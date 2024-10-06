@@ -12,6 +12,8 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
   onSelectCard,
   resourceSelection = false,
   setResourceSelection,
+  availableResources,
+  totalResources,
 }) => {
   const [disabled, setDisabled] = useState(!resourceSelection);
   const [emblaRef, embla] = useEmblaCarousel({ loop: false });
@@ -63,7 +65,9 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
                   <FaceCard
                     selected={card.selected}
                     handleSelect={() => handleCardClick(card)}
-                    disabled={disabled}
+                    disabled={
+                      disabled || availableResources! >= totalResources!
+                    }
                   />
                 ) : (
                   <BackCard />

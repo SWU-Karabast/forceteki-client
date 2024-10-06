@@ -13,7 +13,11 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
   onSelectCard,
   resourceSelection,
   setResourceSelection,
+  availableResources,
+  totalResources,
 }) => {
+  console.log("active player in player card tray", participant.type);
+
   return (
     <Grid container columnSpacing={1.2} sx={{ height: "20.82%" }}>
       <Grid
@@ -28,8 +32,8 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
         }}
       >
         <Resources
-          availableResources={3}
-          totalResources={5}
+          availableResources={availableResources}
+          totalResources={totalResources}
           activePlayer={participant.type}
           handleModalToggle={handleModalToggle}
         />

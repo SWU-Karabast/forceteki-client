@@ -1,7 +1,7 @@
 // GameBoard.tsx
 
 "use client";
-import React, { useState, useRef, useEffect, use } from "react";
+import React, { useState, useRef, useEffect, use, act } from "react";
 import { Box, IconButton } from "@mui/material";
 import { Settings, Menu } from "@mui/icons-material";
 import ChatDrawer from "../_components/Gameboard/ChatDrawer/ChatDrawer";
@@ -15,14 +15,19 @@ const GameBoard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [chatMessage, setChatMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<string[]>([]);
-  const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer); // Correct type
+  const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
   const [round, setRound] = useState(2);
+
+  console.log(activePlayer, "in gameboard");
 
   const drawerRef = useRef<HTMLDivElement | null>(null);
   const [drawerWidth, setDrawerWidth] = useState(0);
 
+  // State for resource selection
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [resourceSelection, setResourceSelection] = useState(false);
+  const [totalResources, setTotalResources] = useState(2);
+  const [availableResources, setAvailableResources] = useState(0);
 
   // State for card management
   const [availableCards, setAvailableCards] = useState<FaceCardProps[]>(
@@ -57,8 +62,15 @@ const GameBoard = () => {
   // Handler to select a card
   const handleSelectCard = (card: FaceCardProps) => {
     if (resourceSelection && activePlayer.type === "player") {
-      setSelectedResourceCards((prev) => [...prev, card]);
-      setAvailableCards((prev) => prev.filter((c) => c.id !== card.id));
+      if (availableResources < totalResources) {
+        // Check resource limit
+        setSelectedResourceCards((prev) => [...prev, card]);
+        setAvailableResources((prev) => prev + 1); // Increment available resources
+        setAvailableCards((prev) => prev.filter((c) => c.id !== card.id));
+        if (availableResources + 1 >= totalResources) {
+          setResourceSelection(false);
+        }
+      }
     }
   };
 
@@ -105,6 +117,8 @@ const GameBoard = () => {
           onSelectCard={handleSelectCard}
           resourceSelection={resourceSelection}
           setResourceSelection={setResourceSelection}
+          availableResources={availableResources}
+          totalResources={totalResources}
         />
       </Box>
 

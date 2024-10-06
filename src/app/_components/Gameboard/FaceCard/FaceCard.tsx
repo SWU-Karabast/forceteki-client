@@ -22,11 +22,10 @@ const FaceCard: React.FC<FaceCardProps> = ({
             ? "rgba(0, 0, 0, 0.8)"
             : "rgba(112, 128, 144, 0.8)", // Adjust hover color
         },
-        cursor: disabled ? "not-allowed" : "pointer", // Change cursor style
+        cursor: disabled ? "not-allowed" : "pointer",
       }}
       onClick={() => {
         if (!disabled) {
-          // Only handle select if not disabled
           handleSelect();
         }
       }}
@@ -34,7 +33,6 @@ const FaceCard: React.FC<FaceCardProps> = ({
       <CardActionArea>
         <CardContent>
           <Typography variant="h6">Card Name</Typography>
-          {/* Display more card details here */}
         </CardContent>
       </CardActionArea>
     </Card>

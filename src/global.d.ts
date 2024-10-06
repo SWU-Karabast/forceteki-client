@@ -23,10 +23,12 @@ interface ChatDrawerProps {
 
 interface PlayerCardTrayProps {
   participant: Participant;
-  handleModalToggle: () => void;
   availableCards: Card[];
-  onSelectCard: (card: Card) => void;
   resourceSelection: boolean;
+  availableResources: number;
+  totalResources: number;
+  handleModalToggle: () => void;
+  onSelectCard: (card: Card) => void;
   setResourceSelection: (active: boolean) => void;
 }
 
@@ -45,6 +47,8 @@ interface CardActionTrayProps {
   onSelectCard?: (card: Card) => void; // Optional, only for player
   resourceSelection?: boolean; // Optional, only for player
   setResourceSelection?: (active: boolean) => void;
+  availableResources?: number; // Optional, only for player
+  totalResources?: number; // Optional, only for player
 }
 
 type DeckSize = number;
