@@ -47,7 +47,7 @@ interface CardActionTrayProps {
   availableCards: Card[];
   onSelectCard?: (card: Card) => void; // Optional, only for player
   resourceSelection?: boolean; // Optional, only for player
-  setResourceSelection?: (active: boolean) => void;
+  setResourceSelection?: (active: boolean) => void; // Optional, only for player
   availableResources?: number; // Optional, only for player
   totalResources?: number; // Optional, only for player
 }
@@ -60,9 +60,11 @@ interface DeckDiscardProps {
 
 interface FaceCardProps {
   id?: string;
+  name: string;
   selected: boolean;
-  handleSelect: () => void;
   disabled?: boolean;
+  unitType?: "ground" | "space";
+  handleSelect: () => void;
 }
 
 interface ResourcesProps {
@@ -75,7 +77,10 @@ interface ResourcesProps {
 interface ResourcesOverlayProps {
   isModalOpen: boolean;
   handleModalToggle: () => void;
-  selectedResourceCards: Card[];
+  selectedResourceCards: FaceCardProps[];
+}
+interface CardAreaProps {
+  cards: FaceCardProps[];
 }
 
 interface BoardProps {
