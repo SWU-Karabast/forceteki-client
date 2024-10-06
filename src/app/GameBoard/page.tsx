@@ -17,9 +17,6 @@ const GameBoard = () => {
   const [chatHistory, setChatHistory] = useState<string[]>([]);
   const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
   const [round, setRound] = useState(2);
-
-  console.log(activePlayer, "in gameboard");
-
   const drawerRef = useRef<HTMLDivElement | null>(null);
   const [drawerWidth, setDrawerWidth] = useState(0);
 
@@ -109,7 +106,7 @@ const GameBoard = () => {
         </Box>
 
         <OpponentCardTray participant={mockOpponent} spacing={colSpace} />
-        <Board spacing={colSpace} />
+        <Board spacing={colSpace} sidebarOpen={sidebarOpen} />
         <PlayerCardTray
           participant={activePlayer}
           handleModalToggle={handleModalToggle}
