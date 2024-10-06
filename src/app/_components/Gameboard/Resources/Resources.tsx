@@ -13,7 +13,7 @@ const Resources: React.FC<ResourcesProps> = ({
       sx={{
         backgroundColor: "rgba(20, 20, 20, 0.8)",
         width: "9.52vw",
-        height: "11.29vh",
+        height: "9vh",
         display: "flex",
         borderRadius: "5px",
         justifyContent: "center",
