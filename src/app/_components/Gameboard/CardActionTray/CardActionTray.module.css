@@ -1,0 +1,18 @@
+.embla {
+  overflow: hidden;
+  height: 10vh;
+  width: 70%; /* Ensures the carousel takes the full width of its parent */
+  position: relative; /* Required for gradient overlays */
+}
+
+.embla__container {
+  display: flex;
+  height: 10vh;
+  width: 70%;
+}
+
+.embla__slide {
+  flex: 0 0 10%;
+  box-sizing: border-box;
+  margin-right: 2%; /* Space between slides */
+}

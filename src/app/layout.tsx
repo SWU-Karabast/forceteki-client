@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import dynamic from "next/dynamic";
 import "./globals.css";
+import { Barlow } from "next/font/google";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+const barlow = Barlow({
+  subsets: ["latin"],
+  weight: ["400", "800"],
+  variable: "--font-barlow",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+
+const ClientProviders = dynamic(
+  () => import("@/app/_components/ClientProviders/ClientProviders"),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -24,9 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+    <html lang="en" className={`${barlow.variable} font-sans`}>
+      <body>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );
