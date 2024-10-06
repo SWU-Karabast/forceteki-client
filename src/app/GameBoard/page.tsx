@@ -4,11 +4,11 @@
 import React, { useState, useRef, useEffect, use, act } from "react";
 import { Box, IconButton } from "@mui/material";
 import { Settings, Menu } from "@mui/icons-material";
-import ChatDrawer from "../_components/Gameboard/ChatDrawer/ChatDrawer";
+import ChatDrawer from "../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer";
 import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/OpponentCardTray";
 import Board from "../_components/Gameboard/Board/Board";
 import PlayerCardTray from "../_components/Gameboard/PlayerCardTray/PlayerCardTray";
-import ResourcesOverlay from "../_components/Gameboard/ResourcesOverlay/ResourcesOverlay";
+import ResourcesOverlay from "../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay";
 import { mockPlayer, mockOpponent } from "../_constants/mockData";
 
 const GameBoard = () => {

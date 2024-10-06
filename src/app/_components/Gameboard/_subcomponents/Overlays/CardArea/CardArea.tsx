@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Box } from "@mui/material";
-import FaceCard from "../FaceCard/FaceCard";
+import FaceCard from "../../Cards/FaceCard/FaceCard";
 
 interface CardAreaProps {
   cards: FaceCardProps[];

@@ -2,9 +2,9 @@
 
 import React from "react";
 import Grid from "@mui/material/Grid2";
-import Resources from "../Resources/Resources";
-import DeckDiscard from "../DeckDiscard/DeckDiscard";
-import CardActionTray from "../CardActionTray/CardActionTray";
+import Resources from "../_subcomponents/PlayerOpponentRows/Resources/Resources";
+import DeckDiscard from "../_subcomponents/PlayerOpponentRows/DeckDiscard/DeckDiscard";
+import CardActionTray from "../_subcomponents/PlayerOpponentRows/CardActionTray/CardActionTray";
 
 const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({
   participant,
