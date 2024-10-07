@@ -165,6 +165,7 @@ const GameBoard = () => {
           sidebarOpen={sidebarOpen}
           playedGroundCards={playedGroundCards}
           playedSpaceCards={playedSpaceCards}
+          participant={activePlayer}
         />
         <PlayerCardTray
           participant={activePlayer}

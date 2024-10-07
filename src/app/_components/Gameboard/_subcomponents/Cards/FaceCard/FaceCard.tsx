@@ -12,13 +12,13 @@ const FaceCard: React.FC<FaceCardProps> = ({
     <Card
       sx={{
         border: selected ? "2px solid blue" : "1px solid gray",
-        opacity: disabled ? 0.65 : 1,
+        opacity: disabled ? 0.8 : 1,
         width: "8vh",
         height: "8vh",
         textAlign: "center",
         color: "white",
         display: "flex",
-        backgroundColor: "rgba(0, 0, 0, 0.8)", // Slightly transparent black
+        backgroundColor: "rgba(0, 0, 0, 0.9)", // Slightly transparent black
         "&:hover": {
           backgroundColor: disabled
             ? "rgba(0, 0, 0, 0.8)"

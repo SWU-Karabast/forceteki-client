@@ -52,7 +52,9 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
         spacing={2}
         sx={{ marginTop: "1vh" }}
       >
-        <Typography variant="h6">Choose an Action:</Typography>
+        <Typography variant="h6" sx={{ color: "white" }}>
+          Choose an Action:
+        </Typography>
         <Button variant="contained">Pass [Space]</Button>
         <Button variant="contained">Claim Initiative</Button>
         <Button

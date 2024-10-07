@@ -48,6 +48,7 @@ interface BoardProps {
     player: FaceCardProps[];
     opponent: FaceCardProps[];
   };
+  participant: Participant;
 }
 
 interface CardActionTrayProps {
@@ -109,3 +110,25 @@ interface GroundUnitsBoardProps {
     opponent: FaceCardProps[];
   };
 }
+
+interface LeaderCardProps {
+  selected?: boolean;
+  handleSelect?: () => void;
+}
+
+interface BaseCardProps {
+  selected?: boolean;
+  handleSelect?: () => void;
+}
+
+interface LeaderBaseBoardProps {
+  participant: Participant;
+}
+
+interface LeaderBaseProps {
+  participant: Participant;
+}
+
+interface LeaderCardProps {}
+
+interface BaseCardProps {}

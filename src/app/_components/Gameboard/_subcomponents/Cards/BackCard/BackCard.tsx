@@ -8,7 +8,7 @@ const BackCard: React.FC<BackCardProps> = ({ deckSize }) => {
   return (
     <Card
       sx={{
-        backgroundColor: "rgba(20, 20, 20, 0.8)",
+        backgroundColor: "rgba(20, 20, 20, 0.9)",
         width: "9vh",
         height: "9vh",
         display: "flex",
@@ -48,7 +48,7 @@ const BackCard: React.FC<BackCardProps> = ({ deckSize }) => {
               sx={{
                 width: "5.5vh",
                 height: "5.5vh",
-                backgroundColor: "rgba(20, 20, 20, 0.8)",
+                backgroundColor: "rgba(20, 20, 20, 0.9)",
                 borderRadius: "50%",
                 position: "absolute",
                 display: "flex",

@@ -10,7 +10,6 @@ const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ participant }) => {
       <Grid
         size={3}
         sx={{
-          backgroundColor: "tomato",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "flex-start",
@@ -28,7 +27,6 @@ const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ participant }) => {
         size={6}
         sx={{
           height: "100%",
-          backgroundColor: "lightblue",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -44,7 +42,6 @@ const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ participant }) => {
       <Grid
         size={3}
         sx={{
-          backgroundColor: "lightcoral",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "flex-end",

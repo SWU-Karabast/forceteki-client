@@ -2,11 +2,13 @@ import React from "react";
 import Grid from "@mui/material/Grid2";
 import SpaceUnitsBoard from "../_subcomponents/BoardRow/SpaceUnitsBoard/SpaceUnitsBoard";
 import GroundUnitsBoard from "../_subcomponents/BoardRow/GroundUnitsBoard/GroundUnitsBoard";
+import LeaderBaseBoard from "../_subcomponents/BoardRow/LeaderBaseBoard/LeaderBaseBoard";
 
 const Board: React.FC<BoardProps> = ({
   sidebarOpen,
   playedGroundCards,
   playedSpaceCards,
+  participant,
 }) => {
   return (
     <Grid container sx={{ height: "64.18%" }}>
@@ -14,7 +16,6 @@ const Board: React.FC<BoardProps> = ({
         container
         size={5}
         sx={{
-          backgroundColor: "lightyellow",
           justifyContent: "flex-end",
           alignItems: "center",
         }}
@@ -24,12 +25,13 @@ const Board: React.FC<BoardProps> = ({
           playedSpaceCards={playedSpaceCards}
         />
       </Grid>
-      <Grid size={2} sx={{ backgroundColor: "lightpink" }}></Grid>
+      <Grid container size={2}>
+        <LeaderBaseBoard participant={participant} />
+      </Grid>
       <Grid
         container
         size={5}
         sx={{
-          backgroundColor: "lightgray",
           justifyContent: "flex-start",
           alignItems: "center",
         }}

@@ -23,7 +23,6 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
       <Grid
         size={3}
         sx={{
-          backgroundColor: "purple",
           display: "flex",
           alignItems: "flex-end",
           justifyContent: "flex-start",
@@ -42,7 +41,6 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
         size={6}
         sx={{
           height: "100%",
-          backgroundColor: "lightblue",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -64,7 +62,6 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
       <Grid
         size={3}
         sx={{
-          backgroundColor: "lightseagreen",
           display: "flex",
           alignItems: "flex-end",
           justifyContent: "flex-end",
