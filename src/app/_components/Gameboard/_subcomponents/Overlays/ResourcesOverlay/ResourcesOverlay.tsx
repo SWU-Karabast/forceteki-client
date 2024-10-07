@@ -12,12 +12,6 @@ import {
 import { Close } from "@mui/icons-material";
 import CardArea from "../CardArea/CardArea";
 
-interface ResourcesOverlayProps {
-  isModalOpen: boolean;
-  handleModalToggle: () => void;
-  selectedResourceCards: FaceCardProps[];
-}
-
 const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
   isModalOpen,
   handleModalToggle,

@@ -2,9 +2,11 @@ import React from "react";
 import { Card, CardActionArea, CardContent, Typography } from "@mui/material";
 
 const FaceCard: React.FC<FaceCardProps> = ({
-  selected,
+  selected = false,
   handleSelect,
   disabled = false,
+  name = "Unnamed Card",
+  unitType,
 }) => {
   return (
     <Card
@@ -25,14 +27,19 @@ const FaceCard: React.FC<FaceCardProps> = ({
         cursor: disabled ? "not-allowed" : "pointer",
       }}
       onClick={() => {
-        if (!disabled) {
+        if (!disabled && handleSelect) {
           handleSelect();
         }
       }}
     >
       <CardActionArea>
         <CardContent>
-          <Typography variant="h6">Card Name</Typography>
+          <Typography variant="h6">{name}</Typography>
+          {unitType && (
+            <Typography variant="body2" sx={{ fontSize: "1.5vh" }}>
+              {unitType.toUpperCase()}
+            </Typography>
+          )}
         </CardContent>
       </CardActionArea>
     </Card>

@@ -2,10 +2,6 @@ import React from "react";
 import { Box } from "@mui/material";
 import FaceCard from "../../Cards/FaceCard/FaceCard";
 
-interface CardAreaProps {
-  cards: FaceCardProps[];
-}
-
 const CardArea: React.FC<CardAreaProps> = ({ cards }) => {
   return (
     <Box
@@ -19,6 +15,7 @@ const CardArea: React.FC<CardAreaProps> = ({ cards }) => {
       {cards.map((card) => (
         <FaceCard
           key={card.id}
+          name={card.name}
           selected={false} // Selection logic can be added if needed
           handleSelect={() => {}} // No action on select within ResourcesOverlay
           disabled={true} // Disable interactions in ResourcesOverlay

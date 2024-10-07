@@ -1,5 +1,3 @@
-// PlayerCardTray.tsx
-
 import React from "react";
 import Grid from "@mui/material/Grid2";
 import Resources from "../_subcomponents/PlayerOpponentRows/Resources/Resources";
@@ -15,6 +13,8 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
   setResourceSelection,
   availableResources,
   totalResources,
+  handlePlayCard,
+  selectedResourceCards,
 }) => {
   console.log("active player in player card tray", participant.type);
 
@@ -55,6 +55,10 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
           onSelectCard={onSelectCard}
           resourceSelection={resourceSelection}
           setResourceSelection={setResourceSelection}
+          handlePlayCard={handlePlayCard}
+          selectedResourceCards={selectedResourceCards}
+          availableResources={availableResources}
+          totalResources={totalResources}
         />
       </Grid>
       <Grid

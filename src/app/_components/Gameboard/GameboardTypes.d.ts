@@ -8,7 +8,7 @@ interface Participant {
   id: string;
   type: ParticipantType;
   deckSize: number;
-  cards: Card[];
+  cards: FaceCardProps[];
 }
 
 interface ChatDrawerProps {
@@ -23,33 +23,43 @@ interface ChatDrawerProps {
 
 interface PlayerCardTrayProps {
   participant: Participant;
-  availableCards: Card[];
+  availableCards: FaceCardProps[];
   resourceSelection: boolean;
   availableResources: number;
   totalResources: number;
+  selectedResourceCards: FaceCardProps[];
   handleModalToggle: () => void;
-  onSelectCard: (card: Card) => void;
+  onSelectCard: (card: FaceCardProps) => void;
   setResourceSelection: (active: boolean) => void;
+  handlePlayCard: (card: FaceCardProps) => void;
 }
 
 interface OpponentCardTrayProps {
   participant: Participant;
-  spacing: number;
 }
 
 interface BoardProps {
-  spacing: number;
   sidebarOpen: boolean;
+  playedGroundCards: {
+    player: FaceCardProps[];
+    opponent: FaceCardProps[];
+  };
+  playedSpaceCards: {
+    player: FaceCardProps[];
+    opponent: FaceCardProps[];
+  };
 }
 
 interface CardActionTrayProps {
   activePlayer: ParticipantType;
-  availableCards: Card[];
-  onSelectCard?: (card: Card) => void; // Optional, only for player
+  availableCards: FaceCardProps[];
+  onSelectCard?: (card: FaceCardProps) => void; // Optional, only for player
   resourceSelection?: boolean; // Optional, only for player
   setResourceSelection?: (active: boolean) => void; // Optional, only for player
   availableResources?: number; // Optional, only for player
   totalResources?: number; // Optional, only for player
+  selectedResourceCards?: FaceCardProps[]; // Optional, only for player
+  handlePlayCard?: (card: FaceCardProps) => void; // Optional, only for player
 }
 
 type DeckSize = number;
@@ -59,12 +69,12 @@ interface DeckDiscardProps {
 }
 
 interface FaceCardProps {
-  id?: string;
-  name: string;
-  selected: boolean;
+  id?: number;
+  name?: string;
+  selected?: boolean;
   disabled?: boolean;
   unitType?: "ground" | "space";
-  handleSelect: () => void;
+  handleSelect?: () => void;
 }
 
 interface ResourcesProps {
@@ -79,16 +89,23 @@ interface ResourcesOverlayProps {
   handleModalToggle: () => void;
   selectedResourceCards: FaceCardProps[];
 }
+
 interface CardAreaProps {
   cards: FaceCardProps[];
 }
 
-interface BoardProps {
-  sidebarOpen: boolean;
-}
 interface SpaceUnitsBoardProps {
   sidebarOpen: boolean;
+  playedSpaceCards: {
+    player: FaceCardProps[];
+    opponent: FaceCardProps[];
+  };
 }
+
 interface GroundUnitsBoardProps {
   sidebarOpen: boolean;
+  playedGroundCards: {
+    player: FaceCardProps[];
+    opponent: FaceCardProps[];
+  };
 }

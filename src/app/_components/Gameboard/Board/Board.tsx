@@ -1,12 +1,15 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
-import { Paper } from "@mui/material";
 import SpaceUnitsBoard from "../_subcomponents/BoardRow/SpaceUnitsBoard.tsx/SpaceUnitsBoard";
 import GroundUnitsBoard from "../_subcomponents/BoardRow/GroundUnitsBoard.tsx/GroundUnitsBoard";
 
-const Board: React.FC<BoardProps> = ({ spacing, sidebarOpen }) => {
+const Board: React.FC<BoardProps> = ({
+  sidebarOpen,
+  playedGroundCards,
+  playedSpaceCards,
+}) => {
   return (
-    <Grid container columnSpacing={spacing} sx={{ height: "64.18%" }}>
+    <Grid container columnSpacing={1.2} sx={{ height: "64.18%" }}>
       <Grid
         container
         size={5}
@@ -16,7 +19,10 @@ const Board: React.FC<BoardProps> = ({ spacing, sidebarOpen }) => {
           alignItems: "center",
         }}
       >
-        <SpaceUnitsBoard sidebarOpen={sidebarOpen} />
+        <SpaceUnitsBoard
+          sidebarOpen={sidebarOpen}
+          playedSpaceCards={playedSpaceCards}
+        />
       </Grid>
       <Grid size={2} sx={{ backgroundColor: "lightpink" }}></Grid>
       <Grid
@@ -28,7 +34,10 @@ const Board: React.FC<BoardProps> = ({ spacing, sidebarOpen }) => {
           alignItems: "center",
         }}
       >
-        <GroundUnitsBoard sidebarOpen={sidebarOpen} />
+        <GroundUnitsBoard
+          sidebarOpen={sidebarOpen}
+          playedGroundCards={playedGroundCards}
+        />
       </Grid>
     </Grid>
   );

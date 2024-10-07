@@ -12,25 +12,46 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
   onSelectCard,
   resourceSelection = false,
   setResourceSelection,
-  availableResources,
-  totalResources,
+  availableResources = 0,
+  totalResources = 0,
+  selectedResourceCards = [],
+  handlePlayCard,
 }) => {
-  const [disabled, setDisabled] = useState(!resourceSelection);
+  const [isPlayCardMode, setIsPlayCardMode] = useState(false);
   const [emblaRef, embla] = useEmblaCarousel({ loop: false });
 
   useEffect(() => {
-    setDisabled(!resourceSelection);
-  }, [resourceSelection]);
+    // Disable card selection when not in resource selection or play card mode
+    if (!resourceSelection && !isPlayCardMode) {
+      // Optionally, reset selected cards if needed
+    }
+  }, [resourceSelection, isPlayCardMode]);
 
   const handleCardClick = (card: FaceCardProps) => {
-    if (onSelectCard && resourceSelection && activePlayer === "player") {
-      onSelectCard(card);
+    if (resourceSelection && activePlayer === "player") {
+      onSelectCard && onSelectCard(card);
+    } else if (isPlayCardMode && activePlayer === "player") {
+      handlePlayCard && handlePlayCard(card);
+      // Exit play card mode after playing a card
+      setIsPlayCardMode(false);
+    }
+  };
+
+  const togglePlayCardMode = () => {
+    if (availableResources > 0) {
+      setIsPlayCardMode(!isPlayCardMode);
     }
   };
 
   const bottomRow =
-    activePlayer === "player" && setResourceSelection ? (
-      <Grid container justifyContent="center" alignItems="center" spacing={2}>
+    activePlayer === "player" ? (
+      <Grid
+        container
+        justifyContent="center"
+        alignItems="center"
+        spacing={2}
+        sx={{ marginTop: "1vh" }}
+      >
         <Typography variant="h6">Choose an Action:</Typography>
         <Button variant="contained">Pass [Space]</Button>
         <Button variant="contained">Claim Initiative</Button>
@@ -38,12 +59,22 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
           variant="contained"
           sx={{ backgroundColor: resourceSelection ? "red" : "green" }}
           onClick={() => {
-            setResourceSelection(!resourceSelection);
+            setResourceSelection
+              ? setResourceSelection(!resourceSelection)
+              : console.log("setResourceSelection not defined");
           }}
         >
           {resourceSelection
             ? "Stop Resource Selection"
             : "Start Resource Selection"}
+        </Button>
+        <Button
+          variant="contained"
+          sx={{ backgroundColor: isPlayCardMode ? "yellow" : "green" }}
+          onClick={togglePlayCardMode}
+          disabled={availableResources === 0}
+        >
+          {isPlayCardMode ? "Cancel Play Card" : "Play a Card"}
         </Button>
       </Grid>
     ) : null;
@@ -63,10 +94,14 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
               <Box className={styles.embla__slide} key={card.id}>
                 {activePlayer === "player" ? (
                   <FaceCard
+                    id={card.id}
+                    name={card.name}
                     selected={card.selected}
                     handleSelect={() => handleCardClick(card)}
                     disabled={
-                      disabled || availableResources! >= totalResources!
+                      (resourceSelection &&
+                        availableResources >= totalResources) ||
+                      (isPlayCardMode && availableResources === 0)
                     }
                   />
                 ) : (
