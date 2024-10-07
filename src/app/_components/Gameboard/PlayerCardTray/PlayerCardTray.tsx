@@ -19,7 +19,7 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
   console.log("active player in player card tray", participant.type);
 
   return (
-    <Grid container columnSpacing={1.2} sx={{ height: "20.82%" }}>
+    <Grid container sx={{ height: "20.82%" }}>
       <Grid
         size={3}
         sx={{

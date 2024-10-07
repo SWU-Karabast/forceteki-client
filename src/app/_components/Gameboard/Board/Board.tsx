@@ -1,7 +1,7 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
-import SpaceUnitsBoard from "../_subcomponents/BoardRow/SpaceUnitsBoard.tsx/SpaceUnitsBoard";
-import GroundUnitsBoard from "../_subcomponents/BoardRow/GroundUnitsBoard.tsx/GroundUnitsBoard";
+import SpaceUnitsBoard from "../_subcomponents/BoardRow/SpaceUnitsBoard/SpaceUnitsBoard";
+import GroundUnitsBoard from "../_subcomponents/BoardRow/GroundUnitsBoard/GroundUnitsBoard";
 
 const Board: React.FC<BoardProps> = ({
   sidebarOpen,
@@ -9,7 +9,7 @@ const Board: React.FC<BoardProps> = ({
   playedSpaceCards,
 }) => {
   return (
-    <Grid container columnSpacing={1.2} sx={{ height: "64.18%" }}>
+    <Grid container sx={{ height: "64.18%" }}>
       <Grid
         container
         size={5}

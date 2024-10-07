@@ -21,6 +21,13 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/app/_components/Gameboard/_subcomponents/BoardRow/SpaceUnitsBoard",
+    "src/app/_components/Gameboard/_subcomponents/BoardRow/GroundUnitsBoard"
+  ],
   "exclude": ["node_modules"]
 }

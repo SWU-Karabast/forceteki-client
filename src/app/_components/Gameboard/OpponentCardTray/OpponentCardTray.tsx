@@ -6,11 +6,11 @@ import CardActionTray from "../_subcomponents/PlayerOpponentRows/CardActionTray/
 
 const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ participant }) => {
   return (
-    <Grid container columnSpacing={1.2} sx={{ height: "15%" }}>
+    <Grid container sx={{ height: "15%" }}>
       <Grid
         size={3}
         sx={{
-          backgroundColor: "lightblue",
+          backgroundColor: "tomato",
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "flex-start",

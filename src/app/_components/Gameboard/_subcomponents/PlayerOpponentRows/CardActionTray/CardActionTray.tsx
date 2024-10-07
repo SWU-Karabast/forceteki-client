@@ -70,7 +70,10 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
         </Button>
         <Button
           variant="contained"
-          sx={{ backgroundColor: isPlayCardMode ? "yellow" : "green" }}
+          sx={{
+            backgroundColor: isPlayCardMode ? "gold" : "green",
+            color: isPlayCardMode ? "black" : "white",
+          }}
           onClick={togglePlayCardMode}
           disabled={availableResources === 0}
         >
