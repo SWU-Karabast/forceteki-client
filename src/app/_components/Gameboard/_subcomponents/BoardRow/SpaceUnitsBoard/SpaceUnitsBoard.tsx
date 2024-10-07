@@ -10,10 +10,14 @@ const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
   return (
     <Paper
       sx={{
+        borderRadius: "1.5em",
         height: "60vh",
         width: sidebarOpen ? "32vw" : "36vw",
         marginRight: ".3vw",
         padding: "1vh",
+        backgroundImage: "url(/space-board.jpeg)",
+        backgroundPositionX: "50%",
+        backgroundSize: sidebarOpen ? "200%" : "180%",
       }}
     >
       <Grid container direction="column" sx={{ height: "100%" }}>

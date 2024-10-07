@@ -11,7 +11,7 @@ const Resources: React.FC<ResourcesProps> = ({
   return (
     <Card
       sx={{
-        backgroundColor: "rgba(20, 20, 20, 0.8)",
+        backgroundColor: "rgba(40, 40, 40, 0.9)",
         width: "9.52vw",
         height: "9vh",
         display: "flex",

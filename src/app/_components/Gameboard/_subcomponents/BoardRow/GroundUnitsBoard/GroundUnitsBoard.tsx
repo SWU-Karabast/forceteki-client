@@ -10,10 +10,15 @@ const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
   return (
     <Paper
       sx={{
+        borderRadius: "1.5em",
         height: "60vh",
         width: sidebarOpen ? "32vw" : "36vw",
         marginLeft: ".3vw",
         padding: "1vh",
+        backgroundImage: "url(/ground-board.png)",
+        backgroundPositionX: "45%",
+        backgroundPositionY: sidebarOpen ? "80%" : "90%",
+        backgroundSize: "200%",
       }}
     >
       <Grid container direction="column" sx={{ height: "100%" }}>
