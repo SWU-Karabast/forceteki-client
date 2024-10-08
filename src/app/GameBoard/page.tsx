@@ -1,12 +1,14 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { Box, IconButton } from "@mui/material";
-import { Settings, Menu } from "@mui/icons-material";
+import { Box } from "@mui/material";
+import Grid from "@mui/material/Grid2";
+
 import ChatDrawer from "../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer";
 import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/OpponentCardTray";
 import Board from "../_components/Gameboard/Board/Board";
 import PlayerCardTray from "../_components/Gameboard/PlayerCardTray/PlayerCardTray";
 import ResourcesOverlay from "../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay";
+import ControlHub from "../_components/Gameboard/_subcomponents/Overlays/ControlHub/ControlHub";
 import { mockPlayer, mockOpponent } from "../_constants/mockData";
 
 const GameBoard = () => {
@@ -129,36 +131,18 @@ const GameBoard = () => {
   }, [mockOpponent.cards]);
 
   return (
-    <Box sx={{ height: "100vh", display: "flex" }}>
+    <Grid container sx={{ height: "100vh" }}>
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           transition: "margin-right 0.3s ease",
           marginRight: sidebarOpen ? `${drawerWidth}px` : "0",
-          height: "100%",
+          height: "100vh",
           position: "relative",
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            display: "flex",
-            alignItems: "center",
-            zIndex: 1,
-          }}
-        >
-          <IconButton>
-            <Settings sx={{ color: "#fff" }} />
-          </IconButton>
-          {!sidebarOpen && (
-            <IconButton onClick={toggleSidebar}>
-              <Menu sx={{ color: "#fff" }} />
-            </IconButton>
-          )}
-        </Box>
+        <ControlHub sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
         <OpponentCardTray participant={mockOpponent} />
         <Board
@@ -198,7 +182,7 @@ const GameBoard = () => {
         handleModalToggle={handleModalToggle}
         selectedResourceCards={selectedResourceCards}
       />
-    </Box>
+    </Grid>
   );
 };
 

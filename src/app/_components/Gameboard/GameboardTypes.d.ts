@@ -132,3 +132,8 @@ interface LeaderBaseProps {
 interface LeaderCardProps {}
 
 interface BaseCardProps {}
+
+interface ControlHub {
+  sidebarOpen: boolean;
+  toggleSidebar: () => void;  
+}
