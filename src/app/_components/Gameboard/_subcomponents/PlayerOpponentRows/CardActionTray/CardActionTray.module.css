@@ -1,7 +1,7 @@
 .embla {
   overflow: hidden;
   height: 10vh;
-  width: 70%; /* Ensures the carousel takes the full width of its parent */
+  width: 70%;
   position: relative; /* Required for gradient overlays */
 }
 

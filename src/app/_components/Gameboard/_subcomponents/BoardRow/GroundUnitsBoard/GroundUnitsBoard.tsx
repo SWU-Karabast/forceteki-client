@@ -9,6 +9,7 @@ const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
 }) => {
   return (
     <Paper
+      elevation={16}
       sx={{
         borderRadius: "1.5em",
         height: "60vh",
