@@ -1,25 +1,21 @@
-// _components/ClientProviders/ClientProviders.tsx
 "use client";
 
-// import { SessionProvider } from "next-auth/react";
-// import { UserProvider } from "@/app/_contexts/User.context";
-// import { UserPoemsProvider } from "@/app/_contexts/UserPoems.context";
+import { SidebarProvider } from "@/app/_contexts/Sidebar.context";
+import { PlayerProvider } from "@/app/_contexts/Player.context";
 import { ThemeContextProvider } from "@/app/_contexts/Theme.context";
 
 interface ClientProvidersProps {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }
 
 const ClientProviders: React.FC<ClientProvidersProps> = ({ children }) => {
-  return (
-    // <SessionProvider>
-    //  <UserProvider>
-    //    <UserPoemsProvider>
-    <ThemeContextProvider>{children}</ThemeContextProvider>
-    //  </UserPoemsProvider>
-    // </UserProvider>
-    // </SessionProvider>
-  );
+	return (
+		<SidebarProvider>
+			<PlayerProvider>
+				<ThemeContextProvider>{children}</ThemeContextProvider>
+			</PlayerProvider>
+		</SidebarProvider>
+	);
 };
 
 export default ClientProviders;

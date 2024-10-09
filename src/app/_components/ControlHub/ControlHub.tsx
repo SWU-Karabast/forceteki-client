@@ -4,9 +4,11 @@ import { Settings, Menu, ArrowBackIosNew } from "@mui/icons-material";
 
 const ControlHub: React.FC<ControlHub> = ({
 	sidebarOpen,
-	isLobbyView,
 	toggleSidebar,
+	path,
 }) => {
+	const isLobbyView = path === "/lobby";
+
 	return (
 		<Box
 			sx={{

@@ -10,13 +10,15 @@ import Board from "../_components/Gameboard/Board/Board";
 import PlayerCardTray from "../_components/Gameboard/PlayerCardTray/PlayerCardTray";
 import ResourcesOverlay from "../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay";
 import ControlHub from "../_components/ControlHub/ControlHub";
-import { mockPlayer, mockOpponent } from "../_constants/mockData";
+import { mockOpponent } from "../_constants/mockData";
+import { usePlayer } from "../_contexts/Player.context";
+import { useSidebar } from "../_contexts/Sidebar.context";
 
 const GameBoard = () => {
-	const [sidebarOpen, setSidebarOpen] = useState(true);
+	const { activePlayer } = usePlayer();
+	const { sidebarOpen, toggleSidebar } = useSidebar();
 	const [chatMessage, setChatMessage] = useState("");
 	const [chatHistory, setChatHistory] = useState<string[]>([]);
-	const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
 	const [round, setRound] = useState(2);
 	const drawerRef = useRef<HTMLDivElement | null>(null);
 	const [drawerWidth, setDrawerWidth] = useState(0);
@@ -45,10 +47,6 @@ const GameBoard = () => {
 		player: FaceCardProps[];
 		opponent: FaceCardProps[];
 	}>({ player: [], opponent: [] });
-
-	const toggleSidebar = () => {
-		setSidebarOpen(!sidebarOpen);
-	};
 
 	const handleChatSubmit = () => {
 		if (chatMessage.trim()) {
@@ -143,8 +141,6 @@ const GameBoard = () => {
 					position: "relative",
 				}}
 			>
-				<ControlHub sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-
 				<OpponentCardTray participant={mockOpponent} />
 				<Board
 					sidebarOpen={sidebarOpen}

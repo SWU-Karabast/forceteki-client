@@ -36,7 +36,7 @@ interface LeaderBaseProps {
 }
 
 interface ControlHub {
-	isLobbyView?: boolean;
+	path?: string;
 	sidebarOpen?: boolean;
 	toggleSidebar?: () => void;
 }
