@@ -1,6 +1,6 @@
 import React from "react";
 import { Paper } from "@mui/material";
-import FaceCard from "../../Cards/FaceCard/FaceCard";
+import FaceCard from "../../../../Cards/FaceCard/FaceCard";
 import Grid from "@mui/material/Grid2";
 
 const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({

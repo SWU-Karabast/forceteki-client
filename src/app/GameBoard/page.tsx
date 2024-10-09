@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { Box } from "@mui/material";
@@ -8,182 +9,182 @@ import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/Opponent
 import Board from "../_components/Gameboard/Board/Board";
 import PlayerCardTray from "../_components/Gameboard/PlayerCardTray/PlayerCardTray";
 import ResourcesOverlay from "../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay";
-import ControlHub from "../_components/Gameboard/_subcomponents/Overlays/ControlHub/ControlHub";
+import ControlHub from "../_components/ControlHub/ControlHub";
 import { mockPlayer, mockOpponent } from "../_constants/mockData";
 
 const GameBoard = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatHistory, setChatHistory] = useState<string[]>([]);
-  const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
-  const [round, setRound] = useState(2);
-  const drawerRef = useRef<HTMLDivElement | null>(null);
-  const [drawerWidth, setDrawerWidth] = useState(0);
+	const [sidebarOpen, setSidebarOpen] = useState(true);
+	const [chatMessage, setChatMessage] = useState("");
+	const [chatHistory, setChatHistory] = useState<string[]>([]);
+	const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
+	const [round, setRound] = useState(2);
+	const drawerRef = useRef<HTMLDivElement | null>(null);
+	const [drawerWidth, setDrawerWidth] = useState(0);
 
-  // State for resource selection
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [resourceSelection, setResourceSelection] = useState(false);
-  const [totalResources, setTotalResources] = useState(2);
-  const [availableResources, setAvailableResources] = useState(0);
+	// State for resource selection
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [resourceSelection, setResourceSelection] = useState(false);
+	const [totalResources, setTotalResources] = useState(2);
+	const [availableResources, setAvailableResources] = useState(0);
 
-  // State for card management
-  const [availableCards, setAvailableCards] = useState<FaceCardProps[]>(
-    activePlayer.cards
-  );
-  const [selectedResourceCards, setSelectedResourceCards] = useState<
-    FaceCardProps[]
-  >([]);
+	// State for card management
+	const [availableCards, setAvailableCards] = useState<FaceCardProps[]>(
+		activePlayer.cards
+	);
+	const [selectedResourceCards, setSelectedResourceCards] = useState<
+		FaceCardProps[]
+	>([]);
 
-  // States for played cards
-  const [playedGroundCards, setPlayedGroundCards] = useState<{
-    player: FaceCardProps[];
-    opponent: FaceCardProps[];
-  }>({ player: [], opponent: [] });
+	// States for played cards
+	const [playedGroundCards, setPlayedGroundCards] = useState<{
+		player: FaceCardProps[];
+		opponent: FaceCardProps[];
+	}>({ player: [], opponent: [] });
 
-  const [playedSpaceCards, setPlayedSpaceCards] = useState<{
-    player: FaceCardProps[];
-    opponent: FaceCardProps[];
-  }>({ player: [], opponent: [] });
+	const [playedSpaceCards, setPlayedSpaceCards] = useState<{
+		player: FaceCardProps[];
+		opponent: FaceCardProps[];
+	}>({ player: [], opponent: [] });
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+	const toggleSidebar = () => {
+		setSidebarOpen(!sidebarOpen);
+	};
 
-  const handleChatSubmit = () => {
-    if (chatMessage.trim()) {
-      setChatHistory([...chatHistory, chatMessage]);
-      setChatMessage("");
-    }
-  };
+	const handleChatSubmit = () => {
+		if (chatMessage.trim()) {
+			setChatHistory([...chatHistory, chatMessage]);
+			setChatMessage("");
+		}
+	};
 
-  useEffect(() => {
-    // Update the drawer width when the drawer opens or closes
-    if (drawerRef.current) {
-      setDrawerWidth(drawerRef.current.offsetWidth);
-    }
-  }, [sidebarOpen]);
+	useEffect(() => {
+		// Update the drawer width when the drawer opens or closes
+		if (drawerRef.current) {
+			setDrawerWidth(drawerRef.current.offsetWidth);
+		}
+	}, [sidebarOpen]);
 
-  const handleModalToggle = () => {
-    setIsModalOpen(!isModalOpen);
-  };
+	const handleModalToggle = () => {
+		setIsModalOpen(!isModalOpen);
+	};
 
-  // Handler to select a card for resource selection
-  const handleSelectResourceCard = (card: FaceCardProps) => {
-    if (resourceSelection && activePlayer.type === "player") {
-      if (availableResources < totalResources) {
-        // Check resource limit
-        setSelectedResourceCards((prev) => [...prev, card]);
-        setAvailableResources((prev) => prev + 1); // Increment available resources
-        setAvailableCards((prev) => prev.filter((c) => c.id !== card.id));
-        if (availableResources + 1 >= totalResources) {
-          setResourceSelection(false);
-        }
-      }
-    }
-  };
+	// Handler to select a card for resource selection
+	const handleSelectResourceCard = (card: FaceCardProps) => {
+		if (resourceSelection && activePlayer.type === "player") {
+			if (availableResources < totalResources) {
+				// Check resource limit
+				setSelectedResourceCards((prev) => [...prev, card]);
+				setAvailableResources((prev) => prev + 1); // Increment available resources
+				setAvailableCards((prev) => prev.filter((c) => c.id !== card.id));
+				if (availableResources + 1 >= totalResources) {
+					setResourceSelection(false);
+				}
+			}
+		}
+	};
 
-  // Function to handle playing a card from the hand to the board
-  const handlePlayCard = (card: FaceCardProps) => {
-    if (availableResources > 0 && activePlayer.type === "player") {
-      if (card.unitType === "ground") {
-        setPlayedGroundCards((prev) => ({
-          ...prev,
-          player: [...prev.player, card],
-        }));
-      } else if (card.unitType === "space") {
-        setPlayedSpaceCards((prev) => ({
-          ...prev,
-          player: [...prev.player, card],
-        }));
-      }
-      // Remove played card from availableCards
-      setAvailableCards((prev) => prev.filter((c) => c.id !== card.id));
-      // Optionally, decrement availableResources if playing a card consumes resources
-      // setAvailableResources((prev) => prev - 1);
-    }
-  };
+	// Function to handle playing a card from the hand to the board
+	const handlePlayCard = (card: FaceCardProps) => {
+		if (availableResources > 0 && activePlayer.type === "player") {
+			if (card.unitType === "ground") {
+				setPlayedGroundCards((prev) => ({
+					...prev,
+					player: [...prev.player, card],
+				}));
+			} else if (card.unitType === "space") {
+				setPlayedSpaceCards((prev) => ({
+					...prev,
+					player: [...prev.player, card],
+				}));
+			}
+			// Remove played card from availableCards
+			setAvailableCards((prev) => prev.filter((c) => c.id !== card.id));
+			// Optionally, decrement availableResources if playing a card consumes resources
+			// setAvailableResources((prev) => prev - 1);
+		}
+	};
 
-  // Pre-populate opponent's played cards only once
-  const opponentCardsInitialized = useRef(false);
+	// Pre-populate opponent's played cards only once
+	const opponentCardsInitialized = useRef(false);
 
-  useEffect(() => {
-    if (!opponentCardsInitialized.current) {
-      const groundCard = mockOpponent.cards.find(
-        (card) => card.unitType === "ground"
-      );
-      const spaceCard = mockOpponent.cards.find(
-        (card) => card.unitType === "space"
-      );
-      if (groundCard) {
-        setPlayedGroundCards((prev) => ({
-          ...prev,
-          opponent: [...prev.opponent, groundCard],
-        }));
-      }
-      if (spaceCard) {
-        setPlayedSpaceCards((prev) => ({
-          ...prev,
-          opponent: [...prev.opponent, spaceCard],
-        }));
-      }
-      opponentCardsInitialized.current = true;
-    }
-  }, [mockOpponent.cards]);
+	useEffect(() => {
+		if (!opponentCardsInitialized.current) {
+			const groundCard = mockOpponent.cards.find(
+				(card) => card.unitType === "ground"
+			);
+			const spaceCard = mockOpponent.cards.find(
+				(card) => card.unitType === "space"
+			);
+			if (groundCard) {
+				setPlayedGroundCards((prev) => ({
+					...prev,
+					opponent: [...prev.opponent, groundCard],
+				}));
+			}
+			if (spaceCard) {
+				setPlayedSpaceCards((prev) => ({
+					...prev,
+					opponent: [...prev.opponent, spaceCard],
+				}));
+			}
+			opponentCardsInitialized.current = true;
+		}
+	}, [activePlayer]);
 
-  return (
-    <Grid container sx={{ height: "100vh" }}>
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          transition: "margin-right 0.3s ease",
-          marginRight: sidebarOpen ? `${drawerWidth}px` : "0",
-          height: "100vh",
-          position: "relative",
-        }}
-      >
-        <ControlHub sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+	return (
+		<Grid container sx={{ height: "100vh" }}>
+			<Box
+				component="main"
+				sx={{
+					flexGrow: 1,
+					transition: "margin-right 0.3s ease",
+					marginRight: sidebarOpen ? `${drawerWidth}px` : "0",
+					height: "100vh",
+					position: "relative",
+				}}
+			>
+				<ControlHub sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
-        <OpponentCardTray participant={mockOpponent} />
-        <Board
-          sidebarOpen={sidebarOpen}
-          playedGroundCards={playedGroundCards}
-          playedSpaceCards={playedSpaceCards}
-          participant={activePlayer}
-        />
-        <PlayerCardTray
-          participant={activePlayer}
-          handleModalToggle={handleModalToggle}
-          availableCards={availableCards}
-          onSelectCard={handleSelectResourceCard}
-          resourceSelection={resourceSelection}
-          setResourceSelection={setResourceSelection}
-          availableResources={availableResources}
-          totalResources={totalResources}
-          handlePlayCard={handlePlayCard}
-          selectedResourceCards={selectedResourceCards}
-        />
-      </Box>
+				<OpponentCardTray participant={mockOpponent} />
+				<Board
+					sidebarOpen={sidebarOpen}
+					playedGroundCards={playedGroundCards}
+					playedSpaceCards={playedSpaceCards}
+					participant={activePlayer}
+				/>
+				<PlayerCardTray
+					participant={activePlayer}
+					handleModalToggle={handleModalToggle}
+					availableCards={availableCards}
+					onSelectCard={handleSelectResourceCard}
+					resourceSelection={resourceSelection}
+					setResourceSelection={setResourceSelection}
+					availableResources={availableResources}
+					totalResources={totalResources}
+					handlePlayCard={handlePlayCard}
+					selectedResourceCards={selectedResourceCards}
+				/>
+			</Box>
 
-      {sidebarOpen && (
-        <ChatDrawer
-          ref={drawerRef}
-          toggleSidebar={toggleSidebar}
-          chatHistory={chatHistory}
-          chatMessage={chatMessage}
-          setChatMessage={setChatMessage}
-          handleChatSubmit={handleChatSubmit}
-          sidebarOpen={sidebarOpen}
-          currentRound={round}
-        />
-      )}
-      <ResourcesOverlay
-        isModalOpen={isModalOpen}
-        handleModalToggle={handleModalToggle}
-        selectedResourceCards={selectedResourceCards}
-      />
-    </Grid>
-  );
+			{sidebarOpen && (
+				<ChatDrawer
+					ref={drawerRef}
+					toggleSidebar={toggleSidebar}
+					chatHistory={chatHistory}
+					chatMessage={chatMessage}
+					setChatMessage={setChatMessage}
+					handleChatSubmit={handleChatSubmit}
+					sidebarOpen={sidebarOpen}
+					currentRound={round}
+				/>
+			)}
+			<ResourcesOverlay
+				isModalOpen={isModalOpen}
+				handleModalToggle={handleModalToggle}
+				selectedResourceCards={selectedResourceCards}
+			/>
+		</Grid>
+	);
 };
 
 export default GameBoard;

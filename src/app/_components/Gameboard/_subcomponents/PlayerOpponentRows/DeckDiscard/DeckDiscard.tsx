@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
-import BackCard from "../../Cards/BackCard/BackCard";
+import BackCard from "../../../../Cards/BackCard/BackCard";
 
 const DeckDiscard: React.FC<DeckDiscardProps> = ({ deckSize }) => {
   return (

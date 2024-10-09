@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid2";
 import { Box, Button, Typography } from "@mui/material";
-import FaceCard from "../../Cards/FaceCard/FaceCard";
-import BackCard from "../../Cards/BackCard/BackCard";
+import FaceCard from "../../../../Cards/FaceCard/FaceCard";
+import BackCard from "../../../../Cards/BackCard/BackCard";
 import useEmblaCarousel from "embla-carousel-react";
 import styles from "./CardActionTray.module.css";
 

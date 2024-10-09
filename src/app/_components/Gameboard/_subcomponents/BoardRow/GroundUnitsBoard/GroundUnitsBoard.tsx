@@ -1,7 +1,7 @@
 import React from "react";
 import { Paper } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import FaceCard from "../../Cards/FaceCard/FaceCard";
+import FaceCard from "../../../../Cards/FaceCard/FaceCard";
 
 const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
   sidebarOpen,
