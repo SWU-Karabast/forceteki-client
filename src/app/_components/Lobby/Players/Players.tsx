@@ -9,7 +9,7 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 			sx={{
 				borderRadius: "1.11vw",
 				borderColor: "rgba(255, 255, 255, 0.0)",
-				height: "90%",
+				height: "90vh",
 				width: "80%",
 				display: "flex",
 				flexDirection: isLobbyView ? "column" : "row",

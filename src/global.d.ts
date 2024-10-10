@@ -45,3 +45,12 @@ interface ControlHub {
 interface DeckProps {
 	activePlayer: Participant;
 }
+
+interface ChatProps {
+	chatHistory: string[];
+	chatMessage: string;
+	playerRoll?: number;
+	opponentRoll?: number;
+	setChatMessage: (message: string) => void;
+	handleChatSubmit: () => void;
+}

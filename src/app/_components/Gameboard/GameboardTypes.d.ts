@@ -3,6 +3,7 @@ type ParticipantType = "player" | "opponent";
 interface Participant {
 	id: string;
 	type: ParticipantType;
+	initiative: boolean | null;
 	deckSize: number;
 	cards: FaceCardProps[];
 	fullDeck: FaceCardProps[];

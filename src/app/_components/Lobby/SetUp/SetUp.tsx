@@ -1,103 +1,182 @@
-import React from "react";
-import { Card, Box, Typography } from "@mui/material";
-import CardArea from "../../CardArea/CardArea";
-import { useDragScroll } from "@/app/utils/useDragScroll";
+import React, { useEffect, useRef } from "react";
+import {
+	Card,
+	Box,
+	Typography,
+	CardContent,
+	CardActions,
+	Button,
+	FilledInput,
+} from "@mui/material";
+import Chat from "@/app/_components/Chat/Chat";
 
-const SetUp: React.FC<DeckProps> = ({ activePlayer }) => {
-	// Use the custom hook with horizontal or vertical scrolling as required
-	const {
-		containerRef,
-		handleMouseDown,
-		handleMouseMove,
-		handleMouseUp,
-		handleTouchStart,
-		handleTouchMove,
-		handleTouchEnd,
-		isScrolling,
-	} = useDragScroll("vertical");
+const SetUp: React.FC<SetUpProps> = ({
+	participant,
+	chatHistory,
+	chatMessage,
+	playerRoll,
+	opponentRoll,
+	isRolling,
+	isRollSame,
+	setChatMessage,
+	handleChatSubmit,
+	handleRollInitiative,
+}) => {
+	const getInitiativeMessage = () => {
+		if (isRolling) {
+			return "Rolling initiative...";
+		}
+		if (isRollSame) {
+			return "Initiative tied, rolling initiative again";
+		}
+		if (participant.initiative === true) {
+			return "You won the initiative choice.";
+		}
+		if (participant.initiative === false) {
+			return "Start the game when ready.";
+		}
+		return "";
+	};
 
-	const { deckSize } = activePlayer;
+	const hasRolled = useRef(false);
+
+	useEffect(() => {
+		if (!hasRolled.current) {
+			handleRollInitiative();
+			hasRolled.current = true;
+		}
+	}, [handleRollInitiative]);
 
 	return (
 		<Card
 			sx={{
 				borderRadius: "1.11vw",
-				borderColor: "rgba(255, 255, 255, 0.0)",
-				height: "90vh",
+				height: "auto",
 				width: "100%",
 				display: "flex",
 				flexDirection: "column",
 				paddingTop: "1vh",
-
 				marginTop: "4vh",
-				backgroundColor: "rgba(40, 40, 40, 0.9)",
-				overflow: "hidden", // Ensure content respects the rounded corners
+				padding: "1.5vw",
+				backgroundColor: "rgba(0, 0, 0, 0.9)",
+				overflow: "hidden",
 			}}
 		>
-			<Box
-				sx={{
-					marginBottom: "0",
-					marginLeft: "0",
-					marginRight: "0",
-					height: "10vh",
-					width: "100%",
-					position: "sticky",
-					top: "0",
-					zIndex: 1,
-					display: "flex",
-					justifyContent: "space-between",
-				}}
-			>
-				<Typography
+			<Card sx={{ height: "15vh", background: "#18325199" }}>
+				<CardContent
 					sx={{
-						fontSize: "1.67vw",
-						fontWeight: "bold",
-						color: "white",
-						marginLeft: "1vw",
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						textAlign: "center",
 					}}
 				>
-					Your Deck
-				</Typography>
-				<Typography
+					{/* Left-aligned "Set Up" */}
+					<Typography
+						sx={{
+							fontSize: "1.67vw",
+							fontWeight: "bold",
+							color: "white",
+							alignSelf: "flex-start",
+							marginLeft: "1vw",
+							marginTop: "1vh",
+						}}
+					>
+						Set Up
+					</Typography>
+
+					{/* Centered initiative message */}
+					{hasRolled.current && getInitiativeMessage() && (
+						<Typography
+							sx={{
+								fontSize: "1vw",
+								fontWeight: "400",
+								color: "white",
+								textAlign: "center",
+								width: "100%",
+							}}
+						>
+							{getInitiativeMessage()}
+						</Typography>
+					)}
+				</CardContent>
+				<CardActions
 					sx={{
-						fontSize: "1.67vw",
-						fontWeight: "400",
-						color: "white",
-						marginRight: "1vw",
+						display: "flex",
+						justifyContent: "center",
+						width: "100%",
 					}}
 				>
-					{deckSize}/{deckSize}
-				</Typography>
-			</Box>
-			<Box
-				ref={containerRef}
-				onMouseDown={handleMouseDown}
-				onMouseMove={handleMouseMove}
-				onMouseUp={handleMouseUp}
-				onTouchStart={handleTouchStart}
-				onTouchMove={handleTouchMove}
-				onTouchEnd={handleTouchEnd}
+					{!isRolling && !hasRolled.current && (
+						<Button variant="contained" onClick={handleRollInitiative}>
+							Roll Initiative
+						</Button>
+					)}
+					{!isRolling &&
+						hasRolled.current &&
+						participant.initiative === false && (
+							<Button variant="contained">Start Game</Button>
+						)}
+					{!isRolling &&
+						hasRolled.current &&
+						participant.initiative === true && (
+							<Box display="flex" gap={2}>
+								<Button
+									variant="contained"
+									sx={{ flex: 1 }}
+									onClick={() => {
+										/* Add logic for going first */
+									}}
+								>
+									Go First
+								</Button>
+								<Button
+									variant="contained"
+									sx={{ flex: 1 }}
+									onClick={() => {
+										/* Add logic for going second */
+									}}
+								>
+									Go Second
+								</Button>
+							</Box>
+						)}
+				</CardActions>
+			</Card>
+
+			<Card
 				sx={{
-					paddingX: "4vw",
-					flexGrow: 1,
-					overflowY: "auto",
-					"::-webkit-scrollbar": {
-						width: "0.2vw",
-					},
-					"::-webkit-scrollbar-thumb": {
-						backgroundColor: isScrolling
-							? "rgba(211, 211, 211, 0.7)"
-							: "rgba(211, 211, 211, 0.0)",
-						borderRadius: "1vw",
-					},
-					"::-webkit-scrollbar-button": {
-						display: "none",
-					},
-					transition: "scrollbar-color 0.3s ease-in-out",
+					height: "15vh",
+					background: "#18325199",
+					marginTop: "3vh",
+					padding: "1.5vw",
+					paddingBottom: "2vh",
+					backgroundColor: "rgba(0, 0, 0, 0.9)",
 				}}
 			>
-				<CardArea cards={activePlayer.fullDeck} />
-			</Box>
+				<CardContent>
+					<Typography variant="h6" sx={{ color: "white" }}>
+						Game Link
+					</Typography>
+					<FilledInput
+						fullWidth
+						sx={{ color: "#fff", backgroundColor: "#fff2" }}
+						placeholder="https://properlink.com"
+					/>
+					<Button variant="contained" sx={{ marginTop: "1vh" }}>
+						Copy Link
+					</Button>
+				</CardContent>
+			</Card>
+
+			<Chat
+				chatHistory={chatHistory}
+				chatMessage={chatMessage}
+				setChatMessage={setChatMessage}
+				handleChatSubmit={handleChatSubmit}
+				playerRoll={playerRoll}
+				opponentRoll={opponentRoll}
+			/>
 		</Card>
 	);
 };

@@ -1,6 +1,7 @@
 export const mockPlayer: Participant = {
 	id: "player1",
 	type: "player",
+	initiative: null,
 	deckSize: 50,
 	cards: Array.from({ length: 8 }, (_, i) => {
 		const unitType = Math.random() > 0.5 ? "ground" : "space";
@@ -27,6 +28,7 @@ export const mockPlayer: Participant = {
 export const mockOpponent: Participant = {
 	id: "opponent1",
 	type: "opponent",
+	initiative: null,
 	deckSize: 50,
 	cards: Array.from({ length: 10 }, (_, i) => {
 		const unitType = Math.random() > 0.5 ? "ground" : "space";

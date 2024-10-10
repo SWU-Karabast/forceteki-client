@@ -19,6 +19,7 @@ const FaceCard: React.FC<FaceCardProps> = ({
 				textAlign: "center",
 				color: "white",
 				textWrap: "wrap",
+
 				backgroundColor: "rgba(40, 40, 40, 0.9)",
 				"&:hover": {
 					backgroundColor: disabled
