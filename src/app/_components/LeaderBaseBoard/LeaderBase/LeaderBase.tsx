@@ -14,11 +14,17 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 			container
 			direction="column"
 			sx={{
-				flexGrow: 1,
-				justifyContent: participant === "player" ? "flex-end" : "flex-start",
+				justifyContent:
+					participant === "opponent" && isLobbyView
+						? "flex-end" //flex-start for player side in lobby because in lobby it is on top rather than bottom
+						: participant === "player" && isLobbyView
+						? "flex-start" //flex-end for opponent side in lobby because in lobby it is on bottom rather than top
+						: participant === "player"
+						? "flex-end"
+						: "flex-start",
 				alignItems: "center",
 				gap: isLobbyView ? "1vh" : "0.5vh",
-				height: "100%",
+				height: "94%",
 				paddingTop: isLobbyView ? "0vh" : "4vh", // No padding in lobby, 4vh outside
 				paddingBottom:
 					participant === "player" && isLobbyView
@@ -28,17 +34,18 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 						: "0vh", //no padding for opponent side
 			}}
 		>
-			{isLobbyView ? (
+			{isLobbyView ? ( //leader card on top in lobby view for both player and opponent
 				<>
 					<LeaderCard isLobbyView={isLobbyView} title={title} />
 					<BaseCard isLobbyView={isLobbyView} />
 				</>
-			) : participant === "player" ? (
+			) : participant === "player" ? ( // player side leader card on bottom in gameboard
 				<>
 					<BaseCard isLobbyView={isLobbyView} />
 					<LeaderCard isLobbyView={isLobbyView} title={title} />
 				</>
 			) : (
+				//opponent side leader card on bottom in gameboard
 				<>
 					<LeaderCard isLobbyView={isLobbyView} title={title} />
 					<BaseCard isLobbyView={isLobbyView} />

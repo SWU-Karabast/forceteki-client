@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React from "react";
-import { Typography, Paper, Grid2 as Grid } from "@mui/material";
+import { Grid2 as Grid } from "@mui/material";
 import { usePlayer } from "../_contexts/Player.context";
 import { usePathname } from "next/navigation";
 import Players from "../_components/Lobby/Players/Players";
 import Deck from "../_components/Lobby/Deck/Deck";
+import SetUp from "../_components/Lobby/SetUp/SetUp";
 
 const Lobby = () => {
 	const { activePlayer } = usePlayer();
@@ -17,10 +17,16 @@ const Lobby = () => {
 			container
 			sx={{ height: "100vh", backgroundColor: "tomato", overflow: "hidden" }}
 		>
-			<Grid size={4}>
-				<Paper sx={{ backgroundColor: "lightpink", height: "100%" }}>
-					<Typography>HELLO</Typography>
-				</Paper>
+			<Grid
+				container
+				size={4}
+				sx={{
+					justifyContent: "center",
+					alignContent: "center",
+					paddingLeft: "20px",
+				}}
+			>
+				<SetUp activePlayer={activePlayer} />
 			</Grid>
 			<Grid
 				container
@@ -32,7 +38,11 @@ const Lobby = () => {
 			<Grid
 				container
 				size={5}
-				sx={{ justifyContent: "center", alignContent: "center" }}
+				sx={{
+					justifyContent: "center",
+					alignContent: "center",
+					paddingRight: "20px",
+				}}
 			>
 				<Deck activePlayer={activePlayer} />
 			</Grid>

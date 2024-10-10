@@ -9,8 +9,8 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 			sx={{
 				borderRadius: "1.11vw",
 				borderColor: "rgba(255, 255, 255, 0.0)",
-				height: "91%",
-				width: "66%",
+				height: "90%",
+				width: "80%",
 				display: "flex",
 				flexDirection: isLobbyView ? "column" : "row",
 				justifyContent: isLobbyView ? "flex-start" : "center",
@@ -21,7 +21,7 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 		>
 			<Box
 				sx={{
-					marginBottom: isLobbyView ? "5.78vh" : "0",
+					marginBottom: isLobbyView ? "10.78vh" : "0",
 					marginLeft: isLobbyView ? "0" : "1.11vw",
 					marginRight: isLobbyView ? "0" : "1.11vw",
 					width: "100%",
@@ -33,6 +33,7 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 						fontWeight: "bold",
 						color: "white",
 						marginLeft: "1vw",
+						paddingBottom: ".9vh",
 					}}
 				>
 					Players

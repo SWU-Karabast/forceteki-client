@@ -37,7 +37,7 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
 					fontFamily: "var(--font-barlow), sans-serif",
 					fontWeight: "400",
 					border: selected ? "2px solid blue" : "1px solid gray",
-					width: isLobbyView ? "14.5vw" : "12vw",
+					width: isLobbyView ? "18vw" : "12vw",
 					height: isLobbyView ? "18vh" : "11vh",
 					textAlign: "center",
 					color: "white",
