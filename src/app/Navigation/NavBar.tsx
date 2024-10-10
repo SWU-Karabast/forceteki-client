@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { Grid2 as Grid } from "@mui/material";
+import { Typography, Grid2 as Grid } from "@mui/material";
 import ControlHub from "../_components/ControlHub/ControlHub";
 import { useSidebar } from "../_contexts/Sidebar.context";
 
@@ -22,6 +22,21 @@ const Navbar = () => {
 				width: "100%",
 			}}
 		>
+			{pathname === "/lobby" ? (
+				<Typography
+					variant="h6"
+					sx={{
+						fontFamily: "var(--font-barlow), sans-serif",
+						fontWeight: "600",
+						color: "#fff",
+						marginTop: ".5vh",
+						marginLeft: ".5vw",
+					}}
+				>
+					GAME LOBBY
+				</Typography>
+			) : null}
+
 			<ControlHub
 				path={pathname}
 				sidebarOpen={sidebarOpen}

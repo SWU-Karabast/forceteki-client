@@ -9,6 +9,7 @@ interface FaceCardProps {
 	disabled?: boolean;
 	unitType?: "ground" | "space";
 	handleSelect?: () => void;
+	path?: string;
 }
 
 interface LeaderCardProps {
@@ -39,4 +40,8 @@ interface ControlHub {
 	path?: string;
 	sidebarOpen?: boolean;
 	toggleSidebar?: () => void;
+}
+
+interface DeckProps {
+	activePlayer: Participant;
 }

@@ -19,18 +19,13 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 				alignItems: "center",
 				gap: isLobbyView ? "1vh" : "0.5vh",
 				height: "100%",
-				paddingTop:
-					participant === "player" && isLobbyView
-						? "0vh"
-						: participant === "player"
-						? "4vh"
-						: "0vh",
+				paddingTop: isLobbyView ? "0vh" : "4vh", // No padding in lobby, 4vh outside
 				paddingBottom:
 					participant === "player" && isLobbyView
-						? "4vh"
+						? "0vh" // no padding in lobby
 						: participant === "player"
-						? "4vh"
-						: "0vh",
+						? "4vh" //padding for player side
+						: "0vh", //no padding for opponent side
 			}}
 		>
 			{isLobbyView ? (

@@ -5,6 +5,7 @@ interface Participant {
 	type: ParticipantType;
 	deckSize: number;
 	cards: FaceCardProps[];
+	fullDeck: FaceCardProps[];
 }
 
 interface ChatDrawerProps {
