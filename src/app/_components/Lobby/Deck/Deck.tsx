@@ -30,8 +30,8 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 				paddingTop: "1vh",
 
 				marginTop: "4vh",
-				backgroundColor: "rgba(40, 40, 40, 0.9)",
-				overflow: "hidden", // Ensure content respects the rounded corners
+				backgroundColor: "rgba(0, 0, 0, 0.9)",
+				overflow: "hidden",
 			}}
 		>
 			<Box

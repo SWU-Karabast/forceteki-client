@@ -6,9 +6,9 @@ import {
 	CardContent,
 	CardActions,
 	Button,
-	FilledInput,
 } from "@mui/material";
 import Chat from "@/app/_components/Chat/Chat";
+import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
 
 const SetUp: React.FC<SetUpProps> = ({
 	participant,
@@ -62,30 +62,18 @@ const SetUp: React.FC<SetUpProps> = ({
 				overflow: "hidden",
 			}}
 		>
-			<Card sx={{ height: "15vh", background: "#18325199" }}>
-				<CardContent
-					sx={{
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
-						textAlign: "center",
-					}}
-				>
-					{/* Left-aligned "Set Up" */}
-					<Typography
-						sx={{
-							fontSize: "1.67vw",
-							fontWeight: "bold",
-							color: "white",
-							alignSelf: "flex-start",
-							marginLeft: "1vw",
-							marginTop: "1vh",
-						}}
-					>
-						Set Up
-					</Typography>
-
-					{/* Centered initiative message */}
+			<Card
+				sx={{
+					height: "15vh",
+					background: "#18325199",
+					display: "flex",
+					flexDirection: "column",
+					justifyContent: "center",
+					alignItems: "center",
+					textAlign: "center",
+				}}
+			>
+				<CardContent>
 					{hasRolled.current && getInitiativeMessage() && (
 						<Typography
 							sx={{
@@ -108,14 +96,20 @@ const SetUp: React.FC<SetUpProps> = ({
 					}}
 				>
 					{!isRolling && !hasRolled.current && (
-						<Button variant="contained" onClick={handleRollInitiative}>
+						<Button
+							variant="contained"
+							sx={{ backgroundColor: "#292929" }}
+							onClick={handleRollInitiative}
+						>
 							Roll Initiative
 						</Button>
 					)}
 					{!isRolling &&
 						hasRolled.current &&
 						participant.initiative === false && (
-							<Button variant="contained">Start Game</Button>
+							<Button variant="contained" sx={{ backgroundColor: "#292929" }}>
+								Start Game
+							</Button>
 						)}
 					{!isRolling &&
 						hasRolled.current &&
@@ -123,7 +117,7 @@ const SetUp: React.FC<SetUpProps> = ({
 							<Box display="flex" gap={2}>
 								<Button
 									variant="contained"
-									sx={{ flex: 1 }}
+									sx={{ backgroundColor: "#292929" }}
 									onClick={() => {
 										/* Add logic for going first */
 									}}
@@ -132,7 +126,7 @@ const SetUp: React.FC<SetUpProps> = ({
 								</Button>
 								<Button
 									variant="contained"
-									sx={{ flex: 1 }}
+									sx={{ backgroundColor: "#292929" }}
 									onClick={() => {
 										/* Add logic for going second */
 									}}
@@ -143,31 +137,18 @@ const SetUp: React.FC<SetUpProps> = ({
 						)}
 				</CardActions>
 			</Card>
-
-			<Card
+			<Typography
 				sx={{
-					height: "15vh",
-					background: "#18325199",
+					fontSize: "1.2vw",
+					fontWeight: "bold",
+					color: "white",
+					alignSelf: "flex-start",
 					marginTop: "3vh",
-					padding: "1.5vw",
-					paddingBottom: "2vh",
-					backgroundColor: "rgba(0, 0, 0, 0.9)",
 				}}
 			>
-				<CardContent>
-					<Typography variant="h6" sx={{ color: "white" }}>
-						Game Link
-					</Typography>
-					<FilledInput
-						fullWidth
-						sx={{ color: "#fff", backgroundColor: "#fff2" }}
-						placeholder="https://properlink.com"
-					/>
-					<Button variant="contained" sx={{ marginTop: "1vh" }}>
-						Copy Link
-					</Button>
-				</CardContent>
-			</Card>
+				Set Up
+			</Typography>
+			<GameLinkCard />
 
 			<Chat
 				chatHistory={chatHistory}

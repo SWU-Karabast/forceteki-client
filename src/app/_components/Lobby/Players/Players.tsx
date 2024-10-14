@@ -16,7 +16,7 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 				justifyContent: isLobbyView ? "flex-start" : "center",
 				paddingTop: "1vh",
 				marginTop: "4vh",
-				backgroundColor: "rgba(40, 40, 40, 0.9)",
+				backgroundColor: "rgba(0, 0, 0, 0.9)",
 			}}
 		>
 			<Box

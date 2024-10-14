@@ -27,6 +27,7 @@ const Navbar = () => {
 					variant="h6"
 					sx={{
 						fontFamily: "var(--font-barlow), sans-serif",
+						fontSize: "1.67vw",
 						fontWeight: "600",
 						color: "#fff",
 						marginTop: ".5vh",
