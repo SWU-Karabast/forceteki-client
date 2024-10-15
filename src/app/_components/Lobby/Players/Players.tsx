@@ -1,7 +1,7 @@
 // Players.tsx
 import React from "react";
 import { Card, Box, Typography } from "@mui/material";
-import LeaderBaseBoard from "../../LeaderBaseBoard/LeaderBaseBoard";
+import LeaderBaseBoard from "../../_sharedcomponents/LeaderBaseBoard/LeaderBaseBoard";
 
 const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 	return (

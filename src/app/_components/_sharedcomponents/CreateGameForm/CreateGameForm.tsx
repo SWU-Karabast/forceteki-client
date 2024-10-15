@@ -23,7 +23,7 @@ const deckOptions: string[] = [
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
 
-const CreateGameForm = () => {
+const CreateGameForm: React.FC = () => {
 	const pathname = usePathname();
 	const isCreateGamePath = pathname === "/creategame";
 
