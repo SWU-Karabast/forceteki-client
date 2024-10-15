@@ -65,7 +65,6 @@ const CreateGame: React.FC = () => {
 				<Card
 					sx={{
 						fontFamily: "var(--font-barlow), sans-serif",
-
 						width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
 						padding: "2.5em",
 						borderRadius: "1.5vw",

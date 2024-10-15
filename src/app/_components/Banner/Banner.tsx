@@ -21,17 +21,40 @@ const KarabastBanner = () => {
 				sx={{
 					position: "relative",
 					flex: "0 0 auto",
-					width: "28%",
+					width: "20%",
 					zIndex: 10,
 					marginBottom: "10vh",
 					marginLeft: "1%",
 				}}
 			>
-				<Typography variant="h1" sx={{ fontWeight: "400", fontSize: "10vh" }}>
+				<Typography
+					variant="h3"
+					sx={{
+						fontFamily: "var(--font-barlow), sans-serif",
+						fontWeight: "400",
+						fontSize: "8vh",
+					}}
+				>
 					KARABAST
 				</Typography>
-				<Typography variant="h4">The Fan-Made, Open-Source</Typography>
-				<Typography variant="h4">Star Wars Unlimited Simulator</Typography>
+				<Typography
+					variant="h6"
+					sx={{
+						fontFamily: "var(--font-barlow), sans-serif",
+						marginLeft: ".6vw",
+					}}
+				>
+					The Fan-Made, Open-Source
+				</Typography>
+				<Typography
+					variant="h6"
+					sx={{
+						fontFamily: "var(--font-barlow), sans-serif",
+						marginLeft: ".6vw",
+					}}
+				>
+					Star Wars Unlimited Simulator
+				</Typography>
 			</Box>
 
 			<Box
