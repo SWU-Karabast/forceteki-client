@@ -7,7 +7,7 @@ import {
 	FormControl,
 	Typography,
 } from "@mui/material";
-import StyledTextField from "../_subcomponents/StyledTextField/StyledTextField";
+import StyledTextField from "../../_sharedcomponents/_styledcomponents/StyledTextField/StyledTextField";
 
 const SignUp: React.FC<SignUpProps> = ({
 	email,

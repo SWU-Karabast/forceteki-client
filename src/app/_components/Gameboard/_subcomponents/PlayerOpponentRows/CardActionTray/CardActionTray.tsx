@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Grid2 as Grid, Box, Button, Typography } from "@mui/material";
-import FaceCard from "../../../../Cards/FaceCard/FaceCard";
-import BackCard from "../../../../Cards/BackCard/BackCard";
+import FaceCard from "../../../../_sharedcomponents/Cards/FaceCard/FaceCard";
+import BackCard from "../../../../_sharedcomponents/Cards/BackCard/BackCard";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
 
 enum ActionMode {

@@ -1,7 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { Typography, Grid2 as Grid } from "@mui/material";
-import ControlHub from "../_components/ControlHub/ControlHub";
+import ControlHub from "../_components/_sharedcomponents/ControlHub/ControlHub";
 import { useSidebar } from "../_contexts/Sidebar.context";
 
 const Navbar = () => {

@@ -10,7 +10,7 @@ import {
 	Typography,
 } from "@mui/material";
 import Link from "next/link";
-import StyledTextField from "../_subcomponents/StyledTextField/StyledTextField";
+import StyledTextField from "../../_sharedcomponents/_styledcomponents/StyledTextField/StyledTextField";
 
 const Login: React.FC<LoginProps> = ({
 	username,

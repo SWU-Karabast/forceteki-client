@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, FormEvent } from "react";
 import { Box } from "@mui/material";
-import KarabastBanner from "../_components/Banner/Banner";
+import KarabastBanner from "../_components/_sharedcomponents/Banner/Banner";
 import Login from "../_components/Auth/Login/Login";
 import SignUp from "../_components/Auth/SignUp/SignUp";
 

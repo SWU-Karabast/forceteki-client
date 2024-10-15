@@ -7,7 +7,7 @@ import {
 	CardActions,
 	Button,
 } from "@mui/material";
-import Chat from "@/app/_components/Chat/Chat";
+import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
 
 const SetUp: React.FC<SetUpProps> = ({

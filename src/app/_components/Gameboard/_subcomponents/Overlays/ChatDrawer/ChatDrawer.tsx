@@ -1,7 +1,7 @@
 import React, { forwardRef } from "react";
 import { Drawer, Box, IconButton } from "@mui/material";
 import { Settings, Close } from "@mui/icons-material";
-import Chat from "@/app/_components/Chat/Chat";
+import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 
 const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
 	(
