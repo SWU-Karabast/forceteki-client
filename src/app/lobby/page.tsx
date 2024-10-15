@@ -1,5 +1,5 @@
 "use client";
-import React, { act, useState } from "react";
+import React, { useState } from "react";
 import { Grid2 as Grid } from "@mui/material";
 import { usePlayer } from "../_contexts/Player.context";
 import { usePathname } from "next/navigation";

@@ -1,13 +1,34 @@
-import styles from "./page.module.css";
+import React from "react";
+import { Box } from "@mui/material";
+import KarabastBanner from "./_components/Banner/Banner";
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <h1>Home</h1>
-      <p>
-        Welcome to the home page. This is a simple example of a Next.js app with
-        TypeScript.
-      </p>
-    </div>
-  );
-}
+const Home: React.FC = () => {
+	return (
+		<Box
+			sx={{
+				position: "relative", // To contain the absolutely positioned banner
+				height: "100vh",
+				overflow: "hidden", // Prevents overflow
+				display: "flex",
+				flexDirection: "column",
+			}}
+		>
+			{/* Banner positioned absolutely */}
+			<KarabastBanner />
+
+			{/* Main Content */}
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					paddingTop: "18vh",
+				}}
+			>
+				{/* Primary Card - Login Form */}
+			</Box>
+		</Box>
+	);
+};
+
+export default Home;

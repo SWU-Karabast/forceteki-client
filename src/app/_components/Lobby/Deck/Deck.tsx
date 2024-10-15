@@ -21,15 +21,13 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 	return (
 		<Card
 			sx={{
-				borderRadius: "1.11vw",
-				borderColor: "rgba(255, 255, 255, 0.0)",
 				height: "90vh",
 				width: "100%",
 				display: "flex",
 				flexDirection: "column",
 				paddingTop: "1vh",
-
 				marginTop: "4vh",
+				borderRadius: "1.11vw",
 				backgroundColor: "rgba(0, 0, 0, 0.9)",
 				overflow: "hidden",
 			}}
