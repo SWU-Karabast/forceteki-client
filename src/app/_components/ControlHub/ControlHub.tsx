@@ -2,8 +2,7 @@ import React from "react";
 import { Box, IconButton, Typography } from "@mui/material";
 import { Settings, Menu, ArrowBackIosNew, GitHub } from "@mui/icons-material";
 import { FaDiscord, FaPatreon } from "react-icons/fa";
-
-import NextLinkMui from "../Auth/_subcomponents/NextLinkMui/NextLinkMui";
+import NextLinkMui from "./_subcomponents/NextLinkMui/NextLinkMui";
 
 const ControlHub: React.FC<ControlHub> = ({
 	sidebarOpen,
@@ -11,21 +10,60 @@ const ControlHub: React.FC<ControlHub> = ({
 	path,
 }) => {
 	const isLobbyView = path === "/lobby";
-	const isAuthView = path === "/auth";
+	const isGameboardView = path === "/gameboard";
 
 	return (
 		<Box
 			sx={{
 				position: "absolute",
 				top: 10,
-				right: isAuthView ? 0 : 10,
+				right: isLobbyView || isGameboardView ? 10 : 0,
 				display: "flex",
 				alignItems: "center",
 				zIndex: 1,
 			}}
 		>
-			{isAuthView ? (
-				// Auth View: Profile, Log Out, and Social Icons
+			{isLobbyView ? (
+				// Lobby View: Exit Button
+				<>
+					<IconButton>
+						<ArrowBackIosNew
+							sx={{
+								color: "#fff",
+								marginTop: ".5vh",
+								fontFamily: "var(--font-barlow), sans-serif",
+								fontWeight: "600",
+								fontSize: "1.5rem",
+							}}
+						/>
+					</IconButton>
+					<Typography
+						variant="h6"
+						sx={{
+							fontFamily: "var(--font-barlow), sans-serif",
+							fontWeight: "600",
+							color: "#fff",
+							marginTop: ".5vh",
+							marginRight: ".5vw",
+						}}
+					>
+						Exit
+					</Typography>
+				</>
+			) : isGameboardView ? (
+				// Gameboard View: Settings and Menu Button
+				<>
+					<IconButton>
+						<Settings sx={{ color: "#fff" }} />
+					</IconButton>
+					{!sidebarOpen && (
+						<IconButton onClick={toggleSidebar}>
+							<Menu sx={{ color: "#fff" }} />
+						</IconButton>
+					)}
+				</>
+			) : (
+				// Default View: Profile, Log Out, and Social Icons
 				<Box
 					sx={{
 						display: "flex",
@@ -122,43 +160,6 @@ const ControlHub: React.FC<ControlHub> = ({
 						</NextLinkMui>
 					</Box>
 				</Box>
-			) : isLobbyView ? (
-				<>
-					<IconButton>
-						<ArrowBackIosNew
-							sx={{
-								color: "#fff",
-								marginTop: ".5vh",
-								fontFamily: "var(--font-barlow), sans-serif",
-								fontWeight: "600",
-								fontSize: "1.5rem",
-							}}
-						/>
-					</IconButton>
-					<Typography
-						variant="h6"
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontWeight: "600",
-							color: "#fff",
-							marginTop: ".5vh",
-							marginRight: ".5vw",
-						}}
-					>
-						Exit
-					</Typography>
-				</>
-			) : (
-				<>
-					<IconButton>
-						<Settings sx={{ color: "#fff" }} />
-					</IconButton>
-					{!sidebarOpen && (
-						<IconButton onClick={toggleSidebar}>
-							<Menu sx={{ color: "#fff" }} />
-						</IconButton>
-					)}
-				</>
 			)}
 		</Box>
 	);

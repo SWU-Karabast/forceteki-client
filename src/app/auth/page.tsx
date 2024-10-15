@@ -75,9 +75,9 @@ const Auth: React.FC = () => {
 	return (
 		<Box
 			sx={{
-				position: "relative", // To contain the absolutely positioned banner
+				position: "relative",
 				height: "100vh",
-				overflow: "hidden", // Prevents overflow
+				overflow: "hidden",
 				display: "flex",
 				flexDirection: "column",
 			}}

@@ -106,9 +106,9 @@ const Login: React.FC<LoginProps> = ({
 								fontSize: "1.1rem",
 								borderRadius: "0.5vw",
 								backgroundColor: "#292929",
-								display: "block", // ensures it's treated as a block element
-								marginLeft: "auto", // centers horizontally
-								marginRight: "auto", // centers horizontally
+								display: "block",
+								marginLeft: "auto",
+								marginRight: "auto",
 							}}
 						>
 							Login

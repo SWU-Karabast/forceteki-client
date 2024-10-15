@@ -10,6 +10,7 @@ const StyledTextField: React.FC<StyledTextFieldProps> = ({
 			variant="outlined"
 			fullWidth
 			sx={{
+				fontFamily: "var(--font-barlow), sans-serif",
 				backgroundColor: "#fff",
 				borderRadius: "0.5vw",
 				"& .MuiOutlinedInput-root": {
