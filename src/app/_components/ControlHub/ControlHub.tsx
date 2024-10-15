@@ -1,7 +1,8 @@
 import React from "react";
 import { Box, IconButton, Typography } from "@mui/material";
 import { Settings, Menu, ArrowBackIosNew, GitHub } from "@mui/icons-material";
-import { FaDiscord, FaPatreon } from "react-icons/fa";
+import { FaDiscord, FaPatreon } from "react-icons/fa6";
+
 import NextLinkMui from "./_subcomponents/NextLinkMui/NextLinkMui";
 
 const ControlHub: React.FC<ControlHub> = ({
@@ -24,7 +25,6 @@ const ControlHub: React.FC<ControlHub> = ({
 			}}
 		>
 			{isLobbyView ? (
-				// Lobby View: Exit Button
 				<>
 					<IconButton>
 						<ArrowBackIosNew
