@@ -16,9 +16,10 @@ const BaseCard: React.FC<BaseCardProps> = ({
 				textAlign: "center",
 				color: "white",
 				display: "flex",
-				backgroundColor: "rgba(0, 0, 0, 0.9)",
+				backgroundColor: "#000000E6",
+				backdropFilter: "blur(20px)",
 				"&:hover": {
-					backgroundColor: "rgba(112, 128, 144, 0.9)",
+					backgroundColor: "#708090E6",
 				},
 				cursor: "pointer",
 			}}

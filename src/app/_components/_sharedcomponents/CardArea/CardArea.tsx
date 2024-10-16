@@ -20,7 +20,7 @@ const CardArea: React.FC<CardAreaProps> = ({ cards }) => {
 					name={card.name}
 					selected={false} // Selection logic can be added if needed
 					handleSelect={() => {}} // No action on select within ResourcesOverlay
-					disabled={true} // Disable interactions in ResourcesOverlay
+					disabled={true}
 				/>
 			))}
 		</Box>

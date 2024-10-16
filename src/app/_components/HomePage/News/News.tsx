@@ -1,39 +1,10 @@
 import React, { useEffect } from "react";
-import {
-	Box,
-	Card,
-	CardContent,
-	CardMedia,
-	Divider,
-	Typography,
-} from "@mui/material";
+import { Box, Card, CardContent, Typography } from "@mui/material";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
-
-const article = {
-	title: "The Dead Speak!",
-	content:
-		"The galaxy has heard a mysterious broadcast, a threat of revenge in the sinister voice of the late Emperor Palpatine. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis rhoncus commodo lacus, at laoreet nisl ornare sit amet. Pellentesque sit amet viverra nunc.",
-	date: "05/15",
-	image: "/newsboba.png",
-	imageAlt: "Placeholder image",
-};
+import NewsItem from "../_subcomponents/NewsItem/NewsItem";
+import { articles } from "@/app/_constants/mockData";
 
 const NewsColumn: React.FC = () => {
-	const [articleTitle, setArticleTitle] = React.useState<string>("");
-	const [articleContent, setArticleContent] = React.useState<string>("");
-	const [articleDate, setArticleDate] = React.useState<string>("");
-	const [articleImage, setArticleImage] = React.useState<string>("");
-	const [articleImageAlt, setArticleImageAlt] = React.useState<string>("");
-
-	useEffect(() => {
-		// Fetch news article here
-		setArticleTitle(article.title);
-		setArticleContent(article.content);
-		setArticleDate(article.date);
-		setArticleImage(article.image);
-		setArticleImageAlt(article.imageAlt);
-	}, []);
-
 	const {
 		containerRef,
 		handleMouseDown,
@@ -45,19 +16,25 @@ const NewsColumn: React.FC = () => {
 	} = useDragScroll("vertical");
 
 	return (
-		<Box sx={{ height: "100%" }}>
+		<Box
+			sx={{
+				height: "80vh",
+				display: "flex",
+				flexDirection: "column",
+				alignItems: "center",
+				mr: 3,
+			}}
+		>
 			{/* Top Card: Fixed size */}
 			<Card
 				sx={{
-					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
-					p: "1.5em",
+					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
 					borderRadius: "1.5vw",
 					backgroundColor: "#18325199",
-					boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+					backdropFilter: "blur(20px)",
 					mb: 1,
-					// Ensure this card will never grow more than it needs
-					height: "auto",
-					maxHeight: "fit-content",
+					p: "1.5em",
+					height: "30vh",
 				}}
 			>
 				<CardContent>
@@ -83,18 +60,13 @@ const NewsColumn: React.FC = () => {
 							fontWeight: "400",
 						}}
 					>
-						It is an educational tool, meant to facilitate deck research and
-						strategies supportive of in-person play. Direct competition through
-						the form of automated tournaments or rankings will not be added.
-						<br />
-						<br />
 						This tool is free to use and is published non-commercially. Payment
 						is not required to access any functionality.
 					</Typography>
 				</CardContent>
 			</Card>
 
-			{/* Bottom Card: Scrollable if content is larger */}
+			{/* Bottom Card: Scrollable and displays NewsItem */}
 			<Card
 				ref={containerRef}
 				onMouseDown={handleMouseDown}
@@ -104,21 +76,21 @@ const NewsColumn: React.FC = () => {
 				onTouchMove={handleTouchMove}
 				onTouchEnd={handleTouchEnd}
 				sx={{
-					flexGrow: 1, // Allow it to take remaining space
+					flexGrow: 1,
 					fontFamily: "var(--font-barlow), sans-serif",
-					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
-					p: "1.5em",
+					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
 					borderRadius: "1.5vw",
-					overflowY: "auto", // Enable vertical scrolling
-					backgroundColor: "rgba(0, 0, 0, 0.9)",
+					overflowY: "auto",
+					backgroundColor: "#000000E6",
+					backdropFilter: "blur(20px)",
 					mt: 2,
-					mb: 4,
-					maxHeight: "50vh",
+					p: "2em",
+					clipPath: "inset(0 0 0 0 round 1.5vw)", // Clips the scrollbar within the border-radius
 					"::-webkit-scrollbar": {
 						width: "0.2vw",
 					},
 					"::-webkit-scrollbar-thumb": {
-						backgroundColor: "rgba(211, 211, 211, 0.7)",
+						backgroundColor: "#D3D3D3B3",
 						borderRadius: "1vw",
 					},
 					"::-webkit-scrollbar-button": {
@@ -127,74 +99,25 @@ const NewsColumn: React.FC = () => {
 					transition: "scrollbar-color 0.3s ease-in-out",
 				}}
 			>
-				<CardContent>
-					<Typography
-						variant="h4"
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							color: "#fff",
-							mb: 3,
-							fontWeight: "800",
-						}}
-					>
-						News
-					</Typography>
-					<Box
-						sx={{
-							display: "flex",
-							justifyContent: "space-between",
-							alignItems: "flex-end",
-						}}
-					>
-						<Typography
-							sx={{
-								fontFamily: "var(--font-barlow), sans-serif",
-								fontWeight: "800",
-								color: "#fff",
-								fontSize: "1.5rem",
-							}}
-						>
-							{articleTitle}
-						</Typography>
-						<Typography
-							sx={{
-								fontFamily: "var(--font-barlow), sans-serif",
-								fontWeight: "400",
-								color: "#fff",
-								fontSize: "1.5rem",
-							}}
-						>
-							{articleDate}
-						</Typography>
-					</Box>
-					<Divider
-						sx={{
-							backgroundColor: "#fff",
-							mt: ".5vh",
-							mb: "1vh",
-						}}
-					/>
-					<Typography
-						variant="body1"
-						sx={{
-							color: "#fff",
-							textAlign: "left",
-							mb: 2,
-							fontSize: "1rem",
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontWeight: "400",
-						}}
-					>
-						{articleContent}
-					</Typography>
-				</CardContent>
-				<CardMedia
-					component="img"
-					height="auto"
-					image={articleImage}
-					alt={articleImageAlt}
-					sx={{ borderRadius: ".5vw" }}
-				/>
+				{/* Sticky Title */}
+				<Typography
+					variant="h4"
+					sx={{
+						position: "sticky",
+						top: 0,
+						zIndex: 1,
+						fontFamily: "var(--font-barlow), sans-serif",
+						color: "#fff",
+						mb: 3,
+						fontWeight: "800",
+					}}
+				>
+					News
+				</Typography>
+
+				{articles.map((article, index) => (
+					<NewsItem article={article} key={index} />
+				))}
 			</Card>
 		</Box>
 	);

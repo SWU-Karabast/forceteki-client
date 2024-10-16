@@ -15,7 +15,8 @@ const GameLinkCard: React.FC = () => {
 				height: "15vh",
 				background: "#18325199",
 				pb: "4vh",
-				backgroundColor: "rgba(0, 0, 0, 0.9)",
+				backgroundColor: "#000000E6",
+				backdropFilter: "blur(20px)",
 			}}
 		>
 			<CardContent>

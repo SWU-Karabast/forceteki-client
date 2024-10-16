@@ -20,11 +20,9 @@ const FaceCard: React.FC<FaceCardProps> = ({
 				color: "white",
 				textWrap: "wrap",
 
-				backgroundColor: "rgba(40, 40, 40, 0.9)",
+				backgroundColor: "#282828E6",
 				"&:hover": {
-					backgroundColor: disabled
-						? "rgba(0, 0, 0, 0.8)"
-						: "rgba(112, 128, 144, 0.8)", // Adjust hover color
+					backgroundColor: disabled ? "#000000CC" : "#708090CC",
 				},
 				cursor: disabled ? "not-allowed" : "pointer",
 			}}
@@ -36,9 +34,23 @@ const FaceCard: React.FC<FaceCardProps> = ({
 		>
 			<CardActionArea>
 				<CardContent>
-					<Typography variant="h6">{name}</Typography>
+					<Typography
+						variant="h6"
+						sx={{
+							fontFamily: "var(--font-barlow), sans-serif",
+							fontSize: "1em",
+						}}
+					>
+						{name}
+					</Typography>
 					{unitType && (
-						<Typography variant="body2" sx={{ fontSize: "1.5vh" }}>
+						<Typography
+							variant="body2"
+							sx={{
+								fontFamily: "var(--font-barlow), sans-serif",
+								fontSize: "1em",
+							}}
+						>
 							{unitType.toUpperCase()}
 						</Typography>
 					)}

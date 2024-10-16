@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Grid2 as Grid } from "@mui/material";
 import KarabastBanner from "./_components/_sharedcomponents/Banner/Banner";
 import PublicGames from "./_components/HomePage/PublicGames/PublicGames";
@@ -7,14 +7,15 @@ import CreateGameForm from "./_components/_sharedcomponents/CreateGameForm/Creat
 import NewsColumn from "./_components/HomePage/News/News";
 
 const Home: React.FC = () => {
+	const [format, setFormat] = useState("Premier");
 	const mt = "17vh";
 	return (
 		<Grid
 			container
 			sx={{
-				position: "relative", // To contain the absolutely positioned banner
+				position: "relative",
 				height: "100vh",
-				overflow: "hidden", // Prevents overflow
+				overflow: "hidden",
 			}}
 		>
 			{/* Banner positioned absolutely */}
@@ -30,7 +31,7 @@ const Home: React.FC = () => {
 					mt: mt,
 				}}
 			>
-				<PublicGames />
+				<PublicGames format={format} />
 			</Grid>
 			<Grid
 				container
@@ -41,7 +42,7 @@ const Home: React.FC = () => {
 					mt: mt,
 				}}
 			>
-				<CreateGameForm />
+				<CreateGameForm format={format} setFormat={setFormat} />
 			</Grid>
 			<Grid
 				container

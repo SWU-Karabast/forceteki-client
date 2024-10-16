@@ -1,17 +1,20 @@
 import React from "react";
-import { Box, Card, CardContent, Typography, Divider } from "@mui/material";
-import PublicGame from "../_subcomponents/PublicGame/PublicGame";
+import { Card, CardContent, Typography, Divider } from "@mui/material";
+import JoinableGame from "../_subcomponents/JoinableGame/JoinableGame";
+import GamesInProgress from "../_subcomponents/GamesInProgress/GamesInProgress";
 
-const PublicGames: React.FC = () => {
+const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 	return (
 		<Card
 			sx={{
+				maxHeight: "80vh",
+				width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
 				fontFamily: "var(--font-barlow), sans-serif",
-				width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
-				p: "2em",
 				borderRadius: "1.5vw",
-				backgroundColor: "rgba(0, 0, 0, 0.9)",
-				mb: 4,
+				backgroundColor: "#000000E6",
+				backdropFilter: "blur(20px)",
+				ml: 3,
+				p: "2em",
 			}}
 		>
 			<CardContent
@@ -29,7 +32,7 @@ const PublicGames: React.FC = () => {
 						fontSize: "1.5rem",
 					}}
 				>
-					Premier
+					{format}
 				</Typography>
 
 				<Divider
@@ -39,9 +42,9 @@ const PublicGames: React.FC = () => {
 						mb: "1vh",
 					}}
 				/>
-				<PublicGame />
-				<PublicGame />
-				<PublicGame />
+				<JoinableGame />
+				<JoinableGame />
+				<JoinableGame />
 				<Typography
 					sx={{
 						mt: 1,
@@ -51,7 +54,7 @@ const PublicGames: React.FC = () => {
 						fontSize: "1.5rem",
 					}}
 				>
-					Request-Undo Premier
+					Request-Undo {format}
 				</Typography>
 
 				<Divider
@@ -62,44 +65,8 @@ const PublicGames: React.FC = () => {
 					}}
 				/>
 
-				<PublicGame />
-				<Box
-					sx={{
-						mt: 1,
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "flex-end",
-						alignContent: "center",
-					}}
-				>
-					<Typography
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontWeight: "800",
-							color: "#fff",
-							fontSize: "1.5rem",
-						}}
-					>
-						Games in Progress
-					</Typography>
-					<Typography
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontWeight: "400",
-							color: "#fff",
-							fontSize: "1.5rem",
-						}}
-					>
-						124
-					</Typography>
-				</Box>
-				<Divider
-					sx={{
-						backgroundColor: "#fff",
-						mt: ".5vh",
-						mb: "1vh",
-					}}
-				/>
+				<JoinableGame />
+				<GamesInProgress />
 			</CardContent>
 		</Card>
 	);

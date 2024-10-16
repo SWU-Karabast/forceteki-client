@@ -24,7 +24,10 @@ const deckOptions: string[] = [
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
 
-const CreateGameForm: React.FC = () => {
+const CreateGameForm: React.FC<CreateGameFormProps> = ({
+	format,
+	setFormat,
+}) => {
 	const pathname = usePathname();
 	const isCreateGamePath = pathname === "/creategame";
 
@@ -36,7 +39,6 @@ const CreateGameForm: React.FC = () => {
 
 	// Additional State for Non-Creategame Path
 	const [gameName, setGameName] = useState<string>("");
-	const [format, setFormat] = useState<string>("Premier");
 	const [privacy, setPrivacy] = useState<string>("Public");
 
 	// Handle Create Game Submission
@@ -56,15 +58,16 @@ const CreateGameForm: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ height: "100%" }}>
+		<Box sx={{ height: "80vh" }}>
 			{/* Primary Card - Create/Choose Deck Form */}
 			<Card
 				sx={{
 					fontFamily: "var(--font-barlow), sans-serif",
-					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
+					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
 					p: "2em",
 					borderRadius: "1.5vw",
-					backgroundColor: "rgba(0, 0, 0, 0.9)",
+					backgroundColor: "#000000E6",
+					backdropFilter: "blur(20px)",
 					mb: 4,
 				}}
 			>
@@ -291,12 +294,12 @@ const CreateGameForm: React.FC = () => {
 			{isCreateGamePath && (
 				<Card
 					sx={{
-						width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
+						width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
 						p: "2em",
 						borderRadius: "1.5vw",
 						backgroundColor: "#18325199",
 						boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-						mb: 4, // Add margin bottom for spacing
+						mb: 4,
 					}}
 				>
 					<CardContent>

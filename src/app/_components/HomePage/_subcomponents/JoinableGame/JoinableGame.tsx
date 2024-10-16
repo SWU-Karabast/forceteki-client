@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Button, Typography } from "@mui/material";
 
-const PublicGame: React.FC = () => {
+const JoinableGame: React.FC = () => {
 	const randomGameId = Math.floor(Math.random() * 10000);
 
 	return (
@@ -18,7 +18,7 @@ const PublicGame: React.FC = () => {
 			<Typography
 				sx={{
 					fontFamily: "var(--font-barlow), sans-serif",
-					fontSize: ".9em",
+					fontSize: "1.5em",
 					color: "#fff",
 				}}
 			>
@@ -27,7 +27,7 @@ const PublicGame: React.FC = () => {
 			<Button
 				sx={{
 					fontFamily: "var(--font-barlow), sans-serif",
-					width: "6vw",
+					width: "5vw",
 					height: "3.5em",
 					fontSize: ".9rem",
 					borderRadius: "0.5vw",
@@ -44,4 +44,4 @@ const PublicGame: React.FC = () => {
 	);
 };
 
-export default PublicGame;
+export default JoinableGame;

@@ -32,10 +32,11 @@ const SignUp: React.FC<SignUpProps> = ({
 		>
 			<Card
 				sx={{
-					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
+					width: { xs: "90vw", sm: "70vw", md: "60vw", lg: "30vw" },
 					p: "2.5em",
 					borderRadius: "1.5vw",
-					backgroundColor: "rgba(0, 0, 0, 0.9)",
+					backgroundColor: "#000000E6",
+					backdropFilter: "blur(20px)",
 					mb: 4,
 				}}
 			>
@@ -56,9 +57,6 @@ const SignUp: React.FC<SignUpProps> = ({
 								type="email"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
-								errorMessage={
-									passwordError ? "Password must be at least 8 characters" : ""
-								}
 								required
 							/>
 						</FormControl>
@@ -103,10 +101,10 @@ const SignUp: React.FC<SignUpProps> = ({
 							sx={{
 								mb: 2,
 								height: "3.5em",
-								fontSize: "1.1rem",
+								fontSize: "1rem",
 								borderRadius: "0.5vw",
 								backgroundColor: "#292929",
-								width: "10vw",
+								width: "11vw",
 								mx: "auto",
 								display: "block",
 							}}

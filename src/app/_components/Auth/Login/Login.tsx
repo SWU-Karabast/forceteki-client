@@ -34,10 +34,11 @@ const Login: React.FC<LoginProps> = ({
 			{/* Primary Card - Login Form */}
 			<Card
 				sx={{
-					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
+					width: { xs: "90vw", sm: "70vw", md: "60vw", lg: "30vw" },
 					p: "2.5em",
 					borderRadius: "1.5vw",
-					backgroundColor: "rgba(0, 0, 0, 0.9)",
+					backgroundColor: "#000000E6",
+					backdropFilter: "blur(20px)",
 					mb: 4,
 				}}
 			>

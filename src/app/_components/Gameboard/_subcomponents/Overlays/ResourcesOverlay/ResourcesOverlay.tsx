@@ -25,7 +25,7 @@ const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 				display: "flex",
 				justifyContent: "center",
 				alignItems: "center",
-				backgroundColor: "rgba(0, 0, 0, 0.5)",
+				backgroundColor: "#00000080",
 			}}
 		>
 			<Card
@@ -34,7 +34,7 @@ const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 					width: "80%",
 					height: "60%",
 					p: 2,
-					backgroundColor: "rgba(0, 0, 0, 0.7)",
+					backgroundColor: "#000000B3",
 					textAlign: "center",
 				}}
 			>

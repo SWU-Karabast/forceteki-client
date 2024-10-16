@@ -58,7 +58,8 @@ const SetUp: React.FC<SetUpProps> = ({
 				pt: "1vh",
 				mt: "4vh",
 				p: "1.5vw",
-				backgroundColor: "rgba(0, 0, 0, 0.9)",
+				backgroundColor: "#000000E6",
+				backdropFilter: "blur(20px)",
 				overflow: "hidden",
 			}}
 		>

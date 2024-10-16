@@ -27,7 +27,8 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 				pt: "1vh",
 				mt: "4vh",
 				borderRadius: "1.11vw",
-				backgroundColor: "rgba(0, 0, 0, 0.9)",
+				backgroundColor: "#000000E6",
+				backdropFilter: "blur(20px)",
 				overflow: "hidden",
 			}}
 		>
@@ -82,7 +83,7 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 						width: "0.2vw",
 					},
 					"::-webkit-scrollbar-thumb": {
-						backgroundColor: "rgba(211, 211, 211, 0.7)",
+						backgroundColor: "#D3D3D3B3",
 						borderRadius: "1vw",
 					},
 					"::-webkit-scrollbar-button": {

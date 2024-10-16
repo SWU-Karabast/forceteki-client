@@ -8,7 +8,7 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 		<Card
 			sx={{
 				borderRadius: "1.11vw",
-				borderColor: "rgba(255, 255, 255, 0.0)",
+				borderColor: "#FFFFFF00",
 				height: "90vh",
 				width: "80%",
 				display: "flex",
@@ -16,7 +16,8 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 				justifyContent: isLobbyView ? "flex-start" : "center",
 				pt: "1vh",
 				mt: "4vh",
-				backgroundColor: "rgba(0, 0, 0, 0.9)",
+				backgroundColor: "#000000E6",
+				backdropFilter: "blur(20px)",
 			}}
 		>
 			<Box

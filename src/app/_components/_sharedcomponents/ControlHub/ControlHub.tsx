@@ -78,7 +78,8 @@ const ControlHub: React.FC<ControlHub> = ({
 							display: "flex",
 							p: "0.5rem 1rem",
 							borderRadius: "50px",
-							backgroundColor: "rgba(0, 0, 0, 0.9)",
+							backgroundColor: "#000000E6",
+							backdropFilter: "blur(20px)",
 							height: "48px",
 							alignItems: "center",
 						}}
@@ -120,7 +121,8 @@ const ControlHub: React.FC<ControlHub> = ({
 							display: "flex",
 							p: "0.5rem",
 							borderRadius: "50px 0 0 50px", // Rounded on one side
-							backgroundColor: "rgba(0, 0, 0, 0.9)",
+							backgroundColor: "#000000E6",
+							backdropFilter: "blur(20px)",
 							height: "48px", // Ensure both are the same height
 							alignItems: "center",
 						}}

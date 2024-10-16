@@ -33,7 +33,7 @@ const Chat: React.FC<ChatProps> = ({
 
 	return (
 		<>
-			<Box sx={{ mt: 2, backgroundColor: "rgba(40, 40, 40, 0.0)" }}>
+			<Box sx={{ mt: 2, backgroundColor: "#28282800" }}>
 				<Typography sx={{ fontWeight: "bold", color: "#fff" }}>Chat</Typography>
 				<Divider
 					sx={{
@@ -48,7 +48,7 @@ const Chat: React.FC<ChatProps> = ({
 						borderRadius: "4px",
 						minHeight: "100px",
 						overflowY: "auto",
-						backgroundColor: "rgba(40, 40, 40, 0.0)",
+						backgroundColor: "#28282800",
 					}}
 				>
 					{chatHistory.length > 0 ? (
@@ -90,7 +90,7 @@ const Chat: React.FC<ChatProps> = ({
 				sx={{
 					display: "flex",
 					alignItems: "center",
-					backgroundColor: "rgba(40, 40, 40, 0.0)",
+					backgroundColor: "#28282800",
 					p: "10px",
 					mt: 2,
 				}}
@@ -108,7 +108,7 @@ const Chat: React.FC<ChatProps> = ({
 						}
 					}}
 					sx={{
-						backgroundColor: "rgba(40, 40, 40, 0.0)",
+						backgroundColor: "#28282800",
 						color: "#fff",
 						borderRadius: "4px",
 						flexGrow: 1,

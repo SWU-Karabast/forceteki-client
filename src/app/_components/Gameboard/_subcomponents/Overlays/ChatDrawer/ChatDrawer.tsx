@@ -25,7 +25,7 @@ const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
 				sx={{
 					flexShrink: 0,
 					"& .MuiDrawer-paper": {
-						backgroundColor: "rgba(0,0,0,0.8)",
+						backgroundColor: "#000000CC",
 						color: "#fff",
 						display: "flex",
 						flexDirection: "column",

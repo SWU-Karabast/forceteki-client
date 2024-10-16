@@ -18,7 +18,7 @@ const DeckDiscard: React.FC<DeckDiscardProps> = ({ deckSize }) => {
 			{/* Discard */}
 			<Card
 				sx={{
-					backgroundColor: "rgba(40, 40, 40, 0.9)",
+					backgroundColor: "#282828E6",
 					width: "9vh",
 					height: "9vh",
 					display: "flex",
