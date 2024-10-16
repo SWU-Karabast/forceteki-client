@@ -14,8 +14,8 @@ const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
 				borderRadius: "1.5em",
 				height: "60vh",
 				width: sidebarOpen ? "32vw" : "36vw",
-				marginLeft: ".3vw",
-				padding: "1vh",
+				ml: ".3vw",
+				p: "1vh",
 				backgroundImage: "url(/ground-board.png)",
 				backgroundPositionX: "45%",
 				backgroundPositionY: sidebarOpen ? "80%" : "90%",
@@ -57,7 +57,7 @@ const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
 						gap: "0.5vw",
 						flexWrap: "nowrap",
 						overflowX: "auto",
-						marginTop: "1vh",
+						mt: "1vh",
 					}}
 				>
 					{playedGroundCards.player.map((card) => (

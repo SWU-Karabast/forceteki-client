@@ -27,13 +27,13 @@ const SignUp: React.FC<SignUpProps> = ({
 				display: "flex",
 				flexDirection: "column",
 				alignItems: "center",
-				paddingTop: "20vh",
+				pt: "20vh",
 			}}
 		>
 			<Card
 				sx={{
 					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
-					padding: "2.5em",
+					p: "2.5em",
 					borderRadius: "1.5vw",
 					backgroundColor: "rgba(0, 0, 0, 0.9)",
 					mb: 4,
@@ -123,7 +123,7 @@ const SignUp: React.FC<SignUpProps> = ({
 								sx={{
 									color: "#1976d2",
 									textDecoration: "underline",
-									padding: 0,
+									p: 0,
 									fontSize: ".7rem",
 								}}
 							>

@@ -24,8 +24,8 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 				width: "100%",
 				display: "flex",
 				flexDirection: "column",
-				paddingTop: "1vh",
-				marginTop: "4vh",
+				pt: "1vh",
+				mt: "4vh",
 				borderRadius: "1.11vw",
 				backgroundColor: "rgba(0, 0, 0, 0.9)",
 				overflow: "hidden",
@@ -33,9 +33,9 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 		>
 			<Box
 				sx={{
-					marginBottom: "0",
-					marginLeft: "0",
-					marginRight: "0",
+					mb: "0",
+					ml: "0",
+					mr: "0",
 					height: "10vh",
 					width: "100%",
 					position: "sticky",
@@ -50,7 +50,7 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 						fontSize: "1.67vw",
 						fontWeight: "bold",
 						color: "white",
-						marginLeft: "1vw",
+						ml: "1vw",
 					}}
 				>
 					Your Deck
@@ -60,7 +60,7 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 						fontSize: "1.67vw",
 						fontWeight: "400",
 						color: "white",
-						marginRight: "1vw",
+						mr: "1vw",
 					}}
 				>
 					{deckSize}/{deckSize}

@@ -55,9 +55,9 @@ const SetUp: React.FC<SetUpProps> = ({
 				width: "100%",
 				display: "flex",
 				flexDirection: "column",
-				paddingTop: "1vh",
-				marginTop: "4vh",
-				padding: "1.5vw",
+				pt: "1vh",
+				mt: "4vh",
+				p: "1.5vw",
 				backgroundColor: "rgba(0, 0, 0, 0.9)",
 				overflow: "hidden",
 			}}
@@ -143,7 +143,7 @@ const SetUp: React.FC<SetUpProps> = ({
 					fontWeight: "bold",
 					color: "white",
 					alignSelf: "flex-start",
-					marginTop: "3vh",
+					mt: "3vh",
 				}}
 			>
 				Set Up

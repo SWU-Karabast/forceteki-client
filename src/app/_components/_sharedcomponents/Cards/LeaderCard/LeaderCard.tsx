@@ -24,7 +24,7 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
 						fontWeight: "800",
 
 						textAlign: "Left",
-						marginBottom: "4px",
+						mb: "4px",
 						color: "white",
 					}}
 				>
@@ -70,7 +70,7 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
 							left: "50%",
 							transform: "translateX(-50%)",
 							backgroundColor: "red",
-							padding: "4px 8px",
+							p: "4px 8px",
 							borderRadius: "4px",
 						}}
 					>

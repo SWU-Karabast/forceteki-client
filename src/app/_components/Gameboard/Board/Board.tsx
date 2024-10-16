@@ -2,7 +2,7 @@ import React from "react";
 import Grid from "@mui/material/Grid2";
 import SpaceUnitsBoard from "../_subcomponents/BoardRow/SpaceUnitsBoard/SpaceUnitsBoard";
 import GroundUnitsBoard from "../_subcomponents/BoardRow/GroundUnitsBoard/GroundUnitsBoard";
-import LeaderBaseBoard from "../../LeaderBaseBoard/LeaderBaseBoard";
+import LeaderBaseBoard from "../../_sharedcomponents/LeaderBaseBoard/LeaderBaseBoard";
 
 const Board: React.FC<BoardProps> = ({
 	sidebarOpen,

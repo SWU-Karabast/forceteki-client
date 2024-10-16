@@ -50,7 +50,7 @@ const NewsColumn: React.FC = () => {
 			<Card
 				sx={{
 					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
-					padding: "1.5em",
+					p: "1.5em",
 					borderRadius: "1.5vw",
 					backgroundColor: "#18325199",
 					boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
@@ -107,7 +107,7 @@ const NewsColumn: React.FC = () => {
 					flexGrow: 1, // Allow it to take remaining space
 					fontFamily: "var(--font-barlow), sans-serif",
 					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
-					padding: "1.5em",
+					p: "1.5em",
 					borderRadius: "1.5vw",
 					overflowY: "auto", // Enable vertical scrolling
 					backgroundColor: "rgba(0, 0, 0, 0.9)",
@@ -139,9 +139,15 @@ const NewsColumn: React.FC = () => {
 					>
 						News
 					</Typography>
-					<Box sx={{ display: "flex", justifyContent: "space-between" }}>
+					<Box
+						sx={{
+							display: "flex",
+							justifyContent: "space-between",
+							alignItems: "flex-end",
+						}}
+					>
 						<Typography
-							style={{
+							sx={{
 								fontFamily: "var(--font-barlow), sans-serif",
 								fontWeight: "800",
 								color: "#fff",
@@ -151,10 +157,11 @@ const NewsColumn: React.FC = () => {
 							{articleTitle}
 						</Typography>
 						<Typography
-							style={{
+							sx={{
 								fontFamily: "var(--font-barlow), sans-serif",
 								fontWeight: "400",
 								color: "#fff",
+								fontSize: "1.5rem",
 							}}
 						>
 							{articleDate}
@@ -163,8 +170,8 @@ const NewsColumn: React.FC = () => {
 					<Divider
 						sx={{
 							backgroundColor: "#fff",
-							marginTop: ".5vh",
-							marginBottom: "1vh",
+							mt: ".5vh",
+							mb: "1vh",
 						}}
 					/>
 					<Typography

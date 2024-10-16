@@ -28,14 +28,14 @@ const Login: React.FC<LoginProps> = ({
 				display: "flex",
 				flexDirection: "column",
 				alignItems: "center",
-				paddingTop: "20vh",
+				pt: "20vh",
 			}}
 		>
 			{/* Primary Card - Login Form */}
 			<Card
 				sx={{
 					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
-					padding: "2.5em",
+					p: "2.5em",
 					borderRadius: "1.5vw",
 					backgroundColor: "rgba(0, 0, 0, 0.9)",
 					mb: 4,
@@ -107,8 +107,8 @@ const Login: React.FC<LoginProps> = ({
 								borderRadius: "0.5vw",
 								backgroundColor: "#292929",
 								display: "block",
-								marginLeft: "auto",
-								marginRight: "auto",
+								ml: "auto",
+								mr: "auto",
 							}}
 						>
 							Login
@@ -137,7 +137,7 @@ const Login: React.FC<LoginProps> = ({
 								sx={{
 									color: "#1976d2",
 									textDecoration: "underline",
-									padding: 0,
+									p: 0,
 									fontSize: ".7rem",
 								}}
 							>
@@ -152,7 +152,7 @@ const Login: React.FC<LoginProps> = ({
 			<Card
 				sx={{
 					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
-					padding: "2em",
+					p: "2em",
 					borderRadius: "1.5vw",
 					backgroundColor: "#18325199",
 					boxShadow: "0 4px 20px rgba(0,0,0,0.3)",

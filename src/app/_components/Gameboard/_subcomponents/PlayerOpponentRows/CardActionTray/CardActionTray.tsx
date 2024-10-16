@@ -90,7 +90,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 					width: "100%",
 					overflowX: "auto",
 					whiteSpace: "nowrap",
-					padding: "10px 0",
+					p: "10px 0",
 					cursor: isDragging ? "grabbing" : "grab",
 					userSelect: "none",
 					scrollbarWidth: "thin",
@@ -138,7 +138,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 					justifyContent="center"
 					alignItems="center"
 					spacing={2}
-					sx={{ marginTop: "1vh" }}
+					sx={{ mt: "1vh" }}
 				>
 					<Typography variant="h6" sx={{ color: "white" }}>
 						Choose an Action:

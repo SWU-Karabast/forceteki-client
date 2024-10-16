@@ -59,8 +59,8 @@ const Lobby = () => {
 				sx={{
 					justifyContent: "center",
 					alignContent: "center",
-					paddingLeft: "20px",
-					marginBottom: "30vh",
+					pl: "20px",
+					mb: "30vh",
 				}}
 			>
 				<SetUp
@@ -89,7 +89,7 @@ const Lobby = () => {
 				sx={{
 					justifyContent: "center",
 					alignContent: "center",
-					paddingRight: "20px",
+					pr: "20px",
 				}}
 			>
 				<Deck activePlayer={activePlayer} />

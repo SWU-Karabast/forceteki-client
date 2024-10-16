@@ -14,8 +14,8 @@ const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
 				borderRadius: "1.5em",
 				height: "60vh",
 				width: sidebarOpen ? "32vw" : "36vw",
-				marginRight: ".3vw",
-				padding: "1vh",
+				mr: ".3vw",
+				p: "1vh",
 				backgroundImage: "url(/space-board.jpeg)",
 				backgroundPositionX: "50%",
 				backgroundSize: sidebarOpen ? "200%" : "180%",
@@ -56,7 +56,7 @@ const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
 						gap: "0.5vw",
 						flexWrap: "nowrap",
 						overflowX: "auto",
-						marginTop: "1vh",
+						mt: "1vh",
 					}}
 				>
 					{playedSpaceCards.player.map((card) => (

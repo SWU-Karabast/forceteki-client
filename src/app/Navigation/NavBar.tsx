@@ -30,8 +30,8 @@ const Navbar = () => {
 						fontSize: "1.67vw",
 						fontWeight: "600",
 						color: "#fff",
-						marginTop: ".5vh",
-						marginLeft: ".5vw",
+						mt: ".5vh",
+						ml: ".5vw",
 					}}
 				>
 					GAME LOBBY

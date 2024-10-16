@@ -1,5 +1,5 @@
 import React, { forwardRef } from "react";
-import { Drawer, Box, IconButton } from "@mui/material";
+import { Drawer, Box, IconButton, Typography } from "@mui/material";
 import { Settings, Close } from "@mui/icons-material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 
@@ -36,7 +36,7 @@ const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
 					ref: ref,
 				}}
 			>
-				<Box sx={{ padding: 2 }}>
+				<Box sx={{ p: 2 }}>
 					<Box
 						sx={{
 							display: "flex",
@@ -44,7 +44,9 @@ const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
 							alignItems: "center",
 						}}
 					>
-						<h3 style={{ margin: 0 }}>ROUND {currentRound}</h3>
+						<Typography variant="h3" sx={{ m: 0 }}>
+							ROUND {currentRound}
+						</Typography>
 						<Box>
 							<IconButton>
 								<Settings sx={{ color: "#fff" }} />
@@ -56,7 +58,7 @@ const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
 					</Box>
 
 					<Box sx={{ mt: 1 }}>
-						<p style={{ fontWeight: "bold" }}>Last Played</p>
+						<Typography style={{ fontWeight: "bold" }}>Last Played</Typography>
 						<Box
 							sx={{
 								backgroundColor: "#333",
@@ -66,7 +68,9 @@ const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
 								justifyContent: "center",
 							}}
 						>
-							<p style={{ color: "#888" }}>Image Placeholder</p>
+							<Typography style={{ color: "#888" }}>
+								Image Placeholder
+							</Typography>
 						</Box>
 					</Box>
 

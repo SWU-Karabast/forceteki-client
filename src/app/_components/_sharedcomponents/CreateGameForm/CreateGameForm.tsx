@@ -62,10 +62,10 @@ const CreateGameForm: React.FC = () => {
 				sx={{
 					fontFamily: "var(--font-barlow), sans-serif",
 					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "25vw" },
-					padding: "2em",
+					p: "2em",
 					borderRadius: "1.5vw",
 					backgroundColor: "rgba(0, 0, 0, 0.9)",
-					mb: 4, // Margin bottom adjusted based on path
+					mb: 4,
 				}}
 			>
 				<CardContent>

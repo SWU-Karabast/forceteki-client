@@ -10,7 +10,7 @@ import {
 	IconButton,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import CardArea from "../../../../CardArea/CardArea";
+import CardArea from "../../../../_sharedcomponents/CardArea/CardArea";
 
 const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 	isModalOpen,
@@ -33,7 +33,7 @@ const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 					position: "relative",
 					width: "80%",
 					height: "60%",
-					padding: 2,
+					p: 2,
 					backgroundColor: "rgba(0, 0, 0, 0.7)",
 					textAlign: "center",
 				}}

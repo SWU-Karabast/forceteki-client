@@ -135,7 +135,7 @@ const GameBoard = () => {
 				sx={{
 					flexGrow: 1,
 					transition: "margin-right 0.3s ease",
-					marginRight: sidebarOpen ? `${drawerWidth}px` : "0",
+					mr: sidebarOpen ? `${drawerWidth}px` : "0",
 					height: "100vh",
 					position: "relative",
 				}}

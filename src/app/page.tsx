@@ -2,11 +2,12 @@
 import React from "react";
 import { Grid2 as Grid } from "@mui/material";
 import KarabastBanner from "./_components/_sharedcomponents/Banner/Banner";
+import PublicGames from "./_components/HomePage/PublicGames/PublicGames";
 import CreateGameForm from "./_components/_sharedcomponents/CreateGameForm/CreateGameForm";
 import NewsColumn from "./_components/HomePage/News/News";
 
 const Home: React.FC = () => {
-	const marginTop = "17vh";
+	const mt = "17vh";
 	return (
 		<Grid
 			container
@@ -26,7 +27,18 @@ const Home: React.FC = () => {
 				sx={{
 					justifyContent: "center",
 					alignContent: "center",
-					marginTop: marginTop,
+					mt: mt,
+				}}
+			>
+				<PublicGames />
+			</Grid>
+			<Grid
+				container
+				size={4}
+				sx={{
+					justifyContent: "center",
+					alignContent: "center",
+					mt: mt,
 				}}
 			>
 				<CreateGameForm />
@@ -37,18 +49,7 @@ const Home: React.FC = () => {
 				sx={{
 					justifyContent: "center",
 					alignContent: "center",
-					marginTop: marginTop,
-				}}
-			>
-				<CreateGameForm />
-			</Grid>
-			<Grid
-				container
-				size={4}
-				sx={{
-					justifyContent: "center",
-					alignContent: "center",
-					marginTop: marginTop,
+					mt: mt,
 				}}
 			>
 				<NewsColumn />

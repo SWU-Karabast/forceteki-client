@@ -30,7 +30,7 @@ const ControlHub: React.FC<ControlHub> = ({
 						<ArrowBackIosNew
 							sx={{
 								color: "#fff",
-								marginTop: ".5vh",
+								mt: ".5vh",
 								fontFamily: "var(--font-barlow), sans-serif",
 								fontWeight: "600",
 								fontSize: "1.5rem",
@@ -43,8 +43,8 @@ const ControlHub: React.FC<ControlHub> = ({
 							fontFamily: "var(--font-barlow), sans-serif",
 							fontWeight: "600",
 							color: "#fff",
-							marginTop: ".5vh",
-							marginRight: ".5vw",
+							mt: ".5vh",
+							mr: ".5vw",
 						}}
 					>
 						Exit
@@ -69,14 +69,14 @@ const ControlHub: React.FC<ControlHub> = ({
 						display: "flex",
 						gap: 1,
 						alignItems: "center",
-						marginLeft: "1rem",
+						ml: "1rem",
 					}}
 				>
 					{/* Profile and Log Out Chip */}
 					<Box
 						sx={{
 							display: "flex",
-							padding: "0.5rem 1rem",
+							p: "0.5rem 1rem",
 							borderRadius: "50px",
 							backgroundColor: "rgba(0, 0, 0, 0.9)",
 							height: "48px",
@@ -88,7 +88,7 @@ const ControlHub: React.FC<ControlHub> = ({
 							sx={{
 								fontFamily: "var(--font-barlow), sans-serif",
 								fontWeight: "400",
-								marginRight: "1rem",
+								mr: "1rem",
 								textDecoration: "none",
 								color: "#fff",
 								"&:hover": {
@@ -118,7 +118,7 @@ const ControlHub: React.FC<ControlHub> = ({
 					<Box
 						sx={{
 							display: "flex",
-							padding: "0.5rem",
+							p: "0.5rem",
 							borderRadius: "50px 0 0 50px", // Rounded on one side
 							backgroundColor: "rgba(0, 0, 0, 0.9)",
 							height: "48px", // Ensure both are the same height

@@ -12,7 +12,7 @@ const KarabastBanner: React.FC = () => {
 				color: "#fff",
 				display: "flex",
 				alignItems: "center",
-				padding: "0 2%",
+				p: "0 2%",
 				zIndex: -1,
 				overflow: "hidden",
 			}}
@@ -23,8 +23,8 @@ const KarabastBanner: React.FC = () => {
 					flex: "0 0 auto",
 					width: "20%",
 					zIndex: 10,
-					marginBottom: "10vh",
-					marginLeft: "1%",
+					mb: "10vh",
+					ml: "1%",
 				}}
 			>
 				<Typography
@@ -41,7 +41,7 @@ const KarabastBanner: React.FC = () => {
 					variant="h6"
 					sx={{
 						fontFamily: "var(--font-barlow), sans-serif",
-						marginLeft: ".6vw",
+						ml: ".6vw",
 					}}
 				>
 					The Fan-Made, Open-Source
@@ -50,7 +50,7 @@ const KarabastBanner: React.FC = () => {
 					variant="h6"
 					sx={{
 						fontFamily: "var(--font-barlow), sans-serif",
-						marginLeft: ".6vw",
+						ml: ".6vw",
 					}}
 				>
 					Star Wars Unlimited Simulator
@@ -74,7 +74,7 @@ const KarabastBanner: React.FC = () => {
 						backgroundPositionX: "28%",
 						backgroundPositionY: "9%",
 						clipPath: "polygon(20.5% 0, 100% 0, 79.5% 100%, 0% 100%)",
-						marginRight: "-9%",
+						mr: "-9%",
 						height: "100%",
 					}}
 				/>
@@ -86,7 +86,7 @@ const KarabastBanner: React.FC = () => {
 						backgroundPositionY: "4%",
 						backgroundPositionX: "40%",
 						clipPath: "polygon(20.5% 0, 100% 0, 79.5% 100%, 0% 100%)",
-						marginRight: "-9%",
+						mr: "-9%",
 						height: "100%",
 					}}
 				/>
@@ -98,7 +98,7 @@ const KarabastBanner: React.FC = () => {
 						backgroundPositionY: "4%",
 						backgroundPositionX: "40%",
 						clipPath: "polygon(20.5% 0, 100% 0, 79.5% 100%, 0% 100%)",
-						marginRight: "-3%",
+						mr: "-3%",
 						height: "100%",
 					}}
 				/>

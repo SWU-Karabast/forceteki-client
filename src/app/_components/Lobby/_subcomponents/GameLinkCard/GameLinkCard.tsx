@@ -14,7 +14,7 @@ const GameLinkCard: React.FC = () => {
 			sx={{
 				height: "15vh",
 				background: "#18325199",
-				paddingBottom: "4vh",
+				pb: "4vh",
 				backgroundColor: "rgba(0, 0, 0, 0.9)",
 			}}
 		>
@@ -37,7 +37,7 @@ const GameLinkCard: React.FC = () => {
 					sx={{
 						display: "flex",
 						justifyContent: "flex-end",
-						marginTop: "1vh",
+						mt: "1vh",
 					}}
 				>
 					<Button
