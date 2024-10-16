@@ -13,7 +13,6 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 		handleTouchStart,
 		handleTouchMove,
 		handleTouchEnd,
-		isScrolling,
 	} = useDragScroll("vertical");
 
 	const { deckSize } = activePlayer;
@@ -83,9 +82,7 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 						width: "0.2vw",
 					},
 					"::-webkit-scrollbar-thumb": {
-						backgroundColor: isScrolling
-							? "rgba(211, 211, 211, 0.7)"
-							: "rgba(211, 211, 211, 0.0)",
+						backgroundColor: "rgba(211, 211, 211, 0.7)",
 						borderRadius: "1vw",
 					},
 					"::-webkit-scrollbar-button": {

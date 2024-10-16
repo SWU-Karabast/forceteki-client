@@ -1,10 +1,12 @@
 "use client";
 import React from "react";
-import { Paper, Grid2 as Grid } from "@mui/material";
+import { Grid2 as Grid } from "@mui/material";
 import KarabastBanner from "./_components/_sharedcomponents/Banner/Banner";
 import CreateGameForm from "./_components/_sharedcomponents/CreateGameForm/CreateGameForm";
+import NewsColumn from "./_components/HomePage/News/News";
 
 const Home: React.FC = () => {
+	const marginTop = "17vh";
 	return (
 		<Grid
 			container
@@ -24,14 +26,8 @@ const Home: React.FC = () => {
 				sx={{
 					justifyContent: "center",
 					alignContent: "center",
+					marginTop: marginTop,
 				}}
-			>
-				<Paper sx={{ backgroundColor: "tomato" }}> hello</Paper>
-			</Grid>
-			<Grid
-				container
-				size={4}
-				sx={{ justifyContent: "center", alignContent: "center" }}
 			>
 				<CreateGameForm />
 			</Grid>
@@ -41,9 +37,21 @@ const Home: React.FC = () => {
 				sx={{
 					justifyContent: "center",
 					alignContent: "center",
+					marginTop: marginTop,
 				}}
 			>
-				<Paper sx={{ backgroundColor: "tomato" }}>hello</Paper>
+				<CreateGameForm />
+			</Grid>
+			<Grid
+				container
+				size={4}
+				sx={{
+					justifyContent: "center",
+					alignContent: "center",
+					marginTop: marginTop,
+				}}
+			>
+				<NewsColumn />
 			</Grid>
 		</Grid>
 	);

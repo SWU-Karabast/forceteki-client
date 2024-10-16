@@ -6,7 +6,7 @@ const KarabastBanner: React.FC = () => {
 		<Box
 			sx={{
 				position: "absolute",
-				height: "30vh",
+				height: "26vh",
 				width: "100%",
 				backgroundColor: "transparent",
 				color: "#fff",
