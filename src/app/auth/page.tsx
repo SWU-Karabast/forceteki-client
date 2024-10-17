@@ -39,8 +39,7 @@ const Auth: React.FC = () => {
 		// Simulate login and set the user in the context
 		login(loginUsername);
 		router.push("/"); // Redirect to the home page
-
-		// Temporary - Simulate storing the token or credentials (remove later)
+		// Temporary -  storing the token or credentials (remove later)
 		document.cookie = `user=${loginUsername}; max-age=3600; path=/`;
 	};
 
