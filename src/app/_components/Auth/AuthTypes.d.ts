@@ -25,7 +25,7 @@ interface SignUpProps {
 interface StyledTextFieldProps {
 	variant?: "outlined" | "filled" | "standard";
 	fullWidth?: boolean;
-	value: string;
+	value?: string | null;
 	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	errorMessage?: string;
 	[key: string]: unknown;

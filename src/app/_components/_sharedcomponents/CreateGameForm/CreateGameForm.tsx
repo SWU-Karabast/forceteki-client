@@ -204,7 +204,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 										select
 										value={format}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-											setFormat(e.target.value)
+											setFormat ? setFormat(e.target.value) : null
 										}
 										required
 									>

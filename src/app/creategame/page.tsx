@@ -24,7 +24,7 @@ const CreateGame: React.FC = () => {
 					display: "flex",
 					flexDirection: "column",
 					alignItems: "center",
-					pt: "10vh",
+					pt: "16vh",
 				}}
 			>
 				{/* Primary Card - Create Game Form */}

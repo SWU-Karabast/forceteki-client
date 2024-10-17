@@ -15,8 +15,8 @@ interface PublicGameInProgressProps {
 }
 
 interface CreateGameFormProps {
-	format: string;
-	setFormat: (format: string) => void;
+	format?: string | null;
+	setFormat?: (format: string) => void;
 }
 
 interface PublicGamesProps {

@@ -96,6 +96,7 @@ const ControlHub: React.FC<ControlHub> = ({
 								backdropFilter: "blur(20px)",
 								height: "48px",
 								alignItems: "center",
+								alignContent: "center",
 							}}
 						>
 							<NextLinkMui
@@ -111,11 +112,12 @@ const ControlHub: React.FC<ControlHub> = ({
 									},
 								}}
 							>
-								Profile
+								PROFILE
 							</NextLinkMui>
 							<Button
 								onClick={logout}
 								sx={{
+									height: "48px",
 									fontFamily: "var(--font-barlow), sans-serif",
 									fontWeight: "400",
 									textDecoration: "none",
@@ -132,6 +134,7 @@ const ControlHub: React.FC<ControlHub> = ({
 						<Button
 							onClick={() => router.push("/auth")}
 							sx={{
+								height: "48px",
 								fontFamily: "var(--font-barlow), sans-serif",
 								fontWeight: "400",
 								textDecoration: "none",
@@ -156,7 +159,7 @@ const ControlHub: React.FC<ControlHub> = ({
 							borderRadius: "50px 0 0 50px", // Rounded on one side
 							backgroundColor: "#000000E6",
 							backdropFilter: "blur(20px)",
-							height: "48px", // Ensure both are the same height
+							height: "48px",
 							alignItems: "center",
 						}}
 					>
