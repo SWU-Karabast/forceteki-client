@@ -40,6 +40,8 @@ interface ControlHub {
 	path?: string;
 	sidebarOpen?: boolean;
 	toggleSidebar?: () => void;
+	user?: User;
+	logout?: () => void;
 }
 
 interface DeckProps {
@@ -53,4 +55,10 @@ interface ChatProps {
 	opponentRoll?: number;
 	setChatMessage: (message: string) => void;
 	handleChatSubmit: () => void;
+}
+
+interface UserContextType {
+	user: string | null;
+	login: (username: string) => void;
+	logout: () => void;
 }

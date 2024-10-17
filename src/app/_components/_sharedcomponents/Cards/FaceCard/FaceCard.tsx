@@ -9,6 +9,8 @@ const FaceCard: React.FC<FaceCardProps> = ({
 	unitType,
 	path,
 }) => {
+	const isLobbyView = path === "/lobby";
+
 	return (
 		<Card
 			sx={{
@@ -38,22 +40,11 @@ const FaceCard: React.FC<FaceCardProps> = ({
 						variant="h6"
 						sx={{
 							fontFamily: "var(--font-barlow), sans-serif",
-							fontSize: "1em",
+							fontSize: isLobbyView ? "1.6em" : "1.3em",
 						}}
 					>
 						{name}
 					</Typography>
-					{unitType && (
-						<Typography
-							variant="body2"
-							sx={{
-								fontFamily: "var(--font-barlow), sans-serif",
-								fontSize: "1em",
-							}}
-						>
-							{unitType.toUpperCase()}
-						</Typography>
-					)}
 				</CardContent>
 			</CardActionArea>
 		</Card>

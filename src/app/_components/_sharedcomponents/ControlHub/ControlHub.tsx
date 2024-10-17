@@ -1,7 +1,8 @@
 import React from "react";
-import { Box, IconButton, Typography } from "@mui/material";
+import { Box, IconButton, Typography, Button } from "@mui/material";
 import { Settings, Menu, ArrowBackIosNew, GitHub } from "@mui/icons-material";
 import { FaDiscord, FaPatreon } from "react-icons/fa6";
+import { useRouter } from "next/navigation";
 
 import NextLinkMui from "./_subcomponents/NextLinkMui/NextLinkMui";
 
@@ -9,9 +10,20 @@ const ControlHub: React.FC<ControlHub> = ({
 	sidebarOpen,
 	toggleSidebar,
 	path,
+	user,
+	logout,
 }) => {
+	const router = useRouter();
 	const isLobbyView = path === "/lobby";
 	const isGameboardView = path === "/gameboard";
+
+	const handleBack = () => {
+		if (isLobbyView) {
+			router.push("/");
+		} else {
+			router.back();
+		}
+	};
 
 	return (
 		<Box
@@ -35,6 +47,7 @@ const ControlHub: React.FC<ControlHub> = ({
 								fontWeight: "600",
 								fontSize: "1.5rem",
 							}}
+							onClick={handleBack}
 						/>
 					</IconButton>
 					<Typography
@@ -63,7 +76,7 @@ const ControlHub: React.FC<ControlHub> = ({
 					)}
 				</>
 			) : (
-				// Default View: Profile, Log Out, and Social Icons
+				// Default View: Conditional Profile/Login and Social Icons
 				<Box
 					sx={{
 						display: "flex",
@@ -72,48 +85,68 @@ const ControlHub: React.FC<ControlHub> = ({
 						ml: "1rem",
 					}}
 				>
-					{/* Profile and Log Out Chip */}
-					<Box
-						sx={{
-							display: "flex",
-							p: "0.5rem 1rem",
-							borderRadius: "50px",
-							backgroundColor: "#000000E6",
-							backdropFilter: "blur(20px)",
-							height: "48px",
-							alignItems: "center",
-						}}
-					>
-						<NextLinkMui
-							href="/profile"
+					{/* Conditionally render Profile/Log Out or Log In */}
+					{user ? (
+						<Box
+							sx={{
+								display: "flex",
+								p: "0.5rem 1rem",
+								borderRadius: "50px",
+								backgroundColor: "#000000E6",
+								backdropFilter: "blur(20px)",
+								height: "48px",
+								alignItems: "center",
+							}}
+						>
+							<NextLinkMui
+								href="/profile"
+								sx={{
+									fontFamily: "var(--font-barlow), sans-serif",
+									fontWeight: "400",
+									mr: "1rem",
+									textDecoration: "none",
+									color: "#fff",
+									"&:hover": {
+										color: "#00ffff",
+									},
+								}}
+							>
+								Profile
+							</NextLinkMui>
+							<Button
+								onClick={logout}
+								sx={{
+									fontFamily: "var(--font-barlow), sans-serif",
+									fontWeight: "400",
+									textDecoration: "none",
+									color: "#fff",
+									"&:hover": {
+										color: "#00ffff",
+									},
+								}}
+							>
+								Log Out
+							</Button>
+						</Box>
+					) : (
+						<Button
+							onClick={() => router.push("/auth")}
 							sx={{
 								fontFamily: "var(--font-barlow), sans-serif",
 								fontWeight: "400",
-								mr: "1rem",
 								textDecoration: "none",
 								color: "#fff",
+								backgroundColor: "#000000E6",
+								borderRadius: "50px",
+								p: "0.5rem 1rem",
 								"&:hover": {
 									color: "#00ffff",
 								},
 							}}
 						>
-							Profile
-						</NextLinkMui>
-						<NextLinkMui
-							href="/logout"
-							sx={{
-								fontFamily: "var(--font-barlow), sans-serif",
-								fontWeight: "400",
-								textDecoration: "none",
-								color: "#fff",
-								"&:hover": {
-									color: "#00ffff",
-								},
-							}}
-						>
-							Log Out
-						</NextLinkMui>
-					</Box>
+							Log In
+						</Button>
+					)}
 
 					{/* Social Icons Chip */}
 					<Box
@@ -139,7 +172,7 @@ const ControlHub: React.FC<ControlHub> = ({
 							</IconButton>
 						</NextLinkMui>
 						<NextLinkMui
-							href="https://github.com"
+							href="https://github.com/SWU-Karabast"
 							target="_blank"
 							rel="noopener noreferrer"
 						>

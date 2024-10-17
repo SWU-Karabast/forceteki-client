@@ -4,9 +4,12 @@ import { Box } from "@mui/material";
 import KarabastBanner from "../_components/_sharedcomponents/Banner/Banner";
 import Login from "../_components/Auth/Login/Login";
 import SignUp from "../_components/Auth/SignUp/SignUp";
+import { useUser } from "../_contexts/User.context";
+import { useRouter } from "next/navigation";
 
 const Auth: React.FC = () => {
-	// State to toggle between Login and Sign Up
+	const router = useRouter();
+
 	const [isLogin, setIsLogin] = useState<boolean>(true);
 
 	// Login State Hooks
@@ -14,7 +17,7 @@ const Auth: React.FC = () => {
 	const [loginPassword, setLoginPassword] = useState<string>("");
 	const [rememberMe, setRememberMe] = useState<boolean>(false);
 
-	// Sign Up State Hooks
+	// Sign Up State Hooks (if needed later)
 	const [signUpEmail, setSignUpEmail] = useState<string>("");
 	const [signUpPassword, setSignUpPassword] = useState<string>("");
 	const [signUpConfirmPassword, setSignUpConfirmPassword] =
@@ -24,6 +27,8 @@ const Auth: React.FC = () => {
 	const [signUpPasswordMatchError, setSignUpPasswordMatchError] =
 		useState<boolean>(false);
 
+	const { login } = useUser(); // Get the login function from UserContext
+
 	// Handle Login Submission
 	const handleLoginSubmit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -31,45 +36,27 @@ const Auth: React.FC = () => {
 		console.log("Login - Password:", loginPassword);
 		console.log("Login - Remember Me:", rememberMe);
 
-		// Temporary - Simulate storing the token or credentials
+		// Simulate login and set the user in the context
+		login(loginUsername);
+		router.push("/"); // Redirect to the home page
+
+		// Temporary - Simulate storing the token or credentials (remove later)
 		document.cookie = `user=${loginUsername}; max-age=3600; path=/`;
-		// Once the back-end is ready, send credentials to an API
-		// fetch("/api/login", { method: "POST", body: JSON.stringify({ username: loginUsername, password: loginPassword }) })
 	};
 
-	// Handle Sign Up Submission
+	// Handle Sign Up Submission (not implemented yet)
 	const handleSignUpSubmit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		console.log("Sign Up - Email:", signUpEmail);
 		console.log("Sign Up - Password:", signUpPassword);
 
-		// Validate before submission
+		// Simulate sign-up logic if needed
 		if (!signUpPasswordError && !signUpPasswordMatchError) {
-			// Simulate sign-up logic
 			console.log("Sign-up successful", {
 				email: signUpEmail,
 				password: signUpPassword,
 			});
-			// Reset form or redirect as needed
-		} else {
-			console.log("Errors in Sign Up form", {
-				signUpPasswordError,
-				signUpPasswordMatchError,
-			});
 		}
-	};
-
-	// Handle Password Change for Sign Up
-	const handleSignUpPasswordChange = (password: string) => {
-		setSignUpPassword(password);
-		setSignUpPasswordError(password.length < 8);
-		setSignUpPasswordMatchError(password !== signUpConfirmPassword);
-	};
-
-	// Handle Confirm Password Change for Sign Up
-	const handleSignUpConfirmPasswordChange = (confirmPassword: string) => {
-		setSignUpConfirmPassword(confirmPassword);
-		setSignUpPasswordMatchError(signUpPassword !== confirmPassword);
 	};
 
 	return (
@@ -82,10 +69,8 @@ const Auth: React.FC = () => {
 				flexDirection: "column",
 			}}
 		>
-			{/* Banner positioned absolutely */}
 			<KarabastBanner />
 
-			{/* Conditionally render Login or Sign Up */}
 			{isLogin ? (
 				<Login
 					username={loginUsername}
@@ -102,9 +87,9 @@ const Auth: React.FC = () => {
 					email={signUpEmail}
 					setEmail={setSignUpEmail}
 					password={signUpPassword}
-					setPassword={handleSignUpPasswordChange}
+					setPassword={setSignUpPassword}
 					confirmPassword={signUpConfirmPassword}
-					setConfirmPassword={handleSignUpConfirmPasswordChange}
+					setConfirmPassword={setSignUpConfirmPassword}
 					passwordError={signUpPasswordError}
 					passwordMatchError={signUpPasswordMatchError}
 					handleSubmit={handleSignUpSubmit}
