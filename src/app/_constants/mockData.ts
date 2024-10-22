@@ -55,82 +55,82 @@ export const mockOpponent: Participant = {
 export const playerMatches = [
 	{
 		player1: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FF5733", "#33FF57", "#3357FF"],
+			playerImage: "iden.webp",
+			hexagonColors: ["#4689E1", "#454545", "#298F4A"],
 		},
 		player2: {
-			playerImage: "kylo.png",
-			hexagonColors: ["#FF33A6", "#A633FF", "#33FFC4"],
+			playerImage: "boba.webp",
+			hexagonColors: ["#F7B440", "#454545", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "leia.png",
-			hexagonColors: ["#FFA533", "#33FFF5", "#FF3357"],
+			playerImage: "han.webp",
+			hexagonColors: ["#F7B440", "#FAFADB", "#F7B440"],
 		},
 		player2: {
-			playerImage: "fella.jpeg",
-			hexagonColors: ["#33A6FF", "#FF5733", "#F5FF33"],
+			playerImage: "leia.webp",
+			hexagonColors: ["#298F4A", "#FAFADB", "#C82134"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "ladyfella.jpeg",
-			hexagonColors: ["#F533FF", "#57FF33", "#33A6FF"],
+			playerImage: "luke.webp",
+			hexagonColors: ["#4689E1", "#FAFADB", "#4689E1"],
 		},
 		player2: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FFC433", "#FF33A6", "#3357FF"],
+			playerImage: "palpatine.webp",
+			hexagonColors: ["#298F4A", "#454545", "#3357FF"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FF5733", "#33FF57", "#3357FF"],
+			playerImage: "sabine.webp",
+			hexagonColors: ["#C82134", "#FAFADB", "#298F4A"],
 		},
 		player2: {
-			playerImage: "kylo.png",
-			hexagonColors: ["#FF33A6", "#A633FF", "#33FFC4"],
+			playerImage: "vader.webp",
+			hexagonColors: ["#C82134", "#454545", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "leia.png",
-			hexagonColors: ["#FFA533", "#33FFF5", "#FF3357"],
+			playerImage: "leia.webp",
+			hexagonColors: ["#298F4A", "#FAFADB", "#FF3357"],
 		},
 		player2: {
-			playerImage: "fella.jpeg",
-			hexagonColors: ["#33A6FF", "#FF5733", "#F5FF33"],
+			playerImage: "luke.webp",
+			hexagonColors: ["#4689E1", "#FAFADB", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FF5733", "#33FF57", "#3357FF"],
+			playerImage: "boba.webp",
+			hexagonColors: ["#F7B440", "#454545", "#F7B440"],
 		},
 		player2: {
-			playerImage: "kylo.png",
-			hexagonColors: ["#FF33A6", "#A633FF", "#33FFC4"],
+			playerImage: "iden.webp",
+			hexagonColors: ["#4689E1", "#454545", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "leia.png",
-			hexagonColors: ["#FFA533", "#33FFF5", "#FF3357"],
+			playerImage: "leia.webp",
+			hexagonColors: ["#298F4A", "#FAFADB", "#298F4A"],
 		},
 		player2: {
-			playerImage: "fella.jpeg",
-			hexagonColors: ["#33A6FF", "#FF5733", "#F5FF33"],
+			playerImage: "boba.webp",
+			hexagonColors: ["#F7B440", "#454545", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "ladyfella.jpeg",
-			hexagonColors: ["#F533FF", "#57FF33", "#33A6FF"],
+			playerImage: "sabine.webp",
+			hexagonColors: ["#C82134", "#FAFADB", "#F7B440"],
 		},
 		player2: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FFC433", "#FF33A6", "#3357FF"],
+			playerImage: "boba.webp",
+			hexagonColors: ["#F7B440", "#454545", "#F7B440"],
 		},
 	},
 ];
