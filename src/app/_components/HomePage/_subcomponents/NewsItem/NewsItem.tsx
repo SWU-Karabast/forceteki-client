@@ -19,54 +19,21 @@ const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 						alignItems: "flex-end",
 					}}
 				>
-					<Typography
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontWeight: "800",
-							color: "#fff",
-							fontSize: "1.5rem",
-						}}
-					>
-						{article.title}
-					</Typography>
-					<Typography
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontWeight: "400",
-							color: "#fff",
-							fontSize: "1.5rem",
-						}}
-					>
-						{article.date}
-					</Typography>
+					<h3>{article.title}</h3>
+					<h3 className="light">{article.date}</h3>
 				</Box>
-				<Divider
-					sx={{
-						backgroundColor: "#fff",
-						mt: ".5vh",
-						mb: "1vh",
-					}}
-				/>
-				<Typography
-					variant="body1"
-					sx={{
-						color: "#fff",
-						textAlign: "left",
-						mb: 2,
-						fontSize: "1rem",
-						fontFamily: "var(--font-barlow), sans-serif",
-						fontWeight: "400",
-					}}
-				>
-					{article.content}
-				</Typography>
+				<hr></hr>
+				<p>{article.content}</p>
 			</CardContent>
 			<CardMedia
 				component="img"
-				height="auto"
 				image={article.image}
 				alt={article.imageAlt}
-				sx={{ borderRadius: ".5vw" }}
+				sx={{ borderRadius: ".5vw" ,
+				mt: "1.25rem",
+				mb: "2rem",
+				}}
+				
 			/>
 		</>
 	);

@@ -15,29 +15,9 @@ const JoinableGame: React.FC = () => {
 				mb: 1,
 			}}
 		>
-			<Typography
-				sx={{
-					fontFamily: "var(--font-barlow), sans-serif",
-					fontSize: "1.5em",
-					color: "#fff",
-				}}
-			>
-				Game #{randomGameId}
-			</Typography>
-			<Button
-				sx={{
-					fontFamily: "var(--font-barlow), sans-serif",
-					width: "5vw",
-					height: "3.5em",
-					fontSize: ".9rem",
-					borderRadius: "0.5vw",
-					backgroundColor: "#292929",
-					color: "#fff",
-					"&:hover": {
-						backgroundColor: "#3a3a3a",
-					},
-				}}
-			>
+			<p>Game #{randomGameId}</p>
+		
+			<Button className="button">
 				Join Game
 			</Button>
 		</Box>

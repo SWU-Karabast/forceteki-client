@@ -88,12 +88,10 @@ const ControlHub: React.FC<ControlHub> = ({
 					{/* Conditionally render Profile/Log Out or Log In */}
 					{user ? (
 						<Box
+							className="nav-bar-user"
 							sx={{
 								display: "flex",
 								p: "0.5rem 1rem",
-								borderRadius: "50px",
-								backgroundColor: "#000000E6",
-								backdropFilter: "blur(20px)",
 								height: "48px",
 								alignItems: "center",
 								alignContent: "center",
@@ -133,18 +131,10 @@ const ControlHub: React.FC<ControlHub> = ({
 					) : (
 						<Button
 							onClick={() => router.push("/auth")}
+							className="nav-bar-button"
 							sx={{
 								height: "48px",
-								fontFamily: "var(--font-barlow), sans-serif",
-								fontWeight: "400",
-								textDecoration: "none",
-								color: "#fff",
-								backgroundColor: "#000000E6",
-								borderRadius: "50px",
 								p: "0.5rem 1rem",
-								"&:hover": {
-									color: "#00ffff",
-								},
 							}}
 						>
 							Log In
@@ -153,12 +143,10 @@ const ControlHub: React.FC<ControlHub> = ({
 
 					{/* Social Icons Chip */}
 					<Box
+						className="nav-bar-links"
 						sx={{
 							display: "flex",
-							p: "0.5rem",
-							borderRadius: "50px 0 0 50px", // Rounded on one side
-							backgroundColor: "#000000E6",
-							backdropFilter: "blur(20px)",
+							p: "0.5rem",			
 							height: "48px",
 							alignItems: "center",
 						}}
@@ -169,7 +157,7 @@ const ControlHub: React.FC<ControlHub> = ({
 							rel="noopener noreferrer"
 						>
 							<IconButton
-								sx={{ color: "#fff", "&:hover": { color: "#00ffff" } }}
+								sx={{ color: "#fff", "&:hover": { color: "lightblue" } }}
 							>
 								<FaDiscord />
 							</IconButton>
@@ -180,20 +168,9 @@ const ControlHub: React.FC<ControlHub> = ({
 							rel="noopener noreferrer"
 						>
 							<IconButton
-								sx={{ color: "#fff", "&:hover": { color: "#00ffff" } }}
+								sx={{ color: "#fff", "&:hover": { color: "lightblue" } }}
 							>
 								<GitHub />
-							</IconButton>
-						</NextLinkMui>
-						<NextLinkMui
-							href="https://patreon.com"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							<IconButton
-								sx={{ color: "#fff", "&:hover": { color: "#00ffff" } }}
-							>
-								<FaPatreon />
 							</IconButton>
 						</NextLinkMui>
 					</Box>
