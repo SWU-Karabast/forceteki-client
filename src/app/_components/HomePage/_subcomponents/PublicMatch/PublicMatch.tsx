@@ -19,36 +19,15 @@ const PublicMatch: React.FC<PublicGameInProgressProps> = ({ match }) => {
 				hexagonColors={match.player1.hexagonColors}
 			/>
 
-			<Typography
-				sx={{
-					fontFamily: "var(--font-barlow), sans-serif",
-					fontSize: "1.4em",
-					color: "#fff",
-				}}
-			>
-				VS
-			</Typography>
+			<p>vs</p>
 
 			<GameInProgressPlayer
 				playerImage={match.player2.playerImage}
 				hexagonColors={match.player2.hexagonColors}
 			/>
 
-			<Button
-				sx={{
-					fontFamily: "var(--font-barlow), sans-serif",
-					width: "5vw",
-					height: "3.5em",
-					fontSize: ".9rem",
-					borderRadius: "0.5vw",
-					backgroundColor: "#292929",
-					color: "#fff",
-					"&:hover": {
-						backgroundColor: "#3a3a3a",
-					},
-				}}
-			>
-				Spectate
+			<Button className="button">
+			Spectate
 			</Button>
 		</Box>
 	);

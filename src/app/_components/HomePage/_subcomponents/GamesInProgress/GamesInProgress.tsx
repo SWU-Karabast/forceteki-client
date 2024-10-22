@@ -20,51 +20,14 @@ const GamesInProgress: React.FC = () => {
 					alignContent: "center",
 				}}
 			>
-				<Typography
-					sx={{
-						fontFamily: "var(--font-barlow), sans-serif",
-						fontWeight: "800",
-						color: "#fff",
-						fontSize: "1.5rem",
-					}}
-				>
-					Games in Progress
-				</Typography>
-				<Typography
-					sx={{
-						fontFamily: "var(--font-barlow), sans-serif",
-						fontWeight: "400",
-						color: "#fff",
-						fontSize: "1.5rem",
-					}}
-				>
-					{randomGamesInProgress}
-				</Typography>
+				<h3>Games in Progress</h3>
+				<h3 className="light">{randomGamesInProgress}</h3>
 			</Box>
-			<Divider
-				sx={{
-					backgroundColor: "#fff",
-					mt: ".5vh",
-					mb: "1vh",
-				}}
-			/>
+			<hr></hr>
 			<Box
 				sx={{
 					mb: 1,
 					pr: 1,
-					maxHeight: "35vh",
-					overflowY: "auto",
-					"::-webkit-scrollbar": {
-						width: "0.2vw",
-					},
-					"::-webkit-scrollbar-thumb": {
-						backgroundColor: "#D3D3D3B3",
-						borderRadius: "1vw",
-					},
-					"::-webkit-scrollbar-button": {
-						display: "none",
-					},
-					transition: "scrollbar-color 0.3s ease-in-out",
 				}}
 			>
 				{playerMatches.map((match, index) => (

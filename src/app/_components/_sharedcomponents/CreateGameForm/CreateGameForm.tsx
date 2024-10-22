@@ -61,44 +61,25 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		<Box sx={{ height: "80vh" }}>
 			{/* Primary Card - Create/Choose Deck Form */}
 			<Card
+				className={"container" + ' ' + "black-bg" + ' ' + "create-game"}
 				sx={{
-					fontFamily: "var(--font-barlow), sans-serif",
 					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
-					p: "2em",
-					borderRadius: "1.5vw",
-					backgroundColor: "#000000E6",
-					backdropFilter: "blur(20px)",
 					mb: 4,
 				}}
 			>
 				<CardContent>
-					<Typography
-						variant="h4"
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							color: "#fff",
-							mb: 3,
-							fontWeight: "800",
-						}}
-					>
+					<h2>
 						{isCreateGamePath ? "Choose Your Deck" : "Create New Game"}
-					</Typography>
+					</h2>
 					<form onSubmit={handleCreateGameSubmit}>
 						{/* Favourite Decks Input */}
-						<FormControl fullWidth sx={{ mb: 1 }}>
-							<Typography
-								sx={{
-									fontFamily: "var(--font-barlow), sans-serif",
-									color: "#fff",
-									fontSize: "1.1rem",
-									mb: 1,
-								}}
-							>
-								Favourite Decks
-							</Typography>
+						<FormControl 
+						fullWidth sx={{ mb: 1 }}>
+							<p>Favorite Decks</p>
 							<StyledTextField
 								select
 								value={favouriteDeck}
+								className="input"
 								onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 									setFavouriteDeck(e.target.value)
 								}
@@ -115,21 +96,10 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 						{/* SWUDB Deck Link Input */}
 						<FormControl fullWidth sx={{ mb: 1 }}>
-							<Typography
-								sx={{
-									fontFamily: "var(--font-barlow), sans-serif",
-									color: "#fff",
-									fontSize: "1.1rem",
-									mb: 1,
-								}}
-							>
-								SWUDB Deck Link
-								<Typography component="span" sx={{ fontSize: "0.8rem" }}>
-									(use the url or &apos;Deck Link&apos; button)
-								</Typography>
-							</Typography>
+						<p><a href="https://www.swudb.com/" target="_blank">SWUDB</a> or <a href="https://www.sw-unlimited-db.com/" target="_blank">SW-Unlimited-DB</a> Deck Link <span className="secondary">(use the url or 'Deck Link' button)</span></p>
 							<StyledTextField
 								type="url"
+								className="input"
 								value={deckLink}
 								onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 									setDeckLink(e.target.value)
@@ -138,7 +108,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 							/>
 						</FormControl>
 
-						{/* Save Deck To Favourites Checkbox */}
+						{/* Save to Favorite Decks Checkbox */}
 						<FormControlLabel
 							control={
 								<Checkbox
@@ -153,11 +123,11 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 								/>
 							}
 							label={
-								<Typography sx={{ color: "#fff", fontSize: "1rem" }}>
-									Save Deck To Favourites
-								</Typography>
+								<p>Save to Favorite Decks</p>
 							}
-							sx={{ mb: isCreateGamePath ? 1 : 3 }}
+							sx={{
+								mt: "-1rem", 
+								mb: "1rem" }}
 						/>
 
 						{/* Additional Fields for Non-Creategame Path */}
@@ -165,21 +135,10 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 							<>
 								{/* Game Name Input */}
 								<FormControl fullWidth sx={{ mb: 1 }}>
-									<Typography
-										sx={{
-											fontFamily: "var(--font-barlow), sans-serif",
-											color: "#fff",
-											fontSize: "1.1rem",
-											mb: 1,
-										}}
-									>
-										Game Name{" "}
-										<Typography component="span" sx={{ fontSize: "0.8rem" }}>
-											(optional)
-										</Typography>
-									</Typography>
+									<p>Game Name {" "}<span className="secondary">(optional)</span></p>
 									<StyledTextField
 										type="text"
+										className="input"
 										value={gameName}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 											setGameName(e.target.value)
@@ -190,18 +149,10 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 								{/* Format Selection */}
 								<FormControl fullWidth sx={{ mb: 3 }}>
-									<Typography
-										sx={{
-											fontFamily: "var(--font-barlow), sans-serif",
-											color: "#fff",
-											fontSize: "1.1rem",
-											mb: 1,
-										}}
-									>
-										Format
-									</Typography>
+									<p>Format</p>
 									<StyledTextField
 										select
+										className="input"
 										value={format}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 											setFormat ? setFormat(e.target.value) : null
@@ -217,7 +168,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 								</FormControl>
 
 								{/* Privacy Selection */}
-								<FormControl component="fieldset" sx={{ mb: 3 }}>
+								<FormControl component="fieldset" sx={{ mt: "-2rem", mb: 3 }}>
 									<RadioGroup
 										row
 										value={privacy}
@@ -268,23 +219,17 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 						<Button
 							type="submit"
 							variant="contained"
+							className="button"
 							sx={{
-								fontFamily: "var(--font-barlow), sans-serif",
 								width: "10vw",
 								height: "3.5em",
-								fontSize: "1.1rem",
-								borderRadius: "0.5vw",
-								backgroundColor: "#292929",
 								display: "block",
 								ml: "auto",
 								mr: "auto",
-								mb: 2,
-								"&:hover": {
-									backgroundColor: "#3a3a3a",
-								},
+								mb: "1rem",
 							}}
 						>
-							Create
+							Create Game
 						</Button>
 					</form>
 				</CardContent>

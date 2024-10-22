@@ -1,9 +1,7 @@
 import { Box, Paper } from "@mui/material";
-import Hexagon from "../Hexagon/Hexagon";
 
 const GameInProgressPlayer: React.FC<GameInProgressPlayerProps> = ({
 	playerImage,
-	hexagonColors,
 }) => {
 	return (
 		<Box sx={{ display: "flex" }}>
@@ -11,15 +9,13 @@ const GameInProgressPlayer: React.FC<GameInProgressPlayerProps> = ({
 				elevation={16}
 				sx={{
 					border: "1px solid #454545",
-					borderRadius: "5px",
-					height: "6vh",
-					width: "5vw",
+					borderRadius: "3px",
+					height: "58px",
+					width: "80px",
 					ml: ".3vw",
 					p: "1vh",
-					backgroundImage: `url(/${playerImage})`,
-					backgroundPositionX: "55%",
-					backgroundPositionY: "10%",
-					backgroundSize: "200%",
+					backgroundImage: `url(/leaders/${playerImage})`,
+					backgroundSize: "cover",
 					display: "flex",
 					alignItems: "center",
 				}}
@@ -33,9 +29,6 @@ const GameInProgressPlayer: React.FC<GameInProgressPlayerProps> = ({
 					ml: ".3vw",
 				}}
 			>
-				<Hexagon backgroundColor={hexagonColors[0]} />
-				<Hexagon backgroundColor={hexagonColors[1]} />
-				<Hexagon backgroundColor={hexagonColors[2]} />
 			</Box>
 		</Box>
 	);

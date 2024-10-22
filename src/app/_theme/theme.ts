@@ -46,11 +46,6 @@ export const theme = createTheme({
 			styleOverrides: {
 				body: {
 					backgroundColor: baseTheme.palette.background.default,
-					backgroundImage: `url('/image2.png')`,
-					backgroundSize: "cover",
-					backgroundPosition: "center",
-					backgroundRepeat: "no-repeat",
-					font: "Barlow, sans-serif",
 				},
 			},
 		},
