@@ -15,12 +15,13 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 		flexDirection: isLobbyView ? "column" : "row",
 		justifyContent: isLobbyView ? "flex-start" : "center",
 		mt: "2.6em",
-		backgroundColor: "#000000E6",
+		pt: ".8em",
+		backgroundColor: "tomato",
 		backdropFilter: "blur(20px)",
 	};
 
 	const typographyStyle = {
-		fontSize: "2em",
+		fontSize: "2.4em",
 		fontWeight: "bold",
 		color: "white",
 		ml: ".6em",

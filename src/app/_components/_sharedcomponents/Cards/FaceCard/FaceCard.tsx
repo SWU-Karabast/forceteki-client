@@ -11,23 +11,32 @@ const FaceCard: React.FC<FaceCardProps> = ({
 }) => {
 	const isLobbyView = path === "/lobby";
 
+	//------------------------STYLES------------------------//
+
+	const cardStyle = {
+		backgroundColor: "#282828E6",
+		border: selected ? "2px solid blue" : "1px solid gray",
+		opacity: disabled ? 0.8 : 1,
+		width: path === "/lobby" ? "10vh" : "8vh",
+		height: path === "/lobby" ? "10vh" : "8vh",
+		textAlign: "center",
+		textWrap: "wrap",
+		color: "white",
+		"&:hover": {
+			backgroundColor: disabled ? "#000000CC" : "#708090CC",
+		},
+		cursor: disabled ? "not-allowed" : "pointer",
+	};
+
+	const typographyStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "400",
+		fontSize: isLobbyView ? "2em" : "1.6em",
+	};
+
 	return (
 		<Card
-			sx={{
-				border: selected ? "2px solid blue" : "1px solid gray",
-				opacity: disabled ? 0.8 : 1,
-				width: path === "/lobby" ? "10vh" : "8vh",
-				height: path === "/lobby" ? "10vh" : "8vh",
-				textAlign: "center",
-				color: "white",
-				textWrap: "wrap",
-
-				backgroundColor: "#282828E6",
-				"&:hover": {
-					backgroundColor: disabled ? "#000000CC" : "#708090CC",
-				},
-				cursor: disabled ? "not-allowed" : "pointer",
-			}}
+			sx={cardStyle}
 			onClick={() => {
 				if (!disabled && handleSelect) {
 					handleSelect();
@@ -36,13 +45,7 @@ const FaceCard: React.FC<FaceCardProps> = ({
 		>
 			<CardActionArea>
 				<CardContent>
-					<Typography
-						variant="h6"
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontSize: isLobbyView ? "1.6em" : "1.3em",
-						}}
-					>
+					<Typography variant="body1" sx={typographyStyle}>
 						{name}
 					</Typography>
 				</CardContent>

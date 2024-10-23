@@ -93,8 +93,6 @@ const NewsColumn: React.FC = () => {
 		color: "#fff",
 	};
 
-	//------------------------RETURN------------------------//
-
 	return (
 		<Box sx={boxStyle}>
 			{/* Top Card: Fixed size */}
