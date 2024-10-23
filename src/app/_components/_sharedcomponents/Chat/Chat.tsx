@@ -17,7 +17,6 @@ const Chat: React.FC<ChatProps> = ({
 	setChatMessage,
 	handleChatSubmit,
 }) => {
-	// Determine who goes first based on the higher roll
 	const determineFirstPlayer = () => {
 		if (playerRoll !== null && opponentRoll !== null) {
 			if (playerRoll > opponentRoll) {
@@ -88,8 +87,6 @@ const Chat: React.FC<ChatProps> = ({
 			},
 		},
 	};
-
-	//------------------------RETURN------------------------//
 
 	return (
 		<>

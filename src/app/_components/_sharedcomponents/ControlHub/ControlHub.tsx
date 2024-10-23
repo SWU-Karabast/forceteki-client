@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, IconButton, Typography, Button } from "@mui/material";
+import { Box, Divider, IconButton, Typography } from "@mui/material";
 import { Settings, Menu, ArrowBackIosNew, GitHub } from "@mui/icons-material";
 import { FaDiscord, FaPatreon } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
@@ -25,42 +25,87 @@ const ControlHub: React.FC<ControlHub> = ({
 		}
 	};
 
+	//------------------------STYLES------------------------//
+
+	const containerStyle = {
+		position: "absolute",
+		top: 10,
+		right: isLobbyView || isGameboardView ? 10 : 0,
+		display: "flex",
+		alignItems: "center",
+		zIndex: 1,
+	};
+
+	const defaultMainContainerStyle = {
+		display: "flex",
+		gap: 1,
+		alignItems: "center",
+		ml: "1rem",
+	};
+
+	const backButtonStyle = {
+		color: "#fff",
+		mt: ".5vh",
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "600",
+		fontSize: "1.5rem",
+	};
+
+	const exitTextStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "600",
+		color: "#fff",
+		mt: ".5vh",
+		mr: ".5vw",
+	};
+
+	const profileBoxStyle = {
+		display: "flex",
+		borderRadius: "50px",
+		backgroundColor: "#000000E6",
+		backdropFilter: "blur(20px)",
+		height: "48px",
+		justifyContent: "space-around",
+		alignItems: "center",
+		alignContent: "center",
+		p: "0.5rem 1rem",
+	};
+
+	const profileLinkStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "400",
+		fontSize: "1em",
+		textDecoration: "none",
+		color: "#fff",
+		"&:hover": {
+			color: "#00ffff",
+		},
+	};
+
+	const socialIconsBoxStyle = {
+		display: "flex",
+		height: "48px",
+		borderRadius: "50px 0 0 50px",
+		backgroundColor: "#000000E6",
+		backdropFilter: "blur(20px)",
+		alignItems: "center",
+		p: "0.5rem",
+	};
+
+	const iconButtonStyle = {
+		color: "#fff",
+		"&:hover": { color: "#00ffff" },
+	};
+
 	return (
-		<Box
-			sx={{
-				position: "absolute",
-				top: 10,
-				right: isLobbyView || isGameboardView ? 10 : 0,
-				display: "flex",
-				alignItems: "center",
-				zIndex: 1,
-			}}
-		>
+		<Box sx={containerStyle}>
 			{isLobbyView ? (
 				<>
 					<IconButton>
-						<ArrowBackIosNew
-							sx={{
-								color: "#fff",
-								mt: ".5vh",
-								fontFamily: "var(--font-barlow), sans-serif",
-								fontWeight: "600",
-								fontSize: "1.5rem",
-							}}
-							onClick={handleBack}
-						/>
+						<ArrowBackIosNew sx={backButtonStyle} onClick={handleBack} />
 					</IconButton>
-					<Typography
-						variant="h6"
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontWeight: "600",
-							color: "#fff",
-							mt: ".5vh",
-							mr: ".5vw",
-						}}
-					>
-						Exit
+					<Typography variant="h5" sx={exitTextStyle}>
+						EXIT
 					</Typography>
 				</>
 			) : isGameboardView ? (
@@ -77,100 +122,37 @@ const ControlHub: React.FC<ControlHub> = ({
 				</>
 			) : (
 				// Default View: Conditional Profile/Login and Social Icons
-				<Box
-					sx={{
-						display: "flex",
-						gap: 1,
-						alignItems: "center",
-						ml: "1rem",
-					}}
-				>
+				<Box sx={defaultMainContainerStyle}>
 					{/* Conditionally render Profile/Log Out or Log In */}
-					{user ? (
-						<Box
-							sx={{
-								display: "flex",
-								p: "0.5rem 1rem",
-								borderRadius: "50px",
-								backgroundColor: "#000000E6",
-								backdropFilter: "blur(20px)",
-								height: "48px",
-								alignItems: "center",
-								alignContent: "center",
-							}}
-						>
-							<NextLinkMui
-								href="/profile"
-								sx={{
-									fontFamily: "var(--font-barlow), sans-serif",
-									fontWeight: "400",
-									mr: "1rem",
-									textDecoration: "none",
-									color: "#fff",
-									"&:hover": {
-										color: "#00ffff",
-									},
-								}}
-							>
-								PROFILE
+					<Box sx={profileBoxStyle}>
+						{user ? (
+							<>
+								<NextLinkMui href="/profile" sx={profileLinkStyle}>
+									PROFILE
+								</NextLinkMui>
+								<Divider
+									orientation="vertical"
+									flexItem
+									sx={{ borderColor: "#ffffff4D", mx: 1 }}
+								/>
+								<NextLinkMui href="/" onClick={logout} sx={profileLinkStyle}>
+									LOG OUT
+								</NextLinkMui>
+							</>
+						) : (
+							<NextLinkMui href="/auth" sx={profileLinkStyle}>
+								LOG IN
 							</NextLinkMui>
-							<Button
-								onClick={logout}
-								sx={{
-									height: "48px",
-									fontFamily: "var(--font-barlow), sans-serif",
-									fontWeight: "400",
-									textDecoration: "none",
-									color: "#fff",
-									"&:hover": {
-										color: "#00ffff",
-									},
-								}}
-							>
-								Log Out
-							</Button>
-						</Box>
-					) : (
-						<Button
-							onClick={() => router.push("/auth")}
-							sx={{
-								height: "48px",
-								fontFamily: "var(--font-barlow), sans-serif",
-								fontWeight: "400",
-								textDecoration: "none",
-								color: "#fff",
-								backgroundColor: "#000000E6",
-								borderRadius: "50px",
-								p: "0.5rem 1rem",
-								"&:hover": {
-									color: "#00ffff",
-								},
-							}}
-						>
-							Log In
-						</Button>
-					)}
-
+						)}
+					</Box>
 					{/* Social Icons Chip */}
-					<Box
-						sx={{
-							display: "flex",
-							p: "0.5rem",
-							borderRadius: "50px 0 0 50px", // Rounded on one side
-							backgroundColor: "#000000E6",
-							backdropFilter: "blur(20px)",
-							height: "48px",
-							alignItems: "center",
-						}}
-					>
+					<Box sx={socialIconsBoxStyle}>
 						<NextLinkMui
 							href="https://discord.com"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton
-								sx={{ color: "#fff", "&:hover": { color: "#00ffff" } }}
-							>
+							<IconButton sx={iconButtonStyle}>
 								<FaDiscord />
 							</IconButton>
 						</NextLinkMui>
@@ -179,9 +161,7 @@ const ControlHub: React.FC<ControlHub> = ({
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton
-								sx={{ color: "#fff", "&:hover": { color: "#00ffff" } }}
-							>
+							<IconButton sx={iconButtonStyle}>
 								<GitHub />
 							</IconButton>
 						</NextLinkMui>
@@ -190,9 +170,7 @@ const ControlHub: React.FC<ControlHub> = ({
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton
-								sx={{ color: "#fff", "&:hover": { color: "#00ffff" } }}
-							>
+							<IconButton sx={iconButtonStyle}>
 								<FaPatreon />
 							</IconButton>
 						</NextLinkMui>
