@@ -63,20 +63,17 @@ const Lobby = () => {
 		alignContent: "center",
 		pl: "20px",
 		mb: "16.3em",
-		backgroundColor: "cyan",
 	};
 
 	const playersGridStyle = {
 		justifyContent: "center",
 		alignContent: "center",
-		backgroundColor: "cyan",
 	};
 
 	const deckGridStyle = {
 		justifyContent: "center",
 		alignContent: "center",
 		pr: "20px",
-		backgroundColor: "cyan",
 	};
 
 	//------------------------RETURN------------------------//
