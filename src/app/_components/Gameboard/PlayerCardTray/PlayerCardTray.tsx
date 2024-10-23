@@ -16,20 +16,34 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 	handlePlayCard,
 	selectedResourceCards,
 }) => {
-	console.log("active player in player card tray", participant.type);
+	//---------------Styles------------------- //
+	const leftColumnStyle = {
+		display: "flex",
+		alignItems: "flex-start",
+		justifyContent: "flex-start",
+		pl: "1.35%",
+		pt: "1.35%",
+	};
+
+	const centerColumnStyle = {
+		height: "100%",
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		justifyContent: "center",
+	};
+
+	const rightColumnStyle = {
+		display: "flex",
+		alignItems: "flex-start",
+		justifyContent: "flex-end",
+		pr: "1.35%",
+		pt: "1.35%",
+	};
 
 	return (
 		<Grid container sx={{ height: "20.82%" }}>
-			<Grid
-				size={3}
-				sx={{
-					display: "flex",
-					alignItems: "flex-end",
-					justifyContent: "flex-start",
-					pl: "1.35%",
-					pb: "1.35%",
-				}}
-			>
+			<Grid size={3} sx={leftColumnStyle}>
 				<Resources
 					availableResources={availableResources}
 					totalResources={totalResources}
@@ -37,16 +51,7 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 					handleModalToggle={handleModalToggle}
 				/>
 			</Grid>
-			<Grid
-				size={6}
-				sx={{
-					height: "100%",
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					justifyContent: "center",
-				}}
-			>
+			<Grid size={6} sx={centerColumnStyle}>
 				<CardActionTray
 					activePlayer={participant.type}
 					availableCards={availableCards}
@@ -59,16 +64,7 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 					totalResources={totalResources}
 				/>
 			</Grid>
-			<Grid
-				size={3}
-				sx={{
-					display: "flex",
-					alignItems: "flex-end",
-					justifyContent: "flex-end",
-					pr: "1.35%",
-					pb: "1.35%",
-				}}
-			>
+			<Grid size={3} sx={rightColumnStyle}>
 				<DeckDiscard deckSize={participant.deckSize} />
 			</Grid>
 		</Grid>

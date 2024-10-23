@@ -10,16 +10,20 @@ const Board: React.FC<BoardProps> = ({
 	playedSpaceCards,
 	participant,
 }) => {
+	//----------------Styles----------------//
+	const leftColumnStyle = {
+		justifyContent: "flex-end",
+		alignItems: "center",
+	};
+
+	const rightColumnStyle = {
+		justifyContent: "flex-start",
+		alignItems: "center",
+	};
+
 	return (
 		<Grid container sx={{ height: "64.18%" }}>
-			<Grid
-				container
-				size={5}
-				sx={{
-					justifyContent: "flex-end",
-					alignItems: "center",
-				}}
-			>
+			<Grid container size={5} sx={leftColumnStyle}>
 				<SpaceUnitsBoard
 					sidebarOpen={sidebarOpen}
 					playedSpaceCards={playedSpaceCards}
@@ -28,14 +32,7 @@ const Board: React.FC<BoardProps> = ({
 			<Grid container size={2}>
 				<LeaderBaseBoard participant={participant} />
 			</Grid>
-			<Grid
-				container
-				size={5}
-				sx={{
-					justifyContent: "flex-start",
-					alignItems: "center",
-				}}
-			>
+			<Grid container size={5} sx={rightColumnStyle}>
 				<GroundUnitsBoard
 					sidebarOpen={sidebarOpen}
 					playedGroundCards={playedGroundCards}

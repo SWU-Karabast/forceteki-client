@@ -79,26 +79,48 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 		return false;
 	};
 
+	//------------------------STYLES------------------------//
+
+	const gridContainerStyle = {
+		position: "relative",
+		width: "100%",
+		overflowX: "auto",
+		whiteSpace: "nowrap",
+		p: "10px 0",
+		cursor: isDragging ? "grabbing" : "grab",
+		userSelect: "none",
+		scrollbarWidth: "thin",
+		scrollbarColor: isScrolling
+			? "#c4bfbf60 transparent"
+			: "transparent transparent",
+		transition: "scrollbar-color 0.3s ease-in-out",
+	};
+
+	const cardBoxStyle = {
+		display: "inline-flex",
+		gap: "10px",
+	};
+
+	const actionContainerStyle = {
+		mt: "1vh",
+	};
+
+	const actionButtonStyle = {
+		backgroundColor: resourceSelection ? "red" : "green",
+	};
+
+	const playCardButtonStyle = {
+		backgroundColor: actionMode === ActionMode.PlayCard ? "gold" : "green",
+		color: actionMode === ActionMode.PlayCard ? "black" : "white",
+	};
+
 	return (
 		<>
 			<Grid
 				container
 				justifyContent="center"
 				alignItems="center"
-				sx={{
-					position: "relative",
-					width: "100%",
-					overflowX: "auto",
-					whiteSpace: "nowrap",
-					p: "10px 0",
-					cursor: isDragging ? "grabbing" : "grab",
-					userSelect: "none",
-					scrollbarWidth: "thin",
-					scrollbarColor: isScrolling
-						? "#c4bfbf60 transparent"
-						: "transparent transparent",
-					transition: "scrollbar-color 0.3s ease-in-out",
-				}}
+				sx={gridContainerStyle}
 				ref={containerRef}
 				onMouseDown={handleMouseDown}
 				onMouseMove={handleMouseMove}
@@ -108,12 +130,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 				onTouchMove={handleTouchMove}
 				onTouchEnd={handleTouchEnd}
 			>
-				<Box
-					sx={{
-						display: "inline-flex",
-						gap: "10px",
-					}}
-				>
+				<Box sx={cardBoxStyle}>
 					{availableCards.map((card: FaceCardProps) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
 							{activePlayer === "player" ? (
@@ -138,7 +155,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 					justifyContent="center"
 					alignItems="center"
 					spacing={2}
-					sx={{ mt: "1vh" }}
+					sx={actionContainerStyle}
 				>
 					<Typography variant="h6" sx={{ color: "white" }}>
 						Choose an Action:
@@ -147,7 +164,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 					<Button variant="contained">Claim Initiative</Button>
 					<Button
 						variant="contained"
-						sx={{ backgroundColor: resourceSelection ? "red" : "green" }}
+						sx={actionButtonStyle}
 						onClick={
 							setResourceSelection
 								? () => setResourceSelection(!resourceSelection)
@@ -161,11 +178,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 					</Button>
 					<Button
 						variant="contained"
-						sx={{
-							backgroundColor:
-								actionMode === ActionMode.PlayCard ? "gold" : "green",
-							color: actionMode === ActionMode.PlayCard ? "black" : "white",
-						}}
+						sx={playCardButtonStyle}
 						onClick={togglePlayCardMode}
 						disabled={isPlayCardButtonDisabled()}
 					>

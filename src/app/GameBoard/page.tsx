@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { Box } from "@mui/material";
-import Grid from "@mui/material/Grid2";
-
+import { Box, Grid2 as Grid } from "@mui/material";
 import ChatDrawer from "../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer";
 import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/OpponentCardTray";
 import Board from "../_components/Gameboard/Board/Board";
@@ -128,18 +126,19 @@ const GameBoard = () => {
 		}
 	}, [activePlayer]);
 
+	// ----------------------Styles-----------------------------//
+
+	const mainBoxStyle = {
+		flexGrow: 1,
+		transition: "margin-right 0.3s ease",
+		mr: sidebarOpen ? `${drawerWidth}px` : "0",
+		height: "100vh",
+		position: "relative",
+	};
+
 	return (
 		<Grid container sx={{ height: "100vh" }}>
-			<Box
-				component="main"
-				sx={{
-					flexGrow: 1,
-					transition: "margin-right 0.3s ease",
-					mr: sidebarOpen ? `${drawerWidth}px` : "0",
-					height: "100vh",
-					position: "relative",
-				}}
-			>
+			<Box component="main" sx={mainBoxStyle}>
 				<OpponentCardTray participant={mockOpponent} />
 				<Board
 					sidebarOpen={sidebarOpen}

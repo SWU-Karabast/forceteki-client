@@ -9,18 +9,23 @@ const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 	const titlePlayer = "ThisIsTheWay";
 	const titleOpponent = "Order66";
 
+	//------------------------STYLES------------------------//
+
+	const containerStyle = {
+		height: "100%",
+		width: "100%",
+		justifyContent: "space-between",
+	};
+
+	const rowStyle = {
+		flexGrow: 1,
+		width: "100%",
+	};
+
 	return (
-		<Grid
-			container
-			direction="column"
-			sx={{
-				height: "100%",
-				width: "100%",
-				justifyContent: "space-between",
-			}}
-		>
+		<Grid container direction="column" sx={containerStyle}>
 			{/* Opponent's row */}
-			<Grid sx={{ flexGrow: 1, width: "100%" }}>
+			<Grid sx={rowStyle}>
 				<LeaderBase
 					participant={"opponent"}
 					isLobbyView={isLobbyView}
@@ -28,7 +33,7 @@ const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 				/>
 			</Grid>
 			{/* Player's row */}
-			<Grid sx={{ flexGrow: 1, width: "100%" }}>
+			<Grid sx={rowStyle}>
 				<LeaderBase
 					participant={participant.type}
 					isLobbyView={isLobbyView}

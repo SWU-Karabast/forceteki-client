@@ -9,43 +9,45 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 	isLobbyView,
 	title,
 }) => {
+	//------------------------STYLES------------------------//
+
+	const containerStyle = {
+		justifyContent:
+			participant === "opponent" && isLobbyView
+				? "flex-end" // flex-start for player side in lobby because in lobby it is on top rather than bottom
+				: participant === "player" && isLobbyView
+				? "flex-start" // flex-end for opponent side in lobby because in lobby it is on bottom rather than top
+				: participant === "player"
+				? "flex-end"
+				: "flex-start",
+		alignItems: "center",
+		gap: isLobbyView ? "1vh" : "0.5vh",
+		height: "94%",
+		pt: isLobbyView ? "0vh" : "4vh", // No padding in lobby, 4vh outside
+		pb:
+			participant === "player" && isLobbyView
+				? "0vh" // no padding in lobby
+				: participant === "player"
+				? "4vh" // padding for player side
+				: "0vh", // no padding for opponent side
+	};
+
 	return (
-		<Grid
-			container
-			direction="column"
-			sx={{
-				justifyContent:
-					participant === "opponent" && isLobbyView
-						? "flex-end" //flex-start for player side in lobby because in lobby it is on top rather than bottom
-						: participant === "player" && isLobbyView
-						? "flex-start" //flex-end for opponent side in lobby because in lobby it is on bottom rather than top
-						: participant === "player"
-						? "flex-end"
-						: "flex-start",
-				alignItems: "center",
-				gap: isLobbyView ? "1vh" : "0.5vh",
-				height: "94%",
-				pt: isLobbyView ? "0vh" : "4vh", // No padding in lobby, 4vh outside
-				pb:
-					participant === "player" && isLobbyView
-						? "0vh" // no padding in lobby
-						: participant === "player"
-						? "4vh" //padding for player side
-						: "0vh", //no padding for opponent side
-			}}
-		>
-			{isLobbyView ? ( //leader card on top in lobby view for both player and opponent
+		<Grid container direction="column" sx={containerStyle}>
+			{isLobbyView ? (
+				// leader card on top in lobby view for both player and opponent
 				<>
 					<LeaderCard isLobbyView={isLobbyView} title={title} />
 					<BaseCard isLobbyView={isLobbyView} />
 				</>
-			) : participant === "player" ? ( // player side leader card on bottom in gameboard
+			) : participant === "player" ? (
+				// player side leader card on bottom in gameboard
 				<>
 					<BaseCard isLobbyView={isLobbyView} />
 					<LeaderCard isLobbyView={isLobbyView} title={title} />
 				</>
 			) : (
-				//opponent side leader card on bottom in gameboard
+				// opponent side leader card on bottom in gameboard
 				<>
 					<LeaderCard isLobbyView={isLobbyView} title={title} />
 					<BaseCard isLobbyView={isLobbyView} />

@@ -1,39 +1,55 @@
 import React from "react";
-import { Paper } from "@mui/material";
+import { Box, Grid2 as Grid } from "@mui/material";
 import FaceCard from "../../../../_sharedcomponents/Cards/FaceCard/FaceCard";
-import Grid from "@mui/material/Grid2";
 
 const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
 	sidebarOpen,
 	playedSpaceCards,
 }) => {
+	//------------------------STYLES------------------------//
+
+	const mainBoxStyle = {
+		borderRadius: "20px",
+		height: "60vh",
+		width: sidebarOpen ? "32vw" : "36vw",
+		mr: ".3vw",
+		p: "1vh",
+		backgroundImage: "url(/space-board.jpeg)",
+		backgroundPositionX: "50%",
+		backgroundSize: sidebarOpen ? "200%" : "180%",
+	};
+
+	const containerStyle = {
+		height: "100%",
+	};
+
+	const opponentGridStyle = {
+		flexGrow: 1,
+		display: "flex",
+		justifyContent: "flex-end",
+		alignItems: "flex-start",
+		gap: "0.5vw",
+		flexWrap: "nowrap",
+		overflowX: "auto",
+	};
+
+	const playerGridStyle = {
+		flexGrow: 1,
+		display: "flex",
+		justifyContent: "flex-end",
+		alignItems: "flex-end",
+		gap: "0.5vw",
+		flexWrap: "nowrap",
+		overflowX: "auto",
+	};
+
+	//------------------------RETURN------------------------//
+
 	return (
-		<Paper
-			elevation={16}
-			sx={{
-				borderRadius: "1.5em",
-				height: "60vh",
-				width: sidebarOpen ? "32vw" : "36vw",
-				mr: ".3vw",
-				p: "1vh",
-				backgroundImage: "url(/space-board.jpeg)",
-				backgroundPositionX: "50%",
-				backgroundSize: sidebarOpen ? "200%" : "180%",
-			}}
-		>
-			<Grid container direction="column" sx={{ height: "100%" }}>
+		<Box sx={mainBoxStyle}>
+			<Grid container direction="column" sx={containerStyle}>
 				{/* Opponent's Space Units */}
-				<Grid
-					sx={{
-						flexGrow: 1,
-						display: "flex",
-						justifyContent: "flex-end",
-						alignItems: "flex-start",
-						gap: "0.5vw",
-						flexWrap: "nowrap",
-						overflowX: "auto",
-					}}
-				>
+				<Grid sx={opponentGridStyle}>
 					{playedSpaceCards.opponent.map((card) => (
 						<FaceCard
 							key={card.id}
@@ -47,18 +63,7 @@ const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
 				</Grid>
 
 				{/* Player's Space Units */}
-				<Grid
-					sx={{
-						flexGrow: 1,
-						display: "flex",
-						justifyContent: "flex-end",
-						alignItems: "flex-end",
-						gap: "0.5vw",
-						flexWrap: "nowrap",
-						overflowX: "auto",
-						mt: "1vh",
-					}}
-				>
+				<Grid sx={playerGridStyle}>
 					{playedSpaceCards.player.map((card) => (
 						<FaceCard
 							key={card.id}
@@ -71,7 +76,7 @@ const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
 					))}
 				</Grid>
 			</Grid>
-		</Paper>
+		</Box>
 	);
 };
 

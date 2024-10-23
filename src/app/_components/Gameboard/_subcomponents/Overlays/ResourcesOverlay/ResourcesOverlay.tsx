@@ -42,6 +42,10 @@ const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 					<Typography variant="h6" color="#fff">
 						Your Resources
 					</Typography>
+					<Typography variant="caption" color="#fff">
+						Your Resources
+					</Typography>
+
 					<CardArea cards={selectedResourceCards} />
 				</CardContent>
 				<Box
