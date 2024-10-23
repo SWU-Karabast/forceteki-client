@@ -47,59 +47,72 @@ const SetUp: React.FC<SetUpProps> = ({
 		}
 	}, [handleRollInitiative]);
 
+	//------------------------STYLES------------------------//
+
+	const mainCardStyle = {
+		borderRadius: "1.1em",
+		height: "auto",
+		width: "100%",
+		display: "flex",
+		flexDirection: "column",
+		mt: "2.6em",
+		p: "1.8em",
+		backgroundColor: "#000000E6",
+		backdropFilter: "blur(20px)",
+		overflow: "hidden",
+	};
+
+	const initiativeCardStyle = {
+		height: "15vh",
+		background: "#18325199",
+		display: "flex",
+		flexDirection: "column",
+		justifyContent: "center",
+	};
+
+	const initiativeMessageStyle = {
+		fontSize: "1.5em",
+		fontWeight: "400",
+		color: "white",
+		textAlign: "center",
+		width: "100%",
+	};
+
+	const buttonsContainerStyle = {
+		display: "flex",
+		justifyContent: "center",
+		width: "100%",
+	};
+
+	const buttonStyle = {
+		backgroundColor: "#292929",
+	};
+
+	const setUpTextStyle = {
+		fontSize: "1.5em",
+		fontWeight: "800",
+		color: "white",
+		alignSelf: "flex-start",
+		mt: "1.3em",
+	};
+
+	//------------------------RETURN------------------------//
+
 	return (
-		<Card
-			sx={{
-				borderRadius: "1.11vw",
-				height: "auto",
-				width: "100%",
-				display: "flex",
-				flexDirection: "column",
-				pt: "1vh",
-				mt: "4vh",
-				p: "1.5vw",
-				backgroundColor: "#000000E6",
-				backdropFilter: "blur(20px)",
-				overflow: "hidden",
-			}}
-		>
-			<Card
-				sx={{
-					height: "15vh",
-					background: "#18325199",
-					display: "flex",
-					flexDirection: "column",
-					justifyContent: "center",
-					alignItems: "center",
-					textAlign: "center",
-				}}
-			>
+		<Card sx={mainCardStyle}>
+			<Card sx={initiativeCardStyle}>
 				<CardContent>
 					{hasRolled.current && getInitiativeMessage() && (
-						<Typography
-							sx={{
-								fontSize: "1vw",
-								fontWeight: "400",
-								color: "white",
-								textAlign: "center",
-								width: "100%",
-							}}
-						>
+						<Typography sx={initiativeMessageStyle}>
 							{getInitiativeMessage()}
 						</Typography>
 					)}
 				</CardContent>
-				<CardActions
-					sx={{
-						display: "flex",
-						justifyContent: "center",
-						width: "100%",
-					}}
-				>
+				<CardActions sx={buttonsContainerStyle}>
 					{!isRolling && !hasRolled.current && (
 						<Button
 							variant="contained"
-							sx={{ backgroundColor: "#292929" }}
+							sx={buttonStyle}
 							onClick={handleRollInitiative}
 						>
 							Roll Initiative
@@ -108,7 +121,7 @@ const SetUp: React.FC<SetUpProps> = ({
 					{!isRolling &&
 						hasRolled.current &&
 						participant.initiative === false && (
-							<Button variant="contained" sx={{ backgroundColor: "#292929" }}>
+							<Button variant="contained" sx={buttonStyle}>
 								Start Game
 							</Button>
 						)}
@@ -118,7 +131,7 @@ const SetUp: React.FC<SetUpProps> = ({
 							<Box display="flex" gap={2}>
 								<Button
 									variant="contained"
-									sx={{ backgroundColor: "#292929" }}
+									sx={buttonStyle}
 									onClick={() => {
 										/* Add logic for going first */
 									}}
@@ -127,7 +140,7 @@ const SetUp: React.FC<SetUpProps> = ({
 								</Button>
 								<Button
 									variant="contained"
-									sx={{ backgroundColor: "#292929" }}
+									sx={buttonStyle}
 									onClick={() => {
 										/* Add logic for going second */
 									}}
@@ -138,17 +151,7 @@ const SetUp: React.FC<SetUpProps> = ({
 						)}
 				</CardActions>
 			</Card>
-			<Typography
-				sx={{
-					fontSize: "1.2vw",
-					fontWeight: "bold",
-					color: "white",
-					alignSelf: "flex-start",
-					mt: "3vh",
-				}}
-			>
-				Set Up
-			</Typography>
+			<Typography sx={setUpTextStyle}>Set Up</Typography>
 			<GameLinkCard />
 
 			<Chat

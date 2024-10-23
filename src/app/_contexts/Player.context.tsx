@@ -1,7 +1,13 @@
 // contexts/PlayerContext.tsx
 "use client";
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import io, { Socket } from "socket.io-client";
+import React, {
+	createContext,
+	useContext,
+	useState,
+	ReactNode,
+	useEffect,
+} from "react";
+// import io, { Socket } from "socket.io-client";
 import { mockPlayer } from "../_constants/mockData";
 
 interface PlayerContextType {
@@ -13,23 +19,23 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 	const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
-	let socket: Socket | undefined;
+	// let socket: Socket | undefined;
 
-	useEffect(() => {
-		socket = io("http://localhost:9500", {
-			query: {
-				user: {
-					username: 'Order66'
-				}
-			}
-		});
-		socket.on("connect", () => {
-			console.log("Connected to server");
-		});
-		return () => {
-			socket?.disconnect();
-		};
-	}, []);
+	// useEffect(() => {
+	// 	socket = io("http://localhost:9500", {
+	// 		query: {
+	// 			user: {
+	// 				username: 'Order66'
+	// 			}
+	// 		}
+	// 	});
+	// 	socket.on("connect", () => {
+	// 		console.log("Connected to server");
+	// 	});
+	// 	return () => {
+	// 		socket?.disconnect();
+	// 	};
+	// }, []);
 
 	return (
 		<PlayerContext.Provider value={{ activePlayer, setActivePlayer }}>
