@@ -21,38 +21,80 @@ const SignUp: React.FC<SignUpProps> = ({
 	handleSubmit,
 	toggleAuth,
 }) => {
+	//------------------------STYLES------------------------//
+
+	const containerStyle = {
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		pt: "12em",
+	};
+
+	const cardStyle = {
+		width: { xs: "90vw", sm: "70vw", md: "60vw", lg: "30vw" },
+		borderRadius: "1.5em",
+		backgroundColor: "#000000E6",
+		backdropFilter: "blur(20px)",
+		p: "2.5em",
+		mb: "2em",
+	};
+	const headingStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "800",
+		fontSize: "2em",
+		color: "#fff",
+		mb: ".5em",
+	};
+
+	const formControlStyle = {
+		mb: ".5em",
+	};
+
+	const labelTextStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontSize: "1.3em",
+		color: "#fff",
+		mb: ".5em",
+	};
+
+	const submitButtonStyle = {
+		display: "block",
+		width: "10em",
+		height: "3em",
+		borderRadius: "0.5em",
+		backgroundColor: "#292929",
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontSize: "1.2em",
+		ml: "auto",
+		mr: "auto",
+		mb: ".8em",
+		"&:hover": {
+			backgroundColor: "#3a3a3a",
+		},
+	};
+	const toggleTextStyle = {
+		color: "#fff",
+		fontSize: ".7rem",
+	};
+
+	const toggleButtonStyle = {
+		color: "#1976d2",
+		textDecoration: "underline",
+		fontSize: ".7rem",
+	};
+	//------------------------RETURN------------------------//
+
 	return (
-		<Box
-			sx={{
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				pt: "20vh",
-			}}
-		>
-			<Card
-				sx={{
-					width: { xs: "90vw", sm: "70vw", md: "60vw", lg: "30vw" },
-					p: "2.5em",
-					borderRadius: "1.5vw",
-					backgroundColor: "#000000E6",
-					backdropFilter: "blur(20px)",
-					mb: 4,
-				}}
-			>
+		<Box sx={containerStyle}>
+			<Card sx={cardStyle}>
 				<CardContent>
-					<Typography
-						variant="h4"
-						sx={{ color: "#fff", mb: 3, fontWeight: "bold" }}
-					>
+					<Typography variant="h4" sx={headingStyle}>
 						Sign Up
 					</Typography>
 					<form onSubmit={handleSubmit}>
 						{/* Email Input */}
-						<FormControl fullWidth sx={{ mb: 3 }}>
-							<Typography sx={{ color: "#fff", fontSize: "1.1rem", mb: 1 }}>
-								Email
-							</Typography>
+						<FormControl fullWidth sx={formControlStyle}>
+							<Typography sx={labelTextStyle}>Email</Typography>
 							<StyledTextField
 								type="email"
 								value={email}
@@ -62,10 +104,8 @@ const SignUp: React.FC<SignUpProps> = ({
 						</FormControl>
 
 						{/* Password Input */}
-						<FormControl fullWidth sx={{ mb: 3 }}>
-							<Typography sx={{ color: "#fff", fontSize: "1.1rem", mb: 1 }}>
-								Password
-							</Typography>
+						<FormControl fullWidth sx={formControlStyle}>
+							<Typography sx={labelTextStyle}>Password</Typography>
 							<StyledTextField
 								type="password"
 								value={password}
@@ -78,10 +118,8 @@ const SignUp: React.FC<SignUpProps> = ({
 						</FormControl>
 
 						{/* Confirm Password Input */}
-						<FormControl fullWidth sx={{ mb: 3 }}>
-							<Typography sx={{ color: "#fff", fontSize: "1.1rem", mb: 1 }}>
-								Confirm Password
-							</Typography>
+						<FormControl fullWidth sx={formControlStyle}>
+							<Typography sx={labelTextStyle}>Confirm Password</Typography>
 							<StyledTextField
 								type="password"
 								value={confirmPassword}
@@ -94,37 +132,15 @@ const SignUp: React.FC<SignUpProps> = ({
 						</FormControl>
 
 						{/* Submit Button */}
-						<Button
-							type="submit"
-							variant="contained"
-							color="primary"
-							sx={{
-								mb: 2,
-								height: "3.5em",
-								fontSize: "1rem",
-								borderRadius: "0.5vw",
-								backgroundColor: "#292929",
-								width: "11vw",
-								mx: "auto",
-								display: "block",
-							}}
-						>
+						<Button type="submit" variant="contained" sx={submitButtonStyle}>
 							Sign Up
 						</Button>
 					</form>
 					{/* Toggle to Login */}
 					<Box sx={{ textAlign: "center", mt: 2 }}>
-						<Typography sx={{ color: "#fff", fontSize: ".7rem" }}>
+						<Typography sx={toggleTextStyle}>
 							Already have an account?{" "}
-							<Button
-								onClick={toggleAuth}
-								sx={{
-									color: "#1976d2",
-									textDecoration: "underline",
-									p: 0,
-									fontSize: ".7rem",
-								}}
-							>
+							<Button onClick={toggleAuth} sx={toggleButtonStyle}>
 								Login
 							</Button>
 						</Typography>

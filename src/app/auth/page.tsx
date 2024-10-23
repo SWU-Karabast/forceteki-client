@@ -58,16 +58,18 @@ const Auth: React.FC = () => {
 		}
 	};
 
+	//-------------------------Styles-------------------------//
+
+	const mainContainerStyle = {
+		position: "relative",
+		height: "100vh",
+		overflow: "hidden",
+		display: "flex",
+		flexDirection: "column",
+	};
+
 	return (
-		<Box
-			sx={{
-				position: "relative",
-				height: "100vh",
-				overflow: "hidden",
-				display: "flex",
-				flexDirection: "column",
-			}}
-		>
+		<Box sx={mainContainerStyle}>
 			<KarabastBanner />
 
 			{isLogin ? (

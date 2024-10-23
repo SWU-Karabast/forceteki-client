@@ -103,7 +103,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 	const submitButtonStyle = {
 		display: "block",
 		width: "10em",
-		height: "3.5em",
+		height: "3em",
 		borderRadius: "0.5em",
 		backgroundColor: "#292929",
 		fontFamily: "var(--font-barlow), sans-serif",

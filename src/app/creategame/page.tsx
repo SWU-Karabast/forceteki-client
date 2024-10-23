@@ -9,11 +9,11 @@ const CreateGame: React.FC = () => {
 	//------------------------STYLES------------------------//
 
 	const containerStyle = {
-		position: "relative",
 		height: "100vh",
-		overflow: "hidden",
 		display: "flex",
 		flexDirection: "column",
+		position: "relative",
+		overflow: "hidden",
 	};
 
 	const formContainerStyle = {
