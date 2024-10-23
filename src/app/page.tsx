@@ -9,50 +9,32 @@ import NewsColumn from "./_components/HomePage/News/News";
 const Home: React.FC = () => {
 	const [format, setFormat] = useState("Premier");
 	const mt = "17vh";
+
+	//------------------------STYLES------------------------//
+
+	const gridContainerStyle = {
+		position: "relative",
+		height: "100vh",
+		overflow: "hidden",
+	};
+
+	const columnStyle = {
+		justifyContent: "center",
+		alignContent: "center",
+		mt: mt,
+	};
+
 	return (
-		<Grid
-			container
-			sx={{
-				position: "relative",
-				height: "100vh",
-				overflow: "hidden",
-			}}
-		>
+		<Grid container sx={gridContainerStyle}>
 			{/* Banner positioned absolutely */}
 			<KarabastBanner />
-
-			{/* Main Content */}
-			<Grid
-				container
-				size={4}
-				sx={{
-					justifyContent: "center",
-					alignContent: "center",
-					mt: mt,
-				}}
-			>
+			<Grid container size={4} sx={columnStyle}>
 				<PublicGames format={format} />
 			</Grid>
-			<Grid
-				container
-				size={4}
-				sx={{
-					justifyContent: "center",
-					alignContent: "center",
-					mt: mt,
-				}}
-			>
+			<Grid container size={4} sx={columnStyle}>
 				<CreateGameForm format={format} setFormat={setFormat} />
 			</Grid>
-			<Grid
-				container
-				size={4}
-				sx={{
-					justifyContent: "center",
-					alignContent: "center",
-					mt: mt,
-				}}
-			>
+			<Grid container size={4} sx={columnStyle}>
 				<NewsColumn />
 			</Grid>
 		</Grid>
