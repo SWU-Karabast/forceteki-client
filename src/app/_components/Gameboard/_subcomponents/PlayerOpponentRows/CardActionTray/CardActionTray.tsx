@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid2 as Grid, Box, Button, Typography } from "@mui/material";
-import FaceCard from "../../../../_sharedcomponents/Cards/FaceCard/FaceCard";
-import BackCard from "../../../../_sharedcomponents/Cards/BackCard/BackCard";
+import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
 
 enum ActionMode {
@@ -130,7 +129,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 				onTouchMove={handleTouchMove}
 				onTouchEnd={handleTouchEnd}
 			>
-				<Box sx={cardBoxStyle}>
+				{/* <Box sx={cardBoxStyle}>
 					{availableCards.map((card: FaceCardProps) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
 							{activePlayer === "player" ? (
@@ -144,6 +143,21 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 							) : (
 								<BackCard />
 							)}
+						</Box>
+					))}
+				</Box> */}
+
+				<Box sx={cardBoxStyle}>
+					{availableCards.map((card) => (
+						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
+							<GameCard
+								id={card.id}
+								name={card.name}
+								selected={card.selected}
+								handleSelect={() => handleCardClick(card)}
+								disabled={isCardDisabled()}
+								isFaceUp={activePlayer === "player"}
+							/>
 						</Box>
 					))}
 				</Box>

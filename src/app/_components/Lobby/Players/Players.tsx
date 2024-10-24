@@ -16,7 +16,7 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 		justifyContent: isLobbyView ? "flex-start" : "center",
 		mt: "2.6em",
 		pt: ".8em",
-		backgroundColor: "tomato",
+		backgroundColor: "#000000E6",
 		backdropFilter: "blur(20px)",
 	};
 

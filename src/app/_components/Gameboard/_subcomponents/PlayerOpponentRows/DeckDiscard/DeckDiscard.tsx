@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
-import BackCard from "../../../../_sharedcomponents/Cards/BackCard/BackCard";
+import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
 
 const DeckDiscard: React.FC<DeckDiscardProps> = ({ deckSize }) => {
 	//------------------------STYLES------------------------//
@@ -40,7 +40,7 @@ const DeckDiscard: React.FC<DeckDiscardProps> = ({ deckSize }) => {
 					<Typography sx={discardTextStyle}>Discard</Typography>
 				</CardContent>
 			</Card>
-			<BackCard deckSize={deckSize} />
+			<GameCard deckSize={deckSize} isFaceUp={false} />
 		</Box>
 	);
 };

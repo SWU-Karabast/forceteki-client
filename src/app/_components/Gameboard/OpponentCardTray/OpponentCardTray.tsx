@@ -10,8 +10,8 @@ const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ participant }) => {
 		display: "flex",
 		alignItems: "flex-start",
 		justifyContent: "flex-start",
-		pl: "1.35%",
-		pt: "1.35%",
+		pl: "2em",
+		pt: "2em",
 	};
 
 	const centerColumn = {
@@ -26,8 +26,8 @@ const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ participant }) => {
 		display: "flex",
 		alignItems: "flex-start",
 		justifyContent: "flex-end",
-		pr: "1.35%",
-		pt: "1.35%",
+		pr: "2em",
+		pt: "2em",
 	};
 
 	return (

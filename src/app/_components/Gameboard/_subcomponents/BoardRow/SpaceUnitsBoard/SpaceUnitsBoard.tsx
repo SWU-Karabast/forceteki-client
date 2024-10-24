@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Grid2 as Grid } from "@mui/material";
-import FaceCard from "../../../../_sharedcomponents/Cards/FaceCard/FaceCard";
+import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
 
 const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
 	sidebarOpen,
@@ -46,30 +46,32 @@ const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
 	return (
 		<Box sx={mainBoxStyle}>
 			<Grid container direction="column" sx={containerStyle}>
-				{/* Opponent's Space Units */}
+				{/* Opponent's Ground Units */}
 				<Grid sx={opponentGridStyle}>
 					{playedSpaceCards.opponent.map((card) => (
-						<FaceCard
+						<GameCard
 							key={card.id}
 							name={card.name}
 							unitType={card.unitType}
 							selected={card.selected}
 							handleSelect={card.handleSelect}
 							disabled
+							isFaceUp={true}
 						/>
 					))}
 				</Grid>
 
-				{/* Player's Space Units */}
+				{/* Player's Ground Units */}
 				<Grid sx={playerGridStyle}>
 					{playedSpaceCards.player.map((card) => (
-						<FaceCard
+						<GameCard
 							key={card.id}
 							name={card.name}
 							unitType={card.unitType}
 							selected={card.selected}
 							handleSelect={card.handleSelect}
 							disabled
+							isFaceUp={true}
 						/>
 					))}
 				</Grid>

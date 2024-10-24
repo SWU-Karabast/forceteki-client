@@ -1,6 +1,6 @@
 import React from "react";
 import { Box } from "@mui/material";
-import FaceCard from "../Cards/FaceCard/FaceCard";
+import GameCard from "../Cards/GameCard/GameCard";
 
 const CardArea: React.FC<CardAreaProps> = ({ cards }) => {
 	//------------------------STYLES------------------------//
@@ -16,13 +16,14 @@ const CardArea: React.FC<CardAreaProps> = ({ cards }) => {
 	return (
 		<Box sx={mainContainerStyle}>
 			{cards.map((card) => (
-				<FaceCard
+				<GameCard
 					path={"/lobby"}
 					key={card.id}
 					name={card.name}
-					selected={false} // Selection logic can be added if needed
-					handleSelect={() => {}} // No action yet, cause no selection logic yet
+					selected={false}
+					handleSelect={() => {}}
 					disabled={true}
+					isFaceUp={true}
 				/>
 			))}
 		</Box>

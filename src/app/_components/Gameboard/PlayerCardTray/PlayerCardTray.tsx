@@ -19,10 +19,10 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 	//---------------Styles------------------- //
 	const leftColumnStyle = {
 		display: "flex",
-		alignItems: "flex-start",
+		alignItems: "center",
 		justifyContent: "flex-start",
-		pl: "1.35%",
-		pt: "1.35%",
+		pl: "2em",
+		pt: "2em",
 	};
 
 	const centerColumnStyle = {
@@ -35,10 +35,10 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 
 	const rightColumnStyle = {
 		display: "flex",
-		alignItems: "flex-start",
+		alignItems: "center",
 		justifyContent: "flex-end",
-		pr: "1.35%",
-		pt: "1.35%",
+		pr: "2em",
+		pt: "2em",
 	};
 
 	return (
