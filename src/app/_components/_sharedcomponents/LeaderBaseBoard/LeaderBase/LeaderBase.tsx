@@ -21,15 +21,15 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 				? "flex-end"
 				: "flex-start",
 		alignItems: "center",
-		gap: isLobbyView ? "1vh" : "0.5vh",
+		gap: ".5em",
 		height: "94%",
-		pt: isLobbyView ? "0vh" : "4vh", // No padding in lobby, 4vh outside
+		pt: isLobbyView ? 0 : "3.5em", // No padding in lobby, 3.5em outside meaning in the gameboard
 		pb:
 			participant === "player" && isLobbyView
-				? "0vh" // no padding in lobby
+				? 0 // no padding in lobby
 				: participant === "player"
 				? "4vh" // padding for player side
-				: "0vh", // no padding for opponent side
+				: 0, // no padding for opponent side
 	};
 
 	return (

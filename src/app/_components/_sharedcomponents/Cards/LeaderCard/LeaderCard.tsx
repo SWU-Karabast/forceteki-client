@@ -24,8 +24,8 @@ const LeaderCard: React.FC<LeaderCardProps> = ({
 		fontFamily: "var(--font-barlow), sans-serif",
 		fontWeight: "800",
 		textAlign: "Left",
-		mb: "4px",
 		color: "white",
+		mb: "4px",
 	};
 
 	const cardStyle = {
