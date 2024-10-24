@@ -50,8 +50,6 @@ const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 		borderRadius: ".5vw",
 	};
 
-	//------------------------RETURN------------------------//
-
 	return (
 		<>
 			<CardContent>

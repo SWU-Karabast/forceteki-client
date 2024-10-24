@@ -43,8 +43,6 @@ const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
 		overflowX: "auto",
 	};
 
-	//------------------------RETURN------------------------//
-
 	return (
 		<Box sx={mainBoxStyle}>
 			<Grid container direction="column" sx={containerStyle}>

@@ -50,8 +50,6 @@ const BackCard: React.FC<BackCardProps> = ({ deckSize }) => {
 		position: "absolute",
 	};
 
-	//------------------------RETURN------------------------//
-
 	return (
 		<Card sx={cardStyle}>
 			<CardContent sx={cardContentStyle}>

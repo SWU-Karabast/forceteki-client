@@ -82,7 +82,6 @@ const SignUp: React.FC<SignUpProps> = ({
 		textDecoration: "underline",
 		fontSize: ".7rem",
 	};
-	//------------------------RETURN------------------------//
 
 	return (
 		<Box sx={containerStyle}>

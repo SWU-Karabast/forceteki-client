@@ -39,8 +39,6 @@ const GameLinkCard: React.FC = () => {
 		backgroundColor: "#292929",
 	};
 
-	//------------------------RETURN------------------------//
-
 	return (
 		<Card sx={cardStyle}>
 			<CardContent>

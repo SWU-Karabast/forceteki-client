@@ -76,8 +76,6 @@ const Lobby = () => {
 		pr: "20px",
 	};
 
-	//------------------------RETURN------------------------//
-
 	return (
 		<Grid container sx={containerStyle}>
 			<Grid container size={4} sx={setUpGridStyle}>

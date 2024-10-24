@@ -42,8 +42,6 @@ const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
 			justifyContent: "center",
 		};
 
-		//------------------------RETURN------------------------//
-
 		return (
 			<Drawer
 				anchor="right"

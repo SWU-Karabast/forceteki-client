@@ -96,8 +96,6 @@ const SetUp: React.FC<SetUpProps> = ({
 		mt: "1.3em",
 	};
 
-	//------------------------RETURN------------------------//
-
 	return (
 		<Card sx={mainCardStyle}>
 			<Card sx={initiativeCardStyle}>

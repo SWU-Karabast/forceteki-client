@@ -33,8 +33,6 @@ const PublicMatch: React.FC<PublicGameInProgressProps> = ({ match }) => {
 		},
 	};
 
-	//------------------------RETURN------------------------//
-
 	return (
 		<Box sx={boxStyle}>
 			<GameInProgressPlayer
