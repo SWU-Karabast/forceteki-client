@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Grid2 as Grid, Box, Button, Typography } from "@mui/material";
 import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
+import { usePlayer } from "@/app/_contexts/Player.context";
+import { send } from "process";
 
 enum ActionMode {
 	None,
@@ -32,6 +34,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 	} = useDragScroll("horizontal");
 
 	const [actionMode, setActionMode] = useState<ActionMode>(ActionMode.None);
+	const { sendMessage } = usePlayer();
 
 	useEffect(() => {
 		if (resourceSelection) {
@@ -179,11 +182,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 					<Button
 						variant="contained"
 						sx={actionButtonStyle}
-						onClick={
-							setResourceSelection
-								? () => setResourceSelection(!resourceSelection)
-								: undefined
-						}
+						onClick={sendMessage}
 						disabled={resourceSelection && availableResources >= totalResources}
 					>
 						{resourceSelection

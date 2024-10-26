@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { Box, Grid2 as Grid } from "@mui/material";
 import ChatDrawer from "../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer";
 import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/OpponentCardTray";
@@ -11,8 +11,9 @@ import { mockOpponent } from "../_constants/mockData";
 import { usePlayer } from "../_contexts/Player.context";
 import { useSidebar } from "../_contexts/Sidebar.context";
 
+
 const GameBoard = () => {
-	const { activePlayer } = usePlayer();
+	const { activePlayer, gameState } = usePlayer();
 	const { sidebarOpen, toggleSidebar } = useSidebar();
 	const [chatMessage, setChatMessage] = useState("");
 	const [chatHistory, setChatHistory] = useState<string[]>([]);
