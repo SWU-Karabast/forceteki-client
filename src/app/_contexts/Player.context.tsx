@@ -14,7 +14,7 @@ interface PlayerContextType {
 	activePlayer: Participant;
 	setActivePlayer: (player: Participant) => void;
 	gameState: any;
-	sendMessage: () => void;
+	sendMessage: (args: any[]) => void;
 	connectedPlayer: string;
 }
 
@@ -53,9 +53,8 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 		};
 	}, []);
 
-	const sendMessage = () => {
-		const uuid = gameState.players['Order66'].buttons[0].uuid;
-		socket?.emit("game", "menuButton", 0, uuid);
+	const sendMessage = (args: any[]) => {
+		socket?.emit("game", ...args);
 	}
 
 	return (
