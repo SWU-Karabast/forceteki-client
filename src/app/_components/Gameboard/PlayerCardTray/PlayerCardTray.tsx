@@ -15,6 +15,7 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 	totalResources,
 	handlePlayCard,
 	selectedResourceCards,
+	handleBasicPromptToggle
 }) => {
 	//---------------Styles------------------- //
 	const leftColumnStyle = {
@@ -62,6 +63,7 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 					selectedResourceCards={selectedResourceCards}
 					availableResources={availableResources}
 					totalResources={totalResources}
+					handleBasicPromptToggle={handleBasicPromptToggle}
 				/>
 			</Grid>
 			<Grid size={3} sx={rightColumnStyle}>

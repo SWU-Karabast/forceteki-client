@@ -7,38 +7,58 @@ import React, {
 	ReactNode,
 	useEffect,
 } from "react";
-// import io, { Socket } from "socket.io-client";
+import io, { Socket } from "socket.io-client";
 import { mockPlayer } from "../_constants/mockData";
 
 interface PlayerContextType {
 	activePlayer: Participant;
 	setActivePlayer: (player: Participant) => void;
+	gameState: any;
+	sendMessage: (args: any[]) => void;
+	connectedPlayer: string;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 	const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
-	// let socket: Socket | undefined;
+	const [gameState, setGameState] = useState<any>(null);
+	const [socket, setSocket] = useState<Socket | undefined>(undefined);
+	const [connectedPlayer, setConnectedPlayer] = useState<string>('');
 
-	// useEffect(() => {
-	// 	socket = io("http://localhost:9500", {
-	// 		query: {
-	// 			user: {
-	// 				username: 'Order66'
-	// 			}
-	// 		}
-	// 	});
-	// 	socket.on("connect", () => {
-	// 		console.log("Connected to server");
-	// 	});
-	// 	return () => {
-	// 		socket?.disconnect();
-	// 	};
-	// }, []);
+	useEffect(() => {
+		const urlParams = new URLSearchParams(window.location.search);
+		const playerName = urlParams.get('player') || 'Order66';
+		setConnectedPlayer(playerName);
+		const newSocket = io("http://localhost:9500", {
+			query: {
+				user: JSON.stringify({
+					username: playerName
+				})
+			}
+		});
+
+		newSocket.on("connect", () => {
+			console.log(`Connected to server as ${playerName}`);
+		});
+		newSocket.on("gamestate", (gameState) => {
+			setGameState(gameState);
+			console.log("Game state received:", gameState);
+		});
+
+		setSocket(newSocket);
+
+		return () => {
+			newSocket?.disconnect();
+		};
+	}, []);
+
+	const sendMessage = (args: any[]) => {
+		socket?.emit("game", ...args);
+	}
 
 	return (
-		<PlayerContext.Provider value={{ activePlayer, setActivePlayer }}>
+		<PlayerContext.Provider value={{ activePlayer, setActivePlayer, gameState, sendMessage, connectedPlayer }}>
 			{children}
 		</PlayerContext.Provider>
 	);

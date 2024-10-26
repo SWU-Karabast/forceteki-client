@@ -1,18 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { Box, Grid2 as Grid } from "@mui/material";
 import ChatDrawer from "../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer";
 import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/OpponentCardTray";
 import Board from "../_components/Gameboard/Board/Board";
 import PlayerCardTray from "../_components/Gameboard/PlayerCardTray/PlayerCardTray";
 import ResourcesOverlay from "../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay";
+import BasicPrompt from "../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt";
 import { mockOpponent } from "../_constants/mockData";
 import { usePlayer } from "../_contexts/Player.context";
 import { useSidebar } from "../_contexts/Sidebar.context";
 
+
 const GameBoard = () => {
-	const { activePlayer } = usePlayer();
+	const { activePlayer, gameState } = usePlayer();
 	const { sidebarOpen, toggleSidebar } = useSidebar();
 	const [chatMessage, setChatMessage] = useState("");
 	const [chatHistory, setChatHistory] = useState<string[]>([]);
@@ -22,6 +24,7 @@ const GameBoard = () => {
 
 	// State for resource selection
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isBasicPromptOpen, setBasicPromptOpen] = useState(false);
 	const [resourceSelection, setResourceSelection] = useState(false);
 	const [totalResources, setTotalResources] = useState(2);
 	const [availableResources, setAvailableResources] = useState(0);
@@ -61,6 +64,10 @@ const GameBoard = () => {
 
 	const handleModalToggle = () => {
 		setIsModalOpen(!isModalOpen);
+	};
+
+	const handleBasicPromptToggle = () => {
+		setBasicPromptOpen(!isBasicPromptOpen);
 	};
 
 	// Handler to select a card for resource selection
@@ -157,6 +164,7 @@ const GameBoard = () => {
 					totalResources={totalResources}
 					handlePlayCard={handlePlayCard}
 					selectedResourceCards={selectedResourceCards}
+					handleBasicPromptToggle={handleBasicPromptToggle}
 				/>
 			</Box>
 
@@ -176,6 +184,10 @@ const GameBoard = () => {
 				isModalOpen={isModalOpen}
 				handleModalToggle={handleModalToggle}
 				selectedResourceCards={selectedResourceCards}
+			/>
+			<BasicPrompt
+				isBasicPromptOpen={isBasicPromptOpen}
+				handleBasicPromptToggle={handleBasicPromptToggle}
 			/>
 		</Grid>
 	);

@@ -30,6 +30,7 @@ interface PlayerCardTrayProps {
 	onSelectCard: (card: FaceCardProps) => void;
 	setResourceSelection: (active: boolean) => void;
 	handlePlayCard: (card: FaceCardProps) => void;
+	handleBasicPromptToggle: () => void;
 }
 
 interface OpponentCardTrayProps {
@@ -59,6 +60,7 @@ interface CardActionTrayProps {
 	totalResources?: number; // Optional, only for player
 	selectedResourceCards?: FaceCardProps[]; // Optional, only for player
 	handlePlayCard?: (card: FaceCardProps) => void; // Optional, only for player
+	handleBasicPromptToggle?: () => void;
 }
 
 type DeckSize = number;
@@ -77,6 +79,11 @@ interface ResourcesOverlayProps {
 	isModalOpen: boolean;
 	handleModalToggle: () => void;
 	selectedResourceCards: FaceCardProps[];
+}
+
+interface BasicPromptProps {
+	isBasicPromptOpen: boolean;
+	handleBasicPromptToggle: () => void;
 }
 
 interface CardAreaProps {
