@@ -20,6 +20,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 	availableResources = 0,
 	totalResources = 0,
 	handlePlayCard = () => {},
+	handleBasicPromptToggle
 }) => {
 	const {
 		containerRef,
@@ -182,12 +183,8 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 					<Button
 						variant="contained"
 						sx={actionButtonStyle}
-						onClick={sendMessage}
-						disabled={resourceSelection && availableResources >= totalResources}
-					>
-						{resourceSelection
-							? "Stop Resource Selection"
-							: "Start Resource Selection"}
+						onClick={handleBasicPromptToggle}
+					>Open Prompt
 					</Button>
 					<Button
 						variant="contained"

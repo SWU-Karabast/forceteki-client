@@ -7,6 +7,7 @@ import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/Opponent
 import Board from "../_components/Gameboard/Board/Board";
 import PlayerCardTray from "../_components/Gameboard/PlayerCardTray/PlayerCardTray";
 import ResourcesOverlay from "../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay";
+import BasicPrompt from "../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt";
 import { mockOpponent } from "../_constants/mockData";
 import { usePlayer } from "../_contexts/Player.context";
 import { useSidebar } from "../_contexts/Sidebar.context";
@@ -23,6 +24,7 @@ const GameBoard = () => {
 
 	// State for resource selection
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [isBasicPromptOpen, setBasicPromptOpen] = useState(false);
 	const [resourceSelection, setResourceSelection] = useState(false);
 	const [totalResources, setTotalResources] = useState(2);
 	const [availableResources, setAvailableResources] = useState(0);
@@ -62,6 +64,10 @@ const GameBoard = () => {
 
 	const handleModalToggle = () => {
 		setIsModalOpen(!isModalOpen);
+	};
+
+	const handleBasicPromptToggle = () => {
+		setBasicPromptOpen(!isBasicPromptOpen);
 	};
 
 	// Handler to select a card for resource selection
@@ -158,6 +164,7 @@ const GameBoard = () => {
 					totalResources={totalResources}
 					handlePlayCard={handlePlayCard}
 					selectedResourceCards={selectedResourceCards}
+					handleBasicPromptToggle={handleBasicPromptToggle}
 				/>
 			</Box>
 
@@ -177,6 +184,10 @@ const GameBoard = () => {
 				isModalOpen={isModalOpen}
 				handleModalToggle={handleModalToggle}
 				selectedResourceCards={selectedResourceCards}
+			/>
+			<BasicPrompt
+				isBasicPromptOpen={isBasicPromptOpen}
+				handleBasicPromptToggle={handleBasicPromptToggle}
 			/>
 		</Grid>
 	);

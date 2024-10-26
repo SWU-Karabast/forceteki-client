@@ -1,14 +1,14 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
 import LeaderBase from "./LeaderBase/LeaderBase";
+import { usePlayer } from '@/app/_contexts/Player.context';
 
 const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 	participant,
 	isLobbyView,
 }) => {
-	const titlePlayer = "ThisIsTheWay";
-	const titleOpponent = "Order66";
-
+	const { connectedPlayer } = usePlayer()
+	const titleOpponent = connectedPlayer === 'ThisIsTheWay' ? 'Order66' : 'ThisIsTheWay';
 	//------------------------STYLES------------------------//
 
 	const containerStyle = {
@@ -37,7 +37,7 @@ const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 				<LeaderBase
 					participant={participant.type}
 					isLobbyView={isLobbyView}
-					title={titlePlayer}
+					title={connectedPlayer}
 				/>
 			</Grid>
 		</Grid>

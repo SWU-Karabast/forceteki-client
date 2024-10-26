@@ -15,6 +15,7 @@ interface PlayerContextType {
 	setActivePlayer: (player: Participant) => void;
 	gameState: any;
 	sendMessage: () => void;
+	connectedPlayer: string;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -23,18 +24,22 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 	const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
 	const [gameState, setGameState] = useState<any>(null);
 	const [socket, setSocket] = useState<Socket | undefined>(undefined);
+	const [connectedPlayer, setConnectedPlayer] = useState<string>('');
 
 	useEffect(() => {
+		const urlParams = new URLSearchParams(window.location.search);
+		const playerName = urlParams.get('player') || 'Order66';
+		setConnectedPlayer(playerName);
 		const newSocket = io("http://localhost:9500", {
 			query: {
 				user: JSON.stringify({
-					username: 'Order66'
+					username: playerName
 				})
 			}
 		});
 
 		newSocket.on("connect", () => {
-			console.log("Connected to server");
+			console.log(`Connected to server as ${playerName}`);
 		});
 		newSocket.on("gamestate", (gameState) => {
 			setGameState(gameState);
@@ -54,7 +59,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 	}
 
 	return (
-		<PlayerContext.Provider value={{ activePlayer, setActivePlayer, gameState, sendMessage }}>
+		<PlayerContext.Provider value={{ activePlayer, setActivePlayer, gameState, sendMessage, connectedPlayer }}>
 			{children}
 		</PlayerContext.Provider>
 	);
