@@ -1,5 +1,6 @@
-import { Box, Paper } from "@mui/material";
+import { Box } from "@mui/material";
 import Hexagon from "../Hexagon/Hexagon";
+import { GameInProgressPlayerProps } from "../../HomePageTypes";
 
 const GameInProgressPlayer: React.FC<GameInProgressPlayerProps> = ({
 	playerImage,

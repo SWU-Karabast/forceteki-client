@@ -8,6 +8,7 @@ import {
 	Typography,
 } from "@mui/material";
 import StyledTextField from "../../_sharedcomponents/_styledcomponents/StyledTextField/StyledTextField";
+import { SignUpProps } from "../AuthTypes";
 
 const SignUp: React.FC<SignUpProps> = ({
 	email,
@@ -97,7 +98,7 @@ const SignUp: React.FC<SignUpProps> = ({
 							<StyledTextField
 								type="email"
 								value={email}
-								onChange={(e) => setEmail(e.target.value)}
+								onChange={(e: any) => setEmail(e.target.value)}
 								required
 							/>
 						</FormControl>
@@ -108,7 +109,7 @@ const SignUp: React.FC<SignUpProps> = ({
 							<StyledTextField
 								type="password"
 								value={password}
-								onChange={(e) => setPassword(e.target.value)}
+								onChange={(e: any) => setPassword(e.target.value)}
 								errorMessage={
 									passwordError ? "Password must be at least 8 characters" : ""
 								}
@@ -122,7 +123,7 @@ const SignUp: React.FC<SignUpProps> = ({
 							<StyledTextField
 								type="password"
 								value={confirmPassword}
-								onChange={(e) => setConfirmPassword(e.target.value)}
+								onChange={(e: any) => setConfirmPassword(e.target.value)}
 								errorMessage={
 									passwordMatchError ? "Passwords do not match" : ""
 								}

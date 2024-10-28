@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Grid2 as Grid } from "@mui/material";
 import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
+import { SpaceUnitsBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const SpaceUnitsBoard: React.FC<SpaceUnitsBoardProps> = ({
 	sidebarOpen,

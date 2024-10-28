@@ -3,6 +3,7 @@ import React from "react";
 import Grid from "@mui/material/Grid2";
 import LeaderCard from "../../Cards/LeaderCard/LeaderCard";
 import BaseCard from "../../Cards/BaseCard/BaseCard";
+import { LeaderBaseProps } from "../LeaderBaseBoardTypes";
 
 const LeaderBase: React.FC<LeaderBaseProps> = ({
 	participant,

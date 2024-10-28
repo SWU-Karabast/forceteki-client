@@ -7,20 +7,9 @@ import {
 	Box,
 } from "@mui/material";
 import Image from "next/image";
+import { GameCardProps } from "../CardsTypes";
 
-interface CardProps {
-	id?: number;
-	name?: string;
-	selected?: boolean;
-	disabled?: boolean;
-	unitType?: "ground" | "space";
-	handleSelect?: () => void;
-	path?: string;
-	deckSize?: number;
-	isFaceUp: boolean;
-}
-
-const GameCard: React.FC<CardProps> = ({
+const GameCard: React.FC<GameCardProps> = ({
 	id,
 	name,
 	selected = false,

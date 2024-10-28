@@ -15,6 +15,11 @@ import {
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
 import { usePathname } from "next/navigation";
 
+interface CreateGameFormProps {
+	format?: string | null;
+	setFormat?: (format: string) => void;
+}
+
 const deckOptions: string[] = [
 	"Vader Green Ramp",
 	"Obi-Wan Blue Control",
@@ -196,7 +201,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 								<Checkbox
 									sx={checkboxStyle}
 									checked={saveDeck}
-									onChange={(e) => setSaveDeck(e.target.checked)}
+									onChange={(e: any) => setSaveDeck(e.target.checked)}
 								/>
 							}
 							label={
@@ -252,7 +257,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 									<RadioGroup
 										row
 										value={privacy}
-										onChange={(e) => setPrivacy(e.target.value)}
+										onChange={(e: any) => setPrivacy(e.target.value)}
 									>
 										<FormControlLabel
 											value="Public"

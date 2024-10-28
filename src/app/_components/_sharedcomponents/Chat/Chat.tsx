@@ -8,6 +8,7 @@ import {
 	Typography,
 } from "@mui/material";
 import { Send } from "@mui/icons-material";
+import { ChatProps } from "./ChatTypes";
 
 const Chat: React.FC<ChatProps> = ({
 	chatHistory,

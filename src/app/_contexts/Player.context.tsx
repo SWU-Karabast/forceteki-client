@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import io, { Socket } from "socket.io-client";
 import { mockPlayer } from "../_constants/mockData";
+import { Participant } from "@/app/_components/Gameboard/GameboardTypes";
 
 interface PlayerContextType {
 	activePlayer: Participant;
@@ -24,24 +25,24 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 	const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
 	const [gameState, setGameState] = useState<any>(null);
 	const [socket, setSocket] = useState<Socket | undefined>(undefined);
-	const [connectedPlayer, setConnectedPlayer] = useState<string>('');
+	const [connectedPlayer, setConnectedPlayer] = useState<string>("");
 
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
-		const playerName = urlParams.get('player') || 'Order66';
+		const playerName = urlParams.get("player") || "Order66";
 		setConnectedPlayer(playerName);
 		const newSocket = io("http://localhost:9500", {
 			query: {
 				user: JSON.stringify({
-					username: playerName
-				})
-			}
+					username: playerName,
+				}),
+			},
 		});
 
 		newSocket.on("connect", () => {
 			console.log(`Connected to server as ${playerName}`);
 		});
-		newSocket.on("gamestate", (gameState) => {
+		newSocket.on("gamestate", (gameState: any) => {
 			setGameState(gameState);
 			console.log("Game state received:", gameState);
 		});
@@ -55,10 +56,18 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
 	const sendMessage = (args: any[]) => {
 		socket?.emit("game", ...args);
-	}
+	};
 
 	return (
-		<PlayerContext.Provider value={{ activePlayer, setActivePlayer, gameState, sendMessage, connectedPlayer }}>
+		<PlayerContext.Provider
+			value={{
+				activePlayer,
+				setActivePlayer,
+				gameState,
+				sendMessage,
+				connectedPlayer,
+			}}
+		>
 			{children}
 		</PlayerContext.Provider>
 	);

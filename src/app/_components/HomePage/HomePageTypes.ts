@@ -1,29 +1,24 @@
-interface HexagonProps {
+export interface HexagonProps {
 	backgroundColor: string;
 }
 
-interface GameInProgressPlayerProps {
+export interface GameInProgressPlayerProps {
 	playerImage: string;
 	hexagonColors: string[];
 }
 
-interface PublicGameInProgressProps {
+export interface PublicGameInProgressProps {
 	match: {
 		player1: GameInProgressPlayerProps;
 		player2: GameInProgressPlayerProps;
 	};
 }
 
-interface CreateGameFormProps {
-	format?: string | null;
-	setFormat?: (format: string) => void;
-}
-
-interface PublicGamesProps {
+export interface PublicGamesProps {
 	format: string;
 }
 
-type Article = {
+export type Article = {
 	title: string;
 	content: string;
 	date: string;
@@ -31,6 +26,6 @@ type Article = {
 	imageAlt: string;
 };
 
-interface NewsItemProps {
+export interface NewsItemProps {
 	article: Article;
 }

@@ -4,6 +4,8 @@ import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
 import { usePlayer } from "@/app/_contexts/Player.context";
 import { send } from "process";
+import { GameCardProps } from "../../../../_sharedcomponents/Cards/CardsTypes";
+import { CardActionTrayProps } from "../../../GameboardTypes";
 
 enum ActionMode {
 	None,
@@ -20,7 +22,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 	availableResources = 0,
 	totalResources = 0,
 	handlePlayCard = () => {},
-	handleBasicPromptToggle
+	handleBasicPromptToggle,
 }) => {
 	const {
 		containerRef,
@@ -45,7 +47,7 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 		}
 	}, [resourceSelection, actionMode]);
 
-	const handleCardClick = (card: FaceCardProps) => {
+	const handleCardClick = (card: GameCardProps) => {
 		if (activePlayer !== "player") return;
 		switch (actionMode) {
 			case ActionMode.ResourceSelection:
@@ -133,24 +135,6 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 				onTouchMove={handleTouchMove}
 				onTouchEnd={handleTouchEnd}
 			>
-				{/* <Box sx={cardBoxStyle}>
-					{availableCards.map((card: FaceCardProps) => (
-						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
-							{activePlayer === "player" ? (
-								<FaceCard
-									id={card.id}
-									name={card.name}
-									selected={card.selected}
-									handleSelect={() => handleCardClick(card)}
-									disabled={isCardDisabled()}
-								/>
-							) : (
-								<BackCard />
-							)}
-						</Box>
-					))}
-				</Box> */}
-
 				<Box sx={cardBoxStyle}>
 					{availableCards.map((card) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
@@ -184,7 +168,8 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 						variant="contained"
 						sx={actionButtonStyle}
 						onClick={handleBasicPromptToggle}
-					>Open Prompt
+					>
+						Open Prompt
 					</Button>
 					<Button
 						variant="contained"

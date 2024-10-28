@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import StyledTextField from "../../_sharedcomponents/_styledcomponents/StyledTextField/StyledTextField";
+import { LoginProps } from "@/app/_components/Auth/AuthTypes";
 
 const Login: React.FC<LoginProps> = ({
 	username,
@@ -143,7 +144,7 @@ const Login: React.FC<LoginProps> = ({
 							<StyledTextField
 								type="email"
 								value={username}
-								onChange={(e) => setUsername(e.target.value)}
+								onChange={(e: any) => setUsername(e.target.value)}
 								required
 							/>
 						</FormControl>
@@ -153,7 +154,7 @@ const Login: React.FC<LoginProps> = ({
 							<StyledTextField
 								type="password"
 								value={password}
-								onChange={(e) => setPassword(e.target.value)}
+								onChange={(e: any) => setPassword(e.target.value)}
 								required
 							/>
 						</FormControl>
@@ -163,7 +164,7 @@ const Login: React.FC<LoginProps> = ({
 								<Checkbox
 									sx={checkboxStyle}
 									checked={rememberMe}
-									onChange={(e) => setRememberMe(e.target.checked)}
+									onChange={(e: any) => setRememberMe(e.target.checked)}
 								/>
 							}
 							label={

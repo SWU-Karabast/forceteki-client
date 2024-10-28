@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Box, Typography } from "@mui/material";
 import CardArea from "../../_sharedcomponents/CardArea/CardArea";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
+import { DeckProps } from "../LobbyTypes";
 
 const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 	// Use the custom hook with horizontal or vertical scrolling as required
