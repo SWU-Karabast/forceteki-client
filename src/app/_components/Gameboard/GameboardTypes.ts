@@ -1,4 +1,4 @@
-import { GameCardProps } from "../_sharedcomponents/Cards/CardsTypes";
+import { GameCardProps } from "../_sharedcomponents/Cards/CardTypes";
 
 export type ParticipantType = "player" | "opponent";
 

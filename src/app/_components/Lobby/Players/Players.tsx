@@ -27,7 +27,6 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 		color: "white",
 		ml: ".6em",
 		pt: ".2em",
-		pb: ".3em",
 	};
 
 	return (

@@ -9,3 +9,11 @@ export interface GameCardProps {
 	deckSize?: number;
 	isFaceUp: boolean;
 }
+
+export interface LeaderBaseCardProps {
+	variant: "base" | "leader";
+	selected?: boolean;
+	isLobbyView?: boolean;
+	handleSelect?: () => void;
+	title?: string;
+}

@@ -4,7 +4,7 @@ import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
 import { usePlayer } from "@/app/_contexts/Player.context";
 import { send } from "process";
-import { GameCardProps } from "../../../../_sharedcomponents/Cards/CardsTypes";
+import { GameCardProps } from "../../../../_sharedcomponents/Cards/CardTypes";
 import { CardActionTrayProps } from "../../../GameboardTypes";
 
 enum ActionMode {

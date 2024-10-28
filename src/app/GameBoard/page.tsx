@@ -11,7 +11,7 @@ import BasicPrompt from "../_components/Gameboard/_subcomponents/Overlays/Prompt
 import { mockOpponent } from "../_constants/mockData";
 import { usePlayer } from "../_contexts/Player.context";
 import { useSidebar } from "../_contexts/Sidebar.context";
-import { GameCardProps } from "../_components/_sharedcomponents/Cards/CardsTypes";
+import { GameCardProps } from "../_components/_sharedcomponents/Cards/CardTypes";
 
 const GameBoard = () => {
 	const { activePlayer, gameState } = usePlayer();

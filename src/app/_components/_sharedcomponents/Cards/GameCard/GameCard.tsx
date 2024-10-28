@@ -7,7 +7,7 @@ import {
 	Box,
 } from "@mui/material";
 import Image from "next/image";
-import { GameCardProps } from "../CardsTypes";
+import { GameCardProps } from "../CardTypes";
 
 const GameCard: React.FC<GameCardProps> = ({
 	id,
