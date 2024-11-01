@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ChangeEvent } from "react";
 import {
 	Box,
 	Button,
@@ -144,7 +144,9 @@ const Login: React.FC<LoginProps> = ({
 							<StyledTextField
 								type="email"
 								value={username}
-								onChange={(e: any) => setUsername(e.target.value)}
+								onChange={(e: ChangeEvent<HTMLInputElement>) =>
+									setUsername(e.target.value)
+								}
 								required
 							/>
 						</FormControl>
@@ -154,7 +156,9 @@ const Login: React.FC<LoginProps> = ({
 							<StyledTextField
 								type="password"
 								value={password}
-								onChange={(e: any) => setPassword(e.target.value)}
+								onChange={(e: ChangeEvent<HTMLInputElement>) =>
+									setPassword(e.target.value)
+								}
 								required
 							/>
 						</FormControl>
@@ -164,7 +168,10 @@ const Login: React.FC<LoginProps> = ({
 								<Checkbox
 									sx={checkboxStyle}
 									checked={rememberMe}
-									onChange={(e: any) => setRememberMe(e.target.checked)}
+									onChange={(
+										e: ChangeEvent<HTMLInputElement>,
+										checked: boolean
+									) => setRememberMe(checked)}
 								/>
 							}
 							label={
