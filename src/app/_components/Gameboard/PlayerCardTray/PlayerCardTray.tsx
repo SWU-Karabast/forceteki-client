@@ -3,6 +3,7 @@ import Grid from "@mui/material/Grid2";
 import Resources from "../_subcomponents/PlayerOpponentRows/Resources/Resources";
 import DeckDiscard from "../_subcomponents/PlayerOpponentRows/DeckDiscard/DeckDiscard";
 import CardActionTray from "../_subcomponents/PlayerOpponentRows/CardActionTray/CardActionTray";
+import { PlayerCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 	participant,
@@ -15,7 +16,7 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 	totalResources,
 	handlePlayCard,
 	selectedResourceCards,
-	handleBasicPromptToggle
+	handleBasicPromptToggle,
 }) => {
 	//---------------Styles------------------- //
 	const leftColumnStyle = {

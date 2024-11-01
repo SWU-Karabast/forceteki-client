@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
 import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
+import { DeckDiscardProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const DeckDiscard: React.FC<DeckDiscardProps> = ({ deckSize }) => {
 	//------------------------STYLES------------------------//

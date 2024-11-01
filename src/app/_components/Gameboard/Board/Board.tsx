@@ -3,6 +3,7 @@ import Grid from "@mui/material/Grid2";
 import SpaceUnitsBoard from "../_subcomponents/BoardRow/SpaceUnitsBoard/SpaceUnitsBoard";
 import GroundUnitsBoard from "../_subcomponents/BoardRow/GroundUnitsBoard/GroundUnitsBoard";
 import LeaderBaseBoard from "../../_sharedcomponents/LeaderBaseBoard/LeaderBaseBoard";
+import { BoardProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const Board: React.FC<BoardProps> = ({
 	sidebarOpen,

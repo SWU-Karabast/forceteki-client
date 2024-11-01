@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
+import { SetUpProps } from "../LobbyTypes";
 
 const SetUp: React.FC<SetUpProps> = ({
 	participant,

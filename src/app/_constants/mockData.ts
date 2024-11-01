@@ -1,3 +1,6 @@
+import { Article } from "@/app/_components/HomePage/HomePageTypes";
+import { Participant } from "@/app/_components/Gameboard/GameboardTypes";
+
 export const mockPlayer: Participant = {
 	id: "player1",
 	type: "player",
@@ -11,6 +14,7 @@ export const mockPlayer: Participant = {
 				unitType.charAt(0).toUpperCase() + unitType.slice(1)
 			})`,
 			unitType: unitType,
+			isFaceUp: true,
 		};
 	}),
 	fullDeck: Array.from({ length: 50 }, (_, i) => {
@@ -21,6 +25,7 @@ export const mockPlayer: Participant = {
 				unitType.charAt(0).toUpperCase() + unitType.slice(1)
 			})`,
 			unitType: unitType,
+			isFaceUp: true,
 		};
 	}),
 };
@@ -38,6 +43,7 @@ export const mockOpponent: Participant = {
 				unitType.charAt(0).toUpperCase() + unitType.slice(1)
 			})`,
 			unitType: unitType,
+			isFaceUp: false,
 		};
 	}),
 	fullDeck: Array.from({ length: 50 }, (_, i) => {
@@ -48,6 +54,7 @@ export const mockOpponent: Participant = {
 				unitType.charAt(0).toUpperCase() + unitType.slice(1)
 			})`,
 			unitType: unitType,
+			isFaceUp: false,
 		};
 	}),
 };

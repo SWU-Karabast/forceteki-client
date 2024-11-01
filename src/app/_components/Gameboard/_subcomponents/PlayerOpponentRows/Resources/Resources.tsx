@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
 import Image from "next/image";
+import { ResourcesProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const Resources: React.FC<ResourcesProps> = ({
 	availableResources,

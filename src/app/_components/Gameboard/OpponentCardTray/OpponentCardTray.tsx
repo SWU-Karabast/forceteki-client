@@ -3,6 +3,7 @@ import Grid from "@mui/material/Grid2";
 import Resources from "../_subcomponents/PlayerOpponentRows/Resources/Resources";
 import DeckDiscard from "../_subcomponents/PlayerOpponentRows/DeckDiscard/DeckDiscard";
 import CardActionTray from "../_subcomponents/PlayerOpponentRows/CardActionTray/CardActionTray";
+import { OpponentCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ participant }) => {
 	//---------------Styles------------------- //

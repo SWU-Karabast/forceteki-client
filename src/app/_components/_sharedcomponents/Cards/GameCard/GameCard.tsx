@@ -7,20 +7,9 @@ import {
 	Box,
 } from "@mui/material";
 import Image from "next/image";
+import { GameCardProps } from "../CardTypes";
 
-interface CardProps {
-	id?: number;
-	name?: string;
-	selected?: boolean;
-	disabled?: boolean;
-	unitType?: "ground" | "space";
-	handleSelect?: () => void;
-	path?: string;
-	deckSize?: number;
-	isFaceUp: boolean;
-}
-
-const GameCard: React.FC<CardProps> = ({
+const GameCard: React.FC<GameCardProps> = ({
 	id,
 	name,
 	selected = false,
@@ -31,6 +20,12 @@ const GameCard: React.FC<CardProps> = ({
 	deckSize,
 	isFaceUp,
 }) => {
+	console.log(
+		"temporary log of variables id, unitType to avoid unused vars",
+		id,
+		unitType
+	);
+
 	const isLobbyView = path === "/lobby";
 
 	// Base styles shared between face-up and face-down cards

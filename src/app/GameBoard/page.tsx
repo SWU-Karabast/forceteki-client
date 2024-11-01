@@ -11,7 +11,7 @@ import BasicPrompt from "../_components/Gameboard/_subcomponents/Overlays/Prompt
 import { mockOpponent } from "../_constants/mockData";
 import { usePlayer } from "../_contexts/Player.context";
 import { useSidebar } from "../_contexts/Sidebar.context";
-
+import { GameCardProps } from "../_components/_sharedcomponents/Cards/CardTypes";
 
 const GameBoard = () => {
 	const { activePlayer, gameState } = usePlayer();
@@ -30,22 +30,22 @@ const GameBoard = () => {
 	const [availableResources, setAvailableResources] = useState(0);
 
 	// State for card management
-	const [availableCards, setAvailableCards] = useState<FaceCardProps[]>(
+	const [availableCards, setAvailableCards] = useState<GameCardProps[]>(
 		activePlayer.cards
 	);
 	const [selectedResourceCards, setSelectedResourceCards] = useState<
-		FaceCardProps[]
+		GameCardProps[]
 	>([]);
 
 	// States for played cards
 	const [playedGroundCards, setPlayedGroundCards] = useState<{
-		player: FaceCardProps[];
-		opponent: FaceCardProps[];
+		player: GameCardProps[];
+		opponent: GameCardProps[];
 	}>({ player: [], opponent: [] });
 
 	const [playedSpaceCards, setPlayedSpaceCards] = useState<{
-		player: FaceCardProps[];
-		opponent: FaceCardProps[];
+		player: GameCardProps[];
+		opponent: GameCardProps[];
 	}>({ player: [], opponent: [] });
 
 	const handleChatSubmit = () => {
@@ -71,7 +71,7 @@ const GameBoard = () => {
 	};
 
 	// Handler to select a card for resource selection
-	const handleSelectResourceCard = (card: FaceCardProps) => {
+	const handleSelectResourceCard = (card: GameCardProps) => {
 		if (resourceSelection && activePlayer.type === "player") {
 			if (availableResources < totalResources) {
 				// Check resource limit
@@ -86,7 +86,7 @@ const GameBoard = () => {
 	};
 
 	// Function to handle playing a card from the hand to the board
-	const handlePlayCard = (card: FaceCardProps) => {
+	const handlePlayCard = (card: GameCardProps) => {
 		if (availableResources > 0 && activePlayer.type === "player") {
 			if (card.unitType === "ground") {
 				setPlayedGroundCards((prev) => ({
@@ -112,10 +112,10 @@ const GameBoard = () => {
 	useEffect(() => {
 		if (!opponentCardsInitialized.current) {
 			const groundCard = mockOpponent.cards.find(
-				(card) => card.unitType === "ground"
+				(card: GameCardProps) => card.unitType === "ground"
 			);
 			const spaceCard = mockOpponent.cards.find(
-				(card) => card.unitType === "space"
+				(card: GameCardProps) => card.unitType === "space"
 			);
 			if (groundCard) {
 				setPlayedGroundCards((prev) => ({

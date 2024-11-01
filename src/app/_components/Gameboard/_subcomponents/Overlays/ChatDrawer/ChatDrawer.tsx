@@ -2,9 +2,10 @@ import React, { forwardRef } from "react";
 import { Drawer, Box, IconButton, Typography } from "@mui/material";
 import { Settings, Close } from "@mui/icons-material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
+import { ChatDrawerProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
-	(
+	function ChatDrawer(
 		{
 			sidebarOpen,
 			toggleSidebar,
@@ -15,7 +16,7 @@ const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
 			currentRound,
 		},
 		ref
-	) => {
+	) {
 		//------------------------STYLES------------------------//
 
 		const drawerStyle = {

@@ -8,22 +8,22 @@ import {
 	Typography,
 	Box,
 	IconButton,
-    Button,
+	Button,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import { usePlayer } from '@/app/_contexts/Player.context';
-import CardArea from "../../../../_sharedcomponents/CardArea/CardArea";
+import { usePlayer } from "@/app/_contexts/Player.context";
+import { BasicPromptProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const BasicPrompt: React.FC<BasicPromptProps> = ({
 	isBasicPromptOpen,
-	handleBasicPromptToggle
+	handleBasicPromptToggle,
 }) => {
-    const { connectedPlayer, gameState, sendMessage } = usePlayer();
-    if (!gameState) {
-        return null;
-    }
+	const { connectedPlayer, gameState, sendMessage } = usePlayer();
+	if (!gameState) {
+		return null;
+	}
 
-    const playerState = gameState.players[connectedPlayer];
+	const playerState = gameState.players[connectedPlayer];
 
 	return (
 		<Modal
@@ -53,11 +53,15 @@ const BasicPrompt: React.FC<BasicPromptProps> = ({
 					<Typography variant="caption" color="#fff">
 						{playerState.promptTitle || ""}
 					</Typography>
-                    <Box>
-						{playerState.buttons.map((button: any) => (
-							<PromptButton key={button.arg} button={button} sendMessage={sendMessage} />
+					<Box>
+						{playerState.buttons.map((button: ButtonsProps) => (
+							<PromptButton
+								key={button.arg}
+								button={button}
+								sendMessage={sendMessage}
+							/>
 						))}
-                    </Box>
+					</Box>
 				</CardContent>
 				<Box
 					sx={{
@@ -79,14 +83,15 @@ const BasicPrompt: React.FC<BasicPromptProps> = ({
 };
 
 interface PromptButtonProps {
-	button: {
-		command: string;
-		arg: string;
-        text: string;
-        uuid: string;
-        method?: any;
-	};
-	sendMessage: (args: any) => void;
+	button: ButtonsProps
+	sendMessage: (args: [string, string, string]) => void;
+}
+
+interface ButtonsProps {
+	command: string;
+	arg: string;
+	text: string;
+	uuid: string;
 }
 
 const PromptButton: React.FC<PromptButtonProps> = ({ button, sendMessage }) => {
@@ -98,6 +103,6 @@ const PromptButton: React.FC<PromptButtonProps> = ({ button, sendMessage }) => {
 			{button.text}
 		</Button>
 	);
-}
+};
 
 export default BasicPrompt;

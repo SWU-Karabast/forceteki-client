@@ -27,6 +27,12 @@ const Auth: React.FC = () => {
 	const [signUpPasswordMatchError, setSignUpPasswordMatchError] =
 		useState<boolean>(false);
 
+	console.log(
+		"temporary use of variables setSignUpPasswordError, setSignUpPasswordMatchError to avoid unused vars",
+		setSignUpPasswordError,
+		setSignUpPasswordMatchError
+	);
+
 	const { login } = useUser(); // Get the login function from UserContext
 
 	// Handle Login Submission

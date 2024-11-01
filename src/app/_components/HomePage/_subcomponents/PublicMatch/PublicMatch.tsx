@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Button, Typography } from "@mui/material";
 import GameInProgressPlayer from "../GameInProgressPlayer/GameInProgressPlayer";
+import { PublicGameInProgressProps } from "../../HomePageTypes";
 
 const PublicMatch: React.FC<PublicGameInProgressProps> = ({ match }) => {
 	//------------------------STYLES------------------------//

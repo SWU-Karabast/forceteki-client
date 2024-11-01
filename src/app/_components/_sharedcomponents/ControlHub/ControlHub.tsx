@@ -3,10 +3,10 @@ import { Box, Divider, IconButton, Typography } from "@mui/material";
 import { Settings, Menu, ArrowBackIosNew, GitHub } from "@mui/icons-material";
 import { FaDiscord, FaPatreon } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
-
 import NextLinkMui from "./_subcomponents/NextLinkMui/NextLinkMui";
+import { ControlHubProps } from "./ControlHubTypes";
 
-const ControlHub: React.FC<ControlHub> = ({
+const ControlHub: React.FC<ControlHubProps> = ({
 	sidebarOpen,
 	toggleSidebar,
 	path,

@@ -1,56 +1,63 @@
-// LeaderBase.tsx
 import React from "react";
 import Grid from "@mui/material/Grid2";
-import LeaderCard from "../../Cards/LeaderCard/LeaderCard";
-import BaseCard from "../../Cards/BaseCard/BaseCard";
+import LeaderBaseCard from "../../Cards/LeaderBaseCard/LeaderBaseCard";
+import { LeaderBaseProps } from "../LeaderBaseBoardTypes";
 
 const LeaderBase: React.FC<LeaderBaseProps> = ({
 	participant,
-	isLobbyView,
+	isLobbyView = false,
 	title,
 }) => {
-	//------------------------STYLES------------------------//
-
+	// Adjusted styles
 	const containerStyle = {
 		justifyContent:
 			participant === "opponent" && isLobbyView
-				? "flex-end" // flex-start for player side in lobby because in lobby it is on top rather than bottom
+				? "flex-end"
 				: participant === "player" && isLobbyView
-				? "flex-start" // flex-end for opponent side in lobby because in lobby it is on bottom rather than top
+				? "flex-start"
 				: participant === "player"
 				? "flex-end"
 				: "flex-start",
 		alignItems: "center",
 		gap: ".5em",
 		height: "94%",
-		pt: isLobbyView ? 0 : "3.5em", // No padding in lobby, 3.5em outside meaning in the gameboard
+		pt: isLobbyView ? 0 : "3.5em",
 		pb:
 			participant === "player" && isLobbyView
-				? 0 // no padding in lobby
+				? 0
 				: participant === "player"
-				? "4vh" // padding for player side
-				: 0, // no padding for opponent side
+				? "4vh"
+				: 0,
 	};
 
 	return (
 		<Grid container direction="column" sx={containerStyle}>
 			{isLobbyView ? (
-				// leader card on top in lobby view for both player and opponent
 				<>
-					<LeaderCard isLobbyView={isLobbyView} title={title} />
-					<BaseCard isLobbyView={isLobbyView} />
+					<LeaderBaseCard
+						variant="leader"
+						isLobbyView={isLobbyView}
+						title={title}
+					/>
+					<LeaderBaseCard variant="base" isLobbyView={isLobbyView} />
 				</>
 			) : participant === "player" ? (
-				// player side leader card on bottom in gameboard
 				<>
-					<BaseCard isLobbyView={isLobbyView} />
-					<LeaderCard isLobbyView={isLobbyView} title={title} />
+					<LeaderBaseCard variant="base" isLobbyView={isLobbyView} />
+					<LeaderBaseCard
+						variant="leader"
+						isLobbyView={isLobbyView}
+						title={title}
+					/>
 				</>
 			) : (
-				// opponent side leader card on bottom in gameboard
 				<>
-					<LeaderCard isLobbyView={isLobbyView} title={title} />
-					<BaseCard isLobbyView={isLobbyView} />
+					<LeaderBaseCard
+						variant="leader"
+						isLobbyView={isLobbyView}
+						title={title}
+					/>
+					<LeaderBaseCard variant="base" isLobbyView={isLobbyView} />
 				</>
 			)}
 		</Grid>

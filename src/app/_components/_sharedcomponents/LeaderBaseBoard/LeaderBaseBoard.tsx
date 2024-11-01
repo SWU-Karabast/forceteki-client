@@ -1,14 +1,16 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
 import LeaderBase from "./LeaderBase/LeaderBase";
-import { usePlayer } from '@/app/_contexts/Player.context';
+import { usePlayer } from "@/app/_contexts/Player.context";
+import { LeaderBaseBoardProps } from "./LeaderBaseBoardTypes";
 
 const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 	participant,
 	isLobbyView,
 }) => {
-	const { connectedPlayer } = usePlayer()
-	const titleOpponent = connectedPlayer === 'ThisIsTheWay' ? 'Order66' : 'ThisIsTheWay';
+	const { connectedPlayer } = usePlayer();
+	const titleOpponent =
+		connectedPlayer === "ThisIsTheWay" ? "Order66" : "ThisIsTheWay";
 	//------------------------STYLES------------------------//
 
 	const containerStyle = {

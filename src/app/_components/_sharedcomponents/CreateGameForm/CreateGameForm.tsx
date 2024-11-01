@@ -1,4 +1,4 @@
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, ChangeEvent } from "react";
 import {
 	Box,
 	Button,
@@ -14,6 +14,11 @@ import {
 } from "@mui/material";
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
 import { usePathname } from "next/navigation";
+
+interface CreateGameFormProps {
+	format?: string | null;
+	setFormat?: (format: string) => void;
+}
 
 const deckOptions: string[] = [
 	"Vader Green Ramp",
@@ -157,7 +162,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 							<StyledTextField
 								select
 								value={favouriteDeck}
-								onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+								onChange={(e: ChangeEvent<HTMLInputElement>) =>
 									setFavouriteDeck(e.target.value)
 								}
 								placeholder="Vader Green Ramp"
@@ -183,7 +188,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 							<StyledTextField
 								type="url"
 								value={deckLink}
-								onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+								onChange={(e: ChangeEvent<HTMLInputElement>) =>
 									setDeckLink(e.target.value)
 								}
 								required
@@ -196,7 +201,10 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 								<Checkbox
 									sx={checkboxStyle}
 									checked={saveDeck}
-									onChange={(e) => setSaveDeck(e.target.checked)}
+									onChange={(
+										e: ChangeEvent<HTMLInputElement>,
+										checked: boolean
+									) => setSaveDeck(checked)}
 								/>
 							}
 							label={
@@ -207,7 +215,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 							sx={{ mb: isCreateGamePath ? 1 : 3 }}
 						/>
 
-						{/* Additional Fields for Non-Creategame Path --- Meaning the homepage so "/"  */}
+						{/* Additional Fields for Non-Creategame Path */}
 						{!isCreateGamePath && (
 							<>
 								{/* Game Name Input */}
@@ -221,7 +229,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 									<StyledTextField
 										type="text"
 										value={gameName}
-										onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+										onChange={(e: ChangeEvent<HTMLInputElement>) =>
 											setGameName(e.target.value)
 										}
 										placeholder="Enter Game Name"
@@ -234,7 +242,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 									<StyledTextField
 										select
 										value={format}
-										onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+										onChange={(e: ChangeEvent<HTMLInputElement>) =>
 											setFormat ? setFormat(e.target.value) : null
 										}
 										required
@@ -252,7 +260,10 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 									<RadioGroup
 										row
 										value={privacy}
-										onChange={(e) => setPrivacy(e.target.value)}
+										onChange={(
+											e: ChangeEvent<HTMLInputElement>,
+											value: string
+										) => setPrivacy(value)}
 									>
 										<FormControlLabel
 											value="Public"

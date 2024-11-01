@@ -6,6 +6,7 @@ import {
 	Typography,
 	Box,
 } from "@mui/material";
+import { NewsItemProps } from "../../HomePageTypes";
 
 const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 	//------------------------STYLES------------------------//

@@ -1,6 +1,7 @@
 import React from "react";
 import { Box } from "@mui/material";
 import GameCard from "../Cards/GameCard/GameCard";
+import { CardAreaProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const CardArea: React.FC<CardAreaProps> = ({ cards }) => {
 	//------------------------STYLES------------------------//
