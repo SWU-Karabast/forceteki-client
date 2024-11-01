@@ -20,6 +20,12 @@ const GameCard: React.FC<GameCardProps> = ({
 	deckSize,
 	isFaceUp,
 }) => {
+	console.log(
+		"temporary log of variables id, unitType to avoid unused vars",
+		id,
+		unitType
+	);
+
 	const isLobbyView = path === "/lobby";
 
 	// Base styles shared between face-up and face-down cards

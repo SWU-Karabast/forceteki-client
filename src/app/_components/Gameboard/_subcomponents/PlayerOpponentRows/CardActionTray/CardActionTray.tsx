@@ -39,6 +39,13 @@ const CardActionTray: React.FC<CardActionTrayProps> = ({
 	const [actionMode, setActionMode] = useState<ActionMode>(ActionMode.None);
 	const { sendMessage } = usePlayer();
 
+	console.log(
+		"temporary log of variable send, sendMessage and setResourceSelection to avoid unused vars",
+		send,
+		sendMessage,
+		setResourceSelection
+	);
+
 	useEffect(() => {
 		if (resourceSelection) {
 			setActionMode(ActionMode.ResourceSelection);
