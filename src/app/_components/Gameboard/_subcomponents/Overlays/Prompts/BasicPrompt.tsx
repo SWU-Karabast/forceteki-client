@@ -54,7 +54,7 @@ const BasicPrompt: React.FC<BasicPromptProps> = ({
 						{playerState.promptTitle || ""}
 					</Typography>
 					<Box>
-						{playerState.buttons.map((button: any) => (
+						{playerState.buttons.map((button: ButtonsProps) => (
 							<PromptButton
 								key={button.arg}
 								button={button}
@@ -83,14 +83,15 @@ const BasicPrompt: React.FC<BasicPromptProps> = ({
 };
 
 interface PromptButtonProps {
-	button: {
-		command: string;
-		arg: string;
-		text: string;
-		uuid: string;
-		method?: any;
-	};
-	sendMessage: (args: any) => void;
+	button: ButtonsProps
+	sendMessage: (args: [string, string, string]) => void;
+}
+
+interface ButtonsProps {
+	command: string;
+	arg: string;
+	text: string;
+	uuid: string;
 }
 
 const PromptButton: React.FC<PromptButtonProps> = ({ button, sendMessage }) => {
