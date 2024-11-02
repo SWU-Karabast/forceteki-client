@@ -1,4 +1,6 @@
-interface LoginProps {
+import React from "react";
+
+export interface LoginProps {
 	username: string;
 	setUsername: (value: string) => void;
 	password: string;
@@ -9,7 +11,7 @@ interface LoginProps {
 	toggleAuth: () => void;
 }
 
-interface SignUpProps {
+export interface SignUpProps {
 	email: string;
 	setEmail: (value: string) => void;
 	password: string;
@@ -22,7 +24,7 @@ interface SignUpProps {
 	toggleAuth: () => void;
 }
 
-interface StyledTextFieldProps {
+export interface StyledTextFieldProps {
 	variant?: "outlined" | "filled" | "standard";
 	fullWidth?: boolean;
 	value?: string | null;

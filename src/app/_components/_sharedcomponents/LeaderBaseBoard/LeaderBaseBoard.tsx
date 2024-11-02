@@ -1,26 +1,33 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
 import LeaderBase from "./LeaderBase/LeaderBase";
+import { usePlayer } from "@/app/_contexts/Player.context";
+import { LeaderBaseBoardProps } from "./LeaderBaseBoardTypes";
 
 const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 	participant,
 	isLobbyView,
 }) => {
-	const titlePlayer = "ThisIsTheWay";
-	const titleOpponent = "Order66";
+	const { connectedPlayer } = usePlayer();
+	const titleOpponent =
+		connectedPlayer === "ThisIsTheWay" ? "Order66" : "ThisIsTheWay";
+	//------------------------STYLES------------------------//
+
+	const containerStyle = {
+		height: "100%",
+		width: "100%",
+		justifyContent: "space-between",
+	};
+
+	const rowStyle = {
+		flexGrow: 1,
+		width: "100%",
+	};
 
 	return (
-		<Grid
-			container
-			direction="column"
-			sx={{
-				height: "100%",
-				width: "100%",
-				justifyContent: "space-between",
-			}}
-		>
+		<Grid container direction="column" sx={containerStyle}>
 			{/* Opponent's row */}
-			<Grid sx={{ flexGrow: 1, width: "100%" }}>
+			<Grid sx={rowStyle}>
 				<LeaderBase
 					participant={"opponent"}
 					isLobbyView={isLobbyView}
@@ -28,11 +35,11 @@ const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 				/>
 			</Grid>
 			{/* Player's row */}
-			<Grid sx={{ flexGrow: 1, width: "100%" }}>
+			<Grid sx={rowStyle}>
 				<LeaderBase
 					participant={participant.type}
 					isLobbyView={isLobbyView}
-					title={titlePlayer}
+					title={connectedPlayer}
 				/>
 			</Grid>
 		</Grid>

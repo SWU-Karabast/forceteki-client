@@ -1,9 +1,11 @@
-interface PlayersProps {
+import { Participant } from "@/app/_components/Gameboard/GameboardTypes";
+
+export interface PlayersProps {
 	participant: Participant;
 	isLobbyView?: boolean;
 }
 
-interface SetUpProps {
+export interface SetUpProps {
 	participant: Participant;
 	chatHistory: string[];
 	chatMessage: string;
@@ -14,4 +16,8 @@ interface SetUpProps {
 	setChatMessage: (message: string) => void;
 	handleChatSubmit: () => void;
 	handleRollInitiative: () => void;
+}
+
+export interface DeckProps {
+	activePlayer: Participant;
 }

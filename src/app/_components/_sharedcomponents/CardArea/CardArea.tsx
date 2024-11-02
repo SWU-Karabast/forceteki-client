@@ -1,26 +1,30 @@
 import React from "react";
 import { Box } from "@mui/material";
-import FaceCard from "../Cards/FaceCard/FaceCard";
+import GameCard from "../Cards/GameCard/GameCard";
+import { CardAreaProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const CardArea: React.FC<CardAreaProps> = ({ cards }) => {
+	//------------------------STYLES------------------------//
+	const mainContainerStyle = {
+		display: "flex",
+		flexWrap: "wrap",
+		gap: "3em",
+		p: "1em",
+		justifyContent: "center",
+		textWrap: "wrap",
+	};
+
 	return (
-		<Box
-			sx={{
-				display: "flex",
-				flexWrap: "wrap",
-				gap: 5,
-				justifyContent: "center",
-				textWrap: "wrap",
-			}}
-		>
+		<Box sx={mainContainerStyle}>
 			{cards.map((card) => (
-				<FaceCard
+				<GameCard
 					path={"/lobby"}
 					key={card.id}
 					name={card.name}
-					selected={false} // Selection logic can be added if needed
-					handleSelect={() => {}} // No action on select within ResourcesOverlay
+					selected={false}
+					handleSelect={() => {}}
 					disabled={true}
+					isFaceUp={true}
 				/>
 			))}
 		</Box>

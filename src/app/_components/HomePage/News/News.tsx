@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Box, Card, CardContent, Typography } from "@mui/material";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
 import NewsItem from "../_subcomponents/NewsItem/NewsItem";
@@ -15,51 +15,93 @@ const NewsColumn: React.FC = () => {
 		handleTouchEnd,
 	} = useDragScroll("vertical");
 
+	//------------------------STYLES------------------------//
+
+	const boxStyle = {
+		height: "80vh",
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		mr: "1.8em",
+	};
+
+	const topCardStyle = {
+		height: "25vh",
+		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
+		borderRadius: "1.5vw",
+		backgroundColor: "#18325199",
+		backdropFilter: "blur(20px)",
+		display: "flex",
+		flexDirection: "column",
+		justifyContent: "center",
+		p: "1.5em",
+	};
+
+	const topCardHeadingTypographyStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontSize: "1.8em",
+		fontWeight: "600",
+		color: "#fff",
+		mb: ".8em",
+	};
+
+	const topCardContentTypographyStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontSize: "1.4em",
+		fontWeight: "400",
+		textAlign: "left",
+		color: "#fff",
+		mb: ".8em",
+	};
+
+	const bottomCardStyle = {
+		flexGrow: 1,
+		fontFamily: "var(--font-barlow), sans-serif",
+		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
+		borderRadius: "1.5em",
+		overflowY: "auto",
+		backgroundColor: "#000000E6",
+		backdropFilter: "blur(20px)",
+		mt: "1em",
+		p: "2em",
+		pt: 0, // so each article can hide behind the sticky title
+		clipPath: "inset(0 0 0 0 round 1.5vw)",
+		"::-webkit-scrollbar": {
+			width: "0.2vw",
+		},
+		"::-webkit-scrollbar-thumb": {
+			backgroundColor: "#D3D3D3B3",
+			borderRadius: "1vw",
+		},
+		"::-webkit-scrollbar-button": {
+			display: "none",
+		},
+		transition: "scrollbar-color 0.3s ease-in-out",
+	};
+
+	const stickyTitleBoxStyle = {
+		position: "sticky",
+		top: 0,
+		zIndex: 2,
+		backgroundColor: "#000000",
+		mb: ".8em",
+	};
+
+	const titleStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "8		00",
+		color: "#fff",
+	};
+
 	return (
-		<Box
-			sx={{
-				height: "80vh",
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				mr: 3,
-			}}
-		>
+		<Box sx={boxStyle}>
 			{/* Top Card: Fixed size */}
-			<Card
-				sx={{
-					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
-					borderRadius: "1.5vw",
-					backgroundColor: "#18325199",
-					backdropFilter: "blur(20px)",
-					mb: 1,
-					p: "1.5em",
-					height: "30vh",
-				}}
-			>
+			<Card sx={topCardStyle}>
 				<CardContent>
-					<Typography
-						variant="h6"
-						sx={{
-							color: "#fff",
-							mb: 2,
-							fontWeight: "600",
-							fontFamily: "var(--font-barlow), sans-serif",
-						}}
-					>
+					<Typography variant="h4" sx={topCardHeadingTypographyStyle}>
 						Karabast is an open-source, fan-made platform.
 					</Typography>
-					<Typography
-						variant="body1"
-						sx={{
-							color: "#fff",
-							textAlign: "left",
-							mb: 2,
-							fontSize: "1rem",
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontWeight: "400",
-						}}
-					>
+					<Typography variant="body1" sx={topCardContentTypographyStyle}>
 						This tool is free to use and is published non-commercially. Payment
 						is not required to access any functionality.
 					</Typography>
@@ -75,46 +117,13 @@ const NewsColumn: React.FC = () => {
 				onTouchStart={handleTouchStart}
 				onTouchMove={handleTouchMove}
 				onTouchEnd={handleTouchEnd}
-				sx={{
-					flexGrow: 1,
-					fontFamily: "var(--font-barlow), sans-serif",
-					width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
-					borderRadius: "1.5vw",
-					overflowY: "auto",
-					backgroundColor: "#000000E6",
-					backdropFilter: "blur(20px)",
-					mt: 2,
-					p: "2em",
-					clipPath: "inset(0 0 0 0 round 1.5vw)", // Clips the scrollbar within the border-radius
-					"::-webkit-scrollbar": {
-						width: "0.2vw",
-					},
-					"::-webkit-scrollbar-thumb": {
-						backgroundColor: "#D3D3D3B3",
-						borderRadius: "1vw",
-					},
-					"::-webkit-scrollbar-button": {
-						display: "none",
-					},
-					transition: "scrollbar-color 0.3s ease-in-out",
-				}}
+				sx={bottomCardStyle}
 			>
-				{/* Sticky Title */}
-				<Typography
-					variant="h4"
-					sx={{
-						position: "sticky",
-						top: 0,
-						zIndex: 1,
-						fontFamily: "var(--font-barlow), sans-serif",
-						color: "#fff",
-						mb: 3,
-						fontWeight: "800",
-					}}
-				>
-					News
-				</Typography>
-
+				<Box sx={stickyTitleBoxStyle}>
+					<Typography variant="h4" sx={titleStyle}>
+						News
+					</Typography>
+				</Box>
 				{articles.map((article, index) => (
 					<NewsItem article={article} key={index} />
 				))}

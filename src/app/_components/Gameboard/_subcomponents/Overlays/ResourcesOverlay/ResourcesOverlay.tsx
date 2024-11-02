@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import CardArea from "../../../../_sharedcomponents/CardArea/CardArea";
+import { ResourcesOverlayProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 	isModalOpen,
@@ -42,6 +43,10 @@ const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 					<Typography variant="h6" color="#fff">
 						Your Resources
 					</Typography>
+					<Typography variant="caption" color="#fff">
+						Your Resources
+					</Typography>
+
 					<CardArea cards={selectedResourceCards} />
 				</CardContent>
 				<Box

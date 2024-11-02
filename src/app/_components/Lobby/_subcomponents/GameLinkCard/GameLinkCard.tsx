@@ -9,44 +9,49 @@ import {
 } from "@mui/material";
 
 const GameLinkCard: React.FC = () => {
+	//------------------------STYLES------------------------//
+
+	const cardStyle = {
+		height: "15vh",
+		background: "#18325199",
+		pb: "4vh",
+		backgroundColor: "#000000E6",
+		backdropFilter: "blur(20px)",
+	};
+
+	const textFieldStyle = {
+		backgroundColor: "#fff2",
+		"& .MuiInputBase-input": {
+			color: "#fff",
+		},
+		"& .MuiInputBase-input::placeholder": {
+			color: "#fff",
+		},
+	};
+
+	const boxStyle = {
+		display: "flex",
+		justifyContent: "flex-end",
+		mt: "1em",
+	};
+
+	const buttonStyle = {
+		backgroundColor: "#292929",
+	};
+
 	return (
-		<Card
-			sx={{
-				height: "15vh",
-				background: "#18325199",
-				pb: "4vh",
-				backgroundColor: "#000000E6",
-				backdropFilter: "blur(20px)",
-			}}
-		>
+		<Card sx={cardStyle}>
 			<CardContent>
 				<Typography variant="h6" sx={{ color: "white" }}>
 					Game Link
 				</Typography>
 				<TextField
 					fullWidth
-					sx={{
-						color: "#fff",
-						backgroundColor: "#fff2",
-						"& .MuiInputBase-input::placeholder": {
-							color: "#fff",
-						},
-					}}
+					sx={textFieldStyle}
 					placeholder="https://properlink.com"
 				/>
-				<Box
-					sx={{
-						display: "flex",
-						justifyContent: "flex-end",
-						mt: "1vh",
-					}}
-				>
-					<Button
-						variant="contained"
-						sx={{
-							backgroundColor: "#292929",
-						}}
-					>
+				<Box sx={boxStyle}>
+					<Button variant="contained" sx={buttonStyle}>
 						Copy Invite Link
 					</Button>
 				</Box>

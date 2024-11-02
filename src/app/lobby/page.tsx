@@ -51,18 +51,34 @@ const Lobby = () => {
 		}, Math.random() * 3000 + 2000);
 	};
 
+	//------------------------STYLES------------------------//
+
+	const containerStyle = {
+		height: "100vh",
+		overflow: "hidden",
+	};
+
+	const setUpGridStyle = {
+		justifyContent: "center",
+		alignContent: "center",
+		pl: "20px",
+		mb: "16.3em",
+	};
+
+	const playersGridStyle = {
+		justifyContent: "center",
+		alignContent: "center",
+	};
+
+	const deckGridStyle = {
+		justifyContent: "center",
+		alignContent: "center",
+		pr: "20px",
+	};
+
 	return (
-		<Grid container sx={{ height: "100vh", overflow: "hidden" }}>
-			<Grid
-				container
-				size={4}
-				sx={{
-					justifyContent: "center",
-					alignContent: "center",
-					pl: "20px",
-					mb: "30vh",
-				}}
-			>
+		<Grid container sx={containerStyle}>
+			<Grid container size={4} sx={setUpGridStyle}>
 				<SetUp
 					participant={activePlayer}
 					chatMessage={chatMessage}
@@ -76,22 +92,10 @@ const Lobby = () => {
 					isRollSame={isRollSame}
 				/>
 			</Grid>
-			<Grid
-				container
-				size={3}
-				sx={{ justifyContent: "center", alignContent: "center" }}
-			>
+			<Grid container size={3} sx={playersGridStyle}>
 				<Players participant={activePlayer} isLobbyView={isLobbyView} />
 			</Grid>
-			<Grid
-				container
-				size={5}
-				sx={{
-					justifyContent: "center",
-					alignContent: "center",
-					pr: "20px",
-				}}
-			>
+			<Grid container size={5} sx={deckGridStyle}>
 				<Deck activePlayer={activePlayer} />
 			</Grid>
 		</Grid>

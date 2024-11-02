@@ -10,35 +10,37 @@ const Navbar = () => {
 	const pathname = usePathname();
 	const { sidebarOpen, toggleSidebar } = useSidebar();
 
+	//------------------------STYLES------------------------//
+
+	const navbarContainerStyle = {
+		position: "fixed",
+		top: 0,
+		left: 0,
+		right: 0,
+		zIndex: 1100,
+		width: "100%",
+	};
+
+	const gameLobbyTextStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontSize: "2.6em",
+		fontWeight: "600",
+		color: "#fff",
+		ml: ".5vw",
+	};
+
 	return (
 		<Grid
 			container
 			justifyContent="space-between"
 			alignItems="center"
-			sx={{
-				position: "fixed",
-				top: 0,
-				left: 0,
-				right: 0,
-				zIndex: 1100,
-				width: "100%",
-			}}
+			sx={navbarContainerStyle}
 		>
-			{pathname === "/lobby" ? (
-				<Typography
-					variant="h6"
-					sx={{
-						fontFamily: "var(--font-barlow), sans-serif",
-						fontSize: "1.67vw",
-						fontWeight: "600",
-						color: "#fff",
-						mt: ".5vh",
-						ml: ".5vw",
-					}}
-				>
+			{pathname === "/lobby" && (
+				<Typography variant="h1" sx={gameLobbyTextStyle}>
 					GAME LOBBY
 				</Typography>
-			) : null}
+			)}
 
 			<ControlHub
 				path={pathname}

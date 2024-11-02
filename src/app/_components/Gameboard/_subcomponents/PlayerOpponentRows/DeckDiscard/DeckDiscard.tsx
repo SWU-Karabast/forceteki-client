@@ -1,58 +1,47 @@
-// DeckDiscard.tsx
-
 import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
-import BackCard from "../../../../_sharedcomponents/Cards/BackCard/BackCard";
+import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
+import { DeckDiscardProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const DeckDiscard: React.FC<DeckDiscardProps> = ({ deckSize }) => {
+	//------------------------STYLES------------------------//
+	const containerStyle = {
+		display: "flex",
+		flexDirection: "row",
+		gap: "1vw",
+		justifyContent: "center",
+		alignItems: "center",
+	};
+
+	const discardCardStyle = {
+		backgroundColor: "#282828E6",
+		width: "9vh",
+		height: "9vh",
+	};
+
+	const cardContentStyle = {
+		height: "100%",
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "center",
+		textAlign: "center",
+	};
+
+	const discardTextStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "800",
+		fontSize: "1.2em",
+		color: "white",
+	};
+
 	return (
-		<Box
-			sx={{
-				display: "flex",
-				flexDirection: "row",
-				gap: "1vw",
-				justifyContent: "center",
-				alignItems: "center",
-			}}
-		>
-			{/* Discard */}
-			<Card
-				sx={{
-					backgroundColor: "#282828E6",
-					width: "9vh",
-					height: "9vh",
-					display: "flex",
-					borderRadius: "5px",
-					justifyContent: "center",
-					alignItems: "center",
-				}}
-			>
-				<CardContent
-					sx={{
-						width: "100%",
-						height: "100%",
-						display: "flex",
-						justifyContent: "center",
-						alignItems: "center",
-						textAlign: "center",
-					}}
-				>
-					<Typography
-						variant="body2"
-						sx={{
-							fontFamily: "var(--font-barlow), sans-serif",
-							fontWeight: "800",
-							fontSize: "2vh",
-							color: "white",
-						}}
-					>
-						Discard
-					</Typography>
+		<Box sx={containerStyle}>
+			<Card sx={discardCardStyle}>
+				<CardContent sx={cardContentStyle}>
+					<Typography sx={discardTextStyle}>Discard</Typography>
 				</CardContent>
 			</Card>
-
-			{/* Deck Pile */}
-			<BackCard deckSize={deckSize} />
+			<GameCard deckSize={deckSize} isFaceUp={false} />
 		</Box>
 	);
 };

@@ -27,6 +27,12 @@ const Auth: React.FC = () => {
 	const [signUpPasswordMatchError, setSignUpPasswordMatchError] =
 		useState<boolean>(false);
 
+	console.log(
+		"temporary use of variables setSignUpPasswordError, setSignUpPasswordMatchError to avoid unused vars",
+		setSignUpPasswordError,
+		setSignUpPasswordMatchError
+	);
+
 	const { login } = useUser(); // Get the login function from UserContext
 
 	// Handle Login Submission
@@ -58,16 +64,18 @@ const Auth: React.FC = () => {
 		}
 	};
 
+	//-------------------------Styles-------------------------//
+
+	const mainContainerStyle = {
+		position: "relative",
+		height: "100vh",
+		overflow: "hidden",
+		display: "flex",
+		flexDirection: "column",
+	};
+
 	return (
-		<Box
-			sx={{
-				position: "relative",
-				height: "100vh",
-				overflow: "hidden",
-				display: "flex",
-				flexDirection: "column",
-			}}
-		>
+		<Box sx={mainContainerStyle}>
 			<KarabastBanner />
 
 			{isLogin ? (
