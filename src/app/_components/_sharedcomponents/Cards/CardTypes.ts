@@ -1,13 +1,21 @@
-export interface GameCardProps {
+export interface CardData {
+	uuid: string;
 	id?: number;
 	name?: string;
 	selected?: boolean;
+    selectable: boolean;
 	disabled?: boolean;
 	unitType?: "ground" | "space";
 	handleSelect?: () => void;
 	path?: string;
 	deckSize?: number;
-	isFaceUp: boolean;
+	power?: number;
+	hp?: number;
+	cost?: number;
+}
+
+export interface GameCardProps {
+	card: CardData;
 }
 
 export interface LeaderBaseCardProps {

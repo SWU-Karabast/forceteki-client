@@ -17,6 +17,7 @@ interface PlayerContextType {
 	setActivePlayer: (player: Participant) => void;
 	gameState: any;
 	sendMessage: (args: any[]) => void;
+	getOpponent: (player: string) => string;
 	connectedPlayer: string;
 }
 
@@ -59,6 +60,11 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 		socket?.emit("game", ...args);
 	};
 
+	const getOpponent = (player: string) => {
+		const playerNames = Object.keys(gameState.players);
+		return playerNames.find((name) => name !== player) || "";
+	};
+
 	return (
 		<PlayerContext.Provider
 			value={{
@@ -67,6 +73,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 				gameState,
 				sendMessage,
 				connectedPlayer,
+				getOpponent
 			}}
 		>
 			{children}

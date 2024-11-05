@@ -4,9 +4,7 @@ import Image from "next/image";
 import { ResourcesProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const Resources: React.FC<ResourcesProps> = ({
-	availableResources,
-	totalResources,
-	activePlayer,
+	trayPlayer,
 	handleModalToggle,
 }) => {
 	//------------------------STYLES------------------------//
@@ -22,7 +20,7 @@ const Resources: React.FC<ResourcesProps> = ({
 		transition: "background-color 0.3s ease",
 		"&:hover": {
 			background:
-				activePlayer === "player"
+				trayPlayer === "player"
 					? "linear-gradient(to top, white, transparent)"
 					: null,
 		},
@@ -53,7 +51,7 @@ const Resources: React.FC<ResourcesProps> = ({
 		<Card
 			sx={cardStyle}
 			onClick={() => {
-				if (activePlayer === "player" && handleModalToggle) {
+				if (trayPlayer === "player" && handleModalToggle) {
 					handleModalToggle();
 				}
 			}}
@@ -68,7 +66,8 @@ const Resources: React.FC<ResourcesProps> = ({
 						style={imageStyle}
 					/>
 					<Typography sx={availableAndTotalResourcesTextStyle}>
-						{availableResources}/{totalResources}
+						{/* {availableResources}/{totalResources} */}
+						{`0/0`}
 					</Typography>
 				</Box>
 			</CardContent>

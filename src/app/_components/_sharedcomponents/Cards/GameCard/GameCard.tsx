@@ -7,59 +7,49 @@ import {
 	Box,
 } from "@mui/material";
 import Image from "next/image";
-import { GameCardProps } from "../CardTypes";
+import { GameCardProps } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
+import { usePlayer } from "@/app/_contexts/Player.context";
+import { connected, send } from "process";
 
 const GameCard: React.FC<GameCardProps> = ({
-	id,
-	name,
-	selected = false,
-	disabled = false,
-	unitType,
-	handleSelect,
-	path,
-	deckSize,
-	isFaceUp,
+	card = {}
 }) => {
-	console.log(
-		"temporary log of variables id, unitType to avoid unused vars",
-		id,
-		unitType
-	);
-
-	const isLobbyView = path === "/lobby";
+	// const isLobbyView = path === "/lobby";
+	const isLobbyView = false;
+	const isFaceUp = true
 
 	// Base styles shared between face-up and face-down cards
-	const baseCardStyle = {
-		backgroundColor: "#282828E6",
-		display: "flex",
-		borderRadius: "5px",
-		justifyContent: "center",
-		alignItems: "center",
-		position: "relative",
-	};
+	// const baseCardStyle = {
+	// 	backgroundColor: "#282828E6",
+	// 	display: "flex",
+	// 	borderRadius: "5px",
+	// 	justifyContent: "center",
+	// 	alignItems: "center",
+	// 	position: "relative",
+	// };
 
 	// Styles specific to face-up cards
-	const faceCardStyle = {
-		...baseCardStyle,
-		width: isLobbyView ? "10vh" : "8vh",
-		height: isLobbyView ? "10vh" : "8vh",
-		border: selected ? "2px solid blue" : "1px solid gray",
-		opacity: disabled ? 0.8 : 1,
-		textAlign: "center",
-		textWrap: "wrap",
-		color: "white",
-		"&:hover": {
-			backgroundColor: disabled ? "#000000CC" : "#708090CC",
-		},
-		cursor: disabled ? "not-allowed" : "pointer",
-	};
+	// const faceCardStyle = {
+	// 	...baseCardStyle,
+	// 	width: isLobbyView ? "10vh" : "8vh",
+	// 	height: isLobbyView ? "10vh" : "8vh",
+	// 	// border: selected ? "2px solid blue" : "1px solid gray",
+	// 	// opacity: disabled ? 0.8 : 1,
+	// 	textAlign: "center",
+	// 	textWrap: "wrap",
+	// 	color: "white",
+	// 	// "&:hover": {
+	// 	// 	backgroundColor: disabled ? "#000000CC" : "#708090CC",
+	// 	// },
+	// 	// cursor: disabled ? "not-allowed" : "pointer",
+	// };
 
 	// Styles specific to face-down cards
-	const backCardStyle = {
-		...baseCardStyle,
-		width: "9vh",
-		height: "9vh",
-	};
+	// const backCardStyle = {
+	// 	...baseCardStyle,
+	// 	width: "9vh",
+	// 	height: "9vh",
+	// };
 
 	const cardContentStyle = {
 		width: "100%",
@@ -76,24 +66,24 @@ const GameCard: React.FC<GameCardProps> = ({
 		height: "auto",
 	};
 
-	const circularBackgroundStyle = {
-		width: "5.5vh",
-		height: "5.5vh",
-		backgroundColor: "#141414E6",
-		borderRadius: "50%",
-		position: "absolute" as const,
-		display: "flex",
-		justifyContent: "center",
-		alignItems: "center",
-	};
+	// const circularBackgroundStyle = {
+	// 	width: "5.5vh",
+	// 	height: "5.5vh",
+	// 	backgroundColor: "#141414E6",
+	// 	borderRadius: "50%",
+	// 	position: "absolute" as const,
+	// 	display: "flex",
+	// 	justifyContent: "center",
+	// 	alignItems: "center",
+	// };
 
-	const deckSizeTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "800",
-		fontSize: "2em",
-		color: "white",
-		position: "absolute" as const,
-	};
+	// const deckSizeTextStyle = {
+	// 	fontFamily: "var(--font-barlow), sans-serif",
+	// 	fontWeight: "800",
+	// 	fontSize: "2em",
+	// 	color: "white",
+	// 	position: "absolute" as const,
+	// };
 
 	const typographyStyle = {
 		fontFamily: "var(--font-barlow), sans-serif",
@@ -101,27 +91,35 @@ const GameCard: React.FC<GameCardProps> = ({
 		fontSize: isLobbyView ? "2em" : "1.6em",
 	};
 
-	if (isFaceUp) {
-		if (!name) {
-			return null;
-		}
-	}
+	const { sendMessage, connectedPlayer } = usePlayer();
 
 	return (
 		<MuiCard
-			sx={isFaceUp ? faceCardStyle : backCardStyle}
 			onClick={() => {
-				if (isFaceUp && !disabled && handleSelect) {
-					handleSelect();
+				if (card.selectable) {
+					sendMessage(["cardClicked", connectedPlayer, card.uuid]);
 				}
 			}}
 		>
 			{isFaceUp ? (
 				<CardActionArea>
 					<CardContent>
-						<Typography variant="body1" sx={typographyStyle}>
-							{name}
-						</Typography>
+						<Box sx={{ display: 'flex', flexDirection: 'column'}}>
+							<Typography variant="body1" sx={{...typographyStyle, color: 'goldenrod'}}>
+								{card.cost}
+							</Typography>
+							<Typography variant="body1" sx={typographyStyle}>
+								{card.name}
+							</Typography>
+							<Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
+								<Typography variant="body1" sx={{...typographyStyle, color: 'red'}}>
+									{card.power}
+								</Typography>
+								<Typography variant="body1" sx={{...typographyStyle, color: 'blue'}}>
+									{card.hp}
+								</Typography>
+							</Box>
+						</Box>
 					</CardContent>
 				</CardActionArea>
 			) : (
@@ -134,14 +132,14 @@ const GameCard: React.FC<GameCardProps> = ({
 						placeholder="empty"
 						style={imageStyle}
 					/>
-					{deckSize && deckSize > 0 && (
+					{/* {deckSize && deckSize > 0 && (
 						<>
 							<Box sx={circularBackgroundStyle}></Box>
 							<Typography variant="body2" sx={deckSizeTextStyle}>
 								{deckSize}
 							</Typography>
 						</>
-					)}
+					)} */}
 				</CardContent>
 			)}
 		</MuiCard>
