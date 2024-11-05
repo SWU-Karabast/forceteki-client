@@ -37,26 +37,8 @@ const NewsColumn: React.FC = () => {
 		p: "1.5em",
 	};
 
-	const topCardHeadingTypographyStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontSize: "1.8em",
-		fontWeight: "600",
-		color: "#fff",
-		mb: ".8em",
-	};
-
-	const topCardContentTypographyStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontSize: "1.4em",
-		fontWeight: "400",
-		textAlign: "left",
-		color: "#fff",
-		mb: ".8em",
-	};
-
 	const bottomCardStyle = {
 		flexGrow: 1,
-		fontFamily: "var(--font-barlow), sans-serif",
 		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
 		borderRadius: "1.5em",
 		overflowY: "auto",
@@ -87,21 +69,15 @@ const NewsColumn: React.FC = () => {
 		mb: ".8em",
 	};
 
-	const titleStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "8		00",
-		color: "#fff",
-	};
-
 	return (
 		<Box sx={boxStyle}>
 			{/* Top Card: Fixed size */}
 			<Card sx={topCardStyle}>
 				<CardContent>
-					<Typography variant="h4" sx={topCardHeadingTypographyStyle}>
-						Karabast is an open-source, fan-made platform.
+					<Typography variant="body1">
+						<b>Karabast is an open-source, fan-made platform.</b>
 					</Typography>
-					<Typography variant="body1" sx={topCardContentTypographyStyle}>
+					<Typography variant="body1">
 						This tool is free to use and is published non-commercially. Payment
 						is not required to access any functionality.
 					</Typography>
@@ -120,7 +96,7 @@ const NewsColumn: React.FC = () => {
 				sx={bottomCardStyle}
 			>
 				<Box sx={stickyTitleBoxStyle}>
-					<Typography variant="h4" sx={titleStyle}>
+					<Typography variant="h3">
 						News
 					</Typography>
 				</Box>
