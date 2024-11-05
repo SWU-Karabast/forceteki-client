@@ -24,13 +24,6 @@ const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 		justifyContent: "center",
 	};
 
-	const typographyStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "800",
-		color: "#fff",
-		fontSize: "2em",
-	};
-
 	const dividerStyle = {
 		backgroundColor: "#fff",
 		my: ".7em",
@@ -39,12 +32,12 @@ const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 	return (
 		<Card sx={cardStyle}>
 			<CardContent sx={cardContentStyle}>
-				<Typography sx={typographyStyle}>{format}</Typography>
+				<Typography variant="h3">{format}</Typography>
 				<Divider sx={dividerStyle} />
 				<JoinableGame />
 				<JoinableGame />
 				<JoinableGame />
-				<Typography sx={{ ...typographyStyle, mt: 1 }}>
+				<Typography variant="h3">
 					Request-Undo {format}
 				</Typography>
 				<Divider sx={dividerStyle} />

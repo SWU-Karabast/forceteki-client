@@ -26,61 +26,32 @@ const NewsColumn: React.FC = () => {
 	};
 
 	const topCardStyle = {
-		height: "25vh",
-		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
 		borderRadius: "1.5vw",
 		backgroundColor: "#18325199",
 		backdropFilter: "blur(20px)",
-		display: "flex",
-		flexDirection: "column",
-		justifyContent: "center",
-		p: "1.5em",
 	};
 
 	const bottomCardStyle = {
 		flexGrow: 1,
 		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
 		borderRadius: "1.5em",
-		overflowY: "auto",
 		backgroundColor: "#000000E6",
 		backdropFilter: "blur(20px)",
 		mt: "1em",
 		p: "2em",
-		pt: 0, // so each article can hide behind the sticky title
-		clipPath: "inset(0 0 0 0 round 1.5vw)",
-		"::-webkit-scrollbar": {
-			width: "0.2vw",
-		},
-		"::-webkit-scrollbar-thumb": {
-			backgroundColor: "#D3D3D3B3",
-			borderRadius: "1vw",
-		},
-		"::-webkit-scrollbar-button": {
-			display: "none",
-		},
-		transition: "scrollbar-color 0.3s ease-in-out",
 	};
 
 	const stickyTitleBoxStyle = {
-		position: "sticky",
-		top: 0,
-		zIndex: 2,
 		backgroundColor: "#000000",
-		mb: ".8em",
 	};
 
 	return (
 		<Box sx={boxStyle}>
-			{/* Top Card: Fixed size */}
 			<Card sx={topCardStyle}>
 				<CardContent>
-					<Typography variant="body1">
-						<b>Karabast is an open-source, fan-made platform.</b>
-					</Typography>
-					<Typography variant="body1">
-						This tool is free to use and is published non-commercially. Payment
-						is not required to access any functionality.
-					</Typography>
+					<Typography variant="body1"><b>Karabast is an open-source, fan-made platform.</b></Typography>
+					<Typography variant="body1">It is an educational tool only, meant to facilitate researching decks and strategies that is supportive of in-person play. As such, direct competition through the form of automated tournaments or rankings will not be added.</Typography>
+					<Typography variant="body1">This tool is free to use and is published non-commercially. Payment is not required to access any functionality.</Typography>
 				</CardContent>
 			</Card>
 
