@@ -4,10 +4,12 @@ import {
 	CardContent,
 	CardActionArea,
 	Typography,
-	// Box,
+	Box,
 } from "@mui/material";
 import Image from "next/image";
-import { GameCardProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { GameCardProps } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
+import { usePlayer } from "@/app/_contexts/Player.context";
+import { connected, send } from "process";
 
 const GameCard: React.FC<GameCardProps> = ({
 	card = {}
@@ -89,18 +91,35 @@ const GameCard: React.FC<GameCardProps> = ({
 		fontSize: isLobbyView ? "2em" : "1.6em",
 	};
 
+	const { sendMessage, connectedPlayer } = usePlayer();
+
 	return (
 		<MuiCard
 			onClick={() => {
-				console.log("Card Clicked");
+				if (card.selectable) {
+					sendMessage(["cardClicked", connectedPlayer, card.uuid]);
+				}
 			}}
 		>
 			{isFaceUp ? (
 				<CardActionArea>
 					<CardContent>
-						<Typography variant="body1" sx={typographyStyle}>
-							{card.id}
-						</Typography>
+						<Box sx={{ display: 'flex', flexDirection: 'column'}}>
+							<Typography variant="body1" sx={{...typographyStyle, color: 'goldenrod'}}>
+								{card.cost}
+							</Typography>
+							<Typography variant="body1" sx={typographyStyle}>
+								{card.name}
+							</Typography>
+							<Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
+								<Typography variant="body1" sx={{...typographyStyle, color: 'red'}}>
+									{card.power}
+								</Typography>
+								<Typography variant="body1" sx={{...typographyStyle, color: 'blue'}}>
+									{card.hp}
+								</Typography>
+							</Box>
+						</Box>
 					</CardContent>
 				</CardActionArea>
 			) : (

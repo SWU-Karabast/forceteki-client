@@ -1,3 +1,5 @@
+import { CardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
+
 export type ParticipantType = "player" | "opponent";
 
 export interface Participant {
@@ -6,8 +8,8 @@ export interface Participant {
 	type: ParticipantType;
 	initiative: boolean | null;
 	deckSize: number;
-	cards: GameCardProps[];
-	fullDeck: GameCardProps[];
+	cards: CardData[];
+	fullDeck: CardData[];
 }
 
 export interface ChatDrawerProps {
@@ -87,30 +89,6 @@ export interface GroundUnitsBoardProps {
 		player: CardData[];
 		opponent: CardData[];
 	};
-}
-
-export interface CardData {
-	uuid: string;
-	id?: number;
-	name?: string;
-	selected?: boolean;
-	disabled?: boolean;
-	unitType?: "ground" | "space";
-	handleSelect?: () => void;
-	path?: string;
-	deckSize?: number;
-}
-
-export interface GameCardProps {
-	card: CardData;
-}
-
-export interface LeaderBaseCardProps {
-	variant: "base" | "leader";
-	selected?: boolean;
-	isLobbyView?: boolean;
-	handleSelect?: () => void;
-	title?: string;
 }
 
 export interface PlayerHandProps {

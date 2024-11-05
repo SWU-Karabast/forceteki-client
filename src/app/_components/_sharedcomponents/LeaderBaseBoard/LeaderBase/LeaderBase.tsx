@@ -31,7 +31,7 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 	};
 
 	return (
-		<Grid container direction="column" sx={containerStyle}>
+		<Grid container direction="row" sx={containerStyle}>
 			{isLobbyView ? (
 				<>
 					<LeaderBaseCard
