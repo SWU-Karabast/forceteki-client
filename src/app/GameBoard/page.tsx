@@ -11,10 +11,10 @@ import BasicPrompt from "../_components/Gameboard/_subcomponents/Overlays/Prompt
 import { mockOpponent } from "../_constants/mockData";
 import { usePlayer } from "../_contexts/Player.context";
 import { useSidebar } from "../_contexts/Sidebar.context";
-import { GameCardProps } from "../_components/_sharedcomponents/Cards/CardTypes";
+import { CardData } from "../_components/Gameboard/GameboardTypes";
 
 const GameBoard = () => {
-	const { activePlayer, gameState } = usePlayer();
+	const { activePlayer, connectedPlayer, gameState } = usePlayer();
 	const { sidebarOpen, toggleSidebar } = useSidebar();
 	const [chatMessage, setChatMessage] = useState("");
 	const [chatHistory, setChatHistory] = useState<string[]>([]);
@@ -30,22 +30,19 @@ const GameBoard = () => {
 	const [availableResources, setAvailableResources] = useState(0);
 
 	// State for card management
-	const [availableCards, setAvailableCards] = useState<GameCardProps[]>(
-		activePlayer.cards
-	);
 	const [selectedResourceCards, setSelectedResourceCards] = useState<
-		GameCardProps[]
+		CardData[]
 	>([]);
 
 	// States for played cards
 	const [playedGroundCards, setPlayedGroundCards] = useState<{
-		player: GameCardProps[];
-		opponent: GameCardProps[];
+		player: CardData[];
+		opponent: CardData[];
 	}>({ player: [], opponent: [] });
 
 	const [playedSpaceCards, setPlayedSpaceCards] = useState<{
-		player: GameCardProps[];
-		opponent: GameCardProps[];
+		player: CardData[];
+		opponent: CardData[];
 	}>({ player: [], opponent: [] });
 
 	const handleChatSubmit = () => {
@@ -70,69 +67,6 @@ const GameBoard = () => {
 		setBasicPromptOpen(!isBasicPromptOpen);
 	};
 
-	// Handler to select a card for resource selection
-	const handleSelectResourceCard = (card: GameCardProps) => {
-		if (resourceSelection && activePlayer.type === "player") {
-			if (availableResources < totalResources) {
-				// Check resource limit
-				setSelectedResourceCards((prev) => [...prev, card]);
-				setAvailableResources((prev) => prev + 1); // Increment available resources
-				setAvailableCards((prev) => prev.filter((c) => c.id !== card.id));
-				if (availableResources + 1 >= totalResources) {
-					setResourceSelection(false);
-				}
-			}
-		}
-	};
-
-	// Function to handle playing a card from the hand to the board
-	const handlePlayCard = (card: GameCardProps) => {
-		if (availableResources > 0 && activePlayer.type === "player") {
-			if (card.unitType === "ground") {
-				setPlayedGroundCards((prev) => ({
-					...prev,
-					player: [...prev.player, card],
-				}));
-			} else if (card.unitType === "space") {
-				setPlayedSpaceCards((prev) => ({
-					...prev,
-					player: [...prev.player, card],
-				}));
-			}
-			// Remove played card from availableCards
-			setAvailableCards((prev) => prev.filter((c) => c.id !== card.id));
-			// Optionally, decrement availableResources if playing a card consumes resources
-			// setAvailableResources((prev) => prev - 1);
-		}
-	};
-
-	// Pre-populate opponent's played cards only once
-	const opponentCardsInitialized = useRef(false);
-
-	useEffect(() => {
-		if (!opponentCardsInitialized.current) {
-			const groundCard = mockOpponent.cards.find(
-				(card: GameCardProps) => card.unitType === "ground"
-			);
-			const spaceCard = mockOpponent.cards.find(
-				(card: GameCardProps) => card.unitType === "space"
-			);
-			if (groundCard) {
-				setPlayedGroundCards((prev) => ({
-					...prev,
-					opponent: [...prev.opponent, groundCard],
-				}));
-			}
-			if (spaceCard) {
-				setPlayedSpaceCards((prev) => ({
-					...prev,
-					opponent: [...prev.opponent, spaceCard],
-				}));
-			}
-			opponentCardsInitialized.current = true;
-		}
-	}, [activePlayer]);
-
 	// ----------------------Styles-----------------------------//
 
 	const mainBoxStyle = {
@@ -154,16 +88,8 @@ const GameBoard = () => {
 					participant={activePlayer}
 				/>
 				<PlayerCardTray
-					participant={activePlayer}
+					trayPlayer={connectedPlayer}
 					handleModalToggle={handleModalToggle}
-					availableCards={availableCards}
-					onSelectCard={handleSelectResourceCard}
-					resourceSelection={resourceSelection}
-					setResourceSelection={setResourceSelection}
-					availableResources={availableResources}
-					totalResources={totalResources}
-					handlePlayCard={handlePlayCard}
-					selectedResourceCards={selectedResourceCards}
 					handleBasicPromptToggle={handleBasicPromptToggle}
 				/>
 			</Box>

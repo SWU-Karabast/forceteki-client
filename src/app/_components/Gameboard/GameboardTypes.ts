@@ -1,9 +1,8 @@
-import { GameCardProps } from "../_sharedcomponents/Cards/CardTypes";
-
 export type ParticipantType = "player" | "opponent";
 
 export interface Participant {
 	id: string;
+	name: string;
 	type: ParticipantType;
 	initiative: boolean | null;
 	deckSize: number;
@@ -22,16 +21,8 @@ export interface ChatDrawerProps {
 }
 
 export interface PlayerCardTrayProps {
-	participant: Participant;
-	availableCards: GameCardProps[];
-	resourceSelection: boolean;
-	availableResources: number;
-	totalResources: number;
-	selectedResourceCards: GameCardProps[];
+	trayPlayer: string;
 	handleModalToggle: () => void;
-	onSelectCard: (card: GameCardProps) => void;
-	setResourceSelection: (active: boolean) => void;
-	handlePlayCard: (card: GameCardProps) => void;
 	handleBasicPromptToggle: () => void;
 }
 
@@ -42,26 +33,18 @@ export interface OpponentCardTrayProps {
 export interface BoardProps {
 	sidebarOpen: boolean;
 	playedGroundCards: {
-		player: GameCardProps[];
-		opponent: GameCardProps[];
+		player: CardData[];
+		opponent: CardData[];
 	};
 	playedSpaceCards: {
-		player: GameCardProps[];
-		opponent: GameCardProps[];
+		player: CardData[];
+		opponent: CardData[];
 	};
 	participant: Participant;
 }
 
 export interface CardActionTrayProps {
-	activePlayer: ParticipantType;
-	availableCards: GameCardProps[];
-	onSelectCard?: (card: GameCardProps) => void; // Optional, only for player
-	resourceSelection?: boolean; // Optional, only for player
-	setResourceSelection?: (active: boolean) => void; // Optional, only for player
-	availableResources?: number; // Optional, only for player
-	totalResources?: number; // Optional, only for player
-	selectedResourceCards?: GameCardProps[]; // Optional, only for player
-	handlePlayCard?: (card: GameCardProps) => void; // Optional, only for player
+	trayPlayer: string;
 	handleBasicPromptToggle?: () => void;
 }
 
@@ -71,16 +54,14 @@ export interface DeckDiscardProps {
 }
 
 export interface ResourcesProps {
-	availableResources: number;
-	totalResources: number;
-	activePlayer?: ParticipantType;
+	trayPlayer?: string;
 	handleModalToggle?: () => void;
 }
 
 export interface ResourcesOverlayProps {
 	isModalOpen: boolean;
 	handleModalToggle: () => void;
-	selectedResourceCards: GameCardProps[];
+	selectedResourceCards: CardData[];
 }
 
 export interface BasicPromptProps {
@@ -89,21 +70,49 @@ export interface BasicPromptProps {
 }
 
 export interface CardAreaProps {
-	cards: GameCardProps[];
+	cards: CardData[];
 }
 
 export interface SpaceUnitsBoardProps {
 	sidebarOpen: boolean;
 	playedSpaceCards: {
-		player: GameCardProps[];
-		opponent: GameCardProps[];
+		player: CardData[];
+		opponent: CardData[];
 	};
 }
 
 export interface GroundUnitsBoardProps {
 	sidebarOpen: boolean;
 	playedGroundCards: {
-		player: GameCardProps[];
-		opponent: GameCardProps[];
+		player: CardData[];
+		opponent: CardData[];
 	};
+}
+
+export interface CardData {
+	uuid: string;
+	id?: number;
+	name?: string;
+	selected?: boolean;
+	disabled?: boolean;
+	unitType?: "ground" | "space";
+	handleSelect?: () => void;
+	path?: string;
+	deckSize?: number;
+}
+
+export interface GameCardProps {
+	card: CardData;
+}
+
+export interface LeaderBaseCardProps {
+	variant: "base" | "leader";
+	selected?: boolean;
+	isLobbyView?: boolean;
+	handleSelect?: () => void;
+	title?: string;
+}
+
+export interface PlayerHandProps {
+	cards: CardData[];
 }

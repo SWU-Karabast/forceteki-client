@@ -50,30 +50,18 @@ const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
 				{/* Opponent's Ground Units */}
 				<Grid sx={opponentGridStyle}>
 					{playedGroundCards.opponent.map((card) => (
-						<GameCard
-							key={card.id}
-							name={card.name}
-							unitType={card.unitType}
-							selected={card.selected}
-							handleSelect={card.handleSelect}
-							disabled
-							isFaceUp={true}
-						/>
+						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
+							<GameCard card={card} />
+						</Box>
 					))}
 				</Grid>
 
 				{/* Player's Ground Units */}
 				<Grid sx={playerGridStyle}>
 					{playedGroundCards.player.map((card) => (
-						<GameCard
-							key={card.id}
-							name={card.name}
-							unitType={card.unitType}
-							selected={card.selected}
-							handleSelect={card.handleSelect}
-							disabled
-							isFaceUp={true}
-						/>
+						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
+							<GameCard card={card} />
+						</Box>
 					))}
 				</Grid>
 			</Grid>

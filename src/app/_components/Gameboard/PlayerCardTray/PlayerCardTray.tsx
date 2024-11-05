@@ -1,23 +1,20 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
-import Resources from "../_subcomponents/PlayerOpponentRows/Resources/Resources";
-import DeckDiscard from "../_subcomponents/PlayerOpponentRows/DeckDiscard/DeckDiscard";
-import CardActionTray from "../_subcomponents/PlayerOpponentRows/CardActionTray/CardActionTray";
+import Resources from "../_subcomponents/PlayerTray/Resources";
+// import DeckDiscard from "../_subcomponents/PlayerTray/DeckDiscard/DeckDiscard";
+import CardActionTray from "../_subcomponents/PlayerTray/CardActionTray";
+import PlayerHand from "../_subcomponents/PlayerTray/PlayerHand";
 import { PlayerCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { usePlayer } from "@/app/_contexts/Player.context";
 
 const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
-	participant,
+	trayPlayer,
 	handleModalToggle,
-	availableCards,
-	onSelectCard,
-	resourceSelection,
-	setResourceSelection,
-	availableResources,
-	totalResources,
-	handlePlayCard,
-	selectedResourceCards,
 	handleBasicPromptToggle,
 }) => {
+	// -------------- Contexts ---------------- //
+	const { gameState, connectedPlayer } = usePlayer();
+
 	//---------------Styles------------------- //
 	const leftColumnStyle = {
 		display: "flex",
@@ -47,28 +44,19 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 		<Grid container sx={{ height: "20.82%" }}>
 			<Grid size={3} sx={leftColumnStyle}>
 				<Resources
-					availableResources={availableResources}
-					totalResources={totalResources}
-					activePlayer={participant.type}
+					trayPlayer={trayPlayer}
 					handleModalToggle={handleModalToggle}
 				/>
 			</Grid>
 			<Grid size={6} sx={centerColumnStyle}>
+				<PlayerHand cards={gameState?.players[connectedPlayer].cardPiles["hand"] || []} />
 				<CardActionTray
-					activePlayer={participant.type}
-					availableCards={availableCards}
-					onSelectCard={onSelectCard}
-					resourceSelection={resourceSelection}
-					setResourceSelection={setResourceSelection}
-					handlePlayCard={handlePlayCard}
-					selectedResourceCards={selectedResourceCards}
-					availableResources={availableResources}
-					totalResources={totalResources}
+					trayPlayer={connectedPlayer}
 					handleBasicPromptToggle={handleBasicPromptToggle}
 				/>
 			</Grid>
 			<Grid size={3} sx={rightColumnStyle}>
-				<DeckDiscard deckSize={participant.deckSize} />
+				{/* <DeckDiscard deckSize={participant.deckSize} /> */}
 			</Grid>
 		</Grid>
 	);
