@@ -1,11 +1,10 @@
 import React from "react";
 import { Box, Grid2 as Grid } from "@mui/material";
-import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
-import { GroundUnitsBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
+import GameCard from "../../_sharedcomponents/Cards/GameCard/GameCard";
+import { UnitsBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
 
-const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
+const UnitsBoard: React.FC<UnitsBoardProps> = ({
 	sidebarOpen,
-	playedGroundCards,
 }) => {
 	//------------------------STYLES------------------------//
 	const mainBoxStyle = {
@@ -49,24 +48,24 @@ const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
 			<Grid container direction="column" sx={containerStyle}>
 				{/* Opponent's Ground Units */}
 				<Grid sx={opponentGridStyle}>
-					{playedGroundCards.opponent.map((card) => (
+					{/* {playedGroundCards.opponent.map((card) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
 							<GameCard card={card} />
 						</Box>
-					))}
+					))} */}
 				</Grid>
 
 				{/* Player's Ground Units */}
 				<Grid sx={playerGridStyle}>
-					{playedGroundCards.player.map((card) => (
+					{/* {playedGroundCards.player.map((card) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
 							<GameCard card={card} />
 						</Box>
-					))}
+					))} */}
 				</Grid>
 			</Grid>
 		</Box>
 	);
 };
 
-export default GroundUnitsBoard;
+export default UnitsBoard;

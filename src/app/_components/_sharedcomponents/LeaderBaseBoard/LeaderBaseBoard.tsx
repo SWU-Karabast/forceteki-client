@@ -4,11 +4,11 @@ import LeaderBase from "./LeaderBase/LeaderBase";
 import { usePlayer } from "@/app/_contexts/Player.context";
 import { LeaderBaseBoardProps } from "./LeaderBaseBoardTypes";
 
+
 const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
-	participant,
 	isLobbyView,
 }) => {
-	const { connectedPlayer } = usePlayer();
+	const { connectedPlayer, getOpponent } = usePlayer();
 	const titleOpponent =
 		connectedPlayer === "ThisIsTheWay" ? "Order66" : "ThisIsTheWay";
 	//------------------------STYLES------------------------//
@@ -29,7 +29,7 @@ const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 			{/* Opponent's row */}
 			<Grid sx={rowStyle}>
 				<LeaderBase
-					participant={"opponent"}
+					player={getOpponent(connectedPlayer)}
 					isLobbyView={isLobbyView}
 					title={titleOpponent}
 				/>
@@ -37,7 +37,7 @@ const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 			{/* Player's row */}
 			<Grid sx={rowStyle}>
 				<LeaderBase
-					participant={participant.type}
+					player={connectedPlayer}
 					isLobbyView={isLobbyView}
 					title={connectedPlayer}
 				/>

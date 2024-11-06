@@ -7,12 +7,12 @@ import {
 	Box,
 } from "@mui/material";
 import Image from "next/image";
-import { GameCardProps } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
+import { GameCardProps, CardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { usePlayer } from "@/app/_contexts/Player.context";
 import { connected, send } from "process";
 
 const GameCard: React.FC<GameCardProps> = ({
-	card = {}
+	card
 }) => {
 	// const isLobbyView = path === "/lobby";
 	const isLobbyView = false;
@@ -91,13 +91,20 @@ const GameCard: React.FC<GameCardProps> = ({
 		fontSize: isLobbyView ? "2em" : "1.6em",
 	};
 
-	const { sendMessage, connectedPlayer } = usePlayer();
+	const { sendMessage } = usePlayer();
+
+	const cardBorderColor = (card: CardData) => {
+		if (card.selected) return "yellow";
+		if (card.selectable) return "green";
+		return "";
+	}
 
 	return (
-		<MuiCard
+		<MuiCard sx={{ backgroundColor: cardBorderColor(card) }}
 			onClick={() => {
 				if (card.selectable) {
-					sendMessage(["cardClicked", connectedPlayer, card.uuid]);
+					console.log("Card clicked:", card.uuid);
+					sendMessage(["cardClicked", card.uuid]);
 				}
 			}}
 		>

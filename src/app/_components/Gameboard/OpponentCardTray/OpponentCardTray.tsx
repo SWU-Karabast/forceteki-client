@@ -6,7 +6,7 @@ import PlayerHand from "../_subcomponents/PlayerTray/PlayerHand";
 import { OpponentCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { usePlayer } from "@/app/_contexts/Player.context";
 
-const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ participant }) => {
+const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ trayPlayer }) => {
 	//---------------Styles------------------- //
 	const leftColumn = {
 		display: "flex",
@@ -38,14 +38,14 @@ const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ participant }) => {
 		<Grid container sx={{ height: "15%" }}>
 			<Grid size={3} sx={leftColumn}>
 				<Resources
-					trayPlayer={participant.type}
+					trayPlayer={trayPlayer}
 				/>
 			</Grid>
 			<Grid size={6} sx={centerColumn}>
 				<PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles["hand"] || []} />
 			</Grid>
 			<Grid size={3} sx={rightColumn}>
-				<DeckDiscard deckSize={participant.deckSize} />
+				{/* <DeckDiscard deckSize={participant.deckSize} /> */}
 			</Grid>
 		</Grid>
 	);
