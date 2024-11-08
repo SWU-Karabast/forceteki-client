@@ -31,7 +31,9 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 		// 		: 0,
 	};
 
-	const { connectedPlayer } = usePlayer();
+	const { gameState, connectedPlayer } = usePlayer();
+	const playerLeader = gameState?.players[player].leader;
+	const playerBase = gameState?.players[player].base;
 
 	return (
 		<Grid container direction="row" sx={containerStyle}>
@@ -41,16 +43,18 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 						variant="leader"
 						isLobbyView={isLobbyView}
 						title={title}
+						card={playerLeader}
 					/>
-					<LeaderBaseCard variant="base" isLobbyView={isLobbyView} />
+					<LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={playerBase} />
 				</>
 			) : player === connectedPlayer ? (
 				<>
-					<LeaderBaseCard variant="base" isLobbyView={isLobbyView} />
+					<LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={playerBase} />
 					<LeaderBaseCard
 						variant="leader"
 						isLobbyView={isLobbyView}
 						title={title}
+						card={playerLeader}
 					/>
 				</>
 			) : (
@@ -59,8 +63,9 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 						variant="leader"
 						isLobbyView={isLobbyView}
 						title={title}
+						card={playerLeader}
 					/>
-					<LeaderBaseCard variant="base" isLobbyView={isLobbyView} />
+					<LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={playerBase} />
 				</>
 			)}
 		</Grid>

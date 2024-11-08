@@ -9,7 +9,6 @@ import {
 import Image from "next/image";
 import { GameCardProps, CardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { usePlayer } from "@/app/_contexts/Player.context";
-import { connected, send } from "process";
 
 const GameCard: React.FC<GameCardProps> = ({
 	card
@@ -96,6 +95,7 @@ const GameCard: React.FC<GameCardProps> = ({
 	const cardBorderColor = (card: CardData) => {
 		if (card.selected) return "yellow";
 		if (card.selectable) return "green";
+		if (card.exhausted) return "gray";
 		return "";
 	}
 
@@ -103,7 +103,6 @@ const GameCard: React.FC<GameCardProps> = ({
 		<MuiCard sx={{ backgroundColor: cardBorderColor(card) }}
 			onClick={() => {
 				if (card.selectable) {
-					console.log("Card clicked:", card.uuid);
 					sendMessage(["cardClicked", card.uuid]);
 				}
 			}}
@@ -112,9 +111,14 @@ const GameCard: React.FC<GameCardProps> = ({
 				<CardActionArea>
 					<CardContent>
 						<Box sx={{ display: 'flex', flexDirection: 'column'}}>
-							<Typography variant="body1" sx={{...typographyStyle, color: 'goldenrod'}}>
-								{card.cost}
-							</Typography>
+							<Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
+								<Typography variant="body1" sx={{...typographyStyle, color: 'goldenrod'}}>
+									{card.cost}
+								</Typography>
+								<Typography variant="body1" sx={{...typographyStyle, color: 'hotpink'}}>
+									{card.damage}
+								</Typography>
+							</Box>
 							<Typography variant="body1" sx={typographyStyle}>
 								{card.name}
 							</Typography>

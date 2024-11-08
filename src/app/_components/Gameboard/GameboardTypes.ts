@@ -67,6 +67,7 @@ export interface CardAreaProps {
 
 export interface UnitsBoardProps {
 	sidebarOpen: boolean;
+	arena: string;
 }
 
 export interface PlayerHandProps {

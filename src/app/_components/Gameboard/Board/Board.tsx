@@ -22,7 +22,7 @@ const Board: React.FC<BoardProps> = ({
 		<Grid container sx={{ height: "64.18%" }}>
 			<Grid container size={5} sx={leftColumnStyle}>
 				<UnitsBoard
-					sidebarOpen={sidebarOpen}
+					sidebarOpen={sidebarOpen} arena="spaceArena"
 				/>
 			</Grid>
 			<Grid container size={2}>
@@ -30,7 +30,7 @@ const Board: React.FC<BoardProps> = ({
 			</Grid>
 			<Grid container size={5} sx={rightColumnStyle}>
 				<UnitsBoard
-					sidebarOpen={sidebarOpen}
+					sidebarOpen={sidebarOpen} arena="groundArena"
 				/>
 			</Grid>
 		</Grid>
