@@ -1,11 +1,13 @@
 import React from "react";
 import { Box, Grid2 as Grid } from "@mui/material";
-import GameCard from "../../../../_sharedcomponents/Cards/GameCard/GameCard";
-import { GroundUnitsBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
+import GameCard from "../../_sharedcomponents/Cards/GameCard/GameCard";
+import { CardData } from "../../_sharedcomponents/Cards/CardTypes";
+import { UnitsBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { usePlayer } from "@/app/_contexts/Player.context";
 
-const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
+const UnitsBoard: React.FC<UnitsBoardProps> = ({
 	sidebarOpen,
-	playedGroundCards,
+	arena
 }) => {
 	//------------------------STYLES------------------------//
 	const mainBoxStyle = {
@@ -44,12 +46,18 @@ const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
 		overflowX: "auto",
 	};
 
+	//------------------------CONTEXT------------------------//
+	const { gameState, connectedPlayer, getOpponent } = usePlayer();
+
+	const playerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
+	const opponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];
+
 	return (
 		<Box sx={mainBoxStyle}>
 			<Grid container direction="column" sx={containerStyle}>
 				{/* Opponent's Ground Units */}
 				<Grid sx={opponentGridStyle}>
-					{playedGroundCards.opponent.map((card) => (
+					{opponentUnits.map((card: CardData) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
 							<GameCard card={card} />
 						</Box>
@@ -58,7 +66,7 @@ const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
 
 				{/* Player's Ground Units */}
 				<Grid sx={playerGridStyle}>
-					{playedGroundCards.player.map((card) => (
+					{playerUnits.map((card: CardData) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
 							<GameCard card={card} />
 						</Box>
@@ -69,4 +77,4 @@ const GroundUnitsBoard: React.FC<GroundUnitsBoardProps> = ({
 	);
 };
 
-export default GroundUnitsBoard;
+export default UnitsBoard;

@@ -29,20 +29,11 @@ export interface PlayerCardTrayProps {
 }
 
 export interface OpponentCardTrayProps {
-	participant: Participant;
+	trayPlayer: string;
 }
 
 export interface BoardProps {
 	sidebarOpen: boolean;
-	playedGroundCards: {
-		player: CardData[];
-		opponent: CardData[];
-	};
-	playedSpaceCards: {
-		player: CardData[];
-		opponent: CardData[];
-	};
-	participant: Participant;
 }
 
 export interface CardActionTrayProps {
@@ -56,14 +47,13 @@ export interface DeckDiscardProps {
 }
 
 export interface ResourcesProps {
-	trayPlayer?: string;
+	trayPlayer: string;
 	handleModalToggle?: () => void;
 }
 
 export interface ResourcesOverlayProps {
 	isModalOpen: boolean;
 	handleModalToggle: () => void;
-	selectedResourceCards: CardData[];
 }
 
 export interface BasicPromptProps {
@@ -75,20 +65,9 @@ export interface CardAreaProps {
 	cards: CardData[];
 }
 
-export interface SpaceUnitsBoardProps {
+export interface UnitsBoardProps {
 	sidebarOpen: boolean;
-	playedSpaceCards: {
-		player: CardData[];
-		opponent: CardData[];
-	};
-}
-
-export interface GroundUnitsBoardProps {
-	sidebarOpen: boolean;
-	playedGroundCards: {
-		player: CardData[];
-		opponent: CardData[];
-	};
+	arena: string;
 }
 
 export interface PlayerHandProps {

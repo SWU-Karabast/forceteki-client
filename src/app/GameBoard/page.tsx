@@ -11,10 +11,9 @@ import BasicPrompt from "../_components/Gameboard/_subcomponents/Overlays/Prompt
 import { mockOpponent } from "../_constants/mockData";
 import { usePlayer } from "../_contexts/Player.context";
 import { useSidebar } from "../_contexts/Sidebar.context";
-import { CardData } from "../_components/Gameboard/GameboardTypes";
 
 const GameBoard = () => {
-	const { activePlayer, connectedPlayer, gameState } = usePlayer();
+	const { getOpponent, connectedPlayer, gameState } = usePlayer();
 	const { sidebarOpen, toggleSidebar } = useSidebar();
 	const [chatMessage, setChatMessage] = useState("");
 	const [chatHistory, setChatHistory] = useState<string[]>([]);
@@ -25,25 +24,6 @@ const GameBoard = () => {
 	// State for resource selection
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isBasicPromptOpen, setBasicPromptOpen] = useState(false);
-	const [resourceSelection, setResourceSelection] = useState(false);
-	const [totalResources, setTotalResources] = useState(2);
-	const [availableResources, setAvailableResources] = useState(0);
-
-	// State for card management
-	const [selectedResourceCards, setSelectedResourceCards] = useState<
-		CardData[]
-	>([]);
-
-	// States for played cards
-	const [playedGroundCards, setPlayedGroundCards] = useState<{
-		player: CardData[];
-		opponent: CardData[];
-	}>({ player: [], opponent: [] });
-
-	const [playedSpaceCards, setPlayedSpaceCards] = useState<{
-		player: CardData[];
-		opponent: CardData[];
-	}>({ player: [], opponent: [] });
 
 	const handleChatSubmit = () => {
 		if (chatMessage.trim()) {
@@ -77,15 +57,16 @@ const GameBoard = () => {
 		position: "relative",
 	};
 
+	if (!gameState || !connectedPlayer) {
+		return null;
+	}
+
 	return (
 		<Grid container sx={{ height: "100vh" }}>
 			<Box component="main" sx={mainBoxStyle}>
-				<OpponentCardTray participant={mockOpponent} />
+				<OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
 				<Board
 					sidebarOpen={sidebarOpen}
-					playedGroundCards={playedGroundCards}
-					playedSpaceCards={playedSpaceCards}
-					participant={activePlayer}
 				/>
 				<PlayerCardTray
 					trayPlayer={connectedPlayer}
@@ -109,7 +90,6 @@ const GameBoard = () => {
 			<ResourcesOverlay
 				isModalOpen={isModalOpen}
 				handleModalToggle={handleModalToggle}
-				selectedResourceCards={selectedResourceCards}
 			/>
 			<BasicPrompt
 				isBasicPromptOpen={isBasicPromptOpen}

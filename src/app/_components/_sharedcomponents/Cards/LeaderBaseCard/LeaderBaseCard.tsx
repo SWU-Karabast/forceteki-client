@@ -7,22 +7,30 @@ import {
 	Box,
 } from "@mui/material";
 import { LeaderBaseCardProps } from "../CardTypes";
+import { CardData } from "../CardTypes";
+import { usePlayer } from "@/app/_contexts/Player.context";
+
 
 const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 	variant,
-	selected = false,
 	isLobbyView = false,
-	handleSelect,
 	title,
+	card
 }) => {
+	const cardBorderColor = (card: CardData) => {
+		if (card.selected) return "yellow";
+		if (card.selectable) return "green";
+		if (card.exhausted) return "gray";
+		return "black";
+	};
+
 	const cardStyle = {
-		border: selected ? "2px solid blue" : "1px solid gray",
+		backgroundColor: cardBorderColor(card),
 		width: isLobbyView ? "18vw" : "12vw",
 		height: isLobbyView ? "18vh" : "11vh",
 		textAlign: "center",
 		color: "white",
 		display: "flex",
-		backgroundColor: "#000000E6",
 		backdropFilter: "blur(20px)",
 		"&:hover": {
 			backgroundColor: "#708090E6",
@@ -36,6 +44,12 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 		fontFamily: "var(--font-barlow), sans-serif",
 		fontWeight: "400",
 		fontSize: "1.6em",
+	};
+
+	const damageStyle = {
+		fontWeight: "600",
+		fontSize: "2em",
+		color: "hotpink",
 	};
 
 	const titleTypographyStyle = {
@@ -65,6 +79,8 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 		fontSize: "1em",
 	};
 
+	const { sendMessage } = usePlayer();
+
 	return (
 		<Box>
 			{/* Show title above the card if in lobby view and variant is leader */}
@@ -77,15 +93,18 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 			<Card
 				sx={cardStyle}
 				onClick={() => {
-					if (handleSelect) {
-						handleSelect();
+					if (card.selectable) {
+						sendMessage(["cardClicked", card.uuid]);
 					}
 				}}
 			>
 				<CardActionArea>
 					<CardContent>
+						<Box sx={{ display: "flex", justifyContent: "end" }}>
+							<Typography variant="body1" sx={damageStyle}>{card.damage}</Typography>
+						</Box>
 						<Typography variant="body1" sx={typographyStyle}>
-							{variant === "leader" ? "Leader Card" : "Base Card"}
+							{card.name}
 						</Typography>
 					</CardContent>
 				</CardActionArea>

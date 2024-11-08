@@ -12,6 +12,8 @@ export interface CardData {
 	power?: number;
 	hp?: number;
 	cost?: number;
+	exhausted?: boolean;
+	damage?: number;
 }
 
 export interface GameCardProps {
@@ -24,4 +26,5 @@ export interface LeaderBaseCardProps {
 	isLobbyView?: boolean;
 	handleSelect?: () => void;
 	title?: string;
+	card: CardData;
 }
