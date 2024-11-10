@@ -1,0 +1,45 @@
+.core-wrapper {
+  position: absolute;
+  bottom: 0;
+  height: calc(100% - 11rem);
+  display: flex;
+  flex-direction: row;
+}
+
+.game-browser-wrapper { 
+  margin: 0 0 3rem 2rem;
+  flex: 1;
+}
+
+.create-game-wrapper { 
+  margin-left: 2rem;
+  flex: 1;
+  height:fit-content;
+  overflow-y: auto;
+  scrollbar-color: #888888 rgba(0, 0, 0, 0); 
+  scrollbar-width: thin;
+  border-radius: 10px;
+}
+
+.news-wrapper {
+  margin: 0 2rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-color: #888888 rgba(0, 0, 0, 0); 
+  scrollbar-width: thin;
+  border-radius: 10px;
+}
+
+.disclaimer {
+  position: absolute;
+  bottom: 1rem;
+  width: 100%;
+}
+
+.disclaimer p {
+  font-size: 0.75rem;
+  font-weight: 300;
+  text-align: center;
+}

@@ -62,109 +62,82 @@ export const mockOpponent: Participant = {
 export const playerMatches = [
 	{
 		player1: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FF5733", "#33FF57", "#3357FF"],
+			playerImage: "leaders/iden.webp",
+			hexagonColors: ["#4689E1", "#454545", "#298F4A"],
 		},
 		player2: {
-			playerImage: "kylo.png",
-			hexagonColors: ["#FF33A6", "#A633FF", "#33FFC4"],
+			playerImage: "leaders/boba.webp",
+			hexagonColors: ["#F7B440", "#454545", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "leia.png",
-			hexagonColors: ["#FFA533", "#33FFF5", "#FF3357"],
+			playerImage: "leaders/han.webp",
+			hexagonColors: ["#F7B440", "#FAFADB", "#F7B440"],
 		},
 		player2: {
-			playerImage: "fella.jpeg",
-			hexagonColors: ["#33A6FF", "#FF5733", "#F5FF33"],
+			playerImage: "leaders/leia.webp",
+			hexagonColors: ["#298F4A", "#FAFADB", "#C82134"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "ladyfella.jpeg",
-			hexagonColors: ["#F533FF", "#57FF33", "#33A6FF"],
+			playerImage: "leaders/luke.webp",
+			hexagonColors: ["#4689E1", "#FAFADB", "#4689E1"],
 		},
 		player2: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FFC433", "#FF33A6", "#3357FF"],
+			playerImage: "leaders/palpatine.webp",
+			hexagonColors: ["#298F4A", "#454545", "#3357FF"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FF5733", "#33FF57", "#3357FF"],
+			playerImage: "leaders/sabine.webp",
+			hexagonColors: ["#C82134", "#FAFADB", "#298F4A"],
 		},
 		player2: {
-			playerImage: "kylo.png",
-			hexagonColors: ["#FF33A6", "#A633FF", "#33FFC4"],
+			playerImage: "leaders/vader.webp",
+			hexagonColors: ["#C82134", "#454545", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "leia.png",
-			hexagonColors: ["#FFA533", "#33FFF5", "#FF3357"],
+			playerImage: "leaders/leia.webp",
+			hexagonColors: ["#298F4A", "#FAFADB", "#FF3357"],
 		},
 		player2: {
-			playerImage: "fella.jpeg",
-			hexagonColors: ["#33A6FF", "#FF5733", "#F5FF33"],
+			playerImage: "leaders/luke.webp",
+			hexagonColors: ["#4689E1", "#FAFADB", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FF5733", "#33FF57", "#3357FF"],
+			playerImage: "leaders/boba.webp",
+			hexagonColors: ["#F7B440", "#454545", "#F7B440"],
 		},
 		player2: {
-			playerImage: "kylo.png",
-			hexagonColors: ["#FF33A6", "#A633FF", "#33FFC4"],
+			playerImage: "leaders/iden.webp",
+			hexagonColors: ["#4689E1", "#454545", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "leia.png",
-			hexagonColors: ["#FFA533", "#33FFF5", "#FF3357"],
+			playerImage: "leaders/leia.webp",
+			hexagonColors: ["#298F4A", "#FAFADB", "#298F4A"],
 		},
 		player2: {
-			playerImage: "fella.jpeg",
-			hexagonColors: ["#33A6FF", "#FF5733", "#F5FF33"],
+			playerImage: "leaders/boba.webp",
+			hexagonColors: ["#F7B440", "#454545", "#298F4A"],
 		},
 	},
 	{
 		player1: {
-			playerImage: "ladyfella.jpeg",
-			hexagonColors: ["#F533FF", "#57FF33", "#33A6FF"],
+			playerImage: "leaders/sabine.webp",
+			hexagonColors: ["#C82134", "#FAFADB", "#F7B440"],
 		},
 		player2: {
-			playerImage: "boba.png",
-			hexagonColors: ["#FFC433", "#FF33A6", "#3357FF"],
+			playerImage: "leaders/boba.webp",
+			hexagonColors: ["#F7B440", "#454545", "#F7B440"],
 		},
-	},
-];
-
-export const articles: Article[] = [
-	{
-		title: "The Dead Speak!",
-		content:
-			"The galaxy has heard a mysterious broadcast, a threat of revenge in the sinister voice of the late Emperor Palpatine. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		date: "05/15",
-		image: "/newsboba.png",
-		imageAlt: "Placeholder image",
-	},
-	{
-		title: "Second Article",
-		content:
-			"A new era begins with the reconstruction of the galaxy. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		date: "06/10",
-		image: "/leia.png",
-		imageAlt: "Vader placeholder image",
-	},
-	{
-		title: "Third Article",
-		content:
-			"A new era begins with the reconstruction of the galaxy. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		date: "06/10",
-		image: "/kylo.png",
-		imageAlt: "Vader placeholder image",
 	},
 ];

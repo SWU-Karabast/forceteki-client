@@ -1,316 +1,234 @@
 import React, { useState, FormEvent, ChangeEvent } from "react";
-import {
-	Box,
-	Button,
-	Card,
-	CardContent,
-	Checkbox,
-	FormControl,
-	FormControlLabel,
-	MenuItem,
-	Typography,
-	Radio,
-	RadioGroup,
-} from "@mui/material";
-import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
 import { usePathname } from "next/navigation";
+import * as Checkbox from "@radix-ui/react-checkbox";
+import * as RadioGroup from "@radix-ui/react-radio-group";
+import * as Select from "@radix-ui/react-select";
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "@radix-ui/react-icons";
+import classnames from "classnames";
+
 
 interface CreateGameFormProps {
-	format?: string | null;
-	setFormat?: (format: string) => void;
+  format?: string | null;
+  setFormat?: (format: string) => void;
 }
 
 const deckOptions: string[] = [
-	"Vader Green Ramp",
-	"Obi-Wan Blue Control",
-	"Darth Red Aggro",
-	"Leia White Midrange",
+  "Vader Green Ramp",
+  "Obi-Wan Blue Control",
+  "Darth Red Aggro",
+  "Leia White Midrange",
 ];
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
 
-const CreateGameForm: React.FC<CreateGameFormProps> = ({
-	format,
-	setFormat,
-}) => {
-	const pathname = usePathname();
-	const isCreateGamePath = pathname === "/creategame";
+const SelectItem = React.forwardRef<HTMLDivElement, Select.SelectItemProps>(
+  ({ children, className, ...props }, forwardedRef) => {
+    return (
+      <Select.Item
+        className={classnames("SelectItem", className)}
+        {...props}
+        ref={forwardedRef}
+      >
+        <Select.ItemText>{children}</Select.ItemText>
+        <Select.ItemIndicator className="SelectItemIndicator">
+          <CheckIcon />
+        </Select.ItemIndicator>
+      </Select.Item>
+    );
+  }
+);
 
-	// Common State
-	const [favouriteDeck, setFavouriteDeck] =
-		useState<string>("Vader Green Ramp");
-	const [deckLink, setDeckLink] = useState<string>("");
-	const [saveDeck, setSaveDeck] = useState<boolean>(false);
+const CreateGameForm: React.FC<CreateGameFormProps> = ({ format, setFormat }) => {
+  const pathname = usePathname();
+  const isCreateGamePath = pathname === "/creategame";
 
-	// Additional State for Non-Creategame Path
-	const [gameName, setGameName] = useState<string>("");
-	const [privacy, setPrivacy] = useState<string>("Public");
+  // Common State
+  const [favouriteDeck, setFavouriteDeck] = useState<string>("Vader Green Ramp");
+  const [deckLink, setDeckLink] = useState<string>("");
+  const [saveDeck, setSaveDeck] = useState<boolean>(false);
 
-	// Handle Create Game Submission
-	const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-		console.log("Favourite Deck:", favouriteDeck);
-		console.log("SWUDB Deck Link:", deckLink);
-		console.log("Save Deck To Favourites:", saveDeck);
+  // Additional State for Non-Creategame Path
+  const [gameName, setGameName] = useState<string>("");
+  const [privacy, setPrivacy] = useState<string>("Public");
 
-		if (!isCreateGamePath) {
-			console.log("Game Name:", gameName);
-			console.log("Format:", format);
-			console.log("Privacy:", privacy);
-		}
+  // Handle Create Game Submission
+  const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    console.log("Favourite Deck:", favouriteDeck);
+    console.log("SWUDB Deck Link:", deckLink);
+    console.log("Save Deck To Favourites:", saveDeck);
 
-		// TODO: Implement actual game creation logic here
-	};
+    if (!isCreateGamePath) {
+      console.log("Game Name:", gameName);
+      console.log("Format:", format);
+      console.log("Privacy:", privacy);
+    }
 
-	//------------------------STYLES------------------------//
+    // TODO: Implement actual game creation logic here
+  };
 
-	const mainCardStyle = {
-		borderRadius: "1.5em",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
-		fontFamily: "var(--font-barlow), sans-serif",
-		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
-		p: "2em",
-		mb: "2em",
-	};
+  return (
+    <div className="container black-bg">
+      <h2>{isCreateGamePath ? "Choose Your Deck" : "Create New Game"}</h2>
+      <form onSubmit={handleCreateGameSubmit}>
+        {/* Favourite Decks Input */}
+        <div className="form-element">
+          <label className="label">Favorite Decks</label>
+          <Select.Root value={favouriteDeck} onValueChange={setFavouriteDeck}>
+            <Select.Trigger className="SelectTrigger" aria-label="Favourite Decks">
+              <Select.Value placeholder="Select a deck…" />
+              <Select.Icon className="SelectIcon"><ChevronDownIcon /></Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content className="SelectContent">
+                <Select.ScrollUpButton className="SelectScrollButton"><ChevronUpIcon /></Select.ScrollUpButton>
+                <Select.Viewport className="SelectViewport">
+                  {deckOptions.map((deck) => (
+                    <SelectItem key={deck} value={deck}>
+                      {deck}
+                    </SelectItem>
+                  ))}
+                </Select.Viewport>
+                <Select.ScrollDownButton className="SelectScrollButton"><ChevronDownIcon /></Select.ScrollDownButton>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </div>
 
-	const formControlStyle = {
-		mb: ".5em",
-	};
+        {/* SWUDB Deck Link Input */}
+        <div className="form-element-slim">
+          <label className="label"><a href="https://www.swudb.com/" target="_blank">SWUDB</a> or <a href="https://www.sw-unlimited-db.com/" target="_blank">SW-Unlimited-DB</a> Deck Link <span className="secondary">(use the url or 'Deck Link' button)</span></label>
+          <input
+            id="deckLink"
+            type="url"
+            value={deckLink}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setDeckLink(e.target.value)}
+            required
+            className="input"
+          />
+        </div>
 
-	const labelTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontSize: "1.3em",
-		color: "#fff",
-		mb: ".5em",
-	};
+        {/* Save Deck To Favourites Checkbox */}
+        <div className="form-element">
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Checkbox.Root 
+            className="CheckboxRoot" 
+            id="saveDeck"
+            checked={saveDeck}
+            onCheckedChange={(checked) => setSaveDeck(!!checked)}
+            >
+              <Checkbox.Indicator className="CheckboxIndicator">
+                <CheckIcon />
+              </Checkbox.Indicator>
+            </Checkbox.Root>
+            <label className="label-inline">
+              Save to Favorite Decks
+            </label>
+          </div>
+        </div>
 
-	const checkboxStyle = {
-		color: "#fff",
-		"&.Mui-checked": {
-			color: "#fff",
-		},
-	};
+        {/* Additional Fields for Non-Creategame Path */}
+        {!isCreateGamePath && (
+          <>
+            {/* Game Name Input */}
+            <div className="form-element">
+              <label className="label">
+                Game Name <span className="secondary">(optional)</span>
+              </label>
+              <input
+                id="gameName"
+                type="text"
+                value={gameName}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setGameName(e.target.value)}
+                placeholder="Enter Game Name"
+                className="input"
+              />
+            </div>
 
-	const checkboxAndRadioGroupTextStyle = {
-		color: "#fff",
-		fontSize: "1em",
-	};
+            {/* Format Selection */}
+            <div className="form-element">
+              <label className="label">Format</label>
+              <Select.Root
+                value={format || ""}
+                onValueChange={(value) => setFormat && setFormat(value)}
+              >
+                <Select.Trigger className="SelectTrigger" aria-label="Format">
+                  <Select.Value placeholder="Select a format..." />
+                  <Select.Icon className="SelectIcon">
+                    <ChevronDownIcon />
+                  </Select.Icon>
+                </Select.Trigger>
+                <Select.Portal>
+                  <Select.Content className="SelectContent">
+                    <Select.ScrollUpButton className="SelectScrollButton">
+                      <ChevronUpIcon />
+                    </Select.ScrollUpButton>
+                    <Select.Viewport className="SelectViewport">
+                      {formatOptions.map((fmt) => (
+                        <SelectItem key={fmt} value={fmt}>
+                          {fmt}
+                        </SelectItem>
+                      ))}
+                    </Select.Viewport>
+                    <Select.ScrollDownButton className="SelectScrollButton">
+                      <ChevronDownIcon />
+                    </Select.ScrollDownButton>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            </div>
 
-	const submitButtonStyle = {
-		display: "block",
-		width: "10em",
-		height: "3em",
-		borderRadius: "0.5em",
-		backgroundColor: "#292929",
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontSize: "1.2em",
-		ml: "auto",
-		mr: "auto",
-		mb: ".8em",
-		"&:hover": {
-			backgroundColor: "#3a3a3a",
-		},
-	};
+            {/* Privacy Selection */}
+            <div className="form-element">
+              <label className="label">Game Privacy</label>
+              <RadioGroup.Root
+                value={privacy}
+                onValueChange={(value) => setPrivacy(value)}
+                className="RadioGroupRoot"
+              >
+                <div className="radio-container">
+                  <div className="radio-option">
+                    <RadioGroup.Item className="RadioGroupItem" value="Public" id="public">
+                      <RadioGroup.Indicator className="RadioGroupIndicator" />
+                    </RadioGroup.Item>
+                    <label htmlFor="public" className="label-inline">Public</label>
+                  </div>
+                  <div className="radio-option">
+                    <RadioGroup.Item className="RadioGroupItem" value="Private" id="private">
+                      <RadioGroup.Indicator className="RadioGroupIndicator" />
+                    </RadioGroup.Item>
+                    <label htmlFor="private" className="label-inline">Private</label>
+                  </div>
+                </div>
+              </RadioGroup.Root>
+            </div>
+          </>
+        )}
 
-	const instructionsCardStyle = {
-		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
-		borderRadius: "1.5em",
-		backgroundColor: "#18325199",
-		boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-		p: "2em",
-		mb: "2em",
-	};
+        {/* Submit Button */}
+        <button type="submit" className="button button-centered">
+          Create Game
+        </button>
+      </form>
 
-	const instructionsHeadingStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "600",
-		fontSize: "1.8em",
-		color: "#fff",
-		mb: ".8em",
-	};
-
-	const instructionsTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-		fontSize: "1em",
-		textAlign: "left",
-		color: "#fff",
-		mb: ".2em",
-	};
-
-	return (
-		<Box sx={{ height: "80vh" }}>
-			{/* Primary Card - Create/Choose Deck Form */}
-			<Card sx={mainCardStyle}>
-				<CardContent>
-					<Typography variant="h2">
-						{isCreateGamePath ? "Choose Your Deck" : "Create New Game"}
-					</Typography>
-					<form onSubmit={handleCreateGameSubmit}>
-						{/* Favourite Decks Input */}
-						<FormControl fullWidth sx={formControlStyle}>
-							<Typography sx={labelTextStyle}>Favourite Decks</Typography>
-							<StyledTextField
-								select
-								value={favouriteDeck}
-								onChange={(e: ChangeEvent<HTMLInputElement>) =>
-									setFavouriteDeck(e.target.value)
-								}
-								placeholder="Vader Green Ramp"
-								required
-							>
-								{deckOptions.map((deck) => (
-									<MenuItem key={deck} value={deck}>
-										{deck}
-									</MenuItem>
-								))}
-							</StyledTextField>
-						</FormControl>
-
-						{/* SWUDB Deck Link Input */}
-						<FormControl fullWidth sx={formControlStyle}>
-							<Typography sx={labelTextStyle}>
-								SWUDB Deck Link
-								<Typography component="span" sx={{ fontSize: "0.7em" }}>
-									{" "}
-									(use the url or &apos;Deck Link&apos; button)
-								</Typography>
-							</Typography>
-							<StyledTextField
-								type="url"
-								value={deckLink}
-								onChange={(e: ChangeEvent<HTMLInputElement>) =>
-									setDeckLink(e.target.value)
-								}
-								required
-							/>
-						</FormControl>
-
-						{/* Save Deck To Favourites Checkbox */}
-						<FormControlLabel
-							control={
-								<Checkbox
-									sx={checkboxStyle}
-									checked={saveDeck}
-									onChange={(
-										e: ChangeEvent<HTMLInputElement>,
-										checked: boolean
-									) => setSaveDeck(checked)}
-								/>
-							}
-							label={
-								<Typography sx={checkboxAndRadioGroupTextStyle}>
-									Save Deck To Favourites
-								</Typography>
-							}
-							sx={{ mb: isCreateGamePath ? 1 : 3 }}
-						/>
-
-						{/* Additional Fields for Non-Creategame Path */}
-						{!isCreateGamePath && (
-							<>
-								{/* Game Name Input */}
-								<FormControl fullWidth sx={formControlStyle}>
-									<Typography sx={labelTextStyle}>
-										Game Name{" "}
-										<Typography component="span" sx={{ fontSize: "0.8rem" }}>
-											(optional)
-										</Typography>
-									</Typography>
-									<StyledTextField
-										type="text"
-										value={gameName}
-										onChange={(e: ChangeEvent<HTMLInputElement>) =>
-											setGameName(e.target.value)
-										}
-										placeholder="Enter Game Name"
-									/>
-								</FormControl>
-
-								{/* Format Selection */}
-								<FormControl fullWidth sx={{ mb: "1em" }}>
-									<Typography sx={labelTextStyle}>Format</Typography>
-									<StyledTextField
-										select
-										value={format}
-										onChange={(e: ChangeEvent<HTMLInputElement>) =>
-											setFormat ? setFormat(e.target.value) : null
-										}
-										required
-									>
-										{formatOptions.map((fmt) => (
-											<MenuItem key={fmt} value={fmt}>
-												{fmt}
-											</MenuItem>
-										))}
-									</StyledTextField>
-								</FormControl>
-
-								{/* Privacy Selection */}
-								<FormControl component="fieldset" sx={{ mb: ".8em" }}>
-									<RadioGroup
-										row
-										value={privacy}
-										onChange={(
-											e: ChangeEvent<HTMLInputElement>,
-											value: string
-										) => setPrivacy(value)}
-									>
-										<FormControlLabel
-											value="Public"
-											control={<Radio sx={checkboxStyle} />}
-											label={
-												<Typography sx={checkboxAndRadioGroupTextStyle}>
-													Public
-												</Typography>
-											}
-										/>
-										<FormControlLabel
-											value="Private"
-											control={<Radio sx={checkboxStyle} />}
-											label={
-												<Typography sx={checkboxAndRadioGroupTextStyle}>
-													Private
-												</Typography>
-											}
-										/>
-									</RadioGroup>
-								</FormControl>
-							</>
-						)}
-
-						{/* Submit Button */}
-						<Button type="submit" variant="contained" sx={submitButtonStyle}>
-							Create
-						</Button>
-					</form>
-				</CardContent>
-			</Card>
-
-			{/* Secondary Card - Instructions (Only for /creategame path) */}
-			{isCreateGamePath && (
-				<Card sx={instructionsCardStyle}>
-					<CardContent>
-						<Typography variant="h3" sx={instructionsHeadingStyle}>
-							Instructions
-						</Typography>
-						<Typography variant="body1" sx={instructionsTextStyle}>
-							Choose a deck, then click &apos;Create&apos; to be taken to the
-							game lobby.
-							<br />
-							<br />
-							Once in the lobby, the player who wins the dice roll chooses who
-							goes first. Then the host can start the game.
-							<br />
-							<br />
-							Have Fun!
-						</Typography>
-					</CardContent>
-				</Card>
-			)}
-		</Box>
-	);
+      {/* Secondary Card - Instructions (Only for /creategame path) */}
+      {isCreateGamePath && (
+        <div className="card">
+          <h3>Instructions</h3>
+          <p>
+            Choose a deck, then click 'Create' to be taken to the game lobby.
+            <br />
+            <br />
+            Once in the lobby, the player who wins the dice roll chooses who goes first.
+            Then the host can start the game.
+            <br />
+            <br />
+            Have Fun!
+          </p>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default CreateGameForm;

@@ -1,0 +1,24 @@
+.spectate-game-block {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5em;
+}
+
+.leaders {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.leaders p {
+  margin-bottom: 0;
+}
+
+.leader-thumbnail {
+  border-radius: 5px;
+  height: 50px;
+  width: 70px;
+  background-size:contain;
+}

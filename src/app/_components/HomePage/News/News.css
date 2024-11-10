@@ -1,0 +1,13 @@
+  .news-wrapper .container {
+  margin: 0 0 2rem 0;
+  }
+
+  .newspost img {
+      max-width: 100%;
+      border-radius: 5px;
+  }
+
+  .newspost h3 {
+    margin: 15px 0;
+    display: block;
+  }

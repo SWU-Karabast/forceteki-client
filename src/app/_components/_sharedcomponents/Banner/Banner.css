@@ -1,0 +1,40 @@
+.home-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 1.4rem 0 0 4rem;
+}
+
+.home-header h1 {
+  font-size: 3.2rem;
+  font-weight: 400;
+}
+
+.home-banner {
+  width: calc(100% - 240px);
+  min-width: 400px;
+  height: 300px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: -1;
+  mask: linear-gradient(to bottom, rgba(0,0,0, 1) 0, rgba(0,0,0, 1) 50%, rgba(0,0,0, 0) 100%, rgba(0,0,0, 0) 0) 100% 50% / 100% 100% repeat-x;
+  display: flex;
+  flex-direction: row;
+}
+
+.banner {
+  background-size: cover;
+  background-position: center;
+  clip-path: polygon(150px 0, 100% 0, calc(100% - 150px) 326px, 0% 326px);
+  flex: 1;
+}
+
+.block-1 { background-image: url('/leia-sor.jpg'); margin-right: -152px; }
+.block-2 { background-image: url('/boba-shd.jpg'); }
+.block-3 { background-image: url('/kylo-sor.jpg'); margin-left: -152px; }
+.block-4 { background-image: url('/luke-sor.jpg'); margin-left: -152px; }
+
+@media screen and (max-width: 1600px) { .block-4 { display: none; } }
+@media screen and (max-width: 1200px) { .block-3 { display: none; } .block-2 { margin-left: -2px; } }
+@media screen and (max-width: 800px)  { .block-2 { display: none; } .block-1 { margin-right: 0; } }

@@ -1,75 +1,16 @@
 import React from "react";
-import {
-	CardContent,
-	CardMedia,
-	Divider,
-	Typography,
-	Box,
-} from "@mui/material";
 import { NewsItemProps } from "../../HomePageTypes";
 
 const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
-	//------------------------STYLES------------------------//
-
-	const boxStyle = {
-		display: "flex",
-		justifyContent: "space-between",
-		alignItems: "flex-end",
-		mt: 1,
-	};
-
-	const titleTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "600",
-		color: "#fff",
-		fontSize: "1.5em",
-	};
-
-	const dateTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-		color: "#fff",
-		fontSize: "1.5em",
-	};
-
-	const dividerStyle = {
-		backgroundColor: "#fff",
-		mt: ".5vh",
-		mb: "1vh",
-	};
-
-	const contentTextStyle = {
-		color: "#fff",
-		textAlign: "left",
-		mb: 2,
-		fontSize: "1em",
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-	};
-
-	const newsImageStyle = {
-		borderRadius: ".5vw",
-	};
 
 	return (
 		<>
-			<CardContent>
-				<Box sx={boxStyle}>
-					<Typography sx={titleTextStyle}>{article.title}</Typography>
-					<Typography sx={dateTextStyle}>{article.date}</Typography>
-				</Box>
-				<Divider sx={dividerStyle} />
-				<Typography variant="body1" sx={contentTextStyle}>
-					{article.content}
-				</Typography>
-			</CardContent>
-			<CardMedia
-				component="img"
-				height="auto"
-				image={article.image}
-				alt={article.imageAlt}
-				sx={newsImageStyle}
-			/>
+			<div className="newspost">
+      			<img src="/beta.png" alt="Welcome to the Karabast 2.0 Beta" />
+     			<h2>"Welcome to the Karabast 2.0 Beta!"</h2>
+      			<p>"Welcome to the Karabast 2.0 beta! We’re thrilled to have you on board as we unveil the latest features and enhancements. Your participation is invaluable, and we can’t wait to hear your feedback. Dive in, explore what’s new, and help shape the future of Karabast with us!</p>
+				<p> <a target="_blank" href="https://discord.gg/hKRaqHND4v">Join our Discord for the latest progress updates and timelines</a>. If you have coding experience we are always open to new contributors. Info on how to help out can also be found on <a target="_blank" href="https://discord.gg/hKRaqHND4v">Discord</a>. We appreciate everyone's patience as we work on this new Karabast experience, and look forward to playing games with you when we launch!</p>
+    		</div>
 		</>
 	);
 };

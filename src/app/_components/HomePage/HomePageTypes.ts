@@ -19,11 +19,10 @@ export interface PublicGamesProps {
 }
 
 export type Article = {
-	title: string;
-	content: string;
-	date: string;
 	image: string;
 	imageAlt: string;
+	title: string;
+	content: string;
 };
 
 export interface NewsItemProps {

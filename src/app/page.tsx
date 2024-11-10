@@ -1,43 +1,32 @@
 "use client";
 import React, { useState } from "react";
-import { Grid2 as Grid } from "@mui/material";
 import KarabastBanner from "./_components/_sharedcomponents/Banner/Banner";
 import PublicGames from "./_components/HomePage/PublicGames/PublicGames";
 import CreateGameForm from "./_components/_sharedcomponents/CreateGameForm/CreateGameForm";
 import NewsColumn from "./_components/HomePage/News/News";
+import './page.css';
 
 const Home: React.FC = () => {
 	const [format, setFormat] = useState("Premier");
-	const mt = "17vh";
-
-	//------------------------STYLES------------------------//
-
-	const gridContainerStyle = {
-		position: "relative",
-		height: "100vh",
-		overflow: "hidden",
-	};
-
-	const columnStyle = {
-		justifyContent: "center",
-		alignContent: "center",
-		mt: mt,
-	};
 
 	return (
-		<Grid container sx={gridContainerStyle}>
-			{/* Banner positioned absolutely */}
-			<KarabastBanner />
-			<Grid container size={4} sx={columnStyle}>
+		<>
+		<KarabastBanner/>
+		<div className="core-wrapper">
+			<div className="game-browser-wrapper">
 				<PublicGames format={format} />
-			</Grid>
-			<Grid container size={4} sx={columnStyle}>
+			</div>
+			<div className="create-game-wrapper">
 				<CreateGameForm format={format} setFormat={setFormat} />
-			</Grid>
-			<Grid container size={4} sx={columnStyle}>
+			</div>
+			<div className="news-wrapper">
 				<NewsColumn />
-			</Grid>
-		</Grid>
+			</div>
+		</div>
+		<div className="disclaimer">
+			<p>Karabast is in no way affiliated with Disney or Fantasy Flight Games. Star Wars characters, cards, logos, and art are property of Disney and/or Fantasy Flight Games.</p>
+		</div>
+		</>
 	);
 };
 

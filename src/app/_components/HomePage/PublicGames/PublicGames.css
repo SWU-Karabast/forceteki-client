@@ -1,0 +1,16 @@
+.game-browser-wrapper .container { 
+  overflow: auto;
+  height: 100%;
+}
+
+.game-item {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+.game-item p {
+  flex: auto;
+  margin-bottom: 0;
+}
