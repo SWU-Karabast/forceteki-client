@@ -2,11 +2,10 @@ import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
 import Image from "next/image";
 import { ResourcesProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { usePlayer } from "@/app/_contexts/Player.context";
 
 const Resources: React.FC<ResourcesProps> = ({
-	availableResources,
-	totalResources,
-	activePlayer,
+	trayPlayer,
 	handleModalToggle,
 }) => {
 	//------------------------STYLES------------------------//
@@ -22,7 +21,7 @@ const Resources: React.FC<ResourcesProps> = ({
 		transition: "background-color 0.3s ease",
 		"&:hover": {
 			background:
-				activePlayer === "player"
+				trayPlayer === "player"
 					? "linear-gradient(to top, white, transparent)"
 					: null,
 		},
@@ -49,11 +48,16 @@ const Resources: React.FC<ResourcesProps> = ({
 		color: "white",
 	};
 
+	const { gameState } = usePlayer();
+
+	const availableResources = gameState.players[trayPlayer].availableResources;
+	const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
+
 	return (
 		<Card
 			sx={cardStyle}
 			onClick={() => {
-				if (activePlayer === "player" && handleModalToggle) {
+				if (trayPlayer === "player" && handleModalToggle) {
 					handleModalToggle();
 				}
 			}}

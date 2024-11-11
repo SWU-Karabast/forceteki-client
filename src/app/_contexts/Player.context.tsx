@@ -9,21 +9,17 @@ import React, {
 	useEffect,
 } from "react";
 import io, { Socket } from "socket.io-client";
-import { mockPlayer } from "../_constants/mockData";
-import { Participant } from "@/app/_components/Gameboard/GameboardTypes";
 
 interface PlayerContextType {
-	activePlayer: Participant;
-	setActivePlayer: (player: Participant) => void;
 	gameState: any;
 	sendMessage: (args: any[]) => void;
+	getOpponent: (player: string) => string;
 	connectedPlayer: string;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const PlayerProvider = ({ children }: { children: ReactNode }) => {
-	const [activePlayer, setActivePlayer] = useState<Participant>(mockPlayer);
 	const [gameState, setGameState] = useState<any>(null);
 	const [socket, setSocket] = useState<Socket | undefined>(undefined);
 	const [connectedPlayer, setConnectedPlayer] = useState<string>("");
@@ -59,14 +55,18 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 		socket?.emit("game", ...args);
 	};
 
+	const getOpponent = (player: string) => {
+		const playerNames = Object.keys(gameState.players);
+		return playerNames.find((name) => name !== player) || "";
+	};
+
 	return (
 		<PlayerContext.Provider
 			value={{
-				activePlayer,
-				setActivePlayer,
 				gameState,
 				sendMessage,
 				connectedPlayer,
+				getOpponent
 			}}
 		>
 			{children}
