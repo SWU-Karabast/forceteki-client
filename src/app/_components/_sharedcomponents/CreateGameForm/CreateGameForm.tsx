@@ -74,14 +74,6 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		mb: "2em",
 	};
 
-	const headingStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "800",
-		fontSize: "2em",
-		color: "#fff",
-		mb: ".5em",
-	};
-
 	const formControlStyle = {
 		mb: ".5em",
 	};
@@ -152,7 +144,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 			{/* Primary Card - Create/Choose Deck Form */}
 			<Card sx={mainCardStyle}>
 				<CardContent>
-					<Typography variant="h3" sx={headingStyle}>
+					<Typography variant="h2">
 						{isCreateGamePath ? "Choose Your Deck" : "Create New Game"}
 					</Typography>
 					<form onSubmit={handleCreateGameSubmit}>

@@ -21,20 +21,6 @@ const GamesInProgress: React.FC = () => {
 		mt: 1,
 	};
 
-	const headingTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "800",
-		color: "#fff",
-		fontSize: "1.5em",
-	};
-
-	const countTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-		color: "#fff",
-		fontSize: "1.5em",
-	};
-
 	const dividerStyle = {
 		backgroundColor: "#fff",
 		mt: ".5vh",
@@ -62,8 +48,8 @@ const GamesInProgress: React.FC = () => {
 	return (
 		<>
 			<Box sx={headerBoxStyle}>
-				<Typography sx={headingTextStyle}>Games in Progress</Typography>
-				<Typography sx={countTextStyle}>{randomGamesInProgress}</Typography>
+				<Typography>Games in Progress</Typography>
+				<Typography>{randomGamesInProgress}</Typography>
 			</Box>
 			<Divider sx={dividerStyle} />
 			<Box sx={scrollableBoxStyle}>

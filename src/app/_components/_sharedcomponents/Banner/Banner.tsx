@@ -2,101 +2,81 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 
 const KarabastBanner: React.FC = () => {
-	//------------------------STYLES------------------------//
-
-	const bannerContainerStyle = {
-		position: "absolute",
-		height: "26vh",
-		width: "100%",
-		backgroundColor: "transparent",
-		color: "#fff",
-		display: "flex",
-		alignItems: "center",
-		p: "0 2%",
+	
+	const styles = {
+	  titleheader: { 
+		fontSize: "3.2rem", 
+		fontWeight: 400, 
+		marginBottom: "5px" 
+	  },
+	  bannerContainerStyle: {
+		position: 'absolute',
+		height: '26vh',
+		width: '100%',
+		display: 'flex',
+		alignItems: 'center',
+		padding: '0 2%',
 		zIndex: -1,
-		overflow: "hidden",
-	};
-
-	const textBoxStyle = {
-		position: "relative",
-		flex: "0 0 auto",
-		width: "20%",
+		overflow: 'hidden',
+	  },
+	  textBoxStyle: {
+		position: 'relative',
+		width: '20%',
 		zIndex: 10,
-		mb: "7em",
-		ml: "1em",
-	};
-
-	const headingTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-		fontSize: "6em",
-	};
-
-	const subheadingTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontSize: "1.3em",
-		ml: ".6em",
-	};
-
-	const imagesContainerStyle = {
-		display: "flex",
+		marginBottom: '7em',
+		marginLeft: '1em',
+	  },
+	  homeBanner: {
+		width: 'calc(100% - 240px)',
+		minWidth: '400px',
+		height: '100%',
+		position: 'absolute',
+		top: 0,
+		right: 0,
+		zIndex: -1,
+		mask: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%) 100% 50% / 100% 100% repeat-x',
+		display: 'flex',
+	  },
+	  banner: {
+		backgroundSize: 'cover',
+		backgroundPosition: 'center',
+		clipPath: 'polygon(150px 0, 100% 0, calc(100% - 150px) 326px, 0% 326px)',
 		flex: 1,
-		height: "100%",
-		backgroundColor: "transparent",
-		position: "relative",
-	};
-
-	const leiaImageStyle = {
-		flex: 1,
-		backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.1) 80%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,1) 100%), url('/leia.png')`,
-		backgroundSize: "180%",
-		backgroundPositionX: "28%",
-		backgroundPositionY: "9%",
-		clipPath: "polygon(20.5% 0, 100% 0, 79.5% 100%, 0% 100%)",
-		mr: "-9%",
-		height: "100%",
-	};
-
-	const bobaImageStyle = {
-		flex: 1,
-		backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.1) 80%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,1) 100%), url('/boba.png')`,
-		backgroundSize: "150%",
-		backgroundPositionY: "4%",
-		backgroundPositionX: "40%",
-		clipPath: "polygon(20.5% 0, 100% 0, 79.5% 100%, 0% 100%)",
-		mr: "-9%",
-		height: "100%",
-	};
-
-	const kyloImageStyle = {
-		flex: 1,
-		backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.1) 80%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,1) 100%), url('/kylo.png')`,
-		backgroundSize: "150%",
-		backgroundPositionY: "4%",
-		backgroundPositionX: "40%",
-		clipPath: "polygon(20.5% 0, 100% 0, 79.5% 100%, 0% 100%)",
-		mr: "-3%",
-		height: "100%",
+	  },
+	  block1: {
+		backgroundImage: "url('/leia-sor.jpg')",
+		marginRight: '-152px',
+		'@media (max-width:800px)': { marginRight: 0, },
+	  },
+	  block2: {
+		backgroundImage: "url('/boba-shd.jpg')",
+		'@media (max-width:1200px)': { marginLeft: '-2px', },
+		'@media (max-width:800px)': { display: 'none', },
+	  },
+	  block3: {
+		backgroundImage: "url('/kylo-sor.jpg')",
+		marginLeft: '-152px',
+		'@media (max-width:1200px)': { display: 'none', },
+	  },
+	  block4: {
+		backgroundImage: "url('/luke-sor.jpg')",
+		marginLeft: '-152px',
+		'@media (max-width:1600px)': { display: 'none', },
+	  },
 	};
 
 	return (
-		<Box sx={bannerContainerStyle}>
-			<Box sx={textBoxStyle}>
-				<Typography variant="h1" sx={headingTextStyle}>
-					KARABAST
-				</Typography>
-				<Typography variant="h2" sx={subheadingTextStyle}>
-					The Fan-Made, Open-Source
-				</Typography>
-				<Typography variant="h2" sx={subheadingTextStyle}>
-					Star Wars Unlimited Simulator
-				</Typography>
+			<Box sx={styles.bannerContainerStyle}>
+			<Box sx={styles.textBoxStyle}>
+				<Typography variant="h1" sx={styles.titleheader}>KARABAST</Typography>
+				<Typography variant="body1">The Fan-Made, Open-Source</Typography>
+				<Typography variant="body1">Star Wars Unlimited Simulator</Typography>
 			</Box>
-
-			<Box sx={imagesContainerStyle}>
-				<Box sx={leiaImageStyle} />
-				<Box sx={bobaImageStyle} />
-				<Box sx={kyloImageStyle} />
+			<Box sx={styles.homeBanner}>
+				<Box sx={[styles.banner, styles.block1]} />
+				<Box sx={[styles.banner, styles.block2]} />
+				<Box sx={[styles.banner, styles.block3]} />
+				<Box sx={[styles.banner, styles.block4]} />
 			</Box>
 		</Box>
 	);
