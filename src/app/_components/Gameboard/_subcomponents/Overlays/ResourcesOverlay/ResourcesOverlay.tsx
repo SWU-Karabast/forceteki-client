@@ -50,7 +50,7 @@ const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 						Your Resources
 					</Typography>
 
-					<CardArea cards={gameState[connectedPlayer].cardPiles.resources} />
+					<CardArea cards={gameState.players[connectedPlayer].cardPiles["resources"]} />
 				</CardContent>
 				<Box
 					sx={{
