@@ -1,18 +1,12 @@
 import { Grid2 as Grid, Button, Typography, Box } from "@mui/material";
-import { CardActionTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
+
 import { usePlayer } from "@/app/_contexts/Player.context";
 
-const CardActionTray: React.FC<CardActionTrayProps> = ({
-	handleBasicPromptToggle,
-}) => {
+const CardActionTray: React.FC = () => {
 	//------------------------STYLES------------------------//
 
 	const actionContainerStyle = {
 		mt: "1vh",
-	};
-
-	const actionButtonStyle = {
-		backgroundColor: "green"
 	};
 
 	const { sendMessage, gameState, connectedPlayer } = usePlayer();

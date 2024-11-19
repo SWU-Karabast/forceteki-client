@@ -1,7 +1,6 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
 import Resources from "../_subcomponents/PlayerTray/Resources";
-import DeckDiscard from "../_subcomponents/PlayerTray/DeckDiscard";
 import PlayerHand from "../_subcomponents/PlayerTray/PlayerHand";
 import { OpponentCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { usePlayer } from "@/app/_contexts/Player.context";

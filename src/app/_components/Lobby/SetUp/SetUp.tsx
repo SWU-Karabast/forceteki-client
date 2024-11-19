@@ -1,18 +1,15 @@
 import React, { useEffect, useRef } from "react";
 import {
 	Card,
-	Box,
 	Typography,
 	CardContent,
 	CardActions,
-	Button,
 } from "@mui/material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
 import { SetUpProps } from "../LobbyTypes";
 
 const SetUp: React.FC<SetUpProps> = ({
-	participant,
 	chatHistory,
 	chatMessage,
 	playerRoll,
@@ -29,12 +26,6 @@ const SetUp: React.FC<SetUpProps> = ({
 		}
 		if (isRollSame) {
 			return "Initiative tied, rolling initiative again";
-		}
-		if (participant.initiative === true) {
-			return "You won the initiative choice.";
-		}
-		if (participant.initiative === false) {
-			return "Start the game when ready.";
 		}
 		return "";
 	};
@@ -85,10 +76,6 @@ const SetUp: React.FC<SetUpProps> = ({
 		width: "100%",
 	};
 
-	const buttonStyle = {
-		backgroundColor: "#292929",
-	};
-
 	const setUpTextStyle = {
 		fontSize: "1.5em",
 		fontWeight: "800",
@@ -108,46 +95,7 @@ const SetUp: React.FC<SetUpProps> = ({
 					)}
 				</CardContent>
 				<CardActions sx={buttonsContainerStyle}>
-					{!isRolling && !hasRolled.current && (
-						<Button
-							variant="contained"
-							sx={buttonStyle}
-							onClick={handleRollInitiative}
-						>
-							Roll Initiative
-						</Button>
-					)}
-					{!isRolling &&
-						hasRolled.current &&
-						participant.initiative === false && (
-							<Button variant="contained" sx={buttonStyle}>
-								Start Game
-							</Button>
-						)}
-					{!isRolling &&
-						hasRolled.current &&
-						participant.initiative === true && (
-							<Box display="flex" gap={2}>
-								<Button
-									variant="contained"
-									sx={buttonStyle}
-									onClick={() => {
-										/* Add logic for going first */
-									}}
-								>
-									Go First
-								</Button>
-								<Button
-									variant="contained"
-									sx={buttonStyle}
-									onClick={() => {
-										/* Add logic for going second */
-									}}
-								>
-									Go Second
-								</Button>
-							</Box>
-						)}
+					
 				</CardActions>
 			</Card>
 			<Typography sx={setUpTextStyle}>Set Up</Typography>
