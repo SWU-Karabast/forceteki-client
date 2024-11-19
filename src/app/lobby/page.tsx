@@ -1,14 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import { Grid2 as Grid } from "@mui/material";
-import { usePlayer } from "../_contexts/Player.context";
 import { usePathname } from "next/navigation";
 import Players from "../_components/Lobby/Players/Players";
 import Deck from "../_components/Lobby/Deck/Deck";
 import SetUp from "../_components/Lobby/SetUp/SetUp";
 
 const Lobby = () => {
-	const { activePlayer, setActivePlayer } = usePlayer();
+
 	const pathname = usePathname();
 	const isLobbyView = pathname === "/lobby";
 
@@ -39,13 +38,7 @@ const Lobby = () => {
 				return;
 			}
 			setPlayerRoll(playerDieRoll);
-			setOpponentRoll(opponentDieRoll);
-
-			const newInitiative = playerDieRoll > opponentDieRoll;
-			setActivePlayer({
-				...activePlayer,
-				initiative: newInitiative,
-			});
+			setOpponentRoll(opponentDieRoll)
 
 			setIsRolling(false);
 		}, Math.random() * 3000 + 2000);
@@ -80,7 +73,6 @@ const Lobby = () => {
 		<Grid container sx={containerStyle}>
 			<Grid container size={4} sx={setUpGridStyle}>
 				<SetUp
-					participant={activePlayer}
 					chatMessage={chatMessage}
 					chatHistory={chatHistory}
 					handleChatSubmit={handleChatSubmit}
@@ -93,10 +85,10 @@ const Lobby = () => {
 				/>
 			</Grid>
 			<Grid container size={3} sx={playersGridStyle}>
-				<Players participant={activePlayer} isLobbyView={isLobbyView} />
+				<Players isLobbyView={isLobbyView} />
 			</Grid>
 			<Grid container size={5} sx={deckGridStyle}>
-				<Deck activePlayer={activePlayer} />
+				<Deck />
 			</Grid>
 		</Grid>
 	);

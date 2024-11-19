@@ -36,11 +36,6 @@ export interface BoardProps {
 	sidebarOpen: boolean;
 }
 
-export interface CardActionTrayProps {
-	trayPlayer: string;
-	handleBasicPromptToggle?: () => void;
-}
-
 export type DeckSize = number;
 export interface DeckDiscardProps {
 	deckSize: DeckSize;
