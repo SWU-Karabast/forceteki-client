@@ -4,7 +4,7 @@ import { Card, Box, Typography } from "@mui/material";
 import LeaderBaseBoard from "../../_sharedcomponents/LeaderBaseBoard/LeaderBaseBoard";
 import { PlayersProps } from "../LobbyTypes";
 
-const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
+const Players: React.FC<PlayersProps> = ({ isLobbyView }) => {
 	//------------------------STYLES------------------------//
 
 	const cardStyle = {
@@ -33,7 +33,7 @@ const Players: React.FC<PlayersProps> = ({ participant, isLobbyView }) => {
 		<Card sx={cardStyle}>
 			<Box sx={{ width: "100%" }}>
 				<Typography sx={typographyStyle}>Players</Typography>
-				<LeaderBaseBoard participant={participant} isLobbyView={isLobbyView} />
+				<LeaderBaseBoard isLobbyView={isLobbyView} />
 			</Box>
 		</Card>
 	);

@@ -12,12 +12,15 @@ import {
 import { Close } from "@mui/icons-material";
 import CardArea from "../../../../_sharedcomponents/CardArea/CardArea";
 import { ResourcesOverlayProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { usePlayer } from "@/app/_contexts/Player.context";
 
 const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 	isModalOpen,
 	handleModalToggle,
-	selectedResourceCards,
 }) => {
+
+	const { gameState, connectedPlayer } = usePlayer();
+
 	return (
 		<Modal
 			open={isModalOpen}
@@ -47,7 +50,7 @@ const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 						Your Resources
 					</Typography>
 
-					<CardArea cards={selectedResourceCards} />
+					<CardArea cards={gameState.players[connectedPlayer].cardPiles["resources"]} />
 				</CardContent>
 				<Box
 					sx={{

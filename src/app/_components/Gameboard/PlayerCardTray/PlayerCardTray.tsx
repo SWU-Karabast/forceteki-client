@@ -10,7 +10,6 @@ import { usePlayer } from "@/app/_contexts/Player.context";
 const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 	trayPlayer,
 	handleModalToggle,
-	handleBasicPromptToggle,
 }) => {
 	// -------------- Contexts ---------------- //
 	const { gameState, connectedPlayer } = usePlayer();
@@ -50,10 +49,7 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 			</Grid>
 			<Grid size={6} sx={centerColumnStyle}>
 				<PlayerHand cards={gameState?.players[connectedPlayer].cardPiles["hand"] || []} />
-				<CardActionTray
-					trayPlayer={connectedPlayer}
-					handleBasicPromptToggle={handleBasicPromptToggle}
-				/>
+				<CardActionTray />
 			</Grid>
 			<Grid size={3} sx={rightColumnStyle}>
 				{/* <DeckDiscard deckSize={participant.deckSize} /> */}

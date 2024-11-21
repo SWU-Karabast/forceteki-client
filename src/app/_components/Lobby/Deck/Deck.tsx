@@ -2,9 +2,9 @@ import React from "react";
 import { Card, Box, Typography } from "@mui/material";
 import CardArea from "../../_sharedcomponents/CardArea/CardArea";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
-import { DeckProps } from "../LobbyTypes";
 
-const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
+
+const Deck: React.FC = () => {
 	// Use the custom hook with horizontal or vertical scrolling as required
 	const {
 		containerRef,
@@ -15,8 +15,6 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 		handleTouchMove,
 		handleTouchEnd,
 	} = useDragScroll("vertical");
-
-	const { deckSize } = activePlayer;
 
 	//------------------------STYLES------------------------//
 
@@ -79,7 +77,7 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 			<Box sx={headerBoxStyle}>
 				<Typography sx={titleTextStyle}>Your Deck</Typography>
 				<Typography sx={deckSizeTextStyle}>
-					{deckSize}/{deckSize}
+					0/0
 				</Typography>
 			</Box>
 			<Box
@@ -92,7 +90,7 @@ const Deck: React.FC<DeckProps> = ({ activePlayer }) => {
 				onTouchEnd={handleTouchEnd}
 				sx={scrollableBoxStyle}
 			>
-				<CardArea cards={activePlayer.fullDeck} />
+				<CardArea cards={[]} />
 			</Box>
 		</Card>
 	);

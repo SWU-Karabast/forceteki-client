@@ -18,13 +18,8 @@ const CardArea: React.FC<CardAreaProps> = ({ cards }) => {
 		<Box sx={mainContainerStyle}>
 			{cards.map((card) => (
 				<GameCard
-					path={"/lobby"}
-					key={card.id}
-					name={card.name}
-					selected={false}
-					handleSelect={() => {}}
-					disabled={true}
-					isFaceUp={true}
+					key={card.uuid}
+					card={card}
 				/>
 			))}
 		</Box>
