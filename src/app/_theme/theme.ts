@@ -1,5 +1,4 @@
 import { createTheme } from "@mui/material/styles";
-import '../font.css'; // Font import and -webkit-font-smoothing override
 
 const baseTheme = createTheme({
 	palette: {
@@ -23,7 +22,7 @@ const baseTheme = createTheme({
 export const theme = createTheme({
 
 	typography: {
-		
+		fontFamily: "var(--font-barlow), Arial, sans-serif",
 		allVariants: {
 			color: 'white',
 			margin: 0,
