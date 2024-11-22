@@ -49,7 +49,7 @@ const NewsColumn: React.FC = () => {
 		<Box sx={boxStyle}>
 			<Card sx={topCardStyle}>
 				<CardContent>
-					<Typography variant="body1"><b>Karabast is an open-source, fan-made platform.</b></Typography>
+					<Typography variant="bodyBold">Karabast is an open-source, fan-made platform.</Typography>
 					<Typography variant="body1">It is an educational tool only, meant to facilitate researching decks and strategies that is supportive of in-person play. As such, direct competition through the form of automated tournaments or rankings will not be added.</Typography>
 					<Typography variant="body1">This tool is free to use and is published non-commercially. Payment is not required to access any functionality.</Typography>
 				</CardContent>

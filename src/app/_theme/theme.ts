@@ -1,6 +1,6 @@
-import { createTheme } from "@mui/material/styles";
+import { Theme, createTheme } from "@mui/material/styles";
 
-const baseTheme = createTheme({
+const baseTheme: Theme = createTheme({
 	palette: {
 		background: {
 			default: "#000000",
@@ -19,7 +19,7 @@ const baseTheme = createTheme({
 	},
 });
 
-export const theme = createTheme({
+export const theme: Theme = createTheme({
 
 	typography: {
 		fontFamily: "var(--font-barlow), Arial, sans-serif",
@@ -50,6 +50,12 @@ export const theme = createTheme({
 		body1: {
 			fontSize: '1rem',
 			fontWeight: 400,
+			lineHeight: '130%',
+			marginBottom: '1rem',
+		},
+		bodyBold: {
+			fontSize: '1rem',
+			fontWeight: 600,
 			lineHeight: '130%',
 			marginBottom: '1rem',
 		},
