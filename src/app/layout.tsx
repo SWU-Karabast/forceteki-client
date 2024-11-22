@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import { Box } from "@mui/material";
 import "./globals.css";
 import { Barlow } from "next/font/google";
+import "./_utils/s3Assets";
 
 const barlow = Barlow({
 	subsets: ["latin"],

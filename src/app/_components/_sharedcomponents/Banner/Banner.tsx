@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
+import { s3ImageURL } from "@/app/_utils/s3Assets";
 
 const KarabastBanner: React.FC = () => {
 	//------------------------STYLES------------------------//
@@ -48,7 +49,7 @@ const KarabastBanner: React.FC = () => {
 
 	const leiaImageStyle = {
 		flex: 1,
-		backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.1) 80%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,1) 100%), url('/leia.png')`,
+		backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.1) 80%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,1) 100%), url(${s3ImageURL("ui/leia-banner.webp")})`,
 		backgroundSize: "180%",
 		backgroundPositionX: "28%",
 		backgroundPositionY: "9%",
@@ -59,7 +60,7 @@ const KarabastBanner: React.FC = () => {
 
 	const bobaImageStyle = {
 		flex: 1,
-		backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.1) 80%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,1) 100%), url('/boba.png')`,
+		backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.1) 80%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,1) 100%), url(${s3ImageURL("ui/boba-banner.webp")})`,
 		backgroundSize: "150%",
 		backgroundPositionY: "4%",
 		backgroundPositionX: "40%",
@@ -70,7 +71,7 @@ const KarabastBanner: React.FC = () => {
 
 	const kyloImageStyle = {
 		flex: 1,
-		backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.1) 80%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,1) 100%), url('/kylo.png')`,
+		backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.1) 80%, rgba(0,0,0,0.9) 95%, rgba(0,0,0,1) 100%), url(${s3ImageURL("ui/kylo-banner.webp")})`,
 		backgroundSize: "150%",
 		backgroundPositionY: "4%",
 		backgroundPositionX: "40%",
@@ -78,6 +79,8 @@ const KarabastBanner: React.FC = () => {
 		mr: "-3%",
 		height: "100%",
 	};
+
+	console.log(s3ImageURL("ui/leia-banner.webp"));
 
 	return (
 		<Box sx={bannerContainerStyle}>
