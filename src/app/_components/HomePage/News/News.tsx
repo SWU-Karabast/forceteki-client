@@ -22,23 +22,6 @@ const NewsColumn: React.FC = () => {
 		display: "flex",
 		flexDirection: "column",
 		alignItems: "center",
-		mr: "1.8em",
-	};
-
-	const topCardStyle = {
-		borderRadius: "1.5vw",
-		backgroundColor: "#18325199",
-		backdropFilter: "blur(20px)",
-	};
-
-	const bottomCardStyle = {
-		flexGrow: 1,
-		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
-		borderRadius: "1.5em",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
-		mt: "1em",
-		p: "2em",
 	};
 
 	const stickyTitleBoxStyle = {
@@ -47,7 +30,7 @@ const NewsColumn: React.FC = () => {
 
 	return (
 		<Box sx={boxStyle}>
-			<Card sx={topCardStyle}>
+			<Card variant="blue">
 				<CardContent>
 					<Typography variant="bodyBold">Karabast is an open-source, fan-made platform.</Typography>
 					<Typography variant="body1">It is an educational tool only, meant to facilitate researching decks and strategies that is supportive of in-person play. As such, direct competition through the form of automated tournaments or rankings will not be added.</Typography>
@@ -56,7 +39,7 @@ const NewsColumn: React.FC = () => {
 			</Card>
 
 			{/* Bottom Card: Scrollable and displays NewsItem */}
-			<Card
+			<Card variant="black"
 				ref={containerRef}
 				onMouseDown={handleMouseDown}
 				onMouseMove={handleMouseMove}
@@ -64,7 +47,6 @@ const NewsColumn: React.FC = () => {
 				onTouchStart={handleTouchStart}
 				onTouchMove={handleTouchMove}
 				onTouchEnd={handleTouchEnd}
-				sx={bottomCardStyle}
 			>
 				<Box sx={stickyTitleBoxStyle}>
 					<Typography variant="h3">

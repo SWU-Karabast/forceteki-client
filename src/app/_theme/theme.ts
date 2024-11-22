@@ -1,6 +1,6 @@
 import { Theme, createTheme } from "@mui/material/styles";
 
-const baseTheme: Theme = createTheme({
+export const theme: Theme = createTheme({
 	palette: {
 		background: {
 			default: "#000000",
@@ -17,12 +17,8 @@ const baseTheme: Theme = createTheme({
 			xxxl: 2560,
 		},
 	},
-});
-
-export const theme: Theme = createTheme({
-
 	typography: {
-		fontFamily: "var(--font-barlow), Arial, sans-serif",
+		fontFamily: 'var(--font-barlow), Arial, sans-serif',
 		allVariants: {
 			color: 'white',
 			margin: 0,
@@ -58,38 +54,15 @@ export const theme: Theme = createTheme({
 			fontWeight: 600,
 			lineHeight: '130%',
 			marginBottom: '1rem',
+			color: 'white',
+			fontFamily: 'var(--font-barlow), Arial, sans-serif',
 		},
 		body2: {
 			fontSize: '0.75rem',
 			fontWeight: 400,
 		},
 	},
-
 	components: {
-
-		MuiContainer: {
-			styleOverrides: {
-				root: {
-					paddingLeft: "0px",
-					paddingRight: "0px",
-					[baseTheme.breakpoints.up("lg")]: {
-						maxWidth: "100%",
-					},
-				},
-			},
-		},
-
-		MuiCardContent: {
-			styleOverrides: {
-				root: {
-					padding: 0,
-					"&:last-child": {
-						paddingBottom: 0,
-					},
-				},
-			},
-		},
-
 		MuiCssBaseline: {
 			styleOverrides: {
 				body: {
@@ -102,6 +75,58 @@ export const theme: Theme = createTheme({
 				},
 				b: {
 					fontWeight: 600,
+				},
+			},
+		},
+		MuiContainer: {
+			styleOverrides: {
+				root: {
+					paddingLeft: "0px",
+					paddingRight: "0px",
+					// [baseTheme.breakpoints.up("lg")]: {
+					// 	maxWidth: "100%",
+					// },
+				},
+			},
+		},
+		MuiCard: {
+			styleOverrides: {
+				root: {
+					borderRadius: ".8rem",
+					padding: "1rem",
+					backdropFilter: "blur(20px)",
+					width: "100%",
+				},
+			},
+			variants: [
+				{
+					props: { variant: "blue" },
+					style: {
+						backgroundColor: "#18325199",
+					},
+				},
+				{
+					props: { variant: "black" },
+					style: {
+						backgroundColor: "#000000E6",
+					},
+				},
+			]
+		},
+		MuiCardContent: {
+			styleOverrides: {
+				root: {
+					padding: 0,
+					"&:last-child": {
+						paddingBottom: 0,
+					},
+				},
+			},
+		},
+		MuiTypography: {
+			defaultProps: {
+				variantMapping: {
+					bodyBold: "p",
 				},
 			},
 		},

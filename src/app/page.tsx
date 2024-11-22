@@ -8,7 +8,6 @@ import NewsColumn from "./_components/HomePage/News/News";
 
 const Home: React.FC = () => {
 	const [format, setFormat] = useState("Premier");
-	const mt = "17vh";
 
 	//------------------------STYLES------------------------//
 
@@ -21,7 +20,8 @@ const Home: React.FC = () => {
 	const columnStyle = {
 		justifyContent: "center",
 		alignContent: "center",
-		mt: mt,
+		padding: "1rem",
+		mt: "17vh",
 	};
 
 	return (

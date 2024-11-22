@@ -1,4 +1,6 @@
 import "@mui/material/styles";
+import "@mui/material/Typography";
+import "@mui/material/Paper";
 
 declare module "@mui/material/styles" {
   interface TypographyVariants {
@@ -21,5 +23,12 @@ declare module "@mui/material/styles" {
 declare module "@mui/material/Typography" {
   interface TypographyPropsVariantOverrides {
     bodyBold: true;
+  }
+}
+
+declare module '@mui/material/Paper' {
+  interface PaperPropsVariantOverrides {
+    blue: true;
+    black: true;  
   }
 }
