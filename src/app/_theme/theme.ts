@@ -21,7 +21,6 @@ export const theme: Theme = createTheme({
 		fontFamily: 'var(--font-barlow), Arial, sans-serif',
 		allVariants: {
 			color: 'white',
-			margin: 0,
 		},
 		h1: {
 			fontSize: '1.75rem',
@@ -48,7 +47,10 @@ export const theme: Theme = createTheme({
 			fontWeight: 400,
 			lineHeight: '130%',
 			marginBottom: '1rem',
-		},
+			'&:last-child': {
+			  marginBottom: '0',
+			},
+		  },
 		bodyBold: {
 			fontSize: '1rem',
 			fontWeight: 600,
@@ -96,6 +98,7 @@ export const theme: Theme = createTheme({
 					padding: "1rem",
 					backdropFilter: "blur(20px)",
 					width: "100%",
+					overflow: "auto",
 				},
 			},
 			variants: [

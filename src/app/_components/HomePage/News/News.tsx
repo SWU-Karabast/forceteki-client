@@ -7,10 +7,15 @@ const NewsColumn: React.FC = () => {;
 
 	//------------------------STYLES------------------------//
 	const styles = {
+		notice: {
+			mb: "1rem",
+			height:"auto", 
+			overflow: "visible",
+		},
 		newsBox: {
 			display: "flex",
 			flexDirection: "column",
-			height: "50vh",
+			height: "100%",
 		},
 		newsList: {
 			"::-webkit-scrollbar": {
@@ -24,18 +29,19 @@ const NewsColumn: React.FC = () => {;
 				display: "none",
 			},
 			transition: "scrollbar-color 0.3s ease-in-out",
-			overflow: "scroll"
+			overflowY: "scroll",
 		},
 		boxStyle: {
 			display: "flex",
 			flexDirection: "column",
 			alignItems: "center",
+			height: "100%",
 		},
 	};
 
 	return (
 		<Box sx={styles.boxStyle}>
-			<Card variant="blue" sx={{mb: "1rem"}}>
+			<Card variant="blue" sx={styles.notice}>
 				<CardContent>
 					<Typography variant="bodyBold">Karabast is an open-source, fan-made platform.</Typography>
 					<Typography variant="body1">It is an educational tool only, meant to facilitate researching decks and strategies that is supportive of in-person play. As such, direct competition through the form of automated tournaments or rankings will not be added.</Typography>

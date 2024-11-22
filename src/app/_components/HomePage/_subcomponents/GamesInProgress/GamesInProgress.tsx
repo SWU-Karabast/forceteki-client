@@ -28,7 +28,6 @@ const GamesInProgress: React.FC = () => {
 	};
 
 	const scrollableBoxStyle = {
-		maxHeight: "40vh",
 		overflowY: "auto",
 		mb: ".5em",
 		pr: ".5em",

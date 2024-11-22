@@ -7,6 +7,11 @@ import { PublicGamesProps } from "../HomePageTypes";
 const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 	//------------------------STYLES------------------------//
 
+
+	const PublicGamesWrapper = {
+		height: "100%",
+	  };
+
 	const cardContentStyle = {
 		display: "flex",
 		flexDirection: "column",
@@ -19,7 +24,7 @@ const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 	};
 
 	return (
-		<Card variant="black">
+		<Card variant="black" sx={PublicGamesWrapper}>
 			<CardContent sx={cardContentStyle}>
 				<Typography variant="h3">{format}</Typography>
 				<Divider sx={dividerStyle} />
