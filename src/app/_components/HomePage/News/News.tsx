@@ -5,7 +5,6 @@ import { articles } from "@/app/_constants/mockData";
 
 const NewsColumn: React.FC = () => {;
 
-	//------------------------STYLES------------------------//
 	const styles = {
 		notice: {
 			mb: "1rem",
@@ -52,7 +51,7 @@ const NewsColumn: React.FC = () => {;
 			{/* Bottom Card: Scrollable and displays NewsItem */}
 			<Card variant="black" sx={styles.newsBox}>
 				<Box>
-					<Typography variant="h3">
+					<Typography variant="h2">
 						News
 					</Typography>
 				</Box>

@@ -7,9 +7,9 @@ import {
 	Box,
 } from "@mui/material";
 import { NewsItemProps } from "../../HomePageTypes";
+import parse from "html-react-parser";
 
 const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
-	//------------------------STYLES------------------------//
 
 	const boxStyle = {
 		display: "flex",
@@ -41,7 +41,6 @@ const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 	const contentTextStyle = {
 		color: "#fff",
 		textAlign: "left",
-		mb: 2,
 		fontSize: "1em",
 		fontFamily: "var(--font-barlow), sans-serif",
 		fontWeight: "400",
@@ -53,16 +52,6 @@ const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 
 	return (
 		<>
-			<CardContent>
-				<Box sx={boxStyle}>
-					<Typography sx={titleTextStyle}>{article.title}</Typography>
-					<Typography sx={dateTextStyle}>{article.date}</Typography>
-				</Box>
-				<Divider sx={dividerStyle} />
-				<Typography variant="body1" sx={contentTextStyle}>
-					{article.content}
-				</Typography>
-			</CardContent>
 			<CardMedia
 				component="img"
 				height="auto"
@@ -70,6 +59,16 @@ const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 				alt={article.imageAlt}
 				sx={newsImageStyle}
 			/>
+			<CardContent>
+				<Box sx={boxStyle}>
+				<Typography sx={titleTextStyle}>{article.title}</Typography>
+				<Typography sx={dateTextStyle}>{article.date}</Typography>
+				</Box>
+				<Divider sx={dividerStyle} />
+				<Box sx={contentTextStyle} className="news-content">
+				{parse(article.content)}
+				</Box>
+			</CardContent>
 		</>
 	);
 };
