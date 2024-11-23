@@ -68,14 +68,6 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		mb: "2em",
 	};
 
-	const headingStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "800",
-		fontSize: "2em",
-		color: "#fff",
-		mb: ".5em",
-	};
-
 	const formControlStyle = {
 		mb: ".5em",
 	};
@@ -101,18 +93,8 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 	const submitButtonStyle = {
 		display: "block",
-		width: "10em",
-		height: "3em",
-		borderRadius: "0.5em",
-		backgroundColor: "#292929",
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontSize: "1.2em",
 		ml: "auto",
 		mr: "auto",
-		mb: ".8em",
-		"&:hover": {
-			backgroundColor: "#3a3a3a",
-		},
 	};
 
 	const instructionsCardStyle = {
@@ -146,7 +128,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 			{/* Primary Card - Create/Choose Deck Form */}
 			<Card sx={mainCardStyle}>
 				<CardContent>
-					<Typography variant="h3" sx={headingStyle}>
+					<Typography variant="h2">
 						{isCreateGamePath ? "Choose Your Deck" : "Create New Game"}
 					</Typography>
 					<form onSubmit={handleCreateGameSubmit}>
@@ -283,7 +265,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 						{/* Submit Button */}
 						<Button type="submit" variant="contained" sx={submitButtonStyle}>
-							Create
+							Create Game
 						</Button>
 					</form>
 				</CardContent>

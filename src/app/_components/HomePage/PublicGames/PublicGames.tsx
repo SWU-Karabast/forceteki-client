@@ -7,28 +7,15 @@ import { PublicGamesProps } from "../HomePageTypes";
 const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 	//------------------------STYLES------------------------//
 
-	const cardStyle = {
-		height: "80vh",
-		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
-		borderRadius: "1.5em",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
-		fontFamily: "var(--font-barlow), sans-serif",
-		ml: "1.8em",
-		p: "2em",
-	};
+
+	const PublicGamesWrapper = {
+		height: "100%",
+	  };
 
 	const cardContentStyle = {
 		display: "flex",
 		flexDirection: "column",
 		justifyContent: "center",
-	};
-
-	const typographyStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "800",
-		color: "#fff",
-		fontSize: "2em",
 	};
 
 	const dividerStyle = {
@@ -37,14 +24,15 @@ const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 	};
 
 	return (
-		<Card sx={cardStyle}>
+		<Card variant="black" sx={PublicGamesWrapper}>
 			<CardContent sx={cardContentStyle}>
-				<Typography sx={typographyStyle}>{format}</Typography>
+				<Typography variant="h2">Public Games</Typography>
+				<Typography variant="h3">{format}</Typography>
 				<Divider sx={dividerStyle} />
 				<JoinableGame />
 				<JoinableGame />
 				<JoinableGame />
-				<Typography sx={{ ...typographyStyle, mt: 1 }}>
+				<Typography variant="h3">
 					Request-Undo {format}
 				</Typography>
 				<Divider sx={dividerStyle} />
