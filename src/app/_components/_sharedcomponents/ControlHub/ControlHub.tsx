@@ -25,91 +25,88 @@ const ControlHub: React.FC<ControlHubProps> = ({
 		}
 	};
 
-	//------------------------STYLES------------------------//
+	// ---------------------- Styles ---------------------- //
 
-	const containerStyle = {
-		position: "absolute",
-		top: 10,
-		right: isLobbyView || isGameboardView ? 10 : 0,
-		display: "flex",
-		alignItems: "center",
-		zIndex: 1,
-	};
-
-	const defaultMainContainerStyle = {
-		display: "flex",
-		gap: 1,
-		alignItems: "center",
-		ml: "1rem",
-	};
-
-	const backButtonStyle = {
-		color: "#fff",
-		mt: ".5vh",
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "600",
-		fontSize: "1.5rem",
-	};
-
-	const exitTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "600",
-		color: "#fff",
-		mt: ".5vh",
-		mr: ".5vw",
-	};
-
-	const profileBoxStyle = {
-		display: "flex",
-		borderRadius: "50px",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
-		height: "48px",
-		justifyContent: "space-around",
-		alignItems: "center",
-		alignContent: "center",
-		p: "0.5rem 1rem",
-	};
-
-	const profileLinkStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-		fontSize: "1em",
-		textDecoration: "none",
-		color: "#fff",
-		"&:hover": {
-			color: "#00ffff",
+	const controlHubStyles = {
+		container: (isLobbyView: boolean, isGameboardView: boolean) => ({
+			position: "absolute",
+			top: 10,
+			right: isLobbyView || isGameboardView ? 10 : 0,
+			display: "flex",
+			alignItems: "center",
+			zIndex: 1,
+		}),
+		defaultMainContainer: {
+			display: "flex",
+			gap: 1,
+			alignItems: "center",
+			ml: "1rem",
+		},
+		backButton: {
+			color: "#fff",
+			mt: ".5vh",
+			fontFamily: "var(--font-barlow), sans-serif",
+			fontWeight: "600",
+			fontSize: "1.5rem",
+		},
+		exitText: {
+			fontFamily: "var(--font-barlow), sans-serif",
+			fontWeight: "600",
+			color: "#fff",
+			mt: ".5vh",
+			mr: ".5vw",
+		},
+		profileBox: {
+			display: "flex",
+			borderRadius: "50px",
+			backgroundColor: "#000000E6",
+			backdropFilter: "blur(20px)",
+			height: "48px",
+			justifyContent: "space-around",
+			alignItems: "center",
+			alignContent: "center",
+			p: "0.5rem 1rem",
+		},
+		profileLink: {
+			fontFamily: "var(--font-barlow), sans-serif",
+			fontWeight: "400",
+			fontSize: "1em",
+			textDecoration: "none",
+			color: "#fff",
+			"&:hover": {
+				color: "#00ffff",
+			},
+		},
+		socialIconsBox: {
+			display: "flex",
+			height: "48px",
+			borderRadius: "50px 0 0 50px",
+			backgroundColor: "#000000E6",
+			backdropFilter: "blur(20px)",
+			alignItems: "center",
+			p: "0.5rem",
+		},
+		iconButton: {
+			color: "#fff",
+			"&:hover": { color: "#00ffff" },
 		},
 	};
 
-	const socialIconsBoxStyle = {
-		display: "flex",
-		height: "48px",
-		borderRadius: "50px 0 0 50px",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
-		alignItems: "center",
-		p: "0.5rem",
-	};
-
-	const iconButtonStyle = {
-		color: "#fff",
-		"&:hover": { color: "#00ffff" },
-	};
-
 	return (
-		<Box sx={containerStyle}>
+		<Box sx={controlHubStyles.container(isLobbyView, isGameboardView)}>
 			{isLobbyView ? (
 				<>
 					<IconButton>
-						<ArrowBackIosNew sx={backButtonStyle} onClick={handleBack} />
+						<ArrowBackIosNew
+							sx={controlHubStyles.backButton}
+							onClick={handleBack}
+						/>
 					</IconButton>
-					<Typography variant="h5" sx={exitTextStyle}>
+					<Typography variant="h5" sx={controlHubStyles.exitText}>
 						EXIT
 					</Typography>
 				</>
 			) : isGameboardView ? (
-				// Gameboard View: Settings and Menu Button
 				<>
 					<IconButton>
 						<Settings sx={{ color: "#fff" }} />
@@ -121,13 +118,11 @@ const ControlHub: React.FC<ControlHubProps> = ({
 					)}
 				</>
 			) : (
-				// Default View: Conditional Profile/Login and Social Icons
-				<Box sx={defaultMainContainerStyle}>
-					{/* Conditionally render Profile/Log Out or Log In */}
-					<Box sx={profileBoxStyle}>
+				<Box sx={controlHubStyles.defaultMainContainer}>
+					<Box sx={controlHubStyles.profileBox}>
 						{user ? (
 							<>
-								<NextLinkMui href="/profile" sx={profileLinkStyle}>
+								<NextLinkMui href="/profile" sx={controlHubStyles.profileLink}>
 									PROFILE
 								</NextLinkMui>
 								<Divider
@@ -135,24 +130,27 @@ const ControlHub: React.FC<ControlHubProps> = ({
 									flexItem
 									sx={{ borderColor: "#ffffff4D", mx: 1 }}
 								/>
-								<NextLinkMui href="/" onClick={logout} sx={profileLinkStyle}>
+								<NextLinkMui
+									href="/"
+									onClick={logout}
+									sx={controlHubStyles.profileLink}
+								>
 									LOG OUT
 								</NextLinkMui>
 							</>
 						) : (
-							<NextLinkMui href="/auth" sx={profileLinkStyle}>
+							<NextLinkMui href="/auth" sx={controlHubStyles.profileLink}>
 								LOG IN
 							</NextLinkMui>
 						)}
 					</Box>
-					{/* Social Icons Chip */}
-					<Box sx={socialIconsBoxStyle}>
+					<Box sx={controlHubStyles.socialIconsBox}>
 						<NextLinkMui
 							href="https://discord.com"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton sx={iconButtonStyle}>
+							<IconButton sx={controlHubStyles.iconButton}>
 								<FaDiscord />
 							</IconButton>
 						</NextLinkMui>
@@ -161,7 +159,7 @@ const ControlHub: React.FC<ControlHubProps> = ({
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton sx={iconButtonStyle}>
+							<IconButton sx={controlHubStyles.iconButton}>
 								<GitHub />
 							</IconButton>
 						</NextLinkMui>
@@ -170,7 +168,7 @@ const ControlHub: React.FC<ControlHubProps> = ({
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton sx={iconButtonStyle}>
+							<IconButton sx={controlHubStyles.iconButton}>
 								<FaPatreon />
 							</IconButton>
 						</NextLinkMui>
