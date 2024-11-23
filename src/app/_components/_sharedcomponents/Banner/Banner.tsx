@@ -9,6 +9,9 @@ const KarabastBanner: React.FC = () => {
 		fontWeight: 400, 
 		marginBottom: "5px" 
 	  },
+	  subheader: { 
+		marginBottom: 0, 
+	  },
 	  bannerContainerStyle: {
 		position: 'absolute',
 		height: '26vh',
@@ -69,7 +72,7 @@ const KarabastBanner: React.FC = () => {
 			<Box sx={styles.bannerContainerStyle}>
 			<Box sx={styles.textBoxStyle}>
 				<Typography variant="h1" sx={styles.titleheader}>KARABAST</Typography>
-				<Typography variant="body1">The Fan-Made, Open-Source</Typography>
+				<Typography variant="body1" sx={styles.subheader}>The Fan-Made, Open-Source</Typography>
 				<Typography variant="body1">Star Wars Unlimited Simulator</Typography>
 			</Box>
 			<Box sx={styles.homeBanner}>

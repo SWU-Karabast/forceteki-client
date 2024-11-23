@@ -22,7 +22,6 @@ const GamesInProgress: React.FC = () => {
 	};
 
 	const dividerStyle = {
-		backgroundColor: "#fff",
 		mt: ".5vh",
 		mb: "1vh",
 	};

@@ -272,7 +272,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 						{/* Submit Button */}
 						<Button type="submit" variant="contained" sx={submitButtonStyle}>
-							Create
+							Create Game
 						</Button>
 					</form>
 				</CardContent>

@@ -19,7 +19,6 @@ const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 	};
 
 	const dividerStyle = {
-		backgroundColor: "#fff",
 		mt: ".5vh",
 		mb: "1vh",
 	};
