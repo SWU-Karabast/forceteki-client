@@ -18,20 +18,6 @@ const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 		mt: 1,
 	};
 
-	const titleTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "600",
-		color: "#fff",
-		fontSize: "1.5em",
-	};
-
-	const dateTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-		color: "#fff",
-		fontSize: "1.5em",
-	};
-
 	const dividerStyle = {
 		backgroundColor: "#fff",
 		mt: ".5vh",
@@ -61,8 +47,8 @@ const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 			/>
 			<CardContent>
 				<Box sx={boxStyle}>
-				<Typography sx={titleTextStyle}>{article.title}</Typography>
-				<Typography sx={dateTextStyle}>{article.date}</Typography>
+				<Typography variant="h3">{article.title}</Typography>
+				<Typography variant="h3">{article.date}</Typography>
 				</Box>
 				<Divider sx={dividerStyle} />
 				<Box sx={contentTextStyle} className="news-content">

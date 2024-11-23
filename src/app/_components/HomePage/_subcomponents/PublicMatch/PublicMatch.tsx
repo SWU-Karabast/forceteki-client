@@ -21,19 +21,6 @@ const PublicMatch: React.FC<PublicGameInProgressProps> = ({ match }) => {
 		color: "#fff",
 	};
 
-	const buttonStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		width: "5vw",
-		height: "4.8vh",
-		fontSize: "1.2em",
-		borderRadius: "0.5vw",
-		backgroundColor: "#292929",
-		color: "#fff",
-		"&:hover": {
-			backgroundColor: "#3a3a3a",
-		},
-	};
-
 	return (
 		<Box sx={boxStyle}>
 			<GameInProgressPlayer
@@ -48,7 +35,7 @@ const PublicMatch: React.FC<PublicGameInProgressProps> = ({ match }) => {
 				hexagonColors={match.player2.hexagonColors}
 			/>
 
-			<Button sx={buttonStyle}>SPECTATE</Button>
+			<Button>Spectate</Button>
 		</Box>
 	);
 };

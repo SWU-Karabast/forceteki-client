@@ -64,6 +64,16 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 	//------------------------STYLES------------------------//
 
+	const mainCardStyle = {
+		borderRadius: "1.5em",
+		backgroundColor: "#000000E6",
+		backdropFilter: "blur(20px)",
+		fontFamily: "var(--font-barlow), sans-serif",
+		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
+		p: "2em",
+		mb: "2em",
+	};
+
 	const formControlStyle = {
 		mb: ".5em",
 	};
@@ -89,18 +99,8 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 	const submitButtonStyle = {
 		display: "block",
-		width: "10em",
-		height: "3em",
-		borderRadius: "0.5em",
-		backgroundColor: "#292929",
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontSize: "1.2em",
 		ml: "auto",
 		mr: "auto",
-		mb: ".8em",
-		"&:hover": {
-			backgroundColor: "#3a3a3a",
-		},
 	};
 
 	const instructionsCardStyle = {
@@ -132,7 +132,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 	return (
 		<Box sx={{ height: "80vh" }}>
 			{/* Primary Card - Create/Choose Deck Form */}
-			<Card variant="black">
+			<Card sx={mainCardStyle}>
 				<CardContent>
 					<Typography variant="h2">
 						{isCreateGamePath ? "Choose Your Deck" : "Create New Game"}

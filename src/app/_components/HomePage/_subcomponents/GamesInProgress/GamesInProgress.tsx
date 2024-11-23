@@ -47,8 +47,8 @@ const GamesInProgress: React.FC = () => {
 	return (
 		<>
 			<Box sx={headerBoxStyle}>
-				<Typography>Games in Progress</Typography>
-				<Typography>{randomGamesInProgress}</Typography>
+				<Typography variant="h3">Games in Progress</Typography>
+				<Typography variant="h3">{randomGamesInProgress}</Typography>
 			</Box>
 			<Divider sx={dividerStyle} />
 			<Box sx={scrollableBoxStyle}>

@@ -21,6 +21,7 @@ export const theme: Theme = createTheme({
 		fontFamily: 'var(--font-barlow), Arial, sans-serif',
 		allVariants: {
 			color: 'white',
+			WebkitFontSmoothing: 'auto',
 		},
 		h1: {
 			fontSize: '1.75rem',
@@ -131,6 +132,20 @@ export const theme: Theme = createTheme({
 				variantMapping: {
 					bodyBold: "p",
 				},
+			},
+		},
+		MuiButton: {
+			styleOverrides: {
+			  root: {
+				backgroundColor: '#292929',
+				color: 'white',
+				fontWeight: '600',
+				fontSize: '1rem',
+				textTransform: 'none',
+				'&:hover': {
+				  backgroundColor: '#404040',
+				},
+			  },
 			},
 		},
 	},

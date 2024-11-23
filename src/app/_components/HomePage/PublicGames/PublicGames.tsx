@@ -26,6 +26,7 @@ const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 	return (
 		<Card variant="black" sx={PublicGamesWrapper}>
 			<CardContent sx={cardContentStyle}>
+				<Typography variant="h2">Public Games</Typography>
 				<Typography variant="h3">{format}</Typography>
 				<Divider sx={dividerStyle} />
 				<JoinableGame />
