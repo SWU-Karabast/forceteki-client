@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { LeaderBaseCardProps } from "../CardTypes";
 import { CardData } from "../CardTypes";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 
 
 const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
@@ -79,7 +79,7 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 		fontSize: "1em",
 	};
 
-	const { sendMessage } = usePlayer();
+	const { sendMessage } = useGame();
 
 	return (
 		<Box>

@@ -13,7 +13,7 @@ import {
 	RadioGroup,
 } from "@mui/material";
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 interface CreateGameFormProps {
 	format?: string | null;
@@ -34,6 +34,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 	setFormat,
 }) => {
 	const pathname = usePathname();
+	const router = useRouter();
 	const isCreateGamePath = pathname === "/creategame";
 
 	// Common State
@@ -47,19 +48,12 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 	const [privacy, setPrivacy] = useState<string>("Public");
 
 	// Handle Create Game Submission
-	const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
+	const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		console.log("Favourite Deck:", favouriteDeck);
-		console.log("SWUDB Deck Link:", deckLink);
-		console.log("Save Deck To Favourites:", saveDeck);
+		const response = await fetch("http://localhost:9500/api/create-game");
 
-		if (!isCreateGamePath) {
-			console.log("Game Name:", gameName);
-			console.log("Format:", format);
-			console.log("Privacy:", privacy);
-		}
-
-		// TODO: Implement actual game creation logic here
+		const json = await response.json();
+		console.log(json);
 	};
 
 	//------------------------STYLES------------------------//
@@ -191,7 +185,6 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 								onChange={(e: ChangeEvent<HTMLInputElement>) =>
 									setDeckLink(e.target.value)
 								}
-								required
 							/>
 						</FormControl>
 

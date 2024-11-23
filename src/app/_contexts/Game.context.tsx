@@ -1,4 +1,4 @@
-// contexts/PlayerContext.tsx
+// contexts/GameContext.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, {
@@ -9,20 +9,26 @@ import React, {
 	useEffect,
 } from "react";
 import io, { Socket } from "socket.io-client";
+import { usePathname } from "next/navigation";
 
-interface PlayerContextType {
+interface GameContextType {
 	gameState: any;
 	sendMessage: (args: any[]) => void;
 	getOpponent: (player: string) => string;
 	connectedPlayer: string;
 }
 
-const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
+const GameContext = createContext<GameContextType | undefined>(undefined);
 
-export const PlayerProvider = ({ children }: { children: ReactNode }) => {
+export const GameProvider = ({ children }: { children: ReactNode }) => {
 	const [gameState, setGameState] = useState<any>(null);
 	const [socket, setSocket] = useState<Socket | undefined>(undefined);
 	const [connectedPlayer, setConnectedPlayer] = useState<string>("");
+	const path = usePathname();
+
+	if (path !== "/lobby" && path !== "/GameBoard") {
+		return <>{children}</>;
+	};
 
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -61,7 +67,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 	};
 
 	return (
-		<PlayerContext.Provider
+		<GameContext.Provider
 			value={{
 				gameState,
 				sendMessage,
@@ -70,14 +76,14 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 			}}
 		>
 			{children}
-		</PlayerContext.Provider>
+		</GameContext.Provider>
 	);
 };
 
-export const usePlayer = () => {
-	const context = useContext(PlayerContext);
+export const useGame = () => {
+	const context = useContext(GameContext);
 	if (!context) {
-		throw new Error("usePlayer must be used within a PlayerProvider");
+		throw new Error("useGame must be used within a GameProvider");
 	}
 	return context;
 };

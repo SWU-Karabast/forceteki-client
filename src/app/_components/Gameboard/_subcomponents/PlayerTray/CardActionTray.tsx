@@ -1,6 +1,6 @@
 import { Grid2 as Grid, Button, Typography, Box } from "@mui/material";
 
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 
 const CardActionTray: React.FC = () => {
 	//------------------------STYLES------------------------//
@@ -9,7 +9,7 @@ const CardActionTray: React.FC = () => {
 		mt: "1vh",
 	};
 
-	const { sendMessage, gameState, connectedPlayer } = usePlayer();
+	const { sendMessage, gameState, connectedPlayer } = useGame();
 	const playerState = gameState.players[connectedPlayer];
 
 	return (

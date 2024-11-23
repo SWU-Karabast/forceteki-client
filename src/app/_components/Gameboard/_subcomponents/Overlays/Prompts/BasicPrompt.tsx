@@ -11,14 +11,14 @@ import {
 	Button,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 import { BasicPromptProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const BasicPrompt: React.FC<BasicPromptProps> = ({
 	isBasicPromptOpen,
 	handleBasicPromptToggle,
 }) => {
-	const { connectedPlayer, gameState, sendMessage } = usePlayer();
+	const { connectedPlayer, gameState, sendMessage } = useGame();
 	if (!gameState) {
 		return null;
 	}
