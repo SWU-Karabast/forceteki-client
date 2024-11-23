@@ -9,18 +9,12 @@ const GameInProgressPlayer: React.FC<GameInProgressPlayerProps> = ({
 	//------------------------STYLES------------------------//
 
 	const imageContainerStyle = {
-		border: "1px solid #454545",
 		borderRadius: "5px",
-		height: "6vh",
-		width: "5vw",
-		ml: ".3vw",
-		p: "1vh",
+		height: "3.5rem",
+		width: "5rem",
 		backgroundImage: `url(/${playerImage})`,
-		backgroundPositionX: "55%",
-		backgroundPositionY: "10%",
-		backgroundSize: "200%",
+		backgroundSize: "cover",
 		display: "flex",
-		alignItems: "center",
 	};
 
 	const hexagonsContainerStyle = {
@@ -38,11 +32,6 @@ const GameInProgressPlayer: React.FC<GameInProgressPlayerProps> = ({
 	return (
 		<Box sx={boxStyle}>
 			<Box sx={imageContainerStyle} />
-			<Box sx={hexagonsContainerStyle}>
-				<Hexagon backgroundColor={hexagonColors[0]} />
-				<Hexagon backgroundColor={hexagonColors[1]} />
-				<Hexagon backgroundColor={hexagonColors[2]} />
-			</Box>
 		</Box>
 	);
 };

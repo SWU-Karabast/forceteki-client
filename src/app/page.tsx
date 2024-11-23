@@ -5,10 +5,10 @@ import KarabastBanner from "./_components/_sharedcomponents/Banner/Banner";
 import PublicGames from "./_components/HomePage/PublicGames/PublicGames";
 import CreateGameForm from "./_components/_sharedcomponents/CreateGameForm/CreateGameForm";
 import NewsColumn from "./_components/HomePage/News/News";
+import { Height } from "@mui/icons-material";
 
 const Home: React.FC = () => {
 	const [format, setFormat] = useState("Premier");
-	const mt = "17vh";
 
 	//------------------------STYLES------------------------//
 
@@ -21,7 +21,9 @@ const Home: React.FC = () => {
 	const columnStyle = {
 		justifyContent: "center",
 		alignContent: "center",
-		mt: mt,
+		padding: "1rem",
+		mt: "17vh",
+		height: "83vh",
 	};
 
 	return (

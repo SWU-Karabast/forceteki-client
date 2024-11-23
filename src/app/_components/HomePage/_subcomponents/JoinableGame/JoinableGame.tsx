@@ -22,23 +22,10 @@ const JoinableGame: React.FC = () => {
 		color: "#fff",
 	};
 
-	const buttonStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		width: "5vw",
-		height: "4.8vh",
-		fontSize: "1.2em",
-		borderRadius: "0.5vw",
-		backgroundColor: "#292929",
-		color: "#fff",
-		"&:hover": {
-			backgroundColor: "#3a3a3a",
-		},
-	};
-
 	return (
 		<Box sx={boxStyle}>
-			<Typography sx={typographyStyle}>Game #{randomGameId}</Typography>
-			<Button sx={buttonStyle}>Join Game</Button>
+			<Typography variant="body1">Game #{randomGameId}</Typography>
+			<Button>Join Game</Button>
 		</Box>
 	);
 };
