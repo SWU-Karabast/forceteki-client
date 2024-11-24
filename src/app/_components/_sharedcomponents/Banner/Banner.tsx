@@ -15,7 +15,7 @@ const KarabastBanner: React.FC = () => {
 	  },
 	  bannerContainerStyle: {
 		position: 'absolute',
-		height: '26vh',
+		height: '316px',
 		width: '100%',
 		display: 'flex',
 		alignItems: 'center',
@@ -24,11 +24,11 @@ const KarabastBanner: React.FC = () => {
 		overflow: 'hidden',
 	  },
 	  textBoxStyle: {
-		position: 'relative',
+		position: 'absolute',
+		top: 0,
+		margin: '2rem 0 0 1rem',
 		width: '20%',
 		zIndex: 10,
-		marginBottom: '7em',
-		marginLeft: '1em',
 	  },
 	  homeBanner: {
 		width: 'calc(100% - 240px)',
@@ -48,7 +48,7 @@ const KarabastBanner: React.FC = () => {
 		flex: 1,
 	  },
 	  block1: {
-		backgroundImage: `url(${s3ImageURL("ui/leia-banner.webp")})`,
+		backgroundImage: 'url(/leia-sor.jpg)',
 		marginRight: '-152px',
 		'@media (max-width:800px)': { marginRight: 0, },
 	  },
