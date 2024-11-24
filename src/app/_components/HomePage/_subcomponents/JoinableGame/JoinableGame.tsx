@@ -13,13 +13,6 @@ const JoinableGame: React.FC = () => {
 		alignContent: "center",
 		alignItems: "center",
 		mb: ".5em",
-		pr: ".5em",
-	};
-
-	const typographyStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontSize: "1.5em",
-		color: "#fff",
 	};
 
 	return (

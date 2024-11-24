@@ -29,7 +29,6 @@ const GamesInProgress: React.FC = () => {
 	const scrollableBoxStyle = {
 		overflowY: "auto",
 		mb: ".5em",
-		pr: ".5em",
 		"::-webkit-scrollbar": {
 			width: "0.2vw",
 		},
