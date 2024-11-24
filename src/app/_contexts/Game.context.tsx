@@ -9,11 +9,11 @@ import React, {
 	useEffect,
 } from "react";
 import io, { Socket } from "socket.io-client";
-import { usePathname } from "next/navigation";
 
 interface GameContextType {
 	gameState: any;
-	sendMessage: (args: any[]) => void;
+	sendMessage: (message: string, args?: any[]) => void;
+	sendGameMessage: (args: any[]) => void;
 	getOpponent: (player: string) => string;
 	connectedPlayer: string;
 }
@@ -24,11 +24,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 	const [gameState, setGameState] = useState<any>(null);
 	const [socket, setSocket] = useState<Socket | undefined>(undefined);
 	const [connectedPlayer, setConnectedPlayer] = useState<string>("");
-	const path = usePathname();
 
-	if (path !== "/lobby" && path !== "/GameBoard") {
-		return <>{children}</>;
-	};
 
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -57,11 +53,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		};
 	}, []);
 
-	const sendMessage = (args: any[]) => {
+	const sendMessage = (message: string, args: any[] = []) => {
+		socket?.emit(message, ...args);
+	};
+
+	const sendGameMessage = (args: any[]) => {
 		socket?.emit("game", ...args);
 	};
 
 	const getOpponent = (player: string) => {
+		if (!gameState) return "";
 		const playerNames = Object.keys(gameState.players);
 		return playerNames.find((name) => name !== player) || "";
 	};
@@ -70,6 +71,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		<GameContext.Provider
 			value={{
 				gameState,
+				sendGameMessage,
 				sendMessage,
 				connectedPlayer,
 				getOpponent

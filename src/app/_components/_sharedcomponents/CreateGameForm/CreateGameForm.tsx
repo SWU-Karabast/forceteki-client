@@ -21,10 +21,8 @@ interface CreateGameFormProps {
 }
 
 const deckOptions: string[] = [
-	"Vader Green Ramp",
-	"Obi-Wan Blue Control",
-	"Darth Red Aggro",
-	"Leia White Midrange",
+	"Order66",
+	"ThisIsTheWay",
 ];
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
@@ -39,7 +37,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 	// Common State
 	const [favouriteDeck, setFavouriteDeck] =
-		useState<string>("Vader Green Ramp");
+		useState<string>("Order66");
 	const [deckLink, setDeckLink] = useState<string>("");
 	const [saveDeck, setSaveDeck] = useState<boolean>(false);
 
@@ -50,10 +48,31 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 	// Handle Create Game Submission
 	const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		const response = await fetch("http://localhost:9500/api/create-game");
 
-		const json = await response.json();
-		console.log(json);
+		try {
+			const payload = {
+				user: favouriteDeck
+			};
+			const response = await fetch("http://localhost:9500/api/create-lobby",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(payload),
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to create game");
+			}
+
+			router.push("/lobby");
+	
+		} catch (error) {
+			console.error(error);
+		}
+
 	};
 
 	//------------------------STYLES------------------------//

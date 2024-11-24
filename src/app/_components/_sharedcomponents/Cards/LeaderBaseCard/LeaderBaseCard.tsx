@@ -18,6 +18,7 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 	card
 }) => {
 	const cardBorderColor = (card: CardData) => {
+		if (!card) return "";
 		if (card.selected) return "yellow";
 		if (card.selectable) return "green";
 		if (card.exhausted) return "gray";
@@ -90,34 +91,40 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 				</Typography>
 			)}
 
-			<Card
-				sx={cardStyle}
-				onClick={() => {
-					if (card.selectable) {
-						sendMessage(["cardClicked", card.uuid]);
-					}
-				}}
-			>
-				<CardActionArea>
-					<CardContent>
-						<Box sx={{ display: "flex", justifyContent: "end" }}>
-							<Typography variant="body1" sx={damageStyle}>{card.damage}</Typography>
-						</Box>
-						<Typography variant="body1" sx={typographyStyle}>
-							{card.name}
-						</Typography>
-					</CardContent>
-				</CardActionArea>
+			{isLobbyView ? (
+				<Card></Card>
+			) : (
+				<Card
+					sx={cardStyle}
+					onClick={() => {
+						if (card.selectable) {
+							sendMessage(["cardClicked", card.uuid]);
+						}
+					}}
+				>
+					<CardActionArea>
+						<CardContent>
+							<Box sx={{ display: "flex", justifyContent: "end" }}>
+								<Typography variant="body1" sx={damageStyle}>{card.damage}</Typography>
+							</Box>
+							<Typography variant="body1" sx={typographyStyle}>
+								{card.name}
+							</Typography>
+						</CardContent>
+					</CardActionArea>
 
-				{/* Show title inside a red box at the bottom if not in lobby view and variant is leader */}
-				{variant === "leader" && !isLobbyView && title && (
-					<Box sx={redBoxStyle}>
-						<Typography variant="body2" sx={redBoxTypographyStyle}>
-							{title}
-						</Typography>
-					</Box>
-				)}
-			</Card>
+					{/* Show title inside a red box at the bottom if not in lobby view and variant is leader */}
+					{variant === "leader" && !isLobbyView && title && (
+						<Box sx={redBoxStyle}>
+							<Typography variant="body2" sx={redBoxTypographyStyle}>
+								{title}
+							</Typography>
+						</Box>
+					)}
+				</Card>
+			)}
+
+			
 		</Box>
 	);
 };

@@ -13,10 +13,6 @@ const Lobby = () => {
 
 	const [chatMessage, setChatMessage] = useState("");
 	const [chatHistory, setChatHistory] = useState<string[]>([]);
-	const [playerRoll, setPlayerRoll] = useState(0);
-	const [isRolling, setIsRolling] = useState(false);
-	const [isRollSame, setIsRollSame] = useState(false);
-	const [opponentRoll, setOpponentRoll] = useState(0);
 
 	const handleChatSubmit = () => {
 		if (chatMessage.trim()) {
@@ -25,24 +21,6 @@ const Lobby = () => {
 		}
 	};
 
-	const handleRollInitiative = () => {
-		setIsRolling(true);
-		setIsRollSame(false);
-		setTimeout(() => {
-			const playerDieRoll = Math.floor(Math.random() * 20) + 1;
-			const opponentDieRoll = Math.floor(Math.random() * 20) + 1;
-			if (playerDieRoll === opponentDieRoll) {
-				handleRollInitiative();
-				setIsRollSame(true);
-				setIsRolling(false);
-				return;
-			}
-			setPlayerRoll(playerDieRoll);
-			setOpponentRoll(opponentDieRoll)
-
-			setIsRolling(false);
-		}, Math.random() * 3000 + 2000);
-	};
 
 	//------------------------STYLES------------------------//
 
@@ -77,11 +55,6 @@ const Lobby = () => {
 					chatHistory={chatHistory}
 					handleChatSubmit={handleChatSubmit}
 					setChatMessage={setChatMessage}
-					handleRollInitiative={handleRollInitiative}
-					playerRoll={playerRoll}
-					opponentRoll={opponentRoll}
-					isRolling={isRolling}
-					isRollSame={isRollSame}
 				/>
 			</Grid>
 			<Grid container size={3} sx={playersGridStyle}>
