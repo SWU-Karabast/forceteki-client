@@ -10,6 +10,8 @@ const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 
 	const PublicGamesWrapper = {
 		height: "100%",
+  		scrollbarColor: "#888888 rgba(0, 0, 0, 0)",
+  		scrollbarWidth: "thin",
 	  };
 
 	const cardContentStyle = {
