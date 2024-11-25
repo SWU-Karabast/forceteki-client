@@ -11,12 +11,6 @@ import { Height } from "@mui/icons-material";
 const Home: React.FC = () => {
 	const [format, setFormat] = useState("Premier");
 
-	const baseColumnStyle = {
-		justifyContent: "center",
-		height: "calc(100% - 10.5rem)",
-		alignSelf: "end",
-	  };
-
 	const styles = {
 		gridContainer: {
 			position: "relative",
@@ -24,21 +18,20 @@ const Home: React.FC = () => {
 		},
 		columnContainer: {
 		  	height: "100vh",
+			padding: "1rem 0.75rem 3rem",
 		},
 		column: {
-			...baseColumnStyle,
-			padding: "1.5rem 1.5rem 3rem",
-		},
-		columnMiddle: {
-			...baseColumnStyle,
-			padding: "1.5rem 0 3rem",
+			justifyContent: "center",
+			height: "calc(100% - 10.5rem)",
+			alignSelf: "end",
+			padding: "0 0.75rem",
 		},
 		disclaimer: {
-			padding: "1rem",
-			width: "100%",
-			textAlign: "center",
 			position: "absolute",
 			bottom: 0,
+			width: "100%",
+			padding: "1rem",
+			textAlign: "center",
 			fontSize: "0.75rem",
 		},
 	  };
@@ -52,7 +45,7 @@ const Home: React.FC = () => {
 				<Grid size={4} sx={styles.column}>
 				<PublicGames format={format} />
 				</Grid>
-				<Grid size={4} sx={styles.columnMiddle}>
+				<Grid size={4} sx={styles.column}>
 				<CreateGameForm format={format} setFormat={setFormat} />
 				</Grid>
 				<Grid size={4} sx={styles.column}>
