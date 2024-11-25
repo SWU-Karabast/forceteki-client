@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Divider, IconButton, Typography } from "@mui/material";
 import { Settings, Menu, ArrowBackIosNew, GitHub } from "@mui/icons-material";
-import { FaDiscord, FaPatreon } from "react-icons/fa6";
+import { FaDiscord, } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import NextLinkMui from "./_subcomponents/NextLinkMui/NextLinkMui";
 import { ControlHubProps } from "./ControlHubTypes";
@@ -25,8 +25,6 @@ const ControlHub: React.FC<ControlHubProps> = ({
 		}
 	};
 
-	//------------------------STYLES------------------------//
-
 	const containerStyle = {
 		position: "absolute",
 		top: 10,
@@ -38,7 +36,7 @@ const ControlHub: React.FC<ControlHubProps> = ({
 
 	const defaultMainContainerStyle = {
 		display: "flex",
-		gap: 1,
+		gap: 2,
 		alignItems: "center",
 		ml: "1rem",
 	};
@@ -46,7 +44,6 @@ const ControlHub: React.FC<ControlHubProps> = ({
 	const backButtonStyle = {
 		color: "#fff",
 		mt: ".5vh",
-		fontFamily: "var(--font-barlow), sans-serif",
 		fontWeight: "600",
 		fontSize: "1.5rem",
 	};
@@ -62,7 +59,7 @@ const ControlHub: React.FC<ControlHubProps> = ({
 	const profileBoxStyle = {
 		display: "flex",
 		borderRadius: "50px",
-		backgroundColor: "#000000E6",
+		backgroundColor: "rgb(0, 0, 0, 0.40)",
 		backdropFilter: "blur(20px)",
 		height: "48px",
 		justifyContent: "space-around",
@@ -72,9 +69,9 @@ const ControlHub: React.FC<ControlHubProps> = ({
 	};
 
 	const profileLinkStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-		fontSize: "1em",
+		fontWeight: "600",
+		fontSize: "1.2em",
+		p: "0.5rem",
 		textDecoration: "none",
 		color: "#fff",
 		"&:hover": {
@@ -86,10 +83,10 @@ const ControlHub: React.FC<ControlHubProps> = ({
 		display: "flex",
 		height: "48px",
 		borderRadius: "50px 0 0 50px",
-		backgroundColor: "#000000E6",
+		backgroundColor: "rgb(0, 0, 0, 0.40)",
 		backdropFilter: "blur(20px)",
 		alignItems: "center",
-		p: "0.5rem",
+		p: "1rem",
 	};
 
 	const iconButtonStyle = {
@@ -128,7 +125,7 @@ const ControlHub: React.FC<ControlHubProps> = ({
 						{user ? (
 							<>
 								<NextLinkMui href="/profile" sx={profileLinkStyle}>
-									PROFILE
+									Profile
 								</NextLinkMui>
 								<Divider
 									orientation="vertical"
@@ -136,12 +133,12 @@ const ControlHub: React.FC<ControlHubProps> = ({
 									sx={{ borderColor: "#ffffff4D", mx: 1 }}
 								/>
 								<NextLinkMui href="/" onClick={logout} sx={profileLinkStyle}>
-									LOG OUT
+									Log Out
 								</NextLinkMui>
 							</>
 						) : (
 							<NextLinkMui href="/auth" sx={profileLinkStyle}>
-								LOG IN
+								Log In
 							</NextLinkMui>
 						)}
 					</Box>
@@ -163,15 +160,6 @@ const ControlHub: React.FC<ControlHubProps> = ({
 						>
 							<IconButton sx={iconButtonStyle}>
 								<GitHub />
-							</IconButton>
-						</NextLinkMui>
-						<NextLinkMui
-							href="https://patreon.com"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							<IconButton sx={iconButtonStyle}>
-								<FaPatreon />
 							</IconButton>
 						</NextLinkMui>
 					</Box>
