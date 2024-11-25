@@ -11,51 +11,57 @@ import { Height } from "@mui/icons-material";
 const Home: React.FC = () => {
 	const [format, setFormat] = useState("Premier");
 
-	const gridContainerStyle = {
-		position: "relative",
-		overflow: "hidden",
-	};
-
-	const columnContainerStyle = {
-		height: "100vh",
-	};
-
-	const columnStyle = {
+	const baseColumnStyle = {
 		justifyContent: "center",
-		padding: "1rem",
-		pb: "3rem",
 		height: "calc(100% - 10.5rem)",
 		alignSelf: "end",
-	};
+	  };
 
-	const disclaimerStyle = {
-		padding: "1rem",
-		width: "100%",
-		textAlign: "center",
-		position: "absolute",
-		bottom: 0,
-		fontSize: "0.75rem",
-	};
+	const styles = {
+		gridContainer: {
+			position: "relative",
+			overflow: "hidden",
+		},
+		columnContainer: {
+		  	height: "100vh",
+		},
+		column: {
+			...baseColumnStyle,
+			padding: "1.5rem 1.5rem 3rem",
+		},
+		columnMiddle: {
+			...baseColumnStyle,
+			padding: "1.5rem 0 3rem",
+		},
+		disclaimer: {
+			padding: "1rem",
+			width: "100%",
+			textAlign: "center",
+			position: "absolute",
+			bottom: 0,
+			fontSize: "0.75rem",
+		},
+	  };
 
 	return (
-		<Grid container sx={gridContainerStyle}>
+		<Grid container sx={styles.gridContainer}>
 
 			<KarabastBanner />
 
-			<Grid container size={12} sx={columnContainerStyle}>
-				<Grid size={4} sx={columnStyle}>
+			<Grid container size={12} sx={styles.columnContainer}>
+				<Grid size={4} sx={styles.column}>
 				<PublicGames format={format} />
 				</Grid>
-				<Grid size={4} sx={columnStyle}>
+				<Grid size={4} sx={styles.columnMiddle}>
 				<CreateGameForm format={format} setFormat={setFormat} />
 				</Grid>
-				<Grid size={4} sx={columnStyle}>
+				<Grid size={4} sx={styles.column}>
 				<NewsColumn />
 				</Grid>
 			</Grid>
 
 			<Grid size={12}>
-				<Typography variant="body1" sx={disclaimerStyle}>
+				<Typography variant="body1" sx={styles.disclaimer}>
 				Karabast is in no way affiliated with Disney or Fantasy Flight Games.
 				Star Wars characters, cards, logos, and art are property of Disney
 				and/or Fantasy Flight Games.
