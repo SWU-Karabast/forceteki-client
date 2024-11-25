@@ -11,29 +11,24 @@ import parse from "html-react-parser";
 
 const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 
-	const boxStyle = {
-		display: "flex",
-		justifyContent: "space-between",
-		alignItems: "flex-end",
-		mt: 1,
-	};
-
-	const dividerStyle = {
-		mt: ".5vh",
-		mb: "1vh",
-	};
-
-	const contentTextStyle = {
-		color: "#fff",
-		textAlign: "left",
-		fontSize: "1em",
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-	};
-
-	const newsImageStyle = {
-		borderRadius: ".5vw",
-	};
+	const styles = {
+		box: {
+		  display: "flex",
+		  justifyContent: "space-between",
+		  alignItems: "flex-end",
+		  mt: "1rem",
+		},
+		divider: {
+		  mt: ".5vh",
+		  mb: "1vh",
+		},
+		contentText: {
+		  color: "#fff",
+		},
+		newsImage: {
+		  borderRadius: "5px",
+		},
+	  };
 
 	return (
 		<>
@@ -42,15 +37,15 @@ const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
 				height="auto"
 				image={article.image}
 				alt={article.imageAlt}
-				sx={newsImageStyle}
+				sx={styles.newsImage}
 			/>
 			<CardContent>
-				<Box sx={boxStyle}>
+				<Box sx={styles.box}>
 				<Typography variant="h3">{article.title}</Typography>
-				<Typography variant="h3">{article.date}</Typography>
+				<Typography variant="h3" sx={{fontWeight:400}}>{article.date}</Typography>
 				</Box>
-				<Divider sx={dividerStyle} />
-				<Box sx={contentTextStyle} className="news-content">
+				<Divider sx={styles.divider} />
+				<Box sx={styles.contentText} className="news-content">
 				{parse(article.content)}
 				</Box>
 			</CardContent>
