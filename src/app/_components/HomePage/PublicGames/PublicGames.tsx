@@ -5,39 +5,37 @@ import GamesInProgress from "../_subcomponents/GamesInProgress/GamesInProgress";
 import { PublicGamesProps } from "../HomePageTypes";
 
 const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
-	//------------------------STYLES------------------------//
 
-
-	const PublicGamesWrapper = {
-		height: "100%",
-  		scrollbarColor: "#888888 rgba(0, 0, 0, 0)",
-  		scrollbarWidth: "thin",
-	  };
-
-	const cardContentStyle = {
-		display: "flex",
-		flexDirection: "column",
-		justifyContent: "center",
-	};
-
-	const dividerStyle = {
-		backgroundColor: "#fff",
-		my: ".7em",
+	const styles = {
+		publicGamesWrapper: {
+			height: "100%",
+			scrollbarColor: "#888888 rgba(0, 0, 0, 0)",
+			scrollbarWidth: "thin",
+		},
+		cardContent: {
+			display: "flex",
+			flexDirection: "column",
+			justifyContent: "center",
+		},
+		divider: {
+		 	 backgroundColor: "#fff",
+		  	my: ".7em",
+		},
 	};
 
 	return (
-		<Card variant="black" sx={PublicGamesWrapper}>
-			<CardContent sx={cardContentStyle}>
+		<Card variant="black" sx={styles.publicGamesWrapper}>
+			<CardContent sx={styles.cardContent}>
 				<Typography variant="h2">Public Games</Typography>
 				<Typography variant="h3">{format}</Typography>
-				<Divider sx={dividerStyle} />
+				<Divider sx={styles.divider} />
 				<JoinableGame />
 				<JoinableGame />
 				<JoinableGame />
 				<Typography variant="h3">
 					Request-Undo {format}
 				</Typography>
-				<Divider sx={dividerStyle} />
+				<Divider sx={styles.divider} />
 				<JoinableGame />
 				<GamesInProgress />
 			</CardContent>
