@@ -6,40 +6,26 @@ import { articles } from "@/app/_constants/mockData";
 const NewsColumn: React.FC = () => {;
 
 	const styles = {
-		notice: {
-			mb: "1rem",
-			height:"auto", 
-			overflow: "visible",
-		},
-		newsBox: {
-			display: "flex",
-			flexDirection: "column",
-			height: "100%",
-		},
-		newsList: {
-			"::-webkit-scrollbar": {
-				width: "0.2vw",
-			},
-			"::-webkit-scrollbar-thumb": {
-				backgroundColor: "#D3D3D3B3",
-				borderRadius: "1vw",
-			},
-			"::-webkit-scrollbar-button": {
-				display: "none",
-			},
-			transition: "scrollbar-color 0.3s ease-in-out",
-			overflowY: "scroll",
-		},
-		boxStyle: {
+		box: {
 			display: "flex",
 			flexDirection: "column",
 			alignItems: "center",
 			height: "100%",
 		},
+		notice: {
+			mb: "1.5rem",
+			overflow:"visible",
+		},
+		boxNews: {
+			height: "100%",
+			scrollbarColor: "#888888 rgba(0, 0, 0, 0)",
+  			scrollbarWidth: "thin",
+		},
 	};
 
 	return (
-		<Box sx={styles.boxStyle}>
+		<Box sx={styles.box}>
+
 			<Card variant="blue" sx={styles.notice}>
 				<CardContent>
 					<Typography variant="bodyBold">Karabast is an open-source, fan-made platform.</Typography>
@@ -48,19 +34,19 @@ const NewsColumn: React.FC = () => {;
 				</CardContent>
 			</Card>
 
-			{/* Bottom Card: Scrollable and displays NewsItem */}
-			<Card variant="black" sx={styles.newsBox}>
+			<Card variant="black" sx={styles.boxNews}>
 				<Box>
 					<Typography variant="h2">
 						News
 					</Typography>
 				</Box>
-				<Box sx={styles.newsList}>
+				<Box>
 					{articles.map((article, index) => (
 						<NewsItem article={article} key={index} />
 					))}
 				</Box>
 			</Card>
+
 		</Box>
 	);
 };
