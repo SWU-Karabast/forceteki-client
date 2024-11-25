@@ -24,7 +24,7 @@ const Home: React.FC = () => {
 		justifyContent: "center",
 		padding: "1rem",
 		pb: "3rem",
-		height: "calc(100% - 11rem)",
+		height: "calc(100% - 10.5rem)",
 		alignSelf: "end",
 	};
 

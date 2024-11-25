@@ -113,7 +113,7 @@ export const theme: Theme = createTheme({
 				{
 					props: { variant: "black" },
 					style: {
-						backgroundColor: "#000000E6",
+						backgroundColor: "rgb(0, 0, 0, 0.60)",
 					},
 				},
 			]
