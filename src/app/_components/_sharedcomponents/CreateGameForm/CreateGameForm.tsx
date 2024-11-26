@@ -20,6 +20,25 @@ interface CreateGameFormProps {
 	setFormat?: (format: string) => void;
 }
 
+interface DeckMetadata {
+	name: string;
+	author: string;
+}
+
+interface DeckCard {
+	id: string;
+	count: number;
+}
+
+interface DeckData {
+	metadata: DeckMetadata;
+	leader: DeckCard;
+	secondleader: DeckCard | null;
+	base: DeckCard;
+	deck: DeckCard[];
+	sideboard: DeckCard[];
+}
+
 const deckOptions: string[] = [
 	"Vader Green Ramp",
 	"Obi-Wan Blue Control",
@@ -100,7 +119,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		useState<string>("Vader Green Ramp");
 	const [deckLink, setDeckLink] = useState<string>("");
 	const [saveDeck, setSaveDeck] = useState<boolean>(false);
-	const [deckData, setDeckData] = useState<any>(null); // State to store fetched deck data
+	const [deckData, setDeckData] = useState<DeckData | null>(null);
 
 	// Additional State for Non-Creategame Path
 	const [gameName, setGameName] = useState<string>("");
@@ -116,11 +135,14 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 				throw new Error(`Failed to fetch deck: ${response.statusText}`);
 			}
 
-			const data = await response.json();
+			const data: DeckData = await response.json();
 			setDeckData(data);
-			console.log(data);
-		} catch (error: any) {
-			console.error("Error fetching deck:", error.message);
+		} catch (error) {
+			if (error instanceof Error) {
+				console.error("Error fetching deck:", error.message);
+			} else {
+				console.error("Unexpected error:", error);
+			}
 		}
 	};
 
@@ -131,7 +153,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		console.log("SWUDB Deck Link:", deckLink);
 		console.log("beginning fetch for deck link");
 		fetchDeckData(deckLink);
-		console.log("fetch complete");
+		console.log("fetch complete, deck data:", deckData);
 		console.log("Save Deck To Favourites:", saveDeck);
 
 		if (!isCreateGamePath) {

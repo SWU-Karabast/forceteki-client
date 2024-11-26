@@ -1,5 +1,24 @@
 import { NextResponse } from "next/server";
 
+interface DeckMetadata {
+	name: string;
+	author: string;
+}
+
+interface DeckCard {
+	id: string;
+	count: number;
+}
+
+interface DeckData {
+	metadata: DeckMetadata;
+	leader: DeckCard;
+	secondleader: DeckCard | null;
+	base: DeckCard;
+	deck: DeckCard[];
+	sideboard: DeckCard[];
+}
+
 export async function GET(req: Request) {
 	try {
 		const { searchParams } = new URL(req.url);
@@ -10,8 +29,7 @@ export async function GET(req: Request) {
 			return NextResponse.json({ error: "Missing deckLink" }, { status: 400 });
 		}
 
-		// regex to get deck, i found two link styles one with deck/id and other with deck/view/id so i used this regex to get the id either way
-		const match = deckLink.match(/\/deck\/(?:view\/)?([^/?]+)/); // Matches /deck/[id] or /deck/view/[id]
+		const match = deckLink.match(/\/deck\/(?:view\/)?([^/?]+)/);
 		const deckId = match ? match[1] : null;
 
 		if (!deckId) {
@@ -22,8 +40,6 @@ export async function GET(req: Request) {
 			);
 		}
 
-		console.log("Extracted deckId:", deckId);
-
 		const apiUrl = `https://swudb.com/deck/view/${deckId}?handler=JsonFile`;
 
 		const response = await fetch(apiUrl, { method: "GET" });
@@ -33,11 +49,19 @@ export async function GET(req: Request) {
 			throw new Error(`SWUDB API error: ${response.statusText}`);
 		}
 
-		const data = await response.json();
+		const data: DeckData = await response.json();
 
 		return NextResponse.json(data);
-	} catch (error: any) {
-		console.error("Internal Server Error:", error.message);
-		return NextResponse.json({ error: error.message }, { status: 500 });
+	} catch (error) {
+		if (error instanceof Error) {
+			console.error("Internal Server Error:", error.message);
+			return NextResponse.json({ error: error.message }, { status: 500 });
+		}
+
+		console.error("Unexpected error:", error);
+		return NextResponse.json(
+			{ error: "An unexpected error occurred" },
+			{ status: 500 }
+		);
 	}
 }
