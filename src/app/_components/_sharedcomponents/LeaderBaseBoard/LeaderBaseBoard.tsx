@@ -1,14 +1,14 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
 import LeaderBase from "./LeaderBase/LeaderBase";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 import { LeaderBaseBoardProps } from "./LeaderBaseBoardTypes";
 
 
 const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 	isLobbyView,
 }) => {
-	const { connectedPlayer, getOpponent } = usePlayer();
+	const { connectedPlayer, getOpponent } = useGame();
 	const titleOpponent =
 		connectedPlayer === "ThisIsTheWay" ? "Order66" : "ThisIsTheWay";
 	//------------------------STYLES------------------------//

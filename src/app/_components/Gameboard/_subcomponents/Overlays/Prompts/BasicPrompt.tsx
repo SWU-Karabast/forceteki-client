@@ -11,14 +11,14 @@ import {
 	Button,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 import { BasicPromptProps } from "@/app/_components/Gameboard/GameboardTypes";
 
 const BasicPrompt: React.FC<BasicPromptProps> = ({
 	isBasicPromptOpen,
 	handleBasicPromptToggle,
 }) => {
-	const { connectedPlayer, gameState, sendMessage } = usePlayer();
+	const { connectedPlayer, gameState, sendGameMessage } = useGame();
 	if (!gameState) {
 		return null;
 	}
@@ -58,7 +58,7 @@ const BasicPrompt: React.FC<BasicPromptProps> = ({
 							<PromptButton
 								key={button.arg}
 								button={button}
-								sendMessage={sendMessage}
+								sendGameMessage={sendGameMessage}
 							/>
 						))}
 					</Box>
@@ -84,7 +84,7 @@ const BasicPrompt: React.FC<BasicPromptProps> = ({
 
 interface PromptButtonProps {
 	button: ButtonsProps
-	sendMessage: (args: [string, string, string]) => void;
+	sendGameMessage: (args: [string, string, string]) => void;
 }
 
 interface ButtonsProps {
@@ -94,11 +94,11 @@ interface ButtonsProps {
 	uuid: string;
 }
 
-const PromptButton: React.FC<PromptButtonProps> = ({ button, sendMessage }) => {
+const PromptButton: React.FC<PromptButtonProps> = ({ button, sendGameMessage }) => {
 	return (
 		<Button
 			variant="contained"
-			onClick={() => sendMessage([button.command, button.arg, button.uuid])}
+			onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
 		>
 			{button.text}
 		</Button>

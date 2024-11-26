@@ -2,6 +2,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { usePathname } from 'next/navigation';
+import { GameProvider } from "@/app/_contexts/Game.context";
 
 const ClientProviders = dynamic(
   () => import('@/app/_components/ClientProviders/ClientProviders'),
@@ -11,10 +13,25 @@ const ClientProviders = dynamic(
 const Navbar = dynamic(() => import('./Navigation/NavBar'), { ssr: false });
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
+  const path = usePathname();
+  const pagesWithWebsocket = ['/GameBoard', '/lobby'];
+  const isPageWithWebsocket = pagesWithWebsocket.includes(path);
+
   return (
-    <ClientProviders>
-      <Navbar />
-      {children}
-    </ClientProviders>
+    <>
+      {isPageWithWebsocket ? (
+        <ClientProviders>
+          <GameProvider>
+            <Navbar />
+            {children}
+          </GameProvider>
+        </ClientProviders> 
+      ) : (
+        <ClientProviders>
+          <Navbar />
+          {children}
+        </ClientProviders>
+      )}
+    </>
   );
 }

@@ -13,7 +13,7 @@ import {
 	RadioGroup,
 } from "@mui/material";
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 interface CreateGameFormProps {
 	format?: string | null;
@@ -21,10 +21,8 @@ interface CreateGameFormProps {
 }
 
 const deckOptions: string[] = [
-	"Vader Green Ramp",
-	"Obi-Wan Blue Control",
-	"Darth Red Aggro",
-	"Leia White Midrange",
+	"Order66",
+	"ThisIsTheWay",
 ];
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
@@ -34,11 +32,12 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 	setFormat,
 }) => {
 	const pathname = usePathname();
+	const router = useRouter();
 	const isCreateGamePath = pathname === "/creategame";
 
 	// Common State
 	const [favouriteDeck, setFavouriteDeck] =
-		useState<string>("Vader Green Ramp");
+		useState<string>("Order66");
 	const [deckLink, setDeckLink] = useState<string>("");
 	const [saveDeck, setSaveDeck] = useState<boolean>(false);
 
@@ -47,19 +46,33 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 	const [privacy, setPrivacy] = useState<string>("Public");
 
 	// Handle Create Game Submission
-	const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
+	const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		console.log("Favourite Deck:", favouriteDeck);
-		console.log("SWUDB Deck Link:", deckLink);
-		console.log("Save Deck To Favourites:", saveDeck);
 
-		if (!isCreateGamePath) {
-			console.log("Game Name:", gameName);
-			console.log("Format:", format);
-			console.log("Privacy:", privacy);
+		try {
+			const payload = {
+				user: favouriteDeck
+			};
+			const response = await fetch("http://localhost:9500/api/create-lobby",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(payload),
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to create game");
+			}
+
+			router.push("/lobby");
+	
+		} catch (error) {
+			console.error(error);
 		}
 
-		// TODO: Implement actual game creation logic here
 	};
 
 	//------------------------STYLES------------------------//
@@ -173,7 +186,6 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 								onChange={(e: ChangeEvent<HTMLInputElement>) =>
 									setDeckLink(e.target.value)
 								}
-								required
 							/>
 						</FormControl>
 
