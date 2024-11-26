@@ -8,11 +8,11 @@ import Board from "../_components/Gameboard/Board/Board";
 import PlayerCardTray from "../_components/Gameboard/PlayerCardTray/PlayerCardTray";
 import ResourcesOverlay from "../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay";
 import BasicPrompt from "../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt";
-import { usePlayer } from "../_contexts/Player.context";
+import { useGame } from "../_contexts/Game.context";
 import { useSidebar } from "../_contexts/Sidebar.context";
 
 const GameBoard = () => {
-	const { getOpponent, connectedPlayer, gameState } = usePlayer();
+	const { getOpponent, connectedPlayer, gameState } = useGame();
 	const { sidebarOpen, toggleSidebar } = useSidebar();
 	const [chatMessage, setChatMessage] = useState("");
 	const [chatHistory, setChatHistory] = useState<string[]>([]);

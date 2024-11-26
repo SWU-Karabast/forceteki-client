@@ -12,14 +12,14 @@ import {
 import { Close } from "@mui/icons-material";
 import CardArea from "../../../../_sharedcomponents/CardArea/CardArea";
 import { ResourcesOverlayProps } from "@/app/_components/Gameboard/GameboardTypes";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 
 const ResourcesOverlay: React.FC<ResourcesOverlayProps> = ({
 	isModalOpen,
 	handleModalToggle,
 }) => {
 
-	const { gameState, connectedPlayer } = usePlayer();
+	const { gameState, connectedPlayer } = useGame();
 
 	return (
 		<Modal

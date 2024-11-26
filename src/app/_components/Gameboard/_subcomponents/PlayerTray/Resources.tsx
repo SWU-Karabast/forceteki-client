@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
 import Image from "next/image";
 import { ResourcesProps } from "@/app/_components/Gameboard/GameboardTypes";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 
 const Resources: React.FC<ResourcesProps> = ({
 	trayPlayer,
@@ -48,7 +48,7 @@ const Resources: React.FC<ResourcesProps> = ({
 		color: "white",
 	};
 
-	const { gameState } = usePlayer();
+	const { gameState } = useGame();
 
 	const availableResources = gameState.players[trayPlayer].availableResources;
 	const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
