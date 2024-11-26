@@ -9,7 +9,7 @@ const CardActionTray: React.FC = () => {
 		mt: "1vh",
 	};
 
-	const { sendMessage, gameState, connectedPlayer } = useGame();
+	const { sendGameMessage, gameState, connectedPlayer } = useGame();
 	const playerState = gameState.players[connectedPlayer];
 
 	return (
@@ -29,7 +29,7 @@ const CardActionTray: React.FC = () => {
 						<PromptButton
 							key={button.arg}
 							button={button}
-							sendMessage={sendMessage}
+							sendGameMessage={sendGameMessage}
 						/>
 					))}
 				</Box>
@@ -40,7 +40,7 @@ const CardActionTray: React.FC = () => {
 
 interface PromptButtonProps {
 	button: ButtonsProps
-	sendMessage: (args: [string, string, string]) => void;
+	sendGameMessage: (args: [string, string, string]) => void;
 }
 
 interface ButtonsProps {
@@ -50,11 +50,11 @@ interface ButtonsProps {
 	uuid: string;
 }
 
-const PromptButton: React.FC<PromptButtonProps> = ({ button, sendMessage }) => {
+const PromptButton: React.FC<PromptButtonProps> = ({ button, sendGameMessage }) => {
 	return (
 		<Button
 			variant="contained"
-			onClick={() => sendMessage([button.command, button.arg, button.uuid])}
+			onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
 		>
 			{button.text}
 		</Button>

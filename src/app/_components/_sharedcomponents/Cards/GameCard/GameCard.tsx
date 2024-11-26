@@ -90,7 +90,7 @@ const GameCard: React.FC<GameCardProps> = ({
 		fontSize: isLobbyView ? "2em" : "1.6em",
 	};
 
-	const { sendMessage } = useGame();
+	const { sendGameMessage } = useGame();
 
 	const cardBorderColor = (card: CardData) => {
 		if (card.selected) return "yellow";
@@ -103,7 +103,7 @@ const GameCard: React.FC<GameCardProps> = ({
 		<MuiCard sx={{ backgroundColor: cardBorderColor(card) }}
 			onClick={() => {
 				if (card.selectable) {
-					sendMessage(["cardClicked", card.uuid]);
+					sendGameMessage(["cardClicked", card.uuid]);
 				}
 			}}
 		>

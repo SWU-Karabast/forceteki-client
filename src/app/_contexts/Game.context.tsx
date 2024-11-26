@@ -54,10 +54,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 	}, []);
 
 	const sendMessage = (message: string, args: any[] = []) => {
+		console.log("sending message", message, args);
 		socket?.emit(message, ...args);
 	};
 
 	const sendGameMessage = (args: any[]) => {
+		console.log("sending game message", args);
 		socket?.emit("game", ...args);
 	};
 
