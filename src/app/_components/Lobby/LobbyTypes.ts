@@ -5,12 +5,7 @@ export interface PlayersProps {
 export interface SetUpProps {
 	chatHistory: string[];
 	chatMessage: string;
-	playerRoll: number;
-	opponentRoll: number;
-	isRolling: boolean;
-	isRollSame: boolean;
 	setChatMessage: (message: string) => void;
 	handleChatSubmit: () => void;
-	handleRollInitiative: () => void;
 }
 

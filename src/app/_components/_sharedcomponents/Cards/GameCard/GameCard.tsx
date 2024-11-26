@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import Image from "next/image";
 import { GameCardProps, CardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 
 const GameCard: React.FC<GameCardProps> = ({
 	card
@@ -90,7 +90,7 @@ const GameCard: React.FC<GameCardProps> = ({
 		fontSize: isLobbyView ? "2em" : "1.6em",
 	};
 
-	const { sendMessage } = usePlayer();
+	const { sendGameMessage } = useGame();
 
 	const cardBorderColor = (card: CardData) => {
 		if (card.selected) return "yellow";
@@ -103,7 +103,7 @@ const GameCard: React.FC<GameCardProps> = ({
 		<MuiCard sx={{ backgroundColor: cardBorderColor(card) }}
 			onClick={() => {
 				if (card.selectable) {
-					sendMessage(["cardClicked", card.uuid]);
+					sendGameMessage(["cardClicked", card.uuid]);
 				}
 			}}
 		>

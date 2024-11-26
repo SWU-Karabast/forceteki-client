@@ -1,43 +1,30 @@
-import React, { useEffect, useRef } from "react";
 import {
 	Card,
 	Typography,
-	CardContent,
 	CardActions,
+	Button
 } from "@mui/material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
+import { useGame } from "@/app/_contexts/Game.context";
 import { SetUpProps } from "../LobbyTypes";
+import { useRouter } from "next/navigation"
 
 const SetUp: React.FC<SetUpProps> = ({
 	chatHistory,
 	chatMessage,
-	playerRoll,
-	opponentRoll,
-	isRolling,
-	isRollSame,
 	setChatMessage,
 	handleChatSubmit,
-	handleRollInitiative,
 }) => {
-	const getInitiativeMessage = () => {
-		if (isRolling) {
-			return "Rolling initiative...";
-		}
-		if (isRollSame) {
-			return "Initiative tied, rolling initiative again";
-		}
-		return "";
-	};
 
-	const hasRolled = useRef(false);
+	const { sendMessage } = useGame();
+	const router = useRouter();
 
-	useEffect(() => {
-		if (!hasRolled.current) {
-			handleRollInitiative();
-			hasRolled.current = true;
-		}
-	}, [handleRollInitiative]);
+
+	const handleStartGame = () => {
+		sendMessage("startGame");
+		router.push("/GameBoard");
+	}
 
 	//------------------------STYLES------------------------//
 
@@ -62,14 +49,6 @@ const SetUp: React.FC<SetUpProps> = ({
 		justifyContent: "center",
 	};
 
-	const initiativeMessageStyle = {
-		fontSize: "1.5em",
-		fontWeight: "400",
-		color: "white",
-		textAlign: "center",
-		width: "100%",
-	};
-
 	const buttonsContainerStyle = {
 		display: "flex",
 		justifyContent: "center",
@@ -87,15 +66,8 @@ const SetUp: React.FC<SetUpProps> = ({
 	return (
 		<Card sx={mainCardStyle}>
 			<Card sx={initiativeCardStyle}>
-				<CardContent>
-					{hasRolled.current && getInitiativeMessage() && (
-						<Typography sx={initiativeMessageStyle}>
-							{getInitiativeMessage()}
-						</Typography>
-					)}
-				</CardContent>
 				<CardActions sx={buttonsContainerStyle}>
-					
+					<Button variant="contained" onClick={()=>handleStartGame()}>Start Game</Button>
 				</CardActions>
 			</Card>
 			<Typography sx={setUpTextStyle}>Set Up</Typography>
@@ -106,8 +78,6 @@ const SetUp: React.FC<SetUpProps> = ({
 				chatMessage={chatMessage}
 				setChatMessage={setChatMessage}
 				handleChatSubmit={handleChatSubmit}
-				playerRoll={playerRoll}
-				opponentRoll={opponentRoll}
 			/>
 		</Card>
 	);
