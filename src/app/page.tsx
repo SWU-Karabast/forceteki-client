@@ -5,7 +5,6 @@ import KarabastBanner from "./_components/_sharedcomponents/Banner/Banner";
 import PublicGames from "./_components/HomePage/PublicGames/PublicGames";
 import CreateGameForm from "./_components/_sharedcomponents/CreateGameForm/CreateGameForm";
 import NewsColumn from "./_components/HomePage/News/News";
-import { Height } from "@mui/icons-material";
 
 const Home: React.FC = () => {
 	const [format, setFormat] = useState("Premier");

@@ -20,12 +20,90 @@ interface CreateGameFormProps {
 	setFormat?: (format: string) => void;
 }
 
+interface DeckMetadata {
+	name: string;
+	author: string;
+}
+
+interface DeckCard {
+	id: string;
+	count: number;
+}
+
+interface DeckData {
+	metadata: DeckMetadata;
+	leader: DeckCard;
+	secondleader: DeckCard | null;
+	base: DeckCard;
+	deck: DeckCard[];
+	sideboard: DeckCard[];
+}
+
 const deckOptions: string[] = [
 	"Order66",
 	"ThisIsTheWay",
 ];
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
+
+const createGameFormStyles = {
+	mainCard: {
+		borderRadius: "1.5em",
+		backgroundColor: "#000000E6",
+		backdropFilter: "blur(20px)",
+		fontFamily: "var(--font-barlow), sans-serif",
+		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
+		p: "2em",
+		mb: "2em",
+	},
+	formControl: {
+		mb: ".5em",
+	},
+	labelText: {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontSize: "1.3em",
+		color: "#fff",
+		mb: ".5em",
+	},
+	checkbox: {
+		color: "#fff",
+		"&.Mui-checked": {
+			color: "#fff",
+		},
+	},
+	checkboxAndRadioGroupText: {
+		color: "#fff",
+		fontSize: "1em",
+	},
+	submitButton: {
+		display: "block",
+		ml: "auto",
+		mr: "auto",
+	},
+	instructionsCard: {
+		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
+		borderRadius: "1.5em",
+		backgroundColor: "#18325199",
+		boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+		p: "2em",
+		mb: "2em",
+	},
+	instructionsHeading: {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "600",
+		fontSize: "1.8em",
+		color: "#fff",
+		mb: ".8em",
+	},
+	instructionsText: {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "400",
+		fontSize: "1em",
+		textAlign: "left",
+		color: "#fff",
+		mb: ".2em",
+	},
+};
 
 const CreateGameForm: React.FC<CreateGameFormProps> = ({
 	format,
@@ -40,14 +118,42 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		useState<string>("Order66");
 	const [deckLink, setDeckLink] = useState<string>("");
 	const [saveDeck, setSaveDeck] = useState<boolean>(false);
+	const [deckData, setDeckData] = useState<DeckData | null>(null);
 
 	// Additional State for Non-Creategame Path
 	const [gameName, setGameName] = useState<string>("");
 	const [privacy, setPrivacy] = useState<string>("Public");
 
+	const fetchDeckData = async (deckLink: string) => {
+		try {
+			const response = await fetch(
+				`/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
+			);
+
+			if (!response.ok) {
+				throw new Error(`Failed to fetch deck: ${response.statusText}`);
+			}
+
+			const data: DeckData = await response.json();
+			setDeckData(data);
+		} catch (error) {
+			if (error instanceof Error) {
+				console.error("Error fetching deck:", error.message);
+			} else {
+				console.error("Unexpected error:", error);
+			}
+		}
+	};
+
 	// Handle Create Game Submission
 	const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
+		console.log("Favourite Deck:", favouriteDeck);
+		console.log("SWUDB Deck Link:", deckLink);
+		console.log("beginning fetch for deck link");
+		fetchDeckData(deckLink);
+		console.log("fetch complete, deck data:", deckData);
+		console.log("Save Deck To Favourites:", saveDeck);
 
 		try {
 			const payload = {
@@ -77,83 +183,20 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 	//------------------------STYLES------------------------//
 
-	const mainCardStyle = {
-		borderRadius: "1.5em",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
-		fontFamily: "var(--font-barlow), sans-serif",
-		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
-		p: "2em",
-		mb: "2em",
-	};
-
-	const formControlStyle = {
-		mb: ".5em",
-	};
-
-	const labelTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontSize: "1.3em",
-		color: "#fff",
-		mb: ".5em",
-	};
-
-	const checkboxStyle = {
-		color: "#fff",
-		"&.Mui-checked": {
-			color: "#fff",
-		},
-	};
-
-	const checkboxAndRadioGroupTextStyle = {
-		color: "#fff",
-		fontSize: "1em",
-	};
-
-	const submitButtonStyle = {
-		display: "block",
-		ml: "auto",
-		mr: "auto",
-	};
-
-	const instructionsCardStyle = {
-		width: { xs: "90vw", sm: "70vw", md: "40vw", lg: "30vw" },
-		borderRadius: "1.5em",
-		backgroundColor: "#18325199",
-		boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-		p: "2em",
-		mb: "2em",
-	};
-
-	const instructionsHeadingStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "600",
-		fontSize: "1.8em",
-		color: "#fff",
-		mb: ".8em",
-	};
-
-	const instructionsTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-		fontSize: "1em",
-		textAlign: "left",
-		color: "#fff",
-		mb: ".2em",
-	};
-
 	return (
 		<Box sx={{ height: "80vh" }}>
 			{/* Primary Card - Create/Choose Deck Form */}
-			<Card sx={mainCardStyle}>
+			<Card sx={createGameFormStyles.mainCard}>
 				<CardContent>
 					<Typography variant="h2">
 						{isCreateGamePath ? "Choose Your Deck" : "Create New Game"}
 					</Typography>
 					<form onSubmit={handleCreateGameSubmit}>
 						{/* Favourite Decks Input */}
-						<FormControl fullWidth sx={formControlStyle}>
-							<Typography sx={labelTextStyle}>Favourite Decks</Typography>
+						<FormControl fullWidth sx={createGameFormStyles.formControl}>
+							<Typography sx={createGameFormStyles.labelText}>
+								Favourite Decks
+							</Typography>
 							<StyledTextField
 								select
 								value={favouriteDeck}
@@ -172,11 +215,10 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 						</FormControl>
 
 						{/* SWUDB Deck Link Input */}
-						<FormControl fullWidth sx={formControlStyle}>
-							<Typography sx={labelTextStyle}>
+						<FormControl fullWidth sx={createGameFormStyles.formControl}>
+							<Typography sx={createGameFormStyles.labelText}>
 								SWUDB Deck Link
 								<Typography component="span" sx={{ fontSize: "0.7em" }}>
-									{" "}
 									(use the url or &apos;Deck Link&apos; button)
 								</Typography>
 							</Typography>
@@ -193,7 +235,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 						<FormControlLabel
 							control={
 								<Checkbox
-									sx={checkboxStyle}
+									sx={createGameFormStyles.checkbox}
 									checked={saveDeck}
 									onChange={(
 										e: ChangeEvent<HTMLInputElement>,
@@ -202,7 +244,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 								/>
 							}
 							label={
-								<Typography sx={checkboxAndRadioGroupTextStyle}>
+								<Typography sx={createGameFormStyles.checkboxAndRadioGroupText}>
 									Save Deck To Favourites
 								</Typography>
 							}
@@ -213,8 +255,8 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 						{!isCreateGamePath && (
 							<>
 								{/* Game Name Input */}
-								<FormControl fullWidth sx={formControlStyle}>
-									<Typography sx={labelTextStyle}>
+								<FormControl fullWidth sx={createGameFormStyles.formControl}>
+									<Typography sx={createGameFormStyles.labelText}>
 										Game Name{" "}
 										<Typography component="span" sx={{ fontSize: "0.8rem" }}>
 											(optional)
@@ -232,7 +274,9 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 								{/* Format Selection */}
 								<FormControl fullWidth sx={{ mb: "1em" }}>
-									<Typography sx={labelTextStyle}>Format</Typography>
+									<Typography sx={createGameFormStyles.labelText}>
+										Format
+									</Typography>
 									<StyledTextField
 										select
 										value={format}
@@ -261,18 +305,22 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 									>
 										<FormControlLabel
 											value="Public"
-											control={<Radio sx={checkboxStyle} />}
+											control={<Radio sx={createGameFormStyles.checkbox} />}
 											label={
-												<Typography sx={checkboxAndRadioGroupTextStyle}>
+												<Typography
+													sx={createGameFormStyles.checkboxAndRadioGroupText}
+												>
 													Public
 												</Typography>
 											}
 										/>
 										<FormControlLabel
 											value="Private"
-											control={<Radio sx={checkboxStyle} />}
+											control={<Radio sx={createGameFormStyles.checkbox} />}
 											label={
-												<Typography sx={checkboxAndRadioGroupTextStyle}>
+												<Typography
+													sx={createGameFormStyles.checkboxAndRadioGroupText}
+												>
 													Private
 												</Typography>
 											}
@@ -283,34 +331,16 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 						)}
 
 						{/* Submit Button */}
-						<Button type="submit" variant="contained" sx={submitButtonStyle}>
+						<Button
+							type="submit"
+							variant="contained"
+							sx={createGameFormStyles.submitButton}
+						>
 							Create Game
 						</Button>
 					</form>
 				</CardContent>
 			</Card>
-
-			{/* Secondary Card - Instructions (Only for /creategame path) */}
-			{isCreateGamePath && (
-				<Card sx={instructionsCardStyle}>
-					<CardContent>
-						<Typography variant="h3" sx={instructionsHeadingStyle}>
-							Instructions
-						</Typography>
-						<Typography variant="body1" sx={instructionsTextStyle}>
-							Choose a deck, then click &apos;Create&apos; to be taken to the
-							game lobby.
-							<br />
-							<br />
-							Once in the lobby, the player who wins the dice roll chooses who
-							goes first. Then the host can start the game.
-							<br />
-							<br />
-							Have Fun!
-						</Typography>
-					</CardContent>
-				</Card>
-			)}
 		</Box>
 	);
 };
