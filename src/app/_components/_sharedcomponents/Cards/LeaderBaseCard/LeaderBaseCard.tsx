@@ -80,7 +80,7 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 		fontSize: "1em",
 	};
 
-	const { sendMessage } = useGame();
+	const { sendGameMessage } = useGame();
 
 	return (
 		<Box>
@@ -98,7 +98,7 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 					sx={cardStyle}
 					onClick={() => {
 						if (card.selectable) {
-							sendMessage(["cardClicked", card.uuid]);
+							sendGameMessage(["cardClicked", card.uuid]);
 						}
 					}}
 				>
