@@ -14,18 +14,35 @@ import {
 	Link,
 } from "@mui/material";
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 interface CreateGameFormProps {
 	format?: string | null;
 	setFormat?: (format: string) => void;
 }
 
+interface DeckMetadata {
+	name: string;
+	author: string;
+}
+
+interface DeckCard {
+	id: string;
+	count: number;
+}
+
+interface DeckData {
+	metadata: DeckMetadata;
+	leader: DeckCard;
+	secondleader: DeckCard | null;
+	base: DeckCard;
+	deck: DeckCard[];
+	sideboard: DeckCard[];
+}
+
 const deckOptions: string[] = [
-	"Vader Green Ramp",
-	"Obi-Wan Blue Control",
-	"Darth Red Aggro",
-	"Leia White Midrange",
+	"Order66",
+	"ThisIsTheWay",
 ];
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
@@ -35,6 +52,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 	setFormat,
 }) => {
 	const pathname = usePathname();
+	const router = useRouter();
 	const isCreateGamePath = pathname === "/creategame";
 
 	// Common State
@@ -42,25 +60,67 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		useState<string>("Vader Green Ramp");
 	const [deckLink, setDeckLink] = useState<string>("");
 	const [saveDeck, setSaveDeck] = useState<boolean>(false);
+	const [deckData, setDeckData] = useState<DeckData | null>(null);
 
 	// Additional State for Non-Creategame Path
 	const [gameName, setGameName] = useState<string>("");
 	const [privacy, setPrivacy] = useState<string>("Public");
 
+	const fetchDeckData = async (deckLink: string) => {
+		try {
+			const response = await fetch(
+				`/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
+			);
+
+			if (!response.ok) {
+				throw new Error(`Failed to fetch deck: ${response.statusText}`);
+			}
+
+			const data: DeckData = await response.json();
+			setDeckData(data);
+		} catch (error) {
+			if (error instanceof Error) {
+				console.error("Error fetching deck:", error.message);
+			} else {
+				console.error("Unexpected error:", error);
+			}
+		}
+	};
+
 	// Handle Create Game Submission
-	const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
+	const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		console.log("Favourite Deck:", favouriteDeck);
 		console.log("SWUDB Deck Link:", deckLink);
+		console.log("beginning fetch for deck link");
+		fetchDeckData(deckLink);
+		console.log("fetch complete, deck data:", deckData);
 		console.log("Save Deck To Favourites:", saveDeck);
 
-		if (!isCreateGamePath) {
-			console.log("Game Name:", gameName);
-			console.log("Format:", format);
-			console.log("Privacy:", privacy);
+		try {
+			const payload = {
+				user: favouriteDeck
+			};
+			const response = await fetch("http://localhost:9500/api/create-lobby",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(payload),
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Failed to create game");
+			}
+
+			router.push("/lobby");
+	
+		} catch (error) {
+			console.error(error);
 		}
 
-		// TODO: Implement actual game creation logic here
 	};
 
 	const formControlStyle = {
