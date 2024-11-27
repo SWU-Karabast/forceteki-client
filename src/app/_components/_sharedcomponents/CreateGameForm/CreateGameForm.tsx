@@ -204,7 +204,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 									</Link>{' '}
 									Deck Link{' '}
 								<Typography variant="body1" sx={labelTextStyleSecondary}>
-									(use the URL or 'Deck Link' button)
+									(use the URL or &apos;Deck Link&apos; button)
 								</Typography>
 							</Typography>
 							<StyledTextField

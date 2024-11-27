@@ -4,7 +4,6 @@ export interface HexagonProps {
 
 export interface GameInProgressPlayerProps {
 	playerImage: string;
-	hexagonColors: string[];
 }
 
 export interface PublicGameInProgressProps {
