@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Divider, IconButton, Typography } from "@mui/material";
 import { Settings, Menu, ArrowBackIosNew, GitHub } from "@mui/icons-material";
-import { FaDiscord, FaPatreon } from "react-icons/fa6";
+import { FaDiscord, } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import NextLinkMui from "./_subcomponents/NextLinkMui/NextLinkMui";
 import { ControlHubProps } from "./ControlHubTypes";
@@ -25,9 +25,7 @@ const ControlHub: React.FC<ControlHubProps> = ({
 		}
 	};
 
-	// ---------------------- Styles ---------------------- //
-
-	const controlHubStyles = {
+	const styles = {
 		container: (isLobbyView: boolean, isGameboardView: boolean) => ({
 			position: "absolute",
 			top: 10,
@@ -38,14 +36,13 @@ const ControlHub: React.FC<ControlHubProps> = ({
 		}),
 		defaultMainContainer: {
 			display: "flex",
-			gap: 1,
+			gap: 2,
 			alignItems: "center",
 			ml: "1rem",
 		},
 		backButton: {
 			color: "#fff",
 			mt: ".5vh",
-			fontFamily: "var(--font-barlow), sans-serif",
 			fontWeight: "600",
 			fontSize: "1.5rem",
 		},
@@ -59,7 +56,7 @@ const ControlHub: React.FC<ControlHubProps> = ({
 		profileBox: {
 			display: "flex",
 			borderRadius: "50px",
-			backgroundColor: "#000000E6",
+			backgroundColor: "rgb(0, 0, 0, 0.40)",
 			backdropFilter: "blur(20px)",
 			height: "48px",
 			justifyContent: "space-around",
@@ -68,9 +65,9 @@ const ControlHub: React.FC<ControlHubProps> = ({
 			p: "0.5rem 1rem",
 		},
 		profileLink: {
-			fontFamily: "var(--font-barlow), sans-serif",
-			fontWeight: "400",
-			fontSize: "1em",
+			fontWeight: "600",
+			fontSize: "1.2em",
+			p: "0.5rem",
 			textDecoration: "none",
 			color: "#fff",
 			"&:hover": {
@@ -81,28 +78,30 @@ const ControlHub: React.FC<ControlHubProps> = ({
 			display: "flex",
 			height: "48px",
 			borderRadius: "50px 0 0 50px",
-			backgroundColor: "#000000E6",
+			backgroundColor: "rgb(0, 0, 0, 0.40)",
 			backdropFilter: "blur(20px)",
 			alignItems: "center",
-			p: "0.5rem",
+			p: "1rem",
 		},
 		iconButton: {
 			color: "#fff",
 			"&:hover": { color: "#00ffff" },
 		},
-	};
+
+	}
+
 
 	return (
-		<Box sx={controlHubStyles.container(isLobbyView, isGameboardView)}>
+		<Box sx={styles.container(isLobbyView, isGameboardView)}>
 			{isLobbyView ? (
 				<>
 					<IconButton>
 						<ArrowBackIosNew
-							sx={controlHubStyles.backButton}
+							sx={styles.backButton}
 							onClick={handleBack}
 						/>
 					</IconButton>
-					<Typography variant="h5" sx={controlHubStyles.exitText}>
+					<Typography variant="h5" sx={styles.exitText}>
 						EXIT
 					</Typography>
 				</>
@@ -118,39 +117,35 @@ const ControlHub: React.FC<ControlHubProps> = ({
 					)}
 				</>
 			) : (
-				<Box sx={controlHubStyles.defaultMainContainer}>
-					<Box sx={controlHubStyles.profileBox}>
+				<Box sx={styles.defaultMainContainer}>
+					<Box sx={styles.profileBox}>
 						{user ? (
 							<>
-								<NextLinkMui href="/profile" sx={controlHubStyles.profileLink}>
-									PROFILE
+								<NextLinkMui href="/profile" sx={styles.profileLink}>
+									Profile
 								</NextLinkMui>
 								<Divider
 									orientation="vertical"
 									flexItem
 									sx={{ borderColor: "#ffffff4D", mx: 1 }}
 								/>
-								<NextLinkMui
-									href="/"
-									onClick={logout}
-									sx={controlHubStyles.profileLink}
-								>
-									LOG OUT
+								<NextLinkMui href="/" onClick={logout} sx={styles.profileLink}>
+									Log Out
 								</NextLinkMui>
 							</>
 						) : (
-							<NextLinkMui href="/auth" sx={controlHubStyles.profileLink}>
-								LOG IN
+							<NextLinkMui href="/auth" sx={styles.profileLink}>
+								Log In
 							</NextLinkMui>
 						)}
 					</Box>
-					<Box sx={controlHubStyles.socialIconsBox}>
+					<Box sx={styles.socialIconsBox}>
 						<NextLinkMui
 							href="https://discord.com"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton sx={controlHubStyles.iconButton}>
+							<IconButton sx={styles.iconButton}>
 								<FaDiscord />
 							</IconButton>
 						</NextLinkMui>
@@ -159,17 +154,8 @@ const ControlHub: React.FC<ControlHubProps> = ({
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton sx={controlHubStyles.iconButton}>
+							<IconButton sx={styles.iconButton}>
 								<GitHub />
-							</IconButton>
-						</NextLinkMui>
-						<NextLinkMui
-							href="https://patreon.com"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							<IconButton sx={controlHubStyles.iconButton}>
-								<FaPatreon />
 							</IconButton>
 						</NextLinkMui>
 					</Box>

@@ -97,7 +97,7 @@ export const theme: Theme = createTheme({
 			styleOverrides: {
 				root: {
 					borderRadius: ".8rem",
-					padding: "1rem",
+					padding: "1.5rem",
 					backdropFilter: "blur(20px)",
 					width: "100%",
 					overflow: "auto",
@@ -113,7 +113,7 @@ export const theme: Theme = createTheme({
 				{
 					props: { variant: "black" },
 					style: {
-						backgroundColor: "#000000E6",
+						backgroundColor: "rgb(0, 0, 0, 0.60)",
 					},
 				},
 			]
@@ -147,6 +147,83 @@ export const theme: Theme = createTheme({
 				  backgroundColor: '#404040',
 				},
 			  },
+			},
+		},
+		MuiSelect: {
+			defaultProps: {
+				size: 'small',
+			  },
+			styleOverrides: {
+			  select: {
+				backgroundColor: '#394452',
+				color: 'white',
+				'&:hover': {
+				  backgroundColor: '#4C5C71',
+				},
+				'&:focus': {
+				  borderRadius: '5px',
+				},
+			  },
+			  icon: {
+				color: 'white',
+			  },
+			},
+		  },
+		MuiTextField: {
+			defaultProps: {
+				size: 'small', // Set the default size to 'small' for TextField components
+			},
+		},
+		MuiOutlinedInput: {
+			styleOverrides: {
+				root: {
+					borderRadius: '5px',
+					backgroundColor: '#394452',
+					'& .MuiOutlinedInput-notchedOutline': {
+						borderColor: 'transparent',
+					},
+					'&:hover .MuiOutlinedInput-notchedOutline': {
+						borderColor: 'transparent', 
+					},
+					'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+						borderColor: '#7286A0',
+					},
+				},
+				input: {
+					color: 'white',
+					'&::placeholder': {
+					  color: 'white',
+					},
+				},
+			},
+		},
+		MuiMenu: {
+			styleOverrides: {
+				paper: {
+					backgroundColor: '#394452',
+					borderRadius: '5px',
+				},
+			},
+		},
+		MuiMenuItem: {
+			styleOverrides: {
+				root: {
+					color: 'white',
+					'&:hover': {
+						backgroundColor: '#4C5C71',
+					},
+					'&.Mui-selected, &.Mui-selected:hover, &.Mui-selected:focus': {
+						backgroundColor: '#4C5C71',
+					},
+					'&:first-of-type': {
+						borderTopLeftRadius: '5px',
+						borderTopRightRadius: '5px',
+					},
+					'&:last-of-type': {
+						borderBottomLeftRadius: '5px',
+						borderBottomRightRadius: '5px',
+					},
+				},
 			},
 		},
 	},

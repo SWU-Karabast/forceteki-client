@@ -8,49 +8,31 @@ const GamesInProgress: React.FC = () => {
 	const randomGamesInProgress =
 		Math.floor(Math.random() * 9 * twoOrThreeDigits) + twoOrThreeDigits;
 
-	//------------------------STYLES------------------------//
-
-	const headerBoxStyle = {
-		position: "sticky",
-		top: 0,
-		zIndex: 1,
-		display: "flex",
-		justifyContent: "space-between",
-		alignItems: "flex-end",
-		alignContent: "center",
-		mt: 1,
-	};
-
-	const dividerStyle = {
-		mt: ".5vh",
-		mb: "1vh",
-	};
-
-	const scrollableBoxStyle = {
-		overflowY: "auto",
-		mb: ".5em",
-		pr: ".5em",
-		"::-webkit-scrollbar": {
-			width: "0.2vw",
+	const styles = {
+		headerBox: {
+			display: "flex",
+			justifyContent: "space-between",
+			alignItems: "flex-end",
+			alignContent: "center",
+			mt: 1,
 		},
-		"::-webkit-scrollbar-thumb": {
-			backgroundColor: "#D3D3D3B3",
-			borderRadius: "1vw",
+		divider: {
+			mt: ".5vh",
+			mb: "1vh",
 		},
-		"::-webkit-scrollbar-button": {
-			display: "none",
+		activeGamesNumber: {
+			fontWeight: 400,
 		},
-		transition: "scrollbar-color 0.3s ease-in-out",
 	};
 
 	return (
 		<>
-			<Box sx={headerBoxStyle}>
+			<Box sx={styles.headerBox}>
 				<Typography variant="h3">Games in Progress</Typography>
-				<Typography variant="h3">{randomGamesInProgress}</Typography>
+				<Typography variant="h3" sx={styles.activeGamesNumber}>{randomGamesInProgress}</Typography>
 			</Box>
-			<Divider sx={dividerStyle} />
-			<Box sx={scrollableBoxStyle}>
+		<Divider sx={styles.divider} />
+			<Box>
 				{playerMatches.map((match, index) => (
 					<PublicMatch key={index} match={match} />
 				))}

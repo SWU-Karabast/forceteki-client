@@ -1,10 +1,8 @@
 import { Box } from "@mui/material";
-import Hexagon from "../Hexagon/Hexagon";
 import { GameInProgressPlayerProps } from "../../HomePageTypes";
 
 const GameInProgressPlayer: React.FC<GameInProgressPlayerProps> = ({
 	playerImage,
-	hexagonColors,
 }) => {
 	//------------------------STYLES------------------------//
 
@@ -15,14 +13,6 @@ const GameInProgressPlayer: React.FC<GameInProgressPlayerProps> = ({
 		backgroundImage: `url(/${playerImage})`,
 		backgroundSize: "cover",
 		display: "flex",
-	};
-
-	const hexagonsContainerStyle = {
-		display: "flex",
-		flexDirection: "column",
-		justifyContent: "center",
-		alignItems: "center",
-		ml: ".3vw",
 	};
 
 	const boxStyle = {
