@@ -3,7 +3,7 @@ import Grid from "@mui/material/Grid2";
 import Resources from "../_subcomponents/PlayerTray/Resources";
 import PlayerHand from "../_subcomponents/PlayerTray/PlayerHand";
 import { OpponentCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 
 const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ trayPlayer }) => {
 	//---------------Styles------------------- //
@@ -31,7 +31,7 @@ const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ trayPlayer }) => {
 		pt: "2em",
 	};
 
-	const { gameState, connectedPlayer, getOpponent } = usePlayer();
+	const { gameState, connectedPlayer, getOpponent } = useGame();
 
 	return (
 		<Grid container sx={{ height: "15%" }}>

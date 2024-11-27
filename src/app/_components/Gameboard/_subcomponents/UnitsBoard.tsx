@@ -3,7 +3,7 @@ import { Box, Grid2 as Grid } from "@mui/material";
 import GameCard from "../../_sharedcomponents/Cards/GameCard/GameCard";
 import { CardData } from "../../_sharedcomponents/Cards/CardTypes";
 import { UnitsBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 
 const UnitsBoard: React.FC<UnitsBoardProps> = ({
 	sidebarOpen,
@@ -47,7 +47,7 @@ const UnitsBoard: React.FC<UnitsBoardProps> = ({
 	};
 
 	//------------------------CONTEXT------------------------//
-	const { gameState, connectedPlayer, getOpponent } = usePlayer();
+	const { gameState, connectedPlayer, getOpponent } = useGame();
 
 	const playerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
 	const opponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];

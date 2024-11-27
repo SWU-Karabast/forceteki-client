@@ -2,7 +2,7 @@ import React from "react";
 import Grid from "@mui/material/Grid2";
 import LeaderBaseCard from "../../Cards/LeaderBaseCard/LeaderBaseCard";
 import { LeaderBaseProps } from "../LeaderBaseBoardTypes";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 
 const LeaderBase: React.FC<LeaderBaseProps> = ({
 	player,
@@ -31,7 +31,7 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 		// 		: 0,
 	};
 
-	const { gameState, connectedPlayer } = usePlayer();
+	const { gameState, connectedPlayer } = useGame();
 	const playerLeader = gameState?.players[player].leader;
 	const playerBase = gameState?.players[player].base;
 

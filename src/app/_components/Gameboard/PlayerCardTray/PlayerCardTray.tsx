@@ -5,14 +5,14 @@ import Resources from "../_subcomponents/PlayerTray/Resources";
 import CardActionTray from "../_subcomponents/PlayerTray/CardActionTray";
 import PlayerHand from "../_subcomponents/PlayerTray/PlayerHand";
 import { PlayerCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
-import { usePlayer } from "@/app/_contexts/Player.context";
+import { useGame } from "@/app/_contexts/Game.context";
 
 const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 	trayPlayer,
 	handleModalToggle,
 }) => {
 	// -------------- Contexts ---------------- //
-	const { gameState, connectedPlayer } = usePlayer();
+	const { gameState, connectedPlayer } = useGame();
 
 	//---------------Styles------------------- //
 	const leftColumnStyle = {

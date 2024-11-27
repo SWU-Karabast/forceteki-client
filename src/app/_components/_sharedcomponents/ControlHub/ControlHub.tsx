@@ -95,18 +95,20 @@ const ControlHub: React.FC<ControlHubProps> = ({
 	};
 
 	return (
-		<Box sx={containerStyle}>
+		<Box sx={controlHubStyles.container(isLobbyView, isGameboardView)}>
 			{isLobbyView ? (
 				<>
 					<IconButton>
-						<ArrowBackIosNew sx={backButtonStyle} onClick={handleBack} />
+						<ArrowBackIosNew
+							sx={controlHubStyles.backButton}
+							onClick={handleBack}
+						/>
 					</IconButton>
-					<Typography variant="h5" sx={exitTextStyle}>
+					<Typography variant="h5" sx={controlHubStyles.exitText}>
 						EXIT
 					</Typography>
 				</>
 			) : isGameboardView ? (
-				// Gameboard View: Settings and Menu Button
 				<>
 					<IconButton>
 						<Settings sx={{ color: "#fff" }} />
@@ -118,10 +120,8 @@ const ControlHub: React.FC<ControlHubProps> = ({
 					)}
 				</>
 			) : (
-				// Default View: Conditional Profile/Login and Social Icons
-				<Box sx={defaultMainContainerStyle}>
-					{/* Conditionally render Profile/Log Out or Log In */}
-					<Box sx={profileBoxStyle}>
+				<Box sx={controlHubStyles.defaultMainContainer}>
+					<Box sx={controlHubStyles.profileBox}>
 						{user ? (
 							<>
 								<NextLinkMui href="/profile" sx={profileLinkStyle}>
@@ -142,14 +142,13 @@ const ControlHub: React.FC<ControlHubProps> = ({
 							</NextLinkMui>
 						)}
 					</Box>
-					{/* Social Icons Chip */}
-					<Box sx={socialIconsBoxStyle}>
+					<Box sx={controlHubStyles.socialIconsBox}>
 						<NextLinkMui
 							href="https://discord.com"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton sx={iconButtonStyle}>
+							<IconButton sx={controlHubStyles.iconButton}>
 								<FaDiscord />
 							</IconButton>
 						</NextLinkMui>
@@ -158,7 +157,7 @@ const ControlHub: React.FC<ControlHubProps> = ({
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							<IconButton sx={iconButtonStyle}>
+							<IconButton sx={controlHubStyles.iconButton}>
 								<GitHub />
 							</IconButton>
 						</NextLinkMui>
