@@ -6,48 +6,53 @@ import { OpponentCardTrayProps } from "@/app/_components/Gameboard/GameboardType
 import { useGame } from "@/app/_contexts/Game.context";
 
 const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ trayPlayer }) => {
-	//---------------Styles------------------- //
-	const leftColumn = {
-		display: "flex",
-		alignItems: "flex-start",
-		justifyContent: "flex-start",
-		pl: "2em",
-		pt: "2em",
-	};
+  //---------------Styles------------------- //
+  const leftColumn = {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    pl: "2em",
+    pt: "2em",
+  };
 
-	const centerColumn = {
-		height: "100%",
-		display: "flex",
-		flexDirection: "column",
-		alignItems: "center",
-		justifyContent: "center",
-	};
+  const centerColumn = {
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  };
 
-	const rightColumn = {
-		display: "flex",
-		alignItems: "flex-start",
-		justifyContent: "flex-end",
-		pr: "2em",
-		pt: "2em",
-	};
+  const rightColumn = {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "flex-end",
+    pr: "2em",
+    pt: "2em",
+  };
 
-	const { gameState, connectedPlayer, getOpponent } = useGame();
+  const { gameState, connectedPlayer, getOpponent } = useGame();
 
-	return (
-		<Grid container sx={{ height: "15%" }}>
-			<Grid size={3} sx={leftColumn}>
-				<Resources
-					trayPlayer={trayPlayer}
-				/>
-			</Grid>
-			<Grid size={6} sx={centerColumn}>
-				<PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles["hand"] || []} />
-			</Grid>
-			<Grid size={3} sx={rightColumn}>
-				{/* <DeckDiscard deckSize={participant.deckSize} /> */}
-			</Grid>
-		</Grid>
-	);
+  return (
+    <Grid container sx={{ height: "15%" }}>
+      <Grid size={3} sx={leftColumn}>
+        <Resources trayPlayer={trayPlayer} />
+      </Grid>
+      <Grid size={6} sx={centerColumn}>
+        <PlayerHand
+          cards={
+            gameState?.players[getOpponent(connectedPlayer)].cardPiles[
+              "hand"
+            ] || []
+          }
+          isFaceUp={false}
+        />
+      </Grid>
+      <Grid size={3} sx={rightColumn}>
+        {/* <DeckDiscard deckSize={participant.deckSize} /> */}
+      </Grid>
+    </Grid>
+  );
 };
 
 export default OpponentCardTray;
