@@ -1,9 +1,14 @@
 import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
-// import GameCard from "../../../_sharedcomponents/Cards/GameCard/GameCard";
+import GameCard from "../../../_sharedcomponents/Cards/GameCard/GameCard";
 import { DeckDiscardProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { useGame } from "@/app/_contexts/Game.context";
 
-const DeckDiscard: React.FC<DeckDiscardProps> = () => {
+const DeckDiscard: React.FC<DeckDiscardProps> = (
+	trayPlayer
+) => {
+
+	const { gameState } = useGame();
 	//------------------------STYLES------------------------//
 	const containerStyle = {
 		display: "flex",
@@ -41,7 +46,11 @@ const DeckDiscard: React.FC<DeckDiscardProps> = () => {
 					<Typography sx={discardTextStyle}>Discard</Typography>
 				</CardContent>
 			</Card>
-			{/* <GameCard deckSize={deckSize} isFaceUp={false} /> */}
+			<Card sx={discardCardStyle}>
+				<CardContent sx={cardContentStyle}>
+					<Typography sx={discardTextStyle}>Deck</Typography>
+				</CardContent>
+			</Card>
 		</Box>
 	);
 };

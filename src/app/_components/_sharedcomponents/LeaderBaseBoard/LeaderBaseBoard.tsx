@@ -1,6 +1,7 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
 import LeaderBase from "./LeaderBase/LeaderBase";
+import CardActionTray from "@/app/_components/Gameboard/_subcomponents/PlayerTray/CardActionTray";
 import { useGame } from "@/app/_contexts/Game.context";
 import { LeaderBaseBoardProps } from "./LeaderBaseBoardTypes";
 
@@ -34,6 +35,7 @@ const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 					title={titleOpponent}
 				/>
 			</Grid>
+			{ isLobbyView ? null : <CardActionTray /> }
 			{/* Player's row */}
 			<Grid sx={rowStyle}>
 				<LeaderBase

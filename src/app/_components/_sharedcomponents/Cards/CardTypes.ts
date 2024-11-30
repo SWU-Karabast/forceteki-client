@@ -18,6 +18,7 @@ export interface CardData {
 
 export interface GameCardProps {
 	card: CardData;
+	size?: "standard" | "square";
 }
 
 export interface LeaderBaseCardProps {

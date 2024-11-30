@@ -16,10 +16,6 @@ const UnitsBoard: React.FC<UnitsBoardProps> = ({
 		width: sidebarOpen ? "32vw" : "36vw",
 		ml: ".3vw",
 		p: "1vh",
-		backgroundImage: "url(/ground-board.png)",
-		backgroundPositionX: "45%",
-		backgroundPositionY: sidebarOpen ? "80%" : "90%",
-		backgroundSize: "200%",
 	};
 
 	const containerStyle = {
@@ -29,7 +25,7 @@ const UnitsBoard: React.FC<UnitsBoardProps> = ({
 	const opponentGridStyle = {
 		flexGrow: 1,
 		display: "flex",
-		justifyContent: "flex-start",
+		justifyContent: arena == "groundArena" ? "flex-start": "flex-end",
 		alignItems: "flex-start",
 		gap: "0.5vw",
 		flexWrap: "nowrap",
@@ -39,7 +35,7 @@ const UnitsBoard: React.FC<UnitsBoardProps> = ({
 	const playerGridStyle = {
 		flexGrow: 1,
 		display: "flex",
-		justifyContent: "flex-start",
+		justifyContent: arena == "groundArena" ? "flex-start": "flex-end",
 		alignItems: "flex-end",
 		gap: "0.5vw",
 		flexWrap: "nowrap",
@@ -59,7 +55,7 @@ const UnitsBoard: React.FC<UnitsBoardProps> = ({
 				<Grid sx={opponentGridStyle}>
 					{opponentUnits.map((card: CardData) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
-							<GameCard card={card} />
+							<GameCard card={card} size="square" />
 						</Box>
 					))}
 				</Grid>
@@ -68,7 +64,7 @@ const UnitsBoard: React.FC<UnitsBoardProps> = ({
 				<Grid sx={playerGridStyle}>
 					{playerUnits.map((card: CardData) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
-							<GameCard card={card} />
+							<GameCard card={card} size="square" />
 						</Box>
 					))}
 				</Grid>

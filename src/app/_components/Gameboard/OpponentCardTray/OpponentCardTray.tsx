@@ -2,6 +2,7 @@ import React from "react";
 import Grid from "@mui/material/Grid2";
 import Resources from "../_subcomponents/PlayerTray/Resources";
 import PlayerHand from "../_subcomponents/PlayerTray/PlayerHand";
+import DeckDiscard from "../_subcomponents/PlayerTray/DeckDiscard";
 import { OpponentCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
 
@@ -44,7 +45,7 @@ const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ trayPlayer }) => {
 				<PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles["hand"] || []} />
 			</Grid>
 			<Grid size={3} sx={rightColumn}>
-				{/* <DeckDiscard deckSize={participant.deckSize} /> */}
+				<DeckDiscard trayPlayer={trayPlayer} />
 			</Grid>
 		</Grid>
 	);

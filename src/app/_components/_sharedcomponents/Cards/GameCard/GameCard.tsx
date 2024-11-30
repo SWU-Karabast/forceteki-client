@@ -9,86 +9,16 @@ import {
 import Image from "next/image";
 import { GameCardProps, CardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
+import { wrap } from "module";
+import { text } from "stream/consumers";
 
 const GameCard: React.FC<GameCardProps> = ({
-	card
+	card,
+	size = "standard",
 }) => {
 	// const isLobbyView = path === "/lobby";
 	const isLobbyView = false;
 	const isFaceUp = true
-
-	// Base styles shared between face-up and face-down cards
-	// const baseCardStyle = {
-	// 	backgroundColor: "#282828E6",
-	// 	display: "flex",
-	// 	borderRadius: "5px",
-	// 	justifyContent: "center",
-	// 	alignItems: "center",
-	// 	position: "relative",
-	// };
-
-	// Styles specific to face-up cards
-	// const faceCardStyle = {
-	// 	...baseCardStyle,
-	// 	width: isLobbyView ? "10vh" : "8vh",
-	// 	height: isLobbyView ? "10vh" : "8vh",
-	// 	// border: selected ? "2px solid blue" : "1px solid gray",
-	// 	// opacity: disabled ? 0.8 : 1,
-	// 	textAlign: "center",
-	// 	textWrap: "wrap",
-	// 	color: "white",
-	// 	// "&:hover": {
-	// 	// 	backgroundColor: disabled ? "#000000CC" : "#708090CC",
-	// 	// },
-	// 	// cursor: disabled ? "not-allowed" : "pointer",
-	// };
-
-	// Styles specific to face-down cards
-	// const backCardStyle = {
-	// 	...baseCardStyle,
-	// 	width: "9vh",
-	// 	height: "9vh",
-	// };
-
-	const cardContentStyle = {
-		width: "100%",
-		height: "100%",
-		display: "flex",
-		justifyContent: "center",
-		alignItems: "center",
-		textAlign: "center" as const,
-		position: "relative" as const,
-	};
-
-	const imageStyle = {
-		width: "11.29vh",
-		height: "auto",
-	};
-
-	// const circularBackgroundStyle = {
-	// 	width: "5.5vh",
-	// 	height: "5.5vh",
-	// 	backgroundColor: "#141414E6",
-	// 	borderRadius: "50%",
-	// 	position: "absolute" as const,
-	// 	display: "flex",
-	// 	justifyContent: "center",
-	// 	alignItems: "center",
-	// };
-
-	// const deckSizeTextStyle = {
-	// 	fontFamily: "var(--font-barlow), sans-serif",
-	// 	fontWeight: "800",
-	// 	fontSize: "2em",
-	// 	color: "white",
-	// 	position: "absolute" as const,
-	// };
-
-	const typographyStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "400",
-		fontSize: isLobbyView ? "2em" : "1.6em",
-	};
 
 	const { sendGameMessage } = useGame();
 
@@ -97,6 +27,31 @@ const GameCard: React.FC<GameCardProps> = ({
 		if (card.selectable) return "green";
 		if (card.exhausted) return "gray";
 		return "";
+	}
+
+	const styles = {
+		cardWrapper: {
+			height: size === "standard" ? "9.36rem" : "8rem",
+			width: size === "standard" ? "6rem" : "8rem",
+		},
+		cardContentStyle: {
+			width: "100%",
+			height: "100%",
+			position: "relative",
+			padding: ".5em",
+			textAlign: "center",
+			whiteSpace: "normal",
+		},
+		imageStyle: {
+			width: "2.5rem",
+			height: "auto",
+		},
+		typographyStyle: {
+			color: "black",
+			fontWeight: "400",
+			fontSize: "1.3em",
+			margin: 0,
+		},
 	}
 
 	return (
@@ -108,25 +63,25 @@ const GameCard: React.FC<GameCardProps> = ({
 			}}
 		>
 			{isFaceUp ? (
-				<CardActionArea>
-					<CardContent>
-						<Box sx={{ display: 'flex', flexDirection: 'column'}}>
-							<Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
-								<Typography variant="body1" sx={{...typographyStyle, color: 'goldenrod'}}>
+				<CardActionArea sx={styles.cardWrapper}>
+					<CardContent sx={styles.cardContentStyle}>
+						<Box sx={{ display: 'flex', flexDirection: 'column', height: "100%"}}>
+							<Box sx={{ display: 'flex', justifyContent: 'space-between', flex: 1}}>
+								<Typography variant="body1" component="span" sx={{...styles.typographyStyle, color: 'goldenrod'}}>
 									{card.cost}
 								</Typography>
-								<Typography variant="body1" sx={{...typographyStyle, color: 'hotpink'}}>
+								<Typography variant="body1" component="span" sx={{...styles.typographyStyle, color: 'hotpink'}}>
 									{card.damage}
 								</Typography>
 							</Box>
-							<Typography variant="body1" sx={typographyStyle}>
+							<Typography variant="body1" component="span" sx={styles.typographyStyle}>
 								{card.name}
 							</Typography>
-							<Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
-								<Typography variant="body1" sx={{...typographyStyle, color: 'red'}}>
+							<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: "flex-end", flex: 1}}>
+								<Typography variant="body1" component="span" sx={{...styles.typographyStyle, color: 'red'}}>
 									{card.power}
 								</Typography>
-								<Typography variant="body1" sx={{...typographyStyle, color: 'blue'}}>
+								<Typography variant="body1" component="span" sx={{...styles.typographyStyle, color: 'blue'}}>
 									{card.hp}
 								</Typography>
 							</Box>
@@ -134,14 +89,14 @@ const GameCard: React.FC<GameCardProps> = ({
 					</CardContent>
 				</CardActionArea>
 			) : (
-				<CardContent sx={cardContentStyle}>
+				<CardContent sx={styles.cardContentStyle}>
 					<Image
 						src="/card-back.png"
 						alt="Deck Image"
 						width={28}
 						height={38}
 						placeholder="empty"
-						style={imageStyle}
+						style={styles.imageStyle}
 					/>
 					{/* {deckSize && deckSize > 0 && (
 						<>

@@ -213,7 +213,6 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 								onChange={(e: ChangeEvent<HTMLInputElement>) =>
 									setDeckLink(e.target.value)
 								}
-								required
 							/>
 						</FormControl>
 
