@@ -8,7 +8,7 @@ import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
 import { useGame } from "@/app/_contexts/Game.context";
 import { SetUpProps } from "../LobbyTypes";
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 const SetUp: React.FC<SetUpProps> = ({
 	chatHistory,
@@ -19,11 +19,18 @@ const SetUp: React.FC<SetUpProps> = ({
 
 	const { sendMessage } = useGame();
 	const router = useRouter();
+	const searchParams = useSearchParams();
 
+	// Extract the player from the URL query params
+	const player = searchParams.get("player");
 
 	const handleStartGame = () => {
 		sendMessage("startGame");
-		router.push("/GameBoard");
+		if (player){
+			router.push("/GameBoard?player=" + player);
+		}else {
+			router.push("/GameBoard");
+		}
 	}
 
 	//------------------------STYLES------------------------//
