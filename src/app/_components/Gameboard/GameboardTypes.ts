@@ -36,9 +36,8 @@ export interface BoardProps {
 	sidebarOpen: boolean;
 }
 
-export type DeckSize = number;
 export interface DeckDiscardProps {
-	deckSize: DeckSize;
+	trayPlayer: string;
 }
 
 export interface ResourcesProps {

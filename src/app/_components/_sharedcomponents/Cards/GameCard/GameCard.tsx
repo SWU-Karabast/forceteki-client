@@ -85,7 +85,7 @@ const GameCard: React.FC<GameCardProps> = ({
 	// };
 
 	const typographyStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
+		color: "black",
 		fontWeight: "400",
 		fontSize: isLobbyView ? "2em" : "1.6em",
 	};

@@ -97,8 +97,6 @@ export const theme: Theme = createTheme({
 			styleOverrides: {
 				root: {
 					borderRadius: ".8rem",
-					padding: "1.5rem",
-					backdropFilter: "blur(20px)",
 					width: "100%",
 					overflow: "auto",
 				},
@@ -108,12 +106,16 @@ export const theme: Theme = createTheme({
 					props: { variant: "blue" },
 					style: {
 						backgroundColor: "#18325199",
+						padding: "1.5rem",
+						backdropFilter: "blur(20px)",
 					},
 				},
 				{
 					props: { variant: "black" },
 					style: {
 						backgroundColor: "rgb(0, 0, 0, 0.60)",
+						padding: "1.5rem",
+						backdropFilter: "blur(20px)",
 					},
 				},
 			]

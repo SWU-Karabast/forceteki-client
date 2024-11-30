@@ -16,10 +16,6 @@ const UnitsBoard: React.FC<UnitsBoardProps> = ({
 		width: sidebarOpen ? "32vw" : "36vw",
 		ml: ".3vw",
 		p: "1vh",
-		backgroundImage: "url(/ground-board.png)",
-		backgroundPositionX: "45%",
-		backgroundPositionY: sidebarOpen ? "80%" : "90%",
-		backgroundSize: "200%",
 	};
 
 	const containerStyle = {

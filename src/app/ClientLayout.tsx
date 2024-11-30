@@ -22,7 +22,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       {isPageWithWebsocket ? (
         <ClientProviders>
           <GameProvider>
-            <Navbar />
             {children}
           </GameProvider>
         </ClientProviders> 

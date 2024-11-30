@@ -2,6 +2,7 @@
 "use client";
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { Box, Grid2 as Grid } from "@mui/material";
+import { s3ImageURL } from "../_utils/s3Assets";
 import ChatDrawer from "../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer";
 import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/OpponentCardTray";
 import Board from "../_components/Gameboard/Board/Board";
@@ -54,6 +55,9 @@ const GameBoard = () => {
 		mr: sidebarOpen ? `${drawerWidth}px` : "0",
 		height: "100vh",
 		position: "relative",
+		backgroundImage: `url(${s3ImageURL("game/board-background-1.png")})`,
+		backgroundSize: "cover",
+		backgroundPosition: "center",
 	};
 
 	if (!gameState || !connectedPlayer) {
