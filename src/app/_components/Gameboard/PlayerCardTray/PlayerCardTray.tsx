@@ -49,7 +49,7 @@ const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
 			</Grid>
 			<Grid size={6} sx={centerColumnStyle}>
 				<PlayerHand cards={gameState?.players[connectedPlayer].cardPiles["hand"] || []} />
-				<CardActionTray />
+				{/* <CardActionTray /> */}
 			</Grid>
 			<Grid size={3} sx={rightColumnStyle}>
 				<DeckDiscard trayPlayer={trayPlayer} />
