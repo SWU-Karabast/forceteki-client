@@ -1,3 +1,8 @@
+interface CardSetId {
+	set: string;
+	number: number;
+}
+
 export interface CardData {
 	uuid: string;
 	id?: number;
@@ -14,6 +19,8 @@ export interface CardData {
 	cost?: number;
 	exhausted?: boolean;
 	damage?: number;
+	setId: CardSetId;
+	type: string;
 }
 
 export interface GameCardProps {
