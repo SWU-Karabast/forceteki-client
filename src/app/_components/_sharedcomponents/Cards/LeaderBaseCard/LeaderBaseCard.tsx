@@ -18,7 +18,6 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 	title,
 	card
 }) => {
-	console.log("LeaderBaseCard.tsx: card: ", card);
 	const cardBorderColor = (card: CardData) => {
 		if (!card) return "";
 		if (card.selected) return "yellow";
