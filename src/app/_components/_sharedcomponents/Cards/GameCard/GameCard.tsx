@@ -9,8 +9,7 @@ import {
 import Image from "next/image";
 import { GameCardProps, CardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
-import { wrap } from "module";
-import { text } from "stream/consumers";
+import { s3CardImageURL } from "@/app/_utils/s3Assets";
 
 const GameCard: React.FC<GameCardProps> = ({
 	card,
@@ -24,15 +23,16 @@ const GameCard: React.FC<GameCardProps> = ({
 
 	const cardBorderColor = (card: CardData) => {
 		if (card.selected) return "yellow";
-		if (card.selectable) return "green";
+		if (card.selectable) return "limegreen";
 		if (card.exhausted) return "gray";
 		return "";
 	}
 
 	const styles = {
-		cardWrapper: {
-			height: size === "standard" ? "9.36rem" : "8rem",
-			width: size === "standard" ? "6rem" : "8rem",
+		cardStyles: {
+			borderRadius: ".38em",
+			height: size === "standard" ? "10rem" : "8rem",
+			width: size === "standard" ? "7.18rem" : "8rem",
 		},
 		cardContentStyle: {
 			width: "100%",
@@ -41,6 +41,12 @@ const GameCard: React.FC<GameCardProps> = ({
 			padding: ".5em",
 			textAlign: "center",
 			whiteSpace: "normal",
+			backgroundColor: "black",
+			backgroundImage: `url(${s3CardImageURL(card)})`,
+			backgroundSize: size === "standard" ? "contain" : "cover",
+			backgroundPosition: size === "standard" ? "center" : "top",
+			backgroundRepeat: "no-repeat",
+			border: `2px solid ${cardBorderColor(card)}`,
 		},
 		imageStyle: {
 			width: "2.5rem",
@@ -55,7 +61,7 @@ const GameCard: React.FC<GameCardProps> = ({
 	}
 
 	return (
-		<MuiCard sx={{ backgroundColor: cardBorderColor(card) }}
+		<MuiCard sx={styles.cardStyles}
 			onClick={() => {
 				if (card.selectable) {
 					sendGameMessage(["cardClicked", card.uuid]);
@@ -63,31 +69,11 @@ const GameCard: React.FC<GameCardProps> = ({
 			}}
 		>
 			{isFaceUp ? (
-				<CardActionArea sx={styles.cardWrapper}>
-					<CardContent sx={styles.cardContentStyle}>
-						<Box sx={{ display: 'flex', flexDirection: 'column', height: "100%"}}>
-							<Box sx={{ display: 'flex', justifyContent: 'space-between', flex: 1}}>
-								<Typography variant="body1" component="span" sx={{...styles.typographyStyle, color: 'goldenrod'}}>
-									{card.cost}
-								</Typography>
-								<Typography variant="body1" component="span" sx={{...styles.typographyStyle, color: 'hotpink'}}>
-									{card.damage}
-								</Typography>
-							</Box>
-							<Typography variant="body1" component="span" sx={styles.typographyStyle}>
-								{card.name}
-							</Typography>
-							<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: "flex-end", flex: 1}}>
-								<Typography variant="body1" component="span" sx={{...styles.typographyStyle, color: 'red'}}>
-									{card.power}
-								</Typography>
-								<Typography variant="body1" component="span" sx={{...styles.typographyStyle, color: 'blue'}}>
-									{card.hp}
-								</Typography>
-							</Box>
-						</Box>
-					</CardContent>
-				</CardActionArea>
+				<CardContent sx={styles.cardContentStyle}>
+					<Box sx={{ display: 'flex', flexDirection: 'column', height: "100%"}}>
+						
+					</Box>
+				</CardContent>
 			) : (
 				<CardContent sx={styles.cardContentStyle}>
 					<Image

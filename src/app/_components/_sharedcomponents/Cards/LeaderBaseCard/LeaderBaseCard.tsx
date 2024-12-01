@@ -9,6 +9,7 @@ import {
 import { LeaderBaseCardProps } from "../CardTypes";
 import { CardData } from "../CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
+import { s3CardImageURL } from "@/app/_utils/s3Assets";
 
 
 const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
@@ -20,25 +21,25 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 	const cardBorderColor = (card: CardData) => {
 		if (!card) return "";
 		if (card.selected) return "yellow";
-		if (card.selectable) return "green";
+		if (card.selectable) return "limegreen";
 		if (card.exhausted) return "gray";
 		return "black";
 	};
 
 	const cardStyle = {
-		backgroundColor: cardBorderColor(card),
-		width: isLobbyView ? "18vw" : "12vw",
-		height: isLobbyView ? "18vh" : "11vh",
+		backgroundColor: "black",
+		backgroundImage: `url(${s3CardImageURL(card)})`,
+		backgroundSize: "contain",
+		backgroundPosition: "center",
+		width: "10rem",
+		height: "7.18rem",
 		textAlign: "center",
 		color: "white",
 		display: "flex",
-		backdropFilter: "blur(20px)",
-		"&:hover": {
-			backgroundColor: "#708090E6",
-		},
 		cursor: "pointer",
 		m: "0em",
 		position: "relative", // Needed for positioning the red box
+		border: `2px solid ${cardBorderColor(card)}`,
 	};
 
 	const typographyStyle = {
@@ -102,16 +103,11 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 						}
 					}}
 				>
-					<CardActionArea>
-						<CardContent>
-							<Box sx={{ display: "flex", justifyContent: "end" }}>
-								<Typography variant="body1" sx={damageStyle}>{card.damage}</Typography>
-							</Box>
-							<Typography variant="body1" sx={typographyStyle}>
-								{card.name}
-							</Typography>
-						</CardContent>
-					</CardActionArea>
+					<CardContent>
+						<Box sx={{ display: "flex", justifyContent: "end" }}>
+							<Typography variant="body1" sx={damageStyle}>{card.damage}</Typography>
+						</Box>
+					</CardContent>
 
 					{/* Show title inside a red box at the bottom if not in lobby view and variant is leader */}
 					{variant === "leader" && !isLobbyView && title && (
