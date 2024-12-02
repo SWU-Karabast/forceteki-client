@@ -14,7 +14,7 @@ const JoinableGame: React.FC = () => {
 		// Fetch unfilled lobbies from the server
 		const fetchLobbies = async () => {
 			try {
-				const response = await fetch('http://localhost:9500/api/unfilled-lobbies');
+				const response = await fetch('http://localhost:9500/api/available-lobbies');
 				if (!response.ok) {
 					throw new Error(`Error fetching lobbies: ${response.statusText}`);
 				}
