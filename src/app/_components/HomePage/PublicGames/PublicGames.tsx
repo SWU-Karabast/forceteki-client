@@ -30,13 +30,10 @@ const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
 				<Typography variant="h3">{format}</Typography>
 				<Divider sx={styles.divider} />
 				<JoinableGame />
-				<JoinableGame />
-				<JoinableGame />
 				<Typography variant="h3">
 					Request-Undo {format}
 				</Typography>
 				<Divider sx={styles.divider} />
-				<JoinableGame />
 				<GamesInProgress />
 			</CardContent>
 		</Card>
