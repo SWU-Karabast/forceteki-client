@@ -24,10 +24,12 @@ const Deck: React.FC = () => {
 		width: "100%",
 		display: "flex",
 		flexDirection: "column",
-		mt: "2.6em",
 		backgroundColor: "#000000E6",
 		backdropFilter: "blur(20px)",
 		overflow: "hidden",
+		'@media (max-height: 759px)': {
+			height: '84vh',
+		},
 	};
 
 	const headerBoxStyle = {
@@ -54,7 +56,15 @@ const Deck: React.FC = () => {
 		color: "white",
 		mr: ".6em",
 	};
-
+	const exitText = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "600",
+		color: "#fff",
+		mr: ".5vw",
+		textAlign: "end",
+		mb: "22px",
+		cursor: "pointer",
+	};
 	const scrollableBoxStyle = {
 		flexGrow: 1,
 		overflowY: "auto",
@@ -73,26 +83,31 @@ const Deck: React.FC = () => {
 	};
 
 	return (
-		<Card sx={cardStyle}>
-			<Box sx={headerBoxStyle}>
-				<Typography sx={titleTextStyle}>Your Deck</Typography>
-				<Typography sx={deckSizeTextStyle}>
-					0/0
-				</Typography>
-			</Box>
-			<Box
-				ref={containerRef}
-				onMouseDown={handleMouseDown}
-				onMouseMove={handleMouseMove}
-				onMouseUp={handleMouseUp}
-				onTouchStart={handleTouchStart}
-				onTouchMove={handleTouchMove}
-				onTouchEnd={handleTouchEnd}
-				sx={scrollableBoxStyle}
-			>
-				<CardArea cards={[]} />
-			</Box>
-		</Card>
+		<Box sx={{width:'100%'}}>
+			<Typography variant="h5" sx={exitText}>
+				{'>'} Exit
+			</Typography>
+			<Card sx={cardStyle}>
+				<Box sx={headerBoxStyle}>
+					<Typography sx={titleTextStyle}>Your Deck</Typography>
+					<Typography sx={deckSizeTextStyle}>
+						0/0
+					</Typography>
+				</Box>
+				<Box
+					ref={containerRef}
+					onMouseDown={handleMouseDown}
+					onMouseMove={handleMouseMove}
+					onMouseUp={handleMouseUp}
+					onTouchStart={handleTouchStart}
+					onTouchMove={handleTouchMove}
+					onTouchEnd={handleTouchEnd}
+					sx={scrollableBoxStyle}
+				>
+					<CardArea cards={[]} />
+				</Box>
+			</Card>
+		</Box>
 	);
 };
 

@@ -2,13 +2,15 @@ import {
 	Card,
 	Typography,
 	CardActions,
-	Button
+	Button,
+	Box,
 } from "@mui/material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
 import { useGame } from "@/app/_contexts/Game.context";
 import { SetUpProps } from "../LobbyTypes";
 import { useRouter, useSearchParams } from "next/navigation"
+
 
 const SetUp: React.FC<SetUpProps> = ({
 	chatHistory,
@@ -38,10 +40,11 @@ const SetUp: React.FC<SetUpProps> = ({
 	const mainCardStyle = {
 		borderRadius: "1.1em",
 		height: "auto",
+		maxHeight: "100%",
 		width: "100%",
 		display: "flex",
 		flexDirection: "column",
-		mt: "2.6em",
+		mt: "2.0em",
 		p: "1.8em",
 		backgroundColor: "#000000E6",
 		backdropFilter: "blur(20px)",
@@ -67,26 +70,36 @@ const SetUp: React.FC<SetUpProps> = ({
 		fontWeight: "800",
 		color: "white",
 		alignSelf: "flex-start",
-		mt: "1.3em",
 	};
-
+	const lobbyTextStyle ={
+		fontSize: "1.85em",
+		fontWeight: "800",
+		color: "white",
+		alignSelf: "flex-start",
+		mb: "20px",
+	};
+	const boxContainer = {
+		width: "100%",
+	};
 	return (
-		<Card sx={mainCardStyle}>
+		<Box sx={boxContainer}>
+			<Typography sx={lobbyTextStyle}>GAME LOBBY</Typography>
 			<Card sx={initiativeCardStyle}>
 				<CardActions sx={buttonsContainerStyle}>
 					<Button variant="contained" onClick={()=>handleStartGame()}>Start Game</Button>
 				</CardActions>
 			</Card>
-			<Typography sx={setUpTextStyle}>Set Up</Typography>
-			<GameLinkCard />
-
-			<Chat
-				chatHistory={chatHistory}
-				chatMessage={chatMessage}
-				setChatMessage={setChatMessage}
-				handleChatSubmit={handleChatSubmit}
-			/>
-		</Card>
+			<Card sx={mainCardStyle}>
+				<Typography sx={setUpTextStyle}>Set Up</Typography>
+				<GameLinkCard />
+				<Chat
+					chatHistory={chatHistory}
+					chatMessage={chatMessage}
+					setChatMessage={setChatMessage}
+					handleChatSubmit={handleChatSubmit}
+				/>
+			</Card>
+		</Box>
 	);
 };
 

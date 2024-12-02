@@ -13,28 +13,13 @@ import { ChatProps } from "./ChatTypes";
 const Chat: React.FC<ChatProps> = ({
 	chatHistory,
 	chatMessage,
-	playerRoll = null,
-	opponentRoll = null,
 	setChatMessage,
 	handleChatSubmit,
 }) => {
-	const determineFirstPlayer = () => {
-		if (playerRoll !== null && opponentRoll !== null) {
-			if (playerRoll > opponentRoll) {
-				return "Player";
-			} else if (opponentRoll > playerRoll) {
-				return "Opponent";
-			} else {
-				return "It's a tie. Roll again.";
-			}
-		}
-		return null;
-	};
 
 	//------------------------STYLES------------------------//
 
 	const chatContainerStyle = {
-		mt: 2,
 		backgroundColor: "#28282800",
 	};
 
@@ -103,28 +88,14 @@ const Chat: React.FC<ChatProps> = ({
 						))
 					) : (
 						<Box>
-							{playerRoll !== null && opponentRoll !== null ? (
-								<>
-									<Typography sx={messageTextStyle}>
-										Player rolled {playerRoll} and Opponent rolled{" "}
-										{opponentRoll}.
-									</Typography>
-									<Typography sx={messageTextStyle}>
-										{determineFirstPlayer() === "It's a tie. Roll again."
-											? "It's a tie. Roll again."
-											: `${determineFirstPlayer()} chooses who goes first.`}
-									</Typography>
-								</>
-							) : (
-								<>
-									<Typography sx={messageTextStyle}>
-										Player 1 has connected.
-									</Typography>
-									<Typography sx={messageTextStyle}>
-										Player 2 has connected.
-									</Typography>
-								</>
-							)}
+							<>
+								<Typography sx={messageTextStyle}>
+									Player 1 has connected.
+								</Typography>
+								<Typography sx={messageTextStyle}>
+									Player 2 has connected.
+								</Typography>
+							</>
 						</Box>
 					)}
 				</Box>
