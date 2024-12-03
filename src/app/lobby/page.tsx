@@ -64,10 +64,10 @@ const Lobby = () => {
 					setChatMessage={setChatMessage}
 				/>
 			</Grid>
-			<Grid container size={3} sx={playersGridStyle}>
+			<Grid container size={2} sx={playersGridStyle}>
 				<Players isLobbyView={isLobbyView} />
 			</Grid>
-			<Grid container size={6} sx={deckGridStyle}>
+			<Grid container size={7} sx={deckGridStyle}>
 				<Deck />
 			</Grid>
 			<Grid size={12}>

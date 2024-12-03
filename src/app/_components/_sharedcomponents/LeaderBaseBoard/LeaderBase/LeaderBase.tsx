@@ -13,11 +13,9 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 	const { gameState, connectedPlayer, connectedDeck } = useGame();
 	let playerLeader = null
 	let playerBase = null
-	console.log("HEREIAM");
-	console.log(connectedDeck);
 	if(isLobbyView && connectedDeck){
-		playerLeader = connectedDeck.data.leader[0]
-		playerBase = connectedDeck.data.base[0]
+		playerLeader = connectedDeck.leader
+		playerBase = connectedDeck.base
 	}else {
 		playerLeader = gameState?.players[player].leader;
 		playerBase = gameState?.players[player].base;
@@ -27,9 +25,8 @@ const LeaderBase: React.FC<LeaderBaseProps> = ({
 		width: "100%",
 		justifyContent: "center",
 	};
-
 	return (
-		<Grid container direction="row" sx={containerStyle}>
+		<Grid container direction="column" sx={containerStyle}>
 			{isLobbyView ? (
 				<>
 					<LeaderBaseCard

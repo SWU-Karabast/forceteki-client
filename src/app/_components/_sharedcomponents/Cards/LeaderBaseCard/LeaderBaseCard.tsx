@@ -93,7 +93,9 @@ const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
 			)}
 
 			{isLobbyView ? (
-				<Card></Card>
+				<Card
+					sx={cardStyle}
+				></Card>
 			) : (
 				<Card
 					sx={cardStyle}

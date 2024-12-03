@@ -91,7 +91,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
 export const useGame = () => {
 	const context = useContext(GameContext);
-	console.log(context);
 	if (!context) {
 		throw new Error("useGame must be used within a GameProvider");
 	}
