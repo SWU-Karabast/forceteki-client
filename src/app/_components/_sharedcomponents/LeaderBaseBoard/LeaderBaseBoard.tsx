@@ -13,7 +13,6 @@ const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
 	const titleOpponent =
 		connectedPlayer === "ThisIsTheWay" ? "Order66" : "ThisIsTheWay";
 	//------------------------STYLES------------------------//
-
 	const containerStyle = {
 		height: "100%",
 		width: "100%",

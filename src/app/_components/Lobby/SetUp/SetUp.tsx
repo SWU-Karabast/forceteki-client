@@ -80,6 +80,7 @@ const SetUp: React.FC<SetUpProps> = ({
 	};
 	const boxContainer = {
 		width: "100%",
+		maxHeight: "64vh",
 	};
 	return (
 		<Box sx={boxContainer}>

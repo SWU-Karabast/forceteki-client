@@ -13,7 +13,6 @@ const CardArea: React.FC<CardAreaProps> = ({ cards }) => {
 		justifyContent: "center",
 		textWrap: "wrap",
 	};
-
 	return (
 		<Box sx={mainContainerStyle}>
 			{cards.map((card) => (

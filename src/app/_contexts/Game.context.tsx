@@ -16,6 +16,7 @@ interface GameContextType {
 	sendGameMessage: (args: any[]) => void;
 	getOpponent: (player: string) => string;
 	connectedPlayer: string;
+	connectedDeck: any,
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -24,7 +25,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 	const [gameState, setGameState] = useState<any>(null);
 	const [socket, setSocket] = useState<Socket | undefined>(undefined);
 	const [connectedPlayer, setConnectedPlayer] = useState<string>("");
-
+	const [connectedDeck, setDeck] = useState<any>(null);
 
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -44,6 +45,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		newSocket.on("gamestate", (gameState: any) => {
 			setGameState(gameState);
 			console.log("Game state received:", gameState);
+		});
+		newSocket.on("deckData", (deck:any) =>{
+			setDeck(deck);
 		});
 
 		setSocket(newSocket);
@@ -76,6 +80,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 				sendGameMessage,
 				sendMessage,
 				connectedPlayer,
+				connectedDeck,
 				getOpponent
 			}}
 		>
@@ -86,6 +91,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
 export const useGame = () => {
 	const context = useContext(GameContext);
+	console.log(context);
 	if (!context) {
 		throw new Error("useGame must be used within a GameProvider");
 	}

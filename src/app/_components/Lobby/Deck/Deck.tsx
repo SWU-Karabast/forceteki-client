@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Box, Typography } from "@mui/material";
 import CardArea from "../../_sharedcomponents/CardArea/CardArea";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
+import {useGame} from "@/app/_contexts/Game.context";
 
 
 const Deck: React.FC = () => {
@@ -81,7 +82,8 @@ const Deck: React.FC = () => {
 		},
 		transition: "scrollbar-color 0.3s ease-in-out",
 	};
-
+	const { connectedDeck } = useGame();
+	const newDeck = connectedDeck?.data.deckCards ?? [];
 	return (
 		<Box sx={{width:'100%'}}>
 			<Typography variant="h5" sx={exitText}>
@@ -91,7 +93,7 @@ const Deck: React.FC = () => {
 				<Box sx={headerBoxStyle}>
 					<Typography sx={titleTextStyle}>Your Deck</Typography>
 					<Typography sx={deckSizeTextStyle}>
-						0/0
+						0/{connectedDeck?.data.deckCards.length}
 					</Typography>
 				</Box>
 				<Box
@@ -104,7 +106,7 @@ const Deck: React.FC = () => {
 					onTouchEnd={handleTouchEnd}
 					sx={scrollableBoxStyle}
 				>
-					<CardArea cards={[]} />
+					<CardArea cards={newDeck} />
 				</Box>
 			</Card>
 		</Box>
