@@ -60,7 +60,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		useState<string>("Vader Green Ramp");
 	const [deckLink, setDeckLink] = useState<string>("");
 	const [saveDeck, setSaveDeck] = useState<boolean>(false);
-	const [deckData, setDeckData] = useState<DeckData | null>(null);
+	//let [deckData, setDeckData] = useState<DeckData | null>(null);
 
 	// Additional State for Non-Creategame Path
 	const [gameName, setGameName] = useState<string>("");
@@ -71,13 +71,14 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 			const response = await fetch(
 				`/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
 			);
-
 			if (!response.ok) {
 				throw new Error(`Failed to fetch deck: ${response.statusText}`);
 			}
 
 			const data: DeckData = await response.json();
-			setDeckData(data);
+			console.log(data);
+			//setDeckData(data);
+			return data;
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error("Error fetching deck:", error.message);
@@ -93,13 +94,14 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		console.log("Favourite Deck:", favouriteDeck);
 		console.log("SWUDB Deck Link:", deckLink);
 		console.log("beginning fetch for deck link");
-		fetchDeckData(deckLink);
+		const deckData = await fetchDeckData(deckLink);
 		console.log("fetch complete, deck data:", deckData);
 		console.log("Save Deck To Favourites:", saveDeck);
-
+		console.log(deckData);
 		try {
 			const payload = {
-				user: favouriteDeck
+				user: favouriteDeck,
+				deck: deckData
 			};
 			const response = await fetch("http://localhost:9500/api/create-lobby",
 				{
