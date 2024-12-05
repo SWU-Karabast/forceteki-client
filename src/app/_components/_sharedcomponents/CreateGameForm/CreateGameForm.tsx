@@ -58,7 +58,6 @@ const updateIdsWithMapping = (data: DeckData, mapping: Mapping) => {
 	};
 
 	return {
-		...data,
 		leader: updateCard(data.leader),
 		secondleader: data.secondleader,
 		base: updateCard(data.base),
