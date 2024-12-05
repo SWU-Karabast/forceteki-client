@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
 import { usePathname, useRouter } from "next/navigation";
+import {getCardMapping} from "@/app/_utils/s3Assets";
 
 interface CreateGameFormProps {
 	format?: string | null;
@@ -44,6 +45,27 @@ const deckOptions: string[] = [
 	"Order66",
 	"ThisIsTheWay",
 ];
+type Mapping = {
+	[id:string]: string;
+}
+
+// Helper function to update a card's id
+const updateIdsWithMapping = (data: DeckData, mapping: Mapping) => {
+
+	const updateCard = (card: DeckCard): DeckCard => {
+		const updatedId = mapping[card.id] || card.id; // Use mapping if available, else keep the original id
+		return { ...card, id: updatedId };
+	};
+
+	return {
+		...data,
+		leader: updateCard(data.leader),
+		secondleader: data.secondleader,
+		base: updateCard(data.base),
+		deckCards: data.deck.map(updateCard), // Update all cards in the deck
+		sideboard: data.sideboard.map(updateCard) // Update all cards in the sideboard
+	};
+};
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
 
@@ -60,7 +82,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		useState<string>("Vader Green Ramp");
 	const [deckLink, setDeckLink] = useState<string>("");
 	const [saveDeck, setSaveDeck] = useState<boolean>(false);
-	//let [deckData, setDeckData] = useState<DeckData | null>(null);
+	//let [deckData, setDeckData] = useState<DeckData | null>(null); Because of Async this won't set in the correct timeframe
 
 	// Additional State for Non-Creategame Path
 	const [gameName, setGameName] = useState<string>("");
@@ -77,8 +99,11 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 			const data: DeckData = await response.json();
 			console.log(data);
-			//setDeckData(data);
-			return data;
+			const jsonData = await getCardMapping();
+			console.log(jsonData);
+			// we want to transform the data here.
+			//setDeckData(data); using setDeckData isn't fast enough
+			return updateIdsWithMapping(data, jsonData);
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error("Error fetching deck:", error.message);
