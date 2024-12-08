@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
 import { usePathname, useRouter } from "next/navigation";
-import {getCardMapping} from "@/app/_utils/s3Assets";
 
 interface CreateGameFormProps {
 	format?: string | null;
@@ -66,6 +65,10 @@ const updateIdsWithMapping = (data: DeckData, mapping: Mapping) => {
 	};
 };
 
+// Helper function to update a cards data correctly
+
+
+
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
 
 const CreateGameForm: React.FC<CreateGameFormProps> = ({
@@ -98,10 +101,17 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 
 			const data: DeckData = await response.json();
 			console.log(data);
-			const jsonData = await getCardMapping();
+			// Fetch card mapping from the s3bucket endpoint
+			const mappingResponse = await fetch("/api/s3bucket"); // Adjust to your actual endpoint if different
+			if (!mappingResponse.ok) {
+				throw new Error("Failed to fetch card mapping");
+			}
+
+			const jsonData = await mappingResponse.json();
+			console.log("jsonData");
 			console.log(jsonData);
-			// we want to transform the data here.
-			//setDeckData(data); using setDeckData isn't fast enough
+
+			// Now update the deck data with the mapping
 			return updateIdsWithMapping(data, jsonData);
 		} catch (error) {
 			if (error instanceof Error) {
