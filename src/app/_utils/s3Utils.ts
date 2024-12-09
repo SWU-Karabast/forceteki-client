@@ -145,7 +145,7 @@ const fetchCardData = async (internalName: string): Promise<CardDetails | null> 
     try {
         const response = await fetch(`/api/s3bucket?jsonFile=cards/${encodeURIComponent(internalName)}.json`);
         const cardDetails = await response.json();
-        return cardDetails
+        return cardDetails[0];
     } catch {
         console.error(`Failed to fetch card data for ${internalName}:`);
         return null;
@@ -158,7 +158,6 @@ export const transformDeckWithCardData = async (deckData: ServerDeckData): Promi
         const transformCard = async (deckCard: DeckCard): Promise<ServerDeckCard | null> => {
             const cardData = await fetchCardData(deckCard.id);
             if (!cardData) return null;
-
             return {
                 count: deckCard.count,
                 card: cardData, // Add full card details under "card"
@@ -177,11 +176,10 @@ export const transformDeckWithCardData = async (deckData: ServerDeckData): Promi
             await Promise.all(deckData.sideboard.map((card) => transformCard(card)))
         ).filter((card) => card !== null);
         return {
-            leader,
-            secondleader,
-            base,
+            leader: leader ? [leader] : [],
+            base: base ? [base] : [],
             deckCards,
-            sideboard,
+            selected:true,
         };
     } catch {
         console.error('Error transforming deck with card data');
