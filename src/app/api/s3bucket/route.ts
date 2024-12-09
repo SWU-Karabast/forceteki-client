@@ -2,7 +2,13 @@ import {NextResponse} from "next/server";
 
 export async function GET(req: Request) {
     try {
-        const response = await fetch("https://karabast-assets.s3.amazonaws.com/data/_setCodeMap.json");
+        const { searchParams } = new URL(req.url);
+        const jsonFile = searchParams.get("jsonFile");
+        if(!jsonFile) {
+            console.error("Error: Missing parameter jsonFile");
+            return NextResponse.json({ error: "Missing parameter jsonFile" }, { status: 400 });
+        }
+        const response = await fetch("https://karabast-assets.s3.amazonaws.com/data/"+encodeURIComponent(jsonFile));
 
         if (!response.ok) {
             console.error("Failed to fetch card mapping:", response.statusText);
@@ -17,7 +23,6 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        console.error("Unexpected error:", error);
         return NextResponse.json(
             { error: "An unexpected error occurred" },
             { status: 500 }

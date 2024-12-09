@@ -9,7 +9,7 @@ import {
 import Image from "next/image";
 import { GameCardProps, CardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
-import { s3CardImageURL } from "@/app/_utils/s3Assets";
+import { s3CardImageURL } from "@/app/_utils/s3Utils";
 
 const GameCard: React.FC<GameCardProps> = ({
 	card,

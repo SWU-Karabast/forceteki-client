@@ -9,7 +9,7 @@ import {
 import { LeaderBaseCardProps } from "../CardTypes";
 import { CardData } from "../CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
-import { s3CardImageURL } from "@/app/_utils/s3Assets";
+import { s3CardImageURL } from "@/app/_utils/s3Utils";
 
 
 const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({

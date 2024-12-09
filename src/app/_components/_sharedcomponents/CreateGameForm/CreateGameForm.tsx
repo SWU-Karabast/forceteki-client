@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
 import { usePathname, useRouter } from "next/navigation";
+import {updateIdsWithMapping, mapIdToInternalName, transformDeckWithCardData} from "@/app/_utils/s3Utils";
 
 interface CreateGameFormProps {
 	format?: string | null;
@@ -44,30 +45,6 @@ const deckOptions: string[] = [
 	"Order66",
 	"ThisIsTheWay",
 ];
-type Mapping = {
-	[id:string]: string;
-}
-
-// Helper function to update a card's id
-const updateIdsWithMapping = (data: DeckData, mapping: Mapping) => {
-
-	const updateCard = (card: DeckCard): DeckCard => {
-		const updatedId = mapping[card.id] || card.id; // Use mapping if available, else keep the original id
-		return { ...card, id: updatedId };
-	};
-
-	return {
-		leader: updateCard(data.leader),
-		secondleader: data.secondleader,
-		base: updateCard(data.base),
-		deckCards: data.deck.map(updateCard), // Update all cards in the deck
-		sideboard: data.sideboard.map(updateCard) // Update all cards in the sideboard
-	};
-};
-
-// Helper function to update a cards data correctly
-
-
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
 
@@ -100,19 +77,28 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 			}
 
 			const data: DeckData = await response.json();
-			console.log(data);
-			// Fetch card mapping from the s3bucket endpoint
-			const mappingResponse = await fetch("/api/s3bucket"); // Adjust to your actual endpoint if different
-			if (!mappingResponse.ok) {
+
+			// Fetch setToId mapping from the s3bucket endpoint
+			const setCodeMapping = await fetch("/api/s3bucket?jsonFile=_setCodeMap.json"); // Adjust to your actual endpoint if different
+			if (!setCodeMapping.ok) {
 				throw new Error("Failed to fetch card mapping");
 			}
 
-			const jsonData = await mappingResponse.json();
-			console.log("jsonData");
-			console.log(jsonData);
+			const jsonData = await setCodeMapping.json();
+			const deckWithIds = updateIdsWithMapping(data, jsonData);
 
-			// Now update the deck data with the mapping
-			return updateIdsWithMapping(data, jsonData);
+			// Fetch codeToInternalname mapping
+			const codeInternalnameMapping = await fetch("/api/s3bucket?jsonFile=_cardMap.json"); // Adjust to your actual endpoint if different
+			if (!codeInternalnameMapping.ok) {
+				throw new Error("Failed to fetch card mapping");
+			}
+
+			const codeInternalnameJson = await codeInternalnameMapping.json();
+			const deckWithInternalNames = mapIdToInternalName(codeInternalnameJson, deckWithIds)
+
+			// Fetch internalNameToCardMapping
+			const finalDeckForm = await transformDeckWithCardData(deckWithInternalNames);
+			return finalDeckForm
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error("Error fetching deck:", error.message);
