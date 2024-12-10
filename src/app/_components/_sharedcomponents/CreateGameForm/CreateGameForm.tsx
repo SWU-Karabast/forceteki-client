@@ -117,7 +117,6 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		const deckData = await fetchDeckData(deckLink);
 		console.log("fetch complete, deck data:", deckData);
 		console.log("Save Deck To Favourites:", saveDeck);
-		console.log(deckData);
 		try {
 			const payload = {
 				user: favouriteDeck,
