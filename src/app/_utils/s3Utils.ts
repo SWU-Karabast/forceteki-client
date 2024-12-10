@@ -1,6 +1,6 @@
 import { CardData } from "../_components/_sharedcomponents/Cards/CardTypes";
 
-
+// Deck data interfaces for deck info from swudb
 interface DeckMetadata {
     name: string;
     author: string;
@@ -10,11 +10,18 @@ interface DeckCard {
     id: string;
     count: number;
 }
-interface ServerDeckCard {
-    count: number;
-    card: CardDetails
+
+interface DeckData {
+    metadata: DeckMetadata;
+    leader: DeckCard;
+    secondleader: DeckCard | null;
+    base: DeckCard;
+    deck: DeckCard[];
+    sideboard: DeckCard[];
 }
-interface CardDetails {
+
+// Deck data interfaces for deck info on the server
+interface ServerCardDetails {
     title: string;
     subtitle: string | null;
     cost: number | null;
@@ -37,23 +44,19 @@ interface CardDetails {
     internalName: string;
 }
 
-interface DeckData {
-    metadata: DeckMetadata;
-    leader: DeckCard;
-    secondleader: DeckCard | null;
-    base: DeckCard;
-    deck: DeckCard[];
-    sideboard: DeckCard[];
+interface ServerDeckCard {
+    count: number;
+    card: ServerCardDetails;
 }
 
 interface ServerDeckData {
-    leader: DeckCard;
-    secondleader: DeckCard | null;
-    base: DeckCard;
-    deckCards: DeckCard[];
-    sideboard: DeckCard[];
+    leader: ServerDeckCard[];
+    base: ServerDeckCard[];
+    deckCards: ServerDeckCard[];
+    sideboard: ServerDeckCard[];
 }
 
+// types of mapping
 type Mapping = {
     [id:string]: string;
 }
@@ -77,7 +80,7 @@ export const s3CardImageURL = (card: CardData) => {
 
 
 // Helper function to update a card's id
-export const updateIdsWithMapping = (data: DeckData, mapping: Mapping): ServerDeckData => {
+export const updateIdsWithMapping = (data: DeckData, mapping: Mapping): DeckData => {
 
     const updateCard = (card: DeckCard): DeckCard => {
         const updatedId = mapping[card.id] || card.id; // Use mapping if available, else keep the original id
@@ -85,10 +88,11 @@ export const updateIdsWithMapping = (data: DeckData, mapping: Mapping): ServerDe
     };
 
     return {
+        metadata: data.metadata,
         leader: updateCard(data.leader),
         secondleader: data.secondleader,
         base: updateCard(data.base),
-        deckCards: data.deck.map(updateCard), // Update all cards in the deck
+        deck: data.deck.map(updateCard), // Update all cards in the deck
         sideboard: data.sideboard.map(updateCard) // Update all cards in the sideboard
     };
 };
@@ -96,8 +100,8 @@ export const updateIdsWithMapping = (data: DeckData, mapping: Mapping): ServerDe
 // Helper function to update a cards id to its internal name
 export function mapIdToInternalName(
     mapper: idToInternalNameMapping[],
-    deckData: ServerDeckData
-): ServerDeckData {
+    deckData: DeckData
+): DeckData {
     // Convert the mapper array to a lookup map for faster access
     const idToNameMap = new Map<string, string>();
     mapper.forEach(entry => {
@@ -126,25 +130,30 @@ export function mapIdToInternalName(
     const updatedBase = updateCardSlot(deckData.base);
 
     // Update deck and sideboard arrays
-    const updatedDeck = deckData.deckCards.map(updateCardSlot).filter((slot): slot is DeckCard => slot !== null);
+    const updatedDeck = deckData.deck.map(updateCardSlot).filter((slot): slot is DeckCard => slot !== null);
     const updatedSideboard = deckData.sideboard.map(updateCardSlot).filter((slot): slot is DeckCard => slot !== null);
 
     return {
-        ...deckData,
+        metadata: deckData.metadata,
         leader: updatedLeader,
         secondleader: updatedSecondLeader,
         base: updatedBase,
-        deckCards: updatedDeck,
+        deck: updatedDeck,
         sideboard: updatedSideboard
     };
 }
 
 // helper function to convert DeckWithInternalName to a playable set of cards.
 // Fetch card details from the API
-const fetchCardData = async (internalName: string): Promise<CardDetails | null> => {
+const fetchCardData = async (internalName: string): Promise<ServerCardDetails | null> => {
     try {
         const response = await fetch(`/api/s3bucket?jsonFile=cards/${encodeURIComponent(internalName)}.json`);
         const cardDetails = await response.json();
+        // Do we want to inform the user that some of the cards weren't imported?
+        if(cardDetails.status){
+            console.error(`Failed to fetch card data for ${internalName}:`);
+            return null
+        }
         return cardDetails[0];
     } catch {
         console.error(`Failed to fetch card data for ${internalName}:`);
@@ -153,7 +162,7 @@ const fetchCardData = async (internalName: string): Promise<CardDetails | null> 
 };
 
 // Transform Deck with card details
-export const transformDeckWithCardData = async (deckData: ServerDeckData): Promise<any> => {
+export const transformDeckWithCardData = async (deckData: DeckData): Promise<ServerDeckData | null> => {
     try {
         const transformCard = async (deckCard: DeckCard): Promise<ServerDeckCard | null> => {
             const cardData = await fetchCardData(deckCard.id);
@@ -165,12 +174,9 @@ export const transformDeckWithCardData = async (deckData: ServerDeckData): Promi
         };
 
         const leader = await transformCard(deckData.leader);
-        const secondleader = deckData.secondleader
-            ? await transformCard(deckData.secondleader)
-            : null;
         const base = await transformCard(deckData.base);
         const deckCards = (
-            await Promise.all(deckData.deckCards.map((card) => transformCard(card)))
+            await Promise.all(deckData.deck.map((card) => transformCard(card)))
         ).filter((card) => card !== null);
         const sideboard = (
             await Promise.all(deckData.sideboard.map((card) => transformCard(card)))
@@ -179,7 +185,7 @@ export const transformDeckWithCardData = async (deckData: ServerDeckData): Promi
             leader: leader ? [leader] : [],
             base: base ? [base] : [],
             deckCards,
-            selected:true,
+            sideboard,
         };
     } catch {
         console.error('Error transforming deck with card data');
