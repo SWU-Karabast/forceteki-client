@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Button, Typography } from "@mui/material";
 import GameInProgressPlayer from "../GameInProgressPlayer/GameInProgressPlayer";
-import { PublicGameInProgressProps } from "../../HomePageTypes";
+import { IPublicGameInProgressProps } from "../../HomePageTypes";
 
-const PublicMatch: React.FC<PublicGameInProgressProps> = ({ match }) => {
+const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
 
 	const styles = {
 		box: {

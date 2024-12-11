@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server";
 
-interface DeckMetadata {
+interface IDeckMetadata {
 	name: string;
 	author: string;
 }
 
-interface DeckCard {
+interface IDeckCard {
 	id: string;
 	count: number;
 }
 
-interface DeckData {
-	metadata: DeckMetadata;
-	leader: DeckCard;
-	secondleader: DeckCard | null;
-	base: DeckCard;
-	deck: DeckCard[];
-	sideboard: DeckCard[];
+interface IDeckData {
+	metadata: IDeckMetadata;
+	leader: IDeckCard;
+	secondleader: IDeckCard | null;
+	base: IDeckCard;
+	deck: IDeckCard[];
+	sideboard: IDeckCard[];
 }
 
 export async function GET(req: Request) {
@@ -49,7 +49,7 @@ export async function GET(req: Request) {
 			throw new Error(`SWUDB API error: ${response.statusText}`);
 		}
 
-		const data: DeckData = await response.json();
+		const data: IDeckData = await response.json();
 
 		return NextResponse.json(data);
 	} catch (error) {

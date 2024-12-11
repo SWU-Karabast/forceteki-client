@@ -1,4 +1,4 @@
-export interface ChatProps {
+export interface IChatProps {
 	chatHistory: string[];
 	chatMessage: string;
 	playerRoll?: number;

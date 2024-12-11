@@ -17,28 +17,28 @@ import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextFiel
 import { usePathname, useRouter } from "next/navigation";
 import {updateIdsWithMapping, mapIdToInternalName, transformDeckWithCardData} from "@/app/_utils/s3Utils";
 
-interface CreateGameFormProps {
+interface ICreateGameFormProps {
 	format?: string | null;
 	setFormat?: (format: string) => void;
 }
 
-interface DeckMetadata {
+interface IDeckMetadata {
 	name: string;
 	author: string;
 }
 
-interface DeckCard {
+interface IDeckCard {
 	id: string;
 	count: number;
 }
 
-interface DeckData {
-	metadata: DeckMetadata;
-	leader: DeckCard;
-	secondleader: DeckCard | null;
-	base: DeckCard;
-	deck: DeckCard[];
-	sideboard: DeckCard[];
+interface IDeckData {
+	metadata: IDeckMetadata;
+	leader: IDeckCard;
+	secondleader: IDeckCard | null;
+	base: IDeckCard;
+	deck: IDeckCard[];
+	sideboard: IDeckCard[];
 }
 
 const deckOptions: string[] = [
@@ -48,7 +48,7 @@ const deckOptions: string[] = [
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
 
-const CreateGameForm: React.FC<CreateGameFormProps> = ({
+const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 	format,
 	setFormat,
 }) => {
@@ -76,7 +76,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 				throw new Error(`Failed to fetch deck: ${response.statusText}`);
 			}
 
-			const data: DeckData = await response.json();
+			const data: IDeckData = await response.json();
 
 			// Fetch setToId mapping from the s3bucket endpoint
 			const setCodeMapping = await fetch("/api/s3bucket?jsonFile=_setCodeMap.json"); // Adjust to your actual endpoint if different

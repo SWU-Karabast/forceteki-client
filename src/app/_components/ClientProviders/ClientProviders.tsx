@@ -5,11 +5,11 @@ import { ThemeContextProvider } from "@/app/_contexts/Theme.context";
 import { UserProvider } from "@/app/_contexts/User.context";
 import { SessionProvider } from "next-auth/react";
 
-interface ClientProvidersProps {
+interface IClientProvidersProps {
 	children: React.ReactNode;
 }
 
-const ClientProviders: React.FC<ClientProvidersProps> = ({ children }) => {
+const ClientProviders: React.FC<IClientProvidersProps> = ({ children }) => {
 	return (
 		<SessionProvider>
 			<UserProvider>

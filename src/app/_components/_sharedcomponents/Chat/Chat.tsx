@@ -8,9 +8,9 @@ import {
 	Typography,
 } from "@mui/material";
 import { Send } from "@mui/icons-material";
-import { ChatProps } from "./ChatTypes";
+import { IChatProps } from "./ChatTypes";
 
-const Chat: React.FC<ChatProps> = ({
+const Chat: React.FC<IChatProps> = ({
 	chatHistory,
 	chatMessage,
 	playerRoll = null,

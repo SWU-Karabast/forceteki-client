@@ -1,11 +1,11 @@
 import React from "react";
 import Grid from "@mui/material/Grid2";
 import LeaderBaseCard from "../../Cards/LeaderBaseCard/LeaderBaseCard";
-import { LeaderBaseProps } from "../LeaderBaseBoardTypes";
+import { ILeaderBaseProps } from "../LeaderBaseBoardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
 import { s3CardImageURL } from "@/app/_utils/s3Utils";
 
-const LeaderBase: React.FC<LeaderBaseProps> = ({
+const LeaderBase: React.FC<ILeaderBaseProps> = ({
 	player,
 	isLobbyView = false,
 	title,

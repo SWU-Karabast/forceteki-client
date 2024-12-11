@@ -2,9 +2,9 @@ import React from "react";
 import Grid from "@mui/material/Grid2";
 import UnitsBoard from "../_subcomponents/UnitsBoard";
 import LeaderBaseBoard from "../../_sharedcomponents/LeaderBaseBoard/LeaderBaseBoard";
-import { BoardProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { IBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
 
-const Board: React.FC<BoardProps> = ({
+const Board: React.FC<IBoardProps> = ({
 	sidebarOpen,
 }) => {
 	//----------------Styles----------------//

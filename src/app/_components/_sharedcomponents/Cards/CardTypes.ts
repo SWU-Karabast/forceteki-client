@@ -1,9 +1,9 @@
-interface CardSetId {
+interface ICardSetId {
 	set: string;
 	number: number;
 }
 
-export interface CardData {
+export interface ICardData {
 	uuid: string;
 	id?: number;
 	name?: string;
@@ -19,20 +19,20 @@ export interface CardData {
 	cost?: number;
 	exhausted?: boolean;
 	damage?: number;
-	setId: CardSetId;
+	setId: ICardSetId;
 	type: string;
 }
 
-export interface GameCardProps {
-	card: CardData;
+export interface IGameCardProps {
+	card: ICardData;
 	size?: "standard" | "square";
 }
 
-export interface LeaderBaseCardProps {
+export interface ILeaderBaseCardProps {
 	variant: "base" | "leader";
 	selected?: boolean;
 	isLobbyView?: boolean;
 	handleSelect?: () => void;
 	title?: string;
-	card: CardData;
+	card: ICardData;
 }

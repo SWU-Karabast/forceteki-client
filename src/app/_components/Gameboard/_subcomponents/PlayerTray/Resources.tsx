@@ -1,10 +1,10 @@
 import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
 import Image from "next/image";
-import { ResourcesProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { IResourcesProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
 
-const Resources: React.FC<ResourcesProps> = ({
+const Resources: React.FC<IResourcesProps> = ({
 	trayPlayer,
 	handleModalToggle,
 }) => {

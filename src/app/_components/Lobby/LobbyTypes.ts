@@ -1,8 +1,8 @@
-export interface PlayersProps {
+export interface IPlayersProps {
 	isLobbyView?: boolean;
 }
 
-export interface SetUpProps {
+export interface ISetUpProps {
 	chatHistory: string[];
 	chatMessage: string;
 	setChatMessage: (message: string) => void;

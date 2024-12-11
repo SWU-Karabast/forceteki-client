@@ -25,7 +25,7 @@ const CardActionTray: React.FC = () => {
 					{playerState.menuTitle}
 				</Typography>
 				<Box>
-					{playerState.buttons.map((button: ButtonsProps) => (
+					{playerState.buttons.map((button: IButtonsProps) => (
 						<PromptButton
 							key={button.arg}
 							button={button}
@@ -38,19 +38,19 @@ const CardActionTray: React.FC = () => {
 	);
 };
 
-interface PromptButtonProps {
-	button: ButtonsProps
+interface IPromptButtonProps {
+	button: IButtonsProps
 	sendGameMessage: (args: [string, string, string]) => void;
 }
 
-interface ButtonsProps {
+interface IButtonsProps {
 	command: string;
 	arg: string;
 	text: string;
 	uuid: string;
 }
 
-const PromptButton: React.FC<PromptButtonProps> = ({ button, sendGameMessage }) => {
+const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage }) => {
 	return (
 		<Button
 			variant="contained"

@@ -7,11 +7,11 @@ import {
 	Box,
 } from "@mui/material";
 import Image from "next/image";
-import { GameCardProps, CardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
+import { IGameCardProps, ICardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
 import { s3CardImageURL } from "@/app/_utils/s3Utils";
 
-const GameCard: React.FC<GameCardProps> = ({
+const GameCard: React.FC<IGameCardProps> = ({
 	card,
 	size = "standard",
 }) => {
@@ -21,7 +21,7 @@ const GameCard: React.FC<GameCardProps> = ({
 
 	const { sendGameMessage } = useGame();
 
-	const cardBorderColor = (card: CardData) => {
+	const cardBorderColor = (card: ICardData) => {
 		if (card.selected) return "yellow";
 		if (card.selectable) return "limegreen";
 		if (card.exhausted) return "gray";

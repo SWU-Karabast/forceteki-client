@@ -1,27 +1,27 @@
-import { CardData } from "../_components/_sharedcomponents/Cards/CardTypes";
+import { ICardData } from "../_components/_sharedcomponents/Cards/CardTypes";
 
 // Deck data interfaces for deck info from swudb
-interface DeckMetadata {
+interface IDeckMetadata {
     name: string;
     author: string;
 }
 
-interface DeckCard {
+interface IDeckCard {
     id: string;
     count: number;
 }
 
-interface DeckData {
-    metadata: DeckMetadata;
-    leader: DeckCard;
-    secondleader: DeckCard | null;
-    base: DeckCard;
-    deck: DeckCard[];
-    sideboard: DeckCard[];
+interface IDeckData {
+    metadata: IDeckMetadata;
+    leader: IDeckCard;
+    secondleader: IDeckCard | null;
+    base: IDeckCard;
+    deck: IDeckCard[];
+    sideboard: IDeckCard[];
 }
 
 // Deck data interfaces for deck info on the server
-interface ServerCardDetails {
+interface IServerCardDetails {
     title: string;
     subtitle: string | null;
     cost: number | null;
@@ -44,16 +44,16 @@ interface ServerCardDetails {
     internalName: string;
 }
 
-interface ServerDeckCard {
+interface IServerDeckCard {
     count: number;
-    card: ServerCardDetails;
+    card: IServerCardDetails;
 }
 
-interface ServerDeckData {
-    leader: ServerDeckCard[];
-    base: ServerDeckCard[];
-    deckCards: ServerDeckCard[];
-    sideboard: ServerDeckCard[];
+interface IServerDeckData {
+    leader: IServerDeckCard[];
+    base: IServerDeckCard[];
+    deckCards: IServerDeckCard[];
+    sideboard: IServerDeckCard[];
 }
 
 // types of mapping
@@ -72,7 +72,7 @@ export const s3ImageURL = (path: string) => {
     return s3Bucket + path;
 };
 
-export const s3CardImageURL = (card: CardData) => {
+export const s3CardImageURL = (card: ICardData) => {
     if (!card) return "game/epic-action-token.webp";
     const cardNumber = card.setId.number.toString().padStart(3, "0") + (card.type === "leaderUnit" ? "-portrait" : "");
     return s3ImageURL(`cards/${card.setId.set}/${cardNumber}.webp`);
@@ -80,9 +80,9 @@ export const s3CardImageURL = (card: CardData) => {
 
 
 // Helper function to update a card's id
-export const updateIdsWithMapping = (data: DeckData, mapping: Mapping): DeckData => {
+export const updateIdsWithMapping = (data: IDeckData, mapping: Mapping): IDeckData => {
 
-    const updateCard = (card: DeckCard): DeckCard => {
+    const updateCard = (card: IDeckCard): IDeckCard => {
         const updatedId = mapping[card.id] || card.id; // Use mapping if available, else keep the original id
         return { ...card, id: updatedId };
     };
@@ -100,8 +100,8 @@ export const updateIdsWithMapping = (data: DeckData, mapping: Mapping): DeckData
 // Helper function to update a cards id to its internal name
 export function mapIdToInternalName(
     mapper: idToInternalNameMapping[],
-    deckData: DeckData
-): DeckData {
+    deckData: IDeckData
+): IDeckData {
     // Convert the mapper array to a lookup map for faster access
     const idToNameMap = new Map<string, string>();
     mapper.forEach(entry => {
@@ -109,7 +109,7 @@ export function mapIdToInternalName(
     });
 
     // Helper function to update a single CardSlot
-    const updateCardSlot = (slot: DeckCard): DeckCard => {
+    const updateCardSlot = (slot: IDeckCard): IDeckCard => {
         const { id, count } = slot;
         const mappedName = idToNameMap.get(id);
         if (mappedName) {
@@ -130,8 +130,8 @@ export function mapIdToInternalName(
     const updatedBase = updateCardSlot(deckData.base);
 
     // Update deck and sideboard arrays
-    const updatedDeck = deckData.deck.map(updateCardSlot).filter((slot): slot is DeckCard => slot !== null);
-    const updatedSideboard = deckData.sideboard.map(updateCardSlot).filter((slot): slot is DeckCard => slot !== null);
+    const updatedDeck = deckData.deck.map(updateCardSlot).filter((slot): slot is IDeckCard => slot !== null);
+    const updatedSideboard = deckData.sideboard.map(updateCardSlot).filter((slot): slot is IDeckCard => slot !== null);
 
     return {
         metadata: deckData.metadata,
@@ -145,7 +145,7 @@ export function mapIdToInternalName(
 
 // helper function to convert DeckWithInternalName to a playable set of cards.
 // Fetch card details from the API
-const fetchCardData = async (internalName: string): Promise<ServerCardDetails | null> => {
+const fetchCardData = async (internalName: string): Promise<IServerCardDetails | null> => {
     try {
         const response = await fetch(`/api/s3bucket?jsonFile=cards/${encodeURIComponent(internalName)}.json`);
         const cardDetails = await response.json();
@@ -162,9 +162,9 @@ const fetchCardData = async (internalName: string): Promise<ServerCardDetails | 
 };
 
 // Transform Deck with card details
-export const transformDeckWithCardData = async (deckData: DeckData): Promise<ServerDeckData | null> => {
+export const transformDeckWithCardData = async (deckData: IDeckData): Promise<IServerDeckData | null> => {
     try {
-        const transformCard = async (deckCard: DeckCard): Promise<ServerDeckCard | null> => {
+        const transformCard = async (deckCard: IDeckCard): Promise<IServerDeckCard | null> => {
             const cardData = await fetchCardData(deckCard.id);
             if (!cardData) return null;
             return {
