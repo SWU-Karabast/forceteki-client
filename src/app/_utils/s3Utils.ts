@@ -57,10 +57,10 @@ interface IServerDeckData {
 }
 
 // types of mapping
-type Mapping = {
+type IMapping = {
     [id:string]: string;
 }
-type idToInternalNameMapping = {
+type IIdToInternalNameMapping = {
     "id": string,
     "internalName": string,
     "title": string,
@@ -80,7 +80,7 @@ export const s3CardImageURL = (card: ICardData) => {
 
 
 // Helper function to update a card's id
-export const updateIdsWithMapping = (data: IDeckData, mapping: Mapping): IDeckData => {
+export const updateIdsWithMapping = (data: IDeckData, mapping: IMapping): IDeckData => {
 
     const updateCard = (card: IDeckCard): IDeckCard => {
         const updatedId = mapping[card.id] || card.id; // Use mapping if available, else keep the original id
@@ -99,7 +99,7 @@ export const updateIdsWithMapping = (data: IDeckData, mapping: Mapping): IDeckDa
 
 // Helper function to update a cards id to its internal name
 export function mapIdToInternalName(
-    mapper: idToInternalNameMapping[],
+    mapper: IIdToInternalNameMapping[],
     deckData: IDeckData
 ): IDeckData {
     // Convert the mapper array to a lookup map for faster access

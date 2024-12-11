@@ -17,7 +17,7 @@ export interface IPublicGamesProps {
 	format: string;
 }
 
-export type Article = {
+export type IArticle = {
 	title: string;
 	content: string;
 	date: string;
@@ -26,5 +26,5 @@ export type Article = {
 };
 
 export interface INewsItemProps {
-	article: Article;
+	article: IArticle;
 }

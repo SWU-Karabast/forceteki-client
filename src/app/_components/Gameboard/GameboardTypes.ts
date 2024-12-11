@@ -1,11 +1,11 @@
 import { ICardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 
-export type ParticipantType = "player" | "opponent";
+export type IParticipantType = "player" | "opponent";
 
 export interface IParticipant {
 	id: string;
 	name: string;
-	type: ParticipantType;
+	type: IParticipantType;
 	initiative: boolean | null;
 	deckSize: number;
 	cards: ICardData[];
