@@ -4,10 +4,10 @@ import Resources from "../_subcomponents/PlayerTray/Resources";
 import DeckDiscard from "../_subcomponents/PlayerTray/DeckDiscard";
 import CardActionTray from "../_subcomponents/PlayerTray/CardActionTray";
 import PlayerHand from "../_subcomponents/PlayerTray/PlayerHand";
-import { PlayerCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { IPlayerCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
 
-const PlayerCardTray: React.FC<PlayerCardTrayProps> = ({
+const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
 	trayPlayer,
 	handleModalToggle,
 }) => {

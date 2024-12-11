@@ -3,10 +3,10 @@ import Grid from "@mui/material/Grid2";
 import Resources from "../_subcomponents/PlayerTray/Resources";
 import PlayerHand from "../_subcomponents/PlayerTray/PlayerHand";
 import DeckDiscard from "../_subcomponents/PlayerTray/DeckDiscard";
-import { OpponentCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { IOpponentCardTrayProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
 
-const OpponentCardTray: React.FC<OpponentCardTrayProps> = ({ trayPlayer }) => {
+const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
 	//---------------Styles------------------- //
 	const leftColumn = {
 		display: "flex",

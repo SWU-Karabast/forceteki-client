@@ -1,8 +1,8 @@
 import React from "react";
 import { TextField } from "@mui/material";
-import { StyledTextFieldProps } from "@/app/_components/Auth/AuthTypes";
+import { IStyledTextFieldProps } from "@/app/_components/Auth/AuthTypes";
 
-const StyledTextField: React.FC<StyledTextFieldProps> = ({
+const StyledTextField: React.FC<IStyledTextFieldProps> = ({
 	errorMessage,
 	...props
 }) => {

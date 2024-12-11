@@ -1,9 +1,9 @@
 import { Grid2 as Grid, Box } from "@mui/material";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
 import GameCard from "@/app/_components/_sharedcomponents/Cards/GameCard/GameCard";
-import { PlayerHandProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { IPlayerHandProps } from "@/app/_components/Gameboard/GameboardTypes";
 
-const PlayerHand: React.FC<PlayerHandProps> = ({
+const PlayerHand: React.FC<IPlayerHandProps> = ({
 	cards = []
 }) => {
 	const {

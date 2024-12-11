@@ -1,8 +1,8 @@
-export interface LeaderBaseBoardProps {
+export interface ILeaderBaseBoardProps {
 	isLobbyView?: boolean;
 }
 
-export interface LeaderBaseProps {
+export interface ILeaderBaseProps {
 	player: string;
 	isLobbyView?: boolean;
 	title?: string;

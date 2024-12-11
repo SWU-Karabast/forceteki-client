@@ -1,18 +1,18 @@
-import { CardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
+import { ICardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 
-export type ParticipantType = "player" | "opponent";
+export type IParticipantType = "player" | "opponent";
 
-export interface Participant {
+export interface IParticipant {
 	id: string;
 	name: string;
-	type: ParticipantType;
+	type: IParticipantType;
 	initiative: boolean | null;
 	deckSize: number;
-	cards: CardData[];
-	fullDeck: CardData[];
+	cards: ICardData[];
+	fullDeck: ICardData[];
 }
 
-export interface ChatDrawerProps {
+export interface IChatDrawerProps {
 	sidebarOpen: boolean;
 	toggleSidebar: () => void;
 	chatHistory: string[];
@@ -22,48 +22,48 @@ export interface ChatDrawerProps {
 	currentRound: number;
 }
 
-export interface PlayerCardTrayProps {
+export interface IPlayerCardTrayProps {
 	trayPlayer: string;
 	handleModalToggle: () => void;
 	handleBasicPromptToggle: () => void;
 }
 
-export interface OpponentCardTrayProps {
+export interface IOpponentCardTrayProps {
 	trayPlayer: string;
 }
 
-export interface BoardProps {
+export interface IBoardProps {
 	sidebarOpen: boolean;
 }
 
-export interface DeckDiscardProps {
+export interface IDeckDiscardProps {
 	trayPlayer: string;
 }
 
-export interface ResourcesProps {
+export interface IResourcesProps {
 	trayPlayer: string;
 	handleModalToggle?: () => void;
 }
 
-export interface ResourcesOverlayProps {
+export interface IResourcesOverlayProps {
 	isModalOpen: boolean;
 	handleModalToggle: () => void;
 }
 
-export interface BasicPromptProps {
+export interface IBasicPromptProps {
 	isBasicPromptOpen: boolean;
 	handleBasicPromptToggle: () => void;
 }
 
-export interface CardAreaProps {
-	cards: CardData[];
+export interface ICardAreaProps {
+	cards: ICardData[];
 }
 
-export interface UnitsBoardProps {
+export interface IUnitsBoardProps {
 	sidebarOpen: boolean;
 	arena: string;
 }
 
-export interface PlayerHandProps {
-	cards: CardData[];
+export interface IPlayerHandProps {
+	cards: ICardData[];
 }

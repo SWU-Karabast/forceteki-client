@@ -2,9 +2,9 @@ import React from "react";
 import { Card, CardContent, Typography, Divider } from "@mui/material";
 import JoinableGame from "../_subcomponents/JoinableGame/JoinableGame";
 import GamesInProgress from "../_subcomponents/GamesInProgress/GamesInProgress";
-import { PublicGamesProps } from "../HomePageTypes";
+import { IPublicGamesProps } from "../HomePageTypes";
 
-const PublicGames: React.FC<PublicGamesProps> = ({ format }) => {
+const PublicGames: React.FC<IPublicGamesProps> = ({ format }) => {
 
 	const styles = {
 		publicGamesWrapper: {

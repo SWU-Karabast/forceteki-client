@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import { s3ImageURL } from "@/app/_utils/s3Assets";
+import { s3ImageURL } from "@/app/_utils/s3Utils";
 
 const KarabastBanner: React.FC = () => {
 	

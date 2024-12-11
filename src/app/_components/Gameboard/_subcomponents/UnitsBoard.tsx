@@ -1,11 +1,11 @@
 import React from "react";
 import { Box, Grid2 as Grid } from "@mui/material";
 import GameCard from "../../_sharedcomponents/Cards/GameCard/GameCard";
-import { CardData } from "../../_sharedcomponents/Cards/CardTypes";
-import { UnitsBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { ICardData } from "../../_sharedcomponents/Cards/CardTypes";
+import { IUnitsBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
 
-const UnitsBoard: React.FC<UnitsBoardProps> = ({
+const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 	sidebarOpen,
 	arena
 }) => {
@@ -53,7 +53,7 @@ const UnitsBoard: React.FC<UnitsBoardProps> = ({
 			<Grid container direction="column" sx={containerStyle}>
 				{/* Opponent's Ground Units */}
 				<Grid sx={opponentGridStyle}>
-					{opponentUnits.map((card: CardData) => (
+					{opponentUnits.map((card: ICardData) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
 							<GameCard card={card} size="square" />
 						</Box>
@@ -62,7 +62,7 @@ const UnitsBoard: React.FC<UnitsBoardProps> = ({
 
 				{/* Player's Ground Units */}
 				<Grid sx={playerGridStyle}>
-					{playerUnits.map((card: CardData) => (
+					{playerUnits.map((card: ICardData) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
 							<GameCard card={card} size="square" />
 						</Box>

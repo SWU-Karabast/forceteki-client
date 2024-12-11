@@ -1,9 +1,9 @@
-import { User } from "./../../../_contexts/UserTypes";
+import { IUser } from "./../../../_contexts/UserTypes";
 
-export interface ControlHubProps {
+export interface IControlHubProps {
 	path?: string;
 	sidebarOpen?: boolean;
 	toggleSidebar?: () => void;
-	user?: User | null;
+	user?: IUser | null;
 	logout?: () => void;
 }

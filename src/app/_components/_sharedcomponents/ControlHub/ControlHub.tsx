@@ -4,9 +4,9 @@ import { Settings, Menu, ArrowBackIosNew, GitHub } from "@mui/icons-material";
 import { FaDiscord, } from "react-icons/fa6";
 import { useRouter } from "next/navigation";
 import NextLinkMui from "./_subcomponents/NextLinkMui/NextLinkMui";
-import { ControlHubProps } from "./ControlHubTypes";
+import { IControlHubProps } from "./ControlHubTypes";
 
-const ControlHub: React.FC<ControlHubProps> = ({
+const ControlHub: React.FC<IControlHubProps> = ({
 	sidebarOpen,
 	toggleSidebar,
 	path,

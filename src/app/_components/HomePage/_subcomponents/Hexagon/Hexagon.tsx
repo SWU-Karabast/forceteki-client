@@ -1,8 +1,8 @@
 import React from "react";
 import { Box } from "@mui/material";
-import { HexagonProps } from "../../HomePageTypes";
+import { IHexagonProps } from "../../HomePageTypes";
 
-const Hexagon: React.FC<HexagonProps> = ({
+const Hexagon: React.FC<IHexagonProps> = ({
 	backgroundColor,
 }: {
 	backgroundColor: string;

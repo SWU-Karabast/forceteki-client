@@ -1,23 +1,23 @@
-export interface HexagonProps {
+export interface IHexagonProps {
 	backgroundColor: string;
 }
 
-export interface GameInProgressPlayerProps {
+export interface IGameInProgressPlayerProps {
 	playerImage: string;
 }
 
-export interface PublicGameInProgressProps {
+export interface IPublicGameInProgressProps {
 	match: {
-		player1: GameInProgressPlayerProps;
-		player2: GameInProgressPlayerProps;
+		player1: IGameInProgressPlayerProps;
+		player2: IGameInProgressPlayerProps;
 	};
 }
 
-export interface PublicGamesProps {
+export interface IPublicGamesProps {
 	format: string;
 }
 
-export type Article = {
+export type IArticle = {
 	title: string;
 	content: string;
 	date: string;
@@ -25,6 +25,6 @@ export type Article = {
 	imageAlt: string;
 };
 
-export interface NewsItemProps {
-	article: Article;
+export interface INewsItemProps {
+	article: IArticle;
 }
