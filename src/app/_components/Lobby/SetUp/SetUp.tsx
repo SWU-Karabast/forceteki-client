@@ -3,13 +3,14 @@ import {
 	Typography,
 	CardActions,
 	Button,
-	Box,
+	Box, Divider,
 } from "@mui/material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
 import { useGame } from "@/app/_contexts/Game.context";
 import { SetUpProps } from "../LobbyTypes";
 import { useRouter, useSearchParams } from "next/navigation"
+import React from "react";
 
 
 const SetUp: React.FC<SetUpProps> = ({
@@ -39,8 +40,8 @@ const SetUp: React.FC<SetUpProps> = ({
 
 	const mainCardStyle = {
 		borderRadius: "1.1em",
-		height: "auto",
-		maxHeight: "100%",
+		height: "100%",
+		maxHeight: "72.5vh",
 		width: "100%",
 		display: "flex",
 		flexDirection: "column",
@@ -49,6 +50,9 @@ const SetUp: React.FC<SetUpProps> = ({
 		backgroundColor: "#000000E6",
 		backdropFilter: "blur(20px)",
 		overflow: "hidden",
+		'@media (max-height: 1000px)': {
+			maxHeight: '67vh',
+		},
 	};
 
 	const initiativeCardStyle = {
@@ -72,19 +76,38 @@ const SetUp: React.FC<SetUpProps> = ({
 		alignSelf: "flex-start",
 	};
 	const lobbyTextStyle ={
-		fontSize: "1.85em",
-		fontWeight: "800",
+		fontSize: "3.0em",
+		fontWeight: "600",
 		color: "white",
 		alignSelf: "flex-start",
-		mb: "20px",
+		mb: "0.3em",
+	};
+	const exitCard = {
+		display: "flex",
+		pr: "1.2em",
+		pl: "1.2em",
+		width: "100%",
+		height: "6%",
+		alignItems: "center",
+		justifyContent: "space-between",
+		cursor: "pointer",
+	};
+	const dividerStyle = {
+		backgroundColor: "#fff",
+		mt: ".5vh",
+		mb: "0.5vh",
 	};
 	const boxContainer = {
 		width: "100%",
-		maxHeight: "64vh",
+		//maxHeight: "64vh", // this is for the small screen
+		height: "100%",
 	};
+	const handleExit = () => {
+		router.push("/");
+	}
 	return (
 		<Box sx={boxContainer}>
-			<Typography sx={lobbyTextStyle}>GAME LOBBY</Typography>
+			<Typography sx={lobbyTextStyle}>KARABAST</Typography>
 			<Card sx={initiativeCardStyle}>
 				<CardActions sx={buttonsContainerStyle}>
 					<Button variant="contained" onClick={()=>handleStartGame()}>Start Game</Button>
@@ -92,13 +115,21 @@ const SetUp: React.FC<SetUpProps> = ({
 			</Card>
 			<Card sx={mainCardStyle}>
 				<Typography sx={setUpTextStyle}>Set Up</Typography>
-				<GameLinkCard />
 				<Chat
 					chatHistory={chatHistory}
 					chatMessage={chatMessage}
 					setChatMessage={setChatMessage}
 					handleChatSubmit={handleChatSubmit}
 				/>
+				<Divider sx={dividerStyle} />
+				<Box sx={exitCard} onClick={() => handleExit()}>
+					<Typography variant="h5">
+						Exit Game Lobby
+					</Typography>
+					<Typography variant="h5">
+						{'<'}
+					</Typography>
+				</Box>
 			</Card>
 		</Box>
 	);

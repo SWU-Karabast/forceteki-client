@@ -3,8 +3,6 @@ import { Card, Box, Typography } from "@mui/material";
 import CardArea from "../../_sharedcomponents/CardArea/CardArea";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
 import {useGame} from "@/app/_contexts/Game.context";
-import {useRouter} from "next/navigation";
-
 
 const Deck: React.FC = () => {
 	// Use the custom hook with horizontal or vertical scrolling as required
@@ -17,12 +15,6 @@ const Deck: React.FC = () => {
 		handleTouchMove,
 		handleTouchEnd,
 	} = useDragScroll("vertical");
-
-	const router = useRouter();
-	const handleExit = () => {
-		router.push("/");
-	}
-
 	//------------------------STYLES------------------------//
 	const cardStyle = {
 		borderRadius: "1.1em",
@@ -35,6 +27,9 @@ const Deck: React.FC = () => {
 		overflow: "hidden",
 		'@media (max-height: 759px)': {
 			height: '84vh',
+		},
+		'@media (max-height: 1000px)': {
+			maxHeight: '85.5vh',
 		},
 	};
 
@@ -91,9 +86,6 @@ const Deck: React.FC = () => {
 	const newDeck = connectedDeck?.deckCards ?? [];
 	return (
 		<Box sx={{width:'100%'}}>
-			<Typography variant="h5" sx={exitText} onClick={() => handleExit()}>
-				{'>'} Exit
-			</Typography>
 			<Card sx={cardStyle}>
 				<Box sx={headerBoxStyle}>
 					<Typography sx={titleTextStyle}>Your Deck</Typography>

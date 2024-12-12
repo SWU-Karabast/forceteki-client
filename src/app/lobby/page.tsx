@@ -32,18 +32,18 @@ const Lobby = () => {
 	const setUpGridStyle = {
 		justifyContent: "center",
 		pl: "20px",
-		mt: "24px",
+		mt: "5px",
 	};
 
 	const playersGridStyle = {
 		justifyContent: "center",
-		mt: "78px"
+		mt: "78px",
 	};
 
 	const deckGridStyle = {
 		justifyContent: "center",
 		pr: "20px",
-		mt: "23px"
+		mt: "78px",
 	};
 	const disclaimer = {
 		position: "absolute",

@@ -21,6 +21,8 @@ const Chat: React.FC<ChatProps> = ({
 
 	const chatContainerStyle = {
 		backgroundColor: "#28282800",
+		height: "53vh",
+		overflowY: "auto",
 	};
 
 	const titleStyle = {
@@ -31,7 +33,7 @@ const Chat: React.FC<ChatProps> = ({
 	const dividerStyle = {
 		backgroundColor: "#fff",
 		mt: ".5vh",
-		mb: "1vh",
+		mb: "0.5vh",
 	};
 
 	const chatBoxStyle = {
@@ -53,7 +55,6 @@ const Chat: React.FC<ChatProps> = ({
 		p: "10px",
 		mt: 2,
 	};
-
 	const textFieldStyle = {
 		backgroundColor: "#28282800",
 		color: "#fff",

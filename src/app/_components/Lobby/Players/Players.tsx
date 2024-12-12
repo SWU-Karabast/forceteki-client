@@ -21,6 +21,9 @@ const Players: React.FC<PlayersProps> = ({ isLobbyView }) => {
 		'@media (max-height: 759px)': {
 			height: '84vh',
 		},
+		'@media (max-height: 1000px)': {
+			maxHeight: '85.5vh',
+		},
 	};
 
 	const typographyStyle = {
