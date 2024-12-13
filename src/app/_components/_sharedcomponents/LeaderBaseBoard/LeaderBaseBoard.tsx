@@ -3,10 +3,10 @@ import Grid from "@mui/material/Grid2";
 import LeaderBase from "./LeaderBase/LeaderBase";
 import CardActionTray from "@/app/_components/Gameboard/_subcomponents/PlayerTray/CardActionTray";
 import { useGame } from "@/app/_contexts/Game.context";
-import { LeaderBaseBoardProps } from "./LeaderBaseBoardTypes";
+import { ILeaderBaseBoardProps } from "./LeaderBaseBoardTypes";
 
 
-const LeaderBaseBoard: React.FC<LeaderBaseBoardProps> = ({
+const LeaderBaseBoard: React.FC<ILeaderBaseBoardProps> = ({
 	isLobbyView,
 }) => {
 	const { connectedPlayer, getOpponent } = useGame();

@@ -1,10 +1,10 @@
 import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
 import GameCard from "../../../_sharedcomponents/Cards/GameCard/GameCard";
-import { DeckDiscardProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { IDeckDiscardProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
 
-const DeckDiscard: React.FC<DeckDiscardProps> = (
+const DeckDiscard: React.FC<IDeckDiscardProps> = (
 	trayPlayer
 ) => {
 

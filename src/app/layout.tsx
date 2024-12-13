@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import React from 'react';
 import ClientLayout from './ClientLayout';
 import { Barlow } from "next/font/google";
-import "./_utils/s3Assets";
+import "./_utils/s3Utils";
 
 const barlow = Barlow({
 	subsets: ["latin"],

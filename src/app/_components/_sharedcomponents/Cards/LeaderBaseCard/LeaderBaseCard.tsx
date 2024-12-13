@@ -6,19 +6,19 @@ import {
 	Typography,
 	Box,
 } from "@mui/material";
-import { LeaderBaseCardProps } from "../CardTypes";
-import { CardData } from "../CardTypes";
+import { ILeaderBaseCardProps } from "../CardTypes";
+import { ICardData } from "../CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
-import { s3CardImageURL } from "@/app/_utils/s3Assets";
+import { s3CardImageURL } from "@/app/_utils/s3Utils";
 
 
-const LeaderBaseCard: React.FC<LeaderBaseCardProps> = ({
+const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 	variant,
 	isLobbyView = false,
 	title,
 	card
 }) => {
-	const cardBorderColor = (card: CardData) => {
+	const cardBorderColor = (card: ICardData) => {
 		if (!card) return "";
 		if (card.selected) return "yellow";
 		if (card.selectable) return "limegreen";

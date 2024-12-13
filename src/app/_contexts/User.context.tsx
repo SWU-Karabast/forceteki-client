@@ -8,9 +8,9 @@ import React, {
 	useState,
 } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { UserContextType } from "./UserTypes";
+import { IUserContextType } from "./UserTypes";
 
-const UserContext = createContext<UserContextType>({
+const UserContext = createContext<IUserContextType>({
 	user: null,
 	login: () => {},
 	logout: () => {},
@@ -20,7 +20,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 	children,
 }) => {
 	const { data: session } = useSession(); // Get session from next-auth
-	const [user, setUser] = useState<UserContextType["user"]>(null);
+	const [user, setUser] = useState<IUserContextType["user"]>(null);
 
 	useEffect(() => {
 		// Keep context in sync with next-auth session

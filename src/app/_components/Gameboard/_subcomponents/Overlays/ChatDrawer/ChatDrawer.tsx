@@ -2,9 +2,9 @@ import React, { forwardRef } from "react";
 import { Drawer, Box, IconButton, Typography } from "@mui/material";
 import { Settings, Close } from "@mui/icons-material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
-import { ChatDrawerProps } from "@/app/_components/Gameboard/GameboardTypes";
+import { IChatDrawerProps } from "@/app/_components/Gameboard/GameboardTypes";
 
-const ChatDrawer = forwardRef<HTMLDivElement, ChatDrawerProps>(
+const ChatDrawer = forwardRef<HTMLDivElement, IChatDrawerProps>(
 	function ChatDrawer(
 		{
 			sidebarOpen,

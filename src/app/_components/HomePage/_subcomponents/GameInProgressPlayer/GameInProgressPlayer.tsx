@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
-import { GameInProgressPlayerProps } from "../../HomePageTypes";
+import { IGameInProgressPlayerProps } from "../../HomePageTypes";
 
-const GameInProgressPlayer: React.FC<GameInProgressPlayerProps> = ({
+const GameInProgressPlayer: React.FC<IGameInProgressPlayerProps> = ({
 	playerImage,
 }) => {
 	//------------------------STYLES------------------------//

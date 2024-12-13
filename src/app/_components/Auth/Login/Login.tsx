@@ -2,9 +2,9 @@
 
 import React from "react";
 import { Box, Button, Card, CardContent, Typography } from "@mui/material";
-import { LoginProps } from "../AuthTypes";
+import { ILoginProps } from "../AuthTypes";
 
-const Login: React.FC<LoginProps> = ({ handleSubmit }) => {
+const Login: React.FC<ILoginProps> = ({ handleSubmit }) => {
 	//------------------------STYLES------------------------//
 	const loginStyles = {
 		container: {

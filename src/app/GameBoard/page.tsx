@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { Box, Grid2 as Grid } from "@mui/material";
-import { s3ImageURL } from "../_utils/s3Assets";
+import { s3ImageURL } from "../_utils/s3Utils";
 import ChatDrawer from "../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer";
 import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/OpponentCardTray";
 import Board from "../_components/Gameboard/Board/Board";

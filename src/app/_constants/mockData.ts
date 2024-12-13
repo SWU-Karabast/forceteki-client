@@ -1,4 +1,4 @@
-import { Article } from "@/app/_components/HomePage/HomePageTypes";
+import { IArticle } from "@/app/_components/HomePage/HomePageTypes";
 
 export const playerMatches = [
 	{
@@ -83,7 +83,7 @@ export const playerMatches = [
 	},
 ];
 
-export const articles: Article[] = [
+export const articles: IArticle[] = [
 	{
 	  title: "Welcome to the Karabast Beta!",
 	  content: `

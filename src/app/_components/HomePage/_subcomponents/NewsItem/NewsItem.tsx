@@ -6,10 +6,10 @@ import {
 	Typography,
 	Box,
 } from "@mui/material";
-import { NewsItemProps } from "../../HomePageTypes";
+import { INewsItemProps } from "../../HomePageTypes";
 import parse from "html-react-parser";
 
-const NewsItem: React.FC<NewsItemProps> = ({ article }) => {
+const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
 
 	const styles = {
 		box: {

@@ -2,9 +2,9 @@
 import React from "react";
 import { Card, Box, Typography } from "@mui/material";
 import LeaderBaseBoard from "../../_sharedcomponents/LeaderBaseBoard/LeaderBaseBoard";
-import { PlayersProps } from "../LobbyTypes";
+import { IPlayersProps } from "../LobbyTypes";
 
-const Players: React.FC<PlayersProps> = ({ isLobbyView }) => {
+const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 	//------------------------STYLES------------------------//
 
 	const cardStyle = {

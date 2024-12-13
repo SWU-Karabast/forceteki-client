@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import io, { Socket } from "socket.io-client";
 
-interface GameContextType {
+interface IGameContextType {
 	gameState: any;
 	sendMessage: (message: string, args?: any[]) => void;
 	sendGameMessage: (args: any[]) => void;
@@ -19,7 +19,7 @@ interface GameContextType {
 	connectedDeck: any,
 }
 
-const GameContext = createContext<GameContextType | undefined>(undefined);
+const GameContext = createContext<IGameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
 	const [gameState, setGameState] = useState<any>(null);

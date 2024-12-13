@@ -1,7 +1,7 @@
 import React, { useEffect, useState} from "react";
 import { Box, Button, Typography } from "@mui/material";
 import { usePathname, useRouter } from "next/navigation";
-interface Lobby {
+interface ILobby {
 	id: string;
 	name: string;
 }
@@ -9,7 +9,7 @@ interface Lobby {
 const JoinableGame: React.FC = () => {
 	//const randomGameId = Math.floor(Math.random() * 10000);
 	const router = useRouter();
-	const [lobbies, setLobbies] = useState<Lobby[]>([]);
+	const [lobbies, setLobbies] = useState<ILobby[]>([]);
 	useEffect(() => {
 		// Fetch unfilled lobbies from the server
 		const fetchLobbies = async () => {
@@ -18,7 +18,7 @@ const JoinableGame: React.FC = () => {
 				if (!response.ok) {
 					throw new Error(`Error fetching lobbies: ${response.statusText}`);
 				}
-				const data: Lobby[] = await response.json();
+				const data: ILobby[] = await response.json();
 				setLobbies(data);
 			} catch (error) {
 				console.error('Error fetching lobbies:', error);

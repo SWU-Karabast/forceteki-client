@@ -8,12 +8,12 @@ import {
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
 import { useGame } from "@/app/_contexts/Game.context";
-import { SetUpProps } from "../LobbyTypes";
+import { ISetUpProps } from "../LobbyTypes";
 import { useRouter, useSearchParams } from "next/navigation"
 import React from "react";
 
 
-const SetUp: React.FC<SetUpProps> = ({
+const SetUp: React.FC<ISetUpProps> = ({
 	chatHistory,
 	chatMessage,
 	setChatMessage,

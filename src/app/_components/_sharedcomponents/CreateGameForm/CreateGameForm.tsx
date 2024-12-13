@@ -15,29 +15,30 @@ import {
 } from "@mui/material";
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
 import { usePathname, useRouter } from "next/navigation";
+import {updateIdsWithMapping, mapIdToInternalName, transformDeckWithCardData} from "@/app/_utils/s3Utils";
 
-interface CreateGameFormProps {
+interface ICreateGameFormProps {
 	format?: string | null;
 	setFormat?: (format: string) => void;
 }
 
-interface DeckMetadata {
+interface IDeckMetadata {
 	name: string;
 	author: string;
 }
 
-interface DeckCard {
+interface IDeckCard {
 	id: string;
 	count: number;
 }
 
-interface DeckData {
-	metadata: DeckMetadata;
-	leader: DeckCard;
-	secondleader: DeckCard | null;
-	base: DeckCard;
-	deck: DeckCard[];
-	sideboard: DeckCard[];
+interface IDeckData {
+	metadata: IDeckMetadata;
+	leader: IDeckCard;
+	secondleader: IDeckCard | null;
+	base: IDeckCard;
+	deck: IDeckCard[];
+	sideboard: IDeckCard[];
 }
 
 const deckOptions: string[] = [
@@ -47,7 +48,7 @@ const deckOptions: string[] = [
 
 const formatOptions: string[] = ["Premier", "Twin Suns", "Draft", "Sealed"];
 
-const CreateGameForm: React.FC<CreateGameFormProps> = ({
+const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 	format,
 	setFormat,
 }) => {
@@ -60,7 +61,7 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		useState<string>("Vader Green Ramp");
 	const [deckLink, setDeckLink] = useState<string>("");
 	const [saveDeck, setSaveDeck] = useState<boolean>(false);
-	const [deckData, setDeckData] = useState<DeckData | null>(null);
+	//let [deckData, setDeckData] = useState<DeckData | null>(null); Because of Async this won't set in the correct timeframe
 
 	// Additional State for Non-Creategame Path
 	const [gameName, setGameName] = useState<string>("");
@@ -71,13 +72,33 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 			const response = await fetch(
 				`/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
 			);
-
 			if (!response.ok) {
 				throw new Error(`Failed to fetch deck: ${response.statusText}`);
 			}
 
-			const data: DeckData = await response.json();
-			setDeckData(data);
+			const data: IDeckData = await response.json();
+
+			// Fetch setToId mapping from the s3bucket endpoint
+			const setCodeMapping = await fetch("/api/s3bucket?jsonFile=_setCodeMap.json"); // Adjust to your actual endpoint if different
+			if (!setCodeMapping.ok) {
+				throw new Error("Failed to fetch card mapping");
+			}
+
+			const jsonData = await setCodeMapping.json();
+			const deckWithIds = updateIdsWithMapping(data, jsonData);
+
+			// Fetch codeToInternalname mapping
+			const codeInternalnameMapping = await fetch("/api/s3bucket?jsonFile=_cardMap.json"); // Adjust to your actual endpoint if different
+			if (!codeInternalnameMapping.ok) {
+				throw new Error("Failed to fetch card mapping");
+			}
+
+			const codeInternalnameJson = await codeInternalnameMapping.json();
+			const deckWithInternalNames = mapIdToInternalName(codeInternalnameJson, deckWithIds)
+
+			// Fetch internalNameToCardMapping
+			const finalDeckForm = await transformDeckWithCardData(deckWithInternalNames);
+			return finalDeckForm
 		} catch (error) {
 			if (error instanceof Error) {
 				console.error("Error fetching deck:", error.message);
@@ -93,13 +114,13 @@ const CreateGameForm: React.FC<CreateGameFormProps> = ({
 		console.log("Favourite Deck:", favouriteDeck);
 		console.log("SWUDB Deck Link:", deckLink);
 		console.log("beginning fetch for deck link");
-		fetchDeckData(deckLink);
+		const deckData = await fetchDeckData(deckLink);
 		console.log("fetch complete, deck data:", deckData);
 		console.log("Save Deck To Favourites:", saveDeck);
-
 		try {
 			const payload = {
-				user: favouriteDeck
+				user: favouriteDeck,
+				deck: deckData
 			};
 			const response = await fetch("http://localhost:9500/api/create-lobby",
 				{

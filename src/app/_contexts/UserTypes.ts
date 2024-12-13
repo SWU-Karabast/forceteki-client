@@ -1,4 +1,4 @@
-export interface User {
+export interface IUser {
 	id: string | null;
 	name: string | null;
 	email: string | null;
@@ -6,8 +6,8 @@ export interface User {
 	provider: string | null;
 }
 
-export interface UserContextType {
-	user: User | null;
+export interface IUserContextType {
+	user: IUser | null;
 	login: (provider: "google" | "discord") => void;
 	logout: () => void;
 }
