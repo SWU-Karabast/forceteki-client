@@ -15,8 +15,10 @@ const LeaderBase: React.FC<ILeaderBaseProps> = ({
 	let playerLeader = null
 	let playerBase = null
 	if(isLobbyView && connectedDeck){
-		playerLeader = connectedDeck.leader
-		playerBase = connectedDeck.base
+		playerLeader = connectedDeck.leader[0].card
+		playerBase = connectedDeck.base[0].card
+		console.log(playerLeader);
+		console.log(playerBase);
 	}else {
 		playerLeader = gameState?.players[player].leader;
 		playerBase = gameState?.players[player].base;

@@ -47,6 +47,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 			console.log("Game state received:", gameState);
 		});
 		newSocket.on("deckData", (deck:any) =>{
+			console.log(deck);
 			setDeck(deck);
 		});
 

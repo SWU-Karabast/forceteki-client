@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Players from "../_components/Lobby/Players/Players";
 import Deck from "../_components/Lobby/Deck/Deck";
 import SetUp from "../_components/Lobby/SetUp/SetUp";
+import {s3ImageURL} from "@/app/_utils/s3Utils";
 
 const Lobby = () => {
 
@@ -27,6 +28,9 @@ const Lobby = () => {
 	const containerStyle = {
 		height: "100vh",
 		overflow: "hidden",
+		backgroundImage: `url(${s3ImageURL("game/board-background-1.png")})`,
+		backgroundSize: "cover",
+		backgroundPosition: "center",
 	};
 
 	const setUpGridStyle = {

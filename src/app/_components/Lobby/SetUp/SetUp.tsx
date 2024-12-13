@@ -47,11 +47,14 @@ const SetUp: React.FC<ISetUpProps> = ({
 		flexDirection: "column",
 		mt: "2.0em",
 		p: "1.8em",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
+		backgroundColor: "#00000080",
+		backdropFilter: "blur(30px)",
 		overflow: "hidden",
 		'@media (max-height: 1000px)': {
 			maxHeight: '67vh',
+		},
+		'@media (max-height: 759px)': {
+			maxHeight: '64.3vh',
 		},
 	};
 
@@ -87,7 +90,7 @@ const SetUp: React.FC<ISetUpProps> = ({
 		pr: "1.2em",
 		pl: "1.2em",
 		width: "100%",
-		height: "6%",
+		height: "10%",
 		alignItems: "center",
 		justifyContent: "space-between",
 		cursor: "pointer",
@@ -114,7 +117,6 @@ const SetUp: React.FC<ISetUpProps> = ({
 				</CardActions>
 			</Card>
 			<Card sx={mainCardStyle}>
-				<Typography sx={setUpTextStyle}>Set Up</Typography>
 				<Chat
 					chatHistory={chatHistory}
 					chatMessage={chatMessage}

@@ -8,7 +8,7 @@ const CardArea: React.FC<ICardAreaProps> = ({ cards }) => {
 	const mainContainerStyle = {
 		display: "flex",
 		flexWrap: "wrap",
-		gap: "3em",
+		gap: "1em",
 		p: "1em",
 		justifyContent: "center",
 		textWrap: "wrap",
@@ -19,6 +19,8 @@ const CardArea: React.FC<ICardAreaProps> = ({ cards }) => {
 				<GameCard
 					key={card.uuid}
 					card={card}
+					options={['counter']}
+					location={'lobby'}
 				/>
 			))}
 		</Box>

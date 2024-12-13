@@ -22,10 +22,15 @@ export interface ICardData {
 	setId: ICardSetId;
 	type: string;
 }
-
-export interface IGameCardProps {
+export interface IServerCardData {
+	count: number;
 	card: ICardData;
+}
+export interface IGameCardProps {
+	card: ICardData | IServerCardData;
 	size?: "standard" | "square";
+	options: string[];
+	location: "lobby" | "gameBoard";
 }
 
 export interface ILeaderBaseCardProps {

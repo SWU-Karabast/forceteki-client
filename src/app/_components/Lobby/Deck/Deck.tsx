@@ -22,8 +22,8 @@ const Deck: React.FC = () => {
 		width: "100%",
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
+		backgroundColor: "#00000080",
+		backdropFilter: "blur(30px)",
 		overflow: "hidden",
 		'@media (max-height: 759px)': {
 			height: '84vh',
@@ -35,7 +35,7 @@ const Deck: React.FC = () => {
 
 	const headerBoxStyle = {
 		display: "flex",
-		height: "10vh",
+		height: "100px",
 		width: "100%",
 		justifyContent: "space-between",
 		position: "sticky",
@@ -57,19 +57,9 @@ const Deck: React.FC = () => {
 		color: "white",
 		mr: ".6em",
 	};
-	const exitText = {
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "600",
-		color: "#fff",
-		mr: ".5vw",
-		textAlign: "end",
-		mb: "22px",
-		cursor: "pointer",
-	};
 	const scrollableBoxStyle = {
 		flexGrow: 1,
 		overflowY: "auto",
-		px: "5em",
 		"::-webkit-scrollbar": {
 			width: "0.2vw",
 		},
@@ -84,6 +74,7 @@ const Deck: React.FC = () => {
 	};
 	const { connectedDeck } = useGame();
 	const newDeck = connectedDeck?.deckCards ?? [];
+
 	return (
 		<Box sx={{width:'100%'}}>
 			<Card sx={cardStyle}>

@@ -21,13 +21,14 @@ const Chat: React.FC<IChatProps> = ({
 
 	const chatContainerStyle = {
 		backgroundColor: "#28282800",
-		height: "53vh",
+		height: "55vh",
 		overflowY: "auto",
 	};
 
 	const titleStyle = {
 		fontWeight: "bold",
 		color: "#fff",
+		fontSize: "1.5em",
 	};
 
 	const dividerStyle = {

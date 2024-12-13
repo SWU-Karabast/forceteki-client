@@ -16,8 +16,8 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 		flexDirection: isLobbyView ? "column" : "row",
 		justifyContent: isLobbyView ? "flex-start" : "center",
 		pt: ".8em",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
+		backgroundColor: "#00000080",
+		backdropFilter: "blur(30px)",
 		'@media (max-height: 759px)': {
 			height: '84vh',
 		},
