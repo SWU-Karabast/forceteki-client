@@ -42,7 +42,7 @@ const SetUp: React.FC<ISetUpProps> = ({
 			});
 
 			if (!response.ok) {
-				throw new Error("Failed to create game");
+				throw new Error("Failed to submit deck");
 			}
 
 			sendMessage("startGame");
