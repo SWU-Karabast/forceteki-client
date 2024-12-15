@@ -60,8 +60,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
 					{cards.map((card) => (
 						<Box key={card.uuid} sx={{ flex: "0 0 auto" }}>
 							<GameCard
-								card={card}
-							/>
+								card={card} options={[]} location={"gameBoard"} pile={null}							/>
 						</Box>
 					))}
 				</Box>

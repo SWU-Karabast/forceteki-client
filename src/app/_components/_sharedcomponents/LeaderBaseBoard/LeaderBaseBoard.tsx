@@ -16,33 +16,58 @@ const LeaderBaseBoard: React.FC<ILeaderBaseBoardProps> = ({
 	const containerStyle = {
 		height: "100%",
 		width: "100%",
-		justifyContent: "space-between",
+		justifyContent: "space-between"
 	};
 
 	const rowStyle = {
 		flexGrow: 1,
-		width: "100%",
+		width: "100%"
 	};
 
 	return (
 		<Grid container direction="column" sx={containerStyle}>
-			{/* Opponent's row */}
-			<Grid sx={rowStyle}>
-				<LeaderBase
-					player={getOpponent(connectedPlayer)}
-					isLobbyView={isLobbyView}
-					title={titleOpponent}
-				/>
-			</Grid>
-			{ isLobbyView ? null : <CardActionTray /> }
-			{/* Player's row */}
-			<Grid sx={rowStyle}>
-				<LeaderBase
-					player={connectedPlayer}
-					isLobbyView={isLobbyView}
-					title={connectedPlayer}
-				/>
-			</Grid>
+			{isLobbyView ? (
+				// If it's the lobby view, show the player's row first, then the opponent's.
+				<>
+					{/* Player's row */}
+					<Grid sx={rowStyle}>
+						<LeaderBase
+							player={connectedPlayer}
+							isLobbyView={isLobbyView}
+							title={connectedPlayer}
+						/>
+					</Grid>
+					{/* Opponent's row */}
+					<Grid sx={rowStyle}>
+						<LeaderBase
+							player={getOpponent(connectedPlayer)}
+							isLobbyView={isLobbyView}
+							title={titleOpponent}
+						/>
+					</Grid>
+				</>
+			) : (
+				// Otherwise (in-game view), show the opponent's row first, then the player’s row, with the CardActionTray in between.
+				<>
+					{/* Opponent's row */}
+					<Grid sx={rowStyle}>
+						<LeaderBase
+							player={getOpponent(connectedPlayer)}
+							isLobbyView={isLobbyView}
+							title={titleOpponent}
+						/>
+					</Grid>
+					<CardActionTray />
+					{/* Player's row */}
+					<Grid sx={rowStyle}>
+						<LeaderBase
+							player={connectedPlayer}
+							isLobbyView={isLobbyView}
+							title={connectedPlayer}
+						/>
+					</Grid>
+				</>
+			)}
 		</Grid>
 	);
 };

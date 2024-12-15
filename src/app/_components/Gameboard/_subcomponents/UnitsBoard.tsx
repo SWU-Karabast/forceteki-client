@@ -55,7 +55,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 				<Grid sx={opponentGridStyle}>
 					{opponentUnits.map((card: ICardData) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
-							<GameCard card={card} size="square" />
+							<GameCard card={card} size="square" options={[]} location={"gameBoard"} pile={null}/>
 						</Box>
 					))}
 				</Grid>
@@ -64,7 +64,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 				<Grid sx={playerGridStyle}>
 					{playerUnits.map((card: ICardData) => (
 						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
-							<GameCard card={card} size="square" />
+							<GameCard card={card} size="square" options={[]} location={"gameBoard"} pile={null} />
 						</Box>
 					))}
 				</Grid>

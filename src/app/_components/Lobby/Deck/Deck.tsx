@@ -18,6 +18,7 @@ const Deck: React.FC = () => {
 	//------------------------STYLES------------------------//
 	const cardStyle = {
 		borderRadius: "1.1em",
+		pt: ".8em",
 		height: "90vh",
 		width: "100%",
 		display: "flex",
@@ -67,7 +68,8 @@ const Deck: React.FC = () => {
 	};
 	const scrollableBoxStyleSideboard = {
 		flexGrow: 1,
-		height: "20%",
+		height: "21%",
+		minHeight: "183px",
 		overflowY: "auto",
 		"::-webkit-scrollbar": {
 			width: "0.2vw",
@@ -99,14 +101,23 @@ const Deck: React.FC = () => {
 	const { connectedDeck } = useGame();
 	const newDeck = connectedDeck?.deckCards ?? [];
 	const sideBoard = connectedDeck?.sideboard ?? [];
+	// Calculate the total counts
+	const deckCount = newDeck.reduce(
+		(sum: number, item: { count: number; }) => sum + (item.count || 0),
+		0
+	) ?? 0;
 
+	const sideboardCount = sideBoard.reduce(
+		(sum: number, item: { count: number; }) => sum + (item.count || 0),
+		0
+	) ?? 0;
 	return (
 		<Box sx={{width:'100%'}}>
 			<Card sx={cardStyle}>
 				<Box sx={headerBoxStyle}>
 					<Typography sx={titleTextStyle}>Your Deck</Typography>
 					<Typography sx={deckSizeTextStyle}>
-						{connectedDeck?.deckCards.length}/50
+						{deckCount}/50
 					</Typography>
 				</Box>
 				<Box
@@ -121,25 +132,23 @@ const Deck: React.FC = () => {
 				>
 					<CardArea cards={newDeck} pile={"Deck"} />
 				</Box>
-				<Box sx={headerBoxStyle}>
-					<Typography sx={titleTextStyle}>Sideboard</Typography>
-					<Divider sx={dividerStyle} />
-					<Typography sx={deckSizeTextStyle}>
-						{connectedDeck?.sideboard.length}/10
-					</Typography>
-				</Box>
-				<Box
-					ref={containerRef}
-					onMouseDown={handleMouseDown}
-					onMouseMove={handleMouseMove}
-					onMouseUp={handleMouseUp}
-					onTouchStart={handleTouchStart}
-					onTouchMove={handleTouchMove}
-					onTouchEnd={handleTouchEnd}
-					sx={scrollableBoxStyleSideboard}
-				>
-					<CardArea cards={sideBoard} pile={"Sideboard"} />
-				</Box>
+				{sideBoard?.length > 0 && (
+					<>
+						<Box sx={headerBoxStyle}>
+							<Typography sx={titleTextStyle}>Sideboard</Typography>
+							<Divider sx={dividerStyle} />
+							<Typography sx={deckSizeTextStyle}>
+								{sideboardCount}/10
+							</Typography>
+						</Box>
+						<Box
+							ref={containerRef}
+							sx={scrollableBoxStyleSideboard}
+						>
+							<CardArea cards={sideBoard} pile={"Sideboard"} />
+						</Box>
+					</>
+				)}
 			</Card>
 		</Box>
 	);

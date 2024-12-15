@@ -18,7 +18,7 @@ const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
 const GameCard: React.FC<IGameCardProps> = ({
 	card,
 	size = "standard",
-	location = "lobby",
+	location = "gameBoard",
 	pile,
 	options,
 }) => {
@@ -91,8 +91,11 @@ const GameCard: React.FC<IGameCardProps> = ({
 			borderRadius: ".38em",
 			height: "18vh",
 			width: "6.7vw",
+			minWidth: "101px",
+			minHeight: "151px",
 			overflow: "hidden",
 			cursor: "pointer",
+			backgroundColor: "transparent",
 		},
 		cardContentStyle: {
 			width: "100%",
@@ -100,12 +103,11 @@ const GameCard: React.FC<IGameCardProps> = ({
 			position: "relative",
 			textAlign: "center",
 			whiteSpace: "normal",
-			backgroundColor: "black",
+			backgroundColor: "transparent",
 			backgroundImage: `url(${s3CardImageURL(cardData)})`,
 			backgroundSize: size === "standard" ? "contain" : "cover",
 			backgroundPosition: size === "standard" ? "center" : "top",
 			backgroundRepeat: "no-repeat",
-			border: `2px solid ${cardBorderColor(cardData)}`,
 		},
 		imageStyle: {
 			width: "2.5rem",
@@ -138,7 +140,8 @@ const GameCard: React.FC<IGameCardProps> = ({
 	}
 	return (
 		<MuiCard sx={location === 'lobby' ? styles.cardStylesLobby: styles.cardStyles }
-			 onClick={location === 'lobby' ? handleSwitch: () => {
+			 onClick={location === 'lobby' ? handleSwitch : () => {
+				 console.log("Hello world")
 				 if (cardData.selectable) {
 					 sendGameMessage(["cardClicked", cardData.uuid]);
 				 }

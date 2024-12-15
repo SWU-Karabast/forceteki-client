@@ -12,6 +12,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 		borderColor: "#FFFFFF00",
 		height:"90vh",  // For small screens and up (600px and above)
 		width: "80%",
+		minWidth: "212px",
 		display: "flex",
 		flexDirection: isLobbyView ? "column" : "row",
 		justifyContent: isLobbyView ? "flex-start" : "center",
@@ -24,14 +25,25 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 		'@media (max-height: 1000px)': {
 			maxHeight: '85.5vh',
 		},
+		"::-webkit-scrollbar": {
+			width: "0.2vw",
+		},
+		"::-webkit-scrollbar-thumb": {
+			backgroundColor: "#D3D3D3B3",
+			borderRadius: "1vw",
+		},
+		"::-webkit-scrollbar-button": {
+			display: "none",
+		},
+		transition: "scrollbar-color 0.3s ease-in-out",
 	};
 
 	const typographyStyle = {
-		fontSize: "2.4em",
+		fontSize: "2.0em",
 		fontWeight: "bold",
 		color: "white",
-		ml: ".6em",
-		pt: ".2em",
+		ml: "30px",
+		mb: "0px"
 	};
 
 	return (
