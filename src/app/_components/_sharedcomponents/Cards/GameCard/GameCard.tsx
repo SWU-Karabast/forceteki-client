@@ -2,7 +2,6 @@ import React from "react";
 import {
 	Card as MuiCard,
 	CardContent,
-	CardActionArea,
 	Typography,
 	Box,
 } from "@mui/material";
@@ -20,6 +19,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 	card,
 	size = "standard",
 	location = "lobby",
+	pile,
 	options,
 }) => {
 	// const isLobbyView = path === "/lobby";
@@ -28,14 +28,58 @@ const GameCard: React.FC<IGameCardProps> = ({
 	// Determine whether card is ICardData or IServerCardData
 	const cardData = isICardData(card) ? card : card.card;
 	const cardCounter = !isICardData(card) ? card.count : 0;
-	const { sendGameMessage } = useGame();
-
+	const { sendGameMessage, connectedDeck, setConnectedDeck } = useGame();
 	const cardBorderColor = (card: ICardData) => {
 		if (card.selected) return "yellow";
 		if (card.selectable) return "limegreen";
 		if (card.exhausted) return "gray";
 		return "";
 	}
+
+	// handle deck movement
+	const handleSwitch = () => {
+		const updatedDeck = {...connectedDeck};
+		const deckList = updatedDeck.deckCards || [];
+		const sideboardList = updatedDeck.sideboard || [];
+
+		// Helper function to move the card between lists
+		const moveCard = (sourceList: any[], targetList: any[]) => {
+			const cardIndex = sourceList.findIndex((c: any) => c.card.id === cardData.id);
+
+			if (cardIndex !== -1) {
+				// Decrement one copy from the source card
+				sourceList[cardIndex].count -= 1;
+
+				// If count drops to zero, remove the card entirely from source
+				if (sourceList[cardIndex].count === 0) {
+					sourceList.splice(cardIndex, 1);
+				}
+
+				// Now handle the target list
+				const existingCardIndex = targetList.findIndex((c: any) => c.card.id === cardData.id);
+
+				if (existingCardIndex !== -1) {
+					// If the card already exists in the target, just increment its count
+					targetList[existingCardIndex].count += 1;
+				} else {
+					// If the card doesn't exist in the target, add it with count = 1
+					targetList.push({ count: 1, card: { ...cardData } });
+				}
+			}
+		};
+		// Check if the card is in the deck or sideboard
+		if (pile === 'Deck') {
+			// Move from deck to sideboard
+			moveCard(deckList, sideboardList);
+		} else {
+			// Move from sideboard to deck
+			moveCard(sideboardList, deckList);
+		}
+
+		// Update the connectedDeck state
+		setConnectedDeck(updatedDeck);
+	}
+
 
 	const styles = {
 		cardStyles: {
@@ -45,9 +89,10 @@ const GameCard: React.FC<IGameCardProps> = ({
 		},
 		cardStylesLobby: {
 			borderRadius: ".38em",
-			height: "19vh",
-			width: "7.18vw",
+			height: "18vh",
+			width: "6.7vw",
 			overflow: "hidden",
+			cursor: "pointer",
 		},
 		cardContentStyle: {
 			width: "100%",
@@ -91,22 +136,23 @@ const GameCard: React.FC<IGameCardProps> = ({
 			fontWeight: "700",
 		}
 	}
-
 	return (
 		<MuiCard sx={location === 'lobby' ? styles.cardStylesLobby: styles.cardStyles }
-			onClick={() => {
-				if (cardData.selectable) {
-					sendGameMessage(["cardClicked", cardData.uuid]);
-				}
-			}}
+			 onClick={location === 'lobby' ? handleSwitch: () => {
+				 if (cardData.selectable) {
+					 sendGameMessage(["cardClicked", cardData.uuid]);
+				 }
+			 }}
 		>
 			{isFaceUp ? (
 				<CardContent sx={styles.cardContentStyle}>
 					<Box sx={{ display: 'flex', flexDirection: 'column', height: "100%"}}>
 					</Box>
-					<Box sx={styles.iconLayer}>
-						<Typography sx={styles.numberStyle}>{cardCounter}</Typography>
-					</Box>
+					{options?.includes("counter") && (
+						<Box sx={styles.iconLayer}>
+							<Typography sx={styles.numberStyle}>{cardCounter}</Typography>
+						</Box>
+					)}
 				</CardContent>
 			) : (
 				<CardContent sx={styles.cardContentStyle}>

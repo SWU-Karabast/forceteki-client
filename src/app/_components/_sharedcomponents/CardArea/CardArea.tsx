@@ -3,7 +3,7 @@ import { Box } from "@mui/material";
 import GameCard from "../Cards/GameCard/GameCard";
 import { ICardAreaProps } from "@/app/_components/Gameboard/GameboardTypes";
 
-const CardArea: React.FC<ICardAreaProps> = ({ cards }) => {
+const CardArea: React.FC<ICardAreaProps> = ({ cards, pile }) => {
 	//------------------------STYLES------------------------//
 	const mainContainerStyle = {
 		display: "flex",
@@ -21,6 +21,7 @@ const CardArea: React.FC<ICardAreaProps> = ({ cards }) => {
 					card={card}
 					options={['counter']}
 					location={'lobby'}
+					pile={pile}
 				/>
 			))}
 		</Box>

@@ -57,6 +57,7 @@ export interface IBasicPromptProps {
 
 export interface ICardAreaProps {
 	cards: ICardData[];
+	pile: "Deck" | "Sideboard" | null;
 }
 
 export interface IUnitsBoardProps {

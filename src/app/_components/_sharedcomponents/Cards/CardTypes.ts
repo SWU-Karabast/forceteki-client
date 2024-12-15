@@ -31,6 +31,7 @@ export interface IGameCardProps {
 	size?: "standard" | "square";
 	options: string[];
 	location: "lobby" | "gameBoard";
+	pile: "Deck" | "Sideboard" | null;
 }
 
 export interface ILeaderBaseCardProps {

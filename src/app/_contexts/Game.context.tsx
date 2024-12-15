@@ -17,6 +17,7 @@ interface IGameContextType {
 	getOpponent: (player: string) => string;
 	connectedPlayer: string;
 	connectedDeck: any,
+	setConnectedDeck: (deck: any) => void;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -68,11 +69,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		socket?.emit("game", ...args);
 	};
 
+
 	const getOpponent = (player: string) => {
 		if (!gameState) return "";
 		const playerNames = Object.keys(gameState.players);
 		return playerNames.find((name) => name !== player) || "";
 	};
+
+	const setConnectedDeck = (deck: any) => {
+		setDeck(deck);
+	}
 
 	return (
 		<GameContext.Provider
@@ -82,7 +88,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 				sendMessage,
 				connectedPlayer,
 				connectedDeck,
-				getOpponent
+				getOpponent,
+				setConnectedDeck,
 			}}
 		>
 			{children}
