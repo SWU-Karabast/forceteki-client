@@ -43,8 +43,8 @@ const GameCard: React.FC<IGameCardProps> = ({
 		const sideboardList = updatedDeck.sideboard || [];
 
 		// Helper function to move the card between lists
-		const moveCard = (sourceList: any[], targetList: any[]) => {
-			const cardIndex = sourceList.findIndex((c: any) => c.card.id === cardData.id);
+		const moveCard = (sourceList: IServerCardData[], targetList: IServerCardData[]) => {
+			const cardIndex = sourceList.findIndex((c: IServerCardData) => c.card.id === cardData.id);
 
 			if (cardIndex !== -1) {
 				// Decrement one copy from the source card
@@ -56,7 +56,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 				}
 
 				// Now handle the target list
-				const existingCardIndex = targetList.findIndex((c: any) => c.card.id === cardData.id);
+				const existingCardIndex = targetList.findIndex((c: IServerCardData) => c.card.id === cardData.id);
 
 				if (existingCardIndex !== -1) {
 					// If the card already exists in the target, just increment its count
