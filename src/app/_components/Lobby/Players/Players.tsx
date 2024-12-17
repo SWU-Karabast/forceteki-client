@@ -1,11 +1,25 @@
 // Players.tsx
 import React from "react";
 import { Card, Box, Typography } from "@mui/material";
-import LeaderBaseBoard from "../../_sharedcomponents/LeaderBaseBoard/LeaderBaseBoard";
+import Grid from "@mui/material/Grid2";
 import { IPlayersProps } from "../LobbyTypes";
+import LeaderBaseCard from "@/app/_components/_sharedcomponents/Cards/LeaderBaseCard/LeaderBaseCard";
+import {useGame} from "@/app/_contexts/Game.context";
 
 const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 	//------------------------STYLES------------------------//
+	const { connectedPlayer, connectedDeck } = useGame();
+
+	const titleOpponent =
+		connectedPlayer === "ThisIsTheWay" ? "Order66" : "ThisIsTheWay";
+	let playerLeader = null;
+	let playerBase = null;
+
+	// we get the connected deck
+	if (connectedDeck) {
+		playerLeader = connectedDeck.leader[0].card;
+		playerBase = connectedDeck.base[0].card;
+	}
 
 	const cardStyle = {
 		borderRadius: "1.1em",
@@ -46,11 +60,50 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 		mb: "0px"
 	};
 
+	const lobbyLeaderBaseContainer = {
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		width: "100%",
+	}
+	const containerStyle = {
+		height: "100%",
+		width: "100%",
+		justifyContent: "center",
+		alignItems: "center"
+	};
+	const rowStyle = {
+		flexGrow: 1,
+		width: "100%"
+	};
 	return (
 		<Card sx={cardStyle}>
 			<Box sx={{ width: "100%" }}>
 				<Typography sx={typographyStyle}>Players</Typography>
-				<LeaderBaseBoard isLobbyView={isLobbyView} />
+				<Grid container direction="column" sx={containerStyle}>
+					<Grid sx={rowStyle}>
+						<Box sx={lobbyLeaderBaseContainer}>
+							<LeaderBaseCard
+								variant="leader"
+								isLobbyView={true}
+								title={connectedPlayer}
+								card={playerLeader}
+							/>
+							<LeaderBaseCard variant="base" isLobbyView={true} card={playerBase}></LeaderBaseCard>
+						</Box>
+					</Grid>
+					<Grid sx={rowStyle}>
+						<Box sx={lobbyLeaderBaseContainer}>
+							<LeaderBaseCard
+								variant="leader"
+								isLobbyView={isLobbyView}
+								title={titleOpponent}
+								card={playerLeader}
+							/>
+							<LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={playerBase}></LeaderBaseCard>
+						</Box>
+					</Grid>
+				</Grid>
 			</Box>
 		</Card>
 	);
