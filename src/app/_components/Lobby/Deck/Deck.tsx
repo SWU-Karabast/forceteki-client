@@ -170,7 +170,7 @@ const Deck: React.FC = () => {
 										key={card.card.uuid}
 										card={card}
 										variant={'lobby'}
-										onClick={() => updateDeck(['SideBoard', card.card.id])}
+										onClick={() => updateDeck(['Sideboard', card.card.id])}
 									/>
 								))}
 							</Box>
