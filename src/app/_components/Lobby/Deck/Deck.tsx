@@ -1,8 +1,9 @@
 import React from "react";
 import {Card, Box, Typography, Divider} from "@mui/material";
-import CardArea from "../../_sharedcomponents/CardArea/CardArea";
+import { ICardData, IServerCardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { useDragScroll } from "@/app/_utils/useDragScroll";
 import {useGame} from "@/app/_contexts/Game.context";
+import GameCard from "@/app/_components/_sharedcomponents/Cards/GameCard/GameCard";
 
 const Deck: React.FC = () => {
 	// Use the custom hook with horizontal or vertical scrolling as required
@@ -98,7 +99,15 @@ const Deck: React.FC = () => {
 		},
 		transition: "scrollbar-color 0.3s ease-in-out",
 	};
-	const { connectedDeck } = useGame();
+	const mainContainerStyle = {
+		display: "flex",
+		flexWrap: "wrap",
+		gap: "1em",
+		p: "1em",
+		justifyContent: "center",
+		textWrap: "wrap",
+	};
+	const { connectedDeck, updateDeck } = useGame();
 	const newDeck = connectedDeck?.deckCards ?? [];
 	const sideBoard = connectedDeck?.sideboard ?? [];
 	// Calculate the total counts
@@ -111,6 +120,7 @@ const Deck: React.FC = () => {
 		(sum: number, item: { count: number; }) => sum + (item.count || 0),
 		0
 	) ?? 0;
+
 	return (
 		<Box sx={{width:'100%'}}>
 			<Card sx={cardStyle}>
@@ -130,7 +140,17 @@ const Deck: React.FC = () => {
 					onTouchEnd={handleTouchEnd}
 					sx={scrollableBoxStyle}
 				>
-					<CardArea cards={newDeck} pile={"Deck"} />
+					<Box sx={mainContainerStyle}>
+						{newDeck.map((card:IServerCardData) => (
+							<GameCard
+								key={card.card.uuid}
+								card={card}
+								options={['counter']}
+								size={'lobby'}
+								onClick={() => updateDeck(['Deck', card.card.id])}
+							/>
+						))}
+					</Box>
 				</Box>
 				{sideBoard?.length > 0 && (
 					<>
@@ -145,7 +165,17 @@ const Deck: React.FC = () => {
 							ref={containerRef}
 							sx={scrollableBoxStyleSideboard}
 						>
-							<CardArea cards={sideBoard} pile={"Sideboard"} />
+							<Box sx={mainContainerStyle}>
+								{sideBoard.map((card:IServerCardData) => (
+									<GameCard
+										key={card.card.uuid}
+										card={card}
+										options={['counter']}
+										size={'lobby'}
+										onClick={() => updateDeck(['SideBoard', card.card.uuid])}
+									/>
+								))}
+							</Box>
 						</Box>
 					</>
 				)}

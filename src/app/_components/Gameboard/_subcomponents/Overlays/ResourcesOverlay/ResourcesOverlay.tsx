@@ -10,9 +10,10 @@ import {
 	IconButton,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import CardArea from "../../../../_sharedcomponents/CardArea/CardArea";
+import { ICardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { IResourcesOverlayProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
+import GameCard from "@/app/_components/_sharedcomponents/Cards/GameCard/GameCard";
 
 const ResourcesOverlay: React.FC<IResourcesOverlayProps> = ({
 	isModalOpen,
@@ -20,7 +21,14 @@ const ResourcesOverlay: React.FC<IResourcesOverlayProps> = ({
 }) => {
 
 	const { gameState, connectedPlayer } = useGame();
-
+	const mainContainerStyle = {
+		display: "flex",
+		flexWrap: "wrap",
+		gap: "1em",
+		p: "1em",
+		justifyContent: "center",
+		textWrap: "wrap",
+	};
 	return (
 		<Modal
 			open={isModalOpen}
@@ -49,8 +57,14 @@ const ResourcesOverlay: React.FC<IResourcesOverlayProps> = ({
 					<Typography variant="caption" color="#fff">
 						Your Resources
 					</Typography>
-
-					<CardArea cards={gameState.players[connectedPlayer].cardPiles["resources"]} pile={null} />
+					<Box sx={mainContainerStyle}>
+						{gameState.players[connectedPlayer].cardPiles["resources"].map((card: ICardData) => (
+							<GameCard
+								key={card.uuid}
+								card={card}
+							/>
+						))}
+					</Box>
 				</CardContent>
 				<Box
 					sx={{

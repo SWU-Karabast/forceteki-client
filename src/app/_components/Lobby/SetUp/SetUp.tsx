@@ -23,38 +23,17 @@ const SetUp: React.FC<ISetUpProps> = ({
 	const { sendMessage } = useGame();
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const { connectedPlayer, connectedDeck } = useGame();
 	// Extract the player from the URL query params
 	const player = searchParams.get("player");
 
 	const handleStartGame = async () => {
-		try {
-			const payload = {
-				user: connectedPlayer,
-				deck: connectedDeck
-			};
-			const response = await fetch("http://localhost:9500/api/submit-deck", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(payload),
-			});
-
-			if (!response.ok) {
-				throw new Error("Failed to submit deck");
-			}
-
-			sendMessage("startGame");
-			if (player) {
-				router.push("/GameBoard?player=" + player);
-			} else {
-				router.push("/GameBoard");
-			}
-
-		} catch (error) {
-			console.error(error);
+		sendMessage("startGame");
+		if (player) {
+			router.push("/GameBoard?player=" + player);
+		} else {
+			router.push("/GameBoard");
 		}
+
 	};
 
 	//------------------------STYLES------------------------//

@@ -28,10 +28,9 @@ export interface IServerCardData {
 }
 export interface IGameCardProps {
 	card: ICardData | IServerCardData;
-	size?: "standard" | "square";
-	options: string[];
-	location: "lobby" | "gameBoard";
-	pile: "Deck" | "Sideboard" | null;
+	size?: "standard" | "square" | "lobby";
+	onClick?: () => void;
+	options?: string[];
 }
 
 export interface ILeaderBaseCardProps {
