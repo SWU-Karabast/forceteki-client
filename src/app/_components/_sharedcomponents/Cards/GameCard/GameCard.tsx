@@ -19,7 +19,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 	card,
 	size = "standard",
 	onClick,
-	options,
+	variant,
 }) => {
 	// const isLobbyView = path === "/lobby";
 	const isFaceUp = true;
@@ -47,7 +47,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 	const styles = {
 		cardStyles: {
 			borderRadius: ".38em",
-			...(size === "lobby"
+			...(variant === "lobby"
 					? {
 						height: "18vh",
 						width: "6.7vw",
@@ -114,7 +114,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 				<CardContent sx={styles.cardContentStyle}>
 					<Box sx={{ display: 'flex', flexDirection: 'column', height: "100%"}}>
 					</Box>
-					{options?.includes("counter") && (
+					{variant === "lobby" && (
 						<Box sx={styles.iconLayer}>
 							<Typography sx={styles.numberStyle}>{cardCounter}</Typography>
 						</Box>

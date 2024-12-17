@@ -28,9 +28,9 @@ export interface IServerCardData {
 }
 export interface IGameCardProps {
 	card: ICardData | IServerCardData;
-	size?: "standard" | "square" | "lobby";
+	size?: "standard" | "square";
 	onClick?: () => void;
-	options?: string[];
+	variant?: "lobby" | "gameboard";
 }
 
 export interface ILeaderBaseCardProps {

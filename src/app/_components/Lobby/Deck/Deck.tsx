@@ -145,8 +145,7 @@ const Deck: React.FC = () => {
 							<GameCard
 								key={card.card.uuid}
 								card={card}
-								options={['counter']}
-								size={'lobby'}
+								variant={"lobby"}
 								onClick={() => updateDeck(['Deck', card.card.id])}
 							/>
 						))}
@@ -170,8 +169,7 @@ const Deck: React.FC = () => {
 									<GameCard
 										key={card.card.uuid}
 										card={card}
-										options={['counter']}
-										size={'lobby'}
+										variant={'lobby'}
 										onClick={() => updateDeck(['SideBoard', card.card.uuid])}
 									/>
 								))}
