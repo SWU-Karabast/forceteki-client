@@ -5,6 +5,7 @@ import { IBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
 import {useGame} from "@/app/_contexts/Game.context";
 import LeaderBaseCard from "@/app/_components/_sharedcomponents/Cards/LeaderBaseCard/LeaderBaseCard";
 import { Box } from "@mui/material";
+import CardActionTray from "@/app/_components/Gameboard/_subcomponents/PlayerTray/CardActionTray";
 
 const Board: React.FC<IBoardProps> = ({
 	sidebarOpen,
@@ -67,6 +68,7 @@ const Board: React.FC<IBoardProps> = ({
 						</Box>
 					</Grid>
 				</Grid>
+				<CardActionTray />
 				<Grid sx={rowStyle}>
 					<Grid container direction="column" sx={containerStyle}>
 						<Box sx={lobbyLeaderBaseContainer}>
