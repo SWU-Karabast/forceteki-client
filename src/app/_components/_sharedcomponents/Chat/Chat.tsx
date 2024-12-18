@@ -13,40 +13,28 @@ import { IChatProps } from "./ChatTypes";
 const Chat: React.FC<IChatProps> = ({
 	chatHistory,
 	chatMessage,
-	playerRoll = null,
-	opponentRoll = null,
 	setChatMessage,
 	handleChatSubmit,
 }) => {
-	const determineFirstPlayer = () => {
-		if (playerRoll !== null && opponentRoll !== null) {
-			if (playerRoll > opponentRoll) {
-				return "Player";
-			} else if (opponentRoll > playerRoll) {
-				return "Opponent";
-			} else {
-				return "It's a tie. Roll again.";
-			}
-		}
-		return null;
-	};
 
 	//------------------------STYLES------------------------//
 
 	const chatContainerStyle = {
-		mt: 2,
 		backgroundColor: "#28282800",
+		height: "55vh",
+		overflowY: "auto",
 	};
 
 	const titleStyle = {
 		fontWeight: "bold",
 		color: "#fff",
+		fontSize: "1.5em",
 	};
 
 	const dividerStyle = {
 		backgroundColor: "#fff",
 		mt: ".5vh",
-		mb: "1vh",
+		mb: "0.5vh",
 	};
 
 	const chatBoxStyle = {
@@ -68,7 +56,6 @@ const Chat: React.FC<IChatProps> = ({
 		p: "10px",
 		mt: 2,
 	};
-
 	const textFieldStyle = {
 		backgroundColor: "#28282800",
 		color: "#fff",
@@ -103,28 +90,14 @@ const Chat: React.FC<IChatProps> = ({
 						))
 					) : (
 						<Box>
-							{playerRoll !== null && opponentRoll !== null ? (
-								<>
-									<Typography sx={messageTextStyle}>
-										Player rolled {playerRoll} and Opponent rolled{" "}
-										{opponentRoll}.
-									</Typography>
-									<Typography sx={messageTextStyle}>
-										{determineFirstPlayer() === "It's a tie. Roll again."
-											? "It's a tie. Roll again."
-											: `${determineFirstPlayer()} chooses who goes first.`}
-									</Typography>
-								</>
-							) : (
-								<>
-									<Typography sx={messageTextStyle}>
-										Player 1 has connected.
-									</Typography>
-									<Typography sx={messageTextStyle}>
-										Player 2 has connected.
-									</Typography>
-								</>
-							)}
+							<>
+								<Typography sx={messageTextStyle}>
+									Player 1 has connected.
+								</Typography>
+								<Typography sx={messageTextStyle}>
+									Player 2 has connected.
+								</Typography>
+							</>
 						</Box>
 					)}
 				</Box>

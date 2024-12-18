@@ -12,7 +12,7 @@ const GameLinkCard: React.FC = () => {
 	//------------------------STYLES------------------------//
 
 	const cardStyle = {
-		height: "15vh",
+		height: "fit-content",
 		background: "#18325199",
 		pb: "4vh",
 		backgroundColor: "#000000E6",
