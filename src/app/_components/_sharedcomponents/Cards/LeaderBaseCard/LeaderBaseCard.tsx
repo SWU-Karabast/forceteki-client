@@ -103,7 +103,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 sx={isLobbyView ? cardStyleLobby : cardStyle}
                 onClick={() => {
                     // Only allow clicking if not lobby view and the card is selectable
-                    if (!disabled) {
+                    if (!disabled && card.selectable) {
                         sendGameMessage(["cardClicked", card.uuid]);
                     }
                 }}
