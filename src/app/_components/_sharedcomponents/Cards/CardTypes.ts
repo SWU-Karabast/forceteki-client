@@ -31,6 +31,7 @@ export interface IGameCardProps {
 	size?: "standard" | "square";
 	onClick?: () => void;
 	variant?: "lobby" | "gameboard";
+	disabled?: boolean;
 }
 
 export interface ILeaderBaseCardProps {
@@ -40,4 +41,5 @@ export interface ILeaderBaseCardProps {
 	handleSelect?: () => void;
 	title?: string;
 	card: ICardData;
+	disabled?: boolean;
 }

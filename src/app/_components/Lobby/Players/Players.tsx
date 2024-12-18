@@ -74,8 +74,28 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 	};
 	const rowStyle = {
 		flexGrow: 1,
-		width: "100%"
+		width: "100%",
+		alignItems: "center",
+		justifyContent: "center",
+		display: "flex"
 	};
+	const titleTypographyStyle = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "600",
+		fontSize: "1.5em",
+		marginBottom: isLobbyView ? 0 : "0.5em",
+		textAlign: "left",
+		color: "white",
+	};
+	const titleTypographyStyleOpponent = {
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "600",
+		fontSize: "1.5em",
+		marginBottom: "10px",
+		textAlign: "left" as const,
+		color: "white",
+		opacity: "15%",
+	}
 	return (
 		<Card sx={cardStyle}>
 			<Box sx={{ width: "100%" }}>
@@ -83,6 +103,12 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 				<Grid container direction="column" sx={containerStyle}>
 					<Grid sx={rowStyle}>
 						<Box sx={lobbyLeaderBaseContainer}>
+							<Typography
+								variant="subtitle1"
+								sx={titleTypographyStyle}
+							>
+								{connectedPlayer}
+							</Typography>
 							<LeaderBaseCard
 								variant="leader"
 								isLobbyView={true}
@@ -94,6 +120,12 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 					</Grid>
 					<Grid sx={rowStyle}>
 						<Box sx={lobbyLeaderBaseContainer}>
+							<Typography
+								variant="subtitle1"
+								sx={titleOpponent === undefined ? titleTypographyStyleOpponent : titleTypographyStyle}
+							>
+								{titleOpponent === undefined ? "Opponent" : titleOpponent}
+							</Typography>
 							<LeaderBaseCard
 								variant="leader"
 								isLobbyView={isLobbyView}

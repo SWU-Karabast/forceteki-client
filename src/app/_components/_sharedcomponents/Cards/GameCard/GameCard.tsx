@@ -20,6 +20,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 	size = "standard",
 	onClick,
 	variant,
+	disabled = false,
 }) => {
 	// const isLobbyView = path === "/lobby";
 	const isFaceUp = true;
@@ -49,8 +50,8 @@ const GameCard: React.FC<IGameCardProps> = ({
 			borderRadius: ".38em",
 			...(variant === "lobby"
 					? {
-						height: "18vh",
-						width: "6.7vw",
+						height: "13rem",
+						width: "10rem",
 						minWidth: "101px",
 						minHeight: "151px",
 						overflow: "hidden",
@@ -102,13 +103,14 @@ const GameCard: React.FC<IGameCardProps> = ({
 
 		},
 		numberStyle:{
-			fontSize: "1.5vw",
+			fontSize: "2rem",
 			fontWeight: "700",
 		}
 	}
 	return (
 		<MuiCard sx={styles.cardStyles}
-			 onClick={handleClick}
+
+			 onClick={disabled ? undefined : handleClick}
 		>
 			{isFaceUp ? (
 				<CardContent sx={styles.cardContentStyle}>

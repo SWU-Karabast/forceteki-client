@@ -4,7 +4,7 @@ import UnitsBoard from "../_subcomponents/UnitsBoard";
 import { IBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
 import {useGame} from "@/app/_contexts/Game.context";
 import LeaderBaseCard from "@/app/_components/_sharedcomponents/Cards/LeaderBaseCard/LeaderBaseCard";
-import { Box } from "@mui/material";
+import {Box, Typography} from "@mui/material";
 import CardActionTray from "@/app/_components/Gameboard/_subcomponents/PlayerTray/CardActionTray";
 
 const Board: React.FC<IBoardProps> = ({
@@ -46,6 +46,23 @@ const Board: React.FC<IBoardProps> = ({
 	const rowStyle = {
 		flexGrow: 1,
 		width: "100%"
+	};
+	//the title of the deck i believe
+	const redBoxStyle = {
+		position: "absolute",
+		bottom: "10px",
+		left: "50%",
+		transform: "translateX(-50%)",
+		backgroundColor: "red",
+		borderRadius: "4px",
+		p: "4px 8px",
+	};
+
+	const redBoxTypographyStyle = {
+		color: "white",
+		fontFamily: "var(--font-barlow), sans-serif",
+		fontWeight: "600",
+		fontSize: "1em",
 	};
 	return (
 		<Grid container sx={{ height: "64.18%" }}>

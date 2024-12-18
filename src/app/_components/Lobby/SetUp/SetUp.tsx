@@ -1,3 +1,4 @@
+import React from "react";
 import {
 	Card,
 	Typography,
@@ -10,8 +11,6 @@ import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
 import { useGame } from "@/app/_contexts/Game.context";
 import { ISetUpProps } from "../LobbyTypes";
 import { useRouter, useSearchParams } from "next/navigation"
-import React from "react";
-
 
 const SetUp: React.FC<ISetUpProps> = ({
 	chatHistory,
