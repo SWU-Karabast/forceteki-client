@@ -1,13 +1,13 @@
 export interface IUser {
 	id: string | null;
-	name: string | null;
+	username: string | null;
 	email: string | null;
-	image: string | null;
 	provider: string | null;
 }
 
 export interface IUserContextType {
 	user: IUser | null;
 	login: (provider: "google" | "discord") => void;
+	devLogin: (user: "Order66" | "ThisIsTheWay") => void;
 	logout: () => void;
 }
