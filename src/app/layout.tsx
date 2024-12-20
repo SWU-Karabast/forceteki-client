@@ -2,7 +2,6 @@
 import type { Metadata } from "next";
 import { Barlow } from "next/font/google";
 import React from "react";
-import { PopupProvider } from "./_contexts/Popup.context";
 import "./_utils/s3Utils";
 import ClientLayout from "./ClientLayout";
 
@@ -24,9 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={barlow.variable}>
       <body>
-        <PopupProvider>
-          <ClientLayout>{children}</ClientLayout>
-        </PopupProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
