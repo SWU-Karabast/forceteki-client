@@ -9,6 +9,9 @@ export const buttonStyle = {
   "&:hover": {
     background: "hsl(195, 25%, 16%)",
   },
+  "&:disabled": {
+    color: "#666666",
+  },
 };
 
 export const overlayStyle = {
@@ -33,11 +36,7 @@ export const concedeButtonStyle = {
 export const contentStyle = {
   padding: "2rem",
   borderRadius: "15px",
-  width: "90%",
-  maxWidth: "500px",
-  height: "260px",
   position: "relative" as const,
-
   border: "2px solid transparent",
   background:
     "linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box",
@@ -49,6 +48,23 @@ export const containerStyle = {
   display: "flex",
   flexDirection: "column",
   textAlign: "center",
+
+  flex: 1,
+  maxHeight: "550px",
+  minHeigth: "260px",
+  height: "100%",
+  width: "100%",
+  minWidth: "560px",
+  maxWidth: "800px",
+};
+
+export const footerStyle = {
+  display: "flex",
+  gap: "1rem",
+  marginTop: "2rem",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
 };
 
 export const minimalButtonStyle = {
@@ -67,3 +83,21 @@ export const titleStyle = {
 export const textStyle = {
   color: "#C7C7C7",
 };
+
+export const cardButtonStyle = {
+  backgroundColor: "transparent",
+  padding: "0",
+  borderRadius: "8px",
+};
+
+export const selectedCardBorderStyle = (isSelected: boolean) => ({
+  border: isSelected ? "2px solid #66E5FF" : "2px solid transparent",
+  borderRadius: "8px",
+});
+
+export const selectedIndicatorStyle = (isSelected: boolean) => ({
+  backgroundColor: isSelected ? "#66E5FF" : "#666666",
+  height: "8px",
+  width: "8px",
+  borderRadius: "100%",
+});

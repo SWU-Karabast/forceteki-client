@@ -4,10 +4,10 @@ import { Box, IconButton } from "@mui/material";
 import React from "react";
 import { BiMinus } from "react-icons/bi";
 import { contentStyle, minimalButtonStyle, overlayStyle } from "./Popup.styles";
-import { ConcedePopup, DefaultPopup, MulliganPopup } from "./Popup.types";
-import { ConcededPopupModal } from "./PopupVariant/ConcedePopup";
+import { DefaultPopup, PilePopup, SelectCardsPopup } from "./Popup.types";
 import { DefaultPopupModal } from "./PopupVariant/DefaultPopup";
-import { MulliganPopupModal } from "./PopupVariant/MulliganPopup";
+import { PilePopupModal } from "./PopupVariant/PilePopup";
+import { SelectCardsPopupModal } from "./PopupVariant/SelectCardsPopup";
 
 const PopupShell: React.FC = () => {
   const { type, data, closePopup } = usePopup();
@@ -18,10 +18,10 @@ const PopupShell: React.FC = () => {
     switch (type) {
       case "default":
         return <DefaultPopupModal data={data as DefaultPopup} />;
-      case "mulligan":
-        return <MulliganPopupModal data={data as MulliganPopup} />;
-      case "concede":
-        return <ConcededPopupModal data={data as ConcedePopup} />;
+      case "pile":
+        return <PilePopupModal data={data as PilePopup} />;
+      case "select":
+        return <SelectCardsPopupModal data={data as SelectCardsPopup} />;
       default:
         return null;
     }

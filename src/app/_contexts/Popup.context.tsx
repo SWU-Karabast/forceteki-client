@@ -1,20 +1,26 @@
 "use client";
 import React, { createContext, useContext, useState } from "react";
 import {
-  ConcedePopup,
   DefaultPopup,
-  MulliganPopup,
+  PilePopup,
+  SelectCardsPopup,
+  SelectFromPilePopup,
 } from "../_components/_sharedcomponents/Popup/Popup.types";
 
 // TODO: SelectCardsPopup | LeaderAbilityPopup | DrawPopup | SelectCardsWithAspectPopup
-export type PopupData = DefaultPopup | MulliganPopup | ConcedePopup;
+export type PopupData =
+  | DefaultPopup
+  | SelectCardsPopup
+  | SelectFromPilePopup
+  | PilePopup;
 
 export type PopupType = PopupData["type"];
 
 export type PopupDataMap = {
   default: Omit<DefaultPopup, "type">;
-  mulligan: Omit<MulliganPopup, "type">;
-  concede: Omit<ConcedePopup, "type">;
+  select: Omit<SelectCardsPopup, "type">;
+  pile: Omit<PilePopup, "type">;
+  "pile-select": Omit<SelectFromPilePopup, "type">;
 };
 
 interface PopupContextProps {
