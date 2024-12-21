@@ -9,6 +9,7 @@ import React, {
 	useEffect,
 } from "react";
 import io, { Socket } from "socket.io-client";
+import { useUser } from "./User.context";
 
 interface IGameContextType {
 	gameState: any;
@@ -27,21 +28,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 	const [socket, setSocket] = useState<Socket | undefined>(undefined);
 	const [connectedPlayer, setConnectedPlayer] = useState<string>("");
 	const [connectedDeck, setDeck] = useState<any>(null);
+	const { user } = useUser();
 
 	useEffect(() => {
-		const urlParams = new URLSearchParams(window.location.search);
-		const playerName = urlParams.get("player") || "Order66";
-		setConnectedPlayer(playerName);
+		if (!user) return;
+		setConnectedPlayer(user.id || "");
 		const newSocket = io("http://localhost:9500", {
 			query: {
 				user: JSON.stringify({
-					username: playerName,
+					user
 				}),
 			},
 		});
 
 		newSocket.on("connect", () => {
-			console.log(`Connected to server as ${playerName}`);
+			console.log(`Connected to server as ${user.username}`);
 		});
 		newSocket.on("gamestate", (gameState: any) => {
 			setGameState(gameState);
@@ -56,7 +57,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		return () => {
 			newSocket?.disconnect();
 		};
-	}, []);
+	}, [user]);
 
 	const sendMessage = (message: string, args: any[] = []) => {
 		console.log("sending message", message, args);
