@@ -22,10 +22,10 @@ const CardActionTray: React.FC = () => {
 				sx={actionContainerStyle}
 			>
 				<Typography variant="h6" sx={{ color: "white" }}>
-					{playerState.menuTitle}
+					{playerState.promptState.menuTitle}
 				</Typography>
 				<Box>
-					{playerState.buttons.map((button: IButtonsProps) => (
+					{playerState.promptState.buttons.map((button: IButtonsProps) => (
 						<PromptButton
 							key={button.arg}
 							button={button}
