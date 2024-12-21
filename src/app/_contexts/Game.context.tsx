@@ -35,9 +35,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		setConnectedPlayer(user.id || "");
 		const newSocket = io("http://localhost:9500", {
 			query: {
-				user: JSON.stringify({
-					user
-				}),
+				user: JSON.stringify(user)
 			},
 		});
 

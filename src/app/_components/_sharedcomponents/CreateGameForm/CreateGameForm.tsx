@@ -56,8 +56,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 	const pathname = usePathname();
 	const router = useRouter();
 	const isCreateGamePath = pathname === "/creategame";
-	const user = useUser();
-	console.log("User:", user);
+	const { user } = useUser();
 
 	// Common State
 	const [favouriteDeck, setFavouriteDeck] = useState<string>("");
@@ -121,7 +120,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 		console.log("Save Deck To Favourites:", saveDeck);
 		try {
 			const payload = {
-				...user,
+				user: user,
 				deck: deckData
 			};
 			const response = await fetch("http://localhost:9500/api/create-lobby",

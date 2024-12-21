@@ -46,17 +46,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 		});
 	};
 
-	const handleSetUser = (user: "Order66" | "ThisIsTheWay") => {
+	const handleDevSetUser = (user: "Order66" | "ThisIsTheWay") => {
 		if (user === "Order66") {
 			setUser({
-				id: "66",
+				id: "exe66",
 				username: "Order66",
 				email: null,
 				provider: null,
 			});
 		} else if (user === "ThisIsTheWay") {
 			setUser({
-				id: "Mandalorian",
+				id: "th3w4y",
 				username: "ThisIsTheWay",
 				email: null,
 				provider: null,
@@ -65,7 +65,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 	}
 
 	const devLogin = (user: "Order66" | "ThisIsTheWay") => {
-		handleSetUser(user);
+		handleDevSetUser(user);
 		localStorage.setItem("devUser", user);
 		router.push("/");
 	};
@@ -74,7 +74,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 		if (process.env.NODE_ENV === "development" && !user ) {
 			const storedUser = localStorage.getItem("devUser");
 			if (storedUser === "Order66" || storedUser === "ThisIsTheWay") {
-				handleSetUser(storedUser);
+				handleDevSetUser(storedUser);
 			}
 		}
 	}, [user]);
