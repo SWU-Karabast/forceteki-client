@@ -30,7 +30,7 @@ export interface IGameCardProps {
 	card: ICardData | IServerCardData;
 	size?: "standard" | "square";
 	onClick?: () => void;
-	variant?: "lobby" | "gameboard";
+	variant?: "lobby" | "gameboard" | "hand";
 	disabled?: boolean;
 }
 

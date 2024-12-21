@@ -36,7 +36,6 @@ const GameCard: React.FC<IGameCardProps> = ({
 			sendGameMessage(["cardClicked", cardData.uuid]);
 		}
 	};
-
 	const handleClick = onClick ?? defaultClickFunction;
 	const cardBorderColor = (card: ICardData) => {
 		if (card.selected) return "yellow";
@@ -62,6 +61,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 						// For "standard" or other sizes:
 						height: size === "standard" ? "10rem" : "8rem",
 						width: size === "standard" ? "7.18rem" : "8rem",
+						border: `2px solid ${cardBorderColor(cardData)}`,
 					}
 			),
 		},
@@ -72,7 +72,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			position: "relative",
 			textAlign: "center",
 			whiteSpace: "normal",
-			backgroundColor: "transparent",
+			backgroundColor: variant === "lobby" ? "transparent" : "black",
 			backgroundImage: `url(${s3CardImageURL(cardData)})`,
 			backgroundSize: size === "standard" ? "contain" : "cover",
 			backgroundPosition: size === "standard" ? "center" : "top",
@@ -88,7 +88,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			fontSize: "1.3em",
 			margin: 0,
 		},
-		iconLayer:{
+		counterIconLayer:{
 			position: "absolute",
 			width: "100%",
 			display: "flex",
@@ -100,10 +100,53 @@ const GameCard: React.FC<IGameCardProps> = ({
 			backgroundImage: `url(/counterIcon.svg)`,
 			alignItems: "center",
 			justifyContent: "center",
-
+		},
+		powerIconLayer:{
+			position: "absolute",
+			width: "2rem",
+			display: "flex",
+			height: "2.5rem",
+			bottom: "0px",
+			backgroundPosition: "left",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			backgroundImage: `url(/attack_v2.png)`,
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		healthIconLayer:{
+			position: "absolute",
+			width: "2rem",
+			display: "flex",
+			height: "2.5rem",
+			bottom: "0px",
+			right: "0px",
+			backgroundPosition: "right",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			backgroundImage: `url(/life_v2.png)`,
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		damageIconLayer:{
+			position: "absolute",
+			width: "5.7rem",
+			display: "flex",
+			height: "2.5rem",
+			bottom: "0px",
+			right: "18px",
+			background: "linear-gradient(90deg, rgba(255, 0, 0, 0) 47.44%, rgba(255, 0, 0, 0.911111) 75.61%, #FF0000 102.56%)",
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		damageNumberStyle:{
+			fontSize: variant === 'lobby' ? "2rem" : "1.9rem",
+			fontWeight: "700",
+			position: "absolute",
+			right:"13px",
 		},
 		numberStyle:{
-			fontSize: "2rem",
+			fontSize: variant === 'lobby' ? "2rem" : "1.9rem",
 			fontWeight: "700",
 		}
 	}
@@ -116,11 +159,25 @@ const GameCard: React.FC<IGameCardProps> = ({
 				<CardContent sx={styles.cardContentStyle}>
 					<Box sx={{ display: 'flex', flexDirection: 'column', height: "100%"}}>
 					</Box>
-					{variant === "lobby" && (
-						<Box sx={styles.iconLayer}>
+					{variant === "lobby" ? (
+						<Box sx={styles.counterIconLayer}>
 							<Typography sx={styles.numberStyle}>{cardCounter}</Typography>
 						</Box>
-					)}
+					) : variant === "gameboard" ? (
+						<>
+							<Box sx={styles.powerIconLayer}>
+								<Typography sx={{...styles.numberStyle,marginRight:"2px"}}>{cardData.power}</Typography>
+							</Box>
+							<Box sx={styles.damageIconLayer}>
+								<Typography sx={styles.damageNumberStyle}>
+									{cardData.damage}
+								</Typography>
+							</Box>
+							<Box sx={styles.healthIconLayer}>
+								<Typography sx={{...styles.numberStyle,marginLeft:"2px"}}>{cardData.hp}</Typography>
+							</Box>
+						</>
+					) : null}
 				</CardContent>
 			) : (
 				<CardContent sx={styles.cardContentStyle}>

@@ -48,13 +48,13 @@ const BasicPrompt: React.FC<IBasicPromptProps> = ({
 			>
 				<CardContent>
 					<Typography variant="h6" color="#fff">
-						{playerState.menuTitle || "No Prompt"}
+						{playerState.promptState.menuTitle || "No Prompt"}
 					</Typography>
 					<Typography variant="caption" color="#fff">
-						{playerState.promptTitle || ""}
+						{playerState.promptState.promptTitle || ""}
 					</Typography>
 					<Box>
-						{playerState.buttons.map((button: IButtonsProps) => (
+						{playerState.promptState.buttons.map((button: IButtonsProps) => (
 							<PromptButton
 								key={button.arg}
 								button={button}
