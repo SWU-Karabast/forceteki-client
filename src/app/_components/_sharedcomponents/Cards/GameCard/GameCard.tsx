@@ -62,6 +62,10 @@ const GameCard: React.FC<IGameCardProps> = ({
 						height: size === "standard" ? "10rem" : "8rem",
 						width: size === "standard" ? "7.18rem" : "8rem",
 						border: `2px solid ${cardBorderColor(cardData)}`,
+						...(cardData.exhausted &&{
+							transform: 'rotate(4deg)',
+							transition: 'transform 0.3s ease',
+						})
 					}
 			),
 		},
@@ -130,12 +134,26 @@ const GameCard: React.FC<IGameCardProps> = ({
 		},
 		damageIconLayer:{
 			position: "absolute",
-			width: "5.7rem",
+			width: "6.5rem",
 			display: "flex",
 			height: "2.5rem",
 			bottom: "0px",
 			right: "18px",
 			background: "linear-gradient(90deg, rgba(255, 0, 0, 0) 47.44%, rgba(255, 0, 0, 0.911111) 75.61%, #FF0000 102.56%)",
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		shieldIconLayer:{
+			position: "absolute",
+			width: "2rem",
+			display: "flex",
+			height: "2.5rem",
+			top:"0px",
+			right: "0px",
+			backgroundPosition: "right",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			backgroundImage: `url(/ShieldToken.png)`,
 			alignItems: "center",
 			justifyContent: "center",
 		},
@@ -168,11 +186,13 @@ const GameCard: React.FC<IGameCardProps> = ({
 							<Box sx={styles.powerIconLayer}>
 								<Typography sx={{...styles.numberStyle,marginRight:"2px"}}>{cardData.power}</Typography>
 							</Box>
-							<Box sx={styles.damageIconLayer}>
-								<Typography sx={styles.damageNumberStyle}>
-									{cardData.damage}
-								</Typography>
-							</Box>
+							{Number(cardData.damage) > 0 && (
+								<Box sx={styles.damageIconLayer}>
+									<Typography sx={styles.damageNumberStyle}>
+										{cardData.damage}
+									</Typography>
+								</Box>
+							)}
 							<Box sx={styles.healthIconLayer}>
 								<Typography sx={{...styles.numberStyle,marginLeft:"2px"}}>{cardData.hp}</Typography>
 							</Box>
