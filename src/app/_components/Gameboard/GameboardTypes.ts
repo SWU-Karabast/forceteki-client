@@ -55,10 +55,6 @@ export interface IBasicPromptProps {
 	handleBasicPromptToggle: () => void;
 }
 
-export interface ICardAreaProps {
-	cards: ICardData[];
-}
-
 export interface IUnitsBoardProps {
 	sidebarOpen: boolean;
 	arena: string;

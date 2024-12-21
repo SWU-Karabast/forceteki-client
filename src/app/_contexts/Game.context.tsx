@@ -16,6 +16,8 @@ interface IGameContextType {
 	sendGameMessage: (args: any[]) => void;
 	getOpponent: (player: string) => string;
 	connectedPlayer: string;
+	connectedDeck: any,
+	updateDeck: (args: any[]) => void;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -24,7 +26,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 	const [gameState, setGameState] = useState<any>(null);
 	const [socket, setSocket] = useState<Socket | undefined>(undefined);
 	const [connectedPlayer, setConnectedPlayer] = useState<string>("");
-
+	const [connectedDeck, setDeck] = useState<any>(null);
 
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -45,6 +47,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 			setGameState(gameState);
 			console.log("Game state received:", gameState);
 		});
+		newSocket.on("deckData", (deck:any) =>{
+			setDeck(deck);
+		});
 
 		setSocket(newSocket);
 
@@ -63,6 +68,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		socket?.emit("game", ...args);
 	};
 
+	const updateDeck = (args: any[]) => {
+		console.log("move card message", args);
+		socket?.emit("updateDeck", ...args);
+	}
+
 	const getOpponent = (player: string) => {
 		if (!gameState) return "";
 		const playerNames = Object.keys(gameState.players);
@@ -76,7 +86,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 				sendGameMessage,
 				sendMessage,
 				connectedPlayer,
-				getOpponent
+				connectedDeck,
+				getOpponent,
+				updateDeck
 			}}
 		>
 			{children}

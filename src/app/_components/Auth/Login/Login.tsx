@@ -2,9 +2,11 @@
 
 import React from "react";
 import { Box, Button, Card, CardContent, Typography } from "@mui/material";
-import { ILoginProps } from "../AuthTypes";
+import { useUser } from "@/app/_contexts/User.context";
 
-const Login: React.FC<ILoginProps> = ({ handleSubmit }) => {
+const Login: React.FC = () => {
+	const isDev = process.env.NODE_ENV === "development";
+	const { login, devLogin } = useUser();
 	//------------------------STYLES------------------------//
 	const loginStyles = {
 		container: {
@@ -49,7 +51,7 @@ const Login: React.FC<ILoginProps> = ({ handleSubmit }) => {
 					<Button
 						variant="contained"
 						sx={{ ...loginStyles.button, backgroundColor: "#db4437" }}
-						onClick={() => handleSubmit("google")}
+						onClick={() => login("google")}
 					>
 						Login with Google
 					</Button>
@@ -57,10 +59,28 @@ const Login: React.FC<ILoginProps> = ({ handleSubmit }) => {
 					<Button
 						variant="contained"
 						sx={{ ...loginStyles.button, backgroundColor: "#7289da" }}
-						onClick={() => handleSubmit("discord")}
+						onClick={() => login("discord")}
 					>
 						Login with Discord
 					</Button>
+					{ isDev && 
+						<>
+							<Button
+								variant="contained"
+								sx={{ ...loginStyles.button, backgroundColor: "Grey" }}
+								onClick={() => devLogin("Order66")}
+							>
+								Login as Order66
+							</Button>
+							<Button
+								variant="contained"
+								sx={{ ...loginStyles.button, backgroundColor: "Grey" }}
+								onClick={() => devLogin("ThisIsTheWay")}
+							>
+								Login as ThisIsTheWay
+							</Button>
+						</>
+					}
 				</CardContent>
 			</Card>
 		</Box>

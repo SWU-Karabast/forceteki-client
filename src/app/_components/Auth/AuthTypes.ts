@@ -1,9 +1,5 @@
 import React from "react";
 
-export interface ILoginProps {
-	handleSubmit: (provider: "google" | "discord") => void;
-}
-
 export interface IStyledTextFieldProps {
 	variant?: "outlined" | "filled" | "standard";
 	fullWidth?: boolean;

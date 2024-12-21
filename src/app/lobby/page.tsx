@@ -1,10 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import { Grid2 as Grid } from "@mui/material";
+import {Grid2 as Grid, Typography} from "@mui/material";
 import { usePathname } from "next/navigation";
 import Players from "../_components/Lobby/Players/Players";
 import Deck from "../_components/Lobby/Deck/Deck";
 import SetUp from "../_components/Lobby/SetUp/SetUp";
+import {s3ImageURL} from "@/app/_utils/s3Utils";
 
 const Lobby = () => {
 
@@ -27,29 +28,39 @@ const Lobby = () => {
 	const containerStyle = {
 		height: "100vh",
 		overflow: "hidden",
+		backgroundImage: `url(${s3ImageURL("game/board-background-1.png")})`,
+		backgroundSize: "cover",
+		backgroundPosition: "center",
 	};
 
 	const setUpGridStyle = {
 		justifyContent: "center",
-		alignContent: "center",
 		pl: "20px",
-		mb: "16.3em",
+		mt: "5px",
 	};
 
 	const playersGridStyle = {
 		justifyContent: "center",
-		alignContent: "center",
+		mt: "78px",
 	};
 
 	const deckGridStyle = {
 		justifyContent: "center",
-		alignContent: "center",
 		pr: "20px",
+		mt: "78px",
+	};
+	const disclaimer = {
+		position: "absolute",
+		bottom: 0,
+		width: "100%",
+		padding: "1rem",
+		textAlign: "center",
+		fontSize: "0.90rem",
 	};
 
 	return (
 		<Grid container sx={containerStyle}>
-			<Grid container size={4} sx={setUpGridStyle}>
+			<Grid container size={3} sx={setUpGridStyle}>
 				<SetUp
 					chatMessage={chatMessage}
 					chatHistory={chatHistory}
@@ -57,11 +68,18 @@ const Lobby = () => {
 					setChatMessage={setChatMessage}
 				/>
 			</Grid>
-			<Grid container size={3} sx={playersGridStyle}>
+			<Grid container size={2} sx={playersGridStyle}>
 				<Players isLobbyView={isLobbyView} />
 			</Grid>
-			<Grid container size={5} sx={deckGridStyle}>
+			<Grid container size={7} sx={deckGridStyle}>
 				<Deck />
+			</Grid>
+			<Grid size={12}>
+				<Typography variant="body1" sx={disclaimer}>
+					Karabast is in no way affiliated with Disney or Fantasy Flight Games.
+					Star Wars characters, cards, logos, and art are property of Disney
+					and/or Fantasy Flight Games.
+				</Typography>
 			</Grid>
 		</Grid>
 	);

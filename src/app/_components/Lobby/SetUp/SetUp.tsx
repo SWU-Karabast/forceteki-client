@@ -1,8 +1,10 @@
+import React from "react";
 import {
 	Card,
 	Typography,
 	CardActions,
-	Button
+	Button,
+	Box, Divider,
 } from "@mui/material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
@@ -20,32 +22,39 @@ const SetUp: React.FC<ISetUpProps> = ({
 	const { sendMessage } = useGame();
 	const router = useRouter();
 	const searchParams = useSearchParams();
-
 	// Extract the player from the URL query params
 	const player = searchParams.get("player");
 
-	const handleStartGame = () => {
+	const handleStartGame = async () => {
 		sendMessage("startGame");
-		if (player){
+		if (player) {
 			router.push("/GameBoard?player=" + player);
-		}else {
+		} else {
 			router.push("/GameBoard");
 		}
-	}
+
+	};
 
 	//------------------------STYLES------------------------//
 
 	const mainCardStyle = {
 		borderRadius: "1.1em",
-		height: "auto",
+		height: "100%",
+		maxHeight: "72.5vh",
 		width: "100%",
 		display: "flex",
 		flexDirection: "column",
-		mt: "2.6em",
+		mt: "2.0em",
 		p: "1.8em",
-		backgroundColor: "#000000E6",
-		backdropFilter: "blur(20px)",
+		backgroundColor: "#00000080",
+		backdropFilter: "blur(30px)",
 		overflow: "hidden",
+		'@media (max-height: 1000px)': {
+			maxHeight: '67vh',
+		},
+		'@media (max-height: 759px)': {
+			maxHeight: '64.3vh',
+		},
 	};
 
 	const initiativeCardStyle = {
@@ -67,26 +76,63 @@ const SetUp: React.FC<ISetUpProps> = ({
 		fontWeight: "800",
 		color: "white",
 		alignSelf: "flex-start",
-		mt: "1.3em",
 	};
-
+	const lobbyTextStyle ={
+		fontSize: "3.0em",
+		fontWeight: "600",
+		color: "white",
+		alignSelf: "flex-start",
+		mb: "0.3em",
+	};
+	const exitCard = {
+		display: "flex",
+		pr: "1.2em",
+		pl: "1.2em",
+		width: "100%",
+		height: "10%",
+		alignItems: "center",
+		justifyContent: "space-between",
+		cursor: "pointer",
+	};
+	const dividerStyle = {
+		backgroundColor: "#fff",
+		mt: ".5vh",
+		mb: "0.5vh",
+	};
+	const boxContainer = {
+		width: "100%",
+		//maxHeight: "64vh", // this is for the small screen
+		height: "100%",
+	};
+	const handleExit = () => {
+		router.push("/");
+	}
 	return (
-		<Card sx={mainCardStyle}>
+		<Box sx={boxContainer}>
+			<Typography sx={lobbyTextStyle}>KARABAST</Typography>
 			<Card sx={initiativeCardStyle}>
 				<CardActions sx={buttonsContainerStyle}>
 					<Button variant="contained" onClick={()=>handleStartGame()}>Start Game</Button>
 				</CardActions>
 			</Card>
-			<Typography sx={setUpTextStyle}>Set Up</Typography>
-			<GameLinkCard />
-
-			<Chat
-				chatHistory={chatHistory}
-				chatMessage={chatMessage}
-				setChatMessage={setChatMessage}
-				handleChatSubmit={handleChatSubmit}
-			/>
-		</Card>
+			<Card sx={mainCardStyle}>
+				<Chat
+					chatHistory={chatHistory}
+					chatMessage={chatMessage}
+					setChatMessage={setChatMessage}
+					handleChatSubmit={handleChatSubmit}
+				/>
+				<Divider sx={dividerStyle} />
+				<Box sx={exitCard} onClick={() => handleExit()}>
+					<Typography variant="h5">
+						Exit Game Lobby
+					</Typography>
+					<Typography variant="h5">
+						{'<'}
+					</Typography>
+				</Box>
+			</Card>
+		</Box>
 	);
 };
 

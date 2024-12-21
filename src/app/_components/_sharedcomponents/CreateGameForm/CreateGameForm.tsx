@@ -57,8 +57,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 	const isCreateGamePath = pathname === "/creategame";
 
 	// Common State
-	const [favouriteDeck, setFavouriteDeck] =
-		useState<string>("Vader Green Ramp");
+	const [favouriteDeck, setFavouriteDeck] = useState<string>("");
 	const [deckLink, setDeckLink] = useState<string>("");
 	const [saveDeck, setSaveDeck] = useState<boolean>(false);
 	//let [deckData, setDeckData] = useState<DeckData | null>(null); Because of Async this won't set in the correct timeframe
@@ -150,6 +149,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
 	const labelTextStyle = {
 		mb: ".5em",
+		color: "white",
 	};
 
 	const labelTextStyleSecondary = {
@@ -215,7 +215,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
 						{/* SWUDB Deck Link Input */}
 						<FormControl fullWidth sx={{ mb: 0 }}>
-							<Typography variant="body1" sx={labelTextStyle}>
+							<Box sx={labelTextStyle}>
 									<Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
 									SWUDB
 									</Link>{' '}
@@ -227,7 +227,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 								<Typography variant="body1" sx={labelTextStyleSecondary}>
 									(use the URL or &apos;Deck Link&apos; button)
 								</Typography>
-							</Typography>
+							</Box>
 							<StyledTextField
 								type="url"
 								value={deckLink}
