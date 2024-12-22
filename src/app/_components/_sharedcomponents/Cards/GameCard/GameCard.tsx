@@ -19,6 +19,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 	card,
 	size = "standard",
 	onClick,
+	subcards = [],
 	variant,
 	disabled = false,
 }) => {
@@ -43,6 +44,34 @@ const GameCard: React.FC<IGameCardProps> = ({
 		if (card.exhausted) return "gray";
 		return "";
 	}
+	// helper function to get the correct aspects for the upgrade cards
+	const cardUpgradebackground = (card: ICardData) => {
+		if (!card.aspects){
+			return null
+		}
+
+		// Check if Villainy or Heroism are the sole aspects
+		if (card.aspects.includes("villainy") && card.aspects.length === 1) {
+			return "upgrade-black.png";
+		}
+		if (card.aspects.includes("heroism") && card.aspects.length === 1) {
+			return "upgrade-white.png";
+		}
+		// Check other aspects
+		switch (true) {
+			case card.aspects.includes("aggression"):
+				return "upgrade-red.png";
+			case card.aspects.includes("command"):
+				return "upgrade-green.png";
+			case card.aspects.includes("cunning"):
+				return "upgrade-yellow.png";
+			case card.aspects.includes("vigilance"):
+				return "upgrade-blue.png";
+			default:
+				// Fallback for unexpected cases
+				return "upgrade-black.png";
+		}
+	};
 
 	const styles = {
 		cardStyles: {
@@ -62,10 +91,10 @@ const GameCard: React.FC<IGameCardProps> = ({
 						height: size === "standard" ? "10rem" : "8rem",
 						width: size === "standard" ? "7.18rem" : "8rem",
 						border: `2px solid ${cardBorderColor(cardData)}`,
-						...(cardData.exhausted &&{
+						/*...(cardData.exhausted &&{
 							transform: 'rotate(4deg)',
 							transition: 'transform 0.3s ease',
-						})
+						})*/
 					}
 			),
 		},
@@ -157,18 +186,39 @@ const GameCard: React.FC<IGameCardProps> = ({
 			alignItems: "center",
 			justifyContent: "center",
 		},
+		upgradeIconLayer:{
+			position: "relative",
+			width: "100%",
+			display: "flex",
+			height: "1.7rem",
+			bottom:"0px",
+			right: "0px",
+			backgroundPosition: "right",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			alignItems: "center",
+			justifyContent: "center",
+		},
 		damageNumberStyle:{
 			fontSize: variant === 'lobby' ? "2rem" : "1.9rem",
 			fontWeight: "700",
 			position: "absolute",
-			right:"13px",
+			right:"16px",
 		},
 		numberStyle:{
 			fontSize: variant === 'lobby' ? "2rem" : "1.9rem",
 			fontWeight: "700",
+		},
+		upgradeNameStyle:{
+			fontSize: "10px",
+			marginTop: "3.3px",
+			fontWeight: "800",
+			color: "black"
 		}
 	}
+	console.log(cardData);
 	return (
+		<>
 		<MuiCard sx={styles.cardStyles}
 
 			 onClick={disabled ? undefined : handleClick}
@@ -183,6 +233,15 @@ const GameCard: React.FC<IGameCardProps> = ({
 						</Box>
 					) : variant === "gameboard" ? (
 						<>
+						{subcards.map((subcard, index) => (
+							subcard.name === 'shield' ? (
+								<Box
+									key={subcard.id || `subcard-${index}`}
+									sx={styles.shieldIconLayer}
+								>
+								</Box>
+							) : null
+						))}
 							<Box sx={styles.powerIconLayer}>
 								<Typography sx={{...styles.numberStyle,marginRight:"2px"}}>{cardData.power}</Typography>
 							</Box>
@@ -220,6 +279,15 @@ const GameCard: React.FC<IGameCardProps> = ({
 				</CardContent>
 			)}
 		</MuiCard>
+		{subcards.map((subcard, index) => (
+			<Box
+				key={subcard.id || `subcard-${index}`}
+				sx={{...styles.upgradeIconLayer, backgroundImage: `url(${(cardUpgradebackground(subcard))})`,bottom: `${index * 3}px`}}
+			>
+				<Typography sx={styles.upgradeNameStyle}>{subcard.name}</Typography>
+			</Box>
+		))}
+	</>
 	);
 };
 
