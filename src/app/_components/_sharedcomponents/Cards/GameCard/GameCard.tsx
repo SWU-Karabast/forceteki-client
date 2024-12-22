@@ -216,7 +216,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			color: "black"
 		}
 	}
-	console.log(cardData);
+	console.log(cardData.subcards);
 	return (
 		<>
 		<MuiCard sx={styles.cardStyles}
