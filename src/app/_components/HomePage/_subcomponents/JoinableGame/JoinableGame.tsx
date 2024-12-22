@@ -46,8 +46,7 @@ const JoinableGame: React.FC = () => {
 				alert(errorData.message);
 				return;
 			}
-			alert('Successfully joined the lobby');
-			router.push("/lobby?player=ThisIsTheWay");
+			router.push("/lobby");
 		} catch (error) {
 			console.error('Error joining lobby:', error);
 		}
