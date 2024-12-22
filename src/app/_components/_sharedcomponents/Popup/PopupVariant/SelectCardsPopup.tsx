@@ -32,39 +32,46 @@ interface ButtonProps {
 }
 
 export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
-  const [selectedCards, setSelectedCards] = useState<ICardData[]>([]);
-  const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
+  const [selectedCards, setSelectedCards] = useState<
+    Record<number, ICardData[]>
+  >([]);
 
   const handleCardClick = (index: number, card: ICardData) => {
-    if (!selectedIndexes.includes(index)) {
-      setSelectedIndexes([...selectedIndexes, index]);
-      setSelectedCards([...selectedCards, card]);
+    if (!selectedCards[index]) {
+      setSelectedCards((prev) => ({
+        ...prev,
+        [index]: [card],
+      }));
     } else {
-      setSelectedIndexes(selectedIndexes.filter((i) => i !== index));
-      setSelectedCards(selectedCards.filter((c) => c.uuid !== card.uuid));
+      setSelectedCards((prev) => ({
+        ...prev,
+        [index]: [...prev[index], card],
+      }));
     }
   };
 
-  const isSelectedCard = (index: number) => selectedIndexes.includes(index);
+  const isSelectedCard = (index: number) => selectedCards[index] !== undefined;
   const isButtonDisabled = () =>
-    selectedCards.length === 0 ||
-    (data.maxNumber !== undefined && data.maxNumber > selectedCards.length);
+    Object.keys(selectedCards).length === 0 ||
+    (data.maxNumber !== undefined &&
+      data.maxNumber > Object.keys(selectedCards).length);
+
+  //sort and not filter cards by selectable true first
+  const sortCards = (cards: ICardData[]) =>
+    cards.sort((a, b) => Number(b.selectable) - Number(a.selectable));
 
   return (
     <Box sx={containerStyle}>
       <Typography sx={titleStyle}>{data.title}</Typography>
       <Box sx={cardListContainerStyle}>
-        {data.cards.map((card, index) => (
-          <Box sx={cardSelectorStyle}>
+        {sortCards(data.cards).map((card, index) => (
+          <Box key={`card-${index}-${card.uuid}`} sx={cardSelectorStyle}>
             <Button
               sx={cardButtonStyle}
               onClick={() => handleCardClick(index, card)}
               variant="text"
             >
-              <Box
-                sx={selectedCardBorderStyle(isSelectedCard(index))}
-                key={`card-${index}-${card.uuid}`}
-              >
+              <Box sx={selectedCardBorderStyle(isSelectedCard(index))}>
                 <GameCard card={card} />
               </Box>
             </Button>
@@ -75,7 +82,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
       <Box sx={footerStyle}>
         <Button
           disabled={isButtonDisabled()}
-          onClick={() => data.onConfirm(selectedCards)}
+          onClick={() => data.onConfirm(Object.values(selectedCards).flat())}
           sx={buttonStyle}
           variant="contained"
         >

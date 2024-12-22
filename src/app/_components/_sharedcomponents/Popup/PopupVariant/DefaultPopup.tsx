@@ -1,3 +1,5 @@
+import { useGame } from "@/app/_contexts/Game.context";
+import { usePopup } from "@/app/_contexts/Popup.context";
 import { Box, Button, Typography } from "@mui/material";
 import {
   buttonStyle,
@@ -6,24 +8,36 @@ import {
   textStyle,
   titleStyle,
 } from "../Popup.styles";
-import { DefaultPopup } from "../Popup.types";
+import { DefaultPopup, PopupButton } from "../Popup.types";
 
 interface ButtonProps {
   data: DefaultPopup;
 }
 
 export const DefaultPopupModal = ({ data }: ButtonProps) => {
+  const { sendGameMessage } = useGame();
+  const { closePopup } = usePopup();
+
   return (
     <Box sx={containerStyle}>
       <Typography sx={titleStyle}>{data.title}</Typography>
-      <Typography sx={textStyle}>{data.description}</Typography>
+      {data.description && (
+        <Typography sx={textStyle}>{data.description}</Typography>
+      )}
       <Box sx={footerStyle}>
-        <Button onClick={data.onConfirm} sx={buttonStyle} variant="contained">
-          Yes
-        </Button>
-        <Button onClick={data.onCancel} sx={buttonStyle}>
-          No
-        </Button>
+        {data.buttons.map((button: PopupButton, index: number) => (
+          <Button
+            key={`${button.uuid}:${index}`}
+            sx={buttonStyle}
+            variant="contained"
+            onClick={() => {
+              sendGameMessage([button.command, button.arg, button.uuid]);
+              closePopup();
+            }}
+          >
+            {button.text}
+          </Button>
+        ))}
       </Box>
     </Box>
   );
