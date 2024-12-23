@@ -16,6 +16,7 @@ import {
 import StyledTextField from "../_styledcomponents/StyledTextField/StyledTextField";
 import { usePathname, useRouter } from "next/navigation";
 import {updateIdsWithMapping, mapIdToInternalName, transformDeckWithCardData} from "@/app/_utils/s3Utils";
+import { useUser } from "@/app/_contexts/User.context";
 
 interface ICreateGameFormProps {
 	format?: string | null;
@@ -55,6 +56,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 	const pathname = usePathname();
 	const router = useRouter();
 	const isCreateGamePath = pathname === "/creategame";
+	const { user } = useUser();
 
 	// Common State
 	const [favouriteDeck, setFavouriteDeck] = useState<string>("");
@@ -113,12 +115,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 		console.log("Favourite Deck:", favouriteDeck);
 		console.log("SWUDB Deck Link:", deckLink);
 		console.log("beginning fetch for deck link");
-		const deckData = await fetchDeckData(deckLink);
+		const deckData = deckLink ? await fetchDeckData(deckLink) : null;
 		console.log("fetch complete, deck data:", deckData);
 		console.log("Save Deck To Favourites:", saveDeck);
 		try {
 			const payload = {
-				user: favouriteDeck,
+				user: user,
 				deck: deckData
 			};
 			const response = await fetch("http://localhost:9500/api/create-lobby",
@@ -203,7 +205,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 									setFavouriteDeck(e.target.value)
 								}
 								placeholder="Vader Green Ramp"
-								required
 							>
 								{deckOptions.map((deck) => (
 									<MenuItem key={deck} value={deck}>

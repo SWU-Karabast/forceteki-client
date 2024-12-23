@@ -13,7 +13,7 @@ const Board: React.FC<IBoardProps> = ({
 	const { gameState, connectedPlayer } = useGame();
 
 	const titleOpponent =
-		connectedPlayer === "ThisIsTheWay" ? "Order66" : "ThisIsTheWay";
+		connectedPlayer === "th3w4y" ? "exe66" : "th3w4y";
 
 	const playerLeader = gameState?.players[connectedPlayer].leader;
 	const playerBase = gameState?.players[connectedPlayer].base;
