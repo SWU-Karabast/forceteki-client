@@ -5,7 +5,6 @@ interface ICardSetId {
 
 type IAspect =  'aggression' | 'command' | 'cunning' | 'heroism' | 'vigilance' | 'villainy';
 
-
 export interface ICardData {
 	uuid: string;
 	parentCardId?: string,
@@ -37,7 +36,7 @@ export interface IGameCardProps {
 	card: ICardData | IServerCardData;
 	size?: "standard" | "square";
 	onClick?: () => void;
-	variant?: "lobby" | "gameboard" | "hand";
+	variant?: "lobby" | "gameboard";
 	disabled?: boolean;
 	subcards?: ICardData[];
 }

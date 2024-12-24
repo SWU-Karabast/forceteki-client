@@ -11,6 +11,7 @@ const CardActionTray: React.FC = () => {
 
 	const { sendGameMessage, gameState, connectedPlayer } = useGame();
 	const playerState = gameState.players[connectedPlayer];
+
 	return (
 		<>
 			<Grid
