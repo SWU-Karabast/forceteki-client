@@ -1,6 +1,7 @@
 import React, { useEffect, useState} from "react";
 import { Box, Button, Typography } from "@mui/material";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/app/_contexts/User.context";
 interface ILobby {
 	id: string;
 	name: string;
@@ -9,6 +10,7 @@ interface ILobby {
 const JoinableGame: React.FC = () => {
 	//const randomGameId = Math.floor(Math.random() * 10000);
 	const router = useRouter();
+	const { user } = useUser();
 	const [lobbies, setLobbies] = useState<ILobby[]>([]);
 	useEffect(() => {
 		// Fetch unfilled lobbies from the server
@@ -35,7 +37,7 @@ const JoinableGame: React.FC = () => {
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify({ lobbyId, userId: 'ThisIsTheWay' }),
+				body: JSON.stringify({ lobbyId, user }),
 			});
 
 			if (!response.ok) {
@@ -44,8 +46,7 @@ const JoinableGame: React.FC = () => {
 				alert(errorData.message);
 				return;
 			}
-			alert('Successfully joined the lobby');
-			router.push("/lobby?player=ThisIsTheWay");
+			router.push("/lobby");
 		} catch (error) {
 			console.error('Error joining lobby:', error);
 		}
