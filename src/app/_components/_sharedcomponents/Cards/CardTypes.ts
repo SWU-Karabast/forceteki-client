@@ -27,6 +27,7 @@ export interface ICardData {
 	type: string;
 	subcards?: ICardData[];
 	aspects?: IAspect[];
+	sentinel?: boolean;
 }
 export interface IServerCardData {
 	count: number;

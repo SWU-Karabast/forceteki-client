@@ -38,6 +38,13 @@ const GameCard: React.FC<IGameCardProps> = ({
 			sendGameMessage(["cardClicked", cardData.uuid]);
 		}
 	};
+
+	// upgrade on click
+	const upgradeClickFunction = (card:ICardData) => {
+		if(card.selectable){
+			sendGameMessage(["cardClicked", card.uuid]);
+		}
+	}
 	const handleClick = onClick ?? defaultClickFunction;
 	const cardBorderColor = (card: ICardData) => {
 		if (card.selected) return "yellow";
@@ -70,15 +77,14 @@ const GameCard: React.FC<IGameCardProps> = ({
 				return "upgrade-blue.png";
 			default:
 				// Fallback for unexpected cases
-				return "upgrade-black.png";
+				return "upgrade-grey.png";
 		}
 	};
 
 	// Filter subcards into Shields and other upgrades
 	const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
 	const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
-	console.log(shieldCards);
-	console.log(otherUpgradeCards);
+
 	// Styles
 	const styles = {
 		cardStyles: {
@@ -206,7 +212,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			position: "relative",
 			width: "100%",
 			display: "flex",
-			height: "1.7rem",
+			height: "30px",
 			bottom:"0px",
 			right: "0px",
 			backgroundPosition: "right",
@@ -214,6 +220,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			backgroundRepeat: "no-repeat",
 			alignItems: "center",
 			justifyContent: "center",
+			backgroundColor: "transparent",
 		},
 		damageNumberStyle:{
 			fontSize: variant === 'lobby' ? "2rem" : "1.9rem",
@@ -226,8 +233,8 @@ const GameCard: React.FC<IGameCardProps> = ({
 			fontWeight: "700",
 		},
 		upgradeNameStyle:{
-			fontSize: "10px",
-			marginTop: "3.3px",
+			fontSize: "11px",
+			marginTop: "2px",
 			fontWeight: "800",
 			color: "black"
 		},
@@ -246,7 +253,6 @@ const GameCard: React.FC<IGameCardProps> = ({
 			justifyContent: "center",
 		}
 	}
-	console.log(cardData);
 	return (
 		<>
 		<MuiCard sx={styles.cardStyles}
@@ -269,14 +275,13 @@ const GameCard: React.FC<IGameCardProps> = ({
 										<Box
 											key={shieldCard.uuid}
 											sx={styles.shieldIconLayer}
-											>
-										</Box>
+											/>
 									</>
 								))}
 							</Grid>
-							<Box sx={styles.sentinelStyle}>
-
-							</Box>
+							{cardData.sentinel && (
+								<Box sx={styles.sentinelStyle}/>
+							)}
 							<Box sx={styles.powerIconLayer}>
 								<Typography sx={{...styles.numberStyle,marginRight:"2px"}}>{cardData.power}</Typography>
 							</Box>
@@ -317,7 +322,11 @@ const GameCard: React.FC<IGameCardProps> = ({
 		{otherUpgradeCards.map((subcard, index) => (
 			<Box
 				key={subcard.uuid}
-				sx={{...styles.upgradeIconLayer, backgroundImage: `url(${(cardUpgradebackground(subcard))})`,bottom: `${index * 3}px`}}
+				sx={{...styles.upgradeIconLayer,
+					backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
+					bottom: `${index * 7 + 2}px`,
+					border: `1px solid ${subcard.selectable ? 'limegreen' : 'transparent'}`}}
+				onClick={() => upgradeClickFunction(subcard)}
 			>
 				<Typography sx={styles.upgradeNameStyle}>{subcard.name}</Typography>
 			</Box>
