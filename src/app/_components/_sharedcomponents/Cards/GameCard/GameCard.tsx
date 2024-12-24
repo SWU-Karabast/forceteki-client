@@ -9,7 +9,7 @@ import Grid from "@mui/material/Grid2";
 import Image from "next/image";
 import { IGameCardProps, ICardData, IServerCardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
-import { s3CardImageURL } from "@/app/_utils/s3Utils";
+import {s3CardImageURL, s3TokenImageURL} from "@/app/_utils/s3Utils";
 
 // Type guard to check if the card is ICardData
 const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
@@ -157,7 +157,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			backgroundPosition: "left",
 			backgroundSize: "contain",
 			backgroundRepeat: "no-repeat",
-			backgroundImage: `url(/attack_v2.png)`,
+			backgroundImage: `url(${s3TokenImageURL('power-badge')})`,
 			alignItems: "center",
 			justifyContent: "center",
 		},
@@ -171,7 +171,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			backgroundPosition: "right",
 			backgroundSize: "contain",
 			backgroundRepeat: "no-repeat",
-			backgroundImage: `url(/life_v2.png)`,
+			backgroundImage: `url(${s3TokenImageURL('hp-badge')})`,
 			alignItems: "center",
 			justifyContent: "center",
 		},
@@ -196,7 +196,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			backgroundPosition: "right",
 			backgroundSize: "contain",
 			backgroundRepeat: "no-repeat",
-			backgroundImage: `url(/ShieldToken.png)`,
+			backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
 			alignItems: "center",
 			justifyContent: "center",
 		},
