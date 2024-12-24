@@ -5,6 +5,7 @@ import {
 	Typography,
 	Box,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import Image from "next/image";
 import { IGameCardProps, ICardData, IServerCardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
@@ -73,6 +74,12 @@ const GameCard: React.FC<IGameCardProps> = ({
 		}
 	};
 
+	// Filter subcards into Shields and other upgrades
+	const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
+	const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
+	console.log(shieldCards);
+	console.log(otherUpgradeCards);
+	// Styles
 	const styles = {
 		cardStyles: {
 			borderRadius: ".38em",
@@ -121,6 +128,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			fontSize: "1.3em",
 			margin: 0,
 		},
+
 		counterIconLayer:{
 			position: "absolute",
 			width: "100%",
@@ -173,7 +181,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			justifyContent: "center",
 		},
 		shieldIconLayer:{
-			position: "absolute",
+			position: "relative",
 			width: "2rem",
 			display: "flex",
 			height: "2.5rem",
@@ -185,6 +193,14 @@ const GameCard: React.FC<IGameCardProps> = ({
 			backgroundImage: `url(/ShieldToken.png)`,
 			alignItems: "center",
 			justifyContent: "center",
+		},
+		shieldContainerStyle: {
+			position:"absolute",
+			top:"0px",
+			width: "100%",
+			justifyContent: "right",
+			alignItems: "center",
+			columnGap: "4px"
 		},
 		upgradeIconLayer:{
 			position: "relative",
@@ -214,9 +230,23 @@ const GameCard: React.FC<IGameCardProps> = ({
 			marginTop: "3.3px",
 			fontWeight: "800",
 			color: "black"
+		},
+		sentinelStyle:{
+			position: "absolute",
+			width: "2rem",
+			display: "flex",
+			height: "2.5rem",
+			top:"36px",
+			right: "0px",
+			backgroundPosition: "right",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			backgroundImage: `url(/SentinelToken.png)`,
+			alignItems: "center",
+			justifyContent: "center",
 		}
 	}
-	console.log(cardData.subcards);
+	console.log(cardData);
 	return (
 		<>
 		<MuiCard sx={styles.cardStyles}
@@ -233,15 +263,20 @@ const GameCard: React.FC<IGameCardProps> = ({
 						</Box>
 					) : variant === "gameboard" ? (
 						<>
-						{subcards.map((subcard, index) => (
-							subcard.name === 'shield' ? (
-								<Box
-									key={subcard.id || `subcard-${index}`}
-									sx={styles.shieldIconLayer}
-								>
-								</Box>
-							) : null
-						))}
+							<Grid direction="row" container sx={styles.shieldContainerStyle}>
+								{shieldCards.map((shieldCard) => (
+									<>
+										<Box
+											key={shieldCard.uuid}
+											sx={styles.shieldIconLayer}
+											>
+										</Box>
+									</>
+								))}
+							</Grid>
+							<Box sx={styles.sentinelStyle}>
+
+							</Box>
 							<Box sx={styles.powerIconLayer}>
 								<Typography sx={{...styles.numberStyle,marginRight:"2px"}}>{cardData.power}</Typography>
 							</Box>
@@ -279,9 +314,9 @@ const GameCard: React.FC<IGameCardProps> = ({
 				</CardContent>
 			)}
 		</MuiCard>
-		{subcards.map((subcard, index) => (
+		{otherUpgradeCards.map((subcard, index) => (
 			<Box
-				key={subcard.id || `subcard-${index}`}
+				key={subcard.uuid}
 				sx={{...styles.upgradeIconLayer, backgroundImage: `url(${(cardUpgradebackground(subcard))})`,bottom: `${index * 3}px`}}
 			>
 				<Typography sx={styles.upgradeNameStyle}>{subcard.name}</Typography>
