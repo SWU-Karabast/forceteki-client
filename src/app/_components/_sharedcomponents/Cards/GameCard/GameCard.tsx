@@ -40,11 +40,11 @@ const GameCard: React.FC<IGameCardProps> = ({
 	};
 
 	// upgrade on click
-	const upgradeClickFunction = (card:ICardData) => {
+	/*const upgradeClickFunction = (card:ICardData) => {
 		if(card.selectable){
 			sendGameMessage(["cardClicked", card.uuid]);
 		}
-	}
+	}*/
 	const handleClick = onClick ?? defaultClickFunction;
 	const cardBorderColor = (card: ICardData) => {
 		if (card.selected) return "yellow";
@@ -325,8 +325,8 @@ const GameCard: React.FC<IGameCardProps> = ({
 				sx={{...styles.upgradeIconLayer,
 					backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
 					bottom: `${index * 7 + 2}px`,
-					border: `1px solid ${subcard.selectable ? 'limegreen' : 'transparent'}`}}
-				onClick={() => upgradeClickFunction(subcard)}
+				}}
+				// onClick={() => upgradeClickFunction(subcard)}
 			>
 				<Typography sx={styles.upgradeNameStyle}>{subcard.name}</Typography>
 			</Box>
