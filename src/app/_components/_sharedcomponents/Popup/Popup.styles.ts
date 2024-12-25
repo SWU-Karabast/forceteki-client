@@ -58,6 +58,15 @@ export const containerStyle = {
   maxWidth: "800px",
 };
 
+export const headerStyle = (isMinimized: boolean) => ({
+  display: "flex",
+  width: "100%",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginTop: "-10px",
+  marginBottom: isMinimized ? "-20px" : "0",
+});
+
 export const footerStyle = {
   display: "flex",
   gap: "1rem",
@@ -68,16 +77,19 @@ export const footerStyle = {
 };
 
 export const minimalButtonStyle = {
-  position: "absolute",
-  top: "0.5rem",
-  right: "0.5rem",
+  marginTop: "-15px",
   color: "white",
+  display: "flex",
 };
 
 export const titleStyle = {
   color: "white",
   fontSize: "1.25rem",
   fontWeight: "bold",
+  flex: 1,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
 };
 
 export const textStyle = {
