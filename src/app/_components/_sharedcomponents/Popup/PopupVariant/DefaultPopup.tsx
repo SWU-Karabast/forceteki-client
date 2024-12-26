@@ -38,7 +38,7 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
               variant="contained"
               onClick={() => {
                 sendGameMessage([button.command, button.arg, button.uuid]);
-                closePopup();
+                closePopup(data.uuid);
               }}
             >
               {button.text}

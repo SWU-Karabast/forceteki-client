@@ -1,6 +1,6 @@
 "use client";
 import { PopupData, PopupType, usePopup } from "@/app/_contexts/Popup.context";
-import { Box } from "@mui/material";
+import { Box, ButtonBase } from "@mui/material";
 import React from "react";
 import { contentStyle, overlayStyle } from "./Popup.styles";
 import { DefaultPopup, PilePopup, SelectCardsPopup } from "./Popup.types";
@@ -9,9 +9,9 @@ import { PilePopupModal } from "./PopupVariant/PilePopup";
 import { SelectCardsPopupModal } from "./PopupVariant/SelectCardsPopup";
 
 const PopupShell: React.FC = () => {
-  const { type, data } = usePopup();
+  const { popups, focusPopup } = usePopup();
 
-  if (!type || !data) return null; // No popup to display
+  if (popups.length === 0) return null; // No popup to display
 
   const renderPopup = (type: PopupType, data: PopupData) => {
     switch (type) {
@@ -26,9 +26,19 @@ const PopupShell: React.FC = () => {
     }
   };
 
+  console.log("Popups:", popups.length);
+
   return (
     <Box sx={overlayStyle}>
-      <Box sx={contentStyle}>{renderPopup(type, data)}</Box>
+      {popups.map((popup, index) => (
+        <ButtonBase
+          key={popup.uuid}
+          sx={contentStyle(index)}
+          onClick={() => focusPopup(popup.uuid)}
+        >
+          <Box sx={contentStyle(index)}>{renderPopup(popup.type, popup)}</Box>
+        </ButtonBase>
+      ))}
     </Box>
   );
 };

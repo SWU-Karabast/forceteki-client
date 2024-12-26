@@ -11,8 +11,8 @@ export type DefaultPopup = {
   type: "default";
   uuid: string;
   title: string;
+  promptType?: string;
   description?: string;
-  importantAction?: boolean;
   buttons: PopupButton[];
 };
 

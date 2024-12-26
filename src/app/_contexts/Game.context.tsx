@@ -52,11 +52,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
       if (gameState.players[playerUpdate].promptState) {
         const promptState = gameState.players[playerUpdate].promptState;
-        const { buttons, menuTitle, promptUuid, selectCard } = promptState;
+        const { buttons, menuTitle, promptUuid, selectCard, promptType } =
+          promptState;
         if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
           openPopup("default", {
-            title: menuTitle,
             uuid: promptUuid,
+            title: menuTitle,
+            promptType: promptType,
             buttons,
           });
         }

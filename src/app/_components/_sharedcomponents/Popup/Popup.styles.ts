@@ -16,12 +16,14 @@ export const buttonStyle = {
 
 export const overlayStyle = {
   position: "fixed" as const,
-  inset: "0",
+  width: "100%",
+  height: "100%",
+
   backgroundColor: "rgba(0, 0, 0, 0.5)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  zIndex: 50,
+  zIndex: 10,
 };
 
 export const concedeButtonStyle = {
@@ -33,14 +35,16 @@ export const concedeButtonStyle = {
     "linear-gradient(#380707, #380707) padding-box, linear-gradient(to top, #C30101, #7D0807) border-box",
 };
 
-export const contentStyle = {
+export const contentStyle = (index: number) => ({
   padding: "2rem",
   borderRadius: "15px",
-  position: "relative" as const,
+  position: "absolute",
   border: "2px solid transparent",
   background:
     "linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box",
-};
+  zIndex: 11 + index,
+  marginTop: index * 30,
+});
 
 export const containerStyle = {
   alignItems: "center",
