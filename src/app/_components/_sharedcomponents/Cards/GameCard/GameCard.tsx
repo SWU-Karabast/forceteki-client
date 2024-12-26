@@ -5,10 +5,11 @@ import {
 	Typography,
 	Box,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import Image from "next/image";
 import { IGameCardProps, ICardData, IServerCardData } from "@/app/_components/_sharedcomponents/Cards/CardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
-import { s3CardImageURL } from "@/app/_utils/s3Utils";
+import {s3CardImageURL, s3TokenImageURL} from "@/app/_utils/s3Utils";
 
 // Type guard to check if the card is ICardData
 const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
@@ -19,6 +20,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 	card,
 	size = "standard",
 	onClick,
+	subcards = [],
 	variant,
 	disabled = false,
 }) => {
@@ -37,6 +39,12 @@ const GameCard: React.FC<IGameCardProps> = ({
 		}
 	};
 
+	// upgrade on click
+	/*const upgradeClickFunction = (card:ICardData) => {
+		if(card.selectable){
+			sendGameMessage(["cardClicked", card.uuid]);
+		}
+	}*/
 	const handleClick = onClick ?? defaultClickFunction;
 	const cardBorderColor = (card: ICardData) => {
 		if (card.selected) return "yellow";
@@ -44,7 +52,40 @@ const GameCard: React.FC<IGameCardProps> = ({
 		if (card.exhausted) return "gray";
 		return "";
 	}
+	// helper function to get the correct aspects for the upgrade cards
+	const cardUpgradebackground = (card: ICardData) => {
+		if (!card.aspects){
+			return null
+		}
 
+		// Check if Villainy or Heroism are the sole aspects
+		if (card.aspects.includes("villainy") && card.aspects.length === 1) {
+			return "upgrade-black.png";
+		}
+		if (card.aspects.includes("heroism") && card.aspects.length === 1) {
+			return "upgrade-white.png";
+		}
+		// Check other aspects
+		switch (true) {
+			case card.aspects.includes("aggression"):
+				return "upgrade-red.png";
+			case card.aspects.includes("command"):
+				return "upgrade-green.png";
+			case card.aspects.includes("cunning"):
+				return "upgrade-yellow.png";
+			case card.aspects.includes("vigilance"):
+				return "upgrade-blue.png";
+			default:
+				// Fallback for unexpected cases
+				return "upgrade-grey.png";
+		}
+	};
+
+	// Filter subcards into Shields and other upgrades
+	const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
+	const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
+
+	// Styles
 	const styles = {
 		cardStyles: {
 			borderRadius: ".38em",
@@ -62,6 +103,11 @@ const GameCard: React.FC<IGameCardProps> = ({
 						// For "standard" or other sizes:
 						height: size === "standard" ? "10rem" : "8rem",
 						width: size === "standard" ? "7.18rem" : "8rem",
+						border: `2px solid ${cardBorderColor(cardData)}`,
+						/*...(cardData.exhausted &&{
+							transform: 'rotate(4deg)',
+							transition: 'transform 0.3s ease',
+						})*/
 					}
 			),
 		},
@@ -72,7 +118,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 			position: "relative",
 			textAlign: "center",
 			whiteSpace: "normal",
-			backgroundColor: "transparent",
+			backgroundColor: variant === "lobby" ? "transparent" : "black",
 			backgroundImage: `url(${s3CardImageURL(cardData)})`,
 			backgroundSize: size === "standard" ? "contain" : "cover",
 			backgroundPosition: size === "standard" ? "center" : "top",
@@ -88,7 +134,8 @@ const GameCard: React.FC<IGameCardProps> = ({
 			fontSize: "1.3em",
 			margin: 0,
 		},
-		iconLayer:{
+
+		counterIconLayer:{
 			position: "absolute",
 			width: "100%",
 			display: "flex",
@@ -100,14 +147,114 @@ const GameCard: React.FC<IGameCardProps> = ({
 			backgroundImage: `url(/counterIcon.svg)`,
 			alignItems: "center",
 			justifyContent: "center",
-
+		},
+		powerIconLayer:{
+			position: "absolute",
+			width: "2rem",
+			display: "flex",
+			height: "2.5rem",
+			bottom: "0px",
+			backgroundPosition: "left",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			backgroundImage: `url(${s3TokenImageURL('power-badge')})`,
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		healthIconLayer:{
+			position: "absolute",
+			width: "2rem",
+			display: "flex",
+			height: "2.5rem",
+			bottom: "0px",
+			right: "0px",
+			backgroundPosition: "right",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			backgroundImage: `url(${s3TokenImageURL('hp-badge')})`,
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		damageIconLayer:{
+			position: "absolute",
+			width: "6.5rem",
+			display: "flex",
+			height: "2.5rem",
+			bottom: "0px",
+			right: "18px",
+			background: "linear-gradient(90deg, rgba(255, 0, 0, 0) 47.44%, rgba(255, 0, 0, 0.911111) 75.61%, #FF0000 102.56%)",
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		shieldIconLayer:{
+			position: "relative",
+			width: "2rem",
+			display: "flex",
+			height: "2.5rem",
+			top:"0px",
+			right: "0px",
+			backgroundPosition: "right",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
+			alignItems: "center",
+			justifyContent: "center",
+		},
+		shieldContainerStyle: {
+			position:"absolute",
+			top:"0px",
+			width: "100%",
+			justifyContent: "right",
+			alignItems: "center",
+			columnGap: "4px"
+		},
+		upgradeIconLayer:{
+			position: "relative",
+			width: "100%",
+			display: "flex",
+			height: "30px",
+			bottom:"0px",
+			right: "0px",
+			backgroundPosition: "right",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			alignItems: "center",
+			justifyContent: "center",
+			backgroundColor: "transparent",
+		},
+		damageNumberStyle:{
+			fontSize: variant === 'lobby' ? "2rem" : "1.9rem",
+			fontWeight: "700",
+			position: "absolute",
+			right:"16px",
 		},
 		numberStyle:{
-			fontSize: "2rem",
+			fontSize: variant === 'lobby' ? "2rem" : "1.9rem",
 			fontWeight: "700",
+		},
+		upgradeNameStyle:{
+			fontSize: "11px",
+			marginTop: "2px",
+			fontWeight: "800",
+			color: "black"
+		},
+		sentinelStyle:{
+			position: "absolute",
+			width: "2rem",
+			display: "flex",
+			height: "2.5rem",
+			top:"36px",
+			right: "0px",
+			backgroundPosition: "right",
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			backgroundImage: `url(/SentinelToken.png)`,
+			alignItems: "center",
+			justifyContent: "center",
 		}
 	}
 	return (
+		<>
 		<MuiCard sx={styles.cardStyles}
 
 			 onClick={disabled ? undefined : handleClick}
@@ -116,11 +263,40 @@ const GameCard: React.FC<IGameCardProps> = ({
 				<CardContent sx={styles.cardContentStyle}>
 					<Box sx={{ display: 'flex', flexDirection: 'column', height: "100%"}}>
 					</Box>
-					{variant === "lobby" && (
-						<Box sx={styles.iconLayer}>
+					{variant === "lobby" ? (
+						<Box sx={styles.counterIconLayer}>
 							<Typography sx={styles.numberStyle}>{cardCounter}</Typography>
 						</Box>
-					)}
+					) : variant === "gameboard" ? (
+						<>
+							<Grid direction="row" container sx={styles.shieldContainerStyle}>
+								{shieldCards.map((shieldCard) => (
+									<>
+										<Box
+											key={shieldCard.uuid}
+											sx={styles.shieldIconLayer}
+											/>
+									</>
+								))}
+							</Grid>
+							{cardData.sentinel && (
+								<Box sx={styles.sentinelStyle}/>
+							)}
+							<Box sx={styles.powerIconLayer}>
+								<Typography sx={{...styles.numberStyle,marginRight:"2px"}}>{cardData.power}</Typography>
+							</Box>
+							{Number(cardData.damage) > 0 && (
+								<Box sx={styles.damageIconLayer}>
+									<Typography sx={styles.damageNumberStyle}>
+										{cardData.damage}
+									</Typography>
+								</Box>
+							)}
+							<Box sx={styles.healthIconLayer}>
+								<Typography sx={{...styles.numberStyle,marginLeft:"2px"}}>{cardData.hp}</Typography>
+							</Box>
+						</>
+					) : null}
 				</CardContent>
 			) : (
 				<CardContent sx={styles.cardContentStyle}>
@@ -143,6 +319,19 @@ const GameCard: React.FC<IGameCardProps> = ({
 				</CardContent>
 			)}
 		</MuiCard>
+		{otherUpgradeCards.map((subcard, index) => (
+			<Box
+				key={subcard.uuid}
+				sx={{...styles.upgradeIconLayer,
+					backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
+					bottom: `${index * 7 + 2}px`,
+				}}
+				// onClick={() => upgradeClickFunction(subcard)}
+			>
+				<Typography sx={styles.upgradeNameStyle}>{subcard.name}</Typography>
+			</Box>
+		))}
+	</>
 	);
 };
 
