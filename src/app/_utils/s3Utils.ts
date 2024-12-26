@@ -78,6 +78,10 @@ export const s3CardImageURL = (card: ICardData) => {
     return s3ImageURL(`cards/${card.setId.set}/${cardNumber}.webp`);
 };
 
+export const s3TokenImageURL = (token_name: string) =>{
+    return s3ImageURL(`game/${token_name}.webp`);
+}
+
 
 // Helper function to update a card's id
 export const updateIdsWithMapping = (data: IDeckData, mapping: IMapping): IDeckData => {

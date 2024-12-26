@@ -3,8 +3,11 @@ interface ICardSetId {
 	number: number;
 }
 
+type IAspect =  'aggression' | 'command' | 'cunning' | 'heroism' | 'vigilance' | 'villainy';
+
 export interface ICardData {
 	uuid: string;
+	parentCardId?: string,
 	id?: number;
 	name?: string;
 	selected?: boolean;
@@ -21,6 +24,9 @@ export interface ICardData {
 	damage?: number;
 	setId: ICardSetId;
 	type: string;
+	subcards?: ICardData[];
+	aspects?: IAspect[];
+	sentinel?: boolean;
 }
 export interface IServerCardData {
 	count: number;
@@ -32,6 +38,7 @@ export interface IGameCardProps {
 	onClick?: () => void;
 	variant?: "lobby" | "gameboard";
 	disabled?: boolean;
+	subcards?: ICardData[];
 }
 
 export interface ILeaderBaseCardProps {
