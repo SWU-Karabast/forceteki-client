@@ -2,12 +2,14 @@ import React, { useEffect } from "react";
 import { Typography, Box, Tab, Tabs, Card, Button } from "@mui/material";
 import { useRouter } from "next/navigation";
 import CreateGameForm from "../_sharedcomponents/CreateGameForm/CreateGameForm";
+import { useUser } from "@/app/_contexts/User.context";
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
     const [value, setValue] = React.useState(0);
     const [testGameList, setTestGameList] = React.useState([]);
-    const isDevEnv = process.env.NODE_ENV === "development";
+    const { user } = useUser();
+    const showTestGames = process.env.NODE_ENV === "development" && user?.id === "exe66";
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -81,7 +83,7 @@ const HomePagePlayMode: React.FC = () => {
                     <Tabs value={value} variant="fullWidth" onChange={handleChange}>
                         <Tab sx={styles.tabStyles} label="Play" />
                         <Tab sx={styles.tabStyles} label="Create" />
-                        {isDevEnv && <Tab sx={styles.tabStyles} label="Test" />}
+                        {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
                     </Tabs>
                 </Box>
                 <TabPanel index={0} value={value}>
@@ -90,7 +92,7 @@ const HomePagePlayMode: React.FC = () => {
                 <TabPanel index={1} value={value}>
                     <CreateGameForm format={'Premier'} />
                 </TabPanel>
-                {isDevEnv && 
+                {showTestGames && 
                     <TabPanel index={2} value={value}>
                         <Box pt={2}>
                             <Typography variant="h6">Test Game Setups</Typography>
