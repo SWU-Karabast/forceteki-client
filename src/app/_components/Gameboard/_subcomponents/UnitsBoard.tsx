@@ -92,7 +92,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 				{/* Opponent's Ground Units */}
 				<Grid sx={opponentGridStyle}>
 					{opponentUnits.map((card: ICardData) => (
-						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
+						<Box key={card.uuid} sx={{ flex: "0 0 auto" }}>
 							<GameCard card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
 						</Box>
 					))}
@@ -101,7 +101,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 				{/* Player's Ground Units */}
 				<Grid sx={playerGridStyle}>
 					{playerUnits.map((card: ICardData) => (
-						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
+						<Box key={card.uuid} sx={{ flex: "0 0 auto" }}>
 							<GameCard card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
 						</Box>
 					))}
