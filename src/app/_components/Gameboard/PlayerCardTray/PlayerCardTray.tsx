@@ -19,8 +19,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "flex-start",
-		pl: "2em",
-		pt: "2em",
+		padding: "1em",
 	};
 
 	const centerColumnStyle = {
@@ -35,13 +34,13 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "flex-end",
-		pr: "2em",
-		pt: "2em",
+		padding: "1em",
 	};
 
 	return (
 		<Grid container sx={{ height: "20.82%" }}>
 			<Grid size={3} sx={leftColumnStyle}>
+				<DeckDiscard trayPlayer={trayPlayer} />
 				<Resources
 					trayPlayer={trayPlayer}
 					handleModalToggle={handleModalToggle}
@@ -49,10 +48,9 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
 			</Grid>
 			<Grid size={6} sx={centerColumnStyle}>
 				<PlayerHand cards={gameState?.players[connectedPlayer].cardPiles["hand"] || []} />
-				{/* <CardActionTray /> */}
 			</Grid>
 			<Grid size={3} sx={rightColumnStyle}>
-				<DeckDiscard trayPlayer={trayPlayer} />
+				<CardActionTray />
 			</Grid>
 		</Grid>
 	);

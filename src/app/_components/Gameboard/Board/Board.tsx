@@ -22,85 +22,74 @@ const Board: React.FC<IBoardProps> = ({
 
 
 	//----------------Styles----------------//
-	const leftColumnStyle = {
-		justifyContent: "flex-end",
-		alignItems: "center",
-	};
-
-	const rightColumnStyle = {
-		justifyContent: "flex-start",
-		alignItems: "center",
-	};
-	const containerStyle = {
-		height: "100%",
-		width: "100%",
-		justifyContent: "center",
-		alignItems: "center"
-	};
-	const lobbyLeaderBaseContainer = {
-		display: "flex",
-		flexDirection: "column",
-		alignItems: "center",
-		width: "100%",
+	const styles = {
+		leftColumnStyle: {
+			justifyContent: "flex-end",
+			alignItems: "center",
+		},
+		rightColumnStyle: {
+			justifyContent: "flex-start",
+			alignItems: "center",
+		},
+		middleColumnStyle: {
+			justifyContent: "center",
+			alignItems: "center",
+		},
+		middleColumnContent: {
+			display: "flex",
+			justifyContent: "space-between",
+			alignItems: "center",
+			height: "100%",
+			flexDirection: "column",
+			padding: "1em",
+		},
+		containerStyle: {
+			height: "100%",
+			width: "100%",
+			justifyContent: "center",
+			alignItems: "center"
+		},
+		leaderBaseContainer: {
+			display: "flex",
+			flexDirection: "column",
+			alignItems: "center",
+			width: "100%",
+		},
+		rowStyle: {
+			flexGrow: 1,
+			width: "100%"
+		},
 	}
-	const rowStyle = {
-		flexGrow: 1,
-		width: "100%"
-	};
-	//the title of the deck i believe
-	const redBoxStyle = {
-		position: "absolute",
-		bottom: "10px",
-		left: "50%",
-		transform: "translateX(-50%)",
-		backgroundColor: "red",
-		borderRadius: "4px",
-		p: "4px 8px",
-	};
-
-	const redBoxTypographyStyle = {
-		color: "white",
-		fontFamily: "var(--font-barlow), sans-serif",
-		fontWeight: "600",
-		fontSize: "1em",
-	};
 	return (
 		<Grid container sx={{ height: "64.18%" }}>
-			<Grid container size={5} sx={leftColumnStyle}>
+			<Grid container size={5} sx={styles.leftColumnStyle}>
 				<UnitsBoard
 					sidebarOpen={sidebarOpen} arena="spaceArena"
 				/>
 			</Grid>
-			<Grid container size={2}>
-				<Grid sx={rowStyle}>
-					<Grid container direction="column" sx={containerStyle}>
-						<Box sx={lobbyLeaderBaseContainer}>
-							<LeaderBaseCard
-								variant="leader"
-								title={titleOpponent}
-								isLobbyView={false}
-								card={opponentLeader}
-							/>
-							<LeaderBaseCard variant="base" isLobbyView={false} card={opponentBase}></LeaderBaseCard>
-						</Box>
-					</Grid>
-				</Grid>
-				<CardActionTray />
-				<Grid sx={rowStyle}>
-					<Grid container direction="column" sx={containerStyle}>
-						<Box sx={lobbyLeaderBaseContainer}>
-							<LeaderBaseCard
-								variant="leader"
-								isLobbyView={false}
-								title={connectedPlayer}
-								card={playerLeader}
-							/>
-							<LeaderBaseCard variant="base" isLobbyView={false} card={playerBase}></LeaderBaseCard>
-						</Box>
-					</Grid>
-				</Grid>
+			<Grid container size={2} sx={styles.middleColumnStyle}>
+				<Box sx={styles.middleColumnContent}>
+					<Box sx={styles.leaderBaseContainer}>
+						<LeaderBaseCard
+							variant="leader"
+							title={titleOpponent}
+							isLobbyView={false}
+							card={opponentLeader}
+						/>
+						<LeaderBaseCard variant="base" isLobbyView={false} card={opponentBase}></LeaderBaseCard>
+					</Box>
+					<Box sx={styles.leaderBaseContainer}>
+						<LeaderBaseCard variant="base" isLobbyView={false} card={playerBase}></LeaderBaseCard>
+						<LeaderBaseCard
+							variant="leader"
+							isLobbyView={false}
+							title={connectedPlayer}
+							card={playerLeader}
+						/>
+					</Box>
+				</Box>
 			</Grid>
-			<Grid container size={5} sx={rightColumnStyle}>
+			<Grid container size={5} sx={styles.rightColumnStyle}>
 				<UnitsBoard
 					sidebarOpen={sidebarOpen} arena="groundArena"
 				/>

@@ -37,6 +37,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
 	return (
 		<Grid container sx={{ height: "15%" }}>
 			<Grid size={3} sx={leftColumn}>
+				<DeckDiscard trayPlayer={trayPlayer} />
 				<Resources
 					trayPlayer={trayPlayer}
 				/>
@@ -45,7 +46,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
 				<PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles["hand"] || []} />
 			</Grid>
 			<Grid size={3} sx={rightColumn}>
-				<DeckDiscard trayPlayer={trayPlayer} />
+
 			</Grid>
 		</Grid>
 	);

@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, Box, Typography } from "@mui/material";
 import Image from "next/image";
+import { s3TokenImageURL } from "@/app/_utils/s3Utils";
 import { IResourcesProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
 
@@ -11,14 +12,16 @@ const Resources: React.FC<IResourcesProps> = ({
 	//------------------------STYLES------------------------//
 
 	const cardStyle = {
-		backgroundColor: "#282828E6",
-		width: "9.52vw",
-		height: "9vh",
+		width: "auto",
+		background: "transparent",
 		display: "flex",
 		borderRadius: "5px",
 		justifyContent: "center",
 		alignItems: "center",
 		transition: "background-color 0.3s ease",
+		border: "1px solid #FFFFFF55",
+		padding: "1em",
+		overflow: "visible",
 		"&:hover": {
 			background:
 				trayPlayer === "player"
@@ -27,24 +30,21 @@ const Resources: React.FC<IResourcesProps> = ({
 		},
 	};
 
+	const imageStyle = {
+		width: "1.6em",
+		marginRight: "10px",
+	}
+
 	const boxStyle = {
 		display: "flex",
 		justifyContent: "center",
 		alignItems: "center",
 		flexDirection: "row",
-		gap: "1vw",
-		height: "4.47vh",
-	};
-
-	const imageStyle = {
-		width: "2.50vw",
-		height: `calc(2.50vw * 1.357)`, // this was the image ratio in the figma images
 	};
 
 	const availableAndTotalResourcesTextStyle = {
-		fontFamily: "var(--font-barlow), sans-serif",
 		fontWeight: "800",
-		fontSize: "3.2em",
+		fontSize: "2.2em",
 		color: "white",
 	};
 
@@ -65,11 +65,12 @@ const Resources: React.FC<IResourcesProps> = ({
 			<CardContent sx={{ display: "flex" }}>
 				<Box sx={boxStyle}>
 					<Image
-						src="/resource-icon.png"
+						src={s3TokenImageURL("resource-icon")}
 						alt="Resource Icon"
-						width={28}
-						height={38}
 						style={imageStyle}
+						layout="intrinsic"
+						height={72}
+						width={54}
 					/>
 					<Typography sx={availableAndTotalResourcesTextStyle}>
 						{availableResources}/{totalResources}
