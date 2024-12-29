@@ -84,7 +84,7 @@ const SetUp: React.FC = ({
 	return (
 		<Box sx={boxContainer}>
 			<Typography sx={lobbyTextStyle}>KARABAST</Typography>
-			<SetUpCard owner={lobbyState ? lobbyState.lobbyOwner === connectedPlayer : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
+			<SetUpCard owner={lobbyState ? lobbyState.lobbyOwnerId === connectedPlayer : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
 			<Card sx={mainCardStyle}>
 				<Chat
 					chatHistory={lobbyState ? lobbyState.gameChat : []}
