@@ -20,7 +20,6 @@ const SetUp: React.FC = ({
 
 	// find the user
 	const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
-
 	// setup chat mechanics
 	const [chatMessage, setChatMessage] = useState("");
 	const handleChatSubmit = () => {
@@ -85,7 +84,7 @@ const SetUp: React.FC = ({
 	return (
 		<Box sx={boxContainer}>
 			<Typography sx={lobbyTextStyle}>KARABAST</Typography>
-			<SetUpCard owner={connectedUser ? connectedUser.owner : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
+			<SetUpCard owner={lobbyState ? lobbyState.lobbyOwner === connectedPlayer : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
 			<Card sx={mainCardStyle}>
 				<Chat
 					chatHistory={lobbyState ? lobbyState.gameChat : []}

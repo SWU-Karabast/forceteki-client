@@ -93,25 +93,16 @@ const Chat: React.FC<IChatProps> = ({
 				<Typography sx={titleStyle}>Chat</Typography>
 				<Divider sx={dividerStyle} />
 				<Box sx={chatBoxStyle}>
-					{/* If there are no messages, show a default */}
-					{(!chatHistory.messages || chatHistory.messages.length === 0) ? (
-						<Box>
-							<Typography sx={messageTextStyle}>Player 1 has connected.</Typography>
-							<Typography sx={messageTextStyle}>Player 2 has connected.</Typography>
-						</Box>
-					) : (
-						chatHistory.messages.map((chatEntry, index) => {
-							// [ { name: 'Order66', email: null }, 'test' ]
-							// Extract the sender (an object with name)
-							const [senderObject, _, text] = chatEntry.message;
-
-							return (
-								<Typography key={index} sx={messageTextStyle}>
-									{senderObject.name}: {text}
-								</Typography>
-							);
-						})
-					)}
+					{chatHistory.messages.map((chatEntry, index) => {
+						// [ { name: 'Order66', email: null }, 'test', 'some message text' ]
+						// Extract the sender (an object with name) and the text
+						const [senderObject, _, text] = chatEntry.message;
+						return (
+							<Typography key={index} sx={messageTextStyle}>
+								{senderObject.name}: {text}
+							</Typography>
+						);
+					})}
 				</Box>
 			</Box>
 
