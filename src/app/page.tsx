@@ -1,14 +1,14 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import Grid from "@mui/material/Grid2";
 import { Typography } from "@mui/material";
 import KarabastBanner from "./_components/_sharedcomponents/Banner/Banner";
 import PublicGames from "./_components/HomePage/PublicGames/PublicGames";
-import CreateGameForm from "./_components/_sharedcomponents/CreateGameForm/CreateGameForm";
+import HomePagePlayMode from "./_components/HomePage/HomePagePlayMode";
 import NewsColumn from "./_components/HomePage/News/News";
 
 const Home: React.FC = () => {
-	const [format, setFormat] = useState("Premier");
+
 
 	const styles = {
 		gridContainer: {
@@ -42,13 +42,13 @@ const Home: React.FC = () => {
 
 			<Grid container size={12} sx={styles.columnContainer}>
 				<Grid size={4} sx={styles.column}>
-				<PublicGames format={format} />
+					<PublicGames format={"Premier"} />
 				</Grid>
 				<Grid size={4} sx={styles.column}>
-				<CreateGameForm format={format} setFormat={setFormat} />
+					<HomePagePlayMode />
 				</Grid>
 				<Grid size={4} sx={styles.column}>
-				<NewsColumn />
+					<NewsColumn />
 				</Grid>
 			</Grid>
 

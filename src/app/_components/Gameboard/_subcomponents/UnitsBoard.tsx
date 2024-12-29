@@ -43,10 +43,48 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 	};
 
 	//------------------------CONTEXT------------------------//
+	/**
+	 * Takes an array of cards which can be main units or upgrades,
+	 * and returns a new array of only upgrades,
+	 */
+	const findUpgrades = (cards: ICardData[]): Record<string, ICardData[]> => {
+		// Group upgrades by their parentCardId
+		const upgradesByParentId: Record<string, ICardData[]> = {};
+
+		cards.forEach((card) => {
+			if (card.parentCardId) {
+				// If this card is actually an upgrade that references a parent ID
+				if (!upgradesByParentId[card.parentCardId]) {
+					upgradesByParentId[card.parentCardId] = [];
+				}
+				upgradesByParentId[card.parentCardId].push(card);
+			}
+		});
+		return upgradesByParentId
+	}
+	/**
+	 * Takes an array of cards which can be main units or upgrades,
+	 * and returns a new array of only main cards,
+	 * each including a subcards array with any matching upgrades.
+	 */
+	const attachUpgrades = (cards: ICardData[], upgradesByParentId: Record<string, ICardData[]>): ICardData[] => {
+		// For each "main" card (has NO parentCardId), attach the subcards
+		const mainCards = cards
+			.filter((card) => !card.parentCardId)
+			.map((card) => ({
+				...card,
+				subcards: card.uuid ? upgradesByParentId[card.uuid] ?? [] : [], // attach any upgrades belonging to this card
+			}));
+		return mainCards;
+	}
 	const { gameState, connectedPlayer, getOpponent } = useGame();
 
-	const playerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
-	const opponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];
+	const rawPlayerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
+	const rawOpponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];
+	const allCardsInArena = [...rawPlayerUnits, ...rawOpponentUnits];
+	const upgradeMapping = findUpgrades(allCardsInArena);
+	const playerUnits = attachUpgrades(rawPlayerUnits, upgradeMapping);
+	const opponentUnits = attachUpgrades(rawOpponentUnits, upgradeMapping);
 
 	return (
 		<Box sx={mainBoxStyle}>
@@ -54,8 +92,8 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 				{/* Opponent's Ground Units */}
 				<Grid sx={opponentGridStyle}>
 					{opponentUnits.map((card: ICardData) => (
-						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
-							<GameCard card={card} size="square" variant={'gameboard'}/>
+						<Box key={card.uuid} sx={{ flex: "0 0 auto" }}>
+							<GameCard card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
 						</Box>
 					))}
 				</Grid>
@@ -63,8 +101,8 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 				{/* Player's Ground Units */}
 				<Grid sx={playerGridStyle}>
 					{playerUnits.map((card: ICardData) => (
-						<Box key={card.id} sx={{ flex: "0 0 auto" }}>
-							<GameCard card={card} size="square" variant={'gameboard'}/>
+						<Box key={card.uuid} sx={{ flex: "0 0 auto" }}>
+							<GameCard card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
 						</Box>
 					))}
 				</Grid>

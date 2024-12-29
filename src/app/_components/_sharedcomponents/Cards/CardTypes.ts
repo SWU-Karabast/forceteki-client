@@ -3,6 +3,14 @@ interface ICardSetId {
   number: number;
 }
 
+type IAspect =
+  | "aggression"
+  | "command"
+  | "cunning"
+  | "heroism"
+  | "vigilance"
+  | "villainy";
+
 export interface ICardData {
   uuid: string;
   id?: number;
