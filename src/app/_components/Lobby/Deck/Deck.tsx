@@ -4,6 +4,7 @@ import { ICardData, IServerCardData } from "@/app/_components/_sharedcomponents/
 import { useDragScroll } from "@/app/_utils/useDragScroll";
 import {useGame} from "@/app/_contexts/Game.context";
 import GameCard from "@/app/_components/_sharedcomponents/Cards/GameCard/GameCard";
+import {ILobbyUserProps} from "@/app/_components/Lobby/LobbyTypes";
 
 const Deck: React.FC = () => {
 	// Use the custom hook with horizontal or vertical scrolling as required
@@ -104,12 +105,15 @@ const Deck: React.FC = () => {
 		flexWrap: "wrap",
 		gap: "1em",
 		p: "1em",
-		justifyContent: "center",
 		textWrap: "wrap",
 	};
-	const { connectedDeck, updateDeck } = useGame();
-	const newDeck = connectedDeck?.deckCards ?? [];
-	const sideBoard = connectedDeck?.sideboard ?? [];
+	const { connectedPlayer, lobbyState, sendLobbyMessage } = useGame();
+	const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+
+	// set decks for connectedUser
+	const newDeck = connectedUser ? connectedUser.deck.deckCards || [] : [];
+	const sideBoard = connectedUser ? connectedUser.deck.sideboard || [] : [];
+
 	// Calculate the total counts
 	const deckCount = newDeck.reduce(
 		(sum: number, item: { count: number; }) => sum + (item.count || 0),
@@ -146,7 +150,7 @@ const Deck: React.FC = () => {
 								key={card.card.uuid}
 								card={card}
 								variant={"lobby"}
-								onClick={() => updateDeck(['Deck', card.card.id])}
+								onClick={() => sendLobbyMessage(['updateDeck','Deck', card.card.id])}
 							/>
 						))}
 					</Box>
@@ -170,7 +174,7 @@ const Deck: React.FC = () => {
 										key={card.card.uuid}
 										card={card}
 										variant={'lobby'}
-										onClick={() => updateDeck(['Sideboard', card.card.id])}
+										onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.card.id])}
 									/>
 								))}
 							</Box>

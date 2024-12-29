@@ -13,21 +13,21 @@ import { useUser } from "./User.context";
 
 interface IGameContextType {
 	gameState: any;
+	lobbyState: any;
 	sendMessage: (message: string, args?: any[]) => void;
 	sendGameMessage: (args: any[]) => void;
 	getOpponent: (player: string) => string;
 	connectedPlayer: string;
-	connectedDeck: any,
-	updateDeck: (args: any[]) => void;
+	sendLobbyMessage: (args: any[]) => void;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
 	const [gameState, setGameState] = useState<any>(null);
+	const [lobbyState, setLobbyState] = useState<any>(null);
 	const [socket, setSocket] = useState<Socket | undefined>(undefined);
 	const [connectedPlayer, setConnectedPlayer] = useState<string>("");
-	const [connectedDeck, setDeck] = useState<any>(null);
 	const { user } = useUser();
 
 	useEffect(() => {
@@ -46,9 +46,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 			setGameState(gameState);
 			console.log("Game state received:", gameState);
 		});
-		newSocket.on("deckData", (deck:any) =>{
-			setDeck(deck);
-		});
+		newSocket.on("lobbystate", (lobbyState: any) => {
+			setLobbyState(lobbyState);
+			console.log("Lobby state received:", lobbyState);
+		})
 
 		setSocket(newSocket);
 
@@ -67,9 +68,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		socket?.emit("game", ...args);
 	};
 
-	const updateDeck = (args: any[]) => {
-		console.log("move card message", args);
-		socket?.emit("updateDeck", ...args);
+	const sendLobbyMessage = (args: any[]) => {
+		console.log("sending lobby message", args);
+		socket?.emit("lobby", ...args);
 	}
 
 	const getOpponent = (player: string) => {
@@ -82,12 +83,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 		<GameContext.Provider
 			value={{
 				gameState,
+				lobbyState,
 				sendGameMessage,
 				sendMessage,
 				connectedPlayer,
-				connectedDeck,
 				getOpponent,
-				updateDeck
+				sendLobbyMessage
 			}}
 		>
 			{children}

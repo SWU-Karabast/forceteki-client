@@ -2,25 +2,24 @@
 import React from "react";
 import { Card, Box, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import { IPlayersProps } from "../LobbyTypes";
+import {ILobbyUserProps, IPlayersProps} from "../LobbyTypes";
 import LeaderBaseCard from "@/app/_components/_sharedcomponents/Cards/LeaderBaseCard/LeaderBaseCard";
 import {useGame} from "@/app/_contexts/Game.context";
 
 const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 	//------------------------STYLES------------------------//
-	const { connectedPlayer, connectedDeck } = useGame();
+	const { connectedPlayer, lobbyState } = useGame();
+	const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+	const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
 
-	const titleOpponent =
-		connectedPlayer === "ThisIsTheWay" ? "Order66" : "ThisIsTheWay";
-	let playerLeader = null;
-	let playerBase = null;
+	// set connectedPlayer
+	const playerLeader = connectedUser ? connectedUser.deck.leader[0].card : null;
+	const playerBase = connectedUser ? connectedUser.deck.base[0].card : null;
 
-	// we get the connected deck
-	if (connectedDeck) {
-		playerLeader = connectedDeck.leader[0].card;
-		playerBase = connectedDeck.base[0].card;
-	}
-
+	// set opponent
+	const titleOpponent = opponentUser ? opponentUser.username : null;
+	const opponentLeader = opponentUser ? opponentUser.deck.leader[0].card : null;
+	const opponentBase = opponentUser ? opponentUser.deck.base[0].card : null;
 	const cardStyle = {
 		borderRadius: "1.1em",
 		borderColor: "#FFFFFF00",
@@ -107,12 +106,12 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 								variant="subtitle1"
 								sx={titleTypographyStyle}
 							>
-								{connectedPlayer}
+								{connectedUser ? connectedUser.username : connectedPlayer}
 							</Typography>
 							<LeaderBaseCard
 								variant="leader"
 								isLobbyView={true}
-								title={connectedPlayer}
+								title={connectedUser ? connectedUser.username : connectedPlayer}
 								card={playerLeader}
 							/>
 							<LeaderBaseCard variant="base" isLobbyView={true} card={playerBase}></LeaderBaseCard>
@@ -122,17 +121,20 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 						<Box sx={lobbyLeaderBaseContainer}>
 							<Typography
 								variant="subtitle1"
-								sx={titleOpponent === undefined ? titleTypographyStyleOpponent : titleTypographyStyle}
+								sx={{
+									...(opponentUser ? titleTypographyStyle : titleTypographyStyleOpponent),
+									...(opponentUser?.ready && { color: "green" }),
+								}}
 							>
-								{titleOpponent === undefined ? "Opponent" : titleOpponent}
+								{opponentUser ? opponentUser.username : "Opponent"}
 							</Typography>
 							<LeaderBaseCard
 								variant="leader"
 								isLobbyView={isLobbyView}
 								title={titleOpponent}
-								card={playerLeader}
+								card={opponentLeader}
 							/>
-							<LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={playerBase}></LeaderBaseCard>
+							<LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={opponentBase}></LeaderBaseCard>
 						</Box>
 					</Grid>
 				</Grid>

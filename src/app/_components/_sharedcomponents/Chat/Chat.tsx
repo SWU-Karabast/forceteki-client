@@ -23,6 +23,17 @@ const Chat: React.FC<IChatProps> = ({
 		backgroundColor: "#28282800",
 		height: "55vh",
 		overflowY: "auto",
+		"::-webkit-scrollbar": {
+			width: "0.2vw",
+		},
+		"::-webkit-scrollbar-thumb": {
+			backgroundColor: "#D3D3D3B3",
+			borderRadius: "1vw",
+		},
+		"::-webkit-scrollbar-button": {
+			display: "none",
+		},
+		transition: "scrollbar-color 0.3s ease-in-out",
 	};
 
 	const titleStyle = {
@@ -82,23 +93,24 @@ const Chat: React.FC<IChatProps> = ({
 				<Typography sx={titleStyle}>Chat</Typography>
 				<Divider sx={dividerStyle} />
 				<Box sx={chatBoxStyle}>
-					{chatHistory.length > 0 ? (
-						chatHistory.map((message, index) => (
-							<Typography key={index} sx={messageTextStyle}>
-								{message}
-							</Typography>
-						))
-					) : (
+					{/* If there are no messages, show a default */}
+					{(!chatHistory.messages || chatHistory.messages.length === 0) ? (
 						<Box>
-							<>
-								<Typography sx={messageTextStyle}>
-									Player 1 has connected.
-								</Typography>
-								<Typography sx={messageTextStyle}>
-									Player 2 has connected.
-								</Typography>
-							</>
+							<Typography sx={messageTextStyle}>Player 1 has connected.</Typography>
+							<Typography sx={messageTextStyle}>Player 2 has connected.</Typography>
 						</Box>
+					) : (
+						chatHistory.messages.map((chatEntry, index) => {
+							// [ { name: 'Order66', email: null }, 'test' ]
+							// Extract the sender (an object with name)
+							const [senderObject, _, text] = chatEntry.message;
+
+							return (
+								<Typography key={index} sx={messageTextStyle}>
+									{senderObject.name}: {text}
+								</Typography>
+							);
+						})
 					)}
 				</Box>
 			</Box>
