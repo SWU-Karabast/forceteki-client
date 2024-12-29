@@ -10,6 +10,7 @@ import {
 } from "react";
 import io, { Socket } from "socket.io-client";
 import { usePopup } from "./Popup.context";
+import { useUser } from "./User.context";
 
 interface IGameContextType {
   gameState: any;
@@ -29,51 +30,59 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [connectedPlayer, setConnectedPlayer] = useState<string>("");
   const [connectedDeck, setDeck] = useState<any>(null);
   const { openPopup } = usePopup();
+  const { user } = useUser();
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const playerName = urlParams.get("player") || "Order66";
-    setConnectedPlayer(playerName);
+    if (!user) return;
+    setConnectedPlayer(user.id || "");
     const newSocket = io("http://localhost:9500", {
       query: {
-        user: JSON.stringify({
-          username: playerName,
-        }),
+        user: JSON.stringify(user),
       },
     });
 
     newSocket.on("connect", () => {
-      console.log(`Connected to server as ${playerName}`);
+      console.log(`Connected to server as ${user.username}`);
+    });
+    newSocket.on("gamestate", (gameState: any) => {
+      setGameState(gameState);
+      console.log("Game state received:", gameState);
+    });
+    newSocket.on("deckData", (deck: any) => {
+      setDeck(deck);
     });
     newSocket.on("gamestate", (gameState: any) => {
       setGameState(gameState);
       console.log("Game state received:", gameState);
       const playerUpdate = gameState.playerUpdate;
 
-      if (gameState.players[playerUpdate].promptState) {
-        const promptState = gameState.players[playerUpdate].promptState;
-        const { buttons, menuTitle, promptUuid, selectCard, promptType } =
-          promptState;
-        if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
-          openPopup("default", {
-            uuid: promptUuid,
-            title: menuTitle,
-            promptType: promptType,
-            buttons,
-          });
+      newSocket.on("gamestate", (gameState: any) => {
+        setGameState(gameState);
+        console.log("Game state received:", gameState);
+        if (gameState.players[playerUpdate].promptState) {
+          const promptState = gameState.players[playerUpdate].promptState;
+          const { buttons, menuTitle, promptUuid, selectCard, promptType } =
+            promptState;
+          if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
+            openPopup("default", {
+              uuid: promptUuid,
+              title: menuTitle,
+              promptType: promptType,
+              buttons,
+            });
+          }
         }
-      }
-    });
-    newSocket.on("deckData", (deck: any) => {
-      setDeck(deck);
-    });
+      });
+      newSocket.on("deckData", (deck: any) => {
+        setDeck(deck);
+      });
 
-    setSocket(newSocket);
-
-    return () => {
-      newSocket?.disconnect();
-    };
-  }, []);
+      setSocket(newSocket);
+      return () => {
+        newSocket?.disconnect();
+      };
+    });
+  }, [user]);
 
   const sendMessage = (message: string, args: any[] = []) => {
     console.log("sending message", message, args);
