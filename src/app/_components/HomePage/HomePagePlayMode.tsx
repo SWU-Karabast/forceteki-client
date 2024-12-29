@@ -9,7 +9,7 @@ const HomePagePlayMode: React.FC = () => {
     const [value, setValue] = React.useState(0);
     const [testGameList, setTestGameList] = React.useState([]);
     const { user } = useUser();
-    const showTestGames = process.env.NODE_ENV === "development" && user?.id === "exe66";
+    const showTestGames = process.env.NODE_ENV === "development" && (user?.id === "exe66" || user?.id === "th3w4y");
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -103,6 +103,7 @@ const HomePagePlayMode: React.FC = () => {
                                     </Button>
                                 );
                             })}
+                            <Button sx={{marginTop: 2}} onClick={() => router.push("/GameBoard")}>Join Test Game</Button>
                         </Box>
                     </TabPanel>
                 }
