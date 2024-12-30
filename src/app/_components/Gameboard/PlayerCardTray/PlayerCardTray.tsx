@@ -1,5 +1,7 @@
 import React from "react";
+import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid2";
+import { ChatBubbleOutline } from "@mui/icons-material";
 import Resources from "../_subcomponents/PlayerTray/Resources";
 import DeckDiscard from "../_subcomponents/PlayerTray/DeckDiscard";
 import CardActionTray from "../_subcomponents/PlayerTray/CardActionTray";
@@ -41,16 +43,21 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
 		<Grid container sx={{ height: "20.82%" }}>
 			<Grid size={3} sx={leftColumnStyle}>
 				<DeckDiscard trayPlayer={trayPlayer} />
-				<Resources
-					trayPlayer={trayPlayer}
-					handleModalToggle={handleModalToggle}
-				/>
+				<Box ml={1}>
+					<Resources
+						trayPlayer={trayPlayer}
+						handleModalToggle={handleModalToggle}
+					/>
+				</Box>
 			</Grid>
 			<Grid size={6} sx={centerColumnStyle}>
 				<PlayerHand cards={gameState?.players[connectedPlayer].cardPiles["hand"] || []} />
 			</Grid>
 			<Grid size={3} sx={rightColumnStyle}>
 				<CardActionTray />
+				<Box ml={2}>
+					<ChatBubbleOutline />
+				</Box>
 			</Grid>
 		</Grid>
 	);

@@ -110,6 +110,9 @@ const GameCard: React.FC<IGameCardProps> = ({
 						})*/
 					}
 			),
+			"&:hover": {
+				cursor: "pointer",
+			},
 		},
 
 		cardContentStyle: {

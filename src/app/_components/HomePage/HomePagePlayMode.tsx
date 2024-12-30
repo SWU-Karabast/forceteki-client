@@ -98,9 +98,11 @@ const HomePagePlayMode: React.FC = () => {
                             <Typography variant="h6">Test Game Setups</Typography>
                             {testGameList.map((filename, index) => {
                                 return (
-                                    <Button sx={{marginTop: 2}} key={index} onClick={() => handleStartTestGame(filename)}>
-                                        {filename}
-                                    </Button>
+                                    <Box key={index}>
+                                        <Button sx={{marginTop: 2}} key={index} onClick={() => handleStartTestGame(filename)}>
+                                            {filename}
+                                        </Button>
+                                    </Box>
                                 );
                             })}
                             <Button sx={{marginTop: 2}} onClick={() => router.push("/GameBoard")}>Join Test Game</Button>
