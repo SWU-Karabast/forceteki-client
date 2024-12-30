@@ -49,6 +49,11 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
     );
   };
 
+  const handleMinimize = (e: any) => {
+    e.stopPropagation();
+    setIsMinimized(!isMinimized);
+  };
+
   return (
     <Box sx={containerStyle}>
       <Box sx={headerStyle(isMinimized)}>
@@ -56,7 +61,7 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
         <IconButton
           sx={minimalButtonStyle}
           aria-label="minimize"
-          onClick={() => setIsMinimized(!isMinimized)}
+          onClick={handleMinimize}
         >
           {isMinimized ? <BiPlus /> : <BiMinus />}
         </IconButton>

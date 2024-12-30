@@ -41,12 +41,25 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
+    const handleGameStatePopups = (gameState: any) => {
+      if (!user.id) return;
+      if (gameState.players?.[user.id].promptState) {
+        const promptState = gameState.players?.[user.id].promptState;
+        const { buttons, menuTitle, promptUuid, selectCard, promptType } =
+          promptState;
+        if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
+          openPopup("default", {
+            uuid: promptUuid,
+            title: menuTitle,
+            promptType: promptType,
+            buttons,
+          });
+        }
+      }
+    };
+
     newSocket.on("connect", () => {
       console.log(`Connected to server as ${user.username}`);
-    });
-    newSocket.on("gamestate", (gameState: any) => {
-      setGameState(gameState);
-      console.log("Game state received:", gameState);
     });
     newSocket.on("deckData", (deck: any) => {
       setDeck(deck);
@@ -54,34 +67,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     newSocket.on("gamestate", (gameState: any) => {
       setGameState(gameState);
       console.log("Game state received:", gameState);
-      const playerUpdate = gameState.playerUpdate;
-
-      newSocket.on("gamestate", (gameState: any) => {
-        setGameState(gameState);
-        console.log("Game state received:", gameState);
-        if (gameState.players[playerUpdate].promptState) {
-          const promptState = gameState.players[playerUpdate].promptState;
-          const { buttons, menuTitle, promptUuid, selectCard, promptType } =
-            promptState;
-          if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
-            openPopup("default", {
-              uuid: promptUuid,
-              title: menuTitle,
-              promptType: promptType,
-              buttons,
-            });
-          }
-        }
-      });
-      newSocket.on("deckData", (deck: any) => {
-        setDeck(deck);
-      });
-
-      setSocket(newSocket);
-      return () => {
-        newSocket?.disconnect();
-      };
+      handleGameStatePopups(gameState);
     });
+
+    newSocket.on("deckData", (deck: any) => {
+      setDeck(deck);
+    });
+
+    setSocket(newSocket);
+    return () => {
+      newSocket?.disconnect();
+    };
   }, [user]);
 
   const sendMessage = (message: string, args: any[] = []) => {

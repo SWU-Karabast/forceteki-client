@@ -26,8 +26,6 @@ const PopupShell: React.FC = () => {
     }
   };
 
-  console.log("Popups:", popups.length);
-
   return (
     <Box sx={overlayStyle}>
       {popups.map((popup, index) => (

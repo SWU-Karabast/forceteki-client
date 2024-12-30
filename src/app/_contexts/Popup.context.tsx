@@ -61,10 +61,20 @@ export const PopupProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const focusPopup = (uuid: string) => {
-    //put the matched popup as first of the array
     if (popups.length <= 1) return;
-    if (popups[0].uuid === uuid) return;
-    setPopups((prev) => [prev.find((popup) => popup.uuid === uuid) || prev[0]]);
+    if (popups[popups.length - 1].uuid === uuid) return;
+
+    setPopups((prev) => {
+      const index = prev.findIndex((popup) => popup.uuid === uuid);
+      if (index !== -1) {
+        const newPopups = [...prev];
+
+        const [popup] = newPopups.splice(index, 1);
+        newPopups.push(popup);
+        return newPopups;
+      }
+      return prev;
+    });
   };
 
   return (
