@@ -1,10 +1,14 @@
 import { usePopup } from "@/app/_contexts/Popup.context";
-import { Box, Button, Grid2, Typography } from "@mui/material";
+import { Box, Button, Grid2, IconButton, Typography } from "@mui/material";
+import { useState } from "react";
+import { BiMinus, BiPlus } from "react-icons/bi";
 import GameCard from "../../Cards/GameCard/GameCard";
 import {
   buttonStyle,
   containerStyle,
   footerStyle,
+  headerStyle,
+  minimalButtonStyle,
   titleStyle,
 } from "../Popup.styles";
 import { PilePopup } from "../Popup.types";
@@ -32,29 +36,54 @@ export const gridContainerStyle = {
 export const PilePopupModal = ({ data }: ButtonProps) => {
   const { closePopup } = usePopup();
 
+  const [isMinimized, setIsMinimized] = useState(false);
+
+  const renderPopupContent = () => {
+    if (isMinimized) return null;
+    return (
+      <>
+        <Grid2
+          container
+          spacing={1}
+          columnSpacing={3.5}
+          alignItems={"center"}
+          sx={gridContainerStyle}
+        >
+          {data.cards.map((card, index) => (
+            <Grid2 key={index}>
+              <GameCard card={card} />
+            </Grid2>
+          ))}
+        </Grid2>
+
+        <Box sx={footerStyle}>
+          <Button onClick={() => closePopup(data.uuid)} sx={buttonStyle}>
+            Done
+          </Button>
+        </Box>
+      </>
+    );
+  };
+
+  const handleMinimize = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setIsMinimized(!isMinimized);
+  };
+
   return (
     <Box sx={containerStyle}>
-      <Typography sx={titleStyle}>{data.title}</Typography>
-
-      <Grid2
-        container
-        spacing={2}
-        columnSpacing={2}
-        alignItems={"center"}
-        sx={gridContainerStyle}
-      >
-        {data.cards.map((card, index) => (
-          <Grid2 key={index}>
-            <GameCard card={card} />
-          </Grid2>
-        ))}
-      </Grid2>
-
-      <Box sx={footerStyle}>
-        <Button onClick={closePopup} sx={buttonStyle}>
-          Done
-        </Button>
+      <Box sx={headerStyle(isMinimized)}>
+        <Typography sx={titleStyle}>{data.title}</Typography>
+        <IconButton
+          sx={minimalButtonStyle}
+          aria-label="minimize"
+          onClick={handleMinimize}
+        >
+          {isMinimized ? <BiPlus /> : <BiMinus />}
+        </IconButton>
       </Box>
+
+      {renderPopupContent()}
     </Box>
   );
 };

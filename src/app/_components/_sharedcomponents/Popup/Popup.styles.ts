@@ -18,8 +18,9 @@ export const overlayStyle = {
   position: "fixed" as const,
   width: "100%",
   height: "100%",
+  pointerEvents: "none",
 
-  backgroundColor: "rgba(0, 0, 0, 0.5)",
+  backgroundColor: "rgba(0, 0, 0, 0.3)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",

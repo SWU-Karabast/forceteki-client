@@ -1,12 +1,24 @@
 "use client";
 import { PopupData, PopupType, usePopup } from "@/app/_contexts/Popup.context";
-import { Box, ButtonBase } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import React from "react";
 import { contentStyle, overlayStyle } from "./Popup.styles";
 import { DefaultPopup, PilePopup, SelectCardsPopup } from "./Popup.types";
 import { DefaultPopupModal } from "./PopupVariant/DefaultPopup";
 import { PilePopupModal } from "./PopupVariant/PilePopup";
 import { SelectCardsPopupModal } from "./PopupVariant/SelectCardsPopup";
+
+export const focusHandlerStyle = (index: number) => ({
+  zIndex: 11 + index,
+  marginTop: index * 30,
+  padding: 0,
+  background: "red",
+  minWidth: "auto",
+  "&:hover": {
+    backgroundColor: "transparent",
+  },
+  pointerEvents: "auto",
+});
 
 const PopupShell: React.FC = () => {
   const { popups, focusPopup } = usePopup();
@@ -29,13 +41,15 @@ const PopupShell: React.FC = () => {
   return (
     <Box sx={overlayStyle}>
       {popups.map((popup, index) => (
-        <ButtonBase
+        <Button
+          disableRipple
+          variant="text"
           key={popup.uuid}
-          sx={contentStyle(index)}
+          sx={focusHandlerStyle(index)}
           onClick={() => focusPopup(popup.uuid)}
         >
           <Box sx={contentStyle(index)}>{renderPopup(popup.type, popup)}</Box>
-        </ButtonBase>
+        </Button>
       ))}
     </Box>
   );
