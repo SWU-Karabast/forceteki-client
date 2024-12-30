@@ -3,6 +3,7 @@ import { Drawer, Box, IconButton, Typography } from "@mui/material";
 import { Settings, Close } from "@mui/icons-material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
 import { IChatDrawerProps } from "@/app/_components/Gameboard/GameboardTypes";
+import {useGame} from "@/app/_contexts/Game.context";
 
 const ChatDrawer = forwardRef<HTMLDivElement, IChatDrawerProps>(
 	function ChatDrawer(
@@ -17,6 +18,10 @@ const ChatDrawer = forwardRef<HTMLDivElement, IChatDrawerProps>(
 		},
 		ref
 	) {
+
+		// we need to set the chatHistory to correct format so we use gameState.gameChat
+		const { gameState } = useGame();
+
 		//------------------------STYLES------------------------//
 
 		const drawerStyle = {
@@ -80,7 +85,7 @@ const ChatDrawer = forwardRef<HTMLDivElement, IChatDrawerProps>(
 
 					{/* Use the ChatComponent here */}
 					<Chat
-						chatHistory={chatHistory}
+						chatHistory={gameState.gameChat}
 						chatMessage={chatMessage}
 						setChatMessage={setChatMessage}
 						handleChatSubmit={handleChatSubmit}

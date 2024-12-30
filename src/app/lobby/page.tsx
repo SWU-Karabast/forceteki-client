@@ -1,28 +1,23 @@
 "use client";
 import React, { useState } from "react";
 import {Grid2 as Grid, Typography} from "@mui/material";
-import { usePathname } from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import Players from "../_components/Lobby/Players/Players";
 import Deck from "../_components/Lobby/Deck/Deck";
 import SetUp from "../_components/Lobby/SetUp/SetUp";
 import {s3ImageURL} from "@/app/_utils/s3Utils";
+import {useGame} from "@/app/_contexts/Game.context";
 
 const Lobby = () => {
 
 	const pathname = usePathname();
 	const isLobbyView = pathname === "/lobby";
+	const { gameState } = useGame();
+	const router = useRouter();
 
-	const [chatMessage, setChatMessage] = useState("");
-	const [chatHistory, setChatHistory] = useState<string[]>([]);
-
-	const handleChatSubmit = () => {
-		if (chatMessage.trim()) {
-			setChatHistory([...chatHistory, chatMessage]);
-			setChatMessage("");
-		}
-	};
-
-
+	if(gameState){
+		router.push("/GameBoard");
+	}
 	//------------------------STYLES------------------------//
 
 	const containerStyle = {
@@ -62,10 +57,6 @@ const Lobby = () => {
 		<Grid container sx={containerStyle}>
 			<Grid container size={3} sx={setUpGridStyle}>
 				<SetUp
-					chatMessage={chatMessage}
-					chatHistory={chatHistory}
-					handleChatSubmit={handleChatSubmit}
-					setChatMessage={setChatMessage}
 				/>
 			</Grid>
 			<Grid container size={2} sx={playersGridStyle}>

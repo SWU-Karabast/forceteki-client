@@ -1,42 +1,35 @@
-import React from "react";
+import React, {useState} from "react";
 import {
 	Card,
 	Typography,
 	CardActions,
 	Button,
-	Box, Divider,
+	Box, Divider, TextField, CardContent,
 } from "@mui/material";
 import Chat from "@/app/_components/_sharedcomponents/Chat/Chat";
-import GameLinkCard from "../_subcomponents/GameLinkCard/GameLinkCard";
+import SetUpCard from "@/app/_components/Lobby/_subcomponents/SetUpCard/SetUpCard";
 import { useGame } from "@/app/_contexts/Game.context";
-import { ISetUpProps } from "../LobbyTypes";
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
+import {ILobbyUserProps} from "@/app/_components/Lobby/LobbyTypes";
 
-const SetUp: React.FC<ISetUpProps> = ({
-	chatHistory,
-	chatMessage,
-	setChatMessage,
-	handleChatSubmit,
+const SetUp: React.FC = ({
 }) => {
 
-	const { sendMessage } = useGame();
 	const router = useRouter();
-	const searchParams = useSearchParams();
-	// Extract the player from the URL query params
-	const player = searchParams.get("player");
+	const { lobbyState, sendLobbyMessage, connectedPlayer} = useGame();
 
-	const handleStartGame = async () => {
-		sendMessage("startGame");
-		if (player) {
-			router.push("/GameBoard?player=" + player);
-		} else {
-			router.push("/GameBoard");
+	// find the user
+	const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+	// setup chat mechanics
+	const [chatMessage, setChatMessage] = useState("");
+	const handleChatSubmit = () => {
+		if (chatMessage.trim()) {
+			sendLobbyMessage(['sendChatMessage',chatMessage]);
+			setChatMessage("");
 		}
-
 	};
 
 	//------------------------STYLES------------------------//
-
 	const mainCardStyle = {
 		borderRadius: "1.1em",
 		height: "100%",
@@ -53,30 +46,10 @@ const SetUp: React.FC<ISetUpProps> = ({
 			maxHeight: '67vh',
 		},
 		'@media (max-height: 759px)': {
-			maxHeight: '64.3vh',
+			maxHeight: '60.5vh',
 		},
 	};
 
-	const initiativeCardStyle = {
-		height: "15vh",
-		background: "#18325199",
-		display: "flex",
-		flexDirection: "column",
-		justifyContent: "center",
-	};
-
-	const buttonsContainerStyle = {
-		display: "flex",
-		justifyContent: "center",
-		width: "100%",
-	};
-
-	const setUpTextStyle = {
-		fontSize: "1.5em",
-		fontWeight: "800",
-		color: "white",
-		alignSelf: "flex-start",
-	};
 	const lobbyTextStyle ={
 		fontSize: "3.0em",
 		fontWeight: "600",
@@ -107,17 +80,14 @@ const SetUp: React.FC<ISetUpProps> = ({
 	const handleExit = () => {
 		router.push("/");
 	}
+
 	return (
 		<Box sx={boxContainer}>
 			<Typography sx={lobbyTextStyle}>KARABAST</Typography>
-			<Card sx={initiativeCardStyle}>
-				<CardActions sx={buttonsContainerStyle}>
-					<Button variant="contained" onClick={()=>handleStartGame()}>Start Game</Button>
-				</CardActions>
-			</Card>
+			<SetUpCard owner={lobbyState ? lobbyState.lobbyOwnerId === connectedPlayer : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
 			<Card sx={mainCardStyle}>
 				<Chat
-					chatHistory={chatHistory}
+					chatHistory={lobbyState ? lobbyState.gameChat : []}
 					chatMessage={chatMessage}
 					setChatMessage={setChatMessage}
 					handleChatSubmit={handleChatSubmit}
