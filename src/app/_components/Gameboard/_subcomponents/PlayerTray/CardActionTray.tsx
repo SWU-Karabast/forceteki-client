@@ -21,9 +21,6 @@ const CardActionTray: React.FC = () => {
 				spacing={2}
 				sx={actionContainerStyle}
 			>
-				<Typography variant="h6" sx={{ color: "white" }}>
-					{playerState.promptState.menuTitle}
-				</Typography>
 				<Box>
 					{playerState.promptState.buttons.map((button: IButtonsProps) => (
 						<PromptButton

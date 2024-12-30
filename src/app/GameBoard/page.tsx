@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React, { useState, useRef, useEffect, useContext } from "react";
-import { Box, Grid2 as Grid } from "@mui/material";
+import { Box, Grid2 as Grid, Typography } from "@mui/material";
 import { s3ImageURL } from "../_utils/s3Utils";
 import ChatDrawer from "../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer";
 import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/OpponentCardTray";
@@ -11,6 +11,8 @@ import ResourcesOverlay from "../_components/Gameboard/_subcomponents/Overlays/R
 import BasicPrompt from "../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt";
 import { useGame } from "../_contexts/Game.context";
 import { useSidebar } from "../_contexts/Sidebar.context";
+import { transform } from "next/dist/build/swc";
+import { text } from "stream/consumers";
 
 const GameBoard = () => {
 	const { getOpponent, connectedPlayer, gameState } = useGame();
@@ -49,15 +51,32 @@ const GameBoard = () => {
 
 	// ----------------------Styles-----------------------------//
 
-	const mainBoxStyle = {
-		flexGrow: 1,
-		transition: "margin-right 0.3s ease",
-		mr: sidebarOpen ? `${drawerWidth}px` : "0",
-		height: "100vh",
-		position: "relative",
-		backgroundImage: `url(${s3ImageURL("game/board-background-1.png")})`,
-		backgroundSize: "cover",
-		backgroundPosition: "center",
+	const styles = {
+		mainBoxStyle: {
+			flexGrow: 1,
+			transition: "margin-right 0.3s ease",
+			mr: sidebarOpen ? `${drawerWidth}px` : "0",
+			height: "100vh",
+			position: "relative",
+			backgroundImage: `url(${s3ImageURL("game/board-background-1.png")})`,
+			backgroundSize: "cover",
+			backgroundPosition: "center",
+		},
+		centralPromptContainer: {
+			position: "absolute",
+			top: "50%",
+			left: "50%",
+			transform: "translate(-50%, -50%)",
+			display: "flex",
+			justifyContent: "center",
+			alignItems: "center",
+			width: "50vw",
+		},
+		promptStyle: {
+			textAlign: "center",
+			fontSize: "1.3em",
+			background: "radial-gradient(ellipse, rgba(0,0,0, 0.9), rgba(0,0,0,0.7), rgba(0,0,0,0.0))",
+		},
 	};
 
 	if (!gameState || !connectedPlayer) {
@@ -66,7 +85,7 @@ const GameBoard = () => {
 
 	return (
 		<Grid container sx={{ height: "100vh" }}>
-			<Box component="main" sx={mainBoxStyle}>
+			<Box component="main" sx={styles.mainBoxStyle}>
 				<OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
 				<Board
 					sidebarOpen={sidebarOpen}
@@ -90,6 +109,9 @@ const GameBoard = () => {
 					currentRound={round}
 				/>
 			)}
+			<Box sx={styles.centralPromptContainer}>
+				<Typography sx={styles.promptStyle}>{gameState.players[connectedPlayer]?.promptState.menuTitle}</Typography>
+			</Box>
 			<ResourcesOverlay
 				isModalOpen={isModalOpen}
 				handleModalToggle={handleModalToggle}

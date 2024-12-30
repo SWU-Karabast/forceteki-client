@@ -101,7 +101,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 					}
 					: {
 						// For "standard" or other sizes:
-						height: size === "standard" ? "10rem" : "8rem",
+						height: size === "standard" ? "10rem" : "7.7rem",
 						width: size === "standard" ? "7.18rem" : "8rem",
 						border: `2px solid ${cardBorderColor(cardData)}`,
 						/*...(cardData.exhausted &&{
@@ -110,6 +110,9 @@ const GameCard: React.FC<IGameCardProps> = ({
 						})*/
 					}
 			),
+			"&:hover": {
+				cursor: "pointer",
+			},
 		},
 
 		cardContentStyle: {
