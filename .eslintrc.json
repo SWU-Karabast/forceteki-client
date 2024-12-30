@@ -1,6 +1,45 @@
 {
   "extends": ["next/core-web-vitals", "next/typescript"],
+  "plugins": ["@stylistic"],
   "rules": {
-    "@typescript-eslint/no-unused-vars": "warn"
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@stylistic/spaced-comment": ["error", "always"],
+    "@stylistic/function-call-spacing": ["error", "never"],
+    "@stylistic/padded-blocks": ["error", "never"],
+    "@stylistic/object-curly-spacing": ["error", "always"],
+    "@stylistic/function-paren-newline": ["off"],
+    "@stylistic/function-call-argument-newline": ["off"],
+    "@stylistic/object-property-newline": ["off"],
+    "@stylistic/space-before-function-paren": ["off"],
+    "@stylistic/lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+    "@stylistic/quote-props": ["error", "as-needed"],
+    "@stylistic/array-element-newline": ["off"],
+    "@stylistic/multiline-ternary": ["off"],
+    "@stylistic/array-bracket-newline": ["off"],
+    "@stylistic/implicit-arrow-linebreak": ["off"],
+    "@stylistic/no-multi-spaces": ["error", { "ignoreEOLComments": true }],
+    "@stylistic/multiline-comment-style": ["off"],
+    "@stylistic/dot-location": ["error", "property"],
+    "@stylistic/no-extra-parens": ["off"],
+    "@stylistic/comma-dangle": ["error", "only-multiline"],
+    "@stylistic/eol-last": ["off"],
+    "@stylistic/quotes": ["error", "single"],
+    "@stylistic/indent": ["error", 4, {
+        "SwitchCase": 1
+    }],
+    "@stylistic/lines-around-comment": ["error", {
+        "beforeBlockComment": true,
+        "afterBlockComment": false,
+        "beforeLineComment": false,
+        "afterLineComment": false,
+        "allowBlockStart": true,
+        "allowBlockEnd": true,
+        "allowObjectStart": true,
+        "allowObjectEnd": true,
+        "allowArrayStart": true,
+        "allowArrayEnd": true,
+        "allowClassStart": true,
+        "allowClassEnd": true
+    }]
   }
 }
