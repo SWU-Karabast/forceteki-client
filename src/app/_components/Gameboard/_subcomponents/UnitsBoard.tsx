@@ -1,45 +1,14 @@
+import React from "react";
+import { Box, Grid2 as Grid } from "@mui/material";
+import GameCard from "../../_sharedcomponents/Cards/GameCard/GameCard";
+import { ICardData } from "../../_sharedcomponents/Cards/CardTypes";
 import { IUnitsBoardProps } from "@/app/_components/Gameboard/GameboardTypes";
 import { useGame } from "@/app/_contexts/Game.context";
-import { Box, Grid2 as Grid } from "@mui/material";
-import React from "react";
-import { ICardData } from "../../_sharedcomponents/Cards/CardTypes";
-import GameCard from "../../_sharedcomponents/Cards/GameCard/GameCard";
+import { headers } from "next/headers";
+import { Height, Padding } from "@mui/icons-material";
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({ sidebarOpen, arena }) => {
-  //------------------------STYLES------------------------//
-  const mainBoxStyle = {
-    borderRadius: "20px",
-    height: "60vh",
-    width: sidebarOpen ? "32vw" : "36vw",
-    ml: ".3vw",
-    p: "1vh",
-  };
-
-  const containerStyle = {
-    height: "100%",
-  };
-
-  const opponentGridStyle = {
-    flexGrow: 1,
-    display: "flex",
-    justifyContent: arena == "groundArena" ? "flex-start" : "flex-end",
-    alignItems: "flex-start",
-    gap: "0.5vw",
-    flexWrap: "nowrap",
-    overflowX: "auto",
-  };
-
-  const playerGridStyle = {
-    flexGrow: 1,
-    display: "flex",
-    justifyContent: arena == "groundArena" ? "flex-start" : "flex-end",
-    alignItems: "flex-end",
-    gap: "0.5vw",
-    flexWrap: "nowrap",
-    overflowX: "auto",
-  };
-
-  //------------------------CONTEXT------------------------//
+  // ------------------------CONTEXT------------------------//
   /**
    * Takes an array of cards which can be main units or upgrades,
    * and returns a new array of only upgrades,
@@ -59,6 +28,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({ sidebarOpen, arena }) => {
     });
     return upgradesByParentId;
   };
+
   /**
    * Takes an array of cards which can be main units or upgrades,
    * and returns a new array of only main cards,
@@ -87,11 +57,43 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({ sidebarOpen, arena }) => {
   const playerUnits = attachUpgrades(rawPlayerUnits, upgradeMapping);
   const opponentUnits = attachUpgrades(rawOpponentUnits, upgradeMapping);
 
+  const styles = {
+    mainBoxStyle: {
+      borderRadius: "20px",
+      border: "2px solid #FFFFFF55",
+      height: "100%",
+      width: "100%",
+      padding: "1em",
+      margin: "1em",
+    },
+    containerStyle: {
+      height: "100%",
+    },
+    opponentGridStyle: {
+      flexGrow: 1,
+      display: "flex",
+      justifyContent: arena == "groundArena" ? "flex-start" : "flex-end",
+      alignItems: "flex-start",
+      gap: "0.5vw",
+      flexWrap: "nowrap",
+      overflowX: "auto",
+    },
+    playerGridStyle: {
+      flexGrow: 1,
+      display: "flex",
+      justifyContent: arena == "groundArena" ? "flex-start" : "flex-end",
+      alignItems: "flex-end",
+      gap: "0.5vw",
+      flexWrap: "nowrap",
+      overflowX: "auto",
+    },
+  };
+
   return (
-    <Box sx={mainBoxStyle}>
-      <Grid container direction="column" sx={containerStyle}>
+    <Box sx={styles.mainBoxStyle}>
+      <Grid container direction="column" sx={styles.containerStyle}>
         {/* Opponent's Ground Units */}
-        <Grid sx={opponentGridStyle}>
+        <Grid sx={styles.opponentGridStyle}>
           {opponentUnits.map((card: ICardData) => (
             <Box key={card.uuid} sx={{ flex: "0 0 auto" }}>
               <GameCard
@@ -105,7 +107,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({ sidebarOpen, arena }) => {
         </Grid>
 
         {/* Player's Ground Units */}
-        <Grid sx={playerGridStyle}>
+        <Grid sx={styles.playerGridStyle}>
           {playerUnits.map((card: ICardData) => (
             <Box key={card.uuid} sx={{ flex: "0 0 auto" }}>
               <GameCard

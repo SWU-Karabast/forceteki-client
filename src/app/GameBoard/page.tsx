@@ -15,92 +15,92 @@ import { useSidebar } from "../_contexts/Sidebar.context";
 import { s3ImageURL } from "../_utils/s3Utils";
 
 const GameBoard = () => {
-  const { getOpponent, connectedPlayer, gameState } = useGame();
-  const { sidebarOpen, toggleSidebar } = useSidebar();
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatHistory, setChatHistory] = useState<string[]>([]);
-  const [round, setRound] = useState(2);
-  const drawerRef = useRef<HTMLDivElement | null>(null);
-  const [drawerWidth, setDrawerWidth] = useState(0);
+    const { getOpponent, connectedPlayer, gameState } = useGame();
+    const { sidebarOpen, toggleSidebar } = useSidebar();
+    const [chatMessage, setChatMessage] = useState("");
+    const [chatHistory, setChatHistory] = useState<string[]>([]);
+    const [round, setRound] = useState(2);
+    const drawerRef = useRef<HTMLDivElement | null>(null);
+    const [drawerWidth, setDrawerWidth] = useState(0);
 
-  // State for resource selection
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isBasicPromptOpen, setBasicPromptOpen] = useState(false);
+    // State for resource selection
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isBasicPromptOpen, setBasicPromptOpen] = useState(false);
 
-  const handleChatSubmit = () => {
-    if (chatMessage.trim()) {
-      setChatHistory([...chatHistory, chatMessage]);
-      setChatMessage("");
+    const handleChatSubmit = () => {
+        if (chatMessage.trim()) {
+            setChatHistory([...chatHistory, chatMessage]);
+            setChatMessage("");
+        }
+    };
+
+    useEffect(() => {
+        // Update the drawer width when the drawer opens or closes
+        if (drawerRef.current) {
+            setDrawerWidth(drawerRef.current.offsetWidth);
+        }
+    }, [sidebarOpen]);
+
+    const handleModalToggle = () => {
+        setIsModalOpen(!isModalOpen);
+    };
+
+    const handleBasicPromptToggle = () => {
+        setBasicPromptOpen(!isBasicPromptOpen);
+    };
+
+    // ----------------------Styles-----------------------------//
+
+    const mainBoxStyle = {
+        flexGrow: 1,
+        transition: "margin-right 0.3s ease",
+        mr: sidebarOpen ? `${drawerWidth}px` : "0",
+        height: "100vh",
+        position: "relative",
+        backgroundImage: `url(${s3ImageURL("game/board-background-1.png")})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+    };
+
+    if (!gameState || !connectedPlayer) {
+        return null;
     }
-  };
 
-  useEffect(() => {
-    // Update the drawer width when the drawer opens or closes
-    if (drawerRef.current) {
-      setDrawerWidth(drawerRef.current.offsetWidth);
-    }
-  }, [sidebarOpen]);
+    return (
+        <Grid container sx={{ height: "100vh" }}>
+            <Box component="main" sx={mainBoxStyle}>
+                <OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
+                <Board sidebarOpen={sidebarOpen} />
+                <PlayerCardTray
+                    trayPlayer={connectedPlayer}
+                    handleModalToggle={handleModalToggle}
+                    handleBasicPromptToggle={handleBasicPromptToggle}
+                />
+            </Box>
 
-  const handleModalToggle = () => {
-    setIsModalOpen(!isModalOpen);
-  };
-
-  const handleBasicPromptToggle = () => {
-    setBasicPromptOpen(!isBasicPromptOpen);
-  };
-
-  // ----------------------Styles-----------------------------//
-
-  const mainBoxStyle = {
-    flexGrow: 1,
-    transition: "margin-right 0.3s ease",
-    mr: sidebarOpen ? `${drawerWidth}px` : "0",
-    height: "100vh",
-    position: "relative",
-    backgroundImage: `url(${s3ImageURL("game/board-background-1.png")})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  };
-
-  if (!gameState || !connectedPlayer) {
-    return null;
-  }
-
-  return (
-    <Grid container sx={{ height: "100vh" }}>
-      <Box component="main" sx={mainBoxStyle}>
-        <OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
-        <Board sidebarOpen={sidebarOpen} />
-        <PlayerCardTray
-          trayPlayer={connectedPlayer}
-          handleModalToggle={handleModalToggle}
-          handleBasicPromptToggle={handleBasicPromptToggle}
-        />
-      </Box>
-
-      {sidebarOpen && (
-        <ChatDrawer
-          ref={drawerRef}
-          toggleSidebar={toggleSidebar}
-          chatHistory={chatHistory}
-          chatMessage={chatMessage}
-          setChatMessage={setChatMessage}
-          handleChatSubmit={handleChatSubmit}
-          sidebarOpen={sidebarOpen}
-          currentRound={round}
-        />
-      )}
-      <ResourcesOverlay
-        isModalOpen={isModalOpen}
-        handleModalToggle={handleModalToggle}
-      />
-      <BasicPrompt
-        isBasicPromptOpen={isBasicPromptOpen}
-        handleBasicPromptToggle={handleBasicPromptToggle}
-      />
-      <PopupShell />
-    </Grid>
-  );
+            {sidebarOpen && (
+                <ChatDrawer
+                    ref={drawerRef}
+                    toggleSidebar={toggleSidebar}
+                    chatHistory={chatHistory}
+                    chatMessage={chatMessage}
+                    setChatMessage={setChatMessage}
+                    handleChatSubmit={handleChatSubmit}
+                    sidebarOpen={sidebarOpen}
+                    currentRound={round}
+                />
+            )}
+            <ResourcesOverlay
+                isModalOpen={isModalOpen}
+                handleModalToggle={handleModalToggle}
+            />
+            <BasicPrompt
+                isBasicPromptOpen={isBasicPromptOpen}
+                handleBasicPromptToggle={handleBasicPromptToggle}
+            />
+            <PopupShell />
+        </Grid>
+    );
 };
 
 export default GameBoard;
