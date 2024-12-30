@@ -1,68 +1,64 @@
-import React, { useEffect } from "react";
-import { Typography, Box, Tab, Tabs, Card, Button } from "@mui/material";
-import { useRouter } from "next/navigation";
-import CreateGameForm from "../_sharedcomponents/CreateGameForm/CreateGameForm";
-import { useUser } from "@/app/_contexts/User.context";
+import React, { useEffect } from 'react';
+import { Typography, Box, Tab, Tabs, Card, Button } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import CreateGameForm from '../_sharedcomponents/CreateGameForm/CreateGameForm';
+import { useUser } from '@/app/_contexts/User.context';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
     const [value, setValue] = React.useState(0);
     const [testGameList, setTestGameList] = React.useState([]);
     const { user } = useUser();
-    const showTestGames = process.env.NODE_ENV === "development" && (user?.id === "exe66" || user?.id === "th3w4y");
+    const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
     }
 
     const handleStartTestGame = async (filename: string) => {
-
         try {
-			// const payload = {
-			// 	user: user,
-			// 	deck: deckData
-			// };
-			const response = await fetch("http://localhost:9500/api/start-test-game",
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({filename: filename}),
-				}
-			);
+            // const payload = {
+            // 	user: user,
+            // 	deck: deckData
+            // };
+            const response = await fetch('http://localhost:9500/api/start-test-game',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ filename: filename }),
+                }
+            );
 
-			if (!response.ok) {
-				throw new Error("Failed to start test game");
-			}
+            if (!response.ok) {
+                throw new Error('Failed to start test game');
+            }
 
-			router.push("/GameBoard");
-	
-		} catch (error) {
-			console.error(error);
-		}
-
+            router.push('/GameBoard');
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     useEffect(() => {
         const fetchGameList = async () => {
             try {
-                const response = await fetch("http://localhost:9500/api/test-game-setups",
+                const response = await fetch('http://localhost:9500/api/test-game-setups',
                     {
-                        method: "GET",
+                        method: 'GET',
                         headers: {
-                            "Content-Type": "application/json",
+                            'Content-Type': 'application/json',
                         },
                     }
                 );
     
                 if (!response.ok) {
-                    throw new Error("Failed to get test game list");
+                    throw new Error('Failed to get test game list');
                 }
     
                 const data = await response.json();
                 setTestGameList(data);
-    
             } catch (error) {
                 console.error(error);
             }
@@ -72,14 +68,14 @@ const HomePagePlayMode: React.FC = () => {
 
     const styles = {
         tabStyles: {
-            color: "white",
+            color: 'white',
         }
     };
 
     return (
-        <Box sx={{ height: "100%" }}>
+        <Box sx={{ height: '100%' }}>
             <Card variant="black">
-                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={value} variant="fullWidth" onChange={handleChange}>
                         <Tab sx={styles.tabStyles} label="Play" />
                         <Tab sx={styles.tabStyles} label="Create" />
@@ -99,13 +95,13 @@ const HomePagePlayMode: React.FC = () => {
                             {testGameList.map((filename, index) => {
                                 return (
                                     <Box key={index}>
-                                        <Button sx={{marginTop: 2}} key={index} onClick={() => handleStartTestGame(filename)}>
+                                        <Button sx={{ marginTop: 2 }} key={index} onClick={() => handleStartTestGame(filename)}>
                                             {filename}
                                         </Button>
                                     </Box>
                                 );
                             })}
-                            <Button sx={{marginTop: 2}} onClick={() => router.push("/GameBoard")}>Join Test Game</Button>
+                            <Button sx={{ marginTop: 2 }} onClick={() => router.push('/GameBoard')}>Join Test Game</Button>
                         </Box>
                     </TabPanel>
                 }

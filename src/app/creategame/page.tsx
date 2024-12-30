@@ -1,36 +1,36 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Box } from "@mui/material";
-import KarabastBanner from "../_components/_sharedcomponents/Banner/Banner";
-import CreateGameForm from "../_components/_sharedcomponents/CreateGameForm/CreateGameForm";
+import React from 'react';
+import { Box } from '@mui/material';
+import KarabastBanner from '../_components/_sharedcomponents/Banner/Banner';
+import CreateGameForm from '../_components/_sharedcomponents/CreateGameForm/CreateGameForm';
 
 const CreateGame: React.FC = () => {
-	//------------------------STYLES------------------------//
+    // ------------------------STYLES------------------------//
 
-	const containerStyle = {
-		height: "100vh",
-		display: "flex",
-		flexDirection: "column",
-		position: "relative",
-		overflow: "hidden",
-	};
+    const containerStyle = {
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden',
+    };
 
-	const formContainerStyle = {
-		display: "flex",
-		flexDirection: "column",
-		alignItems: "center",
-		pt: "12em",
-	};
+    const formContainerStyle = {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        pt: '12em',
+    };
 
-	return (
-		<Box sx={containerStyle}>
-			<KarabastBanner />
-			<Box sx={formContainerStyle}>
-				<CreateGameForm />
-			</Box>
-		</Box>
-	);
+    return (
+        <Box sx={containerStyle}>
+            <KarabastBanner />
+            <Box sx={formContainerStyle}>
+                <CreateGameForm />
+            </Box>
+        </Box>
+    );
 };
 
 export default CreateGame;

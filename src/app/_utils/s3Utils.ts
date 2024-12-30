@@ -1,4 +1,4 @@
-import { ICardData } from "../_components/_sharedcomponents/Cards/CardTypes";
+import { ICardData } from '../_components/_sharedcomponents/Cards/CardTypes';
 
 // Deck data interfaces for deck info from swudb
 interface IDeckMetadata {
@@ -61,20 +61,20 @@ type IMapping = {
     [id:string]: string;
 }
 type IIdToInternalNameMapping = {
-    "id": string,
-    "internalName": string,
-    "title": string,
-    "subtitle": string
+    id: string,
+    internalName: string,
+    title: string,
+    subtitle: string
 }
 
 export const s3ImageURL = (path: string) => {
-    const s3Bucket = "https://karabast-assets.s3.amazonaws.com/";
+    const s3Bucket = 'https://karabast-assets.s3.amazonaws.com/';
     return s3Bucket + path;
 };
 
 export const s3CardImageURL = (card: ICardData) => {
-    if (!card) return "game/epic-action-token.webp";
-    const cardNumber = card.setId.number.toString().padStart(3, "0") + (card.type === "leaderUnit" ? "-portrait" : "");
+    if (!card) return 'game/epic-action-token.webp';
+    const cardNumber = card.setId.number.toString().padStart(3, '0') + (card.type === 'leaderUnit' ? '-portrait' : '');
     return s3ImageURL(`cards/${card.setId.set}/${cardNumber}.webp`);
 };
 
@@ -85,7 +85,6 @@ export const s3TokenImageURL = (token_name: string) =>{
 
 // Helper function to update a card's id
 export const updateIdsWithMapping = (data: IDeckData, mapping: IMapping): IDeckData => {
-
     const updateCard = (card: IDeckCard): IDeckCard => {
         const updatedId = mapping[card.id] || card.id; // Use mapping if available, else keep the original id
         return { ...card, id: updatedId };
