@@ -1,23 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-'use client';
-import React, { useState, useRef, useEffect, useContext } from 'react';
-import { Box, Grid2 as Grid, Typography } from '@mui/material';
-import { s3ImageURL } from '../_utils/s3Utils';
-import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
-import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
-import Board from '../_components/Gameboard/Board/Board';
-import PlayerCardTray from '../_components/Gameboard/PlayerCardTray/PlayerCardTray';
-import ResourcesOverlay from '../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay';
-import BasicPrompt from '../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt';
-import { useGame } from '../_contexts/Game.context';
-import { useSidebar } from '../_contexts/Sidebar.context';
-import { transform } from 'next/dist/build/swc';
-import { text } from 'stream/consumers';
+"use client";
+import { Box, Button, Grid2 as Grid } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
+import PopupShell from "../_components/_sharedcomponents/Popup/Popup";
+import ChatDrawer from "../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer";
+import BasicPrompt from "../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt";
+import ResourcesOverlay from "../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay";
+import Board from "../_components/Gameboard/Board/Board";
+import OpponentCardTray from "../_components/Gameboard/OpponentCardTray/OpponentCardTray";
+import PlayerCardTray from "../_components/Gameboard/PlayerCardTray/PlayerCardTray";
+import { useGame } from "../_contexts/Game.context";
+import { usePopup } from "../_contexts/Popup.context";
+import { useSidebar } from "../_contexts/Sidebar.context";
+import { s3ImageURL } from "../_utils/s3Utils";
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState } = useGame();
     const { sidebarOpen, toggleSidebar } = useSidebar();
-    const [chatMessage, setChatMessage] = useState('');
+    const [chatMessage, setChatMessage] = useState("");
     const [chatHistory, setChatHistory] = useState<string[]>([]);
     const [round, setRound] = useState(2);
     const drawerRef = useRef<HTMLDivElement | null>(null);
@@ -30,7 +30,7 @@ const GameBoard = () => {
     const handleChatSubmit = () => {
         if (chatMessage.trim()) {
             setChatHistory([...chatHistory, chatMessage]);
-            setChatMessage('');
+            setChatMessage("");
         }
     };
 
@@ -51,32 +51,15 @@ const GameBoard = () => {
 
     // ----------------------Styles-----------------------------//
 
-    const styles = {
-        mainBoxStyle: {
-            flexGrow: 1,
-            transition: 'margin-right 0.3s ease',
-            mr: sidebarOpen ? `${drawerWidth}px` : '0',
-            height: '100vh',
-            position: 'relative',
-            backgroundImage: `url(${s3ImageURL('game/board-background-1.png')})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-        },
-        centralPromptContainer: {
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '50vw',
-        },
-        promptStyle: {
-            textAlign: 'center',
-            fontSize: '1.3em',
-            background: 'radial-gradient(ellipse, rgba(0,0,0, 0.9), rgba(0,0,0,0.7), rgba(0,0,0,0.0))',
-        },
+    const mainBoxStyle = {
+        flexGrow: 1,
+        transition: "margin-right 0.3s ease",
+        mr: sidebarOpen ? `${drawerWidth}px` : "0",
+        height: "100vh",
+        position: "relative",
+        backgroundImage: `url(${s3ImageURL("game/board-background-1.png")})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
     };
 
     if (!gameState || !connectedPlayer) {
@@ -84,12 +67,10 @@ const GameBoard = () => {
     }
 
     return (
-        <Grid container sx={{ height: '100vh' }}>
-            <Box component="main" sx={styles.mainBoxStyle}>
+        <Grid container sx={{ height: "100vh" }}>
+            <Box component="main" sx={mainBoxStyle}>
                 <OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
-                <Board
-                    sidebarOpen={sidebarOpen}
-                />
+                <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
                     handleModalToggle={handleModalToggle}
@@ -109,9 +90,6 @@ const GameBoard = () => {
                     currentRound={round}
                 />
             )}
-            <Box sx={styles.centralPromptContainer}>
-                <Typography sx={styles.promptStyle}>{gameState.players[connectedPlayer]?.promptState.menuTitle}</Typography>
-            </Box>
             <ResourcesOverlay
                 isModalOpen={isModalOpen}
                 handleModalToggle={handleModalToggle}
@@ -120,6 +98,7 @@ const GameBoard = () => {
                 isBasicPromptOpen={isBasicPromptOpen}
                 handleBasicPromptToggle={handleBasicPromptToggle}
             />
+            <PopupShell />
         </Grid>
     );
 };

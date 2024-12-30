@@ -1,4 +1,4 @@
-import { Grid2 as Grid, Button, Typography, Box } from '@mui/material';
+import { Grid2 as Grid, Button, Box } from '@mui/material';
 
 import { useGame } from '@/app/_contexts/Game.context';
 
