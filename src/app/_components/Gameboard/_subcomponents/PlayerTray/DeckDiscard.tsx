@@ -20,8 +20,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
 
 	const discardCardStyle = {
 		backgroundColor: "#282828E6",
-		width: "9vh",
-		height: "9vh",
+		width: "7vh",
+		height: "9.5vh",
 	};
 
 	const cardContentStyle = {

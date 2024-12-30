@@ -1,5 +1,7 @@
 import React from "react";
+import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid2";
+import { ChatBubbleOutline } from "@mui/icons-material";
 import Resources from "../_subcomponents/PlayerTray/Resources";
 import DeckDiscard from "../_subcomponents/PlayerTray/DeckDiscard";
 import CardActionTray from "../_subcomponents/PlayerTray/CardActionTray";
@@ -19,8 +21,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "flex-start",
-		pl: "2em",
-		pt: "2em",
+		padding: "1em",
 	};
 
 	const centerColumnStyle = {
@@ -35,24 +36,28 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "flex-end",
-		pr: "2em",
-		pt: "2em",
+		padding: "1em",
 	};
 
 	return (
 		<Grid container sx={{ height: "20.82%" }}>
 			<Grid size={3} sx={leftColumnStyle}>
-				<Resources
-					trayPlayer={trayPlayer}
-					handleModalToggle={handleModalToggle}
-				/>
+				<DeckDiscard trayPlayer={trayPlayer} />
+				<Box ml={1}>
+					<Resources
+						trayPlayer={trayPlayer}
+						handleModalToggle={handleModalToggle}
+					/>
+				</Box>
 			</Grid>
 			<Grid size={6} sx={centerColumnStyle}>
 				<PlayerHand cards={gameState?.players[connectedPlayer].cardPiles["hand"] || []} />
-				{/* <CardActionTray /> */}
 			</Grid>
 			<Grid size={3} sx={rightColumnStyle}>
-				<DeckDiscard trayPlayer={trayPlayer} />
+				<CardActionTray />
+				<Box ml={2}>
+					<ChatBubbleOutline />
+				</Box>
 			</Grid>
 		</Grid>
 	);
