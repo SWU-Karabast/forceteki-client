@@ -22,7 +22,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
-        sendMessage('startGame');
+        sendLobbyMessage(['onStartGame']);
         router.push('/GameBoard');
     };
 

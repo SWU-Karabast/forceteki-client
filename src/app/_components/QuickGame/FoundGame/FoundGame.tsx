@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 
 
 const FoundGame: React.FC = () => {
-    const { lobbyState, connectedPlayer, sendMessage } = useGame();
+    const { lobbyState, connectedPlayer, sendLobbyMessage } = useGame();
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
 
@@ -26,10 +26,10 @@ const FoundGame: React.FC = () => {
     // When countdown hits 0, emit a socket event
     useEffect(() => {
         if (countdown === 0) {
-            sendMessage('startGame');
+            sendLobbyMessage(['onStartGame']);
             router.push('/GameBoard');
         }
-    }, [countdown, router, sendMessage]);
+    }, [countdown, router, sendLobbyMessage]);
 
     // Decrement countdown every second
     useEffect(() => {

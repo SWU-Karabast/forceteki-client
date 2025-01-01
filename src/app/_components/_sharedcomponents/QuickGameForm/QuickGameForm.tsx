@@ -122,39 +122,35 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         }
     };
 
-    const formControlStyle = {
-        mb: '1.5rem',
-    };
-
-    const labelTextStyle = {
-        mb: '.5em',
-        color: 'white',
-    };
-
-    const labelTextStyleSecondary = {
-        color: '#aaaaaa',
-        display: 'inline',
-    };
-
-    const checkboxStyle = {
-        color: '#fff',
-        '&.Mui-checked': {
-            color: '#fff',
+    const styles = {
+        formControlStyle: {
+            mb: '1.5rem',
         },
-    };
+        labelTextStyle: {
+            mb: '.5em',
+            color: 'white',
+        },
+        labelTextStyleSecondary: {
+            color: '#aaaaaa',
+            display: 'inline',
+        },
+        checkboxStyle: {
+            color: '#fff',
+            '&.Mui-checked': {
+                color: '#fff',
+            },
+        },
+        checkboxAndRadioGroupTextStyle: {
+            color: '#fff',
+            fontSize: '1em',
+        },
+        submitButtonStyle: {
+            display: 'block',
+            ml: 'auto',
+            mr: 'auto',
 
-    const checkboxAndRadioGroupTextStyle = {
-        color: '#fff',
-        fontSize: '1em',
-    };
-
-    const submitButtonStyle = {
-        display: 'block',
-        ml: 'auto',
-        mr: 'auto',
-
-    };
-
+        }
+    }
     return (
         <Box >
             <Typography variant="h2">
@@ -162,8 +158,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             </Typography>
             <form onSubmit={handleJoinGameQueue}>
                 {/* Favourite Decks Input */}
-                <FormControl fullWidth sx={formControlStyle}>
-                    <Typography variant="body1" sx={labelTextStyle}>Favourite Decks</Typography>
+                <FormControl fullWidth sx={styles.formControlStyle}>
+                    <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
                     <StyledTextField
                         select
                         value={favouriteDeck}
@@ -182,7 +178,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
 
                 {/* SWUDB Deck Link Input */}
                 <FormControl fullWidth sx={{ mb: 0 }}>
-                    <Box sx={labelTextStyle}>
+                    <Box sx={styles.labelTextStyle}>
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
@@ -191,7 +187,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                             SW-Unlimited-DB
                         </Link>{' '}
                         Deck Link{' '}
-                        <Typography variant="body1" sx={labelTextStyleSecondary}>
+                        <Typography variant="body1" sx={styles.labelTextStyleSecondary}>
                             (use the URL or &apos;Deck Link&apos; button)
                         </Typography>
                     </Box>
@@ -209,7 +205,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     sx={{ mb: '1rem' }}
                     control={
                         <Checkbox
-                            sx={checkboxStyle}
+                            sx={styles.checkboxStyle}
                             checked={saveDeck}
                             onChange={(
                                 e: ChangeEvent<HTMLInputElement>,
@@ -218,14 +214,14 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         />
                     }
                     label={
-                        <Typography sx={checkboxAndRadioGroupTextStyle}>
+                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
                             Save to Favorite Decks
                         </Typography>
                     }
                 />
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={queueState} variant="contained" sx={{ ...submitButtonStyle,
+                <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,
                     '&.Mui-disabled': {
                         backgroundColor: '#404040',
                         color: 'var(--variant-containedColor)',
