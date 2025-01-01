@@ -1,7 +1,6 @@
 import React from 'react';
 import {
     Card,
-    CardActionArea,
     CardContent,
     Typography,
     Box,
@@ -15,6 +14,7 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     variant,
     isLobbyView = false,
+    size = 'standard',
     title,
     card,
     disabled = false,
@@ -47,8 +47,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         backgroundImage: `url(${s3CardImageURL(card)})`,
         backgroundSize: 'contain',
         backgroundPosition: 'center',
-        width: '9.5vw',
-        height: '13vh',
+        width: size === 'standard' ? '9.5vw' : '14rem',
+        height: size === 'standard' ? '13vh' : '10.18rem',
         backgroundRepeat: 'no-repeat',
         textAlign: 'center' as const,
         color: 'white',
@@ -60,8 +60,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         backgroundColor: '#00000040',
         backgroundSize: 'contain',
         backgroundPosition: 'center',
-        width: '9.5vw',
-        height: '13vh',
+        width: size === 'standard' ? '9.5vw' : '14rem',
+        height: size === 'standard' ? '13vh' : '10.18rem',
         backgroundRepeat: 'no-repeat',
         textAlign: 'center' as const,
         color: 'white',

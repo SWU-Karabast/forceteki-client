@@ -3,6 +3,7 @@ import { Typography, Box, Tab, Tabs, Card, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import CreateGameForm from '../_sharedcomponents/CreateGameForm/CreateGameForm';
 import { useUser } from '@/app/_contexts/User.context';
+import QuickGameForm from "@/app/_components/_sharedcomponents/QuickGameForm/QuickGameForm";
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -83,7 +84,7 @@ const HomePagePlayMode: React.FC = () => {
                     </Tabs>
                 </Box>
                 <TabPanel index={0} value={value}>
-                    <Box>PlayGame</Box>
+                    <QuickGameForm/>
                 </TabPanel>
                 <TabPanel index={1} value={value}>
                     <CreateGameForm format={'Premier'} />

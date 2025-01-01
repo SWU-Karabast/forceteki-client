@@ -14,7 +14,7 @@ const Navbar = dynamic(() => import('./Navigation/NavBar'), { ssr: false });
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const path = usePathname();
-    const pagesWithWebsocket = ['/GameBoard', '/lobby'];
+    const pagesWithWebsocket = ['/GameBoard', '/lobby', '/quickGame'];
     const isPageWithWebsocket = pagesWithWebsocket.includes(path);
 
     return (
