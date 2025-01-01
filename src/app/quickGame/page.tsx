@@ -1,11 +1,11 @@
 'use client';
 import React from 'react';
 import Grid from '@mui/material/Grid2';
-import {Box, Typography} from '@mui/material';
-import FoundGame from "@/app/_components/QuickGame/FoundGame/FoundGame";
-import {useGame} from "@/app/_contexts/Game.context";
-import NextLinkMui from "@/app/_components/_sharedcomponents/ControlHub/_subcomponents/NextLinkMui/NextLinkMui";
-import SearchingForGame from "@/app/_components/QuickGame/SearchingForGame/SearchingForGame";
+import { Box, Typography } from '@mui/material';
+import FoundGame from '@/app/_components/QuickGame/FoundGame/FoundGame';
+import { useGame } from '@/app/_contexts/Game.context';
+import NextLinkMui from '@/app/_components/_sharedcomponents/ControlHub/_subcomponents/NextLinkMui/NextLinkMui';
+import SearchingForGame from '@/app/_components/QuickGame/SearchingForGame/SearchingForGame';
 
 const QuickGame: React.FC = () => {
     const { lobbyState } = useGame();

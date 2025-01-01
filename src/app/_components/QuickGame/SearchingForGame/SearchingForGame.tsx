@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, Card, Typography} from '@mui/material';
+import { Box, Card, Typography } from '@mui/material';
 
 const SearchingForGame: React.FC = () => {
     const styles = {
@@ -37,7 +37,7 @@ const SearchingForGame: React.FC = () => {
                     autoPlay
                     loop
                     muted
-                    style={{width: '80px', height: '80px'}} // Adjust sizing/styling as needed
+                    style={{ width: '80px', height: '80px' }} // Adjust sizing/styling as needed
                 >
                     <source src="/loader.mp4" type="video/mp4"/>
                     {/* Fallback text if video is not supported */}

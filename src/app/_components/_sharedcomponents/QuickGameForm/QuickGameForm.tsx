@@ -1,9 +1,9 @@
-import React, {ChangeEvent, FormEvent, useState} from 'react';
-import {Box, Button, Checkbox, FormControl, FormControlLabel, Link, MenuItem, Typography,} from '@mui/material';
+import React, { ChangeEvent, FormEvent, useState } from 'react';
+import { Box, Button, Checkbox, FormControl, FormControlLabel, Link, MenuItem, Typography } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField/StyledTextField';
-import {useRouter} from 'next/navigation';
-import {mapIdToInternalName, transformDeckWithCardData, updateIdsWithMapping} from '@/app/_utils/s3Utils';
-import {useUser} from '@/app/_contexts/User.context';
+import { useRouter } from 'next/navigation';
+import { mapIdToInternalName, transformDeckWithCardData, updateIdsWithMapping } from '@/app/_utils/s3Utils';
+import { useUser } from '@/app/_contexts/User.context';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -113,7 +113,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             if (!response.ok) {
                 setQueueState(false);
                 throw new Error('Failed to create game');
-
             }
 
             router.push('/quickGame');
@@ -226,10 +225,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 />
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={queueState} variant="contained" sx={{...submitButtonStyle,
-                    "&.Mui-disabled": {
-                        backgroundColor: "#404040",
-                        color: "var(--variant-containedColor)",
+                <Button type="submit" disabled={queueState} variant="contained" sx={{ ...submitButtonStyle,
+                    '&.Mui-disabled': {
+                        backgroundColor: '#404040',
+                        color: 'var(--variant-containedColor)',
                     },
                 }}>
                     {queueState ? 'Queueing...' : 'Join Queue'}

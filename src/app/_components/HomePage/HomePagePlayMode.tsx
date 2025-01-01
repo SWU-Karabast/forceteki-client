@@ -3,7 +3,7 @@ import { Typography, Box, Tab, Tabs, Card, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import CreateGameForm from '../_sharedcomponents/CreateGameForm/CreateGameForm';
 import { useUser } from '@/app/_contexts/User.context';
-import QuickGameForm from "@/app/_components/_sharedcomponents/QuickGameForm/QuickGameForm";
+import QuickGameForm from '@/app/_components/_sharedcomponents/QuickGameForm/QuickGameForm';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
