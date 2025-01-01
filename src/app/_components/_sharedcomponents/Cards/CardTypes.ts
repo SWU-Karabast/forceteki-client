@@ -49,4 +49,5 @@ export interface ILeaderBaseCardProps {
     title?: string;
     card: ICardData;
     disabled?: boolean;
+    size?: 'standard' | 'large';
 }
