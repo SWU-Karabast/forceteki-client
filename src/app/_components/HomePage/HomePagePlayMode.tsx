@@ -78,15 +78,17 @@ const HomePagePlayMode: React.FC = () => {
             <Card variant="black">
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={value} variant="fullWidth" onChange={handleChange}>
-                        <Tab sx={styles.tabStyles} label="Play" />
+                        {user && <Tab sx={styles.tabStyles} label="Play" />}
                         <Tab sx={styles.tabStyles} label="Create" />
                         {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
                     </Tabs>
                 </Box>
-                <TabPanel index={0} value={value}>
-                    <QuickGameForm/>
-                </TabPanel>
-                <TabPanel index={1} value={value}>
+                {user &&
+                    <TabPanel index={0} value={value}>
+                        <QuickGameForm/>
+                    </TabPanel>
+                }
+                <TabPanel index={user ? 1 : 0} value={value}>
                     <CreateGameForm format={'Premier'} />
                 </TabPanel>
                 {showTestGames && 

@@ -111,8 +111,8 @@ const Deck: React.FC = () => {
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     // set decks for connectedUser
-    const newDeck = connectedUser ? connectedUser.deck.deckCards || [] : [];
-    const sideBoard = connectedUser ? connectedUser.deck.sideboard || [] : [];
+    const newDeck = connectedUser ? connectedUser.deck ? connectedUser.deck.deckCards || [] : [] : [];
+    const sideBoard = connectedUser ? connectedUser.deck ? connectedUser.deck.sideboard || [] : [] : [];
 
     // Calculate the total counts
     const deckCount = newDeck.reduce(
