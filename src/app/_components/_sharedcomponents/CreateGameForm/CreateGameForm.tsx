@@ -15,31 +15,12 @@ import {
 } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField/StyledTextField';
 import { usePathname, useRouter } from 'next/navigation';
-import { updateIdsWithMapping, mapIdToInternalName, transformDeckWithCardData } from '@/app/_utils/s3Utils';
 import { useUser } from '@/app/_contexts/User.context';
+import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 
 interface ICreateGameFormProps {
     format?: string | null;
     setFormat?: (format: string) => void;
-}
-
-interface IDeckMetadata {
-    name: string;
-    author: string;
-}
-
-interface IDeckCard {
-    id: string;
-    count: number;
-}
-
-interface IDeckData {
-    metadata: IDeckMetadata;
-    leader: IDeckCard;
-    secondleader: IDeckCard | null;
-    base: IDeckCard;
-    deck: IDeckCard[];
-    sideboard: IDeckCard[];
 }
 
 const deckOptions: string[] = [
@@ -62,52 +43,10 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const [favouriteDeck, setFavouriteDeck] = useState<string>('');
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
-    // let [deckData, setDeckData] = useState<DeckData | null>(null); Because of Async this won't set in the correct timeframe
 
     // Additional State for Non-Creategame Path
     const [gameName, setGameName] = useState<string>('');
-    const [privacy, setPrivacy] = useState<string>('Public');
-
-    const fetchDeckData = async (deckLink: string) => {
-        try {
-            const response = await fetch(
-                `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
-            );
-            if (!response.ok) {
-                throw new Error(`Failed to fetch deck: ${response.statusText}`);
-            }
-
-            const data: IDeckData = await response.json();
-
-            // Fetch setToId mapping from the s3bucket endpoint
-            const setCodeMapping = await fetch('/api/s3bucket?jsonFile=_setCodeMap.json'); // Adjust to your actual endpoint if different
-            if (!setCodeMapping.ok) {
-                throw new Error('Failed to fetch card mapping');
-            }
-
-            const jsonData = await setCodeMapping.json();
-            const deckWithIds = updateIdsWithMapping(data, jsonData);
-
-            // Fetch codeToInternalname mapping
-            const codeInternalnameMapping = await fetch('/api/s3bucket?jsonFile=_cardMap.json'); // Adjust to your actual endpoint if different
-            if (!codeInternalnameMapping.ok) {
-                throw new Error('Failed to fetch card mapping');
-            }
-
-            const codeInternalnameJson = await codeInternalnameMapping.json();
-            const deckWithInternalNames = mapIdToInternalName(codeInternalnameJson, deckWithIds)
-
-            // Fetch internalNameToCardMapping
-            const finalDeckForm = await transformDeckWithCardData(deckWithInternalNames);
-            return finalDeckForm
-        } catch (error) {
-            if (error instanceof Error) {
-                console.error('Error fetching deck:', error.message);
-            } else {
-                console.error('Unexpected error:', error);
-            }
-        }
-    };
+    const [privacy, setPrivacy] = useState<string>(user ? 'Public' : 'Private');
 
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -121,7 +60,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         try {
             const payload = {
                 user: user,
-                deck: deckData
+                deck: deckData,
+                privacy: privacy
             };
             const response = await fetch('http://localhost:9500/api/create-lobby',
                 {
@@ -136,7 +76,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             if (!response.ok) {
                 throw new Error('Failed to create game');
             }
-
+            const responseJson = await response.json();
+            console.log('Response data:', responseJson);
+            // Store unknownUserId in local storage (so we can retrieve it in GameContext)
+            if(privacy === 'Private') {
+                localStorage.setItem('unknownUserId', responseJson.newUserId);
+            }
             router.push('/lobby');
         } catch (error) {
             console.error(error);
@@ -191,7 +136,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             </Typography>
             <form onSubmit={handleCreateGameSubmit}>
                 {/* Favourite Decks Input */}
-                <FormControl fullWidth sx={formControlStyle}>
+                {user && <FormControl fullWidth sx={formControlStyle}>
                     <Typography variant="body1" sx={labelTextStyle}>Favourite Decks</Typography>
                     <StyledTextField
                         select
@@ -208,7 +153,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         ))}
                     </StyledTextField>
                 </FormControl>
-
+                }
                 {/* SWUDB Deck Link Input */}
                 <FormControl fullWidth sx={{ mb: 0 }}>
                     <Box sx={labelTextStyle}>
@@ -234,7 +179,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </FormControl>
 
                 {/* Save Deck To Favourites Checkbox */}
-                <FormControlLabel
+                {user && <FormControlLabel
                     sx={{ mb: '1rem' }}
                     control={
                         <Checkbox
@@ -252,6 +197,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         </Typography>
                     }
                 />
+                }
 
                 {/* Additional Fields for Non-Creategame Path */}
                 {!isCreateGamePath && (
@@ -289,7 +235,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 ))}
                             </StyledTextField>
                         </FormControl>
-
+                        <Typography>
+                            Log In to be able to create public games or join a quick game.
+                        </Typography>
                         {/* Privacy Selection */}
                         <FormControl component="fieldset" sx={formControlStyle}>
                             <RadioGroup
@@ -300,7 +248,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                     value: string
                                 ) => setPrivacy(value)}
                             >
-                                <FormControlLabel
+                                {user && <FormControlLabel
                                     value="Public"
                                     control={<Radio sx={checkboxStyle} />}
                                     label={
@@ -309,6 +257,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                         </Typography>
                                     }
                                 />
+                                }
                                 <FormControlLabel
                                     value="Private"
                                     control={<Radio sx={checkboxStyle} />}

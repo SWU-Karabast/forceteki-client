@@ -4,29 +4,11 @@ import StyledTextField from '../_styledcomponents/StyledTextField/StyledTextFiel
 import { useRouter } from 'next/navigation';
 import { mapIdToInternalName, transformDeckWithCardData, updateIdsWithMapping } from '@/app/_utils/s3Utils';
 import { useUser } from '@/app/_contexts/User.context';
+import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 
 interface ICreateGameFormProps {
     format?: string | null;
     setFormat?: (format: string) => void;
-}
-
-interface IDeckMetadata {
-    name: string;
-    author: string;
-}
-
-interface IDeckCard {
-    id: string;
-    count: number;
-}
-
-interface IDeckData {
-    metadata: IDeckMetadata;
-    leader: IDeckCard;
-    secondleader: IDeckCard | null;
-    base: IDeckCard;
-    deck: IDeckCard[];
-    sideboard: IDeckCard[];
 }
 
 
@@ -44,46 +26,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         'ThisIsTheWay',
     ];
 
-
-    const fetchDeckData = async (deckLink: string) => {
-        try {
-            const response = await fetch(
-                `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
-            );
-            if (!response.ok) {
-                throw new Error(`Failed to fetch deck: ${response.statusText}`);
-            }
-
-            const data: IDeckData = await response.json();
-
-            // Fetch setToId mapping from the s3bucket endpoint
-            const setCodeMapping = await fetch('/api/s3bucket?jsonFile=_setCodeMap.json'); // Adjust to your actual endpoint if different
-            if (!setCodeMapping.ok) {
-                throw new Error('Failed to fetch card mapping');
-            }
-
-            const jsonData = await setCodeMapping.json();
-            const deckWithIds = updateIdsWithMapping(data, jsonData);
-
-            // Fetch codeToInternalname mapping
-            const codeInternalnameMapping = await fetch('/api/s3bucket?jsonFile=_cardMap.json'); // Adjust to your actual endpoint if different
-            if (!codeInternalnameMapping.ok) {
-                throw new Error('Failed to fetch card mapping');
-            }
-
-            const codeInternalnameJson = await codeInternalnameMapping.json();
-            const deckWithInternalNames = mapIdToInternalName(codeInternalnameJson, deckWithIds)
-
-            // Fetch internalNameToCardMapping
-            return await transformDeckWithCardData(deckWithInternalNames)
-        } catch (error) {
-            if (error instanceof Error) {
-                console.error('Error fetching deck:', error.message);
-            } else {
-                console.error('Unexpected error:', error);
-            }
-        }
-    };
 
     // Handle Create Game Submission
     const handleJoinGameQueue = async (event: FormEvent<HTMLFormElement>) => {

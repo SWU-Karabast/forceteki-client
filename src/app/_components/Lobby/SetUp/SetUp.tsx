@@ -32,7 +32,7 @@ const SetUp: React.FC = ({
     const mainCardStyle = {
         borderRadius: '1.1em',
         height: '100%',
-        maxHeight: '72.5vh',
+        maxHeight: lobbyState && lobbyState.privacy === 'Public' ? '72.5vh': '64.4vh',
         width: '100%',
         display: 'flex',
         flexDirection: 'column',

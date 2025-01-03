@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
+import { useSearchParams } from 'next/navigation';
 
 interface IGameContextType {
     gameState: any;
@@ -29,22 +30,29 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const { user } = useUser();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
-        if (!user) return;
-        setConnectedPlayer(user.id || '');
+        const lobbyId = searchParams.get('lobbyId');
+        // we get the lobbyId
+        const storedUnknownUserId = localStorage.getItem('unknownUserId') || lobbyId+'-GuestId2';
+        setConnectedPlayer(user ? user.id || '' : storedUnknownUserId ? storedUnknownUserId : '');
         const newSocket = io('http://localhost:9500', {
             query: {
-                user: JSON.stringify(user)
+                user: JSON.stringify(user ? user : { id:storedUnknownUserId }),
+                lobbyId: lobbyId ? lobbyId : null
             },
         });
 
         newSocket.on('connect', () => {
-            console.log(`Connected to server as ${user.username}`);
+            console.log(`Connected to server as ${user ? user.username : ''}`);
         });
         newSocket.on('gamestate', (gameState: any) => {
             setGameState(gameState);
             console.log('Game state received:', gameState);
+        });
+        newSocket.on('connectedUser', () =>{
+            localStorage.removeItem('unknownUserId');
         });
         newSocket.on('lobbystate', (lobbyState: any) => {
             setLobbyState(lobbyState);
