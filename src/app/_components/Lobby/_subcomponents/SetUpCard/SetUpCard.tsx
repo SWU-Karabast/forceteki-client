@@ -5,7 +5,7 @@ import {
     Typography,
     TextField,
     Button,
-    Box, CardActions, Link, FormControl,
+    Box, CardActions, Link, FormControl, Tooltip,
 } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation'
@@ -19,8 +19,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 }) => {
     const { lobbyState, connectedPlayer, sendLobbyMessage } = useGame();
     const [deckLink, setDeckLink] = useState<string>('');
+    const [showTooltip, setShowTooltip] = useState(false);
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
-    const currentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+    const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+
     // Extract the player from the URL query params
     const router = useRouter();
 
@@ -34,6 +36,15 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         const deckData = deckLink ? await fetchDeckData(deckLink) : null;
         sendLobbyMessage(['changeDeck',deckData])
     }
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(lobbyState.connectionLink)
+            .then(() => {
+                setShowTooltip(true);
+                // Hide the tooltip after 1 second
+                setTimeout(() => setShowTooltip(false), 1000);
+            })
+            .catch(err => console.error('Failed to copy link', err));
+    };
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -117,8 +128,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             <Typography variant="h3" sx={styles.setUpTextStyle}>
                 Set Up
             </Typography>
+
             {!opponentUser ? (
-            // If opponent is null, show "Waiting for an opponent" UI
+                // If opponent is null, show "Waiting for an opponent" UI
                 <CardContent sx={styles.setUpCard}>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Typography variant="h6" sx={{ marginTop: '6px' }}>
@@ -126,16 +138,28 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         </Typography>
                     </Box>
                     <Box sx={styles.boxStyle}>
-                        <TextField fullWidth sx={styles.textFieldStyle} value={lobbyState ? lobbyState.connectionLink : ''} />
-                        <Button variant="contained" sx={styles.buttonStyle}>Copy Invite Link</Button>
+                        <TextField
+                            fullWidth
+                            sx={styles.textFieldStyle}
+                            value={lobbyState ? lobbyState.connectionLink : ''}
+                        />
+                        <Tooltip
+                            open={showTooltip}
+                            title="Copied!"
+                            arrow
+                            placement="top"
+                        >
+                            <Button variant="contained" onClick={handleCopyLink} sx={styles.buttonStyle}>
+                                Copy Invite Link
+                            </Button>
+                        </Tooltip>
                     </Box>
                 </CardContent>
             ) : (
-            // If opponent is not null
+                // If opponent is not null
                 <>
                     {readyStatus && opponentUser.ready && owner ? (
-
-                    /* Both are ready */
+                        // Both are ready
                         <>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Box sx={styles.readyImg} />
@@ -156,47 +180,60 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                             </CardActions>
                         </>
                     ) : (
-
-                    /* Not both ready — show toggle-ready button */
-                        <CardActions sx={styles.buttonsContainerStyle}>
-                            <Box sx={styles.readyImg} />
-                            <Button
-                                variant="contained"
-                                onClick={() => sendLobbyMessage(['setReadyStatus', !readyStatus])}
-                            >
-                                {readyStatus ? 'Unready' : 'Ready'}
-                            </Button>
-                        </CardActions>
+                        // Not both ready — show toggle-ready button
+                        !connectedUser.deck ? (
+                            <Typography>Please import a deck</Typography>
+                        ) : (
+                            <CardActions sx={styles.buttonsContainerStyle}>
+                                <Box sx={styles.readyImg} />
+                                <Button
+                                    variant="contained"
+                                    onClick={() => sendLobbyMessage(['setReadyStatus', !readyStatus])}
+                                >
+                                    {readyStatus ? 'Unready' : 'Ready'}
+                                </Button>
+                            </CardActions>
+                        )
                     )}
                 </>
             )}
-            {lobbyState && lobbyState.privacy === 'Private' && <>
-                <Box sx={styles.labelTextStyle}>
-                    <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                        SWUDB
-                    </Link>{' '}
-                    or{' '}
-                    <Link href="https://www.sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                        SW-Unlimited-DB
-                    </Link>{' '}
-                    Deck Link{' '}
-                    <Typography variant="body1" sx={styles.labelTextStyleSecondary}>
-                        (use the URL or &apos;Deck Link&apos; button)
-                    </Typography>
-                </Box>
-                <StyledTextField
-                    type="url"
-                    value={deckLink}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setDeckLink(e.target.value)
-                    }
-                />
-                <Button type="button" onClick={handleOnChangeDeck} variant="contained" sx={styles.submitButtonStyle}>
-                    Change Deck
-                </Button>
-            </>}
+
+            {lobbyState && lobbyState.privacy === 'Private' && (
+                <>
+                    <Box sx={styles.labelTextStyle}>
+                        <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
+                            SWUDB
+                        </Link>{' '}
+                        or{' '}
+                        <Link
+                            href="https://www.sw-unlimited-db.com/"
+                            target="_blank"
+                            sx={{ color: 'lightblue' }}
+                        >
+                            SW-Unlimited-DB
+                        </Link>{' '}
+                        Deck Link{' '}
+                        <Typography variant="body1" sx={styles.labelTextStyleSecondary}>
+                            (use the URL or &apos;Deck Link&apos; button)
+                        </Typography>
+                    </Box>
+                    <StyledTextField
+                        type="url"
+                        value={deckLink}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setDeckLink(e.target.value)}
+                    />
+                    <Button
+                        type="button"
+                        onClick={handleOnChangeDeck}
+                        variant="contained"
+                        sx={styles.submitButtonStyle}
+                    >
+                        Change Deck
+                    </Button>
+                </>
+            )}
         </Card>
-    );
+    )
 };
 
 export default SetUpCard;
