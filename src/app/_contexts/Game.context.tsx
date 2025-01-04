@@ -47,7 +47,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 const promptState = gameState.players?.[user.id].promptState;
                 const { buttons, menuTitle, promptUuid, selectCard, promptType } =
                     promptState;
-                if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
+                if (promptType === 'actionWindow') return;
+                else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
                     openPopup('default', {
                         uuid: promptUuid,
                         title: menuTitle,
