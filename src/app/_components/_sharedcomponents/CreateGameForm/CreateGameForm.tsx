@@ -61,7 +61,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             const payload = {
                 user: user,
                 deck: deckData,
-                privacy: privacy
+                isPrivate: privacy === 'Private',
             };
             const response = await fetch('http://localhost:9500/api/create-lobby',
                 {

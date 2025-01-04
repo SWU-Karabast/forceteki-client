@@ -87,7 +87,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             minWidth: '9rem',
         },
         initiativeCardStyle: {
-            height: lobbyState && lobbyState.privacy === 'Public' ? '15vh' : '23vh',
+            height: lobbyState && lobbyState.isPrivate ? '23vh' : '15vh',
             minHeight: '8.5rem',
             background: '#18325199',
             display: 'flex',
@@ -181,9 +181,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         </>
                     ) : (
                         // Not both ready — show toggle-ready button
-                        !connectedUser.deck ? (
-                            <Typography>Please import a deck</Typography>
-                        ) : (
+                        connectedUser && connectedUser.deck ? (
                             <CardActions sx={styles.buttonsContainerStyle}>
                                 <Box sx={styles.readyImg} />
                                 <Button
@@ -193,12 +191,15 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                     {readyStatus ? 'Unready' : 'Ready'}
                                 </Button>
                             </CardActions>
+
+                        ) : (
+                            <Typography>Please import a deck</Typography>
                         )
                     )}
                 </>
             )}
 
-            {lobbyState && lobbyState.privacy === 'Private' && (
+            {lobbyState && lobbyState.isPrivate && (
                 <>
                     <Box sx={styles.labelTextStyle}>
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
