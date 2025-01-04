@@ -87,8 +87,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             minWidth: '9rem',
         },
         initiativeCardStyle: {
-            height: lobbyState && lobbyState.isPrivate ? '23vh' : '15vh',
-            minHeight: '8.5rem',
+            height: '16.5rem',
             background: '#18325199',
             display: 'flex',
             paddingLeft: '30px',
@@ -199,7 +198,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 </>
             )}
 
-            {lobbyState && lobbyState.isPrivate && (
+            {lobbyState && (
                 <>
                     <Box sx={styles.labelTextStyle}>
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
