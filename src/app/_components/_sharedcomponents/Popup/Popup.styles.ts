@@ -14,19 +14,6 @@ export const buttonStyle = {
     },
 };
 
-export const overlayStyle = {
-    position: 'absolute' as const,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
-
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-};
-
 export const concedeButtonStyle = {
     padding: '1rem 1.5rem',
     borderRadius: '15px',
