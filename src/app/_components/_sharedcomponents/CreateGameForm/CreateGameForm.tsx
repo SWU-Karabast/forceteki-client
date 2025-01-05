@@ -77,7 +77,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 throw new Error('Failed to create game');
             }
             const responseJson = await response.json();
-            console.log('Response data:', responseJson);
             // Store unknownUserId in local storage (so we can retrieve it in GameContext)
             if(privacy === 'Private') {
                 localStorage.setItem('unknownUserId', responseJson.newUserId);

@@ -37,7 +37,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         // we get the lobbyId
         const storedUnknownUserId = localStorage.getItem('unknownUserId') || lobbyId+'-GuestId2';
         setConnectedPlayer(user ? user.id || '' : storedUnknownUserId ? storedUnknownUserId : '');
-        console.log(lobbyId);
         const newSocket = io('http://localhost:9500', {
             query: {
                 user: JSON.stringify(user ? user : { id:storedUnknownUserId }),
