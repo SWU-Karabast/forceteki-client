@@ -47,9 +47,9 @@ const GameCard: React.FC<IGameCardProps> = ({
 	}*/
     const handleClick = onClick ?? defaultClickFunction;
     const cardBorderColor = (card: ICardData) => {
-        if (card.selected) return 'yellow';
-        if (card.selectable) return 'limegreen';
-        if (card.exhausted) return 'gray';
+        if (card?.selected) return 'yellow';
+        if (card?.selectable) return 'limegreen';
+        if (card?.exhausted) return 'gray';
         return '';
     }
     // helper function to get the correct aspects for the upgrade cards
