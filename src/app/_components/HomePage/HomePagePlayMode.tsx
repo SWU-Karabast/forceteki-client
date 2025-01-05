@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Typography, Box, Tab, Tabs, Card, Button } from '@mui/material';
+import { Typography, Box, Tab, Tabs, Card, CardContent, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import CreateGameForm from '../_sharedcomponents/CreateGameForm/CreateGameForm';
 import { useUser } from '@/app/_contexts/User.context';
@@ -68,14 +68,19 @@ const HomePagePlayMode: React.FC = () => {
     }, []);
 
     const styles = {
+        wrapper: {
+            height: '100%',
+            scrollbarColor: '#888888 rgba(0, 0, 0, 0)',
+            scrollbarWidth: 'thin',
+        },
         tabStyles: {
             color: 'white',
         }
     };
 
     return (
-        <Box sx={{ height: '100%' }}>
-            <Card variant="black">
+        <Card variant="black" sx={styles.wrapper}>
+            <CardContent>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tabs value={value} variant="fullWidth" onChange={handleChange}>
                         <Tab sx={styles.tabStyles} label="Play" />
@@ -106,8 +111,8 @@ const HomePagePlayMode: React.FC = () => {
                         </Box>
                     </TabPanel>
                 }
-            </Card>
-        </Box>
+            </CardContent>
+        </Card>
     );
 };
 
