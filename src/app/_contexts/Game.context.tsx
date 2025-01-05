@@ -47,7 +47,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         const handleGameStatePopups = (gameState: any) => {
-            if (!user.id) return;
+            if (!user || user.id == null) return;
             if (gameState.players?.[user.id].promptState) {
                 const promptState = gameState.players?.[user.id].promptState;
                 const { buttons, menuTitle, promptUuid, selectCard, promptType } =
