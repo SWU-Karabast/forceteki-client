@@ -1,13 +1,16 @@
 import React from 'react';
-import { Card, CardContent, Box, Typography } from '@mui/material';
+import { Card, CardContent, Box, Typography, Button } from '@mui/material';
 import GameCard from '../../../_sharedcomponents/Cards/GameCard/GameCard';
 import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { usePopup } from '@/app/_contexts/Popup.context';
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = (
     trayPlayer
 ) => {
     const { gameState } = useGame();
+    const { openPopup } = usePopup();
+
     // ------------------------STYLES------------------------//
     const containerStyle = {
         display: 'flex',
@@ -38,13 +41,33 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         color: 'white',
     };
 
+    const pileStyle = {
+        backgroundColor: 'transparent',
+        padding: '0',
+        borderRadius: '16px',
+    };
+
     return (
         <Box sx={containerStyle}>
-            <Card sx={discardCardStyle}>
-                <CardContent sx={cardContentStyle}>
-                    <Typography sx={discardTextStyle}>Discard</Typography>
-                </CardContent>
-            </Card>
+            <Button
+                variant="text"
+                sx={pileStyle}
+                onClick={() =>
+                    openPopup('pile', {
+                        uuid: `${trayPlayer.trayPlayer}-discard`,
+                        title: `${trayPlayer.trayPlayer}'s discard`,
+                        cards:
+                            gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
+                    })
+                }
+            >
+
+                <Card sx={discardCardStyle}>
+                    <CardContent sx={cardContentStyle}>
+                        <Typography sx={discardTextStyle}>Discard</Typography>
+                    </CardContent>
+                </Card>
+            </Button>
             <Card sx={discardCardStyle}>
                 <CardContent sx={cardContentStyle}>
                     <Typography sx={discardTextStyle}>Deck</Typography>

@@ -13,6 +13,7 @@ import { useGame } from '../_contexts/Game.context';
 import { useSidebar } from '../_contexts/Sidebar.context';
 import { transform } from 'next/dist/build/swc';
 import { text } from 'stream/consumers';
+import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState } = useGame();
@@ -35,7 +36,7 @@ const GameBoard = () => {
     };
 
     useEffect(() => {
-        // Update the drawer width when the drawer opens or closes
+    // Update the drawer width when the drawer opens or closes
         if (drawerRef.current) {
             setDrawerWidth(drawerRef.current.offsetWidth);
         }
@@ -75,7 +76,8 @@ const GameBoard = () => {
         promptStyle: {
             textAlign: 'center',
             fontSize: '1.3em',
-            background: 'radial-gradient(ellipse, rgba(0,0,0, 0.9), rgba(0,0,0,0.7), rgba(0,0,0,0.0))',
+            background:
+        'radial-gradient(ellipse, rgba(0,0,0, 0.9), rgba(0,0,0,0.7), rgba(0,0,0,0.0))',
         },
     };
 
@@ -87,9 +89,7 @@ const GameBoard = () => {
         <Grid container sx={{ height: '100vh' }}>
             <Box component="main" sx={styles.mainBoxStyle}>
                 <OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
-                <Board
-                    sidebarOpen={sidebarOpen}
-                />
+                <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
                     handleModalToggle={handleModalToggle}
@@ -110,7 +110,9 @@ const GameBoard = () => {
                 />
             )}
             <Box sx={styles.centralPromptContainer}>
-                <Typography sx={styles.promptStyle}>{gameState.players[connectedPlayer]?.promptState.menuTitle}</Typography>
+                <Typography sx={styles.promptStyle}>
+                    {gameState.players[connectedPlayer]?.promptState.menuTitle}
+                </Typography>
             </Box>
             <ResourcesOverlay
                 isModalOpen={isModalOpen}
@@ -120,6 +122,7 @@ const GameBoard = () => {
                 isBasicPromptOpen={isBasicPromptOpen}
                 handleBasicPromptToggle={handleBasicPromptToggle}
             />
+            <PopupShell/>
         </Grid>
     );
 };

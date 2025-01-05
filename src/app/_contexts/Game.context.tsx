@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
+import { usePopup } from './Popup.context';
 
 interface IGameContextType {
     gameState: any;
@@ -28,6 +29,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
+    const { openPopup } = usePopup();
     const { user } = useUser();
 
     useEffect(() => {
@@ -39,12 +41,31 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             },
         });
 
+        const handleGameStatePopups = (gameState: any) => {
+            if (!user.id) return;
+            if (gameState.players?.[user.id].promptState) {
+                const promptState = gameState.players?.[user.id].promptState;
+                const { buttons, menuTitle, promptUuid, selectCard, promptType } =
+                    promptState;
+                if (promptType === 'actionWindow') return;
+                else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
+                    openPopup('default', {
+                        uuid: promptUuid,
+                        title: menuTitle,
+                        promptType: promptType,
+                        buttons,
+                    });
+                }
+            }
+        };
+
         newSocket.on('connect', () => {
             console.log(`Connected to server as ${user.username}`);
         });
         newSocket.on('gamestate', (gameState: any) => {
             setGameState(gameState);
             console.log('Game state received:', gameState);
+            handleGameStatePopups(gameState);
         });
         newSocket.on('lobbystate', (lobbyState: any) => {
             setLobbyState(lobbyState);
