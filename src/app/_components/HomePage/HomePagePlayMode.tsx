@@ -70,8 +70,6 @@ const HomePagePlayMode: React.FC = () => {
     const styles = {
         wrapper: {
             height: '100%',
-            scrollbarColor: '#888888 rgba(0, 0, 0, 0)',
-            scrollbarWidth: 'thin',
         },
         tabStyles: {
             color: 'white',
