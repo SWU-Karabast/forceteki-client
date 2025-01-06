@@ -6,6 +6,7 @@ import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useRouter } from 'next/navigation';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
     // ---------------Styles------------------- //
@@ -42,6 +43,11 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
     };
 
     const { gameState, connectedPlayer, getOpponent } = useGame();
+    const router = useRouter();
+    const handleExitButton = () =>{
+        router.push('/');
+    }
+
 
     return (
         <Grid container sx={{ height: '15%' }}>
@@ -64,7 +70,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
                     <Typography variant={'h4'}>Last Played:</Typography>
                 </Box>
                 <Box sx={styles.menuStyles}>
-                    <CloseOutlined />
+                    <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
                     <SettingsOutlined />
                 </Box>
 
