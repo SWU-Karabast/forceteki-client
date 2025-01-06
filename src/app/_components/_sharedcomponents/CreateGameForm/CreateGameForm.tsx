@@ -80,6 +80,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             // Store unknownUserId in local storage (so we can retrieve it in GameContext)
             if(privacy === 'Private') {
                 localStorage.setItem('unknownUserId', responseJson.newUserId);
+                localStorage.setItem('unknownUsername', 'Player1');
             }
             router.push('/lobby');
         } catch (error) {
