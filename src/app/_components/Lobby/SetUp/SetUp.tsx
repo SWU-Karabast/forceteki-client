@@ -32,7 +32,7 @@ const SetUp: React.FC = ({
     const mainCardStyle = {
         borderRadius: '1.1em',
         height: '100%',
-        maxHeight: '72.5vh',
+        maxHeight: '61.4vh',
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -42,10 +42,10 @@ const SetUp: React.FC = ({
         backdropFilter: 'blur(30px)',
         overflow: 'hidden',
         '@media (max-height: 1000px)': {
-            maxHeight: '67vh',
+            maxHeight: '60.3vh',
         },
         '@media (max-height: 759px)': {
-            maxHeight: '60.5vh',
+            maxHeight: '42.6vh',
         },
     };
 
