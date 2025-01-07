@@ -45,15 +45,23 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             if (!user.id) return;
             if (gameState.players?.[user.id].promptState) {
                 const promptState = gameState.players?.[user.id].promptState;
-                const { buttons, menuTitle, promptUuid, selectCard, promptType } =
+                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions } =
                     promptState;
                 if (promptType === 'actionWindow') return;
                 else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
-                    openPopup('default', {
+                    return openPopup('default', {
                         uuid: promptUuid,
                         title: menuTitle,
                         promptType: promptType,
                         buttons,
+                    });
+                }
+                else if (dropdownListOptions.length > 0 && menuTitle && promptUuid && !selectCard) {
+                    return openPopup('dropdown', {
+                        uuid: promptUuid,
+                        title: promptTitle,
+                        description: menuTitle,
+                        options: dropdownListOptions,
                     });
                 }
             }

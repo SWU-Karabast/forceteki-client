@@ -2,17 +2,16 @@
 import React, { createContext, useContext, useState } from 'react';
 import {
     DefaultPopup,
+    DropdownPopup,
     PilePopup,
     SelectCardsPopup,
-    SelectFromPilePopup,
 } from '../_components/_sharedcomponents/Popup/Popup.types';
 
-// TODO: SelectCardsPopup | LeaderAbilityPopup | DrawPopup | SelectCardsWithAspectPopup
 export type PopupData =
   | DefaultPopup
   | SelectCardsPopup
-  | SelectFromPilePopup
-  | PilePopup;
+  | PilePopup
+  | DropdownPopup;
 
 export type PopupType = PopupData['type'];
 
@@ -20,12 +19,13 @@ export type PopupDataMap = {
     default: Omit<DefaultPopup, 'type'>;
     select: Omit<SelectCardsPopup, 'type'>;
     pile: Omit<PilePopup, 'type'>;
-    'pile-select': Omit<SelectFromPilePopup, 'type'>;
+    dropdown: Omit<DropdownPopup, 'type'>;
 };
 
 interface PopupContextProps {
     popups: PopupData[];
     openPopup: <T extends PopupType>(type: T, data: PopupDataMap[T]) => void;
+    togglePopup: <T extends PopupType>(type: T, data: PopupDataMap[T]) => void;
     closePopup: (uuid: string) => void;
     focusPopup: (uuid: string) => void;
 }
@@ -37,22 +37,18 @@ export const PopupProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
     const [popups, setPopups] = useState<PopupData[]>([]);
 
-    function isDefaultPopup(popup: PopupData): popup is DefaultPopup {
-        return (popup as DefaultPopup)?.promptType !== undefined;
-    }
-
     const openPopup = <T extends PopupType>(type: T, data: PopupDataMap[T]) => {
         if (popups.some((popup) => popup.uuid === data.uuid)) return;
-        if (
-            popups.length > 0 &&
-      popups.some((popup) => isDefaultPopup(popup)) &&
-      isDefaultPopup({ type, ...data } as PopupData)
-        )
-            return;
 
         console.log('Opening new popup with uuid', data.uuid);
         setPopups((prev) => [...prev, { type, ...data } as PopupData]);
     };
+
+    const togglePopup = <T extends PopupType>(type: T, data: PopupDataMap[T]) => {
+        if (popups.some((popup) => popup.uuid === data.uuid)) closePopup(data.uuid);
+        else openPopup(type, data);
+    }
+
 
     const closePopup = (uuid: string) => {
         console.log('Closing popup with uuid', uuid);
@@ -79,7 +75,7 @@ export const PopupProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return (
         <PopupContext.Provider
-            value={{ openPopup, closePopup, focusPopup, popups }}
+            value={{ openPopup, closePopup, focusPopup, togglePopup, popups }}
         >
             {children}
         </PopupContext.Provider>
