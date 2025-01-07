@@ -62,6 +62,7 @@ const Board: React.FC<IBoardProps> = ({
             width: '100%'
         },
     }
+    
     return (
         <Grid container sx={{ height: '64.18%' }}>
             <Grid container size={5} sx={styles.leftColumnStyle}>
