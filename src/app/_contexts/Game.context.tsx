@@ -21,6 +21,7 @@ interface IGameContextType {
     getOpponent: (player: string) => string;
     connectedPlayer: string;
     sendLobbyMessage: (args: any[]) => void;
+    sendManualDisconnectMessage: () => void;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -98,6 +99,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         socket?.emit(message, ...args);
     };
 
+    const sendManualDisconnectMessage = () =>{
+        console.log('sending manual disconnect message');
+        socket?.emit('manualDisconnect')
+    }
+
     const sendGameMessage = (args: any[]) => {
         console.log('sending game message', args);
         socket?.emit('game', ...args);
@@ -123,7 +129,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 sendMessage,
                 connectedPlayer,
                 getOpponent,
-                sendLobbyMessage
+                sendLobbyMessage,
+                sendManualDisconnectMessage
             }}
         >
             {children}

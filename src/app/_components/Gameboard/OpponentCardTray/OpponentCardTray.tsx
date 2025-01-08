@@ -42,9 +42,10 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
         }
     };
 
-    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { gameState, connectedPlayer, getOpponent, sendManualDisconnectMessage } = useGame();
     const router = useRouter();
     const handleExitButton = () =>{
+        sendManualDisconnectMessage();
         router.push('/');
     }
 
