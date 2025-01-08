@@ -1,3 +1,4 @@
+'use client';
 import React, { useEffect, useState } from 'react';
 import { Box, Card, Typography } from '@mui/material';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard/LeaderBaseCard';
@@ -7,10 +8,10 @@ import { useRouter } from 'next/navigation'
 
 
 const FoundGame: React.FC = () => {
-    const { lobbyState, connectedPlayer, sendLobbyMessage } = useGame();
+    const { lobbyState, connectedPlayer, sendLobbyMessage, gameState } = useGame();
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
-
+    const lobbyOwner = lobbyState.lobbyOwnerId
     // set connectedPlayer
     const playerLeader = connectedUser ? connectedUser.deck.leader[0].card : null;
     const playerBase = connectedUser ? connectedUser.deck.base[0].card : null;
@@ -20,26 +21,31 @@ const FoundGame: React.FC = () => {
     const opponentLeader = opponentUser ? opponentUser.deck.leader[0].card : null;
     const opponentBase = opponentUser ? opponentUser.deck.base[0].card : null;
     const router = useRouter();
+
     // --- Countdown State ---
     const [countdown, setCountdown] = useState(5);
+    const [gameStartSent, setGameStart] = useState(false);
 
-    // When countdown hits 0, emit a socket event
-    useEffect(() => {
-        if (countdown === 0) {
-            sendLobbyMessage(['onStartGame']);
-            router.push('/GameBoard');
-        }
-    }, [countdown, router, sendLobbyMessage]);
-
-    // Decrement countdown every second
     useEffect(() => {
         const timer = setInterval(() => {
             setCountdown((prev) => Math.max(prev - 1, 0));
         }, 1000);
 
-        // Cleanup interval on unmount
         return () => clearInterval(timer);
     }, []);
+
+    useEffect(() => {
+        if (countdown !== 0) return;
+        if(gameState){
+            router.push('/GameBoard');
+        }
+
+        // Only run once
+        if (connectedUser?.id === lobbyOwner && !gameStartSent) {
+            setGameStart(true);
+            sendLobbyMessage(['onStartGame']);
+        }
+    }, [countdown, connectedUser?.id, lobbyOwner, sendLobbyMessage, router, gameState, gameStartSent]);
 
     // ------------------------STYLES------------------------//
 
