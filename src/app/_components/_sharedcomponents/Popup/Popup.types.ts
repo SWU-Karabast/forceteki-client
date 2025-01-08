@@ -25,17 +25,17 @@ export type SelectCardsPopup = {
     onConfirm: (cards: ICardData[]) => void;
 };
 
-// Necessary ?
-export type SelectFromPilePopup = {
-    type: 'pile-select';
-    uuid: string;
-    pile: ICardData[];
-    onConfirm: (cards: ICardData[]) => void;
-};
-
 export type PilePopup = {
     type: 'pile';
     uuid: string;
     title: string;
     cards: ICardData[];
+};
+
+export type DropdownPopup = {
+    type: 'dropdown';
+    uuid: string;
+    title: string;
+    description?: string;
+    options: string[];
 };

@@ -31,7 +31,6 @@ export const contentStyle = (index: number) => ({
     background:
     'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
     zIndex: 11 + index,
-    marginTop: index * 30,
 });
 
 export const containerStyle = {
@@ -53,10 +52,11 @@ export const containerStyle = {
 export const headerStyle = (isMinimized: boolean) => ({
     display: 'flex',
     width: '100%',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: '-10px',
     marginBottom: isMinimized ? '-20px' : '0',
+    position: 'relative',
 });
 
 export const footerStyle = {
@@ -68,20 +68,20 @@ export const footerStyle = {
     width: '100%',
 };
 
-export const minimalButtonStyle = {
+export const minimizeButtonStyle = {
     marginTop: '-15px',
     color: 'white',
-    display: 'flex',
+    position: 'absolute',
+    right: 0,
+
 };
 
 export const titleStyle = {
     color: 'white',
     fontSize: '1.25rem',
     fontWeight: 'bold',
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    textAlign: 'center',
+    width: '80%'
 };
 
 export const textStyle = {

@@ -9,7 +9,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
     trayPlayer
 ) => {
     const { gameState } = useGame();
-    const { openPopup } = usePopup();
+    const { togglePopup } = usePopup();
 
     // ------------------------STYLES------------------------//
     const containerStyle = {
@@ -20,11 +20,20 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         alignItems: 'center',
     };
 
-    const discardCardStyle = {
+    const cardPileStyle = {
         backgroundColor: '#282828E6',
         width: '7vh',
         height: '9.5vh',
     };
+
+    const selectableStyle = {
+        '&:hover': {
+            backgroundColor: '#282828',
+            cursor: 'pointer',
+            scale: '1.1',
+            transition: 'all ease-in-out 0.15s',
+        },
+    }
 
     const cardContentStyle = {
         height: '100%',
@@ -41,34 +50,20 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         color: 'white',
     };
 
-    const pileStyle = {
-        backgroundColor: 'transparent',
-        padding: '0',
-        borderRadius: '16px',
-    };
-
     return (
         <Box sx={containerStyle}>
-            <Button
-                variant="text"
-                sx={pileStyle}
-                onClick={() =>
-                    openPopup('pile', {
-                        uuid: `${trayPlayer.trayPlayer}-discard`,
-                        title: `${trayPlayer.trayPlayer}'s discard`,
-                        cards:
-                            gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
-                    })
-                }
-            >
-
-                <Card sx={discardCardStyle}>
-                    <CardContent sx={cardContentStyle}>
-                        <Typography sx={discardTextStyle}>Discard</Typography>
-                    </CardContent>
-                </Card>
-            </Button>
-            <Card sx={discardCardStyle}>
+            <Card sx={[cardPileStyle, selectableStyle]} onClick={() =>
+                togglePopup('pile', {
+                    uuid: `${trayPlayer.trayPlayer}-discard`,
+                    title: `${trayPlayer.trayPlayer}'s discard`,
+                    cards:
+                        gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
+                })}>
+                <CardContent sx={cardContentStyle}>
+                    <Typography sx={discardTextStyle}>Discard</Typography>
+                </CardContent>
+            </Card>
+            <Card sx={cardPileStyle}>
                 <CardContent sx={cardContentStyle}>
                     <Typography sx={discardTextStyle}>Deck</Typography>
                 </CardContent>

@@ -1,6 +1,6 @@
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import { Box, Button, IconButton, MenuItem, Select, SelectChangeEvent, Typography } from '@mui/material';
 import { MouseEvent, useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import {
@@ -12,16 +12,26 @@ import {
     textStyle,
     titleStyle,
 } from '../Popup.styles';
-import { DefaultPopup, PopupButton } from '../Popup.types';
+import { DropdownPopup } from '../Popup.types';
 
 interface ButtonProps {
-    data: DefaultPopup;
+    data: DropdownPopup;
 }
 
-export const DefaultPopupModal = ({ data }: ButtonProps) => {
+export const DropdownPopupModal = ({ data }: ButtonProps) => {
     const { sendGameMessage } = useGame();
     const { closePopup } = usePopup();
     const [isMinimized, setIsMinimized] = useState(false);
+    const [selectedOption, setSelectedOption] = useState('');
+
+    const handleChange = (event: SelectChangeEvent) => {
+        setSelectedOption(event.target.value as string);
+    };
+    
+    const handleDone = () => {
+        sendGameMessage(['menuButton', selectedOption, data.uuid]);
+        closePopup(data.uuid);
+    };
 
     const renderPopupContent = () => {
         if (isMinimized) return null;
@@ -30,20 +40,25 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
                 {data.description && (
                     <Typography sx={textStyle}>{data.description}</Typography>
                 )}
-                <Box sx={footerStyle}>
-                    {data.buttons.map((button: PopupButton, index: number) => (
-                        <Button
-                            key={`${button.uuid}:${index}`}
-                            sx={buttonStyle}
-                            variant="contained"
-                            onClick={() => {
-                                sendGameMessage([button.command, button.arg, button.uuid]);
-                                closePopup(data.uuid);
-                            }}
-                        >
-                            {button.text}
-                        </Button>
+
+                <Select value={selectedOption} sx={{ width: '50%', color: 'white' }}
+
+                    onChange={handleChange}>
+                    {data.options.map((option, index) => (
+                        <MenuItem key={index} value={option}>
+                            {option}
+                        </MenuItem>
                     ))}
+                </Select>
+                <Box sx={footerStyle}>
+                    <Button
+                        onClick={handleDone}
+                        disabled={selectedOption === ''}
+                        sx={buttonStyle}
+                        variant="contained"
+                    >
+                        Done
+                    </Button>
                 </Box>
             </>
         );

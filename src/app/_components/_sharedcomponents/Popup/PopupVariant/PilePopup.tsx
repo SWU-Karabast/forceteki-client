@@ -8,7 +8,7 @@ import {
     containerStyle,
     footerStyle,
     headerStyle,
-    minimalButtonStyle,
+    minimizeButtonStyle,
     titleStyle,
 } from '../Popup.styles';
 import { PilePopup } from '../Popup.types';
@@ -56,6 +56,8 @@ export const PilePopupModal = ({ data }: ButtonProps) => {
                     ))}
                 </Grid2>
 
+                {data.cards.length === 0 && <Typography>No cards to display</Typography>}
+
                 <Box sx={footerStyle}>
                     <Button onClick={() => closePopup(data.uuid)} sx={buttonStyle}>
                         Done
@@ -75,7 +77,7 @@ export const PilePopupModal = ({ data }: ButtonProps) => {
             <Box sx={headerStyle(isMinimized)}>
                 <Typography sx={titleStyle}>{data.title}</Typography>
                 <IconButton
-                    sx={minimalButtonStyle}
+                    sx={minimizeButtonStyle}
                     aria-label="minimize"
                     onClick={handleMinimize}
                 >
