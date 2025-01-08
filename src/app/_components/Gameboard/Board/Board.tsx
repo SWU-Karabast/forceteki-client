@@ -5,20 +5,22 @@ import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard/LeaderBaseCard';
 import { Box, Typography } from '@mui/material';
-import CardActionTray from '@/app/_components/Gameboard/_subcomponents/PlayerTray/CardActionTray';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
 }) => {
     const { gameState, connectedPlayer } = useGame();
+    const playerIds = Object.keys(gameState.players);
 
-    const titleOpponent =
-		connectedPlayer === 'th3w4y' ? 'exe66' : 'th3w4y';
+    const opponentId = playerIds.find((id) => id !== connectedPlayer) || '';
+
+    const titleOpponent = gameState.players[opponentId].user.username;
+    const titleCurrentPlayer = gameState.players[connectedPlayer].user.username;
 
     const playerLeader = gameState?.players[connectedPlayer].leader;
     const playerBase = gameState?.players[connectedPlayer].base;
-    const opponentLeader = gameState?.players[titleOpponent].leader;
-    const opponentBase = gameState?.players[titleOpponent].base;
+    const opponentLeader = gameState?.players[opponentId].leader;
+    const opponentBase = gameState?.players[opponentId].base;
 
 
     // ----------------Styles----------------//
@@ -60,6 +62,7 @@ const Board: React.FC<IBoardProps> = ({
             width: '100%'
         },
     }
+    
     return (
         <Grid container sx={{ height: '64.18%' }}>
             <Grid container size={5} sx={styles.leftColumnStyle}>
@@ -83,7 +86,7 @@ const Board: React.FC<IBoardProps> = ({
                         <LeaderBaseCard
                             variant="leader"
                             isLobbyView={false}
-                            title={connectedPlayer}
+                            title={titleCurrentPlayer}
                             card={playerLeader}
                         />
                     </Box>

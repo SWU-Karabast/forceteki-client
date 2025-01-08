@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
+import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
 
 interface IGameContextType {
@@ -31,18 +32,27 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const { openPopup } = usePopup();
     const { user } = useUser();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
-        if (!user) return;
-        setConnectedPlayer(user.id || '');
+        const lobbyId = searchParams.get('lobbyId');
+        // we get the lobbyId
+        const storedUnknownUserId = localStorage.getItem('unknownUserId') || lobbyId+'-GuestId2';
+
+        // we set the username of the player based on whether it is in the localStorage or not.
+        const username = localStorage.getItem('unknownUsername') || 'Player2';
+        const connectedPlayerId = user?.id || storedUnknownUserId || '';
+        setConnectedPlayer(connectedPlayerId);
+
         const newSocket = io('http://localhost:9500', {
             query: {
-                user: JSON.stringify(user)
+                user: JSON.stringify(user ? user : { username:username, id:storedUnknownUserId }),
+                lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null })
             },
         });
 
         const handleGameStatePopups = (gameState: any) => {
-            if (!user.id) return;
+            if (!user || user.id == null) return;
             if (gameState.players?.[user.id].promptState) {
                 const promptState = gameState.players?.[user.id].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions } =
@@ -68,12 +78,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         };
 
         newSocket.on('connect', () => {
-            console.log(`Connected to server as ${user.username}`);
+            console.log(`Connected to server as ${user ? user.username : ''}`);
         });
         newSocket.on('gamestate', (gameState: any) => {
             setGameState(gameState);
             console.log('Game state received:', gameState);
             handleGameStatePopups(gameState);
+        });
+        newSocket.on('connectedUser', () =>{
+            localStorage.removeItem('unknownUserId');
+            localStorage.removeItem('unknownUsername');
         });
         newSocket.on('lobbystate', (lobbyState: any) => {
             setLobbyState(lobbyState);
