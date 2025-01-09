@@ -73,6 +73,7 @@ type ISetCode = {
         number: number;
     }
     type: string;
+    id: string;
 }
 
 export const s3ImageURL = (path: string) => {
@@ -82,9 +83,14 @@ export const s3ImageURL = (path: string) => {
 
 export const s3CardImageURL = (card: ICardData | ISetCode) => {
     if (!card) return 'game/epic-action-token.webp';
+    if (card.type.includes('token')) {
+        return s3ImageURL(`cards/_tokens/${card.id}.webp`);
+    }
     const cardNumber = card.setId.number.toString().padStart(3, '0') + (card.type === 'leaderUnit' ? '-portrait' : '');
     return s3ImageURL(`cards/${card.setId.set}/${cardNumber}.webp`);
 };
+
+
 
 export const s3TokenImageURL = (token_name: string) =>{
     return s3ImageURL(`game/${token_name}.webp`);
