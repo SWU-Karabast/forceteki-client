@@ -38,7 +38,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
         // we get the lobbyId
-        const storedUnknownUserId = localStorage.getItem('unknownUserId') || lobbyId+'-GuestId2';
+        const storedUnknownUserId = localStorage.getItem('unknownUserId') || lobbyId ? lobbyId+'-GuestId2' : null;
 
         // we set the username of the player based on whether it is in the localStorage or not.
         const username = localStorage.getItem('unknownUsername') || 'Player2';
