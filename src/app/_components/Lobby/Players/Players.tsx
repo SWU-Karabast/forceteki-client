@@ -115,7 +115,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 card={playerLeader}
                                 disabled={true}
                             />
-                            <LeaderBaseCard variant="base" isLobbyView={true} card={playerBase}></LeaderBaseCard>
+                            <LeaderBaseCard variant="base" isLobbyView={true} card={playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                     <Grid sx={rowStyle}>
@@ -136,7 +136,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 card={opponentLeader}
                                 disabled={true}
                             />
-                            <LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={opponentBase}></LeaderBaseCard>
+                            <LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                 </Grid>
