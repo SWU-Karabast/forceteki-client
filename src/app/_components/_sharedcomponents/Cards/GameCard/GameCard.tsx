@@ -274,10 +274,10 @@ const GameCard: React.FC<IGameCardProps> = ({
                         ) : variant === 'gameboard' ? (
                             <>
                                 <Grid direction="row" container sx={styles.shieldContainerStyle}>
-                                    {shieldCards.map((shieldCard) => (
+                                    {shieldCards.map((_, index) => (
                                         <>
                                             <Box
-                                                key={shieldCard.uuid}
+                                                key={`${cardData.uuid}-shield-${index}`}
                                                 sx={styles.shieldIconLayer}
                                             />
                                         </>
