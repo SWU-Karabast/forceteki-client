@@ -65,7 +65,7 @@ const GameBoard = () => {
         },
         centralPromptContainer: {
             position: 'absolute',
-            top: '50%',
+            top: '47%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             display: 'flex',
@@ -86,7 +86,7 @@ const GameBoard = () => {
     }
 
     return (
-        <Grid container sx={{ height: '100vh' }}>
+        <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>
             <Box component="main" sx={styles.mainBoxStyle}>
                 <OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
                 <Board sidebarOpen={sidebarOpen} />

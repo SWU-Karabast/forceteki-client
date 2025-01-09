@@ -25,7 +25,6 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
         width: '100%',
         overflowX: 'auto',
         whiteSpace: 'nowrap',
-        p: '10px 0',
         cursor: isDragging ? 'grabbing' : 'grab',
         userSelect: 'none',
         scrollbarWidth: 'thin',

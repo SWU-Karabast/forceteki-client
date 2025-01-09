@@ -20,23 +20,29 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
     const styles = {
         leftColumn: {
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             justifyContent: 'flex-start',
-            pl: '2em',
-            pt: '2em',
+            gap: '10px',
+            pl: '1em',
         },
         centerColumn: {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
+        },
+        opponentHandWrapper: {
+            width: '100%',
+            height: '100%',
+            transform: 'translateY(-30%)',
         },
         rightColumn: {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            pr: '2em',
+            gap: '15px',
+            pr: '1em',
             py: '1em',
         },
         lastPlayed: {
@@ -57,20 +63,16 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
         <Grid container sx={{ height: '15%' }}>
             <Grid size={3} sx={styles.leftColumn}>
                 <DeckDiscard trayPlayer={trayPlayer} />
-                <Box ml={1}>
-                    <Resources
-                        trayPlayer={trayPlayer}
-                    />
-                </Box>
+                <Resources trayPlayer={trayPlayer}/>
             </Grid>
             <Grid size={6} sx={styles.centerColumn}>
-                <PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
+                <Box sx={styles.opponentHandWrapper}>
+                    <PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
+                </Box>
             </Grid>
             <Grid size={3} sx={styles.rightColumn}>
-                <Box mr={2}>
-                    <Typography variant={'h4'}>Initiative</Typography>
-                </Box>
-                <Box sx={styles.lastPlayed} mr={2}>
+                <Typography variant={'h4'}>Initiative</Typography>
+                <Box sx={styles.lastPlayed}>
                 </Box>
                 <Box sx={styles.menuStyles}>
                     <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
