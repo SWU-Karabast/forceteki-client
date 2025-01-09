@@ -7,8 +7,15 @@ import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
+import { s3CardImageURL } from '@/app/_utils/s3Utils';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
+    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const router = useRouter();
+    const handleExitButton = () =>{
+        router.push('/');
+    }
+
     // ---------------Styles------------------- //
     const styles = {
         leftColumn: {
@@ -30,11 +37,13 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
             alignItems: 'center',
             justifyContent: 'flex-end',
             pr: '2em',
-            pt: '2em',
+            py: '1em',
         },
         lastPlayed: {
-            border: '2px solid #FFFFFF55'
-
+            height: '100%',
+            aspectRatio: '359 / 500',
+            backgroundSize: 'cover',
+            backgroundImage: gameState.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.lastPlayedCard, type: '' })})` : 'none',
         },
         menuStyles: {
             display: 'flex',
@@ -42,11 +51,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
         }
     };
 
-    const { gameState, connectedPlayer, getOpponent } = useGame();
-    const router = useRouter();
-    const handleExitButton = () =>{
-        router.push('/');
-    }
 
 
     return (
@@ -67,7 +71,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
                     <Typography variant={'h4'}>Initiative</Typography>
                 </Box>
                 <Box sx={styles.lastPlayed} mr={2}>
-                    <Typography variant={'h4'}>Last Played:</Typography>
                 </Box>
                 <Box sx={styles.menuStyles}>
                     <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
