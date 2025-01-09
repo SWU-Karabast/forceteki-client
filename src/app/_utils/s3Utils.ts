@@ -82,7 +82,6 @@ export const s3ImageURL = (path: string) => {
 
 export const s3CardImageURL = (card: ICardData | ISetCode) => {
     if (!card) return 'game/epic-action-token.webp';
-    console.log(card);
     const cardNumber = card.setId.number.toString().padStart(3, '0') + (card.type === 'leaderUnit' ? '-portrait' : '');
     return s3ImageURL(`cards/${card.setId.set}/${cardNumber}.webp`);
 };

@@ -63,28 +63,25 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             height: '100%',
             width: '100%',
             padding: '1em',
-            margin: '1em',
         },
         containerStyle: {
             height: '100%',
         },
         opponentGridStyle: {
-            flexGrow: 1,
+            height: '50%',
             display: 'flex',
             justifyContent: arena == 'groundArena' ? 'flex-start': 'flex-end',
             alignItems: 'flex-start',
-            gap: '0.5vw',
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
+            gap: '10px',
+            flexWrap: 'wrap',
         },
         playerGridStyle: {
-            flexGrow: 1,
+            height: '50%',
             display: 'flex',
             justifyContent: arena == 'groundArena' ? 'flex-start': 'flex-end',
             alignItems: 'flex-end',
-            gap: '0.5vw',
-            flexWrap: 'nowrap',
-            overflowX: 'auto',
+            gap: '10px',
+            flexWrap: 'wrap',
         },
     };
 
@@ -104,7 +101,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Player's Ground Units */}
                 <Grid sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={{ flex: '0 0 auto' }}>
+                        <Box key={card.uuid} sx={{ flex: '0 1 auto' }}>
                             <GameCard card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
                         </Box>
                     ))}

@@ -21,7 +21,7 @@ const CardActionTray: React.FC = () => {
                 spacing={2}
                 sx={actionContainerStyle}
             >
-                <Box>
+                <Box sx={{ display: 'flex', gap: '10px' }}>
                     {playerState.promptState.buttons.map((button: IButtonsProps) => (
                         <PromptButton
                             key={button.arg}
