@@ -10,9 +10,10 @@ import { useRouter } from 'next/navigation';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
-    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { gameState, connectedPlayer, getOpponent, sendManualDisconnectMessage } = useGame();
     const router = useRouter();
     const handleExitButton = () =>{
+        sendManualDisconnectMessage();
         router.push('/');
     }
 
@@ -56,8 +57,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
             flexDirection: 'column',
         }
     };
-
-
 
     return (
         <Grid container sx={{ height: '15%' }}>

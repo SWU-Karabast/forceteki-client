@@ -21,6 +21,7 @@ interface IGameContextType {
     getOpponent: (player: string) => string;
     connectedPlayer: string;
     sendLobbyMessage: (args: any[]) => void;
+    sendManualDisconnectMessage: () => void;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -37,8 +38,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
         // we get the lobbyId
-        const storedUnknownUserId = localStorage.getItem('unknownUserId') || lobbyId+'-GuestId2';
-
+        const storedUnknownUserId = localStorage.getItem('unknownUserId') || (lobbyId ? lobbyId + '-GuestId2' : null);
         // we set the username of the player based on whether it is in the localStorage or not.
         const username = localStorage.getItem('unknownUsername') || 'Player2';
         const connectedPlayerId = user?.id || storedUnknownUserId || '';
@@ -52,7 +52,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         const handleGameStatePopups = (gameState: any) => {
-            if (!user || user.id == null) return;
+            if (!user || user.id == null) return; // TODO currently this doesn't support private lobbies where players aren't logged in.
             if (gameState.players?.[user.id].promptState) {
                 const promptState = gameState.players?.[user.id].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions } =
@@ -106,6 +106,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         socket?.emit(message, ...args);
     };
 
+    const sendManualDisconnectMessage = () =>{
+        console.log('sending manual disconnect message');
+        socket?.emit('manualDisconnect')
+    }
+
     const sendGameMessage = (args: any[]) => {
         console.log('sending game message', args);
         socket?.emit('game', ...args);
@@ -131,7 +136,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 sendMessage,
                 connectedPlayer,
                 getOpponent,
-                sendLobbyMessage
+                sendLobbyMessage,
+                sendManualDisconnectMessage
             }}
         >
             {children}
