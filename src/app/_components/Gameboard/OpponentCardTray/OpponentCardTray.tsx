@@ -50,7 +50,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
             height: '100%',
             aspectRatio: '359 / 500',
             backgroundSize: 'cover',
-            backgroundImage: gameState.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.lastPlayedCard, type: '' })})` : 'none',
+            backgroundImage: gameState.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.lastPlayedCard, type: '', id: '' })})` : 'none',
         },
         menuStyles: {
             display: 'flex',
