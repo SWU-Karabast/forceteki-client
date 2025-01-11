@@ -14,6 +14,7 @@ import { useSidebar } from '../_contexts/Sidebar.context';
 import { transform } from 'next/dist/build/swc';
 import { text } from 'stream/consumers';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
+import Preferences from '@/app/_components/_sharedcomponents/Preferences/Preferences';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState } = useGame();
@@ -123,6 +124,7 @@ const GameBoard = () => {
                 handleBasicPromptToggle={handleBasicPromptToggle}
             />
             <PopupShell/>
+            <Preferences/>
         </Grid>
     );
 };
