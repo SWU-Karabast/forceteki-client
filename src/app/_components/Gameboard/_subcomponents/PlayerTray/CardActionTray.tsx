@@ -14,6 +14,7 @@ const CardActionTray: React.FC = () => {
 
     const showTrayButtons = () => {
         if ( playerState.promptState.promptType == 'actionWindow' ||
+             playerState.promptState.promptType == 'resource' ||
              playerState.promptState.selectCards == true ) {
             return true;
         }
