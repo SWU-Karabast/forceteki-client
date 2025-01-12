@@ -2,6 +2,7 @@ import { Grid2 as Grid, Box } from '@mui/material';
 import { useDragScroll } from '@/app/_utils/useDragScroll';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
+import { useGame } from '@/app/_contexts/Game.context';
 
 const PlayerHand: React.FC<IPlayerHandProps> = ({
     cards = []
@@ -17,6 +18,8 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
         isDragging,
         isScrolling,
     } = useDragScroll('horizontal');
+
+    const { connectedPlayer } = useGame();
 
     // ------------------------STYLES------------------------//
 
@@ -56,9 +59,10 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
                 onTouchEnd={handleTouchEnd}
             >
                 <Box sx={cardBoxStyle}>
-                    {cards.map((card) => (
-                        <Box key={card.uuid} sx={{ flex: '0 0 auto' }}>
+                    {cards.map((card, i) => (
+                        <Box key={`${connectedPlayer}-hand-${i}`} sx={{ flex: '0 0 auto' }}>
                             <GameCard
+                                key={`${connectedPlayer}-hand-${i}`}
                                 card={card}/>
                         </Box>
                     ))}
