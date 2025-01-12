@@ -39,13 +39,9 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
         playerHandWrapper: {
             width: '100%',
             height: '100%',
-            transform: 'translateY(15%)',
-            transition: 'transform 0.4s ease',
             display : 'flex',
             alignItems : 'center',
-            '&:hover': {
-                transform: 'translateY(0)',
-            },
+
         },
     }
 
