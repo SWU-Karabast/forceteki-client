@@ -5,24 +5,55 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import CurrentGameTab
     from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CurrentGameTab';
-import KeyboardShortcuts
-    from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/KeyboardShortcuts';
-import CardSleeves from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CardSleeves';
-import GameOptions from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptions';
+import KeyboardShortcutsTab
+    from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/KeyboardShortcutsTab';
+import CardSleevesTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CardSleevesTab';
+import GameOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
+import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
-function a11yProps(index: number) {
+function tabProps(index: number) {
     return {
         id: `vertical-tab-${index}`,
         'aria-controls': `vertical-tabpanel-${index}`,
     };
 }
 
-function VerticalTabs() {
+
+function VerticalTabs({ tabs }:IVerticalTabsProps) {
     const [value, setValue] = React.useState(0);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
     };
+
+    const renderPreferencesContent = (type: string) => {
+        switch (type) {
+            case 'currentGame':
+                return <CurrentGameTab/>;
+            case 'keyboardShortcuts':
+                return <KeyboardShortcutsTab/>;
+            case 'cardSleeves':
+                return <CardSleevesTab/>;
+            case 'gameOptions':
+                return <GameOptionsTab/>;
+            default:
+                return <Typography>Not Implemented</Typography>;
+        }
+    };
+    const renderLabels = (type: string) => {
+        switch (type) {
+            case 'currentGame':
+                return 'CURRENT GAME';
+            case 'keyboardShortcuts':
+                return 'KEYBOARD SHORTCUTS';
+            case 'cardSleeves':
+                return 'CARD SLEEVES';
+            case 'gameOptions':
+                return 'GAME OPTIONS';
+            default:
+                return null;
+        }
+    }
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -60,44 +91,27 @@ function VerticalTabs() {
                 }}
                 sx={styles.tabContainer}
             >
-                <Tab sx={styles.tab} label="Current Game" {...a11yProps(0)} />
-                <Tab sx={styles.tab} label="Keyboard Shortcuts" {...a11yProps(1)} />
-                <Tab sx={styles.tab} label="Card Sleeves" {...a11yProps(2)} />
-                <Tab sx={styles.tab} label="Game Options" {...a11yProps(3)} />
+                {tabs.map((tabName, idx) => (
+                    <Tab
+                        key={tabName}
+                        sx={styles.tab}
+                        label={renderLabels(tabName)}
+                        {...tabProps(idx)}
+                    />
+                ))}
             </Tabs>
             <Box sx={styles.tabPanelContainer}>
-                <Box
-                    role="tabpanel"
-                    hidden={value !== 0}
-                    id={`vertical-tabpanel-${0}`}
-                    aria-labelledby={`vertical-tab-${0}`}
-                >
-                    <CurrentGameTab/>
-                </Box>
-                <Box
-                    role="tabpanel"
-                    hidden={value !== 1}
-                    id={`vertical-tabpanel-${1}`}
-                    aria-labelledby={`vertical-tab-${1}`}
-                >
-                    <KeyboardShortcuts/>
-                </Box>
-                <Box
-                    role="tabpanel"
-                    hidden={value !== 2}
-                    id={`vertical-tabpanel-${2}`}
-                    aria-labelledby={`vertical-tab-${2}`}
-                >
-                    <CardSleeves/>
-                </Box>
-                <Box
-                    role="tabpanel"
-                    hidden={value !== 3}
-                    id={`vertical-tabpanel-${3}`}
-                    aria-labelledby={`vertical-tab-${3}`}
-                >
-                    <GameOptions/>
-                </Box>
+                {tabs.map((tabName, idx) => (
+                    <Box
+                        key={tabName}
+                        role="tabpanel"
+                        hidden={value !== idx}
+                        id={`vertical-tabpanel-${idx}`}
+                        aria-labelledby={`vertical-tab-${idx}`}
+                    >
+                        {value === idx && renderPreferencesContent(tabName)}
+                    </Box>
+                ))}
             </Box>
         </Box>
     );

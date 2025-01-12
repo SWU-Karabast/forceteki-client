@@ -4,8 +4,9 @@ import Grid from '@mui/material/Grid2';
 import { Divider, Typography } from '@mui/material';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField/StyledTextField';
 import { ChangeEvent, useState } from 'react';
+import KeyboardLayout from '@/app/_components/_sharedcomponents/Preferences/_subComponents/KeyboardLayout';
 
-function KeyboardShortcuts() {
+function KeyboardShortcutsTab() {
     const [welcomeMessage, setWelcomeMessage] = useState<string>('');
     const styles = {
         typographyContainer: {
@@ -20,9 +21,6 @@ function KeyboardShortcuts() {
             alignItems: 'center'
         },
         keyboardStyle:{
-            backgroundImage: 'url(\'/Keyboard.png\')',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
             height: '17rem',
             width: '100%',
             mb:'30px',
@@ -37,6 +35,7 @@ function KeyboardShortcuts() {
             textAlign: 'center',
         },
         gridStyle:{
+            mt:'20px',
             gap:'20px',
             gridTemplateColumns: 'auto auto auto',
             display:'grid',
@@ -46,7 +45,7 @@ function KeyboardShortcuts() {
     return (
         <>
             <Box sx={styles.functionContainer}>
-                <Box sx={styles.keyboardStyle}/>
+                <KeyboardLayout />
                 <Grid sx={styles.gridStyle}>
                     <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
                         <Box sx={styles.keyPadsStyle}>
@@ -125,4 +124,4 @@ function KeyboardShortcuts() {
         </>
     );
 }
-export default KeyboardShortcuts;
+export default KeyboardShortcutsTab;

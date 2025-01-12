@@ -28,6 +28,7 @@ const GameBoard = () => {
     // State for resource selection
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isBasicPromptOpen, setBasicPromptOpen] = useState(false);
+    const [isPreferenceOpen, setPreferenceOpen] = useState(false);
 
     const handleChatSubmit = () => {
         if (chatMessage.trim()) {
@@ -50,6 +51,9 @@ const GameBoard = () => {
     const handleBasicPromptToggle = () => {
         setBasicPromptOpen(!isBasicPromptOpen);
     };
+    const handlePreferenceToggle = () => {
+        setPreferenceOpen(!isPreferenceOpen);
+    }
 
     // ----------------------Styles-----------------------------//
 
@@ -89,7 +93,10 @@ const GameBoard = () => {
     return (
         <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>
             <Box component="main" sx={styles.mainBoxStyle}>
-                <OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
+                <OpponentCardTray
+                    trayPlayer={getOpponent(connectedPlayer)}
+                    preferenceToggle={handlePreferenceToggle}
+                />
                 <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
@@ -124,7 +131,7 @@ const GameBoard = () => {
                 handleBasicPromptToggle={handleBasicPromptToggle}
             />
             <PopupShell/>
-            <Preferences/>
+            <Preferences isPreferenceOpen={isPreferenceOpen} preferenceToggle={handlePreferenceToggle}/>
         </Grid>
     );
 };

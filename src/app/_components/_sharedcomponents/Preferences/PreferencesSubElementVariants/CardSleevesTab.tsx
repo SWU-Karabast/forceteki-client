@@ -2,7 +2,7 @@ import * as React from 'react';
 import Grid from '@mui/material/Grid2';
 import CardSleeve from '@/app/_components/_sharedcomponents/Preferences/_subComponents/CardSleeve';
 
-function CardSleeves() {
+function CardSleevesTab() {
     const styles = {
         typographyContainer: {
             mb: '0.5rem',
@@ -61,4 +61,4 @@ function CardSleeves() {
         </>
     );
 }
-export default CardSleeves;
+export default CardSleevesTab;

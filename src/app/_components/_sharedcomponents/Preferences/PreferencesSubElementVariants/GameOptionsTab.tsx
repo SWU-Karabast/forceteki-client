@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import PreferenceOption from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceOption';
 
-function GameOptions() {
+function GameOptionsTab() {
     const styles = {
         typographyContainer: {
             mb: '0.5rem',
@@ -35,4 +35,4 @@ function GameOptions() {
         </>
     );
 }
-export default GameOptions;
+export default GameOptionsTab;

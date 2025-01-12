@@ -1,37 +1,26 @@
 import React from 'react';
-import { PopupData, PopupType, usePopup } from '@/app/_contexts/Popup.context';
-import { useGame } from '@/app/_contexts/Game.context';
-import { DefaultPopupModal } from '@/app/_components/_sharedcomponents/Popup/PopupVariant/DefaultPopup';
-import { DefaultPopup, PilePopup, SelectCardsPopup } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
-import { PilePopupModal } from '@/app/_components/_sharedcomponents/Popup/PopupVariant/PilePopup';
-import { SelectCardsPopupModal } from '@/app/_components/_sharedcomponents/Popup/PopupVariant/SelectCardsPopup';
-import { Box, Button, Typography } from '@mui/material';
-import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
+import { CloseOutlined } from '@mui/icons-material';
 import VerticalTabs from '@/app/_components/_sharedcomponents/Preferences/_subComponents/VerticalTabs';
+import { IPreferenceProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
-const Preferences: React.FC = () => {
-    const renderPreferencesContent = (type: PopupType, data: PopupData) => {
-        switch (type) {
-            case 'default':
-                return <DefaultPopupModal data={data as DefaultPopup} />;
-            case 'pile':
-                return <PilePopupModal data={data as PilePopup} />;
-            case 'select':
-                return <SelectCardsPopupModal data={data as SelectCardsPopup} />;
-            default:
-                return null;
-        }
-    };
-
+const Preferences: React.FC<IPreferenceProps> = ({
+    isPreferenceOpen,
+    preferenceToggle
+}) => {
     // ------------------------STYLES------------------------//
     const styles = {
         overlayStyle:{
+            display: isPreferenceOpen ? 'block' : 'none',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             height: '90vh',
             width: '90vw',
+            maxWidth: '105em',
+            maxHeight: '65em',
             position: 'absolute',
             padding: '30px',
-            left:'5vw',
-            top:'5vh',
             zIndex: 10,
             backgroundColor: 'rgba(0, 0, 0, 0.6)',
             border: '3px solid transparent',
@@ -61,9 +50,9 @@ const Preferences: React.FC = () => {
             <Box sx={styles.headerBox}>
                 <Typography variant={'h1'}>Preferences</Typography>
             </Box>
-            <CloseOutlined sx={{ ...styles.closeButton, cursor:'pointer' }}/>
+            <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
             <Box sx={styles.tabContainer}>
-                <VerticalTabs></VerticalTabs>
+                <VerticalTabs tabs={['currentGame','keyboardShortcuts','cardSleeves','gameOptions']}></VerticalTabs>
             </Box>
         </Box>
     );
