@@ -18,7 +18,7 @@ const CardActionTray: React.FC = () => {
              playerState.promptState.selectCards == true ) {
             return true;
         }
-        return true;
+        return false;
     }
 
     return (
