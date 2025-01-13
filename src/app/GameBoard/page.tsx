@@ -11,8 +11,6 @@ import ResourcesOverlay from '../_components/Gameboard/_subcomponents/Overlays/R
 import BasicPrompt from '../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt';
 import { useGame } from '../_contexts/Game.context';
 import { useSidebar } from '../_contexts/Sidebar.context';
-import { transform } from 'next/dist/build/swc';
-import { text } from 'stream/consumers';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import Preferences from '@/app/_components/_sharedcomponents/Preferences/Preferences';
 
