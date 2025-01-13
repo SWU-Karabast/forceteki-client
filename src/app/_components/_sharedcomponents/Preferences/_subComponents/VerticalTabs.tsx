@@ -63,6 +63,7 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
         },
         tab:{
             color:'white',
+            alignItems: 'start',
             '&.Mui-selected': {
                 backgroundColor: 'rgba(47, 125, 182, 0.5)',
                 borderRadius:'5px',
