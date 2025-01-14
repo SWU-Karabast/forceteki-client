@@ -111,8 +111,8 @@ const Deck: React.FC = () => {
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     // set decks for connectedUser
-    const newDeck = connectedUser ? connectedUser.deck.deckCards || [] : [];
-    const sideBoard = connectedUser ? connectedUser.deck.sideboard || [] : [];
+    const newDeck = connectedUser ? connectedUser.deck ? connectedUser.deck.deckCards || [] : [] : [];
+    const sideBoard = connectedUser ? connectedUser.deck ? connectedUser.deck.sideboard || [] : [] : [];
 
     // Calculate the total counts
     const deckCount = newDeck.reduce(
@@ -147,7 +147,7 @@ const Deck: React.FC = () => {
                     <Box sx={mainContainerStyle}>
                         {newDeck.map((card:IServerCardData) => (
                             <GameCard
-                                key={card.card.uuid}
+                                key={card.card.id}
                                 card={card}
                                 variant={'lobby'}
                                 onClick={() => sendLobbyMessage(['updateDeck','Deck', card.card.id])}

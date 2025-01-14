@@ -12,6 +12,15 @@ const CardActionTray: React.FC = () => {
     const { sendGameMessage, gameState, connectedPlayer } = useGame();
     const playerState = gameState.players[connectedPlayer];
 
+    const showTrayButtons = () => {
+        if ( playerState.promptState.promptType == 'actionWindow' ||
+             playerState.promptState.promptType == 'resource' ||
+             playerState.promptState.selectCards == true ) {
+            return true;
+        }
+        return false;
+    }
+
     return (
         <>
             <Grid
@@ -21,8 +30,8 @@ const CardActionTray: React.FC = () => {
                 spacing={2}
                 sx={actionContainerStyle}
             >
-                <Box>
-                    {playerState.promptState.buttons.map((button: IButtonsProps) => (
+                <Box sx={{ display: 'flex', gap: '10px' }}>
+                    {showTrayButtons() && playerState.promptState.buttons.map((button: IButtonsProps) => (
                         <PromptButton
                             key={button.arg}
                             button={button}

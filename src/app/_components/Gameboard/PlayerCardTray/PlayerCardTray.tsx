@@ -8,6 +8,7 @@ import CardActionTray from '../_subcomponents/PlayerTray/CardActionTray';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import { IPlayerCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { display } from '@mui/system';
 
 const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
     trayPlayer,
@@ -17,43 +18,48 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
     const { gameState, connectedPlayer } = useGame();
 
     // ---------------Styles------------------- //
-    const leftColumnStyle = {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        padding: '1em',
-    };
 
-    const centerColumnStyle = {
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-    };
+    const styles = {
+        leftColumnStyle: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            padding: '1em',
+            gap: '10px',
+        },
+        centerColumnStyle: {
+            height: '100%',
+        },
+        rightColumnStyle: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            padding: '1em',
+        },
+        playerHandWrapper: {
+            width: '100%',
+            height: '100%',
+            display : 'flex',
+            alignItems : 'center',
 
-    const rightColumnStyle = {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        padding: '1em',
-    };
+        },
+    }
 
     return (
         <Grid container sx={{ height: '20.82%' }}>
-            <Grid size={3} sx={leftColumnStyle}>
+            <Grid size={3} sx={styles.leftColumnStyle}>
                 <DeckDiscard trayPlayer={trayPlayer} />
-                <Box ml={1}>
-                    <Resources
-                        trayPlayer={trayPlayer}
-                        handleModalToggle={handleModalToggle}
-                    />
+                <Resources
+                    trayPlayer={trayPlayer}
+                    handleModalToggle={handleModalToggle}
+                />
+            </Grid>
+            <Grid size={6} sx={styles.centerColumnStyle}>
+                <Box sx={styles.playerHandWrapper}>
+                    <PlayerHand cards={gameState?.players[connectedPlayer].cardPiles['hand'] || []} />
                 </Box>
             </Grid>
-            <Grid size={6} sx={centerColumnStyle}>
-                <PlayerHand cards={gameState?.players[connectedPlayer].cardPiles['hand'] || []} />
-            </Grid>
-            <Grid size={3} sx={rightColumnStyle}>
+            <Grid size={3} sx={styles.rightColumnStyle}>
                 <CardActionTray />
                 <Box ml={2}>
                     <ChatBubbleOutline />

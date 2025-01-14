@@ -13,13 +13,13 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
 
     // set connectedPlayer
-    const playerLeader = connectedUser ? connectedUser.deck.leader[0].card : null;
-    const playerBase = connectedUser ? connectedUser.deck.base[0].card : null;
+    const playerLeader = connectedUser ? connectedUser.deck ? connectedUser.deck.leader[0].card : null : null;
+    const playerBase = connectedUser ? connectedUser.deck ? connectedUser.deck.base[0].card : null : null;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
-    const opponentLeader = opponentUser ? opponentUser.deck.leader[0].card : null;
-    const opponentBase = opponentUser ? opponentUser.deck.base[0].card : null;
+    const opponentLeader = opponentUser ? opponentUser.deck ? opponentUser.deck.leader[0].card : null : null;
+    const opponentBase = opponentUser ? opponentUser.deck ? opponentUser.deck.base[0].card : null : null;
     const cardStyle = {
         borderRadius: '1.1em',
         borderColor: '#FFFFFF00',
@@ -113,8 +113,9 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 isLobbyView={true}
                                 title={connectedUser ? connectedUser.username : connectedPlayer}
                                 card={playerLeader}
+                                disabled={true}
                             />
-                            <LeaderBaseCard variant="base" isLobbyView={true} card={playerBase}></LeaderBaseCard>
+                            <LeaderBaseCard variant="base" isLobbyView={true} card={playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                     <Grid sx={rowStyle}>
@@ -133,8 +134,9 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 isLobbyView={isLobbyView}
                                 title={titleOpponent}
                                 card={opponentLeader}
+                                disabled={true}
                             />
-                            <LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={opponentBase}></LeaderBaseCard>
+                            <LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                 </Grid>

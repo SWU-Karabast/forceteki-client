@@ -67,16 +67,32 @@ type IIdToInternalNameMapping = {
     subtitle: string
 }
 
+type ISetCode = {
+    setId: {
+        set: string;
+        number: number;
+    }
+    type: string;
+    types?: string[];
+    id: string;
+}
+
 export const s3ImageURL = (path: string) => {
     const s3Bucket = 'https://karabast-assets.s3.amazonaws.com/';
     return s3Bucket + path;
 };
 
-export const s3CardImageURL = (card: ICardData) => {
-    if (!card) return 'game/epic-action-token.webp';
-    const cardNumber = card.setId.number.toString().padStart(3, '0') + (card.type === 'leaderUnit' ? '-portrait' : '');
+export const s3CardImageURL = (card: ICardData | ISetCode) => {
+    if (!card) return s3ImageURL('game/swu-logo.webp');
+    const type = card.type || card.types;
+    if (type?.includes('token')) {
+        return s3ImageURL(`cards/_tokens/${card.id}.webp`);
+    }
+    const cardNumber = card.setId.number.toString().padStart(3, '0') + (type === 'leaderUnit' ? '-portrait' : '');
     return s3ImageURL(`cards/${card.setId.set}/${cardNumber}.webp`);
 };
+
+
 
 export const s3TokenImageURL = (token_name: string) =>{
     return s3ImageURL(`game/${token_name}.webp`);
