@@ -21,7 +21,7 @@ interface IGameContextType {
     getOpponent: (player: string) => string;
     connectedPlayer: string;
     sendLobbyMessage: (args: any[]) => void;
-    sendManualDisconnectMessage: () => void;
+    resetStates: () => void;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -34,6 +34,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const { openPopup } = usePopup();
     const { user } = useUser();
     const searchParams = useSearchParams();
+    const [socketKey, setSocketKey] = useState(0);
 
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
@@ -43,7 +44,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const username = localStorage.getItem('unknownUsername') || 'Player2';
         const connectedPlayerId = user?.id || storedUnknownUserId || '';
         setConnectedPlayer(connectedPlayerId);
-
         const newSocket = io('http://localhost:9500', {
             query: {
                 user: JSON.stringify(user ? user : { username:username, id:storedUnknownUserId }),
@@ -99,17 +99,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user]);
+    }, [user,socketKey]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         console.log('sending message', message, args);
         socket?.emit(message, ...args);
     };
-
-    const sendManualDisconnectMessage = () =>{
-        console.log('sending manual disconnect message');
-        socket?.emit('manualDisconnect')
-    }
 
     const sendGameMessage = (args: any[]) => {
         console.log('sending game message', args);
@@ -126,7 +121,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const playerNames = Object.keys(gameState.players);
         return playerNames.find((name) => name !== player) || '';
     };
-
+    const resetStates = () => {
+        if (socket) {
+            socket.disconnect();
+            setSocket(undefined);
+        }
+        setLobbyState(null);
+        setGameState(null);
+        setSocketKey((prev) => prev + 1)
+    }
     return (
         <GameContext.Provider
             value={{
@@ -137,7 +140,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 connectedPlayer,
                 getOpponent,
                 sendLobbyMessage,
-                sendManualDisconnectMessage
+                resetStates
             }}
         >
             {children}

@@ -15,7 +15,7 @@ import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 const SetUp: React.FC = ({
 }) => {
     const router = useRouter();
-    const { lobbyState, sendLobbyMessage, connectedPlayer } = useGame();
+    const { lobbyState, sendLobbyMessage, connectedPlayer, sendMessage } = useGame();
 
     // find the user
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
@@ -77,6 +77,7 @@ const SetUp: React.FC = ({
         height: '100%',
     };
     const handleExit = () => {
+        sendMessage('manualDisconnect');
         router.push('/');
     }
 

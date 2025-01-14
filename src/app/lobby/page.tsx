@@ -11,11 +11,14 @@ import { useGame } from '@/app/_contexts/Game.context';
 const Lobby = () => {
     const pathname = usePathname();
     const isLobbyView = pathname === '/lobby';
-    const { gameState } = useGame();
+    const { lobbyState } = useGame();
     const router = useRouter();
 
-    if(gameState){
+    if(lobbyState && lobbyState.gameOngoing){
         router.push('/GameBoard');
+    }
+    if(!lobbyState){
+        return null;
     }
     // ------------------------STYLES------------------------//
 

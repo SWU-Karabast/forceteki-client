@@ -1,6 +1,7 @@
 export type IButtonType = {
     variant: 'concede' | 'standard',
-    text: string
+    text: string,
+    buttonFnc?: () => void
 }
 
 export type ISleeve = {

@@ -10,6 +10,7 @@ import KeyboardShortcutsTab
 import CardSleevesTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CardSleevesTab';
 import GameOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 
 function tabProps(index: number) {
     return {
@@ -36,6 +37,8 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
                 return <CardSleevesTab/>;
             case 'gameOptions':
                 return <GameOptionsTab/>;
+            case 'endGame':
+                return <EndGameTab/>;
             default:
                 return <Typography>Not Implemented</Typography>;
         }
@@ -50,6 +53,8 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
                 return 'CARD SLEEVES';
             case 'gameOptions':
                 return 'GAME OPTIONS';
+            case 'endGame':
+                return 'CURRENT GAME';
             default:
                 return null;
         }

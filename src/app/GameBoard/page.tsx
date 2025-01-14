@@ -13,9 +13,11 @@ import { useGame } from '../_contexts/Game.context';
 import { useSidebar } from '../_contexts/Sidebar.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import Preferences from '@/app/_components/_sharedcomponents/Preferences/Preferences';
+import { useRouter } from 'next/navigation';
 
 const GameBoard = () => {
-    const { getOpponent, connectedPlayer, gameState } = useGame();
+    const { getOpponent, connectedPlayer, gameState, lobbyState } = useGame();
+    const router = useRouter();
     const { sidebarOpen, toggleSidebar } = useSidebar();
     const [chatMessage, setChatMessage] = useState('');
     const [chatHistory, setChatHistory] = useState<string[]>([]);
@@ -40,7 +42,10 @@ const GameBoard = () => {
         if (drawerRef.current) {
             setDrawerWidth(drawerRef.current.offsetWidth);
         }
-    }, [sidebarOpen]);
+        if(lobbyState && !lobbyState.gameOngoing) {
+            router.push('/lobby');
+        }
+    }, [sidebarOpen, gameState, lobbyState, router]);
 
     const handleModalToggle = () => {
         setIsModalOpen(!isModalOpen);
@@ -54,12 +59,12 @@ const GameBoard = () => {
     }
 
     // check if game ended already.
-    const winners = gameState?.winner
+    /* const winners = gameState?.winner
         ? Array.isArray(gameState.winner)
             ? gameState.winner
             : [gameState.winner] // Wrap single winner in array
-        : undefined;
-
+        : undefined;*/
+    const winners = ['order66']
     // we set tabs
     const preferenceTabs = winners
         ? ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
