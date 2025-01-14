@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, Box, Typography, Button } from '@mui/material';
+import { Card, Box, Typography } from '@mui/material';
 import GameCard from '../../../_sharedcomponents/Cards/GameCard/GameCard';
 import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -20,12 +20,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         alignItems: 'center',
     };
 
-    const cardPileStyle = {
-        backgroundColor: '#282828E6',
-        width: '7vh',
-        height: '9.5vh',
-    };
-
+    // ------------------------DISCARD------------------------//
     const selectableStyle = {
         '&:hover': {
             backgroundColor: '#282828',
@@ -35,38 +30,79 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         },
     }
 
-    const cardContentStyle = {
-        height: '100%',
+    const discardCardStyle = {
+        backgroundColor: '#282828E6',
+        width: '7vh',
+        height: '9.5vh',
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        textAlign: 'center',
+        alignItems:'center',
+        justifyContent:'center',
+        ...selectableStyle
     };
-
-    const discardTextStyle = {
+    
+    const discardContentStyle = {
         fontFamily: 'var(--font-barlow), sans-serif',
         fontWeight: '800',
         fontSize: '1.2em',
         color: 'white',
+        textAlign:'center',
+    };
+
+
+    // ------------------------DECK------------------------//
+    const textShadowBoxStyle = {
+        backgroundColor: 'rgba(0, 0, 0, .75)',
+        borderRadius: '100px',
+        width: '50px',
+        height: '50px',
+    };
+
+    const deckCardStyle = {
+        backgroundColor: 'black',
+        backgroundPosition: 'center',
+        backgroundSize:'contain',
+        backgroundImage: 'url(\'/card-back.png\')',
+        backgroundRepeat: 'no-repeat',
+
+        display: 'flex',
+        alignItems:'center',
+        justifyContent:'center',
+
+        width: '7vh',
+        height: '9.5vh',
+    };
+    
+    const deckContentStyle = {
+        fontFamily: 'var(--font-barlow), sans-serif',
+        fontWeight: '800',
+        fontSize: '2em',
+        color: 'white',
+        textAlign:'center',
+        lineHeight: '50px',
+        ...textShadowBoxStyle
     };
 
     return (
         <Box sx={containerStyle}>
-            <Card sx={[cardPileStyle, selectableStyle]} onClick={() =>
-                togglePopup('pile', {
-                    uuid: `${trayPlayer.trayPlayer}-discard`,
-                    title: `${trayPlayer.trayPlayer}'s discard`,
-                    cards:
+            <Card
+                sx={discardCardStyle}
+                onClick={() =>
+                    togglePopup('pile', {
+                        uuid: `${trayPlayer.trayPlayer}-discard`,
+                        title: `${trayPlayer.trayPlayer}'s discard`,
+                        cards:
                         gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
-                })}>
-                <CardContent sx={cardContentStyle}>
-                    <Typography sx={discardTextStyle}>Discard</Typography>
-                </CardContent>
+                    })
+                }
+            >
+                {
+                    gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].length > 0 ?
+                        <GameCard card={gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'][0]} /> : <Typography sx={discardContentStyle}>Discard</Typography>
+                }
             </Card>
-            <Card sx={cardPileStyle}>
-                <CardContent sx={cardContentStyle}>
-                    <Typography sx={discardTextStyle}>Deck</Typography>
-                </CardContent>
+            <Card sx={deckCardStyle}>
+                <Typography sx={deckContentStyle}>{gameState?.players[trayPlayer.trayPlayer]?.cardPiles['deck'].length}</Typography>
+
             </Card>
         </Box>
     );
