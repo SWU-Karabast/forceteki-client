@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import { Grid2 as Grid, Typography } from '@mui/material';
 import { usePathname, useRouter } from 'next/navigation';
 import Players from '../_components/Lobby/Players/Players';

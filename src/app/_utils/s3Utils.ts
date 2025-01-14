@@ -73,6 +73,7 @@ type ISetCode = {
         number: number;
     }
     type: string;
+    types?: string[];
     id: string;
 }
 
@@ -82,11 +83,12 @@ export const s3ImageURL = (path: string) => {
 };
 
 export const s3CardImageURL = (card: ICardData | ISetCode) => {
-    if (!card) return 'game/epic-action-token.webp';
-    if (card.type.includes('token')) {
+    if (!card) return s3ImageURL('game/swu-logo.webp');
+    const type = card.type || card.types;
+    if (type?.includes('token')) {
         return s3ImageURL(`cards/_tokens/${card.id}.webp`);
     }
-    const cardNumber = card.setId.number.toString().padStart(3, '0') + (card.type === 'leaderUnit' ? '-portrait' : '');
+    const cardNumber = card.setId.number.toString().padStart(3, '0') + (type === 'leaderUnit' ? '-portrait' : '');
     return s3ImageURL(`cards/${card.setId.set}/${cardNumber}.webp`);
 };
 

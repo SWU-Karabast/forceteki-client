@@ -30,6 +30,7 @@ export interface IPlayerCardTrayProps {
 
 export interface IOpponentCardTrayProps {
     trayPlayer: string;
+    preferenceToggle: () => void;
 }
 
 export interface IBoardProps {

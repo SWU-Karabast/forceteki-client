@@ -32,6 +32,7 @@ const Resources: React.FC<IResourcesProps> = ({
 
     const imageStyle = {
         width: '1.6em',
+        height: 'auto',
         marginRight: '10px',
     }
 
@@ -68,7 +69,6 @@ const Resources: React.FC<IResourcesProps> = ({
                         src={s3TokenImageURL('resource-icon')}
                         alt="Resource Icon"
                         style={imageStyle}
-                        layout="intrinsic"
                         height={72}
                         width={54}
                     />

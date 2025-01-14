@@ -9,10 +9,11 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 
-const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
-    const { gameState, connectedPlayer, getOpponent } = useGame();
+const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
+    const { gameState, connectedPlayer, getOpponent, sendManualDisconnectMessage } = useGame();
     const router = useRouter();
     const handleExitButton = () =>{
+        sendManualDisconnectMessage();
         router.push('/');
     }
 
@@ -49,15 +50,13 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
             height: '100%',
             aspectRatio: '359 / 500',
             backgroundSize: 'cover',
-            backgroundImage: gameState.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.lastPlayedCard, type: '', id: '' })})` : 'none',
+            backgroundImage: gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none',
         },
         menuStyles: {
             display: 'flex',
             flexDirection: 'column',
         }
     };
-
-
 
     return (
         <Grid container sx={{ height: '15%' }}>
@@ -76,7 +75,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
                 </Box>
                 <Box sx={styles.menuStyles}>
                     <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
-                    <SettingsOutlined />
+                    <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
                 </Box>
 
             </Grid>

@@ -11,9 +11,8 @@ import ResourcesOverlay from '../_components/Gameboard/_subcomponents/Overlays/R
 import BasicPrompt from '../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt';
 import { useGame } from '../_contexts/Game.context';
 import { useSidebar } from '../_contexts/Sidebar.context';
-import { transform } from 'next/dist/build/swc';
-import { text } from 'stream/consumers';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
+import Preferences from '@/app/_components/_sharedcomponents/Preferences/Preferences';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState } = useGame();
@@ -27,6 +26,7 @@ const GameBoard = () => {
     // State for resource selection
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isBasicPromptOpen, setBasicPromptOpen] = useState(false);
+    const [isPreferenceOpen, setPreferenceOpen] = useState(false);
 
     const handleChatSubmit = () => {
         if (chatMessage.trim()) {
@@ -49,6 +49,9 @@ const GameBoard = () => {
     const handleBasicPromptToggle = () => {
         setBasicPromptOpen(!isBasicPromptOpen);
     };
+    const handlePreferenceToggle = () => {
+        setPreferenceOpen(!isPreferenceOpen);
+    }
 
     // ----------------------Styles-----------------------------//
 
@@ -88,7 +91,10 @@ const GameBoard = () => {
     return (
         <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>
             <Box component="main" sx={styles.mainBoxStyle}>
-                <OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
+                <OpponentCardTray
+                    trayPlayer={getOpponent(connectedPlayer)}
+                    preferenceToggle={handlePreferenceToggle}
+                />
                 <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
@@ -123,6 +129,7 @@ const GameBoard = () => {
                 handleBasicPromptToggle={handleBasicPromptToggle}
             />
             <PopupShell/>
+            <Preferences isPreferenceOpen={isPreferenceOpen} preferenceToggle={handlePreferenceToggle}/>
         </Grid>
     );
 };
