@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Grid2 as Grid, Typography } from '@mui/material';
 import { usePathname, useRouter } from 'next/navigation';
 import Players from '../_components/Lobby/Players/Players';
@@ -14,9 +14,12 @@ const Lobby = () => {
     const { gameState } = useGame();
     const router = useRouter();
 
-    if(gameState){
-        router.push('/GameBoard');
-    }
+    useEffect(() => {
+        if (gameState) {
+            router.push('/GameBoard');
+        }
+    }, [gameState, router]);
+
     // ------------------------STYLES------------------------//
 
     const containerStyle = {

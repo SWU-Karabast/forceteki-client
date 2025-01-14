@@ -4,8 +4,6 @@ import GameCard from '../../_sharedcomponents/Cards/GameCard/GameCard';
 import { ICardData } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { headers } from 'next/headers';
-import { Height, Padding } from '@mui/icons-material';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     sidebarOpen,
