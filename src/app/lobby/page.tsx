@@ -22,8 +22,6 @@ const Lobby = () => {
 
     // ------------------------STYLES------------------------//
 
-    
-
     const styles = {
         containerStyle: {
             height: '100vh',

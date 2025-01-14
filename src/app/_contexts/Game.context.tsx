@@ -52,6 +52,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         const handleGameStatePopups = (gameState: any) => {
+            console.log('handling game state popups');
             if (!user || user.id == null) return; // TODO currently this doesn't support private lobbies where players aren't logged in.
             if (gameState.players?.[user.id].promptState) {
                 const promptState = gameState.players?.[user.id].promptState;
@@ -99,7 +100,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user]);
+    }, [user, openPopup, searchParams]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         console.log('sending message', message, args);
