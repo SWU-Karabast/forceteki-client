@@ -53,6 +53,19 @@ const GameBoard = () => {
         setPreferenceOpen(!isPreferenceOpen);
     }
 
+    // check if game ended already.
+    const winners = gameState?.winner
+        ? Array.isArray(gameState.winner)
+            ? gameState.winner
+            : [gameState.winner] // Wrap single winner in array
+        : undefined;
+
+    // we set tabs
+    const preferenceTabs = winners
+        ? ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
+        :['currentGame','keyboardShortcuts','cardSleeves','gameOptions']
+
+
     // ----------------------Styles-----------------------------//
 
     const styles = {
@@ -129,7 +142,13 @@ const GameBoard = () => {
                 handleBasicPromptToggle={handleBasicPromptToggle}
             />
             <PopupShell/>
-            <Preferences isPreferenceOpen={isPreferenceOpen} preferenceToggle={handlePreferenceToggle}/>
+            <Preferences
+                isPreferenceOpen={isPreferenceOpen}
+                preferenceToggle={handlePreferenceToggle}
+                tabs={preferenceTabs}
+                title={winners ? 'Game ended' : 'PREFERENCES'}
+                subtitle={winners ? winners.length > 1 ? 'Game ended in a draw' : `Winner is ${winners[0]}` : undefined}
+            />
         </Grid>
     );
 };

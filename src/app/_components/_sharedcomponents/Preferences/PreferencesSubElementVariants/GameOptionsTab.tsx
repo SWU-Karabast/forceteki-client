@@ -23,7 +23,7 @@ function GameOptionsTab() {
                 <PreferenceOption option={'Accesibility Mode'} optionDescription={'Changes the UI with larger texts, more contrast elements.'}/>
                 <PreferenceOption option={'Mute'} optionDescription={'Remove all in-game sounds.'}/>
             </Box>
-            <Box sx={styles.functionContainer}>
+            <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Options</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <PreferenceOption option={'Disable Chat'} optionDescription={'Text messages with opponent are not allowed.'}/>

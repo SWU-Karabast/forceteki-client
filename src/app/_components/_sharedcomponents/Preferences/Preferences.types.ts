@@ -15,10 +15,13 @@ export type IPreferenceOptions = {
 }
 
 export interface IVerticalTabsProps {
-    tabs: string[];
+    tabs: string[]
 }
 
 export interface IPreferenceProps {
     isPreferenceOpen: boolean,
+    tabs: string[],
     preferenceToggle: () => void,
+    title?: string,
+    subtitle?: string,
 }

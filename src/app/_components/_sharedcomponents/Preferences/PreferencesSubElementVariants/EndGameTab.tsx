@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 
-function CurrentGameTab() {
+function EndGameTab() {
     const styles = {
         typographyContainer: {
             mb: '0.5rem',
@@ -29,41 +29,32 @@ function CurrentGameTab() {
     return (
         <>
             <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Concede</Typography>
+                <Typography sx={styles.typographyContainer} variant={'h3'}>Current Game</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <Box sx={styles.contentContainer}>
-                    <PreferenceButton variant={'concede'} text={'Concede Game'} />
+                    <PreferenceButton variant={'concede'} text={'Return Home'} />
                     <Typography sx={styles.typeographyStyle}>
-                        Yield  current game and abandon. This match will count as a loss.
+                        Return to main page.
+                    </Typography>
+                </Box>
+                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                    <PreferenceButton variant={'standard'} text={'Reset Game/Quick Rematch'} />
+                    <Typography sx={styles.typeographyStyle}>
+                        Restart the current game with no deck changes
+                    </Typography>
+                </Box>
+                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                    <PreferenceButton variant={'standard'} text={'Regular Rematch'} />
+                    <Typography sx={styles.typeographyStyle}>
+                        Return to lobby to start new game with options for changing decks/sideboarding
                     </Typography>
                 </Box>
             </Box>
             <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Undo</Typography>
+                <Typography sx={styles.typographyContainer} variant={'h3'}>Statistics</Typography>
                 <Divider sx={{ mb: '20px' }}/>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                    <PreferenceButton variant={'standard'} text={'Simple Undo'} />
-                    <Typography sx={styles.typeographyStyle}>
-                        Revert to your previous game state.
-                    </Typography>
-                </Box>
-                <Box sx={styles.contentContainer}>
-                    <PreferenceButton variant={'standard'} text={'This Turn'} />
-                    <Typography sx={styles.typeographyStyle}>
-                        Revert to the start of the previous turn.
-                    </Typography>
-                </Box>
-            </Box>
-            <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Report Bug</Typography>
-                <Divider sx={{ mb: '20px' }}/>
-                <Typography sx={styles.typeographyStyle}>
-                    Thank you for reporting a bug.
-                    <br/>
-                    To describe what happened, please report it on the discord server with the game number for reference (3148735-0)
-                </Typography>
             </Box>
         </>
     );
 }
-export default CurrentGameTab;
+export default EndGameTab;

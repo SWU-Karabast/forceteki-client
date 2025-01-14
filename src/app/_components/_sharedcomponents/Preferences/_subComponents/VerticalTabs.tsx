@@ -75,6 +75,19 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
             width: '80%',
             pl:9,
             gap: '20px',
+            maxHeight: 'calc(80vh - 1rem)',
+            overflowY: 'auto',
+            '::-webkit-scrollbar': {
+                width: '0.2vw',
+            },
+            '::-webkit-scrollbar-thumb': {
+                backgroundColor: '#D3D3D3B3',
+                borderRadius: '1vw',
+            },
+            '::-webkit-scrollbar-button': {
+                display: 'none',
+            },
+            transition: 'scrollbar-color 0.3s ease-in-out',
         }
     }
 
@@ -109,6 +122,7 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
                         hidden={value !== idx}
                         id={`vertical-tabpanel-${idx}`}
                         aria-labelledby={`vertical-tab-${idx}`}
+                        sx={{ overflow:'hidden' }}
                     >
                         {value === idx && renderPreferencesContent(tabName)}
                     </Box>

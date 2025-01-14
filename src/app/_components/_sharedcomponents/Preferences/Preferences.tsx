@@ -6,7 +6,10 @@ import { IPreferenceProps } from '@/app/_components/_sharedcomponents/Preference
 
 const Preferences: React.FC<IPreferenceProps> = ({
     isPreferenceOpen,
-    preferenceToggle
+    preferenceToggle,
+    tabs = [],
+    title = 'PREFERENCES',
+    subtitle = undefined,
 }) => {
     // ------------------------STYLES------------------------//
     const styles = {
@@ -32,8 +35,9 @@ const Preferences: React.FC<IPreferenceProps> = ({
             height: '3rem',
             width: '100%',
             display: 'flex',
-            flexDirection: 'row',
+            flexDirection: 'column',
             justifyContent: 'center',
+            alignItems: 'center',
         },
         closeButton:{
             position: 'absolute',
@@ -48,11 +52,12 @@ const Preferences: React.FC<IPreferenceProps> = ({
     return (
         <Box sx={styles.overlayStyle}>
             <Box sx={styles.headerBox}>
-                <Typography variant={'h1'}>Preferences</Typography>
+                <Typography variant={'h1'}>{title}</Typography>
+                <Typography variant={'h2'}>{subtitle}</Typography>
             </Box>
             <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
             <Box sx={styles.tabContainer}>
-                <VerticalTabs tabs={['currentGame','keyboardShortcuts','cardSleeves','gameOptions']}></VerticalTabs>
+                <VerticalTabs tabs={tabs}/>
             </Box>
         </Box>
     );
