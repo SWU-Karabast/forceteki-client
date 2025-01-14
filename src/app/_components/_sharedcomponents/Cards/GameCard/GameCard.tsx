@@ -275,12 +275,10 @@ const GameCard: React.FC<IGameCardProps> = ({
                             <>
                                 <Grid direction="row" container sx={styles.shieldContainerStyle}>
                                     {shieldCards.map((_, index) => (
-                                        <>
-                                            <Box
-                                                key={`${cardData.uuid}-shield-${index}`}
-                                                sx={styles.shieldIconLayer}
-                                            />
-                                        </>
+                                        <Box
+                                            key={`${cardData.uuid}-shield-${index}`}
+                                            sx={styles.shieldIconLayer}
+                                        />
                                     ))}
                                 </Grid>
                                 {cardData.sentinel && (
@@ -332,7 +330,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     }}
                     // onClick={() => upgradeClickFunction(subcard)}
                 >
-                    <Typography sx={styles.upgradeNameStyle}>{subcard.name}</Typography>
+                    <Typography key={subcard.uuid} sx={styles.upgradeNameStyle}>{subcard.name}</Typography>
                 </Box>
             ))}
         </>
