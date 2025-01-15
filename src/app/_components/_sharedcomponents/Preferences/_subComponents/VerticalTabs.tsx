@@ -13,7 +13,6 @@ import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferen
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
 import { useUser } from '@/app/_contexts/User.context';
-import { useRouter } from 'next/navigation';
 
 function tabProps(index: number) {
     return {
@@ -28,7 +27,6 @@ function VerticalTabs({
     variant = 'gameBoard'
 }:IVerticalTabsProps) {
     const [value, setValue] = React.useState(0);
-    const router = useRouter();
     const { logout } = useUser();
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -79,6 +77,7 @@ function VerticalTabs({
         tabContainer: {
             width: '20%',
             backgroundColor: 'transparent',
+            gap:'1rem',
         },
         tab:{
             color:'white',
@@ -86,6 +85,7 @@ function VerticalTabs({
             textTransform: 'none',
             fontSize: '1.2rem',
             height:'4rem',
+            mb:'10px',
             '&.Mui-selected': {
                 backgroundColor: 'rgba(47, 125, 182, 0.5)',
                 borderRadius:'5px',

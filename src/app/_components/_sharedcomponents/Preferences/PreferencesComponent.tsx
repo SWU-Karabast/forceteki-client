@@ -14,6 +14,14 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
 }) => {
     // ------------------------STYLES------------------------//
     const styles = {
+        containerStyle:{
+            display: isPreferenceOpen && variant ==='gameBoard' ? 'block' : 'none',
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 9,
+        },
         overlayStyle:{
             display: isPreferenceOpen ? 'block' : 'none',
             padding: '30px',
@@ -58,20 +66,24 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
         }
     }
     return (
-        <Box sx={styles.overlayStyle}>
-            {title && (
-                <Box sx={styles.headerBox}>
-                    <Typography variant="h1">{title}</Typography>
-                    <Typography variant="h2">{subtitle}</Typography>
-                </Box>
-            )}
-            {variant === 'gameBoard' && (
-                <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
-            )}
-            <Box sx={styles.tabContainer}>
-                <VerticalTabs tabs={tabs} variant={variant}/>
+        <>
+            <Box sx={styles.containerStyle}>
             </Box>
-        </Box>
+            <Box sx={styles.overlayStyle}>
+                {title && (
+                    <Box sx={styles.headerBox}>
+                        <Typography variant="h1">{title}</Typography>
+                        <Typography variant="h2">{subtitle}</Typography>
+                    </Box>
+                )}
+                {variant === 'gameBoard' && (
+                    <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
+                )}
+                <Box sx={styles.tabContainer}>
+                    <VerticalTabs tabs={tabs} variant={variant}/>
+                </Box>
+            </Box>
+        </>
     );
 };
 
