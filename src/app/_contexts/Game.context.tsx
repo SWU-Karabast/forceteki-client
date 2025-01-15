@@ -7,6 +7,7 @@ import React, {
     useState,
     ReactNode,
     useEffect,
+    useRef,
 } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
@@ -28,10 +29,11 @@ const GameContext = createContext<IGameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
+    const lastGameIdRef = useRef<string | null>(null);
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
-    const { openPopup } = usePopup();
+    const { openPopup, clearPopups } = usePopup();
     const { user } = useUser();
     const searchParams = useSearchParams();
     const [socketKey, setSocketKey] = useState(0);
@@ -44,6 +46,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const username = localStorage.getItem('unknownUsername') || 'Player2';
         const connectedPlayerId = user?.id || storedUnknownUserId || '';
         setConnectedPlayer(connectedPlayerId);
+        clearPopups();
+
+
+
         const newSocket = io('http://localhost:9500', {
             query: {
                 user: JSON.stringify(user ? user : { username:username, id:storedUnknownUserId }),
@@ -78,10 +84,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
         };
 
-        newSocket.on('connect', () => {
-            console.log(`Connected to server as ${user ? user.username : ''}`);
-        });
+        // newSocket.on('connect', () => {
+        //     console.log(`Connected to server as ${user ? user.username : ''}`);
+        // });
         newSocket.on('gamestate', (gameState: any) => {
+            if (gameState?.id && gameState.id !== lastGameIdRef.current) {
+                clearPopups();
+                lastGameIdRef.current = gameState.id;
+            }
             setGameState(gameState);
             console.log('Game state received:', gameState);
             handleGameStatePopups(gameState);
@@ -100,7 +110,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user,socketKey]);
+    }, [user, openPopup, clearPopups, searchParams,socketKey]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         console.log('sending message', message, args);
