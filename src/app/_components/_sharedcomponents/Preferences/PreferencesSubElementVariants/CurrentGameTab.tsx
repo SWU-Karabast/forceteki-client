@@ -3,8 +3,12 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { useGame } from '@/app/_contexts/Game.context';
 
 function CurrentGameTab() {
+    const { sendGameMessage, connectedPlayer, gameState } = useGame();
+
+    const currentPlayerName = gameState.players[connectedPlayer].name
     const styles = {
         typographyContainer: {
             mb: '0.5rem',
@@ -32,7 +36,7 @@ function CurrentGameTab() {
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Concede</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <Box sx={styles.contentContainer}>
-                    <PreferenceButton variant={'concede'} text={'Concede Game'} />
+                    <PreferenceButton variant={'concede'} text={'Concede Game'} buttonFnc={() => sendGameMessage(['concede',currentPlayerName])}/>
                     <Typography sx={styles.typeographyStyle}>
                         Yield  current game and abandon. This match will count as a loss.
                     </Typography>

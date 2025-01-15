@@ -1,0 +1,60 @@
+'use client';
+import { Box, Typography } from '@mui/material';
+import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
+import React from 'react';
+import { s3ImageURL } from '@/app/_utils/s3Utils';
+import { useRouter } from 'next/navigation'
+
+const Preferences: React.FC = () => {
+    const router = useRouter();
+    const handleExit = () => {
+        router.push('/');
+    }
+
+    // ----------------------Styles-----------------------------//
+    const styles = {
+        lobbyTextStyle:{
+            ml:'30px',
+            fontSize: '3.0em',
+            fontWeight: '600',
+            color: 'white',
+            alignSelf: 'flex-start',
+            mb: '0px',
+            cursor: 'pointer',
+        },
+        mainContainer:{
+            height: '100vh',
+            overflow: 'hidden',
+            backgroundImage: `url(${s3ImageURL('game/board-background-1.png')})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            display:'grid',
+        },
+        disclaimer: {
+            position: 'absolute',
+            bottom: 0,
+            width: '100%',
+            padding: '1rem',
+            textAlign: 'center',
+            fontSize: '0.90rem',
+        }
+    };
+
+    return (
+        <Box sx={styles.mainContainer}>
+            <Typography sx={styles.lobbyTextStyle} onClick={handleExit}>KARABAST</Typography>
+            <PreferencesComponent
+                isPreferenceOpen={true}
+                tabs={['keyboardShortcuts','cardSleeves','gameOptions','blockList']}
+                variant={'homePage'}
+            />
+            <Typography variant="body1" sx={styles.disclaimer}>
+                Karabast is in no way affiliated with Disney or Fantasy Flight Games.
+                Star Wars characters, cards, logos, and art are property of Disney
+                and/or Fantasy Flight Games.
+            </Typography>
+        </Box>
+    );
+};
+
+export default Preferences;

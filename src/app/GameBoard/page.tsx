@@ -12,7 +12,7 @@ import BasicPrompt from '../_components/Gameboard/_subcomponents/Overlays/Prompt
 import { useGame } from '../_contexts/Game.context';
 import { useSidebar } from '../_contexts/Sidebar.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
-import Preferences from '@/app/_components/_sharedcomponents/Preferences/Preferences';
+import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
 
 const GameBoard = () => {
@@ -59,11 +59,7 @@ const GameBoard = () => {
     }
 
     // check if game ended already.
-    const winners = gameState?.winner
-        ? Array.isArray(gameState.winner)
-            ? gameState.winner
-            : [gameState.winner] // Wrap single winner in array
-        : undefined;
+    const winners = gameState?.winner ? gameState.winner : undefined;
     // const winners = ['order66']
     // we set tabs
     const preferenceTabs = winners
@@ -147,7 +143,7 @@ const GameBoard = () => {
                 handleBasicPromptToggle={handleBasicPromptToggle}
             />
             <PopupShell/>
-            <Preferences
+            <PreferencesComponent
                 isPreferenceOpen={winners ? true : isPreferenceOpen}
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}

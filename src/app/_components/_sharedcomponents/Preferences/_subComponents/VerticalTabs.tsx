@@ -11,6 +11,7 @@ import CardSleevesTab from '@/app/_components/_sharedcomponents/Preferences/Pref
 import GameOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
+import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
 
 function tabProps(index: number) {
     return {
@@ -20,7 +21,10 @@ function tabProps(index: number) {
 }
 
 
-function VerticalTabs({ tabs }:IVerticalTabsProps) {
+function VerticalTabs({ 
+    tabs,
+    variant = 'gameBoard'
+}:IVerticalTabsProps) {
     const [value, setValue] = React.useState(0);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -39,6 +43,8 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
                 return <GameOptionsTab/>;
             case 'endGame':
                 return <EndGameTab/>;
+            case 'blockList':
+                return <BlockListTab/>;
             default:
                 return <Typography>Not Implemented</Typography>;
         }
@@ -46,15 +52,17 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
     const renderLabels = (type: string) => {
         switch (type) {
             case 'currentGame':
-                return 'CURRENT GAME';
+                return 'Current Game';
             case 'keyboardShortcuts':
-                return 'KEYBOARD SHORTCUTS';
+                return 'Keyboard Shortcuts';
             case 'cardSleeves':
-                return 'CARD SLEEVES';
+                return 'Card Sleeves';
             case 'gameOptions':
-                return 'GAME OPTIONS';
+                return 'Game Options';
             case 'endGame':
-                return 'CURRENT GAME';
+                return 'Current Game';
+            case 'blockList':
+                return 'Block List';
             default:
                 return null;
         }
@@ -69,6 +77,9 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
         tab:{
             color:'white',
             alignItems: 'start',
+            textTransform: 'none',
+            fontSize: '1.2rem',
+            height:'4rem',
             '&.Mui-selected': {
                 backgroundColor: 'rgba(47, 125, 182, 0.5)',
                 borderRadius:'5px',
@@ -80,7 +91,7 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
             width: '80%',
             pl:9,
             gap: '20px',
-            maxHeight: 'calc(80vh - 1rem)',
+            maxHeight: variant === 'gameBoard' ? 'calc(80vh - 1rem)' : 'calc(80vh - 1.9rem)',
             overflowY: 'auto',
             '::-webkit-scrollbar': {
                 width: '0.2vw',

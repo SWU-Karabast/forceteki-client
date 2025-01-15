@@ -34,6 +34,7 @@ function PreferenceButton(buttonType: IButtonType) {
         <Button
             variant="contained"
             sx={styles.buttonStyle}
+            disabled={!buttonType.buttonFnc}
             onClick={buttonType.buttonFnc}
         >
             {buttonType.text}

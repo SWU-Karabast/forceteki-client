@@ -4,32 +4,40 @@ import { CloseOutlined } from '@mui/icons-material';
 import VerticalTabs from '@/app/_components/_sharedcomponents/Preferences/_subComponents/VerticalTabs';
 import { IPreferenceProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
-const Preferences: React.FC<IPreferenceProps> = ({
+const PreferencesComponent: React.FC<IPreferenceProps> = ({
     isPreferenceOpen,
     preferenceToggle,
     tabs = [],
-    title = 'PREFERENCES',
+    title,
+    variant = 'gameBoard',
     subtitle = undefined,
 }) => {
     // ------------------------STYLES------------------------//
     const styles = {
         overlayStyle:{
             display: isPreferenceOpen ? 'block' : 'none',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            height: '90vh',
-            width: '90vw',
+            padding: '30px',
             maxWidth: '105em',
             maxHeight: '65em',
-            position: 'absolute',
-            padding: '30px',
             zIndex: 10,
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
             border: '3px solid transparent',
             backdropFilter: 'blur(30px)',
-            borderColor: '#30434B',
-            borderRadius:'15px'
+
+            borderRadius:'15px',
+            ...(variant === 'homePage' ? {
+                width: '95vw',
+                justifySelf:'center',
+                height: '81vh',
+            } : {
+                borderColor: '#30434B',
+                height: '90vh',
+                transform: 'translate(-50%, -50%)',
+                top: '50%',
+                left: '50%',
+                position: 'absolute',
+                width: '90vw',
+            })
         },
         headerBox:{
             height: '3rem',
@@ -51,16 +59,20 @@ const Preferences: React.FC<IPreferenceProps> = ({
     }
     return (
         <Box sx={styles.overlayStyle}>
-            <Box sx={styles.headerBox}>
-                <Typography variant={'h1'}>{title}</Typography>
-                <Typography variant={'h2'}>{subtitle}</Typography>
-            </Box>
-            <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
+            {title && (
+                <Box sx={styles.headerBox}>
+                    <Typography variant="h1">{title}</Typography>
+                    <Typography variant="h2">{subtitle}</Typography>
+                </Box>
+            )}
+            {variant === 'gameBoard' && (
+                <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
+            )}
             <Box sx={styles.tabContainer}>
-                <VerticalTabs tabs={tabs}/>
+                <VerticalTabs tabs={tabs} variant={variant}/>
             </Box>
         </Box>
     );
 };
 
-export default Preferences;
+export default PreferencesComponent;

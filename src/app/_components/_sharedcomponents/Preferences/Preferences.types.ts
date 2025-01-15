@@ -17,12 +17,18 @@ export type IPreferenceOptions = {
 
 export interface IVerticalTabsProps {
     tabs: string[]
+    variant?: 'gameBoard' | 'homePage'
+}
+
+export type IBlockedUser = {
+    username: string,
 }
 
 export interface IPreferenceProps {
     isPreferenceOpen: boolean,
     tabs: string[],
-    preferenceToggle: () => void,
+    preferenceToggle?: () => void,
+    variant?: 'gameBoard' | 'homePage'
     title?: string,
     subtitle?: string,
 }
