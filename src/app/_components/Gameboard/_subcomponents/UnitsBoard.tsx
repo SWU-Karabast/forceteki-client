@@ -4,8 +4,6 @@ import GameCard from '../../_sharedcomponents/Cards/GameCard/GameCard';
 import { ICardData } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { headers } from 'next/headers';
-import { Height, Padding } from '@mui/icons-material';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     sidebarOpen,
@@ -93,7 +91,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 <Grid sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
                         <Box key={card.uuid} sx={{ flex: '0 0 auto' }}>
-                            <GameCard card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
+                            <GameCard key={card.uuid} card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
                         </Box>
                     ))}
                 </Grid>
@@ -102,7 +100,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 <Grid sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
                         <Box key={card.uuid} sx={{ flex: '0 1 auto' }}>
-                            <GameCard card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
+                            <GameCard key={card.uuid} card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
                         </Box>
                     ))}
                 </Grid>
