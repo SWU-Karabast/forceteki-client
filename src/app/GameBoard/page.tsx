@@ -45,7 +45,7 @@ const GameBoard = () => {
         if(lobbyState && !lobbyState.gameOngoing) {
             router.push('/lobby');
         }
-    }, [sidebarOpen, gameState, lobbyState, router]);
+    }, [sidebarOpen, gameState, lobbyState]);
 
     const handleModalToggle = () => {
         setIsModalOpen(!isModalOpen);
@@ -59,12 +59,12 @@ const GameBoard = () => {
     }
 
     // check if game ended already.
-    /* const winners = gameState?.winner
+    const winners = gameState?.winner
         ? Array.isArray(gameState.winner)
             ? gameState.winner
             : [gameState.winner] // Wrap single winner in array
-        : undefined;*/
-    const winners = ['order66']
+        : undefined;
+    // const winners = ['order66']
     // we set tabs
     const preferenceTabs = winners
         ? ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
@@ -148,7 +148,7 @@ const GameBoard = () => {
             />
             <PopupShell/>
             <Preferences
-                isPreferenceOpen={isPreferenceOpen}
+                isPreferenceOpen={winners ? true : isPreferenceOpen}
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}
                 title={winners ? 'Game ended' : 'PREFERENCES'}

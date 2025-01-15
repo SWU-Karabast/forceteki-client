@@ -59,6 +59,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     promptState;
                 if (promptType === 'actionWindow') return;
                 else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
+                    // make an exception for
                     return openPopup('default', {
                         uuid: promptUuid,
                         title: menuTitle,

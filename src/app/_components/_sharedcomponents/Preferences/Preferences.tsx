@@ -25,7 +25,7 @@ const Preferences: React.FC<IPreferenceProps> = ({
             position: 'absolute',
             padding: '30px',
             zIndex: 10,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
             border: '3px solid transparent',
             backdropFilter: 'blur(30px)',
             borderColor: '#30434B',

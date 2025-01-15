@@ -5,7 +5,7 @@ import EndGameOptionsQuickMatch
 import EndGameOptionsCustom from '../_subComponents/EndGameOptionsCustom';
 
 function EndGameTab() {
-    // TODO handle change based on what the match is.
+    // handle change based on what the match is.
     const { lobbyState } = useGame();
     const quickMatchType = lobbyState && lobbyState.gameType ? lobbyState.gameType === 'Quick' : false;
 
