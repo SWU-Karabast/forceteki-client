@@ -80,7 +80,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }, [user]);
 
     const logout = () => {
-        signOut();
+        signOut({ callbackUrl: '/' });
         localStorage.removeItem('devUser');
         setUser(null);
     };

@@ -12,6 +12,8 @@ import GameOptionsTab from '@/app/_components/_sharedcomponents/Preferences/Pref
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
+import { useUser } from '@/app/_contexts/User.context';
+import { useRouter } from 'next/navigation';
 
 function tabProps(index: number) {
     return {
@@ -26,6 +28,8 @@ function VerticalTabs({
     variant = 'gameBoard'
 }:IVerticalTabsProps) {
     const [value, setValue] = React.useState(0);
+    const router = useRouter();
+    const { logout } = useUser();
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -63,6 +67,8 @@ function VerticalTabs({
                 return 'Current Game';
             case 'blockList':
                 return 'Block List';
+            case 'logout':
+                return 'Log Out'
             default:
                 return null;
         }
@@ -85,6 +91,11 @@ function VerticalTabs({
                 borderRadius:'5px',
                 color:'white',
             },
+            '&:hover': {
+                backgroundColor: 'rgba(47, 125, 182, 0.5)',
+                borderRadius:'5px',
+                color:'white',
+            }
         },
         tabPanelContainer:{
             backgroundColor: 'transparent',
@@ -121,28 +132,46 @@ function VerticalTabs({
                 }}
                 sx={styles.tabContainer}
             >
-                {tabs.map((tabName, idx) => (
-                    <Tab
-                        key={tabName}
-                        sx={styles.tab}
-                        label={renderLabels(tabName)}
-                        {...tabProps(idx)}
-                    />
-                ))}
+                {tabs.map((tabName, idx) => {
+                    if (tabName === 'logout') {
+                        return (
+                            <Tab
+                                key={tabName}
+                                sx={styles.tab}
+                                label={renderLabels(tabName)}
+                                onClick={logout} // Your logout function here
+                                {...tabProps(idx)}
+                            />
+                        );
+                    }
+                    return (
+                        <Tab
+                            key={tabName}
+                            sx={styles.tab}
+                            label={renderLabels(tabName)}
+                            {...tabProps(idx)}
+                        />
+                    );
+                })}
             </Tabs>
             <Box sx={styles.tabPanelContainer}>
-                {tabs.map((tabName, idx) => (
-                    <Box
-                        key={tabName}
-                        role="tabpanel"
-                        hidden={value !== idx}
-                        id={`vertical-tabpanel-${idx}`}
-                        aria-labelledby={`vertical-tab-${idx}`}
-                        sx={{ overflow:'hidden' }}
-                    >
-                        {value === idx && renderPreferencesContent(tabName)}
-                    </Box>
-                ))}
+                {tabs.map((tabName, idx) => {
+                    if (tabName === 'logout') {
+                        return null; // Don't render a panel for the logout tab
+                    }
+                    return (
+                        <Box
+                            key={tabName}
+                            role="tabpanel"
+                            hidden={value !== idx}
+                            id={`vertical-tabpanel-${idx}`}
+                            aria-labelledby={`vertical-tab-${idx}`}
+                            sx={{ overflow: 'hidden' }}
+                        >
+                            {value === idx && renderPreferencesContent(tabName)}
+                        </Box>
+                    );
+                })}
             </Box>
         </Box>
     );
