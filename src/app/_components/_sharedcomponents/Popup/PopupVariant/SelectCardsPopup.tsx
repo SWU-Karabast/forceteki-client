@@ -34,7 +34,7 @@ const cardSelectorStyle = {
 
 export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
     const { closePopup } = usePopup();
-    const { sendGameMessage, connectedPlayer } = useGame();
+    const { sendGameMessage } = useGame();
     const [isMinimized, setIsMinimized] = useState(false);
 
     const renderPopupContent = () => {
@@ -75,7 +75,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                         sx={perCardButtonStyle}
                         variant="contained"
                         onClick={() => {
-                            sendGameMessage([connectedPlayer, button.arg, cardUuid, data.uuid]); closePopup(data.uuid)
+                            sendGameMessage([button.command, button.arg, cardUuid, data.uuid]); closePopup(data.uuid)
                         }}
                     >
                         {button.text}
