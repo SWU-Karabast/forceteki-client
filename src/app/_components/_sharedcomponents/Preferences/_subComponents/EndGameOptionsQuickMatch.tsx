@@ -17,11 +17,14 @@ function EndGameOptionsQuickMatch() {
     }
 
     const handleRequeue = async () => {
-        sendMessage('manualDisconnect');
-        const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null
-        // we need to call this since we clear the socket beforehand.
+        sendMessage('requeue');
         resetStates();
-        try {
+        router.push('/quickGame');
+        // const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null
+        // we need to call this since we clear the socket beforehand.
+
+
+        /* try {
             const payload = {
                 user: connectedUser,
                 deck: connectedUser.deck ? connectedUser.deck : null,
@@ -42,7 +45,7 @@ function EndGameOptionsQuickMatch() {
             router.push('/quickGame');
         } catch (error) {
             console.error(error);
-        }
+        }*/
     }
 
     const styles = {

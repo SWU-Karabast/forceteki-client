@@ -14,6 +14,12 @@ import { useSidebar } from '../_contexts/Sidebar.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
+export enum MatchType {
+    Custom = 'Custom',
+    Private = 'Private',
+    Quick = 'Quick',
+}
+
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState } = useGame();
@@ -42,7 +48,7 @@ const GameBoard = () => {
         if (drawerRef.current) {
             setDrawerWidth(drawerRef.current.offsetWidth);
         }
-        if(lobbyState && !lobbyState.gameOngoing) {
+        if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
             router.push('/lobby');
         }
     }, [sidebarOpen, gameState, lobbyState]);
@@ -64,7 +70,7 @@ const GameBoard = () => {
     // we set tabs
     const preferenceTabs = winners
         ? ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
-        :['currentGame','keyboardShortcuts','cardSleeves','gameOptions']
+        :['endGame','currentGame','keyboardShortcuts','cardSleeves','gameOptions']
 
 
     // ----------------------Styles-----------------------------//
