@@ -89,7 +89,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             <Card
                 sx={styles.discard.discardCardStyle(gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'][0])}
                 onClick={() => {
-                    const playerName = connectedPlayer != trayPlayer.trayPlayer ? "Your Opponent\'s" : "Your";
+                    const playerName = connectedPlayer != trayPlayer.trayPlayer ? 'Your Opponent\'s' : 'Your';
 
                     togglePopup('pile', {
                         uuid: `${trayPlayer.trayPlayer}-discard`,
