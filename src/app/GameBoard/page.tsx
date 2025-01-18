@@ -163,7 +163,7 @@ const GameBoard = () => {
             />
             <PopupShell/>
             <PreferencesComponent
-                isPreferenceOpen={winners ? true : isPreferenceOpen}
+                isPreferenceOpen={isPreferenceOpen}
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}
                 title={winners ? 'Game ended' : 'PREFERENCES'}
