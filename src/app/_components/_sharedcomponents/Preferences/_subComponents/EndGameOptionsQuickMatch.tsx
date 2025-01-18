@@ -5,12 +5,17 @@ import { Divider } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
-import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 
 function EndGameOptionsQuickMatch() {
     const router = useRouter();
     const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer } = useGame();
 
+    // Use the rematchRequest property from lobbyState
+    const rematchRequest = lobbyState?.rematchRequest;
+    const isRequestInitiator = rematchRequest && rematchRequest.initiator === connectedPlayer;
+
+
+    // ------------------------Additional button functions------------------------//
     const handleReturnHome = () => {
         sendMessage('manualDisconnect');
         router.push('/');
@@ -20,34 +25,30 @@ function EndGameOptionsQuickMatch() {
         sendMessage('requeue');
         resetStates();
         router.push('/quickGame');
-        // const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null
-        // we need to call this since we clear the socket beforehand.
+    }
+    const handleRematchClick = () => {
+        if (!rematchRequest) {
+            // Request a regular rematch (for quick match)
+            sendLobbyMessage(['requestRematch', 'regular']);
+        } else if (rematchRequest.mode === 'regular' && !isRequestInitiator) {
+            // Confirm the regular rematch
+            sendLobbyMessage(['regularRematch']);
+        }
+    };
 
-
-        /* try {
-            const payload = {
-                user: connectedUser,
-                deck: connectedUser.deck ? connectedUser.deck : null,
-            };
-            const response = await fetch('http://localhost:9500/api/enter-queue',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error('Failed to create game');
-            }
-            router.push('/quickGame');
-        } catch (error) {
-            console.error(error);
-        }*/
+    // Determine button text and behavior based on rematch status
+    let rematchButtonText = 'Request Rematch';
+    let rematchButtonDisabled = false;
+    if (rematchRequest) {
+        if (isRequestInitiator) {
+            rematchButtonText = 'Waiting for confirmation…';
+            rematchButtonDisabled = true;
+        } else {
+            rematchButtonText = 'Confirm Rematch';
+        }
     }
 
+    // ------------------------ Styles ------------------------//
     const styles = {
         typographyContainer: {
             mb: '0.5rem',
@@ -90,10 +91,19 @@ function EndGameOptionsQuickMatch() {
                         Reenter the queue for a new opponent.
                     </Typography>
                 </Box>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                    <PreferenceButton variant={'standard'} text={'Request Rematch'} buttonFnc={() => sendLobbyMessage(['regularRematch'])} />
+                <Box sx={styles.contentContainer}>
+                    <PreferenceButton
+                        variant={'standard'}
+                        text={rematchButtonText}
+                        buttonFnc={handleRematchClick}
+                        disabled={rematchButtonDisabled}
+                    />
                     <Typography sx={styles.typeographyStyle}>
-                        Return to lobby to start a new game with the same opponent.
+                        {rematchRequest
+                            ? isRequestInitiator
+                                ? 'Waiting for your opponent to confirm rematch.'
+                                : 'Confirm you wish to rematch with your opponent.'
+                            : 'Return to lobby to start a new game with the same opponent.'}
                     </Typography>
                 </Box>
             </Box>

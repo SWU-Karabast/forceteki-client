@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box, Card, Typography } from '@mui/material';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard/LeaderBaseCard';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -25,22 +25,29 @@ const FoundGame: React.FC = () => {
     // --- Countdown State ---
     const [countdown, setCountdown] = useState(5);
     const [gameStartSent, setGameStart] = useState(false);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        const timer = setInterval(() => {
+        timerRef.current = setInterval(() => {
             setCountdown((prev) => Math.max(prev - 1, 0));
         }, 1000);
 
-        return () => clearInterval(timer);
+        // Cleanup the timer when the component unmounts
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
     }, []);
 
     useEffect(() => {
         if (countdown !== 0) return;
-        if(gameState){
+
+        if (gameState) {
             router.push('/GameBoard');
         }
 
-        // Only run once
+        // Only run once—if the connected user is the lobby owner and game start hasn't been sent yet
         if (connectedUser?.id === lobbyOwner && !gameStartSent) {
             setGameStart(true);
             sendLobbyMessage(['onStartGame']);

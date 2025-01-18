@@ -2,6 +2,7 @@ export type IButtonType = {
     variant: 'concede' | 'standard',
     text: string,
     buttonFnc?: () => void
+    disabled?: boolean
 }
 
 export type ISleeve = {

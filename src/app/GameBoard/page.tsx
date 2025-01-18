@@ -53,6 +53,14 @@ const GameBoard = () => {
         }
     }, [sidebarOpen, gameState, lobbyState]);
 
+    useEffect(() => {
+        if (gameState?.winner) {
+            setPreferenceOpen(true);
+        }else{
+            setPreferenceOpen(false);
+        }
+    }, [gameState?.winner]);
+
     const handleModalToggle = () => {
         setIsModalOpen(!isModalOpen);
     };
@@ -64,13 +72,18 @@ const GameBoard = () => {
         setPreferenceOpen(!isPreferenceOpen);
     }
 
+    // Ensure that essential state values are defined before rendering.
+    if (!gameState || !connectedPlayer || !lobbyState) {
+        return null;
+    }
+
     // check if game ended already.
     const winners = gameState?.winner ? gameState.winner : undefined;
     // const winners = ['order66']
     // we set tabs
     const preferenceTabs = winners
         ? ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
-        :['endGame','currentGame','keyboardShortcuts','cardSleeves','gameOptions']
+        :['currentGame','keyboardShortcuts','cardSleeves','gameOptions']
 
 
     // ----------------------Styles-----------------------------//

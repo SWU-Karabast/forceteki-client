@@ -45,7 +45,7 @@ const Preferences: React.FC = () => {
             <Typography sx={styles.lobbyTextStyle} onClick={handleExit}>KARABAST</Typography>
             <PreferencesComponent
                 isPreferenceOpen={true}
-                tabs={['keyboardShortcuts','cardSleeves','gameOptions','blockList','logout']}
+                tabs={['keyboardShortcuts','cardSleeves','gameOptions','blockList']}
                 variant={'homePage'}
             />
             <Typography variant="body1" sx={styles.disclaimer}>
