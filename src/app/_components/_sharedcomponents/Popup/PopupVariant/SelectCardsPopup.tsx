@@ -1,17 +1,22 @@
-import { Box, Button, Typography } from '@mui/material';
-import { useState } from 'react';
-import { ICardData } from '../../Cards/CardTypes';
-import GameCard from '../../Cards/GameCard/GameCard';
+import { Box, Button, IconButton, Typography } from '@mui/material';
+import { MouseEvent, useState } from 'react';
 import {
-    buttonStyle,
-    cardButtonStyle,
     containerStyle,
-    footerStyle,
-    selectedCardBorderStyle,
-    selectedIndicatorStyle,
+    headerStyle,
+    minimizeButtonStyle,
+    perCardButtonStyle,
+    textStyle,
     titleStyle,
 } from '../Popup.styles';
-import { SelectCardsPopup } from '../Popup.types';
+import { PerCardButton, SelectCardsPopup } from '../Popup.types';
+import { usePopup } from '@/app/_contexts/Popup.context';
+import { useGame } from '@/app/_contexts/Game.context';
+import { BiMinus, BiPlus } from 'react-icons/bi';
+import GameCard from '../../Cards/GameCard/GameCard';
+
+interface ButtonProps {
+    data: SelectCardsPopup;
+}
 
 const cardListContainerStyle = {
     display: 'flex',
@@ -27,67 +32,72 @@ const cardSelectorStyle = {
     gap: '.5rem',
 };
 
-interface ButtonProps {
-    data: SelectCardsPopup;
-}
-
 export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
-    const [selectedCards, setSelectedCards] = useState<
-        Record<number, ICardData[]>
-    >([]);
+    const { closePopup } = usePopup();
+    const { sendGameMessage } = useGame();
+    const [isMinimized, setIsMinimized] = useState(false);
 
-    const handleCardClick = (index: number, card: ICardData) => {
-        if (!selectedCards[index]) {
-            setSelectedCards((prev) => ({
-                ...prev,
-                [index]: [card],
-            }));
-        } else {
-            setSelectedCards((prev) => ({
-                ...prev,
-                [index]: [...prev[index], card],
-            }));
-        }
+    const renderPopupContent = () => {
+        if (isMinimized) return null;
+        return (
+            <>
+                {data.description && (
+                    <Typography sx={textStyle}>{data.description}</Typography>
+                )}
+                <Box sx={cardListContainerStyle}>
+                    {data.cards.map((card, index) => {
+                        return (
+                            <Box sx={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <Box key={`card-${index}-${card.uuid}`} sx={cardSelectorStyle}>
+
+                                    <GameCard card={{ ...card, selectable: false }} />
+                                </Box>
+                                {renderButtons(card.uuid, data.perCardButtons)}
+                            </Box>
+                        )
+                    })}
+                </Box>
+            </>
+        );
     };
 
-    const isSelectedCard = (index: number) => selectedCards[index] !== undefined;
-    const isButtonDisabled = () =>
-        Object.keys(selectedCards).length === 0 ||
-    (data.maxNumber !== undefined && data.maxNumber > Object.keys(selectedCards).length);
+    const handleMinimize = (e: MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        setIsMinimized(!isMinimized);
+    };
 
-    // sort and not filter cards by selectable true first
-    const sortCards = (cards: ICardData[]) =>
-        cards.sort((a, b) => Number(b.selectable) - Number(a.selectable));
+    const renderButtons = (cardUuid: string, buttons: PerCardButton[]) => {
+        return (
+            <Box sx={{ gap: '1rem', flexDirection: 'column', display: 'flex' }}>
+                {buttons.map((button, index) =>
+                    <Button
+                        key={`${button.arg}:${index}`}
+                        sx={perCardButtonStyle}
+                        variant="contained"
+                        onClick={() => {
+                            sendGameMessage([button.command, button.arg, cardUuid, data.uuid]); closePopup(data.uuid)
+                        }}
+                    >
+                        {button.text}
+                    </Button>
+                )}</Box>
+        )
+    }
+
 
     return (
         <Box sx={containerStyle}>
-            <Typography sx={titleStyle}>{data.title}</Typography>
-            <Box sx={cardListContainerStyle}>
-                {sortCards(data.cards).map((card, index) => (
-                    <Box key={`card-${index}-${card.uuid}`} sx={cardSelectorStyle}>
-                        <Button
-                            sx={cardButtonStyle}
-                            onClick={() => handleCardClick(index, card)}
-                            variant="text"
-                        >
-                            <Box sx={selectedCardBorderStyle(isSelectedCard(index))}>
-                                <GameCard card={card} />
-                            </Box>
-                        </Button>
-                        <Box sx={selectedIndicatorStyle(isSelectedCard(index))} />
-                    </Box>
-                ))}
-            </Box>
-            <Box sx={footerStyle}>
-                <Button
-                    disabled={isButtonDisabled()}
-                    onClick={() => data.onConfirm(Object.values(selectedCards).flat())}
-                    sx={buttonStyle}
-                    variant="contained"
+            <Box sx={headerStyle(isMinimized)}>
+                <Typography sx={titleStyle}>{data.title}</Typography>
+                <IconButton
+                    sx={minimizeButtonStyle}
+                    aria-label="minimize"
+                    onClick={handleMinimize}
                 >
-                    Confirm
-                </Button>
+                    {isMinimized ? <BiPlus /> : <BiMinus />}
+                </IconButton>
             </Box>
+            {renderPopupContent()}
         </Box>
     );
 };

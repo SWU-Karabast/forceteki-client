@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Grid2 as Grid, Typography } from '@mui/material';
 import { usePathname, useRouter } from 'next/navigation';
 import Players from '../_components/Lobby/Players/Players';
@@ -14,58 +14,63 @@ const Lobby = () => {
     const { gameState } = useGame();
     const router = useRouter();
 
-    if(gameState){
-        router.push('/GameBoard');
-    }
+    useEffect(() => {
+        if (gameState) {
+            router.push('/GameBoard');
+        }
+    }, [gameState, router]);
+
     // ------------------------STYLES------------------------//
 
-    const containerStyle = {
-        height: '100vh',
-        overflow: 'hidden',
-        backgroundImage: `url(${s3ImageURL('game/board-background-1.png')})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-    };
-
-    const setUpGridStyle = {
-        justifyContent: 'center',
-        pl: '20px',
-        mt: '5px',
-    };
-
-    const playersGridStyle = {
-        justifyContent: 'center',
-        mt: '78px',
-    };
-
-    const deckGridStyle = {
-        justifyContent: 'center',
-        pr: '20px',
-        mt: '78px',
-    };
-    const disclaimer = {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        padding: '1rem',
-        textAlign: 'center',
-        fontSize: '0.90rem',
-    };
+    const styles = {
+        containerStyle: {
+            height: '100vh',
+            overflow: 'hidden',
+            backgroundImage: `url(${s3ImageURL('game/board-background-1.png')})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+        },
+    
+        setUpGridStyle: {
+            justifyContent: 'center',
+            pl: '20px',
+            mt: '5px',
+        },
+    
+        playersGridStyle: {
+            justifyContent: 'center',
+            mt: '78px',
+        },
+    
+        deckGridStyle: {
+            justifyContent: 'center',
+            pr: '20px',
+            mt: '78px',
+        },
+        disclaimer: {
+            position: 'absolute',
+            bottom: 0,
+            width: '100%',
+            padding: '1rem',
+            textAlign: 'center',
+            fontSize: '0.90rem',
+        },
+    }
 
     return (
-        <Grid container sx={containerStyle}>
-            <Grid container size={3} sx={setUpGridStyle}>
+        <Grid container sx={styles.containerStyle}>
+            <Grid container size={3} sx={styles.setUpGridStyle}>
                 <SetUp
                 />
             </Grid>
-            <Grid container size={2} sx={playersGridStyle}>
+            <Grid container size={2} sx={styles.playersGridStyle}>
                 <Players isLobbyView={isLobbyView} />
             </Grid>
-            <Grid container size={7} sx={deckGridStyle}>
+            <Grid container size={7} sx={styles.deckGridStyle}>
                 <Deck />
             </Grid>
             <Grid size={12}>
-                <Typography variant="body1" sx={disclaimer}>
+                <Typography variant="body1" sx={styles.disclaimer}>
                     Karabast is in no way affiliated with Disney or Fantasy Flight Games.
                     Star Wars characters, cards, logos, and art are property of Disney
                     and/or Fantasy Flight Games.

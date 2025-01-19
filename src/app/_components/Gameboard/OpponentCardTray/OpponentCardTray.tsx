@@ -7,34 +7,50 @@ import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
+import { s3CardImageURL } from '@/app/_utils/s3Utils';
 
-const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
+const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
+    const { gameState, connectedPlayer, getOpponent, sendManualDisconnectMessage } = useGame();
+    const router = useRouter();
+    const handleExitButton = () =>{
+        sendManualDisconnectMessage();
+        router.push('/');
+    }
+
     // ---------------Styles------------------- //
     const styles = {
         leftColumn: {
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             justifyContent: 'flex-start',
-            pl: '2em',
-            pt: '2em',
+            gap: '10px',
+            pl: '1em',
         },
         centerColumn: {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
+        },
+        opponentHandWrapper: {
+            width: '100%',
+            height: '100%',
+            transform: 'translateY(-30%)',
         },
         rightColumn: {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            pr: '2em',
-            pt: '2em',
+            gap: '15px',
+            pr: '1em',
+            py: '1em',
         },
         lastPlayed: {
-            border: '2px solid #FFFFFF55'
-
+            height: '100%',
+            aspectRatio: '359 / 500',
+            backgroundSize: 'cover',
+            backgroundImage: gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none',
         },
         menuStyles: {
             display: 'flex',
@@ -42,36 +58,24 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
         }
     };
 
-    const { gameState, connectedPlayer, getOpponent } = useGame();
-    const router = useRouter();
-    const handleExitButton = () =>{
-        router.push('/');
-    }
-
-
     return (
         <Grid container sx={{ height: '15%' }}>
             <Grid size={3} sx={styles.leftColumn}>
                 <DeckDiscard trayPlayer={trayPlayer} />
-                <Box ml={1}>
-                    <Resources
-                        trayPlayer={trayPlayer}
-                    />
-                </Box>
+                <Resources trayPlayer={trayPlayer}/>
             </Grid>
             <Grid size={6} sx={styles.centerColumn}>
-                <PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
+                <Box sx={styles.opponentHandWrapper}>
+                    <PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
+                </Box>
             </Grid>
             <Grid size={3} sx={styles.rightColumn}>
-                <Box mr={2}>
-                    <Typography variant={'h4'}>Initiative</Typography>
-                </Box>
-                <Box sx={styles.lastPlayed} mr={2}>
-                    <Typography variant={'h4'}>Last Played:</Typography>
+                <Typography variant={'h4'}>Initiative</Typography>
+                <Box sx={styles.lastPlayed}>
                 </Box>
                 <Box sx={styles.menuStyles}>
                     <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
-                    <SettingsOutlined />
+                    <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
                 </Box>
 
             </Grid>

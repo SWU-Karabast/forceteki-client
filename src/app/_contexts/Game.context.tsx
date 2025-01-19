@@ -7,6 +7,7 @@ import React, {
     useState,
     ReactNode,
     useEffect,
+    useRef,
 } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
@@ -21,28 +22,32 @@ interface IGameContextType {
     getOpponent: (player: string) => string;
     connectedPlayer: string;
     sendLobbyMessage: (args: any[]) => void;
+    sendManualDisconnectMessage: () => void;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
+    const lastGameIdRef = useRef<string | null>(null);
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
-    const { openPopup } = usePopup();
+    const { openPopup, clearPopups } = usePopup();
     const { user } = useUser();
     const searchParams = useSearchParams();
 
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
         // we get the lobbyId
-        const storedUnknownUserId = localStorage.getItem('unknownUserId') || lobbyId+'-GuestId2';
-
+        const storedUnknownUserId = localStorage.getItem('unknownUserId') || (lobbyId ? lobbyId + '-GuestId2' : null);
         // we set the username of the player based on whether it is in the localStorage or not.
         const username = localStorage.getItem('unknownUsername') || 'Player2';
         const connectedPlayerId = user?.id || storedUnknownUserId || '';
         setConnectedPlayer(connectedPlayerId);
+        clearPopups();
+
+
 
         const newSocket = io('http://localhost:9500', {
             query: {
@@ -52,17 +57,31 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         const handleGameStatePopups = (gameState: any) => {
-            if (!user || user.id == null) return;
+            if (!user || user.id == null) return; // TODO currently this doesn't support private lobbies where players aren't logged in.
             if (gameState.players?.[user.id].promptState) {
                 const promptState = gameState.players?.[user.id].promptState;
-                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions } =
+                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } =
                     promptState;
                 if (promptType === 'actionWindow') return;
+                else if (promptType === 'displayCards') {
+                    const cards = displayCards.map((card: any) => {
+                        return {
+                            ...card,
+                            uuid: card.cardUuid,
+                        };
+                    });
+                    return openPopup('select', {
+                        uuid: promptUuid,
+                        title: promptTitle,
+                        description: menuTitle,
+                        cards: cards,
+                        perCardButtons: perCardButtons,
+                    });
+                }
                 else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
                     return openPopup('default', {
                         uuid: promptUuid,
                         title: menuTitle,
-                        promptType: promptType,
                         buttons,
                     });
                 }
@@ -77,10 +96,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
         };
 
-        newSocket.on('connect', () => {
-            console.log(`Connected to server as ${user ? user.username : ''}`);
-        });
+        // newSocket.on('connect', () => {
+        //     console.log(`Connected to server as ${user ? user.username : ''}`);
+        // });
         newSocket.on('gamestate', (gameState: any) => {
+            if (gameState?.id && gameState.id !== lastGameIdRef.current) {
+                clearPopups();
+                lastGameIdRef.current = gameState.id;
+            }
             setGameState(gameState);
             console.log('Game state received:', gameState);
             handleGameStatePopups(gameState);
@@ -99,12 +122,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user]);
+    }, [user, openPopup, clearPopups, searchParams]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         console.log('sending message', message, args);
         socket?.emit(message, ...args);
     };
+
+    const sendManualDisconnectMessage = () =>{
+        console.log('sending manual disconnect message');
+        socket?.emit('manualDisconnect')
+    }
 
     const sendGameMessage = (args: any[]) => {
         console.log('sending game message', args);
@@ -131,7 +159,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 sendMessage,
                 connectedPlayer,
                 getOpponent,
-                sendLobbyMessage
+                sendLobbyMessage,
+                sendManualDisconnectMessage
             }}
         >
             {children}
@@ -145,4 +174,4 @@ export const useGame = () => {
         throw new Error('useGame must be used within a GameProvider');
     }
     return context;
-};
+};  
