@@ -103,7 +103,7 @@ function KeyboardShortcutsTab() {
                     </Box>
                 </Grid>
             </Box>
-            <Box sx={styles.functionContainer}>
+            <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
                 <Divider sx={{ mb:'20px' }}/>
                 <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
                     <Box sx={styles.keyPadsStyle}>

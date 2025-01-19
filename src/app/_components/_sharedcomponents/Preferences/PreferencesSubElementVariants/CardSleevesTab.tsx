@@ -17,8 +17,6 @@ function CardSleevesTab() {
             gridTemplateColumns: 'repeat(auto-fill, minmax(10.5rem, 1fr))',
             rowGap:'14px',
             columnGap:'10px',
-            overflowY:'auto',
-            maxHeight: 'calc(80vh - 3rem)',
         }
     }
 

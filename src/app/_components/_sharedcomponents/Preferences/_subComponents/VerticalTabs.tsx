@@ -10,6 +10,9 @@ import KeyboardShortcutsTab
 import CardSleevesTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CardSleevesTab';
 import GameOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
+import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
+import { useUser } from '@/app/_contexts/User.context';
 
 function tabProps(index: number) {
     return {
@@ -19,8 +22,12 @@ function tabProps(index: number) {
 }
 
 
-function VerticalTabs({ tabs }:IVerticalTabsProps) {
+function VerticalTabs({ 
+    tabs,
+    variant = 'gameBoard'
+}:IVerticalTabsProps) {
     const [value, setValue] = React.useState(0);
+    const { logout } = useUser();
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -36,6 +43,10 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
                 return <CardSleevesTab/>;
             case 'gameOptions':
                 return <GameOptionsTab/>;
+            case 'endGame':
+                return <EndGameTab/>;
+            case 'blockList':
+                return <BlockListTab/>;
             default:
                 return <Typography>Not Implemented</Typography>;
         }
@@ -43,13 +54,19 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
     const renderLabels = (type: string) => {
         switch (type) {
             case 'currentGame':
-                return 'CURRENT GAME';
+                return 'Current Game';
             case 'keyboardShortcuts':
-                return 'KEYBOARD SHORTCUTS';
+                return 'Keyboard Shortcuts';
             case 'cardSleeves':
-                return 'CARD SLEEVES';
+                return 'Card Sleeves';
             case 'gameOptions':
-                return 'GAME OPTIONS';
+                return 'Game Options';
+            case 'endGame':
+                return 'Current Game';
+            case 'blockList':
+                return 'Block List';
+            case 'logout':
+                return 'Log Out'
             default:
                 return null;
         }
@@ -60,21 +77,44 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
         tabContainer: {
             width: '20%',
             backgroundColor: 'transparent',
+            gap:'1rem',
         },
         tab:{
             color:'white',
             alignItems: 'start',
+            textTransform: 'none',
+            fontSize: '1.2rem',
+            height:'4rem',
+            mb:'10px',
             '&.Mui-selected': {
                 backgroundColor: 'rgba(47, 125, 182, 0.5)',
                 borderRadius:'5px',
                 color:'white',
             },
+            '&:hover': {
+                backgroundColor: 'rgba(47, 125, 182, 0.5)',
+                borderRadius:'5px',
+                color:'white',
+            }
         },
         tabPanelContainer:{
             backgroundColor: 'transparent',
             width: '80%',
             pl:9,
             gap: '20px',
+            maxHeight: variant === 'gameBoard' ? 'calc(80vh - 1rem)' : 'calc(80vh - 1.9rem)',
+            overflowY: 'auto',
+            '::-webkit-scrollbar': {
+                width: '0.2vw',
+            },
+            '::-webkit-scrollbar-thumb': {
+                backgroundColor: '#D3D3D3B3',
+                borderRadius: '1vw',
+            },
+            '::-webkit-scrollbar-button': {
+                display: 'none',
+            },
+            transition: 'scrollbar-color 0.3s ease-in-out',
         }
     }
 
@@ -92,27 +132,46 @@ function VerticalTabs({ tabs }:IVerticalTabsProps) {
                 }}
                 sx={styles.tabContainer}
             >
-                {tabs.map((tabName, idx) => (
-                    <Tab
-                        key={tabName}
-                        sx={styles.tab}
-                        label={renderLabels(tabName)}
-                        {...tabProps(idx)}
-                    />
-                ))}
+                {tabs.map((tabName, idx) => {
+                    if (tabName === 'logout') {
+                        return (
+                            <Tab
+                                key={tabName}
+                                sx={styles.tab}
+                                label={renderLabels(tabName)}
+                                onClick={logout}
+                                {...tabProps(idx)}
+                            />
+                        );
+                    }
+                    return (
+                        <Tab
+                            key={tabName}
+                            sx={styles.tab}
+                            label={renderLabels(tabName)}
+                            {...tabProps(idx)}
+                        />
+                    );
+                })}
             </Tabs>
             <Box sx={styles.tabPanelContainer}>
-                {tabs.map((tabName, idx) => (
-                    <Box
-                        key={tabName}
-                        role="tabpanel"
-                        hidden={value !== idx}
-                        id={`vertical-tabpanel-${idx}`}
-                        aria-labelledby={`vertical-tab-${idx}`}
-                    >
-                        {value === idx && renderPreferencesContent(tabName)}
-                    </Box>
-                ))}
+                {tabs.map((tabName, idx) => {
+                    if (tabName === 'logout') {
+                        return null;
+                    }
+                    return (
+                        <Box
+                            key={tabName}
+                            role="tabpanel"
+                            hidden={value !== idx}
+                            id={`vertical-tabpanel-${idx}`}
+                            aria-labelledby={`vertical-tab-${idx}`}
+                            sx={{ overflow: 'hidden' }}
+                        >
+                            {value === idx && renderPreferencesContent(tabName)}
+                        </Box>
+                    );
+                })}
             </Box>
         </Box>
     );

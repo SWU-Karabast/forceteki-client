@@ -1,10 +1,38 @@
-import * as React from 'react';
+import React, {
+    useState,
+    useEffect,
+} from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { useGame } from '@/app/_contexts/Game.context';
 
 function CurrentGameTab() {
+    const { sendGameMessage, connectedPlayer, gameState } = useGame();
+
+    const currentPlayerName = gameState.players[connectedPlayer].name
+    const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
+
+    useEffect(() => {
+        if(confirmConcede){
+            const timer = setTimeout(() => setConfirmConcede(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [confirmConcede]);
+
+    // Click handler for the Concede button.
+    const handleConcede = () => {
+        if (!confirmConcede) {
+            setConfirmConcede(true);
+        } else {
+            // Send the game message only on the second click
+            sendGameMessage(['concede', currentPlayerName]);
+            // Reset the confirmation
+            setConfirmConcede(false);
+        }
+    };
+
     const styles = {
         typographyContainer: {
             mb: '0.5rem',
@@ -32,7 +60,7 @@ function CurrentGameTab() {
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Concede</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <Box sx={styles.contentContainer}>
-                    <PreferenceButton variant={'concede'} text={'Concede Game'} />
+                    <PreferenceButton variant={'concede'} text={confirmConcede ? 'Are you sure?' : 'Concede Game'} buttonFnc={handleConcede}/>
                     <Typography sx={styles.typeographyStyle}>
                         Yield  current game and abandon. This match will count as a loss.
                     </Typography>
@@ -54,7 +82,7 @@ function CurrentGameTab() {
                     </Typography>
                 </Box>
             </Box>
-            <Box sx={styles.functionContainer}>
+            <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Report Bug</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <Typography sx={styles.typeographyStyle}>

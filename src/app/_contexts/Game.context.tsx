@@ -22,7 +22,7 @@ interface IGameContextType {
     getOpponent: (player: string) => string;
     connectedPlayer: string;
     sendLobbyMessage: (args: any[]) => void;
-    sendManualDisconnectMessage: () => void;
+    resetStates: () => void;
     getConnectedPlayerPrompt: () => any;
 }
 
@@ -80,6 +80,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     });
                 }
                 else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
+                    // make an exception for
                     return openPopup('default', {
                         uuid: promptUuid,
                         title: menuTitle,
@@ -123,17 +124,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, openPopup, clearPopups, searchParams]);
+    }, [user, openPopup, clearPopups]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         console.log('sending message', message, args);
         socket?.emit(message, ...args);
     };
-
-    const sendManualDisconnectMessage = () =>{
-        console.log('sending manual disconnect message');
-        socket?.emit('manualDisconnect')
-    }
 
     const sendGameMessage = (args: any[]) => {
         console.log('sending game message', args);
@@ -151,6 +147,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return playerNames.find((name) => name !== player) || '';
     };
 
+    const resetStates = () => {
+        setLobbyState(null);
+        setGameState(null);
+    }
+
+
     const getConnectedPlayerPrompt = () => {
         if (!gameState) return '';
         return gameState.players[connectedPlayer]?.promptState;
@@ -166,7 +168,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 connectedPlayer,
                 getOpponent,
                 sendLobbyMessage,
-                sendManualDisconnectMessage,
+                resetStates,
                 getConnectedPlayerPrompt
             }}
         >

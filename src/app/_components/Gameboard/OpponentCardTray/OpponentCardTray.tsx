@@ -10,10 +10,10 @@ import { useRouter } from 'next/navigation';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
-    const { gameState, connectedPlayer, getOpponent, sendManualDisconnectMessage } = useGame();
+    const { gameState, connectedPlayer, getOpponent, sendMessage } = useGame();
     const router = useRouter();
     const handleExitButton = () =>{
-        sendManualDisconnectMessage();
+        sendMessage('manualDisconnect');
         router.push('/');
     }
 

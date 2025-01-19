@@ -11,15 +11,18 @@ import { useGame } from '@/app/_contexts/Game.context';
 const Lobby = () => {
     const pathname = usePathname();
     const isLobbyView = pathname === '/lobby';
-    const { gameState } = useGame();
+    const { lobbyState } = useGame();
     const router = useRouter();
 
     useEffect(() => {
-        if (gameState) {
+        if(lobbyState && lobbyState.gameOngoing){
             router.push('/GameBoard');
         }
-    }, [gameState, router]);
+    }, [lobbyState, router]);
 
+    if(!lobbyState){
+        return null;
+    }
     // ------------------------STYLES------------------------//
 
     const styles = {
@@ -30,18 +33,18 @@ const Lobby = () => {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
         },
-    
+
         setUpGridStyle: {
             justifyContent: 'center',
             pl: '20px',
             mt: '5px',
         },
-    
+
         playersGridStyle: {
             justifyContent: 'center',
             mt: '78px',
         },
-    
+
         deckGridStyle: {
             justifyContent: 'center',
             pr: '20px',

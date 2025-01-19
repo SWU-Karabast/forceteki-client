@@ -4,18 +4,26 @@ import Grid from '@mui/material/Grid2';
 import { Box, Typography } from '@mui/material';
 import FoundGame from '@/app/_components/QuickGame/FoundGame/FoundGame';
 import { useGame } from '@/app/_contexts/Game.context';
-import NextLinkMui from '@/app/_components/_sharedcomponents/ControlHub/_subcomponents/NextLinkMui/NextLinkMui';
 import SearchingForGame from '@/app/_components/QuickGame/SearchingForGame/SearchingForGame';
+import { useRouter } from 'next/navigation';
+import { s3ImageURL } from '@/app/_utils/s3Utils';
 
 const QuickGame: React.FC = () => {
-    const { lobbyState } = useGame();
-
+    const router = useRouter();
+    const { lobbyState, sendMessage } = useGame();
+    const handleExit = () => {
+        sendMessage('manualDisconnect');
+        router.push('/');
+    }
     // ------------------------STYLES------------------------//
 
     const styles = {
         containerStyle: {
             height: '100vh',
             overflow: 'hidden',
+            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
         },
         disclaimer: {
             position: 'absolute',
@@ -36,6 +44,7 @@ const QuickGame: React.FC = () => {
             fontSize: '1.2em',
             p: '0.5rem',
             textDecoration: 'none',
+            cursor: 'pointer',
             color: '#fff',
             '&:hover': {
                 color: '#00ffff',
@@ -67,9 +76,9 @@ const QuickGame: React.FC = () => {
             </Grid>
             {!lobbyState && (
                 <Box sx={styles.leaveQueueContainer}>
-                    <NextLinkMui href="/" sx={styles.leaveQueueLink}>
+                    <Box onClick={handleExit} sx={styles.leaveQueueLink}>
                         Leave queue
-                    </NextLinkMui>
+                    </Box>
                 </Box>
             )}
             <Typography variant="body1" sx={styles.disclaimer}>

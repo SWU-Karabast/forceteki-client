@@ -1,6 +1,8 @@
 export type IButtonType = {
     variant: 'concede' | 'standard',
-    text: string
+    text: string,
+    buttonFnc?: () => void
+    disabled?: boolean
 }
 
 export type ISleeve = {
@@ -15,10 +17,19 @@ export type IPreferenceOptions = {
 }
 
 export interface IVerticalTabsProps {
-    tabs: string[];
+    tabs: string[]
+    variant?: 'gameBoard' | 'homePage'
+}
+
+export type IBlockedUser = {
+    username: string,
 }
 
 export interface IPreferenceProps {
     isPreferenceOpen: boolean,
-    preferenceToggle: () => void,
+    tabs: string[],
+    preferenceToggle?: () => void,
+    variant?: 'gameBoard' | 'homePage'
+    title?: string,
+    subtitle?: string,
 }

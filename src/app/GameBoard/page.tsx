@@ -12,10 +12,18 @@ import BasicPrompt from '../_components/Gameboard/_subcomponents/Overlays/Prompt
 import { useGame } from '../_contexts/Game.context';
 import { useSidebar } from '../_contexts/Sidebar.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
-import Preferences from '@/app/_components/_sharedcomponents/Preferences/Preferences';
+import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
+import { useRouter } from 'next/navigation';
+export enum MatchType {
+    Custom = 'Custom',
+    Private = 'Private',
+    Quick = 'Quick',
+}
+
 
 const GameBoard = () => {
-    const { getOpponent, connectedPlayer, gameState } = useGame();
+    const { getOpponent, connectedPlayer, gameState, lobbyState } = useGame();
+    const router = useRouter();
     const { sidebarOpen, toggleSidebar } = useSidebar();
     const [chatMessage, setChatMessage] = useState('');
     const [chatHistory, setChatHistory] = useState<string[]>([]);
@@ -40,7 +48,18 @@ const GameBoard = () => {
         if (drawerRef.current) {
             setDrawerWidth(drawerRef.current.offsetWidth);
         }
-    }, [sidebarOpen]);
+        if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
+            router.push('/lobby');
+        }
+    }, [sidebarOpen, gameState, lobbyState, router]);
+
+    useEffect(() => {
+        if (gameState?.winner) {
+            setPreferenceOpen(true);
+        }else{
+            setPreferenceOpen(false);
+        }
+    }, [gameState?.winner]);
 
     const handleModalToggle = () => {
         setIsModalOpen(!isModalOpen);
@@ -52,6 +71,20 @@ const GameBoard = () => {
     const handlePreferenceToggle = () => {
         setPreferenceOpen(!isPreferenceOpen);
     }
+
+    // Ensure that essential state values are defined before rendering.
+    if (!gameState && !connectedPlayer && !lobbyState) {
+        return null;
+    }
+
+    // check if game ended already.
+    const winners = gameState?.winner ? gameState.winner : undefined;
+    // const winners = ['order66']
+    // we set tabs
+    const preferenceTabs = winners
+        ? ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
+        :['currentGame','keyboardShortcuts','cardSleeves','gameOptions']
+
 
     // ----------------------Styles-----------------------------//
 
@@ -129,7 +162,13 @@ const GameBoard = () => {
                 handleBasicPromptToggle={handleBasicPromptToggle}
             />
             <PopupShell/>
-            <Preferences isPreferenceOpen={isPreferenceOpen} preferenceToggle={handlePreferenceToggle}/>
+            <PreferencesComponent
+                isPreferenceOpen={isPreferenceOpen}
+                preferenceToggle={handlePreferenceToggle}
+                tabs={preferenceTabs}
+                title={winners ? 'Game ended' : 'PREFERENCES'}
+                subtitle={winners ? winners.length > 1 ? 'Game ended in a draw' : `Winner is ${winners[0]}` : undefined}
+            />
         </Grid>
     );
 };
