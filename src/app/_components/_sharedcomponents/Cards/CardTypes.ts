@@ -28,6 +28,8 @@ export interface ICardData {
     aspects?: IAspect[];
     sentinel?: boolean;
     types?: string[];
+    owner: ICardPlayer;
+    controller: ICardPlayer;
 }
 export interface IServerCardData {
     count: number;
@@ -51,4 +53,11 @@ export interface ILeaderBaseCardProps {
     card: ICardData;
     disabled?: boolean;
     size?: 'standard' | 'large';
+}
+
+interface ICardPlayer {
+    id: string;
+    name: string;
+    label: string;
+    uuid: string;
 }

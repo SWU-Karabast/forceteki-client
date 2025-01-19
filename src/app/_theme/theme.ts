@@ -69,6 +69,13 @@ export const theme: Theme = createTheme({
     components: {
         MuiCssBaseline: {
             styleOverrides: {
+                ':root': {
+                    '--selection-green': '#72F979',
+                    '--selection-red': '#FF0D0D',
+                    '--selection-yellow': '#FFFE50',
+                    '--initiative-blue': '#00BAFF',
+                    '--initiative-red': '#FF3231',
+                },
                 body: {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',

@@ -2,7 +2,7 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { Box, Button, Grid2, IconButton, Typography } from '@mui/material';
 import { useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
-import GameCard from '../../Cards/GameCard/GameCard';
+import GameCard from '../../Cards/GameCard';
 import {
     buttonStyle,
     containerStyle,

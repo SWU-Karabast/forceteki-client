@@ -23,6 +23,7 @@ interface IGameContextType {
     connectedPlayer: string;
     sendLobbyMessage: (args: any[]) => void;
     sendManualDisconnectMessage: () => void;
+    getConnectedPlayerPrompt: () => any;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -136,6 +137,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return playerNames.find((name) => name !== player) || '';
     };
 
+    const getConnectedPlayerPrompt = () => {
+        if (!gameState) return '';
+        return gameState.players[connectedPlayer]?.promptState;
+    }
+
     return (
         <GameContext.Provider
             value={{
@@ -146,7 +152,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 connectedPlayer,
                 getOpponent,
                 sendLobbyMessage,
-                sendManualDisconnectMessage
+                sendManualDisconnectMessage,
+                getConnectedPlayerPrompt
             }}
         >
             {children}

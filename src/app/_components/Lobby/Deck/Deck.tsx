@@ -3,7 +3,7 @@ import { Card, Box, Typography, Divider } from '@mui/material';
 import { ICardData, IServerCardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useDragScroll } from '@/app/_utils/useDragScroll';
 import { useGame } from '@/app/_contexts/Game.context';
-import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard/GameCard';
+import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 
 const Deck: React.FC = () => {

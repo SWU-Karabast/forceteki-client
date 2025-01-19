@@ -1,6 +1,6 @@
 import { Grid2 as Grid, Box } from '@mui/material';
 import { useDragScroll } from '@/app/_utils/useDragScroll';
-import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard/GameCard';
+import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 

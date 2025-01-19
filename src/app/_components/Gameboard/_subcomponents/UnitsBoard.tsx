@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Grid2 as Grid } from '@mui/material';
-import GameCard from '../../_sharedcomponents/Cards/GameCard/GameCard';
+import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
