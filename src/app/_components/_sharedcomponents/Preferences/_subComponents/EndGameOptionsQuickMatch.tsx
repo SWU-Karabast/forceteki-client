@@ -32,7 +32,7 @@ function EndGameOptionsQuickMatch() {
             sendLobbyMessage(['requestRematch', 'regular']);
         } else if (rematchRequest.mode === 'regular' && !isRequestInitiator) {
             // Confirm the regular rematch
-            sendLobbyMessage(['regularRematch']);
+            sendLobbyMessage(['rematch']);
         }
     };
 

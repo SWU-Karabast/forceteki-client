@@ -41,7 +41,7 @@ function EndGameOptionsCustom() {
         if (!rematchRequest) {
             sendLobbyMessage(['requestRematch', 'regular']);
         } else if (rematchRequest.mode === 'regular' && !isInitiator) {
-            sendLobbyMessage(['regularRematch']);
+            sendLobbyMessage(['rematch']);
         }
     };
 
