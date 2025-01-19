@@ -14,6 +14,23 @@ export const buttonStyle = {
     },
 };
 
+export const perCardButtonStyle = {
+    borderRadius: '15px',
+    backgroundColor: '#1E2D32',
+    padding: '.5rem 1rem',
+    fontSize: '.75rem',
+
+    border: '2px solid transparent',
+    background:
+    'linear-gradient(#1E2D32, #1E2D32) padding-box, linear-gradient(to top, #038FC3, #595A5B) border-box',
+    '&:hover': {
+        background: 'hsl(195, 25%, 16%)',
+    },
+    '&:disabled': {
+        color: '#666666',
+    },
+};
+
 export const concedeButtonStyle = {
     padding: '1rem 1.5rem',
     borderRadius: '15px',

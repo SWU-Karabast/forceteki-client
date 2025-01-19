@@ -61,14 +61,28 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             if (!user || user.id == null) return; // TODO currently this doesn't support private lobbies where players aren't logged in.
             if (gameState.players?.[user.id].promptState) {
                 const promptState = gameState.players?.[user.id].promptState;
-                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions } =
+                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } =
                     promptState;
                 if (promptType === 'actionWindow') return;
+                else if (promptType === 'displayCards') {
+                    const cards = displayCards.map((card: any) => {
+                        return {
+                            ...card,
+                            uuid: card.cardUuid,
+                        };
+                    });
+                    return openPopup('select', {
+                        uuid: promptUuid,
+                        title: promptTitle,
+                        description: menuTitle,
+                        cards: cards,
+                        perCardButtons: perCardButtons,
+                    });
+                }
                 else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
                     return openPopup('default', {
                         uuid: promptUuid,
                         title: menuTitle,
-                        promptType: promptType,
                         buttons,
                     });
                 }
@@ -167,4 +181,4 @@ export const useGame = () => {
         throw new Error('useGame must be used within a GameProvider');
     }
     return context;
-};
+};  
