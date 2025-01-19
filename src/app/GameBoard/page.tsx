@@ -51,7 +51,7 @@ const GameBoard = () => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
             router.push('/lobby');
         }
-    }, [sidebarOpen, gameState, lobbyState]);
+    }, [sidebarOpen, gameState, lobbyState, router]);
 
     useEffect(() => {
         if (gameState?.winner) {
@@ -73,7 +73,7 @@ const GameBoard = () => {
     }
 
     // Ensure that essential state values are defined before rendering.
-    if (!gameState || !connectedPlayer || !lobbyState) {
+    if (!gameState && !connectedPlayer && !lobbyState) {
         return null;
     }
 

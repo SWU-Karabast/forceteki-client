@@ -139,7 +139,7 @@ function VerticalTabs({
                                 key={tabName}
                                 sx={styles.tab}
                                 label={renderLabels(tabName)}
-                                onClick={logout} // Your logout function here
+                                onClick={logout}
                                 {...tabProps(idx)}
                             />
                         );
@@ -157,7 +157,7 @@ function VerticalTabs({
             <Box sx={styles.tabPanelContainer}>
                 {tabs.map((tabName, idx) => {
                     if (tabName === 'logout') {
-                        return null; // Don't render a panel for the logout tab
+                        return null;
                     }
                     return (
                         <Box

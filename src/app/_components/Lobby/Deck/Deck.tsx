@@ -147,7 +147,7 @@ const Deck: React.FC = () => {
                     <Box sx={mainContainerStyle}>
                         {newDeck.map((card:IServerCardData) => (
                             <GameCard
-                                key={card.card.id}
+                                key={card.card.uuid}
                                 card={card}
                                 variant={'lobby'}
                                 onClick={() => sendLobbyMessage(['updateDeck','Deck', card.card.id])}
