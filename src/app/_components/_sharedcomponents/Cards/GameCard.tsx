@@ -7,9 +7,10 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import Image from 'next/image';
-import { IGameCardProps, ICardData, IServerCardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { IGameCardProps, ICardData, IServerCardData } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { getBorderColor } from './cardUtils';
 
 // Type guard to check if the card is ICardData
 const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
@@ -30,7 +31,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Determine whether card is ICardData or IServerCardData
     const cardData = isICardData(card) ? card : card.card;
     const cardCounter = !isICardData(card) ? card.count : 0;
-    const { sendGameMessage } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt } = useGame();
 
     // default on click
     const defaultClickFunction = () => {
@@ -46,12 +47,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 		}
 	}*/
     const handleClick = onClick ?? defaultClickFunction;
-    const cardBorderColor = (card: ICardData) => {
-        if (card?.selected) return 'yellow';
-        if (card?.selectable) return 'limegreen';
-        if (card?.exhausted) return 'gray';
-        return '';
-    }
+
     // helper function to get the correct aspects for the upgrade cards
     const cardUpgradebackground = (card: ICardData) => {
         if (!card.aspects){
@@ -103,7 +99,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     // For "standard" or other sizes:
                     height: size === 'standard' ? '10rem' : '7.7rem',
                     width: size === 'standard' ? '7.18rem' : '8rem',
-                    border: `2px solid ${cardBorderColor(cardData)}`,
+                    border: `2px solid ${getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType)}`,
 
                     /* ...(cardData.exhausted &&{
 							transform: 'rotate(4deg)',

@@ -1,7 +1,7 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useState } from 'react';
 import { ICardData } from '../../Cards/CardTypes';
-import GameCard from '../../Cards/GameCard/GameCard';
+import GameCard from '../../Cards/GameCard';
 import {
     buttonStyle,
     cardButtonStyle,

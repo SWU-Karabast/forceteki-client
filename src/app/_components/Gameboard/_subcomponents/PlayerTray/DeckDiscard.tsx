@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Box, Typography } from '@mui/material';
-import GameCard from '../../../_sharedcomponents/Cards/GameCard/GameCard';
+import GameCard from '../../../_sharedcomponents/Cards/GameCard';
 import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';

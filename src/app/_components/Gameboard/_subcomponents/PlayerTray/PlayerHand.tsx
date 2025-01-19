@@ -1,6 +1,6 @@
 import { Grid2 as Grid, Box } from '@mui/material';
 import { useDragScroll } from '@/app/_utils/useDragScroll';
-import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard/GameCard';
+import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 
@@ -16,7 +16,6 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
         handleTouchMove,
         handleTouchEnd,
         isDragging,
-        isScrolling,
     } = useDragScroll('horizontal');
 
     const { connectedPlayer } = useGame();
@@ -30,11 +29,6 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
         whiteSpace: 'nowrap',
         cursor: isDragging ? 'grabbing' : 'grab',
         userSelect: 'none',
-        scrollbarWidth: 'thin',
-        scrollbarColor: isScrolling
-            ? '#c4bfbf60 transparent'
-            : 'transparent transparent',
-        transition: 'scrollbar-color 0.3s ease-in-out',
     };
 
     const cardBoxStyle = {
