@@ -18,8 +18,6 @@ const NewsColumn: React.FC = () => {;
         },
         boxNews: {
             height: '100%',
-            scrollbarColor: '#888888 rgba(0, 0, 0, 0)',
-            scrollbarWidth: 'thin',
         },
     };
 

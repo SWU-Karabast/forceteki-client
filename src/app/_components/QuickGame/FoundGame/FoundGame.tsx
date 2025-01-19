@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
 import { Box, Card, Typography } from '@mui/material';
-import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard/LeaderBaseCard';
+import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 import { useRouter } from 'next/navigation'
