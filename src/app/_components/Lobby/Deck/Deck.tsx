@@ -73,32 +73,10 @@ const Deck: React.FC = () => {
         height: '21%',
         minHeight: '183px',
         overflowY: 'auto',
-        '::-webkit-scrollbar': {
-            width: '0.2vw',
-        },
-        '::-webkit-scrollbar-thumb': {
-            backgroundColor: '#D3D3D3B3',
-            borderRadius: '1vw',
-        },
-        '::-webkit-scrollbar-button': {
-            display: 'none',
-        },
-        transition: 'scrollbar-color 0.3s ease-in-out',
     };
     const scrollableBoxStyle = {
         flexGrow: 1,
         overflowY: 'auto',
-        '::-webkit-scrollbar': {
-            width: '0.2vw',
-        },
-        '::-webkit-scrollbar-thumb': {
-            backgroundColor: '#D3D3D3B3',
-            borderRadius: '1vw',
-        },
-        '::-webkit-scrollbar-button': {
-            display: 'none',
-        },
-        transition: 'scrollbar-color 0.3s ease-in-out',
     };
     const mainContainerStyle = {
         display: 'flex',

@@ -38,17 +38,6 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         '@media (max-height: 1000px)': {
             maxHeight: '85.5vh',
         },
-        '::-webkit-scrollbar': {
-            width: '0.2vw',
-        },
-        '::-webkit-scrollbar-thumb': {
-            backgroundColor: '#D3D3D3B3',
-            borderRadius: '1vw',
-        },
-        '::-webkit-scrollbar-button': {
-            display: 'none',
-        },
-        transition: 'scrollbar-color 0.3s ease-in-out',
     };
 
     const typographyStyle = {

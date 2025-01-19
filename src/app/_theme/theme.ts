@@ -75,10 +75,21 @@ export const theme: Theme = createTheme({
                     backgroundImage: 'url(\'/gamebg.jpg\')',
                     maxWidth: '100%',
                     height: '100%',
-                    margin: '0'
+                    margin: '0',
+
                 },
                 b: {
                     fontWeight: 600,
+                },
+                '::-webkit-scrollbar': {
+                    width: '2px',
+                },
+                '::-webkit-scrollbar-thumb': {
+                    backgroundColor: '#D3D3D3B3',
+                    borderRadius: '2px',
+                },
+                '::-webkit-scrollbar-button': {
+                    height: '10px',
                 },
             },
         },
