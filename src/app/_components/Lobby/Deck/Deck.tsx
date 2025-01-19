@@ -3,7 +3,7 @@ import { Card, Box, Typography, Divider } from '@mui/material';
 import { ICardData, IServerCardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useDragScroll } from '@/app/_utils/useDragScroll';
 import { useGame } from '@/app/_contexts/Game.context';
-import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard/GameCard';
+import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 
 const Deck: React.FC = () => {
@@ -73,32 +73,10 @@ const Deck: React.FC = () => {
         height: '21%',
         minHeight: '183px',
         overflowY: 'auto',
-        '::-webkit-scrollbar': {
-            width: '0.2vw',
-        },
-        '::-webkit-scrollbar-thumb': {
-            backgroundColor: '#D3D3D3B3',
-            borderRadius: '1vw',
-        },
-        '::-webkit-scrollbar-button': {
-            display: 'none',
-        },
-        transition: 'scrollbar-color 0.3s ease-in-out',
     };
     const scrollableBoxStyle = {
         flexGrow: 1,
         overflowY: 'auto',
-        '::-webkit-scrollbar': {
-            width: '0.2vw',
-        },
-        '::-webkit-scrollbar-thumb': {
-            backgroundColor: '#D3D3D3B3',
-            borderRadius: '1vw',
-        },
-        '::-webkit-scrollbar-button': {
-            display: 'none',
-        },
-        transition: 'scrollbar-color 0.3s ease-in-out',
     };
     const mainContainerStyle = {
         display: 'flex',

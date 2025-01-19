@@ -1,3 +1,4 @@
+
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { MouseEvent, useState } from 'react';
 import {
@@ -12,7 +13,7 @@ import { PerCardButton, SelectCardsPopup } from '../Popup.types';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { useGame } from '@/app/_contexts/Game.context';
 import { BiMinus, BiPlus } from 'react-icons/bi';
-import GameCard from '../../Cards/GameCard/GameCard';
+import GameCard from '../../Cards/GameCard';
 
 interface ButtonProps {
     data: SelectCardsPopup;
@@ -45,12 +46,12 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                     <Typography sx={textStyle}>{data.description}</Typography>
                 )}
                 <Box sx={cardListContainerStyle}>
-                    {data.cards.map((card, index) => {
+                    {data.cards.map((card) => {
                         return (
-                            <Box sx={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <Box key={`card-${index}-${card.uuid}`} sx={cardSelectorStyle}>
+                            <Box key={card.uuid} sx={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <Box key={card.uuid} sx={cardSelectorStyle}>
 
-                                    <GameCard card={{ ...card, selectable: false }} />
+                                    <GameCard key={card.uuid} card={{ ...card, selectable: false }} />
                                 </Box>
                                 {renderButtons(card.uuid, data.perCardButtons)}
                             </Box>

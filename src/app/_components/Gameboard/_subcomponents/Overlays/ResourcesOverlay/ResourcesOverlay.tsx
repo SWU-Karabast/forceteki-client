@@ -13,7 +13,7 @@ import { Close } from '@mui/icons-material';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { IResourcesOverlayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard/GameCard';
+import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 
 const ResourcesOverlay: React.FC<IResourcesOverlayProps> = ({
     isModalOpen,
