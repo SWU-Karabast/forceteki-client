@@ -21,7 +21,7 @@ const QuickGame: React.FC = () => {
         containerStyle: {
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: `url(${s3ImageURL('game/board-background-1.png')})`,
+            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
         },
