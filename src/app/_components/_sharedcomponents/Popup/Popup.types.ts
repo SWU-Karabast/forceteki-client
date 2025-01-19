@@ -7,11 +7,16 @@ export type PopupButton = {
     arg: string;
 };
 
+export type PerCardButton = {
+    arg: string;
+    command: string;
+    text: string;
+};
+
 export type DefaultPopup = {
     type: 'default';
     uuid: string;
     title: string;
-    promptType?: string;
     description?: string;
     buttons: PopupButton[];
 };
@@ -20,9 +25,11 @@ export type SelectCardsPopup = {
     type: 'select';
     uuid: string;
     title: string;
-    maxNumber?: number;
+    description?:string;
+
+
     cards: ICardData[];
-    onConfirm: (cards: ICardData[]) => void;
+    perCardButtons: PerCardButton[];
 };
 
 export type PilePopup = {
