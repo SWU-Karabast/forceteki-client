@@ -14,11 +14,7 @@ import { useSidebar } from '../_contexts/Sidebar.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
-export enum MatchType {
-    Custom = 'Custom',
-    Private = 'Private',
-    Quick = 'Quick',
-}
+import { MatchType } from '@/app/_constants/constants';
 
 
 const GameBoard = () => {
