@@ -22,7 +22,7 @@ const HomePagePlayMode: React.FC = () => {
             // 	user: user,
             // 	deck: deckData
             // };
-            const response = await fetch('http://localhost:9500/api/start-test-game',
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/start-test-game`,
                 {
                     method: 'POST',
                     headers: {
@@ -45,7 +45,7 @@ const HomePagePlayMode: React.FC = () => {
     useEffect(() => {
         const fetchGameList = async () => {
             try {
-                const response = await fetch('http://localhost:9500/api/test-game-setups',
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/test-game-setups`,
                     {
                         method: 'GET',
                         headers: {

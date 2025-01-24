@@ -51,6 +51,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
 
         const newSocket = io('http://localhost:9500', {
+            path: '/ws',
             query: {
                 user: JSON.stringify(user ? user : { username:username, id:storedUnknownUserId }),
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null })
