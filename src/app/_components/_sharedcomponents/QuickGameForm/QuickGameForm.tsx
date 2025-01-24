@@ -42,7 +42,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 user: user,
                 deck: deckData
             };
-            const response = await fetch('http://localhost:9500/api/enter-queue',
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
                     method: 'POST',
                     headers: {

@@ -16,7 +16,7 @@ const JoinableGame: React.FC = () => {
         // Fetch unfilled lobbies from the server
         const fetchLobbies = async () => {
             try {
-                const response = await fetch('http://localhost:9500/api/available-lobbies');
+                const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/available-lobbies`);
                 if (!response.ok) {
                     throw new Error(`Error fetching lobbies: ${response.statusText}`);
                 }
@@ -32,7 +32,7 @@ const JoinableGame: React.FC = () => {
 
     const joinLobby = async (lobbyId: string) => {
         try {
-            const response = await fetch('http://localhost:9500/api/join-lobby', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/join-lobby`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

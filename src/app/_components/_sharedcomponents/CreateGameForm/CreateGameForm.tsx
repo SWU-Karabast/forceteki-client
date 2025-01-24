@@ -63,7 +63,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 deck: deckData,
                 isPrivate: privacy === 'Private',
             };
-            const response = await fetch('http://localhost:9500/api/create-lobby',
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
                     method: 'POST',
                     headers: {
