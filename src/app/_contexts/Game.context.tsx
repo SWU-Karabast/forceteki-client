@@ -50,7 +50,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
 
 
-        const newSocket = io('http://localhost:9500', {
+        const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
             query: {
                 user: JSON.stringify(user ? user : { username:username, id:storedUnknownUserId }),
