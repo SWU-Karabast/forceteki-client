@@ -91,6 +91,8 @@ const Deck: React.FC = () => {
     // set decks for connectedUser
     const newDeck = connectedUser ? connectedUser.deck ? connectedUser.deck.deckCards || [] : [] : [];
     const sideBoard = connectedUser ? connectedUser.deck ? connectedUser.deck.sideboard || [] : [] : [];
+    console.log('newDeck', newDeck);
+    console.log('sideBoard', sideBoard);
 
     // Calculate the total counts
     const deckCount = newDeck.reduce(
@@ -125,7 +127,7 @@ const Deck: React.FC = () => {
                     <Box sx={mainContainerStyle}>
                         {newDeck.map((card:IServerCardData) => (
                             <GameCard
-                                key={card.card.uuid}
+                                key={card.card.id}
                                 card={card}
                                 variant={'lobby'}
                                 onClick={() => sendLobbyMessage(['updateDeck','Deck', card.card.id])}
@@ -149,7 +151,7 @@ const Deck: React.FC = () => {
                             <Box sx={mainContainerStyle}>
                                 {sideBoard.map((card:IServerCardData) => (
                                     <GameCard
-                                        key={card.card.uuid}
+                                        key={card.card.id}
                                         card={card}
                                         variant={'lobby'}
                                         onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.card.id])}
