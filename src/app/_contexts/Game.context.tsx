@@ -59,9 +59,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         const handleGameStatePopups = (gameState: any) => {
-            if (!user || user.id == null) return; // TODO currently this doesn't support private lobbies where players aren't logged in.
-            if (gameState.players?.[user.id].promptState) {
-                const promptState = gameState.players?.[user.id].promptState;
+            if (!connectedPlayerId) return; // TODO currently this doesn't support private lobbies where players aren't logged in.
+            if (gameState.players?.[connectedPlayerId].promptState) {
+                const promptState = gameState.players?.[connectedPlayerId].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } =
                     promptState;
                 if (promptType === 'actionWindow') return;
