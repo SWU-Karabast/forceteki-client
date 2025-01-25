@@ -43,6 +43,7 @@ const HomePagePlayMode: React.FC = () => {
     }
 
     useEffect(() => {
+        if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {
             try {
                 const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/test-game-setups`,
