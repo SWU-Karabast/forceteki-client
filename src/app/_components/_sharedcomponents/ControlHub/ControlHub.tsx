@@ -137,9 +137,12 @@ const ControlHub: React.FC<IControlHubProps> = ({
                                 </NextLinkMui>
                             </>
                         ) : (
-                            <NextLinkMui href="/auth" sx={styles.profileLink}>
-                                Log In
-                            </NextLinkMui>
+                            // Disable login on Prod for now
+                            process.env.NODE_ENV === 'development' ? (
+                                <NextLinkMui href="/auth" sx={styles.profileLink}>
+                                    Log In
+                                </NextLinkMui>
+                            ) : null
                         )}
                     </Box>
                     <Box sx={styles.socialIconsBox}>

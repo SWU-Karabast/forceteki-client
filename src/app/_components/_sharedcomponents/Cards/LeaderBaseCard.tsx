@@ -37,6 +37,17 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'relative', // Needed for positioning the red box
             border: `2px solid ${getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt().promptType)}`,
         },
+        cardStyleDeployed: {
+            backgroundColor: 'transparent',
+            width: '10rem',
+            height: '7.18rem',
+            textAlign: 'center',
+            display: 'flex',
+            cursor: 'default',
+            m: '0em',
+            position: 'relative', // Needed for positioning the red box
+            border: '2px solid #FFFFFF55',
+        },
         cardStyleLobby: card ? {
             backgroundColor: 'transparent',
             backgroundImage: `url(${s3CardImageURL(card)})`,
@@ -64,9 +75,24 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             mb: '10px',
         },
         damageStyle: {
-            fontWeight: '600',
-            fontSize: '2em',
-            color: 'hotpink',
+            fontWeight: '800',
+            fontSize: '1.9rem',
+            color: 'white',
+            width: '2.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '2.5rem',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            backgroundImage: 'url(/token-background.svg)',
+            backgroundPosition: 'right',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
+            textShadow: '1px 1px #00000033'
         },
         nameplateBoxStyle: {
             position: 'absolute',
@@ -88,7 +114,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     return (
         <Box>
             <Card
-                sx={isLobbyView ? styles.cardStyleLobby : styles.cardStyle}
+                sx={isLobbyView ? styles.cardStyleLobby : !isLobbyView && variant === 'leader' && card.type !== 'leader' ? styles.cardStyleDeployed : styles.cardStyle}
                 onClick={() => {
                     // Only allow clicking if not lobby view and the card is selectable
                     if (!disabled && card.selectable) {
@@ -97,7 +123,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 }}
             >
                 {/* Only show card content if not in lobby view */}
-                {!isLobbyView && card && (
+                {!isLobbyView && card && variant === 'base' && (
                     <CardContent>
                         <Box sx={{ display: 'flex', justifyContent: 'end' }}>
                             <Typography variant="body1" sx={styles.damageStyle}>
