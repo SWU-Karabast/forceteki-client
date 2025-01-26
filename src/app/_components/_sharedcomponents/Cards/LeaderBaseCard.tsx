@@ -46,7 +46,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             cursor: 'default',
             m: '0em',
             position: 'relative', // Needed for positioning the red box
-            border: '1px solid #FFFFFF',
+            border: '2px solid #FFFFFF55',
         },
         cardStyleLobby: card ? {
             backgroundColor: 'transparent',
@@ -87,10 +87,11 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            backgroundImage: 'url(/damage-base.png)',
+            backgroundImage: 'url(/token-background.svg)',
             backgroundPosition: 'right',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
+            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
             textShadow: '1px 1px #00000033'
         },
         nameplateBoxStyle: {
