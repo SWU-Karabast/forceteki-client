@@ -43,7 +43,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             height: '7.18rem',
             textAlign: 'center',
             display: 'flex',
-            cursor: 'pointer',
+            cursor: 'default',
             m: '0em',
             position: 'relative', // Needed for positioning the red box
             border: '1px solid #FFFFFF',
