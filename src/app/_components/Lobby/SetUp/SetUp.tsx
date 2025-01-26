@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import {
     Card,
     Typography,
-    CardActions,
-    Button,
-    Box, Divider, TextField, CardContent,
+    Box, Divider,
 } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import SetUpCard from '@/app/_components/Lobby/_subcomponents/SetUpCard/SetUpCard';
@@ -21,6 +19,7 @@ const SetUp: React.FC = ({
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     // setup chat mechanics
     const [chatMessage, setChatMessage] = useState('');
+    
     const handleChatSubmit = () => {
         if (chatMessage.trim()) {
             sendLobbyMessage(['sendChatMessage',chatMessage]);
@@ -28,72 +27,74 @@ const SetUp: React.FC = ({
         }
     };
 
-    // ------------------------STYLES------------------------//
-    const mainCardStyle = {
-        borderRadius: '1.1em',
-        height: '100%',
-        maxHeight: '61.4vh',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        mt: '2.0em',
-        p: '1.8em',
-        backgroundColor: '#00000080',
-        backdropFilter: 'blur(30px)',
-        overflow: 'hidden',
-        '@media (max-height: 1000px)': {
-            maxHeight: '60.3vh',
-        },
-        '@media (max-height: 759px)': {
-            maxHeight: '42.6vh',
-        },
-    };
-
-    const lobbyTextStyle ={
-        fontSize: '3.0em',
-        fontWeight: '600',
-        color: 'white',
-        alignSelf: 'flex-start',
-        mb: '0.3em',
-    };
-    const exitCard = {
-        display: 'flex',
-        pr: '1.2em',
-        pl: '1.2em',
-        width: '100%',
-        height: '10%',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        cursor: 'pointer',
-    };
-    const dividerStyle = {
-        backgroundColor: '#fff',
-        mt: '.5vh',
-        mb: '0.5vh',
-    };
-    const boxContainer = {
-        width: '100%',
-        // maxHeight: "64vh", // this is for the small screen
-        height: '100%',
-    };
     const handleExit = () => {
         sendMessage('manualDisconnect');
         router.push('/');
     }
 
+    // ------------------------STYLES------------------------//
+    const styles = {
+        mainCardStyle: {
+            borderRadius: '1.1em',
+            height: '100%',
+            maxHeight: '61.4vh',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            mt: '2.0em',
+            p: '1.8em',
+            backgroundColor: '#00000080',
+            backdropFilter: 'blur(30px)',
+            overflow: 'hidden',
+            '@media (max-height: 1000px)': {
+                maxHeight: '60.3vh',
+            },
+            '@media (max-height: 759px)': {
+                maxHeight: '42.6vh',
+            },
+        },
+        lobbyTextStyle:{
+            fontSize: '3.0em',
+            fontWeight: '600',
+            color: 'white',
+            alignSelf: 'flex-start',
+            mb: '0.3em',
+        },
+        exitCard: {
+            display: 'flex',
+            pr: '1.2em',
+            pl: '1.2em',
+            width: '100%',
+            height: '10%',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+        },
+        dividerStyle: {
+            backgroundColor: '#fff',
+            mt: '.5vh',
+            mb: '0.5vh',
+        },
+        boxContainer: {
+            width: '100%',
+            // maxHeight: "64vh", // this is for the small screen
+            height: '100%',
+        },
+    }
+
     return (
-        <Box sx={boxContainer}>
-            <Typography sx={lobbyTextStyle}>KARABAST</Typography>
+        <Box sx={styles.boxContainer}>
+            <Typography sx={styles.lobbyTextStyle}>KARABAST</Typography>
             <SetUpCard owner={lobbyState ? lobbyState.lobbyOwnerId === connectedPlayer : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
-            <Card sx={mainCardStyle}>
+            <Card sx={styles.mainCardStyle}>
                 <Chat
                     chatHistory={lobbyState ? lobbyState.gameChat : []}
                     chatMessage={chatMessage}
                     setChatMessage={setChatMessage}
                     handleChatSubmit={handleChatSubmit}
                 />
-                <Divider sx={dividerStyle} />
-                <Box sx={exitCard} onClick={() => handleExit()}>
+                <Divider sx={styles.dividerStyle} />
+                <Box sx={styles.exitCard} onClick={() => handleExit()}>
                     <Typography variant="h5">
                         Exit Game Lobby
                     </Typography>
