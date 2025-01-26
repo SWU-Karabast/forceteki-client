@@ -5,7 +5,7 @@ import {
     Typography,
     TextField,
     Button,
-    Box, CardActions, Link, FormControl, Tooltip,
+    Box, CardActions, Link, Tooltip,
 } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation'
