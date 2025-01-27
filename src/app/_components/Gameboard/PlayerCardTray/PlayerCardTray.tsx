@@ -8,11 +8,9 @@ import CardActionTray from '../_subcomponents/PlayerTray/CardActionTray';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import { IPlayerCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { display } from '@mui/system';
 
 const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
     trayPlayer,
-    handleModalToggle,
 }) => {
     // -------------- Contexts ---------------- //
     const { gameState, connectedPlayer } = useGame();
@@ -51,7 +49,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
                 <DeckDiscard trayPlayer={trayPlayer} />
                 <Resources
                     trayPlayer={trayPlayer}
-                    handleModalToggle={handleModalToggle}
                 />
             </Grid>
             <Grid size={6} sx={styles.centerColumnStyle}>
