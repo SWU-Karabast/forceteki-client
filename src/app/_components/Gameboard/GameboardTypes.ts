@@ -43,7 +43,6 @@ export interface IDeckDiscardProps {
 
 export interface IResourcesProps {
     trayPlayer: string;
-    handleModalToggle?: () => void;
 }
 
 export interface IResourcesOverlayProps {
