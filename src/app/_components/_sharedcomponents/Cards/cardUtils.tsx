@@ -5,13 +5,19 @@ export interface ICardUtils {
 }
 
 export const getBorderColor = (card: ICardData, player: string, promptType: string = '') => {
-    if (promptType === 'resource' && card?.selected) {
+    if (!card) return '';
+
+    if (promptType === 'resource' && card.selected) {
         return 'var(--selection-yellow)';
     } else if (promptType === 'resource') {
         return '';
     }
+
+    if (card.selected) {
+        return 'var(--selection-blue)';
+    }
         
-    if (card?.selectable) {
+    if (card.selectable) {
         return card.controller.id === player ? 'var(--selection-green)' : 'var(--selection-red)';
     };
 

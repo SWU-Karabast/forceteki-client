@@ -73,6 +73,7 @@ export const theme: Theme = createTheme({
                     '--selection-green': '#72F979',
                     '--selection-red': '#FF0D0D',
                     '--selection-yellow': '#FFFE50',
+                    '--selection-blue': '#66E5FF',
                     '--initiative-blue': '#00BAFF',
                     '--initiative-red': '#FF3231',
                 },
