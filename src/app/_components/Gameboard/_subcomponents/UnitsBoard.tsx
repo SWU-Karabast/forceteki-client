@@ -3,7 +3,9 @@ import { Box, Grid2 as Grid } from '@mui/material';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
+import { UnitBoardBorder } from './gameboardSvgs';
 import { useGame } from '@/app/_contexts/Game.context';
+import { relative } from 'path';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     sidebarOpen,
@@ -56,11 +58,18 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 
     const styles = {
         mainBoxStyle: {
+            position: 'relative',
             borderRadius: '20px',
             border: '2px solid #FFFFFF55',
             height: '100%',
             width: '100%',
             padding: '1em',
+        },
+        borderLine: {
+            position: 'absolute',
+            top: '0', 
+            left: '0',
+            width: '100%',
         },
         containerStyle: {
             height: '100%',
@@ -86,6 +95,9 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 
     return (
         <Box sx={styles.mainBoxStyle}>
+            <Box sx={styles.borderLine}>
+                <UnitBoardBorder height={40} />
+            </Box>
             <Grid container direction="column" sx={styles.containerStyle}>
                 {/* Opponent's Ground Units */}
                 <Grid sx={styles.opponentGridStyle}>
