@@ -101,11 +101,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                     height: size === 'standard' ? '10rem' : '7.7rem',
                     width: size === 'standard' ? '7.18rem' : '8rem',
                     border: `2px solid ${getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType)}`,
+                    ...(cardData?.exhausted && {
+                        transform: 'rotate(4deg)',
+                        transition: 'transform 0.15s ease' }
+                    ),
 
-                    /* ...(cardData.exhausted &&{
-							transform: 'rotate(4deg)',
-							transition: 'transform 0.3s ease',
-						})*/
                 }
             ),
             '&:hover': {
@@ -129,6 +129,13 @@ const GameCard: React.FC<IGameCardProps> = ({
                     filter: 'grayScale(100%)',
                 } : null
             ),
+        },
+        cardOverlay: {
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundColor: cardData?.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            clickEvents: 'none',
         },
         imageStyle: {
             width: '2.5rem',
@@ -294,6 +301,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {isFaceUp ? (
                     <CardContent sx={styles.cardContentStyle}>
+                        <Box sx={styles.cardOverlay}></Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                         </Box>
                         {variant === 'lobby' ? (
