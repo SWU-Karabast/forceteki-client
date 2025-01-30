@@ -32,7 +32,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         router.push('/GameBoard');
     };
     const handleOnChangeDeck = async () => {
-        console.log('SWUDB Deck Link:', deckLink);
+        console.log('Deck Link:', deckLink);
         const deckData = deckLink ? await fetchDeckData(deckLink) : null;
         sendLobbyMessage(['changeDeck',deckData])
     }
@@ -201,6 +201,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             {lobbyState && (
                 <>
                     <Box sx={styles.labelTextStyle}>
+                        <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
+                            SWU Stats
+                        </Link>{' '}
+                        or{' '}
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
