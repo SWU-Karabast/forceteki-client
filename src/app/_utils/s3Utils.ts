@@ -187,7 +187,7 @@ export const transformDeckWithCardData = async (deckData: IDeckData): Promise<IS
             const cardData = await fetchCardData(deckCard.id);
             if (!cardData) return null;
             return {
-                count: deckCard.count,
+                count: deckCard.count || 1,
                 card: cardData, // Add full card details under "card"
             };
         };
