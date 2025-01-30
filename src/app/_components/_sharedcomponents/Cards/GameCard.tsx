@@ -85,6 +85,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const styles = {
         cardStyles: {
             borderRadius: '.38em',
+            position: 'relative',
             ...(variant === 'lobby'
                 ? {
                     height: '13rem',
@@ -123,6 +124,11 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: size === 'standard' ? 'contain' : 'cover',
             backgroundPosition: size === 'standard' ? 'center' : 'top',
             backgroundRepeat: 'no-repeat',
+            ...(!(cardData?.implemented ?? false)
+                ? {
+                    filter: 'grayScale(100%)',
+                } : null
+            ),
         },
         imageStyle: {
             width: '2.5rem',
@@ -251,6 +257,27 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: 'url(/SentinelToken.png)',
             alignItems: 'center',
             justifyContent: 'center',
+        },
+        unimplementedContainerStyle: {
+            position: 'absolute',
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: '2',
+            top: '0',
+            left: '0'
+        },
+        unimplementedAlertStyle: {
+            fontSize: '1rem',
+            fontWeight: '700',
+            backgroundImage: 'url(/not-implemented.svg)',
+            backgroundPosition: 'center',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            height: '40px',
+            width: '40px',
         }
     }
     return (
@@ -259,6 +286,12 @@ const GameCard: React.FC<IGameCardProps> = ({
 
                 onClick={disabled ? undefined : handleClick}
             >
+                {/* This adds a layer on top of the card to indicate that the card is not yet implemented. */}
+                {isFaceUp === true && !(cardData?.implemented ?? false) && (
+                    <CardContent sx={styles.unimplementedContainerStyle}>
+                        <Box sx={styles.unimplementedAlertStyle}></Box>
+                    </CardContent>
+                )}
                 {isFaceUp ? (
                     <CardContent sx={styles.cardContentStyle}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
