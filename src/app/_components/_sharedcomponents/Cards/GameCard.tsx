@@ -10,6 +10,7 @@ import { IGameCardProps, ICardData, IServerCardData } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
+import { usePathname } from 'next/navigation'
 
 // Type guard to check if the card is ICardData
 const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
@@ -24,7 +25,8 @@ const GameCard: React.FC<IGameCardProps> = ({
     variant,
     disabled = false,
 }) => {
-    // const isLobbyView = path === "/lobby";
+    const pathname = usePathname();
+    const isLobbyView = pathname === '/lobby';
     
     // Determine whether card is ICardData or IServerCardData
     const cardData = isICardData(card) ? card : card.card;
@@ -264,7 +266,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'absolute',
             height: '100%',
             width: '100%',
-            display: cardData?.implemented || !isFaceUp ? 'none' : 'flex',
+            display: !cardData?.implemented && isFaceUp && !isLobbyView ? 'flex' : 'none',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: '2',
