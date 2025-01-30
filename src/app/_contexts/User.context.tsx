@@ -6,11 +6,11 @@ import React, {
     ReactNode,
     useEffect,
     useState,
-    useCallback,
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { IUserContextType } from './UserTypes';
+import { v4 as uuid } from 'uuid';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
@@ -39,6 +39,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             setUser(null);
         }
     }, [session]);
+
+    useEffect(() => {
+        if (!user && !sessionStorage.getItem('anonymousUserId')) {
+            sessionStorage.setItem('anonymousUserId', uuid());
+        }
+    }, [user]);
 
     const login = (provider: 'google' | 'discord') => {
         signIn(provider, {
