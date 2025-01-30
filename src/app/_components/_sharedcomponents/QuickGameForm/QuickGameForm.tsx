@@ -32,7 +32,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         event.preventDefault();
         setQueueState(true);
         console.log('Favourite Deck:', favouriteDeck);
-        console.log('SWUDB Deck Link:', deckLink);
+        console.log('Deck Link:', deckLink);
         console.log('beginning fetch for deck link');
         const deckData = deckLink ? await fetchDeckData(deckLink) : null;
         console.log('fetch complete, deck data:', deckData);
@@ -118,9 +118,13 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     </StyledTextField>
                 </FormControl>
 
-                {/* SWUDB Deck Link Input */}
+                {/* Deck Link Input */}
                 <FormControl fullWidth sx={{ mb: 0 }}>
                     <Box sx={styles.labelTextStyle}>
+                        <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
+                            SWU Stats
+                        </Link>{' '}
+                        or{' '}
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
