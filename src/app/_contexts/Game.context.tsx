@@ -35,13 +35,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const { openPopup, clearPopups } = usePopup();
-    const { user } = useUser();
+    const { user, anonymousUserId } = useUser();
     const searchParams = useSearchParams();
 
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
-        const anonymousUserId = sessionStorage.getItem('anonymousUserId');
         const connectedPlayerId = user?.id || anonymousUserId || '';
+        console.log('connectedPlayerId', connectedPlayerId);
+        if (!connectedPlayerId) return;
         setConnectedPlayer(connectedPlayerId);
         clearPopups();
 
@@ -115,7 +116,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, openPopup, clearPopups]);
+    }, [user, anonymousUserId, openPopup, clearPopups]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         console.log('sending message', message, args);

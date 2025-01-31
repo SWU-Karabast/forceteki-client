@@ -14,6 +14,7 @@ import { v4 as uuid } from 'uuid';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
+    anonymousUserId: null,
     login: () => {},
     devLogin: () => {},
     logout: () => {},
@@ -24,6 +25,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
     const { data: session } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
+    const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -34,7 +36,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 handleDevSetUser(storedUser);
             }
         }
-
+    
         // Keep context in sync with next-auth session
         if (session?.user) {
             setUser({
@@ -45,12 +47,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             });
         } else {
             // if session not detected assign anonymous user
-            const anonymousId = sessionStorage.getItem('anonymousUserId');
+            let anonymousId = sessionStorage.getItem('anonymousUserId');
             if (!anonymousId) {
-                sessionStorage.setItem('anonymousUserId', uuid());
+                anonymousId = uuid();
+                sessionStorage.setItem('anonymousUserId', anonymousId);
             }
+            setAnonymousUserId(anonymousId);
         }
     }, [session]);
+
 
     const login = (provider: 'google' | 'discord') => {
         signIn(provider, {
@@ -93,10 +98,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
     const clearAnonUser = () => {
         sessionStorage.removeItem('anonymousUserId');
+        setAnonymousUserId(null);
     }
 
     return (
-        <UserContext.Provider value={{ user, login, devLogin, logout }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout }}>
             {children}
         </UserContext.Provider>
     );
