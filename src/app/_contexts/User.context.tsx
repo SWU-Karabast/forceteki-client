@@ -6,11 +6,11 @@ import React, {
     ReactNode,
     useEffect,
     useState,
-    useCallback,
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { IUserContextType } from './UserTypes';
+import { v4 as uuid } from 'uuid';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
@@ -27,6 +27,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const router = useRouter();
 
     useEffect(() => {
+        // check dev user first
+        if (process.env.NODE_ENV === 'development') {
+            const storedUser = localStorage.getItem('devUser');
+            if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
+                handleDevSetUser(storedUser);
+            }
+        }
+
         // Keep context in sync with next-auth session
         if (session?.user) {
             setUser({
@@ -36,7 +44,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: session.user.provider || null,
             });
         } else {
-            setUser(null);
+            // if session not detected assign anonymous user
+            const anonymousId = sessionStorage.getItem('anonymousUserId');
+            if (!anonymousId) {
+                sessionStorage.setItem('anonymousUserId', uuid());
+            }
         }
     }, [session]);
 
@@ -44,6 +56,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         signIn(provider, {
             callbackUrl: '/',
         });
+        clearAnonUser();
     };
 
     const handleDevSetUser = (user: 'Order66' | 'ThisIsTheWay') => {
@@ -66,24 +79,21 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
+        clearAnonUser();
         localStorage.setItem('devUser', user);
         router.push('/');
     };
 	
-    useEffect(() => {
-        if (process.env.NODE_ENV === 'development' && !user ) {
-            const storedUser = localStorage.getItem('devUser');
-            if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
-                handleDevSetUser(storedUser);
-            }
-        }
-    }, [user]);
 
     const logout = () => {
         signOut({ callbackUrl: '/' });
         localStorage.removeItem('devUser');
         setUser(null);
     };
+
+    const clearAnonUser = () => {
+        sessionStorage.removeItem('anonymousUserId');
+    }
 
     return (
         <UserContext.Provider value={{ user, login, devLogin, logout }}>

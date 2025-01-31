@@ -59,7 +59,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         console.log('Save Deck To Favourites:', saveDeck);
         try {
             const payload = {
-                user: user,
+                user: user || sessionStorage.getItem('anonymousUserId'),
                 deck: deckData,
                 isPrivate: privacy === 'Private',
             };
@@ -76,12 +76,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             if (!response.ok) {
                 throw new Error('Failed to create game');
             }
-            const responseJson = await response.json();
-            // Store unknownUserId in local storage (so we can retrieve it in GameContext)
-            if(privacy === 'Private') {
-                localStorage.setItem('unknownUserId', responseJson.newUserId);
-                localStorage.setItem('unknownUsername', 'Player1');
-            }
+
             router.push('/lobby');
         } catch (error) {
             console.error(error);

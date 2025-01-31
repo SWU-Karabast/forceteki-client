@@ -19,6 +19,7 @@ import { MatchType } from '@/app/_constants/constants';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState } = useGame();
+
     const router = useRouter();
     const { sidebarOpen, toggleSidebar } = useSidebar();
     const [chatMessage, setChatMessage] = useState('');
@@ -68,11 +69,6 @@ const GameBoard = () => {
         setPreferenceOpen(!isPreferenceOpen);
     }
 
-    // Ensure that essential state values are defined before rendering.
-    if (!gameState && !connectedPlayer && !lobbyState) {
-        return null;
-    }
-
     // check if game ended already.
     const winners = gameState?.winner ? gameState.winner : undefined;
     // const winners = ['order66']
@@ -81,9 +77,10 @@ const GameBoard = () => {
         ? ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
         :['currentGame','keyboardShortcuts','cardSleeves','gameOptions']
 
-
+    if (!gameState || !connectedPlayer) {
+        return null;
+    }
     // ----------------------Styles-----------------------------//
-
     const styles = {
         mainBoxStyle: {
             flexGrow: 1,
@@ -112,10 +109,6 @@ const GameBoard = () => {
         'radial-gradient(ellipse, rgba(0,0,0, 0.9), rgba(0,0,0,0.7), rgba(0,0,0,0.0))',
         },
     };
-
-    if (!gameState || !connectedPlayer) {
-        return null;
-    }
 
     return (
         <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>
