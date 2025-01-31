@@ -27,6 +27,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const router = useRouter();
 
     useEffect(() => {
+        // check dev user first
+        if (process.env.NODE_ENV === 'development') {
+            const storedUser = localStorage.getItem('devUser');
+            if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
+                handleDevSetUser(storedUser);
+            }
+        }
+
         // Keep context in sync with next-auth session
         if (session?.user) {
             setUser({
@@ -36,20 +44,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: session.user.provider || null,
             });
         } else {
-            setUser(null);
+            // if session not detected assign anonymous user
+            const anonymousId = sessionStorage.getItem('anonymousUserId');
+            if (!anonymousId) {
+                sessionStorage.setItem('anonymousUserId', uuid());
+            }
         }
     }, [session]);
-
-    useEffect(() => {
-        if (!user && !sessionStorage.getItem('anonymousUserId')) {
-            sessionStorage.setItem('anonymousUserId', uuid());
-        }
-    }, [user]);
 
     const login = (provider: 'google' | 'discord') => {
         signIn(provider, {
             callbackUrl: '/',
         });
+        clearAnonUser();
     };
 
     const handleDevSetUser = (user: 'Order66' | 'ThisIsTheWay') => {
@@ -72,24 +79,21 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
+        clearAnonUser();
         localStorage.setItem('devUser', user);
         router.push('/');
     };
 	
-    useEffect(() => {
-        if (process.env.NODE_ENV === 'development' && !user ) {
-            const storedUser = localStorage.getItem('devUser');
-            if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
-                handleDevSetUser(storedUser);
-            }
-        }
-    }, [user]);
 
     const logout = () => {
         signOut({ callbackUrl: '/' });
         localStorage.removeItem('devUser');
         setUser(null);
     };
+
+    const clearAnonUser = () => {
+        sessionStorage.removeItem('anonymousUserId');
+    }
 
     return (
         <UserContext.Provider value={{ user, login, devLogin, logout }}>
