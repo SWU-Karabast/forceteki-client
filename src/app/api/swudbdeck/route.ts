@@ -1,4 +1,5 @@
-import { IDeckData } from '@/app/_utils/fetchDeckData';
+import { DeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
+import { Deck } from '@mui/icons-material';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
@@ -12,6 +13,8 @@ export async function GET(req: Request) {
         }
 
         let response: Response;
+        let deckSource = DeckSource.Undefined;
+        let deckIdentifier: string = "";
 
         if (deckLink.includes('swustats.net')) {
             const gameNameMatch = deckLink.match(/gameName=([^&]+)/);
@@ -24,7 +27,7 @@ export async function GET(req: Request) {
                     { status: 400 }
                 );
             }
-
+            deckIdentifier = gameName;
             const apiUrl = `https://swustats.net/TCGEngine/APIs/LoadDeck.php?deckID=${gameName}&format=json&setId=true`;
 
             response = await fetch(apiUrl, { method: 'GET' });
@@ -37,7 +40,7 @@ export async function GET(req: Request) {
         else if (deckLink.includes('swudb.com')) {
             const match = deckLink.match(/\/deck\/(?:view\/)?([^/?]+)/);
             const deckId = match ? match[1] : null;
-
+            if(deckId != null) deckIdentifier = deckId;
             if (!deckId) {
                 console.error('Error: Invalid deckLink format');
                 return NextResponse.json(
@@ -59,7 +62,9 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Deckbuilder not supported' }, { status: 400 });
         }
 
-        const data: IDeckData = await response.json();
+        let data: IDeckData = await response.json();
+        data.deckSource = deckSource;
+        data.deckID = deckIdentifier;
 
         return NextResponse.json(data);
     } catch (error) {

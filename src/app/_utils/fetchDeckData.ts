@@ -13,8 +13,9 @@ export interface IDeckCard {
 }
 
 export enum DeckSource {
-    SWUStats = 0,
-    SWUDB = 1
+    Undefined = 0,
+    SWUStats = 1,
+    SWUDB = 2
 }
 
 export interface IDeckData {
