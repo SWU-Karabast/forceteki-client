@@ -1,23 +1,5 @@
+import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { NextResponse } from 'next/server';
-
-interface IDeckMetadata {
-    name: string;
-    author: string;
-}
-
-interface IDeckCard {
-    id: string;
-    count: number;
-}
-
-interface IDeckData {
-    metadata: IDeckMetadata;
-    leader: IDeckCard;
-    secondleader: IDeckCard | null;
-    base: IDeckCard;
-    deck: IDeckCard[];
-    sideboard: IDeckCard[];
-}
 
 export async function GET(req: Request) {
     try {

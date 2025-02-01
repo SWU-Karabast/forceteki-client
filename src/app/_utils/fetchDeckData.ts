@@ -1,23 +1,31 @@
 // app/_utils/fetchDeckData.ts
 
 import { updateIdsWithMapping, mapIdToInternalName, transformDeckWithCardData } from '@/app/_utils/s3Utils';
-interface IDeckMetadata {
+
+export interface IDeckMetadata {
     name: string;
     author: string;
 }
 
-interface IDeckCard {
+export interface IDeckCard {
     id: string;
     count: number;
 }
 
-interface IDeckData {
+export enum DeckSource {
+    SWUStats = 0,
+    SWUDB = 1
+}
+
+export interface IDeckData {
     metadata: IDeckMetadata;
     leader: IDeckCard;
     secondleader: IDeckCard | null;
     base: IDeckCard;
     deck: IDeckCard[];
     sideboard: IDeckCard[];
+    deckSource: DeckSource;
+    deckID: string;
 }
 
 export const fetchDeckData = async (deckLink: string) => {
