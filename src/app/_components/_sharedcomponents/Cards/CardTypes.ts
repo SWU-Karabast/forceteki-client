@@ -56,6 +56,11 @@ export interface ILeaderBaseCardProps {
     size?: 'standard' | 'large';
 }
 
+export interface ILeaderBasePreviewProps {
+    leader: ICardData;
+    base: ICardData;
+}
+
 interface ICardPlayer {
     id: string;
     name: string;
