@@ -27,6 +27,7 @@ export async function GET(req: Request) {
                     { status: 400 }
                 );
             }
+            deckSource = DeckSource.SWUStats;
             deckIdentifier = gameName;
             const apiUrl = `https://swustats.net/TCGEngine/APIs/LoadDeck.php?deckID=${gameName}&format=json&setId=true`;
 
@@ -41,6 +42,7 @@ export async function GET(req: Request) {
             const match = deckLink.match(/\/deck\/(?:view\/)?([^/?]+)/);
             const deckId = match ? match[1] : null;
             if(deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.SWUDB;
             if (!deckId) {
                 console.error('Error: Invalid deckLink format');
                 return NextResponse.json(
