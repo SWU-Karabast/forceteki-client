@@ -1,5 +1,4 @@
 import { DeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
-import { Deck } from '@mui/icons-material';
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
@@ -14,7 +13,7 @@ export async function GET(req: Request) {
 
         let response: Response;
         let deckSource = DeckSource.Undefined;
-        let deckIdentifier: string = "";
+        let deckIdentifier: string = '';
 
         if (deckLink.includes('swustats.net')) {
             const gameNameMatch = deckLink.match(/gameName=([^&]+)/);
@@ -64,7 +63,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Deckbuilder not supported' }, { status: 400 });
         }
 
-        let data: IDeckData = await response.json();
+        const data: IDeckData = await response.json();
         data.deckSource = deckSource;
         data.deckID = deckIdentifier;
 
