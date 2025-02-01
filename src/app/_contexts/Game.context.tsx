@@ -35,16 +35,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const { openPopup, clearPopups } = usePopup();
-    const { user } = useUser();
+    const { user, anonymousUserId } = useUser();
     const searchParams = useSearchParams();
 
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
-        // we get the lobbyId
-        const storedUnknownUserId = localStorage.getItem('unknownUserId') || (lobbyId ? lobbyId + '-GuestId2' : null);
-        // we set the username of the player based on whether it is in the localStorage or not.
-        const username = localStorage.getItem('unknownUsername') || 'Player2';
-        const connectedPlayerId = user?.id || storedUnknownUserId || '';
+        const connectedPlayerId = user?.id || anonymousUserId || '';
+        console.log('connectedPlayerId', connectedPlayerId);
+        if (!connectedPlayerId) return;
         setConnectedPlayer(connectedPlayerId);
         clearPopups();
 
@@ -53,13 +51,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
             query: {
-                user: JSON.stringify(user ? user : { username:username, id:storedUnknownUserId }),
+                user: JSON.stringify(user ? user : { username: '', id: anonymousUserId }),
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null })
             },
         });
 
         const handleGameStatePopups = (gameState: any) => {
-            if (!connectedPlayerId) return; // TODO currently this doesn't support private lobbies where players aren't logged in.
+            if (!connectedPlayerId) return;
             if (gameState.players?.[connectedPlayerId].promptState) {
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } =
@@ -99,9 +97,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
         };
 
-        // newSocket.on('connect', () => {
-        //     console.log(`Connected to server as ${user ? user.username : ''}`);
-        // });
         newSocket.on('gamestate', (gameState: any) => {
             if (gameState?.id && gameState.id !== lastGameIdRef.current) {
                 clearPopups();
@@ -110,10 +105,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setGameState(gameState);
             console.log('Game state received:', gameState);
             handleGameStatePopups(gameState);
-        });
-        newSocket.on('connectedUser', () =>{
-            localStorage.removeItem('unknownUserId');
-            localStorage.removeItem('unknownUsername');
         });
         newSocket.on('lobbystate', (lobbyState: any) => {
             setLobbyState(lobbyState);
@@ -125,7 +116,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, openPopup, clearPopups]);
+    }, [user, anonymousUserId, openPopup, clearPopups]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         console.log('sending message', message, args);

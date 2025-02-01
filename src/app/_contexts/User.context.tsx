@@ -6,14 +6,15 @@ import React, {
     ReactNode,
     useEffect,
     useState,
-    useCallback,
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { IUserContextType } from './UserTypes';
+import { v4 as uuid } from 'uuid';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
+    anonymousUserId: null,
     login: () => {},
     devLogin: () => {},
     logout: () => {},
@@ -24,9 +25,18 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
     const { data: session } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
+    const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
+        // check dev user first
+        if (process.env.NODE_ENV === 'development') {
+            const storedUser = localStorage.getItem('devUser');
+            if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
+                handleDevSetUser(storedUser);
+            }
+        }
+    
         // Keep context in sync with next-auth session
         if (session?.user) {
             setUser({
@@ -36,14 +46,22 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: session.user.provider || null,
             });
         } else {
-            setUser(null);
+            // if session not detected assign anonymous user
+            let anonymousId = sessionStorage.getItem('anonymousUserId');
+            if (!anonymousId) {
+                anonymousId = uuid();
+                sessionStorage.setItem('anonymousUserId', anonymousId);
+            }
+            setAnonymousUserId(anonymousId);
         }
     }, [session]);
+
 
     const login = (provider: 'google' | 'discord') => {
         signIn(provider, {
             callbackUrl: '/',
         });
+        clearAnonUser();
     };
 
     const handleDevSetUser = (user: 'Order66' | 'ThisIsTheWay') => {
@@ -66,18 +84,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
+        clearAnonUser();
         localStorage.setItem('devUser', user);
         router.push('/');
     };
 	
-    useEffect(() => {
-        if (process.env.NODE_ENV === 'development' && !user ) {
-            const storedUser = localStorage.getItem('devUser');
-            if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
-                handleDevSetUser(storedUser);
-            }
-        }
-    }, [user]);
 
     const logout = () => {
         signOut({ callbackUrl: '/' });
@@ -85,8 +96,13 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         setUser(null);
     };
 
+    const clearAnonUser = () => {
+        sessionStorage.removeItem('anonymousUserId');
+        setAnonymousUserId(null);
+    }
+
     return (
-        <UserContext.Provider value={{ user, login, devLogin, logout }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout }}>
             {children}
         </UserContext.Provider>
     );

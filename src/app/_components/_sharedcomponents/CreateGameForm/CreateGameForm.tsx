@@ -52,14 +52,14 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         console.log('Favourite Deck:', favouriteDeck);
-        console.log('SWUDB Deck Link:', deckLink);
+        console.log('Deck Link:', deckLink);
         console.log('beginning fetch for deck link');
         const deckData = deckLink ? await fetchDeckData(deckLink) : null;
         console.log('fetch complete, deck data:', deckData);
         console.log('Save Deck To Favourites:', saveDeck);
         try {
             const payload = {
-                user: user,
+                user: user || sessionStorage.getItem('anonymousUserId'),
                 deck: deckData,
                 isPrivate: privacy === 'Private',
             };
@@ -76,12 +76,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             if (!response.ok) {
                 throw new Error('Failed to create game');
             }
-            const responseJson = await response.json();
-            // Store unknownUserId in local storage (so we can retrieve it in GameContext)
-            if(privacy === 'Private') {
-                localStorage.setItem('unknownUserId', responseJson.newUserId);
-                localStorage.setItem('unknownUsername', 'Player1');
-            }
+
             router.push('/lobby');
         } catch (error) {
             console.error(error);
@@ -154,9 +149,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     </StyledTextField>
                 </FormControl>
                 }
-                {/* SWUDB Deck Link Input */}
+                {/* Deck Link Input */}
                 <FormControl fullWidth sx={{ mb: 0 }}>
                     <Box sx={labelTextStyle}>
+                        <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
+                            SWU Stats
+                        </Link>{' '}
+                        or
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
