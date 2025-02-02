@@ -53,8 +53,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             deckCardStyle: {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
-                backgroundSize: 'contain',
-                backgroundImage: 'url(\'/swucardback.png\')',
+                backgroundSize: '88%',
+                backgroundImage: 'url(\'/card-back.png\')',
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',
                 alignItems: 'center',
