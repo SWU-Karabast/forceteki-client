@@ -105,9 +105,20 @@ const GameBoard = () => {
         promptStyle: {
             textAlign: 'center',
             fontSize: '1.3em',
-            background:
-        'radial-gradient(ellipse, rgba(0,0,0, 0.9), rgba(0,0,0,0.7), rgba(0,0,0,0.0))',
+            padding: '1rem',
+            position: 'relative',
         },
+        promptShadow: {
+            position: 'absolute',
+            top: '22%',
+            left: 0,
+            width: '100%',
+            height: '60%',
+            zIndex: -1,
+            background: 'rgba(0, 0, 0, 0.5)',
+            filter: 'blur(10px)',
+            WebkitFilter: 'blur(10px)'
+        }
     };
 
     return (
@@ -140,6 +151,7 @@ const GameBoard = () => {
             <Box sx={styles.centralPromptContainer}>
                 <Typography sx={styles.promptStyle}>
                     {gameState.players[connectedPlayer]?.promptState.menuTitle}
+                    <Box sx={styles.promptShadow}/>
                 </Typography>
             </Box>
             <ResourcesOverlay

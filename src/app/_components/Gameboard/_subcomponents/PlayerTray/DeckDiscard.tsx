@@ -17,21 +17,20 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         containerStyle: {
             display: 'flex',
             flexDirection: 'row',
-            gap: '1vw',
+            gap: '1rem',
             justifyContent: 'center',
             alignItems: 'center',
         },
         discard: {
             discardCardStyle: (cardData?: ICardData) => ({
-                backgroundColor: '#282828E6',
-                width: '7vh',
-                height: '9.5vh',
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                width: '4.6rem',
+                height: '6.5rem',
+                borderRadius: '5px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-
                 '&:hover': {
-                    backgroundColor: '#282828',
                     cursor: 'pointer',
                     scale: '1.1',
                     transition: 'all ease-in-out 0.15s',
@@ -54,16 +53,15 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             deckCardStyle: {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
-                backgroundSize: 'contain',
+                backgroundSize: '88%',
                 backgroundImage: 'url(\'/card-back.png\')',
                 backgroundRepeat: 'no-repeat',
-
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-
-                width: '7vh',
-                height: '9.5vh',
+                width: '4.6rem',
+                height: '6.5rem',
+                borderRadius: '5px',
             },
 
             deckContentStyle: {
