@@ -10,6 +10,7 @@ export interface ICardData {
     parentCardId?: string,
     id?: number;
     name?: string;
+    implemented?: boolean;
     selected?: boolean;
     selectable: boolean;
     disabled?: boolean;

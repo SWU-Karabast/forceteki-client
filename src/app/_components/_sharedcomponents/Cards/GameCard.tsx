@@ -6,11 +6,11 @@ import {
     Box,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import Image from 'next/image';
 import { IGameCardProps, ICardData, IServerCardData } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
+import { usePathname } from 'next/navigation'
 
 // Type guard to check if the card is ICardData
 const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
@@ -25,13 +25,14 @@ const GameCard: React.FC<IGameCardProps> = ({
     variant,
     disabled = false,
 }) => {
-    // const isLobbyView = path === "/lobby";
-    const isFaceUp = true;
-
+    const pathname = usePathname();
+    const isLobbyView = pathname === '/lobby';
+    
     // Determine whether card is ICardData or IServerCardData
     const cardData = isICardData(card) ? card : card.card;
     const cardCounter = !isICardData(card) ? card.count : 0;
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt } = useGame();
+    const isFaceUp = !!cardData;
 
     // default on click
     const defaultClickFunction = () => {
@@ -85,6 +86,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const styles = {
         cardStyles: {
             borderRadius: '.38em',
+            position: 'relative',
             ...(variant === 'lobby'
                 ? {
                     height: '13rem',
@@ -129,6 +131,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '100%',
             height: '100%',
             backgroundColor: cardData?.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            filter: 'none',
             clickEvents: 'none',
         },
         imageStyle: {
@@ -258,6 +261,28 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: 'url(/SentinelToken.png)',
             alignItems: 'center',
             justifyContent: 'center',
+        },
+        unimplementedContainerStyle: {
+            position: 'absolute',
+            height: '100%',
+            width: '100%',
+            display: !cardData?.implemented && isFaceUp && !isLobbyView ? 'flex' : 'none',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: '2',
+            top: '0',
+            left: '0'
+        },
+        unimplementedAlertStyle: {
+            fontSize: '1rem',
+            fontWeight: '700',
+            backgroundImage: 'url(/not-implemented.svg)',
+            backgroundPosition: 'center',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            height: 'auto',
+            aspectRatio: '1/1',
+            width: '50%'
         }
     }
     return (
@@ -266,7 +291,10 @@ const GameCard: React.FC<IGameCardProps> = ({
 
                 onClick={disabled ? undefined : handleClick}
             >
-                {isFaceUp ? (
+                <Box sx={{ position: 'relative', height: '100%', width: '100%', backgroundColor: 'transparent' }}>
+                    <Box sx={styles.unimplementedContainerStyle}>
+                        <Box sx={styles.unimplementedAlertStyle}></Box>
+                    </Box>
                     <CardContent sx={styles.cardContentStyle}>
                         <Box sx={styles.cardOverlay}></Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -304,26 +332,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                             </>
                         ) : null}
                     </CardContent>
-                ) : (
-                    <CardContent sx={styles.cardContentStyle}>
-                        <Image
-                            src="/card-back.png"
-                            alt="Deck Image"
-                            width={28}
-                            height={38}
-                            placeholder="empty"
-                            style={styles.imageStyle}
-                        />
-                        {/* {deckSize && deckSize > 0 && (
-						<>
-							<Box sx={circularBackgroundStyle}></Box>
-							<Typography variant="body2" sx={deckSizeTextStyle}>
-								{deckSize}
-							</Typography>
-						</>
-					)} */}
-                    </CardContent>
-                )}
+                </Box>
             </MuiCard>
             {otherUpgradeCards.map((subcard, index) => (
                 <Box
