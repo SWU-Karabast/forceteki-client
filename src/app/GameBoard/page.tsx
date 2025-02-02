@@ -118,7 +118,7 @@ const GameBoard = () => {
             background: 'rgba(0, 0, 0, 0.5)',
             filter: 'blur(10px)',
             WebkitFilter: 'blur(10px)'
-          }
+        }
     };
 
     return (
