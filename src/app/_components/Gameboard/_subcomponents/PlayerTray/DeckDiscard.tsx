@@ -23,16 +23,14 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         },
         discard: {
             discardCardStyle: (cardData?: ICardData) => ({
-                backgroundColor: '#282828E6',
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
                 width: '4.6rem',
                 height: '6.5rem',
                 borderRadius: '5px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-
                 '&:hover': {
-                    backgroundColor: '#282828',
                     cursor: 'pointer',
                     scale: '1.1',
                     transition: 'all ease-in-out 0.15s',
