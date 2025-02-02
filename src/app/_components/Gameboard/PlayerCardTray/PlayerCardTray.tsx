@@ -22,8 +22,8 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: '1rem 0 1rem 3rem',
-            gap: '1rem',
+            padding: '1rem 0 1rem 2rem',
+            gap: '2rem',
         },
         centerColumnStyle: {
             height: '100%',
@@ -32,8 +32,8 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            padding: '1rem 3rem 1rem 0',
-            gap: '1rem',
+            padding: '1rem 2rem 1rem 0',
+            gap: '2rem',
         },
         playerHandWrapper: {
             width: '100%',

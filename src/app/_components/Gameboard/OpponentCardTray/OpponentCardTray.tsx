@@ -23,8 +23,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: '1rem 0 1rem 3rem',
-            gap: '1rem',
+            padding: '1rem 0 1rem 2rem',
+            gap: '2rem',
         },
         centerColumn: {
             height: '100%',
@@ -42,20 +42,42 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            gap: '15px',
-            pr: '1em',
-            py: '1em',
+            padding: '1rem 2rem 1rem 0',
+            gap: '2rem',
         },
         lastPlayed: {
-            height: '100%',
-            aspectRatio: '359 / 500',
+            width: '4.6rem',
+            height: '6.5rem',
+            borderRadius: '5px',
             backgroundSize: 'cover',
             backgroundImage: gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
         },
         menuStyles: {
             display: 'flex',
             flexDirection: 'column',
-        }
+            gap: '1rem',
+        },
+        initiativeWrapper: {
+            borderRadius: '20px',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            height: '2rem',
+            width: 'auto',
+            background: 'rgba(0, 0, 0, 0.5)',
+            borderColor: '#18c1ff',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            h4: {
+                margin: '0.2rem 1rem 0', 
+                textAlign: 'center', 
+                display: 'block',
+                fontSize: '16px', 
+                fontWeight: 600,
+                userSelect: 'none',
+                color: '#18c1ff',
+            }
+        },
     };
 
     return (
@@ -70,7 +92,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 </Box>
             </Grid>
             <Grid size={3} sx={styles.rightColumn}>
-                <Typography variant={'h4'}>Initiative</Typography>
+                <Box sx={styles.initiativeWrapper}>
+                    <Typography variant={'h4'}>Initiative</Typography>
+                </Box>
                 <Box sx={styles.lastPlayed}>
                 </Box>
                 <Box sx={styles.menuStyles}>
