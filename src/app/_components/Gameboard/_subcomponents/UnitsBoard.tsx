@@ -56,11 +56,10 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 
     const styles = {
         mainBoxStyle: {
-            borderRadius: '20px',
-            border: '2px solid #FFFFFF55',
+            position: 'relative',
             height: '100%',
             width: '100%',
-            padding: '1em',
+            padding: '3rem 2rem',
         },
         containerStyle: {
             height: '100%',

@@ -21,12 +21,13 @@ const Resources: React.FC<IResourcesProps> = ({
             width: 'auto',
             background: 'transparent',
             display: 'flex',
+            position: 'relative',
             borderRadius: '5px',
+            height: '6.5rem',
             justifyContent: 'center',
             alignItems: 'center',
             transition: 'background-color 0.3s ease',
-            border: '1px solid #FFFFFF55',
-            padding: '1em',
+            padding: '1rem 2rem',
             overflow: 'visible',
             '&:hover': {
                 background:
@@ -35,6 +36,7 @@ const Resources: React.FC<IResourcesProps> = ({
                         : null,
             },
         },
+        
         imageStyle: {
             width: '1.6em',
             height: 'auto',
@@ -51,6 +53,25 @@ const Resources: React.FC<IResourcesProps> = ({
             fontWeight: '800',
             fontSize: '2.2em',
             color: 'white',
+        },
+
+        resourceBorderLeft: {
+            background: `
+            url('border-res-lt.svg') no-repeat left top,
+            url('border-res-lb.svg') no-repeat left bottom`,
+            'mix-blend-mode': 'soft-light',
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+        },
+        resourceBorderRight: {
+            background: `
+            url('border-res-rt.svg') no-repeat right top,
+            url('border-res-rb.svg') no-repeat right bottom`,
+            'mix-blend-mode': 'soft-light',
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
         },
     };
 
@@ -70,6 +91,9 @@ const Resources: React.FC<IResourcesProps> = ({
                 })
             }}
         >
+            <Box sx={styles.resourceBorderRight} /><Box sx={styles.resourceBorderRight} /> 
+            <Box sx={styles.resourceBorderLeft} /><Box sx={styles.resourceBorderLeft} />
+
             <CardContent sx={{ display: 'flex' }}>
                 <Box sx={styles.boxStyle}>
                     <Image
