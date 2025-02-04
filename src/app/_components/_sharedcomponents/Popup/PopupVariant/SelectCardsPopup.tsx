@@ -53,10 +53,24 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
 
                                     <GameCard key={card.uuid} card={{ ...card, selectable: false }} />
                                 </Box>
-                                {renderButtons(card.uuid, data.perCardButtons)}
+                                {renderButtons(card.uuid, data.perCardButtons, data.cards.length == 1)}
                             </Box>
                         )
                     })}
+                </Box>
+                <Box>
+                    {data.buttons.map((button, index) => 
+                        <Button
+                            key={`${button.arg}:${index}`}
+                            sx={perCardButtonStyle}
+                            variant="contained"
+                            onClick={() => {
+                                sendGameMessage([button.command, button.arg, data.uuid]); closePopup(data.uuid)
+                            }}
+                        >
+                            {button.text}
+                        </Button>
+                    )}
                 </Box>
             </>
         );
@@ -67,7 +81,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
         setIsMinimized(!isMinimized);
     };
 
-    const renderButtons = (cardUuid: string, buttons: PerCardButton[]) => {
+    const renderButtons = (cardUuid: string, buttons: PerCardButton[], last: boolean) => {
         return (
             <Box sx={{ gap: '1rem', flexDirection: 'column', display: 'flex' }}>
                 {buttons.map((button, index) =>
@@ -76,7 +90,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                         sx={perCardButtonStyle}
                         variant="contained"
                         onClick={() => {
-                            sendGameMessage([button.command, button.arg, cardUuid, data.uuid]); closePopup(data.uuid)
+                            sendGameMessage([button.command, button.arg, cardUuid, data.uuid]); if (last) closePopup(data.uuid)
                         }}
                     >
                         {button.text}

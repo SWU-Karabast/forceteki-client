@@ -26,10 +26,9 @@ export type SelectCardsPopup = {
     uuid: string;
     title: string;
     description?:string;
-
-
     cards: ICardData[];
     perCardButtons: PerCardButton[];
+    buttons: PopupButton[];
 };
 
 export type PilePopup = {

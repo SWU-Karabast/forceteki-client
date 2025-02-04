@@ -76,6 +76,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         description: menuTitle,
                         cards: cards,
                         perCardButtons: perCardButtons,
+                        buttons: buttons,
                     });
                 }
                 else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {

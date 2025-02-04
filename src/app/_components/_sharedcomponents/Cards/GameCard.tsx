@@ -266,7 +266,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'absolute',
             height: '100%',
             width: '100%',
-            display: !cardData?.implemented && isFaceUp && !isLobbyView ? 'flex' : 'none',
+            display: cardData?.hasOwnProperty('implemented') && !cardData?.implemented && isFaceUp && !isLobbyView ? 'flex' : 'none',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: '2',
