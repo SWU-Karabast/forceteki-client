@@ -43,6 +43,7 @@ export interface IGameCardProps {
     variant?: 'lobby' | 'gameboard';
     disabled?: boolean;
     subcards?: ICardData[];
+    capturedCards?: ICardData[];
 }
 
 export interface ILeaderBaseCardProps {

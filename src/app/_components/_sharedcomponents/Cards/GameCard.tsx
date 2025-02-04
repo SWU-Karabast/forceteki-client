@@ -22,6 +22,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     size = 'standard',
     onClick,
     subcards = [],
+    capturedCards = [],
     variant,
     disabled = false,
 }) => {
@@ -346,6 +347,50 @@ const GameCard: React.FC<IGameCardProps> = ({
                     <Typography key={subcard.uuid} sx={styles.upgradeNameStyle}>{subcard.name}</Typography>
                 </Box>
             ))}
+
+            {/* Separator for Captured Cards */}
+            {capturedCards.length > 0 && (
+                <>
+                    <Typography
+                        sx={{
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            textAlign: 'center',
+                            color: 'white',
+                            mb:'-6px',
+                            borderTop: '2px solid black',
+                            borderLeft: '2px solid black',
+                            borderRight: '2px solid black',
+                        }}
+                    >
+                        Captured
+                    </Typography>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            marginTop: '4px',
+                        }}
+                    >
+                        {capturedCards.map((capturedCard) => (
+                            <Box
+                                key={`captured-${capturedCard.uuid}`}
+                                sx={{
+                                    ...styles.upgradeIconLayer,
+                                    backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
+                                    bottom: 0,
+                                    position: 'relative',
+                                }}
+                            >
+                                <Typography sx={styles.upgradeNameStyle}>
+                                    {capturedCard.name}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
+                </>
+            )}
         </>
     );
 };
