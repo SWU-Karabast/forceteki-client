@@ -8,6 +8,7 @@ import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTyp
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { blue } from '@mui/material/colors';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, sendMessage } = useGame();
@@ -16,6 +17,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         sendMessage('manualDisconnect');
         router.push('/');
     }
+
+    const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
 
     // ---------------Styles------------------- //
     const styles = {
@@ -65,7 +68,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             height: '2rem',
             width: 'auto',
             background: 'rgba(0, 0, 0, 0.5)',
-            borderColor: '#18c1ff',
+            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             h4: {
@@ -75,7 +78,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 fontSize: '16px', 
                 fontWeight: 600,
                 userSelect: 'none',
-                color: '#18c1ff',
+                color: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
             }
         },
     };
