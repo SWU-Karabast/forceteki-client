@@ -60,8 +60,6 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                            !data.cards.every((card) => card.selectionState === 'viewOnly') &&
                            !data.perCardButtons.length;
 
-    console.log(data);
-
     const selectableCards = data.cards.filter((card) => card.selectionState !== 'invalid');
     const invalidCards = data.cards.filter((card) => card.selectionState === 'invalid');
 
