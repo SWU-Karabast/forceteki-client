@@ -13,30 +13,57 @@ import { PerCardButton, SelectCardsPopup } from '../Popup.types';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { useGame } from '@/app/_contexts/Game.context';
 import { BiMinus, BiPlus } from 'react-icons/bi';
+import { CardAppLocation } from '../../Cards/CardTypes';
 import GameCard from '../../Cards/GameCard';
 
 interface ButtonProps {
     data: SelectCardsPopup;
 }
 
-const cardListContainerStyle = {
-    display: 'flex',
-    gap: '.25rem',
-    marginTop: '1rem',
-    overflowX: 'auto',
-};
-
-const cardSelectorStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '.5rem',
-};
+const styles = {
+    selectableCardsContainer: {
+        display: 'flex',
+        gap: '.25rem',
+        marginTop: '1rem',
+        overflowX: 'auto',
+    },
+    selectionDot: {
+        height: '1rem',
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        '::before': {
+            content: '""',
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            backgroundColor: 'green',
+        }
+    },
+    selectableCard: {
+        alignItems: 'center', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '1rem',
+    },
+    invalidCard: {
+        filter: 'brightness(0.5)',
+    }
+}
 
 export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
     const { closePopup } = usePopup();
     const { sendGameMessage } = useGame();
     const [isMinimized, setIsMinimized] = useState(false);
+
+    const selectingCards = data.cards.some((card) => card.selectionState === 'selectable' || card.selectionState === 'selected') && 
+                           !data.cards.every((card) => card.selectionState === 'viewOnly') &&
+                           !data.perCardButtons.length;
+
+    console.log(data);
+
+    const selectableCards = data.cards.filter((card) => card.selectionState !== 'invalid');
+    const invalidCards = data.cards.filter((card) => card.selectionState === 'invalid');
 
     const renderPopupContent = () => {
         if (isMinimized) return null;
@@ -45,15 +72,34 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                 {data.description && (
                     <Typography sx={textStyle}>{data.description}</Typography>
                 )}
-                <Box sx={cardListContainerStyle}>
-                    {data.cards.map((card) => {
+                <Box sx={styles.selectableCardsContainer}>
+                    {selectableCards.map((card) => {
                         return (
-                            <Box key={card.uuid} sx={{ alignItems: 'center', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <Box key={card.uuid} sx={cardSelectorStyle}>
-
-                                    <GameCard key={card.uuid} card={{ ...card, selectable: false }} />
-                                </Box>
+                            <Box key={card.uuid} sx={{ ...styles.selectableCard, filter: card.selectionState === 'unselectable' ? 'brightness(0.75)' : '' }}>
+                                <GameCard 
+                                    key={card.uuid}
+                                    location={CardAppLocation.Prompt}
+                                    card={{ ...card, selectable: card.selectionState === 'selectable', selected: card.selectionState === 'selected' }}
+                                    onClick={() => sendGameMessage(['menuButton', card.uuid, data.uuid])}
+                                />
+                                {selectingCards && (
+                                    <Box
+                                        sx={{
+                                            ...styles.selectionDot,
+                                            '&::before': {
+                                                backgroundColor: card.selectionState === 'selected' ? 'var(--selection-blue)' : 'var(--selection-grey)',
+                                            }
+                                        }}
+                                    />
+                                )}
                                 {renderButtons(card.uuid, data.perCardButtons, data.cards.length == 1)}
+                            </Box>
+                        )
+                    })}
+                    {invalidCards.map((card) => {
+                        return (
+                            <Box key={card.uuid} sx={styles.invalidCard}>
+                                <GameCard key={card.uuid} disabled={true} location={CardAppLocation.Prompt} card={{ ...card, selectable: false, selected: false }} />
                             </Box>
                         )
                     })}
