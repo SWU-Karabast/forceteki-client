@@ -12,7 +12,7 @@ export async function GET(req: Request) {
         }
 
         let response: Response;
-        let deckSource = DeckSource.Undefined;
+        let deckSource = DeckSource.NotSupported;
         let deckIdentifier: string = '';
 
         if (deckLink.includes('swustats.net')) {
