@@ -50,7 +50,7 @@ export async function GET(req: Request) {
                 );
             }
 
-            const apiUrl = `https://swudb.com/deck/view/${deckId}?handler=JsonFile`;
+            const apiUrl = `https://swudb.com/api/getDeckJson/${deckId}`;
 
             response = await fetch(apiUrl, { method: 'GET' });
 
