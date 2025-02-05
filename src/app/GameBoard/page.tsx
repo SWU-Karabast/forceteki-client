@@ -149,10 +149,10 @@ const GameBoard = () => {
                 />
             )}
             <Box sx={styles.centralPromptContainer}>
-                <Typography sx={styles.promptStyle}>
+                <Box sx={styles.promptStyle}>
                     {gameState.players[connectedPlayer]?.promptState.menuTitle}
                     <Box sx={styles.promptShadow}/>
-                </Typography>
+                </Box>
             </Box>
             <ResourcesOverlay
                 isModalOpen={isModalOpen}

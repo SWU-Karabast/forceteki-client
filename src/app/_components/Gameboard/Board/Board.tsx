@@ -71,7 +71,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-llt.svg') no-repeat left top,
             url('border-llb.svg') no-repeat left bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '80%',
             height: '100%',
             position: 'absolute',
@@ -80,7 +80,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-lrt.svg') no-repeat right top,
             url('border-lrb.svg') no-repeat right bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '20%',
             right: '0',
             height: '100%',
@@ -90,7 +90,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-rrt.svg') no-repeat right top,
             url('border-rrb.svg') no-repeat right bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             right: '0',
             width: '80%',
             height: '100%',
@@ -100,7 +100,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '20%',
             height: '100%',
             position: 'absolute',
@@ -109,7 +109,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-lrt.svg') no-repeat right top,
             url('border-lrb.svg') no-repeat right bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             right: '0',
             width: '20%',
             height: '100%',
@@ -119,7 +119,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             left: '0',
             width: '80%',
             height: '100%',
