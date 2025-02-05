@@ -8,7 +8,11 @@ export const getBorderColor = (card: ICardData, player: string, promptType: stri
     if (!card) return '';
 
     if (location === CardAppLocation.Prompt) {
-        return '';
+        if (card.selected) {
+            return 'var(--selection-blue)';
+        } else {
+            return '';
+        }
     }
 
     if (promptType === 'resource' && card.selected) {
