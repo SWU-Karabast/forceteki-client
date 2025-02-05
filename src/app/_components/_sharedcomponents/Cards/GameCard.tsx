@@ -284,6 +284,17 @@ const GameCard: React.FC<IGameCardProps> = ({
             height: 'auto',
             aspectRatio: '1/1',
             width: '50%'
+        },
+        capturedCardsDivider:{
+            fontSize: '11px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            color: 'white',
+            mb:'0px',
+            borderTop: '2px solid black',
+            borderLeft: '2px solid black',
+            borderRight: '2px solid black',
+            position:'relative'
         }
     }
     return (
@@ -353,42 +364,26 @@ const GameCard: React.FC<IGameCardProps> = ({
                 <>
                     <Typography
                         sx={{
-                            fontSize: '11px',
-                            fontWeight: 'bold',
-                            textAlign: 'center',
-                            color: 'white',
-                            mb:'-6px',
-                            borderTop: '2px solid black',
-                            borderLeft: '2px solid black',
-                            borderRight: '2px solid black',
+                            ...styles.capturedCardsDivider,
+                            bottom:`${otherUpgradeCards.length * 7}px`,
                         }}
                     >
                         Captured
                     </Typography>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            gap: '4px',
-                            marginTop: '4px',
-                        }}
-                    >
-                        {capturedCards.map((capturedCard) => (
-                            <Box
-                                key={`captured-${capturedCard.uuid}`}
-                                sx={{
-                                    ...styles.upgradeIconLayer,
-                                    backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
-                                    bottom: 0,
-                                    position: 'relative',
-                                }}
-                            >
-                                <Typography sx={styles.upgradeNameStyle}>
-                                    {capturedCard.name}
-                                </Typography>
-                            </Box>
-                        ))}
-                    </Box>
+                    {capturedCards.map((capturedCard, index) => (
+                        <Box
+                            key={`captured-${capturedCard.uuid}`}
+                            sx={{
+                                ...styles.upgradeIconLayer,
+                                backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
+                                bottom:`${(otherUpgradeCards.length * 7 + 2) + index * 7}px`,
+                            }}
+                        >
+                            <Typography sx={styles.upgradeNameStyle}>
+                                {capturedCard.name}
+                            </Typography>
+                        </Box>
+                    ))}
                 </>
             )}
         </>

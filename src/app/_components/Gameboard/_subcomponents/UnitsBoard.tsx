@@ -78,8 +78,12 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 
     const rawPlayerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
     const rawOpponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];
-    const allCapturedCards = gameState?.players[connectedPlayer].cardPiles['capturedZone'];
+
+    const playerCapturedCards = gameState?.players[connectedPlayer].cardPiles['capturedZone'];
+    const opponentCapturedCards = gameState?.players[getOpponent(connectedPlayer)].cardPiles['capturedZone'];
+
     const allCardsInArena = [...rawPlayerUnits, ...rawOpponentUnits];
+    const allCapturedCards = [...playerCapturedCards, ...opponentCapturedCards];
 
     const upgradeMapping = findUpgrades(allCardsInArena);
 

@@ -26,6 +26,7 @@ export interface ICardData {
     setId: ICardSetId;
     type: string;
     subcards?: ICardData[];
+    capturedCards?: ICardData[];
     aspects?: IAspect[];
     sentinel?: boolean;
     types?: string[];
