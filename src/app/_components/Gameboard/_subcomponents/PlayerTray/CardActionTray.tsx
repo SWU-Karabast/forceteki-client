@@ -6,7 +6,7 @@ const CardActionTray: React.FC = () => {
     // ------------------------STYLES------------------------//
 
     const actionContainerStyle = {
-        mt: '1vh',
+        mt: '0',
     };
 
     const { sendGameMessage, gameState, connectedPlayer } = useGame();
