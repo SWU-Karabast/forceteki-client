@@ -290,6 +290,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             fontWeight: 'bold',
             textAlign: 'center',
             color: 'white',
+            backgroundColor:'black',
             mb:'0px',
             borderTop: '2px solid black',
             borderLeft: '2px solid black',
