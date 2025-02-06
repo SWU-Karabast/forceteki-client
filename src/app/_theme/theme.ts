@@ -74,6 +74,7 @@ export const theme: Theme = createTheme({
                     '--selection-red': '#FF0D0D',
                     '--selection-yellow': '#FFFE50',
                     '--selection-blue': '#66E5FF',
+                    '--selection-grey': '#9DB4A0',
                     '--initiative-blue': '#00BAFF',
                     '--initiative-red': '#FF3231',
                 },

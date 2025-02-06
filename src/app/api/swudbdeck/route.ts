@@ -1,23 +1,5 @@
+import { DeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { NextResponse } from 'next/server';
-
-interface IDeckMetadata {
-    name: string;
-    author: string;
-}
-
-interface IDeckCard {
-    id: string;
-    count: number;
-}
-
-interface IDeckData {
-    metadata: IDeckMetadata;
-    leader: IDeckCard;
-    secondleader: IDeckCard | null;
-    base: IDeckCard;
-    deck: IDeckCard[];
-    sideboard: IDeckCard[];
-}
 
 export async function GET(req: Request) {
     try {
@@ -30,6 +12,8 @@ export async function GET(req: Request) {
         }
 
         let response: Response;
+        let deckSource = DeckSource.NotSupported;
+        let deckIdentifier: string = '';
 
         if (deckLink.includes('swustats.net')) {
             const gameNameMatch = deckLink.match(/gameName=([^&]+)/);
@@ -42,7 +26,8 @@ export async function GET(req: Request) {
                     { status: 400 }
                 );
             }
-
+            deckSource = DeckSource.SWUStats;
+            deckIdentifier = gameName;
             const apiUrl = `https://swustats.net/TCGEngine/APIs/LoadDeck.php?deckID=${gameName}&format=json&setId=true`;
 
             response = await fetch(apiUrl, { method: 'GET' });
@@ -55,7 +40,8 @@ export async function GET(req: Request) {
         else if (deckLink.includes('swudb.com')) {
             const match = deckLink.match(/\/deck\/(?:view\/)?([^/?]+)/);
             const deckId = match ? match[1] : null;
-
+            if(deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.SWUDB;
             if (!deckId) {
                 console.error('Error: Invalid deckLink format');
                 return NextResponse.json(
@@ -78,6 +64,8 @@ export async function GET(req: Request) {
         }
 
         const data: IDeckData = await response.json();
+        data.deckSource = deckSource;
+        data.deckID = deckIdentifier;
 
         return NextResponse.json(data);
     } catch (error) {

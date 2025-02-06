@@ -6,7 +6,7 @@ import {
     Box,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { IGameCardProps, ICardData, IServerCardData } from './CardTypes';
+import { IGameCardProps, ICardData, IServerCardData, CardAppLocation } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
@@ -25,6 +25,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     capturedCards = [],
     variant,
     disabled = false,
+    location = CardAppLocation.Gameboard,
 }) => {
     const pathname = usePathname();
     const isLobbyView = pathname === '/lobby';
@@ -102,7 +103,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     // For "standard" or other sizes:
                     height: size === 'standard' ? '10rem' : '7.7rem',
                     width: size === 'standard' ? '7.18rem' : '8rem',
-                    border: `2px solid ${getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType)}`,
+                    border: `2px solid ${getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType, location)}`,
                     ...(cardData?.exhausted && {
                         transform: 'rotate(4deg)',
                         transition: 'transform 0.15s ease' }
@@ -111,10 +112,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                 }
             ),
             '&:hover': {
-                cursor: 'pointer',
+                cursor: disabled ? 'normal' : 'pointer',
             },
         },
-
         cardContentStyle: {
             width: '100%',
             height: '100%',
@@ -267,7 +267,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'absolute',
             height: '100%',
             width: '100%',
-            display: !cardData?.implemented && isFaceUp && !isLobbyView ? 'flex' : 'none',
+            display: cardData?.hasOwnProperty('implemented') && !cardData?.implemented && isFaceUp && !isLobbyView ? 'flex' : 'none',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: '2',

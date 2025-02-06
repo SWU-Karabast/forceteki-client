@@ -59,7 +59,7 @@ const Resources: React.FC<IResourcesProps> = ({
             background: `
             url('border-res-lt.svg') no-repeat left top,
             url('border-res-lb.svg') no-repeat left bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '100%',
             height: '100%',
             position: 'absolute',
@@ -68,7 +68,7 @@ const Resources: React.FC<IResourcesProps> = ({
             background: `
             url('border-res-rt.svg') no-repeat right top,
             url('border-res-rb.svg') no-repeat right bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '100%',
             height: '100%',
             position: 'absolute',

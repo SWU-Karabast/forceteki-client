@@ -32,6 +32,7 @@ export interface ICardData {
     types?: string[];
     owner: ICardPlayer;
     controller: ICardPlayer;
+    selectionState?: 'viewOnly' | 'selectable' | 'unselectable' | 'selected' | 'invalid';
 }
 export interface IServerCardData {
     count: number;
@@ -44,6 +45,7 @@ export interface IGameCardProps {
     variant?: 'lobby' | 'gameboard';
     disabled?: boolean;
     subcards?: ICardData[];
+    location?: CardAppLocation;
     capturedCards?: ICardData[];
 }
 
@@ -56,6 +58,12 @@ export interface ILeaderBaseCardProps {
     card: ICardData;
     disabled?: boolean;
     size?: 'standard' | 'large';
+}
+
+export enum CardAppLocation {
+    Gameboard = 'gameboard',
+    Lobby = 'lobby',
+    Prompt = 'prompt',
 }
 
 interface ICardPlayer {
