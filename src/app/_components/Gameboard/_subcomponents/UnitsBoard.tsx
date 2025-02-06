@@ -45,14 +45,55 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             }));
         return mainCards;
     }
+
+    /**
+     * Takes an array of main unit cards and an array of captured cards,
+     * and returns a new array of unit cards where each card has a `capturedCards`
+     * property containing any captured cards that reference its uuid.
+     */
+    const attachCapturedCards = (
+        cards: ICardData[],
+        capturedCards: ICardData[]
+    ): ICardData[] => {
+        // Group captured cards by their parentCardId
+        const capturedMapping: Record<string, ICardData[]> = {};
+
+        capturedCards.forEach((card) => {
+            if (card.parentCardId) {
+                if (!capturedMapping[card.parentCardId]) {
+                    capturedMapping[card.parentCardId] = [];
+                }
+                capturedMapping[card.parentCardId].push(card);
+            }
+        });
+
+        // For each main unit card, attach any matching captured cards
+        return cards.map((card) => ({
+            ...card,
+            capturedCards: card.uuid ? capturedMapping[card.uuid] ?? [] : [],
+        }));
+    };
+
     const { gameState, connectedPlayer, getOpponent } = useGame();
 
     const rawPlayerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
     const rawOpponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];
+
+    const playerCapturedCards = gameState?.players[connectedPlayer].cardPiles['capturedZone'];
+    const opponentCapturedCards = gameState?.players[getOpponent(connectedPlayer)].cardPiles['capturedZone'];
+
     const allCardsInArena = [...rawPlayerUnits, ...rawOpponentUnits];
+    const allCapturedCards = [...playerCapturedCards, ...opponentCapturedCards];
+
     const upgradeMapping = findUpgrades(allCardsInArena);
-    const playerUnits = attachUpgrades(rawPlayerUnits, upgradeMapping);
-    const opponentUnits = attachUpgrades(rawOpponentUnits, upgradeMapping);
+
+    // attach upgrades to the unit cards
+    const playerUnitsWithUpgrades = attachUpgrades(rawPlayerUnits, upgradeMapping);
+    const opponentUnitsWithUpgrades = attachUpgrades(rawOpponentUnits, upgradeMapping);
+
+    // attach capturedCards to the unit cards
+    const playerUnits = attachCapturedCards(playerUnitsWithUpgrades, allCapturedCards);
+    const opponentUnits = attachCapturedCards(opponentUnitsWithUpgrades, allCapturedCards);
 
     const styles = {
         mainBoxStyle: {
@@ -90,7 +131,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 <Grid sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
                         <Box key={card.uuid} sx={{ flex: '0 0 auto' }}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
+                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} size="square" variant={'gameboard'}/>
                         </Box>
                     ))}
                 </Grid>
@@ -99,7 +140,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 <Grid sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
                         <Box key={card.uuid} sx={{ flex: '0 1 auto' }}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} size="square" variant={'gameboard'}/>
+                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} size="square" variant={'gameboard'}/>
                         </Box>
                     ))}
                 </Grid>
