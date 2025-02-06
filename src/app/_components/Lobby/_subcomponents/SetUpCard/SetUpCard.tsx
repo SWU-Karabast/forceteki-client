@@ -34,7 +34,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const handleOnChangeDeck = async () => {
         console.log('Deck Link:', deckLink);
         const deckData = deckLink ? await fetchDeckData(deckLink) : null;
-        sendLobbyMessage(['changeDeck',deckData])
+        const swuDeck = deckLink ? await fetchDeckData(deckLink, false) : null;
+        sendLobbyMessage(['changeDeck',deckData,swuDeck])
     }
     const handleCopyLink = () => {
         navigator.clipboard.writeText(lobbyState.connectionLink)

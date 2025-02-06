@@ -29,7 +29,7 @@ export interface IDeckData {
     deckID: string;
 }
 
-export const fetchDeckData = async (deckLink: string) => {
+export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) => {
     try {
         const response = await fetch(
             `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
@@ -39,7 +39,9 @@ export const fetchDeckData = async (deckLink: string) => {
         }
 
         const data: IDeckData = await response.json();
-
+        if (!fetchAll){
+            return data;
+        }
         // Fetch setToId mapping
         const setCodeMapping = await fetch('/api/s3bucket?jsonFile=_setCodeMap.json');
         if (!setCodeMapping.ok) {

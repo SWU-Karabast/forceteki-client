@@ -35,12 +35,15 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         console.log('Deck Link:', deckLink);
         console.log('beginning fetch for deck link');
         const deckData = deckLink ? await fetchDeckData(deckLink) : null;
+        const swuDeck = deckLink ? await fetchDeckData(deckLink,false) : null;
         console.log('fetch complete, deck data:', deckData);
+        console.log('fetch complete, swu deck data:', swuDeck);
         console.log('Save Deck To Favourites:', saveDeck);
         try {
             const payload = {
                 user: user,
-                deck: deckData
+                deck: deckData,
+                swuDeck: swuDeck
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
