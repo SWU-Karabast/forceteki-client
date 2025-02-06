@@ -26,6 +26,7 @@ export interface ICardData {
     setId: ICardSetId;
     type: string;
     subcards?: ICardData[];
+    capturedCards?: ICardData[];
     aspects?: IAspect[];
     sentinel?: boolean;
     types?: string[];
@@ -45,6 +46,7 @@ export interface IGameCardProps {
     disabled?: boolean;
     subcards?: ICardData[];
     location?: CardAppLocation;
+    capturedCards?: ICardData[];
 }
 
 export interface ILeaderBaseCardProps {
