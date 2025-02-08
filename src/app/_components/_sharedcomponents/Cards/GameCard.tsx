@@ -8,8 +8,6 @@ import { IGameCardProps, ICardData, IServerCardData, CardStyle } from './CardTyp
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
-import { TbBackground } from 'react-icons/tb';
-import { Black_And_White_Picture } from 'next/font/google';
 
 // Type guard to check if the card is ICardData
 const isICardData = (card: ICardData | IServerCardData): card is ICardData => {

@@ -1,10 +1,10 @@
 import React from 'react';
-import Grid from '@mui/material/Grid2';
+import { Box, Grid2 as Grid } from '@mui/material';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
-import { Box } from '@mui/material';
+import { LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
@@ -141,20 +141,18 @@ const Board: React.FC<IBoardProps> = ({
                 <Box sx={styles.middleColumnContent}>
                     <Box sx={styles.leaderBaseContainer}>
                         <LeaderBaseCard
-                            variant="leader"
-                            title={titleOpponent}
-                            isLobbyView={false}
                             card={opponentLeader}
+                            cardStyle={LeaderBaseCardStyle.Leader}
+                            title={titleOpponent}
                         />
-                        <LeaderBaseCard variant="base" isLobbyView={false} card={opponentBase}></LeaderBaseCard>
+                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
                     </Box>
                     <Box sx={styles.leaderBaseContainer}>
-                        <LeaderBaseCard variant="base" isLobbyView={false} card={playerBase}></LeaderBaseCard>
+                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
                         <LeaderBaseCard
-                            variant="leader"
-                            isLobbyView={false}
-                            title={titleCurrentPlayer}
                             card={playerLeader}
+                            cardStyle={LeaderBaseCardStyle.Leader}
+                            title={titleCurrentPlayer}
                         />
                     </Box>
                 </Box>

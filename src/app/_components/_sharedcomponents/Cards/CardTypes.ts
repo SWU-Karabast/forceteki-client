@@ -34,6 +34,7 @@ export interface ICardData {
     controller: ICardPlayer;
     selectionState?: 'viewOnly' | 'selectable' | 'unselectable' | 'selected' | 'invalid';
     zone?: string;
+    epicActionSpent?: boolean;
 }
 export interface IServerCardData {
     count: number;
@@ -49,20 +50,24 @@ export interface IGameCardProps {
 }
 
 export interface ILeaderBaseCardProps {
-    variant: 'base' | 'leader';
     selected?: boolean;
-    isLobbyView?: boolean;
     handleSelect?: () => void;
     title?: string;
     card: ICardData;
     disabled?: boolean;
-    size?: 'standard' | 'large';
+    cardStyle?: LeaderBaseCardStyle;
 }
 
 export enum CardStyle {
     InPlay = 'inplay',
     Lobby = 'lobby',
     Prompt = 'prompt',
+    Plain = 'plain',
+}
+
+export enum LeaderBaseCardStyle {
+    Leader = 'leader',
+    Base = 'base',
     Plain = 'plain',
 }
 
