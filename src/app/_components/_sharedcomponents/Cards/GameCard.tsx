@@ -11,7 +11,7 @@ import { getBorderColor } from './cardUtils';
 
 // Type guard to check if the card is ICardData
 const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
-    return (card as ICardData).zone !== undefined;
+    return (card as ICardData).zone !== undefined || (card as ICardData).uuid !== undefined;
 };
 
 const GameCard: React.FC<IGameCardProps> = ({

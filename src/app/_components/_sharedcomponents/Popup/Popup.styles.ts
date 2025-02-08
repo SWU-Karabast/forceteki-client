@@ -58,12 +58,8 @@ export const containerStyle = {
     textAlign: 'center',
 
     flex: 1,
-    maxHeight: '550px',
-    minHeigth: '260px',
     height: '100%',
     width: '100%',
-    minWidth: '560px',
-    maxWidth: '800px',
 };
 
 export const headerStyle = (isMinimized: boolean) => ({
