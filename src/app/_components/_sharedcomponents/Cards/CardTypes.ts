@@ -35,6 +35,7 @@ export interface ICardData {
     selectionState?: 'viewOnly' | 'selectable' | 'unselectable' | 'selected' | 'invalid';
     zone?: string;
     epicActionSpent?: boolean;
+    onStartingSide?: boolean;
 }
 export interface IServerCardData {
     count: number;

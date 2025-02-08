@@ -88,7 +88,15 @@ export const s3CardImageURL = (card: ICardData | ISetCode) => {
     if (type?.includes('token')) {
         return s3ImageURL(`cards/_tokens/${card.id}.webp`);
     }
-    const cardNumber = card.setId.number.toString().padStart(3, '0') + (type === 'leaderUnit' ? '-portrait' : '');
+    let cardNumber = card.setId.number.toString().padStart(3, '0')
+    
+    if (type === 'leaderUnit') {
+        cardNumber += '-portrait';
+    }
+    if (type === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
+        cardNumber += '-side2';
+    }
+
     return s3ImageURL(`cards/${card.setId.set}/${cardNumber}.webp`);
 };
 
