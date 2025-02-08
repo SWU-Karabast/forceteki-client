@@ -4,11 +4,11 @@ import {
     Box,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { IGameCardProps, ICardData, IServerCardData, CardAppLocation } from './CardTypes';
+import { IGameCardProps, ICardData, IServerCardData, CardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
-import { text } from 'stream/consumers';
+import { transform } from 'next/dist/build/swc';
 
 // Type guard to check if the card is ICardData
 const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
@@ -17,13 +17,11 @@ const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
-    size = 'standard',
     onClick,
+    cardStyle = CardStyle.Plain,
     subcards = [],
     capturedCards = [],
-    variant,
     disabled = false,
-    location = CardAppLocation.Gameboard,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt } = useGame();
     const cardData = isICardData(card) ? card : card.card;
@@ -32,9 +30,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         return null;
     }
 
-
     const cardCounter = !isICardData(card) ? card.count : 0;
-    const isFaceUp = !!cardData;
 
     // default on click
     const defaultClickFunction = () => {
@@ -75,12 +71,12 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
-    const borderColor = getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType, location);
+    const borderColor = getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
 
     // Styles
     const styles = {
         cardContainer: {
-            width: size === 'standard' ? '7.18rem' : '8rem',
+            width: cardStyle === CardStyle.InPlay ? '7.18rem' : '8rem',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -93,12 +89,10 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '.38em',
             position: 'relative',
-            backgroundColor: variant === 'lobby' ? 'transparent' : 'black',
             backgroundImage: `url(${s3CardImageURL(cardData)})`,
-            backgroundSize: size === 'standard' ? 'contain' : 'cover',
-            backgroundPosition: size === 'standard' ? 'center' : 'top',
+            backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: size === 'standard' ? '.718' : '1.058',
+            aspectRatio: cardStyle === CardStyle.InPlay ? '1.058' : '.718',
             width: '100%',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
@@ -118,16 +112,17 @@ const GameCard: React.FC<IGameCardProps> = ({
             fontSize: '1.85rem',
             fontWeight: '700',
             textShadow: '0px 0px 3px black',
-
+            lineHeight: 1
         },
         counterIcon:{
             position: 'absolute',
-            width: '100%',
+            width: '2rem',
+            aspectRatio: '1 / 1',
             display: 'flex',
-            height: '20%',
-            bottom: '0px',
-            backgroundPosition: 'center',
-            backgroundSize: 'contain',
+            bottom: '-5px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/counterIcon.svg)',
             alignItems: 'center',
@@ -209,7 +204,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         sentinelIcon:{
             position: 'absolute',
-            width: '2rem',
+            width: '1.8rem',
             aspectRatio: '1 / 1',
             top:'32%',
             right: '-4px',
@@ -218,7 +213,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: 'url(/SentinelToken.png)',
         },
         unimplementedAlert: {
-            display: cardData?.hasOwnProperty('implemented') && !cardData?.implemented && isFaceUp && location !== CardAppLocation.Lobby ? 'flex' : 'none',
+            display: cardData?.hasOwnProperty('implemented') && !cardData?.implemented ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
@@ -242,12 +237,12 @@ const GameCard: React.FC<IGameCardProps> = ({
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
                 </Box>
-                {location === CardAppLocation.Lobby && (
+                {cardStyle === CardStyle.Lobby && (
                     <Box sx={styles.counterIcon}>
                         <Typography sx={styles.numberFont}>{cardCounter}</Typography>
                     </Box>
                 )}
-                {location === CardAppLocation.Gameboard && variant === 'gameboard' && (
+                {cardStyle === CardStyle.InPlay && (
                     <>
                         <Grid direction="row" container sx={styles.shieldContainer}>
                             {shieldCards.map((_, index) => (

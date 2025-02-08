@@ -40,12 +40,10 @@ export interface IServerCardData {
 }
 export interface IGameCardProps {
     card: ICardData | IServerCardData;
-    size?: 'standard' | 'square';
     onClick?: () => void;
-    variant?: 'lobby' | 'gameboard';
     disabled?: boolean;
     subcards?: ICardData[];
-    location?: CardAppLocation;
+    cardStyle?: CardStyle;
     capturedCards?: ICardData[];
 }
 
@@ -60,10 +58,11 @@ export interface ILeaderBaseCardProps {
     size?: 'standard' | 'large';
 }
 
-export enum CardAppLocation {
-    Gameboard = 'gameboard',
+export enum CardStyle {
+    InPlay = 'inplay',
     Lobby = 'lobby',
     Prompt = 'prompt',
+    Plain = 'plain',
 }
 
 interface ICardPlayer {
