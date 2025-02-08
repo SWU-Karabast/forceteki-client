@@ -1,9 +1,5 @@
-interface ICardSetId {
-    set: string;
-    number: number;
-}
 
-type IAspect = 'aggression' | 'command' | 'cunning' | 'heroism' | 'vigilance' | 'villainy';
+export type GameCardData = ICardData | IServerCardData | IOpponentHiddenCardData | IPromptDisplayCardData;
 
 export interface ICardData {
     uuid: string;
@@ -37,9 +33,34 @@ export interface ICardData {
     epicActionSpent?: boolean;
     onStartingSide?: boolean;
 }
+
 export interface IServerCardData {
     count: number;
     card: ICardData;
+}
+
+export interface IOpponentHiddenCardData {
+    facedown: boolean;
+    controller: ICardPlayer
+    owner: ICardPlayer
+    zone: string;
+
+}
+
+interface ICardSetId {
+    set: string;
+    number: number;
+}
+
+type IAspect = 'aggression' | 'command' | 'cunning' | 'heroism' | 'vigilance' | 'villainy';
+
+
+export interface IPromptDisplayCardData {
+    cardUuid: string;
+    internalName: string;
+    selectionOrder: number;
+    selectionState: 'viewOnly' | 'selectable' | 'unselectable' | 'selected' | 'invalid';
+    setId: ICardSetId;
 }
 export interface IGameCardProps {
     card: ICardData | IServerCardData;
