@@ -33,6 +33,7 @@ export interface ICardData {
     owner: ICardPlayer;
     controller: ICardPlayer;
     selectionState?: 'viewOnly' | 'selectable' | 'unselectable' | 'selected' | 'invalid';
+    zone?: string;
 }
 export interface IServerCardData {
     count: number;

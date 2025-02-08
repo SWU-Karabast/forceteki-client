@@ -8,11 +8,12 @@ import { IGameCardProps, ICardData, IServerCardData, CardStyle } from './CardTyp
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
-import { transform } from 'next/dist/build/swc';
+import { TbBackground } from 'react-icons/tb';
+import { Black_And_White_Picture } from 'next/font/google';
 
 // Type guard to check if the card is ICardData
 const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
-    return (card as ICardData).uuid !== undefined;
+    return (card as ICardData).zone !== undefined;
 };
 
 const GameCard: React.FC<IGameCardProps> = ({
@@ -76,6 +77,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Styles
     const styles = {
         cardContainer: {
+            backgroundColor: 'black',
             width: cardStyle === CardStyle.InPlay ? '7.18rem' : '8rem',
             display: 'flex',
             flexDirection: 'column',
