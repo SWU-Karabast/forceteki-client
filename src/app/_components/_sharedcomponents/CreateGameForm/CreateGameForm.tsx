@@ -2,8 +2,6 @@ import React, { useState, FormEvent, ChangeEvent } from 'react';
 import {
     Box,
     Button,
-    Card,
-    CardContent,
     Checkbox,
     FormControl,
     FormControlLabel,
@@ -116,15 +114,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         display: 'block',
         ml: 'auto',
         mr: 'auto',
-    };
-
-    const instructionsCardStyle = {
-        width: { xs: '90vw', sm: '70vw', md: '40vw', lg: '30vw' },
-        borderRadius: '1.5em',
-        backgroundColor: '#18325199',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-        p: '2em',
-        mb: '2em',
     };
 
     return (

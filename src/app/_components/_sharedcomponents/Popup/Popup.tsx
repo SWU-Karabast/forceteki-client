@@ -1,6 +1,6 @@
 'use client';
 import { PopupData, PopupType, usePopup } from '@/app/_contexts/Popup.context';
-import { Box, Button, SxProps, Theme } from '@mui/material';
+import { Box, SxProps, Theme } from '@mui/material';
 import React from 'react';
 import { DefaultPopup, DropdownPopup, PilePopup, SelectCardsPopup } from './Popup.types';
 import { DefaultPopupModal } from './PopupVariant/DefaultPopup';
