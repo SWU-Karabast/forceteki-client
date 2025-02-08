@@ -26,7 +26,7 @@ const Board: React.FC<IBoardProps> = ({
     // ----------------Styles----------------//
     const styles = {
         boardWrapper: {
-            height: '64.18%',
+            height: '70%',
             margin: '0 5rem',
         },
         containerStyle: {
@@ -49,7 +49,7 @@ const Board: React.FC<IBoardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: '12rem',
+            width: '12.5vw',
             margin: '0 1rem',
         },
         middleColumnContent: {
@@ -58,7 +58,7 @@ const Board: React.FC<IBoardProps> = ({
             alignItems: 'center',
             height: '100%',
             flexDirection: 'column',
-            padding: '2rem 0',
+            padding: '4vh 0',
         },
         leaderBaseContainer: {
             display: 'flex',

@@ -39,7 +39,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         opponentHandWrapper: {
             width: '100%',
             height: '100%',
-            transform: 'translateY(-30%)',
+            display : 'flex',
+            alignItems : 'center',
         },
         rightColumn: {
             display: 'flex',
@@ -91,7 +92,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             </Grid>
             <Grid size={6} sx={styles.centerColumn}>
                 <Box sx={styles.opponentHandWrapper}>
-                    <PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
+                    <PlayerHand playerNumber={2} cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
                 </Box>
             </Grid>
             <Grid size={3} sx={styles.rightColumn}>

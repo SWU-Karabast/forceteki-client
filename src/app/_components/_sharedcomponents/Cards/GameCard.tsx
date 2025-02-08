@@ -101,8 +101,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                 }
                 : {
                     // For "standard" or other sizes:
-                    height: size === 'standard' ? '10rem' : '7.7rem',
-                    width: size === 'standard' ? '7.18rem' : '8rem',
+                    height: size === 'standard' ? '21vh' : '7.7rem',
+                    width: size === 'standard' ? '15vh' : '8rem',
                     border: `2px solid ${getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType, location)}`,
                     ...(cardData?.exhausted && {
                         transform: 'rotate(4deg)',
@@ -123,8 +123,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             whiteSpace: 'normal',
             backgroundColor: variant === 'lobby' ? 'transparent' : 'black',
             backgroundImage: `url(${s3CardImageURL(cardData)})`,
-            backgroundSize: size === 'standard' ? 'contain' : 'cover',
-            backgroundPosition: size === 'standard' ? 'center' : 'top',
+            backgroundSize: size === 'standard' ? (isFaceUp ? 'contain' : '70%') : 'cover',
+            backgroundPosition: size === 'standard' ? (isFaceUp ? 'center' : '50% 72.5%') : 'top',
             backgroundRepeat: 'no-repeat',
         },
         cardOverlay: {

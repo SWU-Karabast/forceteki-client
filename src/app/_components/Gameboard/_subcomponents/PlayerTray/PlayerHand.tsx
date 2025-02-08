@@ -5,7 +5,8 @@ import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 
 const PlayerHand: React.FC<IPlayerHandProps> = ({
-    cards = []
+    cards = [],
+    playerNumber,
 }) => {
     const {
         containerRef,
@@ -33,8 +34,18 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
 
     const cardBoxStyle = {
         display: 'inline-flex',
-        gap: '10px',
+        gap: '2px',
+        overflow: 'hidden',
     };
+
+    const cardStyle = {
+        flex: '0 0 auto',
+        transition: 'transform 0.2s ease-in-out',
+        transform: playerNumber === 1 ? 'translateY(3vh)' : 'translateY(-4vh)',
+        '&:hover': {
+            transform: playerNumber === 1 ? 'translateY(1.5vh)' : '',
+        }
+    }
 
     return (
         <>
@@ -54,7 +65,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
             >
                 <Box sx={cardBoxStyle}>
                     {cards.map((card, i) => (
-                        <Box key={`${connectedPlayer}-hand-${i}`} sx={{ flex: '0 0 auto' }}>
+                        <Box key={`${connectedPlayer}-hand-${i}`} sx={cardStyle}>
                             <GameCard
                                 key={`${connectedPlayer}-hand-${i}`}
                                 card={card}/>

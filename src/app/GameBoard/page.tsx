@@ -94,7 +94,7 @@ const GameBoard = () => {
         },
         centralPromptContainer: {
             position: 'absolute',
-            top: '47%',
+            top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             display: 'flex',
