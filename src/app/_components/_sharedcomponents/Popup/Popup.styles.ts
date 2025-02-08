@@ -56,7 +56,7 @@ export const containerStyle = {
     display: 'flex',
     flexDirection: 'column',
     textAlign: 'center',
-
+    minWidth: '30rem',
     flex: 1,
     height: '100%',
     width: '100%',
