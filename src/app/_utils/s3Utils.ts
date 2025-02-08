@@ -83,7 +83,7 @@ export const s3ImageURL = (path: string) => {
 };
 
 export const s3CardImageURL = (card: ICardData | ISetCode) => {
-    if (!card) return s3ImageURL('game/swu-logo.webp');
+    if (!card?.setId) return s3ImageURL('game/swu-cardback.webp');
     const type = card.type || card.types;
     if (type?.includes('token')) {
         return s3ImageURL(`cards/_tokens/${card.id}.webp`);

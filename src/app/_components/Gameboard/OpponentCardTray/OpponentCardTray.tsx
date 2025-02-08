@@ -8,7 +8,6 @@ import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTyp
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import { blue } from '@mui/material/colors';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, sendMessage } = useGame();

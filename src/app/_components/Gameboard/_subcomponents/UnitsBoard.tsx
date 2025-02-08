@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Grid2 as Grid } from '@mui/material';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
-import { ICardData } from '../../_sharedcomponents/Cards/CardTypes';
+import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 
@@ -131,7 +131,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 <Grid sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
                         <Box key={card.uuid} sx={{ flex: '0 0 auto' }}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} size="square" variant={'gameboard'}/>
+                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
                 </Grid>
@@ -140,7 +140,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 <Grid sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
                         <Box key={card.uuid} sx={{ flex: '0 1 auto' }}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} size="square" variant={'gameboard'}/>
+                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
                 </Grid>

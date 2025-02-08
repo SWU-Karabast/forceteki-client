@@ -13,7 +13,7 @@ import { PerCardButton, SelectCardsPopup } from '../Popup.types';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { useGame } from '@/app/_contexts/Game.context';
 import { BiMinus, BiPlus } from 'react-icons/bi';
-import { CardAppLocation } from '../../Cards/CardTypes';
+import { CardStyle } from '../../Cards/CardTypes';
 import GameCard from '../../Cards/GameCard';
 
 interface ButtonProps {
@@ -76,7 +76,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                             <Box key={card.uuid} sx={{ ...styles.selectableCard, filter: card.selectionState === 'unselectable' ? 'brightness(0.75)' : '' }}>
                                 <GameCard 
                                     key={card.uuid}
-                                    location={CardAppLocation.Prompt}
+                                    cardStyle={CardStyle.Prompt}
                                     card={{ ...card, selectable: card.selectionState === 'selectable', selected: card.selectionState === 'selected' }}
                                     onClick={() => sendGameMessage(['menuButton', card.uuid, data.uuid])}
                                 />
@@ -97,7 +97,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                     {invalidCards.map((card) => {
                         return (
                             <Box key={card.uuid} sx={styles.invalidCard}>
-                                <GameCard key={card.uuid} disabled={true} location={CardAppLocation.Prompt} card={{ ...card, selectable: false, selected: false }} />
+                                <GameCard key={card.uuid} disabled={true} cardStyle={CardStyle.Prompt} card={{ ...card, selectable: false, selected: false }} />
                             </Box>
                         )
                     })}

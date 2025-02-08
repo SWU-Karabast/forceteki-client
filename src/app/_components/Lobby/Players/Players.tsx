@@ -53,6 +53,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         flexDirection: 'column',
         alignItems: 'center',
         width: '100%',
+        gap: '10px'
     }
     const containerStyle = {
         height: '100%',
@@ -71,7 +72,6 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         fontFamily: 'var(--font-barlow), sans-serif',
         fontWeight: '600',
         fontSize: '1.5em',
-        marginBottom: isLobbyView ? 0 : '0.5em',
         textAlign: 'left',
         color: 'white',
     };
@@ -79,7 +79,6 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         fontFamily: 'var(--font-barlow), sans-serif',
         fontWeight: '600',
         fontSize: '1.5em',
-        marginBottom: '10px',
         textAlign: 'left' as const,
         color: 'white',
         opacity: '15%',
@@ -98,13 +97,11 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 {connectedUser ? connectedUser.username : connectedPlayer}
                             </Typography>
                             <LeaderBaseCard
-                                variant="leader"
-                                isLobbyView={true}
                                 title={connectedUser ? connectedUser.username : connectedPlayer}
                                 card={playerLeader}
                                 disabled={true}
                             />
-                            <LeaderBaseCard variant="base" isLobbyView={true} card={playerBase} disabled={true}></LeaderBaseCard>
+                            <LeaderBaseCard card={playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                     <Grid sx={rowStyle}>
@@ -119,13 +116,11 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 {opponentUser ? opponentUser.username : 'Opponent'}
                             </Typography>
                             <LeaderBaseCard
-                                variant="leader"
-                                isLobbyView={isLobbyView}
                                 title={titleOpponent}
                                 card={opponentLeader}
                                 disabled={true}
                             />
-                            <LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={opponentBase} disabled={true}></LeaderBaseCard>
+                            <LeaderBaseCard card={opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                 </Grid>
