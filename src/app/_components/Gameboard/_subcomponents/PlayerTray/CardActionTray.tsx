@@ -34,9 +34,6 @@ const styles = {
         transform: 'skew(10deg)',  // Counter-skew the text
         lineHeight: '1.2',
         fontSize: '1.1rem',
-        maxWidth: '4.3ch',
-        overflow: 'hidden',
-        whiteSpace: 'nowrap',
     },
 };
 
