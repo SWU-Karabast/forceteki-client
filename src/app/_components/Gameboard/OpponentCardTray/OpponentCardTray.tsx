@@ -23,9 +23,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const styles = {
         leftColumn: {
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'flex-start',
-            padding: '1rem 0 1rem 2rem',
+            padding: '2rem 0 0 2rem',
             gap: '2rem',
         },
         centerColumn: {
@@ -38,7 +38,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         opponentHandWrapper: {
             width: '100%',
             height: '100%',
-            transform: 'translateY(-30%)',
+            transform: 'translateY(-1rem)',
         },
         rightColumn: {
             display: 'flex',
@@ -83,7 +83,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     };
 
     return (
-        <Grid container sx={{ height: '15%' }}>
+        <Grid container sx={{ height: '17%' }}>
             <Grid size={3} sx={styles.leftColumn}>
                 <DeckDiscard trayPlayer={trayPlayer} />
                 <Resources trayPlayer={trayPlayer}/>

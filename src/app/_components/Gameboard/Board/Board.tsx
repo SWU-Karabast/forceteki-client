@@ -26,7 +26,7 @@ const Board: React.FC<IBoardProps> = ({
     // ----------------Styles----------------//
     const styles = {
         boardWrapper: {
-            height: '64.18%',
+            height: '66%',
             margin: '0 5rem',
         },
         containerStyle: {
@@ -131,13 +131,13 @@ const Board: React.FC<IBoardProps> = ({
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
         <Grid container sx={styles.boardWrapper}> 
             <Grid container size="grow" sx={styles.ColumnStyle}>
-                <Box sx={styles.leftColumnBorderLeft} /><Box sx={styles.leftColumnBorderLeft} /> 
-                <Box sx={styles.leftColumnBorderRight} /><Box sx={styles.leftColumnBorderRight} />
+                <Box sx={styles.leftColumnBorderLeft} />
+                <Box sx={styles.leftColumnBorderRight} />
                 <UnitsBoard sidebarOpen={sidebarOpen} arena="spaceArena" />
             </Grid>
             <Grid container sx={styles.middleColumnStyle}>
-                <Box sx={styles.middleColumnBorderLeft} /><Box sx={styles.middleColumnBorderLeft} />
-                <Box sx={styles.middleColumnBorderRight} /><Box sx={styles.middleColumnBorderRight} />
+                <Box sx={styles.middleColumnBorderLeft} />
+                <Box sx={styles.middleColumnBorderRight} />
                 <Box sx={styles.middleColumnContent}>
                     <Box sx={styles.leaderBaseContainer}>
                         <LeaderBaseCard
@@ -158,8 +158,8 @@ const Board: React.FC<IBoardProps> = ({
                 </Box>
             </Grid>
             <Grid container size="grow" sx={styles.ColumnStyle}>
-                <Box sx={styles.rightColumnBorderLeft} /><Box sx={styles.rightColumnBorderLeft} />
-                <Box sx={styles.rightColumnBorderRight} /><Box sx={styles.rightColumnBorderRight} />
+                <Box sx={styles.rightColumnBorderLeft} />
+                <Box sx={styles.rightColumnBorderRight} />
                 <UnitsBoard
                     sidebarOpen={sidebarOpen} arena="groundArena"
                 />

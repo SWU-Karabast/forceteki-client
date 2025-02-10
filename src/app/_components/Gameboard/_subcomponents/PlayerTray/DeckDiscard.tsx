@@ -24,8 +24,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         discard: {
             discardCardStyle: (cardData?: ICardData) => ({
                 backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                width: '4.6rem',
-                height: '6.5rem',
+                width: '4.2rem',
+                height: '6rem',
                 borderRadius: '5px',
                 display: 'flex',
                 alignItems: 'center',
@@ -53,14 +53,14 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             deckCardStyle: {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
-                backgroundSize: '88%',
+                backgroundSize: '85%',
                 backgroundImage: 'url(\'/card-back.png\')',
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '4.6rem',
-                height: '6.5rem',
+                width: '4.2rem',
+                height: '6rem',
                 borderRadius: '5px',
             },
 

@@ -23,17 +23,14 @@ const Resources: React.FC<IResourcesProps> = ({
             display: 'flex',
             position: 'relative',
             borderRadius: '5px',
-            height: '6.5rem',
+            height: '6rem',
             justifyContent: 'center',
             alignItems: 'center',
-            transition: 'background-color 0.3s ease',
-            padding: '1rem 2rem',
+            padding: '0 1.5rem',
             overflow: 'visible',
+            '--Paper-shadow': '0 !important',
             '&:hover': {
-                background:
-                    trayPlayer === 'player'
-                        ? 'linear-gradient(to top, white, transparent)'
-                        : null,
+                background:'linear-gradient(rgba(24, 53, 81, 0.60), rgba(77, 118, 155, 0.60))',
             },
         },
         
@@ -91,8 +88,8 @@ const Resources: React.FC<IResourcesProps> = ({
                 })
             }}
         >
-            <Box sx={styles.resourceBorderRight} /><Box sx={styles.resourceBorderRight} /> 
-            <Box sx={styles.resourceBorderLeft} /><Box sx={styles.resourceBorderLeft} />
+            <Box sx={styles.resourceBorderRight} />
+            <Box sx={styles.resourceBorderLeft} />
 
             <CardContent sx={{ display: 'flex' }}>
                 <Box sx={styles.boxStyle}>

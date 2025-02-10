@@ -28,7 +28,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         card: {
             backgroundColor: 'black',
             backgroundImage: `url(${s3CardImageURL(card)})`,
-            borderRadius: '.38em',
+            borderRadius: '0.5rem',
             backgroundSize: 'cover',
             width: '10rem',
             aspectRatio: '1.39',
@@ -42,7 +42,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         deployedPlaceholder: {
             backgroundColor: 'transparent',
-            borderRadius: '.38em',
+            borderRadius: '0.5rem',
             width: '10rem',
             aspectRatio: '1.39',
             cursor: 'normal',
@@ -83,12 +83,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         nameplateBox: {
             position: 'absolute',
-            bottom: '-6px',
+            bottom: '0',
             left: '50%',
             transform: 'translateX(-50%)',
             backgroundColor: 'black',
-            borderRadius: '4px',
-            p: '4px 8px',
+            borderRadius: '0.5rem 0.5rem 0 0',
+            p: '5px 10px',
         },
         nameplateText: {
             color: 'white',
