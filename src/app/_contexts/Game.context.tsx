@@ -24,6 +24,8 @@ interface IGameContextType {
     sendLobbyMessage: (args: any[]) => void;
     resetStates: () => void;
     getConnectedPlayerPrompt: () => any;
+    updateDistributionPrompt: (uuid: string, amount: number) => void;
+    distributionPromptData: IDistributionPromptData[];
 }
 
 interface IDistributionPromptData {
@@ -42,7 +44,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const { openPopup, clearPopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const searchParams = useSearchParams();
-    const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData[]>(null);
+    const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData[]>([]);
 
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
@@ -157,11 +159,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const updateDistributionPrompt = (uuid: string, amount: number) => {
-        setDistributionPromptData((prevData) => {
-            if (!prevData) {
-                return amount > 0 && amount <= totalAmount ? [{ uuid, amount }] : [];
-            }
+        const totalAmount = gameState.players[connectedPlayer].promptState.distributeAmongTargets?.amount;
 
+        setDistributionPromptData((prevData) => {
             const currentTotal = prevData.reduce((sum, item) => sum + item.amount, 0);
             if (currentTotal + amount > totalAmount) return prevData;
     
@@ -178,8 +178,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
-    };
-
     return (
         <GameContext.Provider
             value={{
@@ -191,7 +189,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 getOpponent,
                 sendLobbyMessage,
                 resetStates,
-                getConnectedPlayerPrompt
+                getConnectedPlayerPrompt,
+                updateDistributionPrompt,
+                distributionPromptData
             }}
         >
             {children}

@@ -23,8 +23,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     capturedCards = [],
     disabled = false,
 }) => {
-    const [distributionAmount, setDistributionAmount] = React.useState<number>(null);
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, updateDistributionPrompt, distributionPromptData } = useGame();
     const cardData = isICardData(card) ? card : card.card;
 
     const showDamageAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && cardData.selectable
@@ -45,7 +44,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const handleClick = onClick ?? defaultClickFunction;
 
     const handleDamageAdjusterClick = (amount: number) => {
-        setDistributionAmount((prev) => Math.max(0, prev + amount));
+        updateDistributionPrompt(cardData.uuid, amount);
     }
     
     // helper function to get the correct aspects for the upgrade cards
@@ -77,6 +76,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
     const borderColor = getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
     const cardCounter = !isICardData(card) ? card.count : 0;
+    const distributionAmount = distributionPromptData.find((item) => item.uuid === cardData.uuid)?.amount || 0;
 
     // Styles
     const styles = {
@@ -252,11 +252,11 @@ const GameCard: React.FC<IGameCardProps> = ({
         damageAdjusterButton: {
             flex: 1,
             minWidth: '50%',
-            ':first-child': {
+            ':first-of-type': {
                 borderRadius: '4px 0px 0px 4px',
                 borderRight: '1px solid #404040',
             },
-            ':last-child': {
+            ':last-of-types': {
                 borderRadius: '0px 4px 4px 0px'
             }
         },
@@ -271,6 +271,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             position:'relative'
         }
     }
+
     return (
         <Box sx={styles.cardContainer}>
             <Box sx={styles.card} onClick={disabled ? undefined : handleClick}>
