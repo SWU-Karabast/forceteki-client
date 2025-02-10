@@ -26,6 +26,11 @@ interface IGameContextType {
     getConnectedPlayerPrompt: () => any;
 }
 
+interface IDistributionPromptData {
+    uuid: string;
+    amount: number;
+}
+
 const GameContext = createContext<IGameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
@@ -37,6 +42,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const { openPopup, clearPopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const searchParams = useSearchParams();
+    const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData[]>(null);
 
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
@@ -62,7 +68,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } =
                     promptState;
-                if (promptType === 'actionWindow') return;
+                if (promptType === 'actionWindow' || promptType === 'distributeAmongTargets') return;
                 else if (promptType === 'displayCards') {
                     const cards = displayCards.map((card: any) => {
                         return {
@@ -145,11 +151,34 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setGameState(null);
     }
 
-
     const getConnectedPlayerPrompt = () => {
         if (!gameState) return '';
         return gameState.players[connectedPlayer]?.promptState;
     }
+
+    const updateDistributionPrompt = (uuid: string, amount: number) => {
+        setDistributionPromptData((prevData) => {
+            if (!prevData) {
+                return amount > 0 && amount <= totalAmount ? [{ uuid, amount }] : [];
+            }
+
+            const currentTotal = prevData.reduce((sum, item) => sum + item.amount, 0);
+            if (currentTotal + amount > totalAmount) return prevData;
+    
+
+            const newData = prevData.map(item =>
+                item.uuid === uuid ? { ...item, amount: item.amount + amount } : item
+            ).filter(item => item.amount > 0);
+    
+            if (!prevData.some(item => item.uuid === uuid) && amount > 0) {
+                newData.push({ uuid, amount });
+            }
+    
+            return newData;
+        });
+    };
+
+    };
 
     return (
         <GameContext.Provider

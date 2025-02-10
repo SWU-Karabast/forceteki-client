@@ -2,6 +2,7 @@ import React from 'react';
 import {
     Typography,
     Box,
+    Button,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { IGameCardProps, ICardData, IServerCardData, CardStyle } from './CardTypes';
@@ -22,16 +23,20 @@ const GameCard: React.FC<IGameCardProps> = ({
     capturedCards = [],
     disabled = false,
 }) => {
+    const [distributionAmount, setDistributionAmount] = React.useState<number>(null);
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt } = useGame();
     const cardData = isICardData(card) ? card : card.card;
+
+    const showDamageAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && cardData.selectable
+    if (showDamageAdjuster) {
+        // override when using damage adjuster to show border but prevent click events
+        disabled = true;
+    };
 
     if (!cardData) {
         return null;
     }
 
-    const cardCounter = !isICardData(card) ? card.count : 0;
-
-    // default on click
     const defaultClickFunction = () => {
         if (cardData.selectable) {
             sendGameMessage(['cardClicked', cardData.uuid]);
@@ -39,20 +44,21 @@ const GameCard: React.FC<IGameCardProps> = ({
     };
     const handleClick = onClick ?? defaultClickFunction;
 
+    const handleDamageAdjusterClick = (amount: number) => {
+        setDistributionAmount((prev) => Math.max(0, prev + amount));
+    }
+    
     // helper function to get the correct aspects for the upgrade cards
     const cardUpgradebackground = (card: ICardData) => {
         if (!card.aspects){
             return null
         }
-
-        // Check if Villainy or Heroism are the sole aspects
         if (card.aspects.includes('villainy') && card.aspects.length === 1) {
             return 'upgrade-black.png';
         }
         if (card.aspects.includes('heroism') && card.aspects.length === 1) {
             return 'upgrade-white.png';
         }
-        // Check other aspects
         switch (true) {
             case card.aspects.includes('aggression'):
                 return 'upgrade-red.png';
@@ -63,7 +69,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             case card.aspects.includes('vigilance'):
                 return 'upgrade-blue.png';
             default:
-                // Fallback for unexpected cases
                 return 'upgrade-grey.png';
         }
     };
@@ -71,6 +76,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
     const borderColor = getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
+    const cardCounter = !isICardData(card) ? card.count : 0;
 
     // Styles
     const styles = {
@@ -220,6 +226,40 @@ const GameCard: React.FC<IGameCardProps> = ({
             aspectRatio: '1/1',
             width: '50%'
         },
+        damageCounter: {
+            fontWeight: '800',
+            fontSize: '1.9rem',
+            color: 'white',
+            width: '2.5rem',
+            aspectRatio: '1 / 1',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundImage: 'url(/token-background.svg)',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
+            textShadow: '1px 1px #00000033'
+        },
+        damageAdjuster: {
+            display: 'flex',
+            position: 'absolute',
+            top: '100%',
+            width: '100%',
+            border: '1px solid #404040',
+            borderRadius: '4px',
+        },
+        damageAdjusterButton: {
+            flex: 1,
+            minWidth: '50%',
+            ':first-child': {
+                borderRadius: '4px 0px 0px 4px',
+                borderRight: '1px solid #404040',
+            },
+            ':last-child': {
+                borderRadius: '0px 4px 4px 0px'
+            }
+        },
         capturedCardsDivider:{
             fontSize: '11px',
             fontWeight: 'bold',
@@ -236,6 +276,11 @@ const GameCard: React.FC<IGameCardProps> = ({
             <Box sx={styles.card} onClick={disabled ? undefined : handleClick}>
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
+                    { !!distributionAmount && (
+                        <Typography variant="body1" sx={styles.damageCounter}>
+                            {distributionAmount}
+                        </Typography>
+                    )}
                 </Box>
                 {cardStyle === CardStyle.Lobby && (
                     <Box sx={styles.counterIcon}>
@@ -252,6 +297,12 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 />
                             ))}
                         </Grid>
+                        { showDamageAdjuster && (
+                            <Box sx={styles.damageAdjuster}>
+                                <Button sx={styles.damageAdjusterButton} variant="contained" color="primary" onClick={() => handleDamageAdjusterClick(-1)} >-</Button>
+                                <Button sx={styles.damageAdjusterButton} variant="contained" color="primary" onClick={() => handleDamageAdjusterClick(+1)}>+</Button>
+                            </Box>
+                        )}
                         {cardData.sentinel && (
                             <Box sx={styles.sentinelIcon}/>
                         )}
