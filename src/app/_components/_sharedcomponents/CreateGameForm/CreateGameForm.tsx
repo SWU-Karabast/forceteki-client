@@ -85,7 +85,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     };
 
     const formControlStyle = {
-        mb: '1.5rem',
+        mb: '1rem',
     };
 
     const labelTextStyle = {
