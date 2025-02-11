@@ -44,11 +44,6 @@ export interface IResourcesProps {
     trayPlayer: string;
 }
 
-export interface IResourcesOverlayProps {
-    isModalOpen: boolean;
-    handleModalToggle: () => void;
-}
-
 export interface IUnitsBoardProps {
     sidebarOpen: boolean;
     arena: string;

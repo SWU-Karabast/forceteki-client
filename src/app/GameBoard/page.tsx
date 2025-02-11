@@ -7,7 +7,6 @@ import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDra
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
 import PlayerCardTray from '../_components/Gameboard/PlayerCardTray/PlayerCardTray';
-import ResourcesOverlay from '../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay';
 import { useGame } from '../_contexts/Game.context';
 import { useSidebar } from '../_contexts/Sidebar.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
@@ -149,10 +148,6 @@ const GameBoard = () => {
                     <Box sx={styles.promptShadow}/>
                 </Box>
             </Box>
-            <ResourcesOverlay
-                isModalOpen={isModalOpen}
-                handleModalToggle={handleModalToggle}
-            />
 
             <PopupShell/>
             <PreferencesComponent
