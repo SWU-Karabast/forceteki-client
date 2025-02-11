@@ -30,7 +30,7 @@ interface IGameContextType {
 
 interface IDistributionPromptData {
     type: string;
-    targets: {
+    valueDistribution: {
         uuid: string;
         amount: number;
     }[];
@@ -75,7 +75,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     promptState;
                 if (promptType === 'actionWindow') return;
                 else if (promptType === 'distributeAmongTargets') {
-                    setDistributionPromptData({ type: promptState.distributeAmongTargets.type, targets: [] });
+                    setDistributionPromptData({ type: promptState.distributeAmongTargets.type, valueDistribution: [] });
                     return;
                 }
                 else if (promptType === 'displayCards') {
@@ -175,7 +175,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
         setDistributionPromptData((prevData) => {
             if (!prevData) return null;
-            const targets = prevData.targets;
+            const targets = prevData.valueDistribution;
             const currentTotal = targets.reduce((sum, item) => sum + item.amount, 0);
             if (currentTotal + amount > totalAmount) return prevData;
     
@@ -188,7 +188,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 newTargetData.push({ uuid, amount });
             }
     
-            return { ...prevData, targets: newTargetData };
+            return { ...prevData, valueDistribution: newTargetData };
         });
     };
 
