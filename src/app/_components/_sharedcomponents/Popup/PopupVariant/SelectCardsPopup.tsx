@@ -10,7 +10,6 @@ import {
     titleStyle,
 } from '../Popup.styles';
 import { PerCardButton, SelectCardsPopup } from '../Popup.types';
-import { usePopup } from '@/app/_contexts/Popup.context';
 import { useGame } from '@/app/_contexts/Game.context';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import { CardStyle } from '../../Cards/CardTypes';
@@ -52,7 +51,6 @@ const styles = {
 }
 
 export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
-    const { closePopup } = usePopup();
     const { sendGameMessage } = useGame();
     const [isMinimized, setIsMinimized] = useState(false);
 
@@ -90,7 +88,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                                         }}
                                     />
                                 )}
-                                {renderButtons(card.uuid, data.perCardButtons, data.cards.length == 1)}
+                                {renderButtons(card.uuid, data.perCardButtons)}
                             </Box>
                         )
                     })}
@@ -109,7 +107,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                             sx={perCardButtonStyle}
                             variant="contained"
                             onClick={() => {
-                                sendGameMessage([button.command, button.arg, data.uuid]); closePopup(data.uuid)
+                                sendGameMessage([button.command, button.arg, data.uuid]);
                             }}
                         >
                             {button.text}
@@ -125,7 +123,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
         setIsMinimized(!isMinimized);
     };
 
-    const renderButtons = (cardUuid: string, buttons: PerCardButton[], last: boolean) => {
+    const renderButtons = (cardUuid: string, buttons: PerCardButton[]) => {
         return (
             <Box sx={{ gap: '1rem', flexDirection: 'column', display: 'flex' }}>
                 {buttons.map((button, index) =>
@@ -134,7 +132,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                         sx={perCardButtonStyle}
                         variant="contained"
                         onClick={() => {
-                            sendGameMessage([button.command, button.arg, cardUuid, data.uuid]); if (last) closePopup(data.uuid)
+                            sendGameMessage([button.command, button.arg, cardUuid, data.uuid]);
                         }}
                     >
                         {button.text}
