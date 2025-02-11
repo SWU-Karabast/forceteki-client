@@ -147,7 +147,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWU Stats
                         </Link>{' '}
-                        or
+                        or{' '}
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
