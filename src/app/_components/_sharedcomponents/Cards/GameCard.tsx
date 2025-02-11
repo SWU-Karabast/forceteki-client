@@ -74,7 +74,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
     const borderColor = getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
     const cardCounter = !isICardData(card) ? card.count : 0;
-    const distributionAmount = distributionPromptData?.targets.find((item) => item.uuid === cardData.uuid)?.amount || 0;
+    const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === cardData.uuid)?.amount || 0;
 
     // Styles
     const styles = {

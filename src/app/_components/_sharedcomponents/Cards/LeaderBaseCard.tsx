@@ -24,7 +24,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
-    const distributionAmount = distributionPromptData?.targets.find((item) => item.uuid === card.uuid)?.amount || 0;
+    const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
     const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable && !isDeployed;
     if (showValueAdjuster) {
         // override when using damage adjuster to show border but prevent click events
