@@ -1,12 +1,13 @@
 import React from 'react';
 import {
     Typography,
-    Box,
+    Box
 } from '@mui/material';
 import { ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
+import CardValueAdjuster from './CardValueAdjuster';
 
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
@@ -15,7 +16,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     cardStyle = LeaderBaseCardStyle.Plain,
     disabled = false,
 }) => {
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
     if (!card) {
         return null
@@ -23,6 +24,13 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
+    const distributionAmount = distributionPromptData?.targets.find((item) => item.uuid === card.uuid)?.amount || 0;
+    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable && !isDeployed;
+    if (showValueAdjuster) {
+        // override when using damage adjuster to show border but prevent click events
+        disabled = true;
+    };
+
 
     const styles = {
         card: {
@@ -66,6 +74,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundImage: 'url(/epicActionToken.png)',
             display: card.epicActionSpent && !isDeployed ? 'block' : 'none'
         },
+        damageCounterContainer: {
+            position: 'absolute',
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            pointerEvents: 'none',
+        },
         damageCounter: {
             fontWeight: '800',
             fontSize: '1.9rem',
@@ -79,7 +97,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             filter: 'drop-shadow(0 4px 4px 0 #00000040)',
-            textShadow: '1px 1px #00000033'
+            textShadow: '1px 1px #00000033',
+            mb: 0
         },
         nameplateBox: {
             position: 'absolute',
@@ -109,10 +128,18 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         >
             <Box sx={styles.cardOverlay}></Box>
             <Box sx={styles.epicActionIcon}></Box>
+            { showValueAdjuster && <CardValueAdjuster cardId={card.uuid} /> }
             {cardStyle === LeaderBaseCardStyle.Base && (
-                <Typography variant="body1" sx={styles.damageCounter}>
-                    {card.damage}
-                </Typography>
+                <Box sx={styles.damageCounterContainer}>
+                    { !!distributionAmount && 
+                        <Typography variant="body1" sx={styles.damageCounter}>
+                            {distributionAmount}
+                        </Typography>
+                    }
+                    <Typography variant="body1" sx={styles.damageCounter}>
+                        {card.damage}
+                    </Typography>
+                </Box>
             )}
 
             {cardStyle === LeaderBaseCardStyle.Leader && title && (

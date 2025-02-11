@@ -2,10 +2,10 @@ import React from 'react';
 import {
     Typography,
     Box,
-    Button,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { IGameCardProps, ICardData, IServerCardData, CardStyle } from './CardTypes';
+import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
@@ -23,11 +23,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     capturedCards = [],
     disabled = false,
 }) => {
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, updateDistributionPrompt, distributionPromptData } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
     const cardData = isICardData(card) ? card : card.card;
 
-    const showDamageAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && cardData.selectable
-    if (showDamageAdjuster) {
+    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && cardData.selectable
+    if (showValueAdjuster) {
         // override when using damage adjuster to show border but prevent click events
         disabled = true;
     };
@@ -43,9 +43,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     };
     const handleClick = onClick ?? defaultClickFunction;
 
-    const handleDamageAdjusterClick = (amount: number) => {
-        updateDistributionPrompt(cardData.uuid, amount);
-    }
+
     
     // helper function to get the correct aspects for the upgrade cards
     const cardUpgradebackground = (card: ICardData) => {
@@ -76,7 +74,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
     const borderColor = getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
     const cardCounter = !isICardData(card) ? card.count : 0;
-    const distributionAmount = distributionPromptData.find((item) => item.uuid === cardData.uuid)?.amount || 0;
+    const distributionAmount = distributionPromptData?.targets.find((item) => item.uuid === cardData.uuid)?.amount || 0;
 
     // Styles
     const styles = {
@@ -241,25 +239,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             filter: 'drop-shadow(0 4px 4px 0 #00000040)',
             textShadow: '1px 1px #00000033'
         },
-        damageAdjuster: {
-            display: 'flex',
-            position: 'absolute',
-            top: '100%',
-            width: '100%',
-            border: '1px solid #404040',
-            borderRadius: '4px',
-        },
-        damageAdjusterButton: {
-            flex: 1,
-            minWidth: '50%',
-            ':first-of-type': {
-                borderRadius: '4px 0px 0px 4px',
-                borderRight: '1px solid #404040',
-            },
-            ':last-of-types': {
-                borderRadius: '0px 4px 4px 0px'
-            }
-        },
         capturedCardsDivider:{
             fontSize: '11px',
             fontWeight: 'bold',
@@ -290,6 +269,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
+                        { showValueAdjuster && <CardValueAdjuster cardId={cardData.uuid} /> }
                         <Grid direction="row" container sx={styles.shieldContainer}>
                             {shieldCards.map((_, index) => (
                                 <Box
@@ -298,12 +278,6 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 />
                             ))}
                         </Grid>
-                        { showDamageAdjuster && (
-                            <Box sx={styles.damageAdjuster}>
-                                <Button sx={styles.damageAdjusterButton} variant="contained" color="primary" onClick={() => handleDamageAdjusterClick(-1)} >-</Button>
-                                <Button sx={styles.damageAdjusterButton} variant="contained" color="primary" onClick={() => handleDamageAdjusterClick(+1)}>+</Button>
-                            </Box>
-                        )}
                         {cardData.sentinel && (
                             <Box sx={styles.sentinelIcon}/>
                         )}
