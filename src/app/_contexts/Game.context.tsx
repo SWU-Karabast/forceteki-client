@@ -13,6 +13,7 @@ import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
 import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 interface IGameContextType {
     gameState: any;
@@ -44,7 +45,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
-    const { openPopup, clearPopups } = usePopup();
+    const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const searchParams = useSearchParams();
     const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
@@ -67,12 +68,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             },
         });
 
+        // TODO: consider moving this to popup context
         const handleGameStatePopups = (gameState: any) => {
             if (!connectedPlayerId) return;
             if (gameState.players?.[connectedPlayerId].promptState) {
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
-                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } =
-                    promptState;
+                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
+                prunePromptStatePopups(promptUuid);
                 if (promptType === 'actionWindow') return;
                 else if (promptType === 'distributeAmongTargets') {
                     setDistributionPromptData({ type: promptState.distributeAmongTargets.type, valueDistribution: [] });
@@ -92,6 +94,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         cards: cards,
                         perCardButtons: perCardButtons,
                         buttons: buttons,
+                        source: PopupSource.PromptState
                     });
                 }
                 else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
@@ -100,6 +103,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         uuid: promptUuid,
                         title: menuTitle,
                         buttons,
+                        source: PopupSource.PromptState
                     });
                 }
                 else if (dropdownListOptions.length > 0 && menuTitle && promptUuid && !selectCard) {
@@ -108,6 +112,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         title: promptTitle,
                         description: menuTitle,
                         options: dropdownListOptions,
+                        source: PopupSource.PromptState
                     });
                 }
             }
@@ -132,7 +137,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, anonymousUserId, openPopup, clearPopups]);
+    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         console.log('sending message', message, args);

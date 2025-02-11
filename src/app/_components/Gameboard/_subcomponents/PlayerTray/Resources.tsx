@@ -5,6 +5,7 @@ import { s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { IResourcesProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
@@ -86,8 +87,8 @@ const Resources: React.FC<IResourcesProps> = ({
                 togglePopup('pile', {
                     uuid: `${connectedPlayer}-resources`,
                     title: 'Your Resources',
-                    cards:
-                        gameState?.players[connectedPlayer]?.cardPiles['resources'],
+                    cards: gameState?.players[connectedPlayer]?.cardPiles['resources'],
+                    source: PopupSource.User
                 })
             }}
         >
