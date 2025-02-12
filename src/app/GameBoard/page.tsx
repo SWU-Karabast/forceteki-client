@@ -7,8 +7,6 @@ import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDra
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
 import PlayerCardTray from '../_components/Gameboard/PlayerCardTray/PlayerCardTray';
-import ResourcesOverlay from '../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay';
-import BasicPrompt from '../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt';
 import { useGame } from '../_contexts/Game.context';
 import { useSidebar } from '../_contexts/Sidebar.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
@@ -30,7 +28,6 @@ const GameBoard = () => {
 
     // State for resource selection
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isBasicPromptOpen, setBasicPromptOpen] = useState(false);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
 
     const handleChatSubmit = () => {
@@ -62,9 +59,6 @@ const GameBoard = () => {
         setIsModalOpen(!isModalOpen);
     };
 
-    const handleBasicPromptToggle = () => {
-        setBasicPromptOpen(!isBasicPromptOpen);
-    };
     const handlePreferenceToggle = () => {
         setPreferenceOpen(!isPreferenceOpen);
     }
@@ -101,6 +95,7 @@ const GameBoard = () => {
             justifyContent: 'center',
             alignItems: 'center',
             width: '50vw',
+            pointerEvents: 'none',
         },
         promptStyle: {
             textAlign: 'center',
@@ -132,7 +127,6 @@ const GameBoard = () => {
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
                     handleModalToggle={handleModalToggle}
-                    handleBasicPromptToggle={handleBasicPromptToggle}
                 />
             </Box>
 
@@ -154,14 +148,7 @@ const GameBoard = () => {
                     <Box sx={styles.promptShadow}/>
                 </Box>
             </Box>
-            <ResourcesOverlay
-                isModalOpen={isModalOpen}
-                handleModalToggle={handleModalToggle}
-            />
-            <BasicPrompt
-                isBasicPromptOpen={isBasicPromptOpen}
-                handleBasicPromptToggle={handleBasicPromptToggle}
-            />
+
             <PopupShell/>
             <PreferencesComponent
                 isPreferenceOpen={isPreferenceOpen}

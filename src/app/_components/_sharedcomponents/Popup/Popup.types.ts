@@ -1,5 +1,10 @@
 import { ICardData } from '../Cards/CardTypes';
 
+export enum PopupSource {
+    PromptState = 'promptstate',
+    User = 'user'
+}
+
 export type PopupButton = {
     text: string;
     uuid: string;
@@ -19,6 +24,7 @@ export type DefaultPopup = {
     title: string;
     description?: string;
     buttons: PopupButton[];
+    source: PopupSource;
 };
 
 export type SelectCardsPopup = {
@@ -29,6 +35,7 @@ export type SelectCardsPopup = {
     cards: ICardData[];
     perCardButtons: PerCardButton[];
     buttons: PopupButton[];
+    source: PopupSource;
 };
 
 export type PilePopup = {
@@ -36,6 +43,7 @@ export type PilePopup = {
     uuid: string;
     title: string;
     cards: ICardData[];
+    source: PopupSource;
 };
 
 export type DropdownPopup = {
@@ -44,4 +52,5 @@ export type DropdownPopup = {
     title: string;
     description?: string;
     options: string[];
+    source: PopupSource;
 };
