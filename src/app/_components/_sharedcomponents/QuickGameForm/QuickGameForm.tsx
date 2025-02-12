@@ -68,7 +68,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
 
     const styles = {
         formControlStyle: {
-            mb: '1.5rem',
+            mb: '1rem',
         },
         labelTextStyle: {
             mb: '.5em',
@@ -174,6 +174,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         backgroundColor: '#404040',
                         color: 'var(--variant-containedColor)',
                     },
+                    mb: '1rem',
                 }}>
                     {queueState ? 'Queueing...' : 'Join Queue'}
                 </Button>
