@@ -62,6 +62,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             height: '100%',
             width: '100%',
             backgroundColor: card.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
         },
         epicActionIcon : {
             position: 'absolute',
@@ -79,7 +82,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             height: '100%',
             width: '100%',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-around',
             pointerEvents: 'none',
@@ -109,6 +112,14 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             borderRadius: '4px',
             p: '4px 8px',
         },
+        unimplementedAlert: {
+            display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
+            backgroundImage: 'url(/not-implemented.svg)',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1/1',
+            width: '50%'
+        },
         nameplateText: {
             color: 'white',
             fontWeight: '600',
@@ -126,7 +137,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 }
             }}
         >
-            <Box sx={styles.cardOverlay}></Box>
+            <Box sx={styles.cardOverlay}>
+                <Box sx={styles.unimplementedAlert}></Box>
+            </Box>
             <Box sx={styles.epicActionIcon}></Box>
             { showValueAdjuster && <CardValueAdjuster cardId={card.uuid} /> }
             {cardStyle === LeaderBaseCardStyle.Base && (
