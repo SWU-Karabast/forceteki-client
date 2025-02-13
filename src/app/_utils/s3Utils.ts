@@ -1,4 +1,4 @@
-import { ICardData } from '../_components/_sharedcomponents/Cards/CardTypes';
+import {ICardData, IServerCardData} from '../_components/_sharedcomponents/Cards/CardTypes';
 
 // Deck data interfaces for deck info from swudb
 interface IDeckMetadata {
@@ -82,9 +82,9 @@ export const s3ImageURL = (path: string) => {
     return s3Bucket + path;
 };
 
-export const s3CardImageURL = (card: ICardData | ISetCode) => {
+export const s3CardImageURL = (card: ICardData | ISetCode | IServerCardData) => {
     if (!card?.setId) return s3ImageURL('game/swu-cardback.webp');
-    const type = card.type || card.types;
+    const type = card.type || card.types; // TODO fix this for types
     if (type?.includes('token')) {
         return s3ImageURL(`cards/_tokens/${card.id}.webp`);
     }
