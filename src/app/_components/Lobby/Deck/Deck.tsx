@@ -18,7 +18,7 @@ const transformSWUDeckItem = (item: { id: string; count: number }): IServerCardD
     return {
         count: item.count,
         id: item.id,
-        setId:parseSetId(item.id)
+        setId:parseSetId(item.id),
     };
 }
 
@@ -104,8 +104,6 @@ const Deck: React.FC = () => {
         (sum: number, item: { count: number; }) => sum + (item.count || 0),
         0
     ) ?? 0;
-    console.log(deckCount);
-    console.log(sideboardCount);
     return (
         <Box sx={{ width:'100%', height:'100%', overflowY: 'scroll' }}>
             <Card sx={cardStyle}>

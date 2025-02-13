@@ -1,4 +1,4 @@
-import {ICardData, IServerCardData} from '../_components/_sharedcomponents/Cards/CardTypes';
+import { ICardData, IServerCardData } from '../_components/_sharedcomponents/Cards/CardTypes';
 
 // Deck data interfaces for deck info from swudb
 interface IDeckMetadata {
@@ -84,16 +84,20 @@ export const s3ImageURL = (path: string) => {
 
 export const s3CardImageURL = (card: ICardData | ISetCode | IServerCardData) => {
     if (!card?.setId) return s3ImageURL('game/swu-cardback.webp');
-    const type = card.type || card.types; // TODO fix this for types
-    if (type?.includes('token')) {
+
+    // check if the card has a type
+    const cardType = 'type' in card ? card.type || (Array.isArray(card.types) ? card.types.join() : card.types) : undefined;
+
+    if (cardType?.includes('token')) {
         return s3ImageURL(`cards/_tokens/${card.id}.webp`);
     }
+
     let cardNumber = card.setId.number.toString().padStart(3, '0')
     
-    if (type === 'leaderUnit') {
+    if (cardType === 'leaderUnit') {
         cardNumber += '-portrait';
     }
-    if (type === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
+    if (cardType === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
         cardNumber += '-side2';
     }
 
