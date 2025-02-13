@@ -10,6 +10,7 @@ export type PopupButton = {
     uuid: string;
     command: string;
     arg: string;
+    selected?: boolean;
 };
 
 export type PerCardButton = {
