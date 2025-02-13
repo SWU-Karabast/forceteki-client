@@ -88,11 +88,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             minWidth: '9rem',
         },
         initiativeCardStyle: {
-            height: '16.5rem',
             background: '#18325199',
             display: 'flex',
-            paddingLeft: '30px',
-            paddingRight: '30px',
+            padding: '30px',
             flexDirection: 'column',
             justifyContent: 'center',
         },

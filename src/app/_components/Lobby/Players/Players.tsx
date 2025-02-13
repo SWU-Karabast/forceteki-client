@@ -23,21 +23,14 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const cardStyle = {
         borderRadius: '1.1em',
         borderColor: '#FFFFFF00',
-        height:'90vh',  // For small screens and up (600px and above)
-        width: '80%',
-        minWidth: '212px',
+        height:'100%',
+        width: '100%',
         display: 'flex',
         flexDirection: isLobbyView ? 'column' : 'row',
         justifyContent: isLobbyView ? 'flex-start' : 'center',
         pt: '.8em',
         backgroundColor: '#00000080',
         backdropFilter: 'blur(30px)',
-        '@media (max-height: 759px)': {
-            height: '84vh',
-        },
-        '@media (max-height: 1000px)': {
-            maxHeight: '85.5vh',
-        },
     };
 
     const typographyStyle = {

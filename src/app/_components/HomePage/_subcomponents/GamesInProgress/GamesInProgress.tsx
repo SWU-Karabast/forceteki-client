@@ -4,10 +4,6 @@ import PublicMatch from '../PublicMatch/PublicMatch';
 import { playerMatches } from '@/app/_constants/mockData';
 
 const GamesInProgress: React.FC = () => {
-    const twoOrThreeDigits = Math.random() >= 0.5 ? 100 : 10;
-    const randomGamesInProgress =
-		Math.floor(Math.random() * 9 * twoOrThreeDigits) + twoOrThreeDigits;
-
     const styles = {
         headerBox: {
             display: 'flex',
@@ -29,14 +25,16 @@ const GamesInProgress: React.FC = () => {
         <>
             <Box sx={styles.headerBox}>
                 <Typography variant="h3">Games in Progress</Typography>
-                <Typography variant="h3" sx={styles.activeGamesNumber}>{randomGamesInProgress}</Typography>
+                <Typography variant="h3" sx={styles.activeGamesNumber}>{0}</Typography>
             </Box>
             <Divider sx={styles.divider} />
-            <Box>
-                {playerMatches.map((match, index) => (
-                    <PublicMatch key={index} match={match} />
-                ))}
-            </Box>
+            { process.env.NODE_ENV === 'development' && 
+                <Box>
+                    {playerMatches.map((match, index) => (
+                        <PublicMatch key={index} match={match} />
+                    ))}
+                </Box>
+            }
         </>
     );
 };
