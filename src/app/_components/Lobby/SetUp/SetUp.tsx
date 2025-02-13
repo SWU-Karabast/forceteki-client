@@ -36,8 +36,6 @@ const SetUp: React.FC = ({
     const styles = {
         mainCardStyle: {
             borderRadius: '1.1em',
-            height: '100%',
-            maxHeight: '61.4vh',
             width: '100%',
             display: 'flex',
             flexDirection: 'column',
@@ -46,12 +44,7 @@ const SetUp: React.FC = ({
             backgroundColor: '#00000080',
             backdropFilter: 'blur(30px)',
             overflow: 'hidden',
-            '@media (max-height: 1000px)': {
-                maxHeight: '60.3vh',
-            },
-            '@media (max-height: 759px)': {
-                maxHeight: '42.6vh',
-            },
+            flex: 1,
         },
         lobbyTextStyle:{
             fontSize: '3.0em',
@@ -77,8 +70,9 @@ const SetUp: React.FC = ({
         },
         boxContainer: {
             width: '100%',
-            // maxHeight: "64vh", // this is for the small screen
             height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
         },
     }
 
