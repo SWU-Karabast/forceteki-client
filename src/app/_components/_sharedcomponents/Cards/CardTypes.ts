@@ -36,7 +36,8 @@ export interface ICardData {
 
 export interface IServerCardData {
     count: number;
-    card: ICardData;
+    id: string;
+    setId:ICardSetId;
 }
 
 export interface IOpponentHiddenCardData {

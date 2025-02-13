@@ -5,6 +5,24 @@ import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 
+// ------------------------Utilities------------------------//
+const parseSetId = (fullCardId: string) => {
+    const [setStr, numStr] = fullCardId.split('_');
+    return {
+        set: setStr || '',
+        number: parseInt(numStr, 10) || 0,
+    };
+};
+
+const transformSWUDeckItem = (item: { id: string; count: number }): IServerCardData => {
+    return {
+        count: item.count,
+        id: item.id,
+        setId:parseSetId(item.id)
+    };
+}
+
+
 const Deck: React.FC = () => {
     // ------------------------STYLES------------------------//
     const cardStyle = {
@@ -66,8 +84,13 @@ const Deck: React.FC = () => {
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     // set decks for connectedUser
-    const newDeck = connectedUser ? connectedUser.deck ? connectedUser.deck.deckCards || [] : [] : [];
-    const sideBoard = connectedUser ? connectedUser.deck ? connectedUser.deck.sideboard || [] : [] : [];
+    console.log(connectedUser.swuDeck);
+    const swuDeck = connectedUser?.swuDeck;
+    const deckItems = swuDeck?.deck || [];
+    const sideboardItems = swuDeck?.sideboard || [];
+    // Transform them into IServerCardData
+    const newDeck: IServerCardData[] = deckItems.map(transformSWUDeckItem);
+    const sideBoard: IServerCardData[] = sideboardItems.map(transformSWUDeckItem);
     console.log('newDeck', newDeck);
     console.log('sideBoard', sideBoard);
 
@@ -81,7 +104,8 @@ const Deck: React.FC = () => {
         (sum: number, item: { count: number; }) => sum + (item.count || 0),
         0
     ) ?? 0;
-
+    console.log(deckCount);
+    console.log(sideboardCount);
     return (
         <Box sx={{ width:'100%', height:'100%', overflowY: 'scroll' }}>
             <Card sx={cardStyle}>
@@ -97,10 +121,10 @@ const Deck: React.FC = () => {
                     <Box sx={mainContainerStyle}>
                         {newDeck.map((card:IServerCardData) => (
                             <GameCard
-                                key={card.card.id}
+                                key={card.id}
                                 card={card}
                                 cardStyle={CardStyle.Lobby}
-                                onClick={() => sendLobbyMessage(['updateDeck','Deck', card.card.id])}
+                                onClick={() => sendLobbyMessage(['updateDeck','Deck', card.id])}
                             />
                         ))}
                     </Box>
@@ -120,10 +144,10 @@ const Deck: React.FC = () => {
                             <Box sx={mainContainerStyle}>
                                 {sideBoard.map((card:IServerCardData) => (
                                     <GameCard
-                                        key={card.card.id}
+                                        key={card.id}
                                         card={card}
                                         cardStyle={CardStyle.Lobby}
-                                        onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.card.id])}
+                                        onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.id])}
                                     />
                                 ))}
                             </Box>

@@ -24,7 +24,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     disabled = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
-    const cardData = isICardData(card) ? card : card.card;
+    const cardData = isICardData(card) ? card : card;
 
     const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && cardData.selectable
     if (showValueAdjuster) {
