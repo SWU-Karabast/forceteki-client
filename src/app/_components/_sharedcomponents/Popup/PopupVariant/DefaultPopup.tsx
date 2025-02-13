@@ -1,10 +1,9 @@
 import { useGame } from '@/app/_contexts/Game.context';
-import { usePopup } from '@/app/_contexts/Popup.context';
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { MouseEvent, useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
+import GradientBorderButton from '@/app/_components/_sharedcomponents/_styledcomponents/GradientBorderButton';
 import {
-    buttonStyle,
     containerStyle,
     footerStyle,
     headerStyle,
@@ -20,7 +19,6 @@ interface ButtonProps {
 
 export const DefaultPopupModal = ({ data }: ButtonProps) => {
     const { sendGameMessage } = useGame();
-    const { closePopup } = usePopup();
     const [isMinimized, setIsMinimized] = useState(false);
 
     const renderPopupContent = () => {
@@ -32,17 +30,26 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
                 )}
                 <Box sx={footerStyle}>
                     {data.buttons.map((button: PopupButton, index: number) => (
-                        <Button
+                        <GradientBorderButton
                             key={`${button.uuid}:${index}`}
-                            sx={buttonStyle}
-                            variant="contained"
-                            onClick={() => {
+                            fillColor={button.selected ? '#666' : undefined}
+                            onClickHandler={() => {
                                 sendGameMessage([button.command, button.arg, button.uuid]);
-                                closePopup(data.uuid);
                             }}
                         >
                             {button.text}
-                        </Button>
+                        </GradientBorderButton>
+                        // <Button
+                        //     key={`${button.uuid}:${index}`}
+                        //     sx={{ ...buttonStyle, backgroundColor: button.selected ? 'white' : '' }}
+                        //     variant="contained"
+                        //     onClick={() => {
+                        //         sendGameMessage([button.command, button.arg, button.uuid]);
+                        //         closePopup(data.uuid);
+                        //     }}
+                        // >
+                        //     {button.text}
+                        // </Button>
                     ))}
                 </Box>
             </>
