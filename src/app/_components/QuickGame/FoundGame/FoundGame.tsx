@@ -94,21 +94,6 @@ const FoundGame: React.FC = () => {
             marginTop: '7px',
             marginRight: '5px'
         },
-        boxGeneralStyling: {
-            backgroundColor: 'transparent',
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            width: '14rem',
-            height: '10.18rem',
-            backgroundImage: 'url(/leaders/boba.webp)',
-            backgroundRepeat: 'no-repeat',
-            textAlign: 'center' as const,
-            color: 'white',
-            display: 'flex',
-            cursor: 'pointer',
-            position: 'relative' as const,
-            mb: '10px',
-        },
         parentBoxStyling: {
             position:'absolute',
         },
