@@ -1,4 +1,4 @@
-import { Grid2 as Grid, Button, Typography, Box } from '@mui/material';
+import { Grid2 as Grid, Button, Box } from '@mui/material';
 
 import { useGame } from '@/app/_contexts/Game.context';
 
@@ -6,7 +6,7 @@ const CardActionTray: React.FC = () => {
     // ------------------------STYLES------------------------//
 
     const actionContainerStyle = {
-        mt: '1vh',
+        mt: '0',
     };
 
     const { sendGameMessage, gameState, connectedPlayer } = useGame();
@@ -15,6 +15,7 @@ const CardActionTray: React.FC = () => {
     const showTrayButtons = () => {
         if ( playerState.promptState.promptType == 'actionWindow' ||
              playerState.promptState.promptType == 'resource' ||
+             playerState.promptState.promptType == 'distributeAmongTargets' ||
              playerState.promptState.selectCard == true ) {
             return true;
         }

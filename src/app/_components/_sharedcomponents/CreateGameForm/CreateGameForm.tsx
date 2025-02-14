@@ -2,8 +2,6 @@ import React, { useState, FormEvent, ChangeEvent } from 'react';
 import {
     Box,
     Button,
-    Card,
-    CardContent,
     Checkbox,
     FormControl,
     FormControlLabel,
@@ -13,7 +11,7 @@ import {
     RadioGroup,
     Link,
 } from '@mui/material';
-import StyledTextField from '../_styledcomponents/StyledTextField/StyledTextField';
+import StyledTextField from '../_styledcomponents/StyledTextField';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
@@ -55,12 +53,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         console.log('Deck Link:', deckLink);
         console.log('beginning fetch for deck link');
         const deckData = deckLink ? await fetchDeckData(deckLink) : null;
+        const swuDeck = deckLink ? await fetchDeckData(deckLink,false) : null;
+        console.log('fetch complete, swu deck data:', swuDeck);
         console.log('fetch complete, deck data:', deckData);
         console.log('Save Deck To Favourites:', saveDeck);
         try {
             const payload = {
                 user: user || sessionStorage.getItem('anonymousUserId'),
                 deck: deckData,
+                swuDeck: swuDeck,
                 isPrivate: privacy === 'Private',
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
@@ -84,7 +85,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     };
 
     const formControlStyle = {
-        mb: '1.5rem',
+        mb: '1rem',
     };
 
     const labelTextStyle = {
@@ -113,15 +114,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         display: 'block',
         ml: 'auto',
         mr: 'auto',
-    };
-
-    const instructionsCardStyle = {
-        width: { xs: '90vw', sm: '70vw', md: '40vw', lg: '30vw' },
-        borderRadius: '1.5em',
-        backgroundColor: '#18325199',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-        p: '2em',
-        mb: '2em',
     };
 
     return (
@@ -155,7 +147,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWU Stats
                         </Link>{' '}
-                        or
+                        or{' '}
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}

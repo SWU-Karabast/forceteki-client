@@ -7,8 +7,6 @@ import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDra
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
 import PlayerCardTray from '../_components/Gameboard/PlayerCardTray/PlayerCardTray';
-import ResourcesOverlay from '../_components/Gameboard/_subcomponents/Overlays/ResourcesOverlay/ResourcesOverlay';
-import BasicPrompt from '../_components/Gameboard/_subcomponents/Overlays/Prompts/BasicPrompt';
 import { useGame } from '../_contexts/Game.context';
 import { useSidebar } from '../_contexts/Sidebar.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
@@ -30,7 +28,6 @@ const GameBoard = () => {
 
     // State for resource selection
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isBasicPromptOpen, setBasicPromptOpen] = useState(false);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
 
     const handleChatSubmit = () => {
@@ -62,9 +59,6 @@ const GameBoard = () => {
         setIsModalOpen(!isModalOpen);
     };
 
-    const handleBasicPromptToggle = () => {
-        setBasicPromptOpen(!isBasicPromptOpen);
-    };
     const handlePreferenceToggle = () => {
         setPreferenceOpen(!isPreferenceOpen);
     }
@@ -101,13 +95,25 @@ const GameBoard = () => {
             justifyContent: 'center',
             alignItems: 'center',
             width: '50vw',
+            pointerEvents: 'none',
         },
         promptStyle: {
             textAlign: 'center',
             fontSize: '1.3em',
-            background:
-        'radial-gradient(ellipse, rgba(0,0,0, 0.9), rgba(0,0,0,0.7), rgba(0,0,0,0.0))',
+            padding: '1rem',
+            position: 'relative',
         },
+        promptShadow: {
+            position: 'absolute',
+            top: '22%',
+            left: 0,
+            width: '100%',
+            height: '60%',
+            zIndex: -1,
+            background: 'rgba(0, 0, 0, 0.5)',
+            filter: 'blur(10px)',
+            WebkitFilter: 'blur(10px)'
+        }
     };
 
     return (
@@ -121,7 +127,6 @@ const GameBoard = () => {
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
                     handleModalToggle={handleModalToggle}
-                    handleBasicPromptToggle={handleBasicPromptToggle}
                 />
             </Box>
 
@@ -138,18 +143,12 @@ const GameBoard = () => {
                 />
             )}
             <Box sx={styles.centralPromptContainer}>
-                <Typography sx={styles.promptStyle}>
+                <Box sx={styles.promptStyle}>
                     {gameState.players[connectedPlayer]?.promptState.menuTitle}
-                </Typography>
+                    <Box sx={styles.promptShadow}/>
+                </Box>
             </Box>
-            <ResourcesOverlay
-                isModalOpen={isModalOpen}
-                handleModalToggle={handleModalToggle}
-            />
-            <BasicPrompt
-                isBasicPromptOpen={isBasicPromptOpen}
-                handleBasicPromptToggle={handleBasicPromptToggle}
-            />
+
             <PopupShell/>
             <PreferencesComponent
                 isPreferenceOpen={isPreferenceOpen}

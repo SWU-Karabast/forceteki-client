@@ -5,6 +5,7 @@ import {
     DropdownPopup,
     PilePopup,
     SelectCardsPopup,
+    PopupSource
 } from '../_components/_sharedcomponents/Popup/Popup.types';
 
 export type PopupData =
@@ -26,6 +27,7 @@ interface PopupContextProps {
     closePopup: (uuid: string) => void;
     focusPopup: (uuid: string) => void;
     clearPopups: () => void;
+    prunePromptStatePopups: (promptUuid: string) => void;
 }
 
 const PopupContext = createContext<PopupContextProps | undefined>(undefined);
@@ -37,7 +39,13 @@ export const PopupProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const openPopup = useCallback(<T extends PopupType>(type: T, data: PopupDataMap[T]) => {
         setPopups((prev) => {
-            if (prev.some((popup) => popup.uuid === data.uuid)) return prev;
+            const existingIndex = prev.findIndex((popup) => popup.uuid === data.uuid);
+            if (existingIndex !== -1) {
+                // Replace the existing popup instead of skipping since it may have updated data
+                const updatedPopups = [...prev];
+                updatedPopups[existingIndex] = { type, ...data } as PopupData;
+                return updatedPopups;
+            }
             return [...prev, { type, ...data } as PopupData];
         });
     }, []);
@@ -69,13 +77,17 @@ export const PopupProvider: React.FC<{ children: React.ReactNode }> = ({
         });
     };
 
+    const prunePromptStatePopups = useCallback((promptUuid: string) => {
+        setPopups((prev) => prev.filter((popup) => popup.source === PopupSource.User || popup.uuid === promptUuid));
+    }, []);
+
     const clearPopups = useCallback(() => {
         setPopups([]);
     }, []);
 
     return (
         <PopupContext.Provider
-            value={{ openPopup, closePopup, focusPopup, togglePopup, clearPopups, popups }}
+            value={{ openPopup, closePopup, focusPopup, togglePopup, clearPopups, prunePromptStatePopups, popups }}
         >
             {children}
         </PopupContext.Provider>

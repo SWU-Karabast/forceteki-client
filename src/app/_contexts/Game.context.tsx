@@ -13,6 +13,7 @@ import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
 import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 interface IGameContextType {
     gameState: any;
@@ -24,6 +25,16 @@ interface IGameContextType {
     sendLobbyMessage: (args: any[]) => void;
     resetStates: () => void;
     getConnectedPlayerPrompt: () => any;
+    updateDistributionPrompt: (uuid: string, amount: number) => void;
+    distributionPromptData: IDistributionPromptData | null;
+}
+
+interface IDistributionPromptData {
+    type: string;
+    valueDistribution: {
+        uuid: string;
+        amount: number;
+    }[];
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -34,14 +45,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
-    const { openPopup, clearPopups } = usePopup();
-    const { user } = useUser();
+    const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
+    const { user, anonymousUserId } = useUser();
     const searchParams = useSearchParams();
+    const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
 
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
-        const anonymousUserId = sessionStorage.getItem('anonymousUserId');
         const connectedPlayerId = user?.id || anonymousUserId || '';
+        console.log('connectedPlayerId', connectedPlayerId);
+        if (!connectedPlayerId) return;
         setConnectedPlayer(connectedPlayerId);
         clearPopups();
 
@@ -55,13 +68,18 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             },
         });
 
+        // TODO: consider moving this to popup context
         const handleGameStatePopups = (gameState: any) => {
             if (!connectedPlayerId) return;
             if (gameState.players?.[connectedPlayerId].promptState) {
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
-                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } =
-                    promptState;
+                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
+                prunePromptStatePopups(promptUuid);
                 if (promptType === 'actionWindow') return;
+                else if (promptType === 'distributeAmongTargets') {
+                    setDistributionPromptData({ type: promptState.distributeAmongTargets.type, valueDistribution: [] });
+                    return;
+                }
                 else if (promptType === 'displayCards') {
                     const cards = displayCards.map((card: any) => {
                         return {
@@ -75,6 +93,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         description: menuTitle,
                         cards: cards,
                         perCardButtons: perCardButtons,
+                        buttons: buttons,
+                        source: PopupSource.PromptState
                     });
                 }
                 else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
@@ -83,6 +103,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         uuid: promptUuid,
                         title: menuTitle,
                         buttons,
+                        source: PopupSource.PromptState
                     });
                 }
                 else if (dropdownListOptions.length > 0 && menuTitle && promptUuid && !selectCard) {
@@ -91,6 +112,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         title: promptTitle,
                         description: menuTitle,
                         options: dropdownListOptions,
+                        source: PopupSource.PromptState
                     });
                 }
             }
@@ -115,7 +137,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, openPopup, clearPopups]);
+    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         console.log('sending message', message, args);
@@ -124,6 +146,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     const sendGameMessage = (args: any[]) => {
         console.log('sending game message', args);
+        if (args[0] === 'statefulPromptResults') {
+            args = [args[0], distributionPromptData, args[2]]
+            setDistributionPromptData(null);
+        }
+        console.log('args after push', args);
         socket?.emit('game', ...args);
     };
 
@@ -143,11 +170,32 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setGameState(null);
     }
 
-
     const getConnectedPlayerPrompt = () => {
         if (!gameState) return '';
         return gameState.players[connectedPlayer]?.promptState;
     }
+
+    const updateDistributionPrompt = (uuid: string, amount: number) => {
+        const totalAmount = gameState.players[connectedPlayer].promptState.distributeAmongTargets?.amount;
+
+        setDistributionPromptData((prevData) => {
+            if (!prevData) return null;
+            const targets = prevData.valueDistribution;
+            const currentTotal = targets.reduce((sum, item) => sum + item.amount, 0);
+            if (currentTotal + amount > totalAmount) return prevData;
+    
+
+            const newTargetData = targets.map(item =>
+                item.uuid === uuid ? { ...item, amount: item.amount + amount } : item
+            ).filter(item => item.amount > 0);
+    
+            if (!targets.some(item => item.uuid === uuid) && amount > 0) {
+                newTargetData.push({ uuid, amount });
+            }
+    
+            return { ...prevData, valueDistribution: newTargetData };
+        });
+    };
 
     return (
         <GameContext.Provider
@@ -160,7 +208,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 getOpponent,
                 sendLobbyMessage,
                 resetStates,
-                getConnectedPlayerPrompt
+                getConnectedPlayerPrompt,
+                updateDistributionPrompt,
+                distributionPromptData
             }}
         >
             {children}
