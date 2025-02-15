@@ -104,3 +104,7 @@ interface ICardPlayer {
     label: string;
     uuid: string;
 }
+
+export interface IDeckProps {
+    variant?: string;
+}

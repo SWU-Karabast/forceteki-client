@@ -1,8 +1,6 @@
 'use client';
 import { Box, Button, MenuItem, Typography } from '@mui/material';
-import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import React, { ChangeEvent, useState } from 'react';
-import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation'
 import Grid from '@mui/material/Grid2';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -17,6 +15,12 @@ const sortByOptions: string[] = [
 
 const DeckPage: React.FC = () => {
     const [sortBy, setSortBy] = useState<string>('');
+    const router = useRouter();
+
+    // Handler to navigate to the deck subpage using the deck's id
+    const handleViewDeck = (deckId: string) => {
+        router.push(`/DeckPage/${deckId}`);
+    };
 
     // ----------------------Styles-----------------------------//
     const styles = {
@@ -28,36 +32,6 @@ const DeckPage: React.FC = () => {
             alignSelf: 'flex-start',
             mb: '0px',
             cursor: 'pointer',
-        },
-        mainContainer:{
-            height: '100vh',
-            overflow: 'hidden',
-            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            display:'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-        },
-        disclaimer: {
-            position: 'absolute',
-            bottom: 0,
-            width: '100%',
-            padding: '1rem',
-            textAlign: 'center',
-            fontSize: '0.90rem',
-        },
-        overlayStyle:{
-            padding: '30px',
-            zIndex: 10,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            border: '3px solid transparent',
-            backdropFilter: 'blur(30px)',
-
-            borderRadius:'15px',
-            width: '95vw',
-            justifySelf:'center',
-            height: '81vh',
         },
         header:{
             width: '100%',
@@ -134,184 +108,177 @@ const DeckPage: React.FC = () => {
     };
 
     return (
-        <Box sx={styles.mainContainer}>
-            <Box sx={styles.overlayStyle}>
-                <Box sx={styles.header}>
-                    <Box sx={styles.sortByContainer}>
-                        <Typography variant={'h3'} sx={styles.sortBy}>Sort by</Typography>
-                        <StyledTextField
-                            select
-                            value={sortBy}
-                            placeholder="Sort by"
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setSortBy(e.target.value)
-                            }
-                        >
-                            {sortByOptions.map((sortOption) => (
-                                <MenuItem key={sortOption} value={sortOption}>
-                                    {sortOption}
-                                </MenuItem>
-                            ))}
-                        </StyledTextField>
+        <>
+            <Box sx={styles.header}>
+                <Box sx={styles.sortByContainer}>
+                    <Typography variant={'h3'} sx={styles.sortBy}>Sort by</Typography>
+                    <StyledTextField
+                        select
+                        value={sortBy}
+                        placeholder="Sort by"
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setSortBy(e.target.value)
+                        }
+                    >
+                        {sortByOptions.map((sortOption) => (
+                            <MenuItem key={sortOption} value={sortOption}>
+                                {sortOption}
+                            </MenuItem>
+                        ))}
+                    </StyledTextField>
+                </Box>
+                <Box>
+                    <Button>Add New Deck</Button>
+                </Box>
+            </Box>
+            <Grid container alignItems="center" spacing={1} sx={styles.gridContainer}>
+                <Box sx={styles.deckContainer}>
+                    <Box sx={styles.leaderBaseHolder}>
+                        <Box sx={styles.CardSetContainerStyle}>
+                            <Box>
+                                <Box sx={styles.boxGeneralStyling}/>
+                            </Box>
+                            <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
+                                <Box sx={styles.boxGeneralStyling}/>
+                            </Box>
+                        </Box>
                     </Box>
-                    <Box>
-                        <Button>Add New Deck</Button>
+                    <Box sx={styles.deckMetaContainer}>
+                        <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
+                        <Box sx={styles.viewDeckButton}>
+                            <PreferenceButton variant={'standard'} text={'View Deck'} buttonFnc={() => handleViewDeck('1')}/>
+                        </Box>
                     </Box>
                 </Box>
-                <Grid container alignItems="center" spacing={1} sx={styles.gridContainer}>
-                    <Box sx={styles.deckContainer}>
-                        <Box sx={styles.leaderBaseHolder}>
-                            <Box sx={styles.CardSetContainerStyle}>
-                                <Box>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                                <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
+                <Box sx={styles.deckContainer}>
+                    <Box sx={styles.leaderBaseHolder}>
+                        <Box sx={styles.CardSetContainerStyle}>
+                            <Box>
+                                <Box sx={styles.boxGeneralStyling}/>
                             </Box>
-                        </Box>
-                        <Box sx={styles.deckMetaContainer}>
-                            <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
-                            <Box sx={styles.viewDeckButton}>
-                                <PreferenceButton variant={'standard'} text={'View Deck'} />
+                            <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
+                                <Box sx={styles.boxGeneralStyling}/>
                             </Box>
                         </Box>
                     </Box>
-                    <Box sx={styles.deckContainer}>
-                        <Box sx={styles.leaderBaseHolder}>
-                            <Box sx={styles.CardSetContainerStyle}>
-                                <Box>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                                <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                            </Box>
+                    <Box sx={styles.deckMetaContainer}>
+                        <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
+                        <Box sx={styles.viewDeckButton}>
+                            <PreferenceButton variant={'standard'} text={'View Deck'} buttonFnc={() => handleViewDeck('2')} />
                         </Box>
-                        <Box sx={styles.deckMetaContainer}>
-                            <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
-                            <Box sx={styles.viewDeckButton}>
-                                <PreferenceButton variant={'standard'} text={'View Deck'} />
+                    </Box>
+                </Box>
+                <Box sx={styles.deckContainer}>
+                    <Box sx={styles.leaderBaseHolder}>
+                        <Box sx={styles.CardSetContainerStyle}>
+                            <Box>
+                                <Box sx={styles.boxGeneralStyling}/>
+                            </Box>
+                            <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
+                                <Box sx={styles.boxGeneralStyling}/>
                             </Box>
                         </Box>
                     </Box>
-                    <Box sx={styles.deckContainer}>
-                        <Box sx={styles.leaderBaseHolder}>
-                            <Box sx={styles.CardSetContainerStyle}>
-                                <Box>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                                <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                            </Box>
+                    <Box sx={styles.deckMetaContainer}>
+                        <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
+                        <Box sx={styles.viewDeckButton}>
+                            <PreferenceButton variant={'standard'} text={'View Deck'} buttonFnc={() => handleViewDeck('3')} />
                         </Box>
-                        <Box sx={styles.deckMetaContainer}>
-                            <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
-                            <Box sx={styles.viewDeckButton}>
-                                <PreferenceButton variant={'standard'} text={'View Deck'} />
+                    </Box>
+                </Box>
+                <Box sx={styles.deckContainer}>
+                    <Box sx={styles.leaderBaseHolder}>
+                        <Box sx={styles.CardSetContainerStyle}>
+                            <Box>
+                                <Box sx={styles.boxGeneralStyling}/>
+                            </Box>
+                            <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
+                                <Box sx={styles.boxGeneralStyling}/>
                             </Box>
                         </Box>
                     </Box>
-                    <Box sx={styles.deckContainer}>
-                        <Box sx={styles.leaderBaseHolder}>
-                            <Box sx={styles.CardSetContainerStyle}>
-                                <Box>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                                <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                            </Box>
+                    <Box sx={styles.deckMetaContainer}>
+                        <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
+                        <Box sx={styles.viewDeckButton}>
+                            <PreferenceButton variant={'standard'} text={'View Deck'} buttonFnc={() => handleViewDeck('4')} />
                         </Box>
-                        <Box sx={styles.deckMetaContainer}>
-                            <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
-                            <Box sx={styles.viewDeckButton}>
-                                <PreferenceButton variant={'standard'} text={'View Deck'} />
+                    </Box>
+                </Box>
+                <Box sx={styles.deckContainer}>
+                    <Box sx={styles.leaderBaseHolder}>
+                        <Box sx={styles.CardSetContainerStyle}>
+                            <Box>
+                                <Box sx={styles.boxGeneralStyling}/>
+                            </Box>
+                            <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
+                                <Box sx={styles.boxGeneralStyling}/>
                             </Box>
                         </Box>
                     </Box>
-                    <Box sx={styles.deckContainer}>
-                        <Box sx={styles.leaderBaseHolder}>
-                            <Box sx={styles.CardSetContainerStyle}>
-                                <Box>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                                <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                            </Box>
+                    <Box sx={styles.deckMetaContainer}>
+                        <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
+                        <Box sx={styles.viewDeckButton}>
+                            <PreferenceButton variant={'standard'} text={'View Deck'} buttonFnc={() => handleViewDeck('5')} />
                         </Box>
-                        <Box sx={styles.deckMetaContainer}>
-                            <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
-                            <Box sx={styles.viewDeckButton}>
-                                <PreferenceButton variant={'standard'} text={'View Deck'} />
+                    </Box>
+                </Box>
+                <Box sx={styles.deckContainer}>
+                    <Box sx={styles.leaderBaseHolder}>
+                        <Box sx={styles.CardSetContainerStyle}>
+                            <Box>
+                                <Box sx={styles.boxGeneralStyling}/>
+                            </Box>
+                            <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
+                                <Box sx={styles.boxGeneralStyling}/>
                             </Box>
                         </Box>
                     </Box>
-                    <Box sx={styles.deckContainer}>
-                        <Box sx={styles.leaderBaseHolder}>
-                            <Box sx={styles.CardSetContainerStyle}>
-                                <Box>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                                <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                            </Box>
-                        </Box>
-                        <Box sx={styles.deckMetaContainer}>
-                            <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
-                            <Box sx={styles.viewDeckButton}>
-                                <PreferenceButton variant={'standard'} text={'View Deck'} />
-                            </Box>
+                    <Box sx={styles.deckMetaContainer}>
+                        <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
+                        <Box sx={styles.viewDeckButton}>
+                            <PreferenceButton variant={'standard'} text={'View Deck'} buttonFnc={() => handleViewDeck('6')} />
                         </Box>
                     </Box>
-                    <Box sx={styles.deckContainer}>
-                        <Box sx={styles.leaderBaseHolder}>
-                            <Box sx={styles.CardSetContainerStyle}>
-                                <Box>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                                <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
+                </Box>
+                <Box sx={styles.deckContainer}>
+                    <Box sx={styles.leaderBaseHolder}>
+                        <Box sx={styles.CardSetContainerStyle}>
+                            <Box>
+                                <Box sx={styles.boxGeneralStyling}/>
+                            </Box>
+                            <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
+                                <Box sx={styles.boxGeneralStyling}/>
                             </Box>
                         </Box>
-                        <Box sx={styles.deckMetaContainer}>
-                            <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
-                            <Box sx={styles.viewDeckButton}>
-                                <PreferenceButton variant={'standard'} text={'View Deck'} />
-                            </Box>
-                        </Box>
-                    </Box>
-                    <Box sx={styles.deckContainer}>
-                        <Box sx={styles.leaderBaseHolder}>
-                            <Box sx={styles.CardSetContainerStyle}>
-                                <Box>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                                <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
-                                    <Box sx={styles.boxGeneralStyling}/>
-                                </Box>
-                            </Box>
-                        </Box>
-                        <Box sx={styles.deckMetaContainer}>
-                            <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
-                            <Box sx={styles.viewDeckButton}>
-                                <PreferenceButton variant={'standard'} text={'View Deck'} />
-                            </Box>
-                        </Box>
-                    </Box>
 
-                </Grid>
-            </Box>
-            <Typography variant="body1" sx={styles.disclaimer}>
-                Karabast is in no way affiliated with Disney or Fantasy Flight Games.
-                Star Wars characters, cards, logos, and art are property of Disney
-                and/or Fantasy Flight Games.
-            </Typography>
-        </Box>
+                    </Box>
+                    <Box sx={styles.deckMetaContainer}>
+                        <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
+                        <Box sx={styles.viewDeckButton}>
+                            <PreferenceButton variant={'standard'} text={'View Deck'} buttonFnc={() => handleViewDeck('7')} />
+                        </Box>
+                    </Box>
+                </Box>
+                <Box sx={styles.deckContainer}>
+                    <Box sx={styles.leaderBaseHolder}>
+                        <Box sx={styles.CardSetContainerStyle}>
+                            <Box>
+                                <Box sx={styles.boxGeneralStyling}/>
+                            </Box>
+                            <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
+                                <Box sx={styles.boxGeneralStyling}/>
+                            </Box>
+                        </Box>
+                    </Box>
+                    <Box sx={styles.deckMetaContainer}>
+                        <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
+                        <Box sx={styles.viewDeckButton}>
+                            <PreferenceButton variant={'standard'} text={'View Deck'} buttonFnc={() => handleViewDeck('8')} />
+                        </Box>
+                    </Box>
+                </Box>
+            </Grid>
+        </>
     );
 };
 
