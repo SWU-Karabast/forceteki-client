@@ -38,7 +38,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         opponentHandWrapper: {
             width: '100%',
             height: '100%',
-            transform: 'translateY(-1rem)',
+            transform: 'translateY(-2rem)',
         },
         rightColumn: {
             display: 'flex',

@@ -67,19 +67,19 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: card.epicActionSpent && !isDeployed ? 'block' : 'none'
         },
         damageCounter: {
-            fontWeight: '800',
+            fontWeight: '700',
             fontSize: '1.9rem',
             color: 'white',
-            width: '2.5rem',
-            aspectRatio: '1 / 1',
+            minWidth: '2.5rem',
+            padding: '0 10px', 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundImage: 'url(/token-background.svg)',
+            background: `url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat`,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
-            textShadow: '1px 1px #00000033'
+            filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+            textShadow: '2px 2px rgba(0, 0, 0, 0.20)'
         },
         nameplateBox: {
             position: 'absolute',
@@ -96,7 +96,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             fontSize: '1em',
         }
     }
-
 
     return (
         <Box
