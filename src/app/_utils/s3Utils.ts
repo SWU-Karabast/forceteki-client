@@ -1,5 +1,5 @@
 import { ICardData, IServerCardData, ISetCode } from '../_components/_sharedcomponents/Cards/CardTypes';
-import {isICardData, isSetCodeCard, parseSetId} from '@/app/_components/_sharedcomponents/Cards/cardUtils';
+import { isICardData, isSetCodeCard, parseSetId } from '@/app/_components/_sharedcomponents/Cards/cardUtils';
 
 export const s3ImageURL = (path: string) => {
     const s3Bucket = 'https://karabast-assets.s3.amazonaws.com/';
