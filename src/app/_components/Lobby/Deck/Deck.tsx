@@ -26,7 +26,6 @@ const Deck: React.FC = () => {
         position: 'sticky',
         top: '0',
         zIndex: 1,
-        pt: '.2em',
     };
 
     const titleTextStyle = {
@@ -71,6 +70,9 @@ const Deck: React.FC = () => {
     // Transform them into IServerCardData
     console.log('newDeck', userMain);
     console.log('sideBoard', usersSideboard);
+
+    // sort deck by card cost ascending
+    newDeck.sort((a: { card: { cost: number } }, b: { card: { cost: number } }) => a.card.cost - b.card.cost);
 
     // Calculate the total counts
     const deckCount = userMain.reduce(
