@@ -21,7 +21,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     if (!card) {
         return null
     }
-
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
