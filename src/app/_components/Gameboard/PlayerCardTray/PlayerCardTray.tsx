@@ -52,14 +52,14 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
     };
 
     return (
-        <Grid container sx={{ height: '17%' }}>
-            <Grid size={3} sx={styles.leftColumnStyle}>
+        <Grid container sx={{ height: '17%' }} className="playerCardTrayWrapper">
+            <Grid size={3} sx={styles.leftColumnStyle} >
                 <DeckDiscard trayPlayer={trayPlayer} />
                 <Resources trayPlayer={trayPlayer} />
             </Grid>
 
             <Grid size={6} sx={styles.centerColumnStyle}>
-                <Box sx={styles.playerHandWrapper} className="playerHandWrapper">
+                <Box sx={styles.playerHandWrapper}>
                     <PlayerHand
                         cards={gameState?.players[connectedPlayer].cardPiles['hand'] || []}
                     />

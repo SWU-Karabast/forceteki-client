@@ -39,7 +39,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
 
     const cardHoverStyle = {
         transition: 'transform 0.2s ease-out',
-        '.playerHandWrapper &': {
+        '.playerCardTrayWrapper &': {
             '&:hover': {
                 transform: 'translateY(-1rem)',
             },
