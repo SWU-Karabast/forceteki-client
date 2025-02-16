@@ -71,7 +71,7 @@ const Deck: React.FC = () => {
     console.log('sideBoard', sideBoard);
 
     // sort deck by card cost ascending
-    newDeck.sort((a,b) => a.card.cost - b.card.cost);
+    newDeck.sort((a: { card: { cost: number } }, b: { card: { cost: number } }) => a.card.cost - b.card.cost);
 
     // Calculate the total counts
     const deckCount = newDeck.reduce(
