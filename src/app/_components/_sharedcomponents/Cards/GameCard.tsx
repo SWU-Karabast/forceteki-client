@@ -8,7 +8,7 @@ import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
-import { getBorderColor, isICardData } from './cardUtils';
+import { getBorderColor } from './cardUtils';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -20,9 +20,8 @@ const GameCard: React.FC<IGameCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
-    const isPlayableCard = isICardData(card);
 
-    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && isPlayableCard && card.selectable;
+    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
     if (showValueAdjuster) {
         // override when using damage adjuster to show border but prevent click events
         disabled = true;
@@ -33,7 +32,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     }
 
     const defaultClickFunction = () => {
-        if (isPlayableCard && card.selectable) {
+        if (card.selectable) {
             sendGameMessage(['cardClicked', card.uuid]);
         }
     };
@@ -68,9 +67,9 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
-    const borderColor = isPlayableCard ? getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle) : null;
-    const cardCounter = !isPlayableCard ? card.count : 0;
-    const distributionAmount = isPlayableCard ? distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0 : 0;
+    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
+    const cardCounter = card.count || 0;
+    const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
 
     // Styles
     const styles = {
@@ -80,7 +79,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            transform: isPlayableCard ? card.exhausted ? 'rotate(4deg)' : 'none' : 'none',
+            transform: card.exhausted ? 'rotate(4deg)' : 'none',
             transition: 'transform 0.15s ease',
             '&:hover': {
                 cursor: disabled ? 'normal' : 'pointer',
@@ -101,7 +100,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'absolute',
             width: '100%',
             height: '100%',
-            backgroundColor: isPlayableCard ? card?.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent' : 'transparent',
+            backgroundColor: card?.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
             filter: 'none',
             clickEvents: 'none',
             display: 'flex',
@@ -213,7 +212,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: 'url(/SentinelToken.png)',
         },
         unimplementedAlert: {
-            display: isPlayableCard ? card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none' : 'none',
+            display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
@@ -269,26 +268,26 @@ const GameCard: React.FC<IGameCardProps> = ({
                         <Grid direction="row" container sx={styles.shieldContainer}>
                             {shieldCards.map((_, index) => (
                                 <Box
-                                    key={`${isPlayableCard && card.uuid}-shield-${index}`}
+                                    key={`${card.uuid}-shield-${index}`}
                                     sx={styles.shieldIcon}
                                 />
                             ))}
                         </Grid>
-                        {isPlayableCard && card.sentinel && (
+                        {card.sentinel && (
                             <Box sx={styles.sentinelIcon}/>
                         )}
                         <Box sx={styles.powerIcon}>
-                            <Typography sx={styles.numberFont}>{isPlayableCard && card.power}</Typography>
+                            <Typography sx={styles.numberFont}>{card.power}</Typography>
                         </Box>
-                        {isPlayableCard && Number(card.damage) > 0 && (
+                        {Number(card.damage) > 0 && (
                             <Box sx={styles.damageIcon}>
                                 <Typography sx={styles.damageNumber}>
-                                    {isPlayableCard && card.damage}
+                                    {card.damage}
                                 </Typography>
                             </Box>
                         )}
                         <Box sx={styles.healthIcon}>
-                            <Typography sx={styles.numberFont}>{isPlayableCard && card.hp}</Typography>
+                            <Typography sx={styles.numberFont}>{card.hp}</Typography>
                         </Box>
                     </>
                 )}

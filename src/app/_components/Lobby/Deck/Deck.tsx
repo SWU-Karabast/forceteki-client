@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Box, Typography, Divider } from '@mui/material';
-import { IServerCardData, CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { CardStyle, ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
@@ -66,14 +66,14 @@ const Deck: React.FC = () => {
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     // set decks for connectedUser
-    const usersDeck = connectedUser?.deck ? connectedUser?.deck.deck || [] : [];
-    const usersSideboard = connectedUser?.deck ? connectedUser?.deck.sideboard || [] : [];
+    const userMain = connectedUser.deck?.deck || []
+    const usersSideboard = connectedUser.deck?.sideboard || []
     // Transform them into IServerCardData
-    console.log('newDeck', usersDeck);
+    console.log('newDeck', userMain);
     console.log('sideBoard', usersSideboard);
 
     // Calculate the total counts
-    const deckCount = usersDeck.reduce(
+    const deckCount = userMain.reduce(
         (sum: number, item: { count: number; }) => sum + (item.count || 0),
         0
     ) ?? 0;
@@ -95,7 +95,7 @@ const Deck: React.FC = () => {
                     sx={scrollableBoxStyle}
                 >
                     <Box sx={mainContainerStyle}>
-                        {usersDeck.map((card:IServerCardData) => (
+                        {userMain.map((card:ICardData) => (
                             <GameCard
                                 key={card.id}
                                 card={card}
@@ -118,7 +118,7 @@ const Deck: React.FC = () => {
                             sx={scrollableBoxStyleSideboard}
                         >
                             <Box sx={mainContainerStyle}>
-                                {usersSideboard.map((card:IServerCardData) => (
+                                {usersSideboard.map((card:ICardData) => (
                                     <GameCard
                                         key={card.id}
                                         card={card}

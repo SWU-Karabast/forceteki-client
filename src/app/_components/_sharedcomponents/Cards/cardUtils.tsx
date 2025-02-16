@@ -5,7 +5,7 @@ export interface ICardUtils {
 }
 
 // Type guard to check if the card is ICardData
-export const isICardData = (card: ICardData | IServerCardData | ISetCode): card is ICardData => {
+export const isGameCard = (card: ICardData | IServerCardData | ISetCode): card is ICardData => {
     return (card as ICardData).zone !== undefined || (card as ICardData).uuid !== undefined;
 };
 

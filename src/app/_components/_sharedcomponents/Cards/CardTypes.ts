@@ -3,6 +3,7 @@ export type GameCardData = ICardData | IServerCardData | IOpponentHiddenCardData
 
 export interface ICardData {
     uuid: string;
+    count?: number;
     parentCardId?: string,
     id?: number;
     name?: string;
@@ -72,7 +73,7 @@ export interface IPromptDisplayCardData {
     setId: ICardSetId;
 }
 export interface IGameCardProps {
-    card: ICardData | IServerCardData;
+    card: ICardData;
     onClick?: () => void;
     disabled?: boolean;
     subcards?: ICardData[];
