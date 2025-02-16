@@ -142,6 +142,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setDeckLink(e.target.value)
                         }
+                        required
                     />
                 </FormControl>
 

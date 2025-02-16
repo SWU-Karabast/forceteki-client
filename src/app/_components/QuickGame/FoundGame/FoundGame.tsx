@@ -13,8 +13,8 @@ const FoundGame: React.FC = () => {
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const lobbyOwner = lobbyState.lobbyOwnerId
     // set connectedPlayer
-    const playerLeader = connectedUser ? connectedUser.deck.leader : null;
-    const playerBase = connectedUser ? connectedUser.deck.base : null;
+    const playerLeader = connectedUser.deck?.leader || null;
+    const playerBase = connectedUser.deck?.base || null;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
