@@ -7,7 +7,6 @@ import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponen
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 
-
 const sortByOptions: string[] = [
     'Recently Played',
     'Win rate',
@@ -59,6 +58,8 @@ const DeckPage: React.FC = () => {
         },
         gridContainer:{
             mt: '30px',
+            overflowY: 'auto',
+            maxHeight: '90%',
         },
         CardSetContainerStyle:{
             display: 'flex',

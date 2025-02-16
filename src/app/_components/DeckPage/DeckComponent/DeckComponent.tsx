@@ -7,7 +7,6 @@ const DeckComponent: React.FC = () => {
     // ------------------------STYLES------------------------//
     const cardStyle = {
         borderRadius: '1.1em',
-        pt: '.8em',
         height: '100%',
         width: '100%',
         display: 'flex',
@@ -23,14 +22,12 @@ const DeckComponent: React.FC = () => {
         position: 'sticky',
         top: '0',
         zIndex: 1,
-        pt: '.2em',
     };
 
     const titleTextStyle = {
         fontSize: '2em',
         fontWeight: 'bold',
         color: 'white',
-        ml: '.6em',
     };
 
     const deckSizeTextStyle = {
