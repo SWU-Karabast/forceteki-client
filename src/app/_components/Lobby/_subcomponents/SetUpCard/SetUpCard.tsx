@@ -10,7 +10,7 @@ import {
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation'
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
-import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField/StyledTextField';
+import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 
 const SetUpCard: React.FC<ISetUpProps> = ({

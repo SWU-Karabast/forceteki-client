@@ -11,7 +11,7 @@ import {
     RadioGroup,
     Link,
 } from '@mui/material';
-import StyledTextField from '../_styledcomponents/StyledTextField/StyledTextField';
+import StyledTextField from '../_styledcomponents/StyledTextField';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
