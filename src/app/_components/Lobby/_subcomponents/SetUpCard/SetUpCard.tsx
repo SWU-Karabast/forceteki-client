@@ -80,7 +80,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         },
         boxStyle: {
             display: 'flex',
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
             mt: '1em',
         },
         buttonStyle: {
@@ -92,7 +92,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             display: 'flex',
             padding: '30px',
             flexDirection: 'column',
-            justifyContent: 'center',
         },
         buttonsContainerStyle: {
             display: 'flex',
