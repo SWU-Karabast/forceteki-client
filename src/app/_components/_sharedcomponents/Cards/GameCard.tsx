@@ -4,16 +4,11 @@ import {
     Box,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { IGameCardProps, ICardData, IServerCardData, CardStyle } from './CardTypes';
+import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
-import { getBorderColor } from './cardUtils';
-
-// Type guard to check if the card is ICardData
-const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
-    return (card as ICardData).zone !== undefined || (card as ICardData).uuid !== undefined;
-};
+import { getBorderColor, isICardData } from './cardUtils';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -24,9 +19,10 @@ const GameCard: React.FC<IGameCardProps> = ({
     disabled = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
-    const isPlayableCard = isICardData(card)
 
-    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && (isPlayableCard && card.selectable)
+    const isPlayableCard = isICardData(card);
+
+    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && isPlayableCard && card.selectable;
     if (showValueAdjuster) {
         // override when using damage adjuster to show border but prevent click events
         disabled = true;

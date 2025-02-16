@@ -37,7 +37,6 @@ export interface ICardData {
 export interface IServerCardData {
     count: number;
     id: string;
-    setId:ICardSetId;
 }
 
 export interface IOpponentHiddenCardData {
@@ -76,7 +75,7 @@ export interface ILeaderBaseCardProps {
     selected?: boolean;
     handleSelect?: () => void;
     title?: string;
-    card: ICardData;
+    card: ICardData | null;
     disabled?: boolean;
     cardStyle?: LeaderBaseCardStyle;
 }

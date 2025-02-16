@@ -52,16 +52,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         console.log('Favourite Deck:', favouriteDeck);
         console.log('Deck Link:', deckLink);
         console.log('beginning fetch for deck link');
-        const deckData = deckLink ? await fetchDeckData(deckLink) : null;
-        const swuDeck = deckLink ? await fetchDeckData(deckLink,false) : null;
-        console.log('fetch complete, swu deck data:', swuDeck);
+        const deckData = deckLink ? await fetchDeckData(deckLink,false) : null;
         console.log('fetch complete, deck data:', deckData);
         console.log('Save Deck To Favourites:', saveDeck);
         try {
             const payload = {
                 user: user || sessionStorage.getItem('anonymousUserId'),
                 deck: deckData,
-                swuDeck: swuDeck,
                 isPrivate: privacy === 'Private',
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,

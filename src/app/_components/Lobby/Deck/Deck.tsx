@@ -5,24 +5,6 @@ import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 
-// ------------------------Utilities------------------------//
-const parseSetId = (fullCardId: string) => {
-    const [setStr, numStr] = fullCardId.split('_');
-    return {
-        set: setStr || '',
-        number: parseInt(numStr, 10) || 0,
-    };
-};
-
-const transformSWUDeckItem = (item: { id: string; count: number }): IServerCardData => {
-    return {
-        count: item.count,
-        id: item.id,
-        setId:parseSetId(item.id),
-    };
-}
-
-
 const Deck: React.FC = () => {
     // ------------------------STYLES------------------------//
     const cardStyle = {
@@ -84,23 +66,19 @@ const Deck: React.FC = () => {
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     // set decks for connectedUser
-    console.log(connectedUser.swuDeck);
-    const swuDeck = connectedUser?.swuDeck;
-    const deckItems = swuDeck?.deck || [];
-    const sideboardItems = swuDeck?.sideboard || [];
+    const usersDeck = connectedUser?.deck ? connectedUser?.deck.deck || [] : [];
+    const usersSideboard = connectedUser?.deck ? connectedUser?.deck.sideboard || [] : [];
     // Transform them into IServerCardData
-    const newDeck: IServerCardData[] = deckItems.map(transformSWUDeckItem);
-    const sideBoard: IServerCardData[] = sideboardItems.map(transformSWUDeckItem);
-    console.log('newDeck', newDeck);
-    console.log('sideBoard', sideBoard);
+    console.log('newDeck', usersDeck);
+    console.log('sideBoard', usersSideboard);
 
     // Calculate the total counts
-    const deckCount = newDeck.reduce(
+    const deckCount = usersDeck.reduce(
         (sum: number, item: { count: number; }) => sum + (item.count || 0),
         0
     ) ?? 0;
 
-    const sideboardCount = sideBoard.reduce(
+    const sideboardCount = usersSideboard.reduce(
         (sum: number, item: { count: number; }) => sum + (item.count || 0),
         0
     ) ?? 0;
@@ -117,7 +95,7 @@ const Deck: React.FC = () => {
                     sx={scrollableBoxStyle}
                 >
                     <Box sx={mainContainerStyle}>
-                        {newDeck.map((card:IServerCardData) => (
+                        {usersDeck.map((card:IServerCardData) => (
                             <GameCard
                                 key={card.id}
                                 card={card}
@@ -127,7 +105,7 @@ const Deck: React.FC = () => {
                         ))}
                     </Box>
                 </Box>
-                {sideBoard?.length > 0 && (
+                {usersSideboard?.length > 0 && (
                     <>
                         <Box sx={headerBoxStyle}>
                             <Typography sx={titleTextStyle}>Sideboard</Typography>
@@ -140,7 +118,7 @@ const Deck: React.FC = () => {
                             sx={scrollableBoxStyleSideboard}
                         >
                             <Box sx={mainContainerStyle}>
-                                {sideBoard.map((card:IServerCardData) => (
+                                {usersSideboard.map((card:IServerCardData) => (
                                     <GameCard
                                         key={card.id}
                                         card={card}
