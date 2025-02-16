@@ -59,8 +59,10 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
             </Grid>
 
             <Grid size={6} sx={styles.centerColumnStyle}>
-                <Box sx={styles.playerHandWrapper}>
-                    <PlayerHand cards={gameState?.players[connectedPlayer].cardPiles['hand'] || []} />
+                <Box sx={styles.playerHandWrapper} className="playerHandWrapper">
+                    <PlayerHand
+                        cards={gameState?.players[connectedPlayer].cardPiles['hand'] || []}
+                    />
                 </Box>
             </Grid>
 

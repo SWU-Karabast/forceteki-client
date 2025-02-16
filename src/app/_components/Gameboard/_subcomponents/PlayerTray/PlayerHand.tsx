@@ -34,10 +34,19 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
     const cardBoxStyle = {
         display: 'inline-flex',
         gap: '10px',
+        padding: '1rem 0 0 0',
+    };
+
+    const cardHoverStyle = {
+        transition: 'transform 0.2s ease-out',
+        '.playerHandWrapper &': {
+            '&:hover': {
+                transform: 'translateY(-1rem)',
+            },
+        },
     };
 
     return (
-        <>
             <Grid
                 container
                 justifyContent="center"
@@ -53,8 +62,11 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
                 onTouchEnd={handleTouchEnd}
             >
                 <Box sx={cardBoxStyle}>
-                    {cards.map((card, i) => (
-                        <Box key={`${connectedPlayer}-hand-${i}`} sx={{ flex: '0 0 auto' }}>
+                    {cards.map((card, i) => ( 
+                        <Box
+                            key={`${connectedPlayer}-hand-${i}`}
+                            sx={{ flex: '0 0 auto', ...cardHoverStyle, }}
+                        >
                             <GameCard
                                 key={`${connectedPlayer}-hand-${i}`}
                                 card={card}/>
@@ -62,7 +74,6 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({
                     ))}
                 </Box>
             </Grid>
-        </>
     );
 };
 
