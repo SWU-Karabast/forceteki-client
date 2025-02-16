@@ -38,6 +38,15 @@ export interface IServerCardData {
     count: number;
     id: string;
 }
+export type ISetCode = {
+    setId: {
+        set: string;
+        number: number;
+    }
+    type: string;
+    types?: string[];
+    id: string;
+}
 
 export interface IOpponentHiddenCardData {
     facedown: boolean;
