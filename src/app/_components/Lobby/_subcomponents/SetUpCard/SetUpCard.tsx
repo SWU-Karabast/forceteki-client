@@ -28,14 +28,14 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
-        sendLobbyMessage(['onStartGame']);
+        sendLobbyMessage(['onStartGameAsync']);
         router.push('/GameBoard');
     };
     const handleOnChangeDeck = async () => {
         console.log('Deck Link:', deckLink);
-        const deckData = deckLink ? await fetchDeckData(deckLink) : null;
-        const swuDeck = deckLink ? await fetchDeckData(deckLink, false) : null;
-        sendLobbyMessage(['changeDeck',deckData,swuDeck])
+        const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+        console.log(deckData);
+        sendLobbyMessage(['changeDeck',deckData, deckData])
     }
     const handleCopyLink = () => {
         navigator.clipboard.writeText(lobbyState.connectionLink)
