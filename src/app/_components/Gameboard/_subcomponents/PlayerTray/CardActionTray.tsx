@@ -18,7 +18,7 @@ const styles = {
         transform: 'skew(-10deg)', // Skew the button
         borderRadius: '1rem',
         height: '3.8rem',
-        minWidth: '8rem',
+        minWidth: '7rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

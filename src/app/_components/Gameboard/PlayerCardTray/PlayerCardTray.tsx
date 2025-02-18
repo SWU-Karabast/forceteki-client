@@ -9,13 +9,9 @@ import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import { IPlayerCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 
-const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
-    trayPlayer,
-}) => {
-    // -------------- Contexts ---------------- //
+const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer }) => {
     const { gameState, connectedPlayer } = useGame();
 
-    // ---------------Styles------------------- //
     const styles = {
         leftColumnStyle: {
             display: 'flex',
@@ -35,13 +31,14 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
             justifyContent: 'flex-end',
             padding: '0 2rem 2rem 0',
             gap: '2rem',
+            overflowX: 'hidden',
         },
         playerHandWrapper: {
             width: '100%',
             height: '100%',
             display: 'flex',
             alignItems: 'flex-end',
-            transform: 'translateY(1rem)',
+            transform: 'translateY(1.6rem)',
         },
         chatColumn: {
             display: 'flex',
@@ -52,13 +49,34 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
     };
 
     return (
-        <Grid container sx={{ height: '17%' }} className="playerCardTrayWrapper">
-            <Grid size={3} sx={styles.leftColumnStyle} >
+        <Grid
+            container
+            sx={{
+                height: '17%',
+                display: 'flex',
+                flexWrap: 'nowrap',
+                columnGap: '2rem',  // 2rem gap between columns
+            }}
+            className="playerCardTrayWrapper"
+        >
+            {/* Left column: fixed 360px width */}
+            <Grid             
+                sx={{
+                    flex: '0 0 360px',
+                    ...styles.leftColumnStyle,
+                }}
+            >
                 <DeckDiscard trayPlayer={trayPlayer} />
                 <Resources trayPlayer={trayPlayer} />
             </Grid>
 
-            <Grid size={6} sx={styles.centerColumnStyle}>
+            {/* Middle column: expands to fill space */}
+            <Grid
+                sx={{
+                    flex: 1,
+                    ...styles.centerColumnStyle,
+                }}
+            >
                 <Box sx={styles.playerHandWrapper}>
                     <PlayerHand
                         cards={gameState?.players[connectedPlayer].cardPiles['hand'] || []}
@@ -66,7 +84,13 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
                 </Box>
             </Grid>
 
-            <Grid size={3} sx={styles.rightColumnStyle}>
+            {/* Right column: fixed 360px width */}
+            <Grid
+                sx={{
+                    flex: '0 0 360px',
+                    ...styles.rightColumnStyle,
+                }}
+            >
                 <CardActionTray />
                 <Box ml={2} sx={styles.chatColumn}>
                     <ChatBubbleOutline />
