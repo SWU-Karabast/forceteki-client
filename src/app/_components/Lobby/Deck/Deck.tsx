@@ -71,8 +71,9 @@ const Deck: React.FC = () => {
     console.log('newDeck', userMain);
     console.log('sideBoard', usersSideboard);
 
-    // sort deck by card cost ascending
-    userMain.sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
+    // sort main deck and sideboard by card cost ascending
+    const sortedUserMain = [...userMain].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
+    const sortedUsersSideboard = [...usersSideboard].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
 
     // Calculate the total counts
     const deckCount = userMain.reduce(
@@ -97,7 +98,7 @@ const Deck: React.FC = () => {
                     sx={scrollableBoxStyle}
                 >
                     <Box sx={mainContainerStyle}>
-                        {userMain.map((card:ICardData) => (
+                        {sortedUserMain.map((card:ICardData) => (
                             <GameCard
                                 key={card.id}
                                 card={card}
@@ -120,7 +121,7 @@ const Deck: React.FC = () => {
                             sx={scrollableBoxStyleSideboard}
                         >
                             <Box sx={mainContainerStyle}>
-                                {usersSideboard.map((card:ICardData) => (
+                                {sortedUsersSideboard.map((card:ICardData) => (
                                     <GameCard
                                         key={card.id}
                                         card={card}
