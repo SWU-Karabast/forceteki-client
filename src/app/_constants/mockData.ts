@@ -91,7 +91,7 @@ export const articles: IArticle[] = [
 		<p style="margin-bottom:0;"><a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Join our Discord for the latest progress updates and timelines</a>. If you have coding experience, we are always open to new contributors. Info on how to help out can also be found on <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>.</p>
 	  `,
         date: '12/25',
-        image: '/beta.png',
+        image: '/beta.jpg',
         imageAlt: 'Beta Announcement',
     },
 ];
