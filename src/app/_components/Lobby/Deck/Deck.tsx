@@ -67,9 +67,6 @@ const Deck: React.FC = () => {
     // set decks for connectedUser
     const userMain = connectedUser.deck?.deck || []
     const usersSideboard = connectedUser.deck?.sideboard || []
-    // Transform them into IServerCardData
-    console.log('newDeck', userMain);
-    console.log('sideBoard', usersSideboard);
 
     // sort main deck and sideboard by card cost ascending
     const sortedUserMain = [...userMain].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);

@@ -32,9 +32,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         router.push('/GameBoard');
     };
     const handleOnChangeDeck = async () => {
-        console.log('Deck Link:', deckLink);
         const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
-        console.log(deckData);
         sendLobbyMessage(['changeDeck',deckData, deckData])
     }
     const handleCopyLink = () => {
