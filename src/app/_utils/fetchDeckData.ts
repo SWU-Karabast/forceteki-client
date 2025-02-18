@@ -1,26 +1,35 @@
 // app/_utils/fetchDeckData.ts
 
 import { updateIdsWithMapping, mapIdToInternalName, transformDeckWithCardData } from '@/app/_utils/s3Utils';
-interface IDeckMetadata {
+
+export interface IDeckMetadata {
     name: string;
     author: string;
 }
 
-interface IDeckCard {
+export interface IDeckCard {
     id: string;
     count: number;
 }
 
-interface IDeckData {
+export enum DeckSource {
+    NotSupported = 'NotSupported',
+    SWUStats = 'SWUStats',
+    SWUDB = 'SWUDB'
+}
+
+export interface IDeckData {
     metadata: IDeckMetadata;
     leader: IDeckCard;
     secondleader: IDeckCard | null;
     base: IDeckCard;
     deck: IDeckCard[];
     sideboard: IDeckCard[];
+    deckSource: DeckSource;
+    deckID: string;
 }
 
-export const fetchDeckData = async (deckLink: string) => {
+export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) => {
     try {
         const response = await fetch(
             `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
@@ -30,7 +39,9 @@ export const fetchDeckData = async (deckLink: string) => {
         }
 
         const data: IDeckData = await response.json();
-
+        if (!fetchAll){
+            return data;
+        }
         // Fetch setToId mapping
         const setCodeMapping = await fetch('/api/s3bucket?jsonFile=_setCodeMap.json');
         if (!setCodeMapping.ok) {

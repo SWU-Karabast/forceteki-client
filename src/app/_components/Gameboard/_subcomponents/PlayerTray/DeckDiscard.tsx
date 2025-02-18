@@ -49,7 +49,6 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             },
         },
         deck: {
-
             deckCardStyle: {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
@@ -85,7 +84,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
     return (
         <Box sx={styles.containerStyle}>
             <Card
-                sx={styles.discard.discardCardStyle(gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'][0])}
+                sx={styles.discard.discardCardStyle(gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].at(-1))}
                 onClick={() => {
                     const playerName = connectedPlayer != trayPlayer.trayPlayer ? 'Your Opponent\'s' : 'Your';
 

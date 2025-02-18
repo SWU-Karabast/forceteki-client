@@ -1,10 +1,10 @@
 import React from 'react';
-import Grid from '@mui/material/Grid2';
+import { Box, Grid2 as Grid } from '@mui/material';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
-import { Box } from '@mui/material';
+import { LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
@@ -71,7 +71,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-llt.svg') no-repeat left top,
             url('border-llb.svg') no-repeat left bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '80%',
             height: '100%',
             position: 'absolute',
@@ -80,7 +80,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-lrt.svg') no-repeat right top,
             url('border-lrb.svg') no-repeat right bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '20%',
             right: '0',
             height: '100%',
@@ -90,7 +90,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-rrt.svg') no-repeat right top,
             url('border-rrb.svg') no-repeat right bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             right: '0',
             width: '80%',
             height: '100%',
@@ -100,7 +100,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '20%',
             height: '100%',
             position: 'absolute',
@@ -109,7 +109,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-lrt.svg') no-repeat right top,
             url('border-lrb.svg') no-repeat right bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             right: '0',
             width: '20%',
             height: '100%',
@@ -119,7 +119,7 @@ const Board: React.FC<IBoardProps> = ({
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             left: '0',
             width: '80%',
             height: '100%',
@@ -131,37 +131,35 @@ const Board: React.FC<IBoardProps> = ({
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
         <Grid container sx={styles.boardWrapper}> 
             <Grid container size="grow" sx={styles.ColumnStyle}>
-                <Box sx={styles.leftColumnBorderLeft} /><Box sx={styles.leftColumnBorderLeft} /> 
-                <Box sx={styles.leftColumnBorderRight} /><Box sx={styles.leftColumnBorderRight} />
+                <Box sx={styles.leftColumnBorderLeft} />
+                <Box sx={styles.leftColumnBorderRight} />
                 <UnitsBoard sidebarOpen={sidebarOpen} arena="spaceArena" />
             </Grid>
             <Grid container sx={styles.middleColumnStyle}>
-                <Box sx={styles.middleColumnBorderLeft} /><Box sx={styles.middleColumnBorderLeft} />
-                <Box sx={styles.middleColumnBorderRight} /><Box sx={styles.middleColumnBorderRight} />
+                <Box sx={styles.middleColumnBorderLeft} />
+                <Box sx={styles.middleColumnBorderRight} />
                 <Box sx={styles.middleColumnContent}>
                     <Box sx={styles.leaderBaseContainer}>
                         <LeaderBaseCard
-                            variant="leader"
-                            title={titleOpponent}
-                            isLobbyView={false}
                             card={opponentLeader}
+                            cardStyle={LeaderBaseCardStyle.Leader}
+                            title={titleOpponent}
                         />
-                        <LeaderBaseCard variant="base" isLobbyView={false} card={opponentBase}></LeaderBaseCard>
+                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
                     </Box>
                     <Box sx={styles.leaderBaseContainer}>
-                        <LeaderBaseCard variant="base" isLobbyView={false} card={playerBase}></LeaderBaseCard>
+                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
                         <LeaderBaseCard
-                            variant="leader"
-                            isLobbyView={false}
-                            title={titleCurrentPlayer}
                             card={playerLeader}
+                            cardStyle={LeaderBaseCardStyle.Leader}
+                            title={titleCurrentPlayer}
                         />
                     </Box>
                 </Box>
             </Grid>
             <Grid container size="grow" sx={styles.ColumnStyle}>
-                <Box sx={styles.rightColumnBorderLeft} /><Box sx={styles.rightColumnBorderLeft} />
-                <Box sx={styles.rightColumnBorderRight} /><Box sx={styles.rightColumnBorderRight} />
+                <Box sx={styles.rightColumnBorderLeft} />
+                <Box sx={styles.rightColumnBorderRight} />
                 <UnitsBoard
                     sidebarOpen={sidebarOpen} arena="groundArena"
                 />

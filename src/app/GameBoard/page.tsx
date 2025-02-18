@@ -94,7 +94,7 @@ const GameBoard = () => {
         },
         centralPromptContainer: {
             position: 'absolute',
-            top: '47%',
+            top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             display: 'flex',
@@ -118,7 +118,7 @@ const GameBoard = () => {
             background: 'rgba(0, 0, 0, 0.5)',
             filter: 'blur(10px)',
             WebkitFilter: 'blur(10px)'
-          }
+        }
     };
 
     return (
@@ -149,10 +149,10 @@ const GameBoard = () => {
                 />
             )}
             <Box sx={styles.centralPromptContainer}>
-                <Typography sx={styles.promptStyle}>
+                <Box sx={styles.promptStyle}>
                     {gameState.players[connectedPlayer]?.promptState.menuTitle}
                     <Box sx={styles.promptShadow}/>
-                </Typography>
+                </Box>
             </Box>
             <ResourcesOverlay
                 isModalOpen={isModalOpen}

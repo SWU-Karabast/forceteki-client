@@ -2,8 +2,6 @@ import React, { useState, FormEvent, ChangeEvent } from 'react';
 import {
     Box,
     Button,
-    Card,
-    CardContent,
     Checkbox,
     FormControl,
     FormControlLabel,
@@ -55,12 +53,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         console.log('Deck Link:', deckLink);
         console.log('beginning fetch for deck link');
         const deckData = deckLink ? await fetchDeckData(deckLink) : null;
+        const swuDeck = deckLink ? await fetchDeckData(deckLink,false) : null;
+        console.log('fetch complete, swu deck data:', swuDeck);
         console.log('fetch complete, deck data:', deckData);
         console.log('Save Deck To Favourites:', saveDeck);
         try {
             const payload = {
                 user: user || sessionStorage.getItem('anonymousUserId'),
                 deck: deckData,
+                swuDeck: swuDeck,
                 isPrivate: privacy === 'Private',
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
@@ -113,15 +114,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         display: 'block',
         ml: 'auto',
         mr: 'auto',
-    };
-
-    const instructionsCardStyle = {
-        width: { xs: '90vw', sm: '70vw', md: '40vw', lg: '30vw' },
-        borderRadius: '1.5em',
-        backgroundColor: '#18325199',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-        p: '2em',
-        mb: '2em',
     };
 
     return (

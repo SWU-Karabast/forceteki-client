@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Box, Typography, Divider } from '@mui/material';
-import { ICardData, IServerCardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { IServerCardData, CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useDragScroll } from '@/app/_utils/useDragScroll';
 import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
@@ -129,7 +129,7 @@ const Deck: React.FC = () => {
                             <GameCard
                                 key={card.card.id}
                                 card={card}
-                                variant={'lobby'}
+                                cardStyle={CardStyle.Lobby}
                                 onClick={() => sendLobbyMessage(['updateDeck','Deck', card.card.id])}
                             />
                         ))}
@@ -153,7 +153,7 @@ const Deck: React.FC = () => {
                                     <GameCard
                                         key={card.card.id}
                                         card={card}
-                                        variant={'lobby'}
+                                        cardStyle={CardStyle.Lobby}
                                         onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.card.id])}
                                     />
                                 ))}

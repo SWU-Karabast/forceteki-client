@@ -1,11 +1,19 @@
-import type { ICardData } from './CardTypes'
+import { ICardData, CardStyle } from './CardTypes'
 
 export interface ICardUtils {
     getBorderColor: (card: ICardData, player: string, promptType?: string) => string;
 }
 
-export const getBorderColor = (card: ICardData, player: string, promptType: string = '') => {
+export const getBorderColor = (card: ICardData, player: string, promptType: string = '', style: CardStyle = CardStyle.Plain) => {
     if (!card) return '';
+
+    if (style === CardStyle.Prompt) {
+        if (card.selected) {
+            return 'var(--selection-blue)';
+        } else {
+            return '';
+        }
+    }
 
     if (promptType === 'resource' && card.selected) {
         return 'var(--selection-yellow)';

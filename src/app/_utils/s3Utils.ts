@@ -83,12 +83,20 @@ export const s3ImageURL = (path: string) => {
 };
 
 export const s3CardImageURL = (card: ICardData | ISetCode) => {
-    if (!card) return s3ImageURL('game/swu-logo.webp');
+    if (!card?.setId) return s3ImageURL('game/swu-cardback.webp');
     const type = card.type || card.types;
     if (type?.includes('token')) {
         return s3ImageURL(`cards/_tokens/${card.id}.webp`);
     }
-    const cardNumber = card.setId.number.toString().padStart(3, '0') + (type === 'leaderUnit' ? '-portrait' : '');
+    let cardNumber = card.setId.number.toString().padStart(3, '0')
+    
+    if (type === 'leaderUnit') {
+        cardNumber += '-portrait';
+    }
+    if (type === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
+        cardNumber += '-side2';
+    }
+
     return s3ImageURL(`cards/${card.setId.set}/${cardNumber}.webp`);
 };
 

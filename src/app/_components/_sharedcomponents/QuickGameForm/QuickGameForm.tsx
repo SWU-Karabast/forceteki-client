@@ -2,7 +2,6 @@ import React, { ChangeEvent, FormEvent, useState } from 'react';
 import { Box, Button, Checkbox, FormControl, FormControlLabel, Link, MenuItem, Typography } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField/StyledTextField';
 import { useRouter } from 'next/navigation';
-import { mapIdToInternalName, transformDeckWithCardData, updateIdsWithMapping } from '@/app/_utils/s3Utils';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 
@@ -35,12 +34,15 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         console.log('Deck Link:', deckLink);
         console.log('beginning fetch for deck link');
         const deckData = deckLink ? await fetchDeckData(deckLink) : null;
+        const swuDeck = deckLink ? await fetchDeckData(deckLink,false) : null;
         console.log('fetch complete, deck data:', deckData);
+        console.log('fetch complete, swu deck data:', swuDeck);
         console.log('Save Deck To Favourites:', saveDeck);
         try {
             const payload = {
                 user: user,
-                deck: deckData
+                deck: deckData,
+                swuDeck: swuDeck
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
