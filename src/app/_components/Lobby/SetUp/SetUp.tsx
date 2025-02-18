@@ -31,8 +31,6 @@ const SetUp: React.FC = ({
         sendMessage('manualDisconnect');
         router.push('/');
     }
-    // exit game lobby hover effect
-    const [isHovering, setIsHovering] = useState(false);
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -63,7 +61,7 @@ const SetUp: React.FC = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             cursor: 'pointer',
-            opacity: isHovering ? '0.8' : '1',
+            '&:hover': { opacity: '0.8' },
         },
         dividerStyle: {
             backgroundColor: '#fff',
@@ -90,7 +88,7 @@ const SetUp: React.FC = ({
                     handleChatSubmit={handleChatSubmit}
                 />
                 <Divider sx={styles.dividerStyle} />
-                <Box sx={styles.exitCard} onClick={() => handleExit()} onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}>
+                <Box sx={styles.exitCard} onClick={() => handleExit()}>
                     <Typography variant="h5">
                         Exit Game Lobby
                     </Typography>
