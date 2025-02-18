@@ -2,6 +2,7 @@ import React from 'react';
 import {
     Typography,
     Box,
+    boxClasses,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
@@ -37,6 +38,12 @@ const GameCard: React.FC<IGameCardProps> = ({
         }
     };
     const handleClick = onClick ?? defaultClickFunction;
+
+    const subcardClick = (subCard: ICardData) => {
+        if (subCard.selectable) {
+            sendGameMessage(['cardClicked', subCard.uuid]);
+        }
+    }
 
 
     
@@ -194,6 +201,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             alignItems: 'center',
             justifyContent: 'center',
+            boxSizing: 'content-box',
         },
         upgradeName:{
             fontSize: '11px',
@@ -266,10 +274,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                     <>
                         { showValueAdjuster && <CardValueAdjuster cardId={card.uuid} /> }
                         <Grid direction="row" container sx={styles.shieldContainer}>
-                            {shieldCards.map((_, index) => (
+                            {shieldCards.map((shieldCard, index) => (
                                 <Box
                                     key={`${card.uuid}-shield-${index}`}
-                                    sx={styles.shieldIcon}
+                                    sx={{ ...styles.shieldIcon , border: shieldCard.selectable ? `2px solid ${getBorderColor(shieldCard, connectedPlayer)}` : 'none' }}
+                                    onClick={() => subcardClick(shieldCard)}
                                 />
                             ))}
                         </Grid>
@@ -298,7 +307,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                     key={subcard.uuid}
                     sx={{ ...styles.upgradeIcon,
                         backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
+                        border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none'
                     }}
+                    onClick={() => subcardClick(subcard)}
                 >
                     <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
                 </Box>
@@ -314,8 +325,10 @@ const GameCard: React.FC<IGameCardProps> = ({
                             key={`captured-${capturedCard.uuid}`}
                             sx={{
                                 ...styles.upgradeIcon,
-                                backgroundImage: `url(${cardUpgradebackground(capturedCard)})`
+                                backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
+                                border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none'
                             }}
+                            onClick={() => subcardClick(capturedCard)}
                         >
                             <Typography sx={styles.upgradeName}>
                                 {capturedCard.name}
