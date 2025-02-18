@@ -23,11 +23,11 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         border: '1px solid transparent',
-        background: `linear-gradient(#1D1D1D, #1D1D1D) padding-box, 
+        background: `linear-gradient(rgb(29, 29, 29),rgb(29, 29, 29)) padding-box, 
         linear-gradient(to top, #404040, #404040) border-box`,
         '&:hover': {
-            background: `linear-gradient(#1D1D1D, #1E2D32) padding-box, 
-            linear-gradient(to top, #038FC3, #404040) border-box`,
+            background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
+            linear-gradient(to top,rgb(50, 81, 93), #404040) border-box`,
         },
     },
     promptButtonText: {
@@ -87,6 +87,7 @@ const CardActionTray: React.FC = () => {
     );
 };
 
+
 /**
  * PromptButton Subcomponent
  */
@@ -95,11 +96,28 @@ interface IPromptButtonProps {
     sendGameMessage: (args: [string, string, string]) => void;
 }
 
+
 const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage }) => {
+   
+    const actionTrayStyles = (arg: string) => {
+        switch (arg) {
+            case 'claimInitiative':
+                return {
+                    background: `linear-gradient(rgb(29, 29, 29), #1E2D32) padding-box, 
+                        linear-gradient(to top, #038FC3, #404040) border-box`,
+                    '&:hover': {
+                        background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
+                        linear-gradient(to top, #038FC3, #404040) border-box`,
+                    },
+                };
+            default: return {};
+        }
+    }
+
     return (
         <Button
             variant="contained"
-            sx={styles.promptButton}
+            sx={{ ...styles.promptButton, ...actionTrayStyles(button.arg) }}
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
         >
             <Box sx={styles.promptButtonText}>
