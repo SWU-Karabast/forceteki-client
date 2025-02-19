@@ -18,6 +18,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     }
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
+    const initiativeClaimed = gameState.initiativeClaimed;
 
     // ---------------Styles------------------- //
     const styles = {
@@ -66,8 +67,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             borderStyle: 'solid',
             height: '2rem',
             width: 'auto',
-            background: 'rgba(0, 0, 0, 0.5)',
+            background: initiativeClaimed ? 'var(--initiative-red)' : 'rgba(0, 0, 0, 0.5)',
             borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            display: hasInitiative ? 'none' : 'block',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             h4: {
@@ -77,7 +79,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 fontSize: '16px', 
                 fontWeight: 600,
                 userSelect: 'none',
-                color: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+                color: initiativeClaimed ? 'black' : 'var(--initiative-red)',
             }
         },
     };
