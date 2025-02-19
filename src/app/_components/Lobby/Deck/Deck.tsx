@@ -26,7 +26,6 @@ const Deck: React.FC = () => {
         position: 'sticky',
         top: '0',
         zIndex: 1,
-        pt: '.2em',
     };
 
     const titleTextStyle = {
@@ -68,9 +67,10 @@ const Deck: React.FC = () => {
     // set decks for connectedUser
     const userMain = connectedUser.deck?.deck || []
     const usersSideboard = connectedUser.deck?.sideboard || []
-    // Transform them into IServerCardData
-    console.log('newDeck', userMain);
-    console.log('sideBoard', usersSideboard);
+
+    // sort main deck and sideboard by card cost ascending
+    const sortedUserMain = [...userMain].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
+    const sortedUsersSideboard = [...usersSideboard].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
 
     // Calculate the total counts
     const deckCount = userMain.reduce(
@@ -95,7 +95,7 @@ const Deck: React.FC = () => {
                     sx={scrollableBoxStyle}
                 >
                     <Box sx={mainContainerStyle}>
-                        {userMain.map((card:ICardData) => (
+                        {sortedUserMain.map((card:ICardData) => (
                             <GameCard
                                 key={card.id}
                                 card={card}
@@ -118,7 +118,7 @@ const Deck: React.FC = () => {
                             sx={scrollableBoxStyleSideboard}
                         >
                             <Box sx={mainContainerStyle}>
-                                {usersSideboard.map((card:ICardData) => (
+                                {sortedUsersSideboard.map((card:ICardData) => (
                                     <GameCard
                                         key={card.id}
                                         card={card}

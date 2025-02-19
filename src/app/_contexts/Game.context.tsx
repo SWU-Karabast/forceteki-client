@@ -53,7 +53,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
         const connectedPlayerId = user?.id || anonymousUserId || '';
-        console.log('connectedPlayerId', connectedPlayerId);
         if (!connectedPlayerId) return;
         setConnectedPlayer(connectedPlayerId);
         clearPopups();
@@ -150,7 +149,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             args = [args[0], distributionPromptData, args[2]]
             setDistributionPromptData(null);
         }
-        console.log('args after push', args);
         socket?.emit('game', ...args);
     };
 
