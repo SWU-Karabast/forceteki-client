@@ -2,7 +2,7 @@ import React from 'react';
 import {
     Typography,
     Box,
-    boxClasses,
+    Popover,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
@@ -21,6 +21,14 @@ const GameCard: React.FC<IGameCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
+    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handlePreviewClose = () => {
+        setAnchorEl(null);
+    };
+    const open = Boolean(anchorEl);
 
     const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
     if (showValueAdjuster) {
@@ -251,12 +259,27 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundColor:'black',
             mb:'0px',
             position:'relative'
-        }
+        },
+        cardPreview: {
+            borderRadius: '.38em',
+            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1 / 1.4',
+            width: '16rem',
+        },
     }
 
     return (
         <Box sx={styles.cardContainer}>
-            <Box sx={styles.card} onClick={disabled ? undefined : handleClick}>
+            <Box 
+                sx={styles.card} 
+                onClick={disabled ? undefined : handleClick}
+                aria-owns={open ? 'mouse-over-popover' : undefined}
+                aria-haspopup="true"
+                onMouseEnter={handlePreviewOpen}
+                onMouseLeave={handlePreviewClose}
+            >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
                     { !!distributionAmount && (
@@ -301,6 +324,26 @@ const GameCard: React.FC<IGameCardProps> = ({
                     </>
                 )}
             </Box>
+
+            <Popover
+                id="mouse-over-popover"
+                sx={{ pointerEvents: 'none' }}
+                open={open}
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                    vertical: 'center',
+                    horizontal: 'left',
+                }}
+                transformOrigin={{
+                    vertical: 'center',
+                    horizontal: 'right',
+                }}
+                onClose={handlePreviewClose}
+                disableRestoreFocus
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+            >
+                <Box sx={styles.cardPreview} />
+            </Popover>
 
             {otherUpgradeCards.map((subcard) => (
                 <Box
