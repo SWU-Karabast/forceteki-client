@@ -70,8 +70,10 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     body: JSON.stringify(payload),
                 }
             );
-
+            const result = await response.json();
             if (!response.ok) {
+                const errors = result.errors || {};
+                alert('These errors occured when submitting the deck: '+JSON.stringify(errors, null, 2));
                 throw new Error('Failed to create game');
             }
 

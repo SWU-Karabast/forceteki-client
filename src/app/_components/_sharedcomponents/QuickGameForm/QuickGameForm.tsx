@@ -51,8 +51,11 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 }
             );
 
+            const result = await response.json();
             if (!response.ok) {
+                const errors = result.errors || {};
                 setQueueState(false);
+                alert('These errors occured when submitting the deck: '+JSON.stringify(errors, null, 2));
                 throw new Error('Failed to create game');
             }
 
