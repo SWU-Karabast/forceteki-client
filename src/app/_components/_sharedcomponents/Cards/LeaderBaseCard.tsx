@@ -1,7 +1,8 @@
 import React from 'react';
 import {
     Typography,
-    Box
+    Box,
+    Popover
 } from '@mui/material';
 import { ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -18,9 +19,20 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
+    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        if (isDeployed) return;
+        setAnchorEl(event.currentTarget);
+    };
+    const handlePreviewClose = () => {
+        setAnchorEl(null);
+    };
+    const open = Boolean(anchorEl);
+    
     if (!card) {
         return null
     }
+        
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
@@ -123,7 +135,23 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             color: 'white',
             fontWeight: '600',
             fontSize: '1em',
-        }
+        },
+        cardPreview: {
+            borderRadius: '.38em',
+            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1.4 / 1',
+            width: '21rem',
+        },
+        cardPreviewDeployed: {
+            borderRadius: '.38em',
+            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1 / 1.4',
+            width: '16rem',
+        },
     }
 
 
@@ -135,6 +163,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     sendGameMessage(['cardClicked', card.uuid]);
                 }
             }}
+            aria-owns={open ? 'mouse-over-popover' : undefined}
+            aria-haspopup="true"
+            onMouseEnter={handlePreviewOpen}
+            onMouseLeave={handlePreviewClose}
         >
             <Box sx={styles.cardOverlay}>
                 <Box sx={styles.unimplementedAlert}></Box>
@@ -153,6 +185,26 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     </Typography>
                 </Box>
             )}
+
+            <Popover
+                id="mouse-over-popover"
+                sx={{ pointerEvents: 'none' }}
+                open={open}
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                    vertical: 'center',
+                    horizontal: 'left',
+                }}
+                transformOrigin={{
+                    vertical: 'center',
+                    horizontal: 'right',
+                }}
+                onClose={handlePreviewClose}
+                disableRestoreFocus
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+            >
+                <Box sx={styles.cardPreview} />
+            </Popover>
 
             {cardStyle === LeaderBaseCardStyle.Leader && title && (
                 <>
