@@ -19,15 +19,15 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
-    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         if (isDeployed) return;
-        setAnchorEl(event.currentTarget);
+        setAnchorElement(event.currentTarget);
     };
     const handlePreviewClose = () => {
-        setAnchorEl(null);
+        setAnchorElement(null);
     };
-    const open = Boolean(anchorEl);
+    const open = Boolean(anchorElement);
     
     if (!card) {
         return null
@@ -190,7 +190,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 id="mouse-over-popover"
                 sx={{ pointerEvents: 'none' }}
                 open={open}
-                anchorEl={anchorEl}
+                anchorEl={anchorElement}
                 anchorOrigin={{
                     vertical: 'center',
                     horizontal: 'left',

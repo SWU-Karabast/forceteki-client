@@ -22,17 +22,17 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
 
-    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         if (!card.controlled && card.zone === 'hand') {
             return;
         }
-        setAnchorEl(event.currentTarget);
+        setAnchorElement(event.currentTarget);
     };
     const handlePreviewClose = () => {
-        setAnchorEl(null);
+        setAnchorElement(null);
     };
-    const open = Boolean(anchorEl);
+    const open = Boolean(anchorElement);
 
     const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
     if (showValueAdjuster) {
@@ -333,7 +333,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 id="mouse-over-popover"
                 sx={{ pointerEvents: 'none' }}
                 open={open}
-                anchorEl={anchorEl}
+                anchorEl={anchorElement}
                 anchorOrigin={{
                     vertical: 'center',
                     horizontal: 'left',
