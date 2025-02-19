@@ -24,7 +24,7 @@ export interface IChatDrawerProps {
 
 export interface IPlayerCardTrayProps {
     trayPlayer: string;
-    handleModalToggle: () => void;
+    toggleSidebar: () => void;
 }
 
 export interface IOpponentCardTrayProps {

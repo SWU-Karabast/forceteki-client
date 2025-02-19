@@ -20,32 +20,14 @@ const GameBoard = () => {
 
     const router = useRouter();
     const { sidebarOpen, toggleSidebar } = useSidebar();
-    const [chatMessage, setChatMessage] = useState('');
-    const [chatHistory, setChatHistory] = useState<string[]>([]);
-    const [round, setRound] = useState(2);
-    const drawerRef = useRef<HTMLDivElement | null>(null);
-    const [drawerWidth, setDrawerWidth] = useState(0);
-
-    // State for resource selection
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
 
-    const handleChatSubmit = () => {
-        if (chatMessage.trim()) {
-            setChatHistory([...chatHistory, chatMessage]);
-            setChatMessage('');
-        }
-    };
 
     useEffect(() => {
-    // Update the drawer width when the drawer opens or closes
-        if (drawerRef.current) {
-            setDrawerWidth(drawerRef.current.offsetWidth);
-        }
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
             router.push('/lobby');
         }
-    }, [sidebarOpen, gameState, lobbyState, router]);
+    }, [lobbyState, router]);
 
     useEffect(() => {
         if (gameState?.winner) {
@@ -54,10 +36,6 @@ const GameBoard = () => {
             setPreferenceOpen(false);
         }
     }, [gameState?.winner]);
-
-    const handleModalToggle = () => {
-        setIsModalOpen(!isModalOpen);
-    };
 
     const handlePreferenceToggle = () => {
         setPreferenceOpen(!isPreferenceOpen);
@@ -79,8 +57,8 @@ const GameBoard = () => {
         mainBoxStyle: {
             flexGrow: 1,
             transition: 'margin-right 0.3s ease',
-            mr: sidebarOpen ? `${drawerWidth}px` : '0',
             height: '100vh',
+            width: sidebarOpen ? 'calc(100vw - 300px)' : '100vw',
             position: 'relative',
             backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
             backgroundSize: 'cover',
@@ -89,7 +67,7 @@ const GameBoard = () => {
         centralPromptContainer: {
             position: 'absolute',
             top: '47%',
-            left: '50%',
+            left: sidebarOpen ? 'calc(50% - 150px)' : '50%',
             transform: 'translate(-50%, -50%)',
             display: 'flex',
             justifyContent: 'center',
@@ -126,20 +104,14 @@ const GameBoard = () => {
                 <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
-                    handleModalToggle={handleModalToggle}
+                    toggleSidebar={toggleSidebar}
                 />
             </Box>
 
             {sidebarOpen && (
                 <ChatDrawer
-                    ref={drawerRef}
                     toggleSidebar={toggleSidebar}
-                    chatHistory={chatHistory}
-                    chatMessage={chatMessage}
-                    setChatMessage={setChatMessage}
-                    handleChatSubmit={handleChatSubmit}
                     sidebarOpen={sidebarOpen}
-                    currentRound={round}
                 />
             )}
             <Box sx={styles.centralPromptContainer}>

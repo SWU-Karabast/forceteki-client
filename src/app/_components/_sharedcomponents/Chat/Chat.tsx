@@ -81,7 +81,7 @@ const Chat: React.FC<IChatProps> = ({
                 <Typography sx={titleStyle}>Chat</Typography>
                 <Divider sx={dividerStyle} />
                 <Box sx={chatBoxStyle}>
-                    {chatHistory.messages && chatHistory.messages.map((chatEntry, index) => {
+                    {chatHistory && chatHistory.map((chatEntry, index) => {
                         // [ { name: 'Order66', email: null }, 'test', 'some message text' ]
                         // Extract the sender (an object with name) and the text
                         const [senderObject, _, text] = chatEntry.message;

@@ -11,6 +11,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 
 const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
     trayPlayer,
+    toggleSidebar
 }) => {
     // -------------- Contexts ---------------- //
     const { gameState, connectedPlayer } = useGame();
@@ -60,7 +61,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
             <Grid size={3} sx={styles.rightColumnStyle}>
                 <CardActionTray />
                 <Box ml={2}>
-                    <ChatBubbleOutline />
+                    <ChatBubbleOutline onClick={toggleSidebar} />
                 </Box>
             </Grid>
         </Grid>
