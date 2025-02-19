@@ -21,8 +21,12 @@ const GameCard: React.FC<IGameCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
+
     const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        if (!card.controlled && card.zone === 'hand') {
+            return;
+        }
         setAnchorEl(event.currentTarget);
     };
     const handlePreviewClose = () => {
