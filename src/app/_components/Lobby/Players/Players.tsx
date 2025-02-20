@@ -13,31 +13,27 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
 
     // set connectedPlayer
-    const playerLeader = connectedUser ? connectedUser.deck ? connectedUser.deck.leader[0].card : null : null;
-    const playerBase = connectedUser ? connectedUser.deck ? connectedUser.deck.base[0].card : null : null;
+    const playerLeader = connectedUser.deck?.leader || null;
+    const playerBase = connectedUser.deck?.base || null;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
-    const opponentLeader = opponentUser ? opponentUser.deck ? opponentUser.deck.leader[0].card : null : null;
-    const opponentBase = opponentUser ? opponentUser.deck ? opponentUser.deck.base[0].card : null : null;
+    const opponentLeader = opponentUser ? opponentUser.deck?.leader : null;
+    const opponentBase = opponentUser ? opponentUser.deck?.base : null;
+
+
+
     const cardStyle = {
         borderRadius: '1.1em',
         borderColor: '#FFFFFF00',
-        height:'90vh',  // For small screens and up (600px and above)
-        width: '80%',
-        minWidth: '212px',
+        height:'100%',
+        width: '100%',
         display: 'flex',
         flexDirection: isLobbyView ? 'column' : 'row',
         justifyContent: isLobbyView ? 'flex-start' : 'center',
         pt: '.8em',
         backgroundColor: '#00000080',
         backdropFilter: 'blur(30px)',
-        '@media (max-height: 759px)': {
-            height: '84vh',
-        },
-        '@media (max-height: 1000px)': {
-            maxHeight: '85.5vh',
-        },
     };
 
     const typographyStyle = {

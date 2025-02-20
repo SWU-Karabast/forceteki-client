@@ -10,7 +10,7 @@ import {
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation'
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
-import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField/StyledTextField';
+import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
@@ -28,14 +28,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
-        sendLobbyMessage(['onStartGame']);
+        sendLobbyMessage(['onStartGameAsync']);
         router.push('/GameBoard');
     };
     const handleOnChangeDeck = async () => {
-        console.log('Deck Link:', deckLink);
-        const deckData = deckLink ? await fetchDeckData(deckLink) : null;
-        const swuDeck = deckLink ? await fetchDeckData(deckLink, false) : null;
-        sendLobbyMessage(['changeDeck',deckData,swuDeck])
+        const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+        sendLobbyMessage(['changeDeck',deckData, deckData])
     }
     const handleCopyLink = () => {
         navigator.clipboard.writeText(lobbyState.connectionLink)
@@ -80,7 +78,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         },
         boxStyle: {
             display: 'flex',
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
             mt: '1em',
         },
         buttonStyle: {
@@ -88,13 +86,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             minWidth: '9rem',
         },
         initiativeCardStyle: {
-            height: '16.5rem',
             background: '#18325199',
             display: 'flex',
-            paddingLeft: '30px',
-            paddingRight: '30px',
+            padding: '30px',
             flexDirection: 'column',
-            justifyContent: 'center',
         },
         buttonsContainerStyle: {
             display: 'flex',

@@ -2,17 +2,14 @@ import React from 'react';
 import {
     Typography,
     Box,
+    boxClasses,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { IGameCardProps, ICardData, IServerCardData, CardStyle } from './CardTypes';
+import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
+import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
-
-// Type guard to check if the card is ICardData
-const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
-    return (card as ICardData).zone !== undefined || (card as ICardData).uuid !== undefined;
-};
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -22,37 +19,45 @@ const GameCard: React.FC<IGameCardProps> = ({
     capturedCards = [],
     disabled = false,
 }) => {
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt } = useGame();
-    const cardData = isICardData(card) ? card : card.card;
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
-    if (!cardData) {
+
+    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
+    if (showValueAdjuster) {
+        // override when using damage adjuster to show border but prevent click events
+        disabled = true;
+    };
+
+    if (!card) {
         return null;
     }
 
-    const cardCounter = !isICardData(card) ? card.count : 0;
-
-    // default on click
     const defaultClickFunction = () => {
-        if (cardData.selectable) {
-            sendGameMessage(['cardClicked', cardData.uuid]);
+        if (card.selectable) {
+            sendGameMessage(['cardClicked', card.uuid]);
         }
     };
     const handleClick = onClick ?? defaultClickFunction;
 
+    const subcardClick = (subCard: ICardData) => {
+        if (subCard.selectable) {
+            sendGameMessage(['cardClicked', subCard.uuid]);
+        }
+    }
+
+
+    
     // helper function to get the correct aspects for the upgrade cards
     const cardUpgradebackground = (card: ICardData) => {
         if (!card.aspects){
             return null
         }
-
-        // Check if Villainy or Heroism are the sole aspects
         if (card.aspects.includes('villainy') && card.aspects.length === 1) {
             return 'upgrade-black.png';
         }
         if (card.aspects.includes('heroism') && card.aspects.length === 1) {
             return 'upgrade-white.png';
         }
-        // Check other aspects
         switch (true) {
             case card.aspects.includes('aggression'):
                 return 'upgrade-red.png';
@@ -63,14 +68,15 @@ const GameCard: React.FC<IGameCardProps> = ({
             case card.aspects.includes('vigilance'):
                 return 'upgrade-blue.png';
             default:
-                // Fallback for unexpected cases
                 return 'upgrade-grey.png';
         }
     };
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
-    const borderColor = getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
+    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
+    const cardCounter = card.count || 0;
+    const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
 
     // Styles
     const styles = {
@@ -81,7 +87,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            transform: cardData.exhausted ? 'rotate(4deg)' : 'none',
+            transform: card.exhausted ? 'rotate(4deg)' : 'none',
             transition: 'transform 0.15s ease',
             '&:hover': {
                 cursor: disabled ? 'normal' : 'pointer',
@@ -90,7 +96,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '0.5rem',
             position: 'relative',
-            backgroundImage: `url(${s3CardImageURL(cardData)})`,
+            backgroundImage: `url(${s3CardImageURL(card)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1.058' : '.718',
@@ -102,7 +108,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'absolute',
             width: '100%',
             height: '100%',
-            backgroundColor: cardData?.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            backgroundColor: card?.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
             filter: 'none',
             clickEvents: 'none',
             display: 'flex',
@@ -196,6 +202,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             alignItems: 'center',
             justifyContent: 'center',
+            boxSizing: 'content-box',
         },
         upgradeName:{
             fontSize: '11px',
@@ -214,12 +221,27 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: 'url(/SentinelToken.png)',
         },
         unimplementedAlert: {
-            display: cardData?.hasOwnProperty('implemented') && !cardData?.implemented ? 'flex' : 'none',
+            display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             aspectRatio: '1/1',
             width: '50%'
+        },
+        damageCounter: {
+            fontWeight: '800',
+            fontSize: '1.9rem',
+            color: 'white',
+            width: '2.5rem',
+            aspectRatio: '1 / 1',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundImage: 'url(/token-background.svg)',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
+            textShadow: '1px 1px #00000033'
         },
         capturedCardsDivider:{
             fontSize: '11px',
@@ -232,11 +254,17 @@ const GameCard: React.FC<IGameCardProps> = ({
             position:'relative'
         }
     }
+
     return (
         <Box sx={styles.cardContainer}>
             <Box sx={styles.card} onClick={disabled ? undefined : handleClick}>
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
+                    { !!distributionAmount && (
+                        <Typography variant="body1" sx={styles.damageCounter}>
+                            {distributionAmount}
+                        </Typography>
+                    )}
                 </Box>
                 {cardStyle === CardStyle.Lobby && (
                     <Box sx={styles.counterIcon}>
@@ -245,29 +273,31 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
+                        { showValueAdjuster && <CardValueAdjuster cardId={card.uuid} /> }
                         <Grid direction="row" container sx={styles.shieldContainer}>
-                            {shieldCards.map((_, index) => (
+                            {shieldCards.map((shieldCard, index) => (
                                 <Box
-                                    key={`${cardData.uuid}-shield-${index}`}
-                                    sx={styles.shieldIcon}
+                                    key={`${card.uuid}-shield-${index}`}
+                                    sx={{ ...styles.shieldIcon , border: shieldCard.selectable ? `2px solid ${getBorderColor(shieldCard, connectedPlayer)}` : 'none' }}
+                                    onClick={() => subcardClick(shieldCard)}
                                 />
                             ))}
                         </Grid>
-                        {cardData.sentinel && (
+                        {card.sentinel && (
                             <Box sx={styles.sentinelIcon}/>
                         )}
                         <Box sx={styles.powerIcon}>
-                            <Typography sx={styles.numberFont}>{cardData.power}</Typography>
+                            <Typography sx={styles.numberFont}>{card.power}</Typography>
                         </Box>
-                        {Number(cardData.damage) > 0 && (
+                        {Number(card.damage) > 0 && (
                             <Box sx={styles.damageIcon}>
                                 <Typography sx={styles.damageNumber}>
-                                    {cardData.damage}
+                                    {card.damage}
                                 </Typography>
                             </Box>
                         )}
                         <Box sx={styles.healthIcon}>
-                            <Typography sx={styles.numberFont}>{cardData.hp}</Typography>
+                            <Typography sx={styles.numberFont}>{card.hp}</Typography>
                         </Box>
                     </>
                 )}
@@ -278,7 +308,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                     key={subcard.uuid}
                     sx={{ ...styles.upgradeIcon,
                         backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
+                        border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none'
                     }}
+                    onClick={() => subcardClick(subcard)}
                 >
                     <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
                 </Box>
@@ -294,8 +326,10 @@ const GameCard: React.FC<IGameCardProps> = ({
                             key={`captured-${capturedCard.uuid}`}
                             sx={{
                                 ...styles.upgradeIcon,
-                                backgroundImage: `url(${cardUpgradebackground(capturedCard)})`
+                                backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
+                                border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none'
                             }}
+                            onClick={() => subcardClick(capturedCard)}
                         >
                             <Typography sx={styles.upgradeName}>
                                 {capturedCard.name}

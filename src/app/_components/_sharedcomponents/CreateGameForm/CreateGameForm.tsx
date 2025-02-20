@@ -11,7 +11,7 @@ import {
     RadioGroup,
     Link,
 } from '@mui/material';
-import StyledTextField from '../_styledcomponents/StyledTextField/StyledTextField';
+import StyledTextField from '../_styledcomponents/StyledTextField';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
@@ -49,19 +49,11 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        console.log('Favourite Deck:', favouriteDeck);
-        console.log('Deck Link:', deckLink);
-        console.log('beginning fetch for deck link');
-        const deckData = deckLink ? await fetchDeckData(deckLink) : null;
-        const swuDeck = deckLink ? await fetchDeckData(deckLink,false) : null;
-        console.log('fetch complete, swu deck data:', swuDeck);
-        console.log('fetch complete, deck data:', deckData);
-        console.log('Save Deck To Favourites:', saveDeck);
+        const deckData = deckLink ? await fetchDeckData(deckLink,false) : null;
         try {
             const payload = {
                 user: user || sessionStorage.getItem('anonymousUserId'),
                 deck: deckData,
-                swuDeck: swuDeck,
                 isPrivate: privacy === 'Private',
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
@@ -85,7 +77,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     };
 
     const formControlStyle = {
-        mb: '1.5rem',
+        mb: '1rem',
     };
 
     const labelTextStyle = {
@@ -147,14 +139,14 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWU Stats
                         </Link>{' '}
-                        or
+                        or{' '}
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
-                        or{' '}
+                        {/* or{' '}
                         <Link href="https://www.sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SW-Unlimited-DB
-                        </Link>{' '}
+                        </Link>{' '} */}
                         Deck Link{' '}
                         <Typography variant="body1" sx={labelTextStyleSecondary}>
                             (use the URL or &apos;Deck Link&apos; button)

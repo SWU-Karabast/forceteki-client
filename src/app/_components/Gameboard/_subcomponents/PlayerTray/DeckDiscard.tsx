@@ -1,11 +1,11 @@
 import React from 'react';
 import { Card, Box, Typography } from '@mui/material';
-import GameCard from '../../../_sharedcomponents/Cards/GameCard';
 import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = (
     trayPlayer
@@ -91,8 +91,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                     togglePopup('pile', {
                         uuid: `${trayPlayer.trayPlayer}-discard`,
                         title: `${playerName} discard`,
-                        cards:
-                            gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
+                        cards: gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
+                        source: PopupSource.User
                     })
                 }}
             />
