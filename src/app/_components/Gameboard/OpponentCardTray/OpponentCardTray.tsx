@@ -25,7 +25,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'flex-start',
-            padding: '2rem 0 0 2rem',
+            padding: '1rem 0 1rem 2rem',
             gap: '2rem',
         },
         centerColumn: {
@@ -48,8 +48,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             gap: '2rem',
         },
         lastPlayed: {
-            width: '4.2rem',
-            height: '6rem',
+            width: '4.6rem',
+            height: '6.5rem',
             borderRadius: '5px',
             backgroundSize: 'cover',
             backgroundImage: gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none',
@@ -62,13 +62,16 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         },
         initiativeWrapper: {
             borderRadius: '20px',
-            borderWidth: '1px',
+            borderWidth: '2px',
             borderStyle: 'solid',
-            height: '2.2rem',
+            height: '2rem',
             width: 'auto',
-            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            background: 'rgba(0, 0, 0, 0.5)',
+            borderColor: '#18c1ff',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             h4: {
-                margin: '0.4rem 1.5rem 0', 
+                margin: '0.2rem 1rem 0', 
                 textAlign: 'center', 
                 display: 'block',
                 fontSize: '16px', 
@@ -91,9 +94,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         >
             {/* Left column (fixed 360px) */}
             <Grid sx={{
-                    flex: '0 0 360px',
-                    ...styles.leftColumn,
-                }}
+                flex: '0 0 360px',
+                ...styles.leftColumn,
+            }}
             >
                 <DeckDiscard trayPlayer={trayPlayer} />
                 <Resources trayPlayer={trayPlayer}/>
@@ -101,9 +104,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
 
             {/* Center column (flexes to fill space) */}
             <Grid sx={{
-                    flex: 1,
-                    ...styles.centerColumn,
-                }}
+                flex: 1,
+                ...styles.centerColumn,
+            }}
             >
                 <Box sx={styles.opponentHandWrapper}>
                     <PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
@@ -112,9 +115,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
 
             {/* Right column (fixed 360px) */}
             <Grid sx={{
-                    flex: '0 0 360px',
-                    ...styles.rightColumn,
-                }}
+                flex: '0 0 360px',
+                ...styles.rightColumn,
+            }}
             >
                 <Box sx={styles.initiativeWrapper}>
                     <Typography variant={'h4'}>Initiative</Typography>

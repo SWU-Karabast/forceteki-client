@@ -13,13 +13,13 @@ const FoundGame: React.FC = () => {
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const lobbyOwner = lobbyState.lobbyOwnerId
     // set connectedPlayer
-    const playerLeader = connectedUser ? connectedUser.deck.leader[0].card : null;
-    const playerBase = connectedUser ? connectedUser.deck.base[0].card : null;
+    const playerLeader = connectedUser.deck?.leader || null;
+    const playerBase = connectedUser.deck?.base || null;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
-    const opponentLeader = opponentUser ? opponentUser.deck.leader[0].card : null;
-    const opponentBase = opponentUser ? opponentUser.deck.base[0].card : null;
+    const opponentLeader = opponentUser ? opponentUser.deck.leader : null;
+    const opponentBase = opponentUser ? opponentUser.deck.base : null;
     const router = useRouter();
 
     // --- Countdown State ---
@@ -50,7 +50,7 @@ const FoundGame: React.FC = () => {
         // Only run once—if the connected user is the lobby owner and game start hasn't been sent yet
         if (connectedUser?.id === lobbyOwner && !gameStartSent) {
             setGameStart(true);
-            sendLobbyMessage(['onStartGame']);
+            sendLobbyMessage(['onStartGameAsync']);
         }
     }, [countdown, connectedUser?.id, lobbyOwner, sendLobbyMessage, router, gameState, gameStartSent]);
 

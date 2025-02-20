@@ -3,6 +3,7 @@ export type GameCardData = ICardData | IServerCardData | IOpponentHiddenCardData
 
 export interface ICardData {
     uuid: string;
+    count?: number;
     parentCardId?: string,
     id?: number;
     name?: string;
@@ -36,7 +37,16 @@ export interface ICardData {
 
 export interface IServerCardData {
     count: number;
-    card: ICardData;
+    id: string;
+}
+export type ISetCode = {
+    setId: {
+        set: string;
+        number: number;
+    }
+    type: string;
+    types?: string[];
+    id: string;
 }
 
 export interface IOpponentHiddenCardData {
@@ -63,7 +73,7 @@ export interface IPromptDisplayCardData {
     setId: ICardSetId;
 }
 export interface IGameCardProps {
-    card: ICardData | IServerCardData;
+    card: ICardData;
     onClick?: () => void;
     disabled?: boolean;
     subcards?: ICardData[];
@@ -75,7 +85,7 @@ export interface ILeaderBaseCardProps {
     selected?: boolean;
     handleSelect?: () => void;
     title?: string;
-    card: ICardData;
+    card: ICardData | null;
     disabled?: boolean;
     cardStyle?: LeaderBaseCardStyle;
 }

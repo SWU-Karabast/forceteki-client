@@ -55,11 +55,10 @@ const CardActionTray: React.FC = () => {
     const playerState = gameState.players[connectedPlayer];
 
     const showTrayButtons = () => {
-        if (
-            playerState.promptState.promptType === 'actionWindow' ||
-      playerState.promptState.promptType === 'resource' ||
-      playerState.promptState.selectCard
-        ) {
+        if ( playerState.promptState.promptType == 'actionWindow' ||
+             playerState.promptState.promptType == 'resource' ||
+             playerState.promptState.promptType == 'distributeAmongTargets' ||
+             playerState.promptState.selectCard == true ) {
             return true;
         }
         return false;
@@ -98,7 +97,6 @@ interface IPromptButtonProps {
 
 
 const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage }) => {
-   
     const actionTrayStyles = (arg: string) => {
         switch (arg) {
             case 'claimInitiative':

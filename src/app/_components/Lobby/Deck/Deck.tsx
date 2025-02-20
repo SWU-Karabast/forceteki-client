@@ -1,39 +1,21 @@
 import React from 'react';
 import { Card, Box, Typography, Divider } from '@mui/material';
-import { IServerCardData, CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { useDragScroll } from '@/app/_utils/useDragScroll';
+import { CardStyle, ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 
 const Deck: React.FC = () => {
-    // Use the custom hook with horizontal or vertical scrolling as required
-    const {
-        containerRef,
-        handleMouseDown,
-        handleMouseMove,
-        handleMouseUp,
-        handleTouchStart,
-        handleTouchMove,
-        handleTouchEnd,
-    } = useDragScroll('vertical');
     // ------------------------STYLES------------------------//
     const cardStyle = {
         borderRadius: '1.1em',
         pt: '.8em',
-        height: '90vh',
+        height: '100%',
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: '#00000080',
         backdropFilter: 'blur(30px)',
-        overflow: 'hidden',
-        '@media (max-height: 759px)': {
-            height: '84vh',
-        },
-        '@media (max-height: 1000px)': {
-            maxHeight: '85.5vh',
-        },
     };
 
     const headerBoxStyle = {
@@ -44,7 +26,6 @@ const Deck: React.FC = () => {
         position: 'sticky',
         top: '0',
         zIndex: 1,
-        pt: '.2em',
     };
 
     const titleTextStyle = {
@@ -64,19 +45,14 @@ const Deck: React.FC = () => {
         backgroundColor: '#fff',
         mt: '.5vh',
         mb: '0.5vh',
-        width: '80%',
         alignSelf: 'center',
         height: '1px',
     };
     const scrollableBoxStyleSideboard = {
-        flexGrow: 1,
-        height: '21%',
-        minHeight: '183px',
-        overflowY: 'auto',
+
     };
     const scrollableBoxStyle = {
-        flexGrow: 1,
-        overflowY: 'auto',
+
     };
     const mainContainerStyle = {
         display: 'flex',
@@ -89,24 +65,25 @@ const Deck: React.FC = () => {
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     // set decks for connectedUser
-    const newDeck = connectedUser ? connectedUser.deck ? connectedUser.deck.deckCards || [] : [] : [];
-    const sideBoard = connectedUser ? connectedUser.deck ? connectedUser.deck.sideboard || [] : [] : [];
-    console.log('newDeck', newDeck);
-    console.log('sideBoard', sideBoard);
+    const userMain = connectedUser.deck?.deck || []
+    const usersSideboard = connectedUser.deck?.sideboard || []
+
+    // sort main deck and sideboard by card cost ascending
+    const sortedUserMain = [...userMain].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
+    const sortedUsersSideboard = [...usersSideboard].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
 
     // Calculate the total counts
-    const deckCount = newDeck.reduce(
+    const deckCount = userMain.reduce(
         (sum: number, item: { count: number; }) => sum + (item.count || 0),
         0
     ) ?? 0;
 
-    const sideboardCount = sideBoard.reduce(
+    const sideboardCount = usersSideboard.reduce(
         (sum: number, item: { count: number; }) => sum + (item.count || 0),
         0
     ) ?? 0;
-
     return (
-        <Box sx={{ width:'100%' }}>
+        <Box sx={{ width:'100%', height:'100%', overflowY: 'scroll' }}>
             <Card sx={cardStyle}>
                 <Box sx={headerBoxStyle}>
                     <Typography sx={titleTextStyle}>Your Deck</Typography>
@@ -115,27 +92,20 @@ const Deck: React.FC = () => {
                     </Typography>
                 </Box>
                 <Box
-                    ref={containerRef}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
                     sx={scrollableBoxStyle}
                 >
                     <Box sx={mainContainerStyle}>
-                        {newDeck.map((card:IServerCardData) => (
+                        {sortedUserMain.map((card:ICardData) => (
                             <GameCard
-                                key={card.card.id}
+                                key={card.id}
                                 card={card}
                                 cardStyle={CardStyle.Lobby}
-                                onClick={() => sendLobbyMessage(['updateDeck','Deck', card.card.id])}
+                                onClick={() => sendLobbyMessage(['updateDeck','Deck', card.id])}
                             />
                         ))}
                     </Box>
                 </Box>
-                {sideBoard?.length > 0 && (
+                {usersSideboard?.length > 0 && (
                     <>
                         <Box sx={headerBoxStyle}>
                             <Typography sx={titleTextStyle}>Sideboard</Typography>
@@ -145,16 +115,15 @@ const Deck: React.FC = () => {
                             </Typography>
                         </Box>
                         <Box
-                            ref={containerRef}
                             sx={scrollableBoxStyleSideboard}
                         >
                             <Box sx={mainContainerStyle}>
-                                {sideBoard.map((card:IServerCardData) => (
+                                {sortedUsersSideboard.map((card:ICardData) => (
                                     <GameCard
-                                        key={card.card.id}
+                                        key={card.id}
                                         card={card}
                                         cardStyle={CardStyle.Lobby}
-                                        onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.card.id])}
+                                        onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.id])}
                                     />
                                 ))}
                             </Box>

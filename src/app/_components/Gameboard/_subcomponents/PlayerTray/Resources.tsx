@@ -5,6 +5,7 @@ import { s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { IResourcesProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
@@ -18,35 +19,25 @@ const Resources: React.FC<IResourcesProps> = ({
     // ------------------------STYLES------------------------//
     const styles = {
         cardStyle: {
-            // Ensure container is position: relative so our pseudo-element is placed over it
+            width: 'auto',
+            background: 'transparent',
+            display: 'flex',
             position: 'relative',
             borderRadius: '5px',
-            width: 'auto',
-            height: '6rem',
-            overflow: 'hidden', // so pseudo-element doesn't stick out
-            display: 'flex',
+            height: '6.5rem',
             justifyContent: 'center',
             alignItems: 'center',
-            padding: '0 1.5rem',
-            '--Paper-shadow': '0 !important',
-            background: 'none',
-
-            // 2) Pseudo-element for hover gradient:
-            '&::before': {
-                content: '""',
-                position: 'absolute',
-                inset: 0,
-                background: 'linear-gradient(rgba(24,53,81,0.6), rgba(77,118,155,0.6))',
-                opacity: 0,
-                transition: 'opacity 0.2s ease-out',
-                pointerEvents: 'none', // don’t block clicks on the card
-            },
-
-            // 3) On hover, fade the pseudo-element's opacity to 1
-            '.playerCardTrayWrapper &:hover::before': {
-                opacity: 1,
+            transition: 'background-color 0.3s ease',
+            padding: '1rem 2rem',
+            overflow: 'visible',
+            '&:hover': {
+                background:
+                    trayPlayer === 'player'
+                        ? 'linear-gradient(to top, white, transparent)'
+                        : null,
             },
         },
+        
         imageStyle: {
             width: '1.6em',
             height: 'auto',
@@ -101,8 +92,8 @@ const Resources: React.FC<IResourcesProps> = ({
                 togglePopup('pile', {
                     uuid: `${connectedPlayer}-resources`,
                     title: 'Your Resources',
-                    cards:
-                        gameState?.players[connectedPlayer]?.cardPiles['resources'],
+                    cards: gameState?.players[connectedPlayer]?.cardPiles['resources'],
+                    source: PopupSource.User
                 })
             }}
         >

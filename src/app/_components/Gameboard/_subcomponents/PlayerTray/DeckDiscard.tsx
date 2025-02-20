@@ -1,11 +1,11 @@
 import React from 'react';
 import { Card, Box, Typography } from '@mui/material';
-import GameCard from '../../../_sharedcomponents/Cards/GameCard';
 import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = (
     trayPlayer
@@ -24,8 +24,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         discard: {
             discardCardStyle: (cardData?: ICardData) => ({
                 backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                width: '4.2rem',
-                height: '6rem',
+                width: '4.6rem',
+                height: '6.5rem',
                 borderRadius: '5px',
                 display: 'flex',
                 alignItems: 'center',
@@ -49,18 +49,17 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             },
         },
         deck: {
-
             deckCardStyle: {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
-                backgroundSize: '85%',
-                backgroundImage: 'url(\'/card-back.png\')',
+                backgroundSize: 'contain',
+                backgroundImage: 'url(\'/swucardback.png\')',
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '4.2rem',
-                height: '6rem',
+                width: '4.6rem',
+                height: '6.5rem',
                 borderRadius: '5px',
             },
 
@@ -92,8 +91,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                     togglePopup('pile', {
                         uuid: `${trayPlayer.trayPlayer}-discard`,
                         title: `${playerName} discard`,
-                        cards:
-                            gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
+                        cards: gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
+                        source: PopupSource.User
                     })
                 }}
             />

@@ -26,7 +26,7 @@ const Board: React.FC<IBoardProps> = ({
     // ----------------Styles----------------//
     const styles = {
         boardWrapper: {
-            height: '66%',
+            height: '64.18%',
             margin: '0 5rem',
         },
         containerStyle: {

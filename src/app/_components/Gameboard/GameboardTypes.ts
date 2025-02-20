@@ -25,7 +25,6 @@ export interface IChatDrawerProps {
 export interface IPlayerCardTrayProps {
     trayPlayer: string;
     handleModalToggle: () => void;
-    handleBasicPromptToggle: () => void;
 }
 
 export interface IOpponentCardTrayProps {
@@ -43,16 +42,6 @@ export interface IDeckDiscardProps {
 
 export interface IResourcesProps {
     trayPlayer: string;
-}
-
-export interface IResourcesOverlayProps {
-    isModalOpen: boolean;
-    handleModalToggle: () => void;
-}
-
-export interface IBasicPromptProps {
-    isBasicPromptOpen: boolean;
-    handleBasicPromptToggle: () => void;
 }
 
 export interface IUnitsBoardProps {

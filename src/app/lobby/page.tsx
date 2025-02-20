@@ -7,6 +7,7 @@ import Deck from '../_components/Lobby/Deck/Deck';
 import SetUp from '../_components/Lobby/SetUp/SetUp';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useGame } from '@/app/_contexts/Game.context';
+import { Height } from '@mui/icons-material';
 
 const Lobby = () => {
     const pathname = usePathname();
@@ -32,52 +33,38 @@ const Lobby = () => {
             backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            width: '100%',
+            padding: '1em',
         },
 
         setUpGridStyle: {
             justifyContent: 'center',
-            pl: '20px',
-            mt: '5px',
+            height: '100%',
         },
 
         playersGridStyle: {
             justifyContent: 'center',
-            mt: '78px',
+            height: '100%',
         },
 
         deckGridStyle: {
             justifyContent: 'center',
-            pr: '20px',
-            mt: '78px',
-        },
-        disclaimer: {
-            position: 'absolute',
-            bottom: 0,
-            width: '100%',
-            padding: '1rem',
-            textAlign: 'center',
-            fontSize: '0.90rem',
+            height: '100%',
         },
     }
 
     return (
-        <Grid container sx={styles.containerStyle}>
-            <Grid container size={3} sx={styles.setUpGridStyle}>
-                <SetUp
-                />
+        <Grid container sx={styles.containerStyle} spacing={2}>
+            <Grid size={4} sx={styles.setUpGridStyle}>
+                <SetUp/>
             </Grid>
-            <Grid container size={2} sx={styles.playersGridStyle}>
-                <Players isLobbyView={isLobbyView} />
-            </Grid>
-            <Grid container size={7} sx={styles.deckGridStyle}>
-                <Deck />
-            </Grid>
-            <Grid size={12}>
-                <Typography variant="body1" sx={styles.disclaimer}>
-                    Karabast is in no way affiliated with Disney or Fantasy Flight Games.
-                    Star Wars characters, cards, logos, and art are property of Disney
-                    and/or Fantasy Flight Games.
-                </Typography>
+            <Grid container size={8} direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ height: '100%' }}>
+                <Grid size={{ xs: 3, lg: 3 }} sx={styles.playersGridStyle}>
+                    <Players isLobbyView={isLobbyView} />
+                </Grid>
+                <Grid size={{ xs: 9, lg: 9 }} sx={styles.deckGridStyle}>
+                    <Deck />
+                </Grid>
             </Grid>
         </Grid>
     );
