@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import {
     Card,
     CardContent,
@@ -12,6 +12,11 @@ import { useRouter } from 'next/navigation'
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import {
+    IDeckValidationFailures,
+    DeckValidationFailureReason,
+} from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -23,6 +28,15 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
+    // For deck error display
+    const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
+    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | undefined>(undefined);
+    const [displayError, setDisplayerror] = useState(false);
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const [blockError, setBlockError] = useState(false);
+    // Timer ref for clearing the inline text after 5s
+    const errorTextTimer = useRef<NodeJS.Timeout | null>(null);
+
     // Extract the player from the URL query params
     const router = useRouter();
 
@@ -33,10 +47,81 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     };
     const handleOnChangeDeck = async () => {
         console.log('Deck Link:', deckLink);
+        if (!deckLink || readyStatus) return;
         const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
         console.log(deckData);
-        sendLobbyMessage(['changeDeck',deckData, deckData])
+        sendLobbyMessage(['changeDeck', deckData])
     }
+
+    const showInlineErrorTextFor5s = () =>{
+        if(errorTextTimer.current) clearTimeout(errorTextTimer.current);
+        errorTextTimer.current = setTimeout(() => {
+            if(!blockError) {
+                setDeckErrorSummary(null);
+                setDisplayerror(false);
+            }else{
+                setDeckErrorSummary('Deck is invalid.');
+            }
+            // Check if there's any blocking error (not "NotImplemented")
+            errorTextTimer.current = null;
+        }, 5000);
+    }
+
+    // ------------------ Listen for changes to deckValidator ------------------ //
+    useEffect(() => {
+        if (!connectedUser?.deckValidator) {
+            // No validation errors => clear any old error states
+            setDeckErrorSummary(null);
+            setDeckErrorDetails(undefined);
+            setErrorModalOpen(false);
+            setDisplayerror(false);
+            setBlockError(false);
+            return;
+        }
+        // get error messages
+        const validator: IDeckValidationFailures = connectedUser.deckValidator;
+        // set which types belong to temporary
+        const temporaryErrorTypes = new Set([
+            DeckValidationFailureReason.InvalidDeckData,
+            DeckValidationFailureReason.TooManyLeaders,
+            DeckValidationFailureReason.UnknownCardId,
+            DeckValidationFailureReason.IllegalInFormat,
+            DeckValidationFailureReason.TooManyCopiesOfCard,
+        ]);
+        // Determine if a blocking error exists (ignoring NotImplemented and temporary errors)
+        const hasBlockingError = Object.entries(validator).some(([reason, value]) => {
+            if (reason === DeckValidationFailureReason.NotImplemented) return false;
+            if (temporaryErrorTypes.has(reason as DeckValidationFailureReason)) return false;
+            return Array.isArray(value) ? value.length > 0 : !!value;
+        });
+
+        // Determine if there is any temporary error
+        const hasTemporaryError = Object.entries(validator).some(([reason, value]) => {
+            return temporaryErrorTypes.has(reason as DeckValidationFailureReason) && (Array.isArray(value) ? value.length > 0 : !!value);
+        });
+
+        if (hasBlockingError) {
+            // Show a short inline error message and store the full list
+            setDisplayerror(true);
+            setDeckErrorSummary('Deck is invalid.');
+            setDeckErrorDetails(validator);
+            setBlockError(true)
+        }else{
+            setDeckErrorSummary(null);
+            setDeckErrorDetails(undefined);
+            setErrorModalOpen(false);
+            setDisplayerror(false);
+            setBlockError(false);
+        }
+        if (hasTemporaryError) {
+            // Only 'notImplemented' or no errors => clear them out
+            setDisplayerror(true);
+            setDeckErrorSummary('Couldn\'t import, deck is invalid');
+            setDeckErrorDetails(validator);
+            showInlineErrorTextFor5s()
+        }
+    }, [connectedUser]);
+
     const handleCopyLink = () => {
         navigator.clipboard.writeText(lobbyState.connectionLink)
             .then(() => {
@@ -120,6 +205,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             mr: 'auto',
             mt: '10px',
         },
+        errorMessageStyle: {
+            color: 'var(--initiative-red);',
+            mt: '0.5rem',
+            mb: '0px'
+        },
+        errorMessageLink:{
+            cursor: 'pointer',
+            color: 'var(--selection-red);',
+            textDecorationColor: 'var(--initiative-red);',
+        }
     }
     return (
         <Card sx={styles.initiativeCardStyle}>
@@ -179,7 +274,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         </>
                     ) : (
                         // Not both ready — show toggle-ready button
-                        connectedUser && connectedUser.deck ? (
+                        connectedUser && connectedUser.deck && !blockError ? (
                             <CardActions sx={styles.buttonsContainerStyle}>
                                 <Box sx={styles.readyImg} />
                                 <Button
@@ -222,18 +317,41 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     </Box>
                     <StyledTextField
                         type="url"
+                        disabled={readyStatus}
                         value={deckLink}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setDeckLink(e.target.value)}
                     />
+                    {(displayError || blockError) && (
+                        <Typography variant={'body1'} color={'error'} sx={styles.errorMessageStyle}>
+                            {deckErrorSummary}{' '}
+                            {deckErrorDetails && (
+                                <Link
+                                    sx={styles.errorMessageLink}
+                                    onClick={() => setErrorModalOpen(true)}
+                                >
+                                    Details
+                                </Link>
+                            )}
+                        </Typography>
+                    )}
                     <Button
                         type="button"
                         onClick={handleOnChangeDeck}
                         variant="contained"
+                        disabled={readyStatus}
                         sx={styles.submitButtonStyle}
                     >
                         Change Deck
                     </Button>
                 </>
+            )}
+            {deckErrorDetails && (
+                <ErrorModal
+                    title="Deck Validation Error"
+                    open={errorModalOpen}
+                    onClose={() => setErrorModalOpen(false)}
+                    errors={deckErrorDetails}
+                />
             )}
         </Card>
     )

@@ -4,6 +4,7 @@ import { CardStyle, ICardData } from '@/app/_components/_sharedcomponents/Cards/
 import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
+import { DeckValidationFailureReason } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 
 const Deck: React.FC = () => {
     // ------------------------STYLES------------------------//
@@ -65,9 +66,14 @@ const Deck: React.FC = () => {
     const { connectedPlayer, lobbyState, sendLobbyMessage } = useGame();
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
+    const notImplementedList =
+        connectedUser?.deckValidator?.[DeckValidationFailureReason.NotImplemented] ?? [];
+    const isCardNotImplemented = (cardId: number | undefined) =>
+        notImplementedList.some((item:ICardData) => item.id === cardId);
     // set decks for connectedUser
     const userMain = connectedUser.deck?.deck || []
     const usersSideboard = connectedUser.deck?.sideboard || []
+
     // Transform them into IServerCardData
     console.log('newDeck', userMain);
     console.log('sideBoard', usersSideboard);
@@ -98,9 +104,9 @@ const Deck: React.FC = () => {
                         {userMain.map((card:ICardData) => (
                             <GameCard
                                 key={card.id}
-                                card={card}
+                                card={{ ...card, implemented: !isCardNotImplemented(card.id) }}
                                 cardStyle={CardStyle.Lobby}
-                                onClick={() => sendLobbyMessage(['updateDeck','Deck', card.id])}
+                                onClick={() => !connectedUser.ready && sendLobbyMessage(['updateDeck','Deck', card.id])}
                             />
                         ))}
                     </Box>
@@ -121,9 +127,9 @@ const Deck: React.FC = () => {
                                 {usersSideboard.map((card:ICardData) => (
                                     <GameCard
                                         key={card.id}
-                                        card={card}
+                                        card={{ ...card, implemented: !isCardNotImplemented(card.id) }}
                                         cardStyle={CardStyle.Lobby}
-                                        onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.id])}
+                                        onClick={() => !connectedUser.ready && sendLobbyMessage(['updateDeck','Sideboard', card.id])}
                                     />
                                 ))}
                             </Box>
