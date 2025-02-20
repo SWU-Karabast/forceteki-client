@@ -10,7 +10,6 @@ const ChatDrawer = forwardRef<HTMLDivElement, IChatDrawerProps>(
         {
             sidebarOpen,
             toggleSidebar,
-            chatHistory,
             chatMessage,
             setChatMessage,
             handleChatSubmit,

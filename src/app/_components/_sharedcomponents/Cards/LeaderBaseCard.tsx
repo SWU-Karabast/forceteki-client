@@ -95,7 +95,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat`,
+            background: 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',

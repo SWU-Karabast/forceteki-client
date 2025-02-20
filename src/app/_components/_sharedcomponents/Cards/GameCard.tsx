@@ -2,7 +2,6 @@ import React from 'react';
 import {
     Typography,
     Box,
-    boxClasses,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
