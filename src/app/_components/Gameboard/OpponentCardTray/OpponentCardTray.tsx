@@ -67,21 +67,40 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             borderStyle: 'solid',
             height: '2rem',
             width: 'auto',
-            background: initiativeClaimed ? 'var(--initiative-red)' : 'rgba(0, 0, 0, 0.5)',
+            background: 'rgba(0, 0, 0, 0.5)',
             borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-            display: hasInitiative ? 'none' : 'block',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             h4: {
                 margin: '0.2rem 1rem 0', 
                 textAlign: 'center', 
                 display: 'block',
-                fontSize: '16px', 
+                fontSize: '1em', 
                 fontWeight: 600,
                 userSelect: 'none',
-                color: initiativeClaimed ? 'black' : 'var(--initiative-red)',
+                color: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
             }
         },
+        initiativeClaimedWrapper: {
+            borderRadius: '20px',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            height: '2rem',
+            width: 'auto',
+            background: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            h4: {
+                margin: '0.2rem 1rem 0', 
+                textAlign: 'center', 
+                display: 'block',
+                fontSize: '1em', 
+                fontWeight: 600,
+                userSelect: 'none',
+                color: 'black',
+            }
+        }
     };
 
     return (
@@ -96,7 +115,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 </Box>
             </Grid>
             <Grid size={3} sx={styles.rightColumn}>
-                <Box sx={styles.initiativeWrapper}>
+                <Box sx={initiativeClaimed ? styles.initiativeClaimedWrapper : styles.initiativeWrapper}>
                     <Typography variant={'h4'}>Initiative</Typography>
                 </Box>
                 <Box sx={styles.lastPlayed}>

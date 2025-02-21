@@ -1,7 +1,6 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
-import Typography from '@mui/material/Typography';
 import { ChatBubbleOutline } from '@mui/icons-material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
@@ -15,8 +14,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
 }) => {
     // -------------- Contexts ---------------- //
     const { gameState, connectedPlayer } = useGame();
-    const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
-    const initiativeClaimed = gameState.initiativeClaimed;
 
     // ---------------Styles------------------- //
 
@@ -44,27 +41,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
             display : 'flex',
             alignItems : 'center',
         },
-        initiativeWrapper: {
-            borderRadius: '20px',
-            borderWidth: '2px',
-            borderStyle: 'solid',
-            height: '2rem',
-            width: 'auto',
-            background: initiativeClaimed ? 'var(--initiative-blue)' : 'rgba(0, 0, 0, 0.5)',
-            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-            display: hasInitiative ? 'block' : 'none',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            h4: {
-                margin: '0.2rem 1rem 0', 
-                textAlign: 'center', 
-                display: 'block',
-                fontSize: '16px', 
-                fontWeight: 600,
-                userSelect: 'none',
-                color: initiativeClaimed ? 'black' : 'var(--initiative-blue)',
-            }
-        },
     }
 
     return (
@@ -81,9 +57,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
                 </Box>
             </Grid>
             <Grid size={3} sx={styles.rightColumnStyle}>
-                <Box sx={styles.initiativeWrapper}>
-                    <Typography variant={'h4'}>Initiative</Typography>
-                </Box>
                 <CardActionTray />
                 <Box ml={2}>
                     <ChatBubbleOutline />
