@@ -1,12 +1,9 @@
-interface ICardSetId {
-    set: string;
-    number: number;
-}
 
-type IAspect = 'aggression' | 'command' | 'cunning' | 'heroism' | 'vigilance' | 'villainy';
+export type GameCardData = ICardData | IServerCardData | IOpponentHiddenCardData | IPromptDisplayCardData;
 
 export interface ICardData {
     uuid: string;
+    count?: number;
     parentCardId?: string,
     id?: number;
     name?: string;
@@ -26,34 +23,84 @@ export interface ICardData {
     setId: ICardSetId;
     type: string;
     subcards?: ICardData[];
+    capturedCards?: ICardData[];
     aspects?: IAspect[];
     sentinel?: boolean;
     types?: string[];
     owner: ICardPlayer;
     controller: ICardPlayer;
+    selectionState?: 'viewOnly' | 'selectable' | 'unselectable' | 'selected' | 'invalid';
+    zone?: string;
+    epicActionSpent?: boolean;
+    onStartingSide?: boolean;
 }
+
 export interface IServerCardData {
     count: number;
-    card: ICardData;
+    id: string;
+}
+export type ISetCode = {
+    setId: {
+        set: string;
+        number: number;
+    }
+    type: string;
+    types?: string[];
+    id: string;
+}
+
+export interface IOpponentHiddenCardData {
+    facedown: boolean;
+    controller: ICardPlayer
+    owner: ICardPlayer
+    zone: string;
+
+}
+
+interface ICardSetId {
+    set: string;
+    number: number;
+}
+
+type IAspect = 'aggression' | 'command' | 'cunning' | 'heroism' | 'vigilance' | 'villainy';
+
+
+export interface IPromptDisplayCardData {
+    cardUuid: string;
+    internalName: string;
+    selectionOrder: number;
+    selectionState: 'viewOnly' | 'selectable' | 'unselectable' | 'selected' | 'invalid';
+    setId: ICardSetId;
 }
 export interface IGameCardProps {
-    card: ICardData | IServerCardData;
-    size?: 'standard' | 'square';
+    card: ICardData;
     onClick?: () => void;
-    variant?: 'lobby' | 'gameboard';
     disabled?: boolean;
     subcards?: ICardData[];
+    cardStyle?: CardStyle;
+    capturedCards?: ICardData[];
 }
 
 export interface ILeaderBaseCardProps {
-    variant: 'base' | 'leader';
     selected?: boolean;
-    isLobbyView?: boolean;
     handleSelect?: () => void;
     title?: string;
-    card: ICardData;
+    card: ICardData | null;
     disabled?: boolean;
-    size?: 'standard' | 'large';
+    cardStyle?: LeaderBaseCardStyle;
+}
+
+export enum CardStyle {
+    InPlay = 'inplay',
+    Lobby = 'lobby',
+    Prompt = 'prompt',
+    Plain = 'plain',
+}
+
+export enum LeaderBaseCardStyle {
+    Leader = 'leader',
+    Base = 'base',
+    Plain = 'plain',
 }
 
 interface ICardPlayer {

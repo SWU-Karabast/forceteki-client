@@ -1,26 +1,33 @@
 // app/_utils/fetchDeckData.ts
 
-import { updateIdsWithMapping, mapIdToInternalName, transformDeckWithCardData } from '@/app/_utils/s3Utils';
-interface IDeckMetadata {
+export interface IDeckMetadata {
     name: string;
     author: string;
 }
 
-interface IDeckCard {
+export interface IDeckCard {
     id: string;
     count: number;
 }
 
-interface IDeckData {
+export enum DeckSource {
+    NotSupported = 'NotSupported',
+    SWUStats = 'SWUStats',
+    SWUDB = 'SWUDB'
+}
+
+export interface IDeckData {
     metadata: IDeckMetadata;
     leader: IDeckCard;
     secondleader: IDeckCard | null;
     base: IDeckCard;
     deck: IDeckCard[];
     sideboard: IDeckCard[];
+    deckSource: DeckSource;
+    deckID: string;
 }
 
-export const fetchDeckData = async (deckLink: string) => {
+export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) => {
     try {
         const response = await fetch(
             `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
@@ -30,26 +37,9 @@ export const fetchDeckData = async (deckLink: string) => {
         }
 
         const data: IDeckData = await response.json();
-
-        // Fetch setToId mapping
-        const setCodeMapping = await fetch('/api/s3bucket?jsonFile=_setCodeMap.json');
-        if (!setCodeMapping.ok) {
-            throw new Error('Failed to fetch card mapping');
+        if (!fetchAll){
+            return data;
         }
-        const jsonData = await setCodeMapping.json();
-        const deckWithIds = updateIdsWithMapping(data, jsonData);
-
-        // Fetch codeToInternalname mapping
-        const codeInternalnameMapping = await fetch('/api/s3bucket?jsonFile=_cardMap.json');
-        if (!codeInternalnameMapping.ok) {
-            throw new Error('Failed to fetch card mapping');
-        }
-        const codeInternalnameJson = await codeInternalnameMapping.json();
-        const deckWithInternalNames = mapIdToInternalName(codeInternalnameJson, deckWithIds);
-
-        // Transform deck with final card data
-        const finalDeckForm = await transformDeckWithCardData(deckWithInternalNames);
-        return finalDeckForm;
     } catch (error) {
         if (error instanceof Error) {
             console.error('Error fetching deck:', error.message);

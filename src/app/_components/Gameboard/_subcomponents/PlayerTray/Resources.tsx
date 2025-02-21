@@ -5,6 +5,7 @@ import { s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { IResourcesProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
@@ -48,30 +49,35 @@ const Resources: React.FC<IResourcesProps> = ({
             alignItems: 'center',
             flexDirection: 'row',
             cursor: 'pointer',
+            position: 'relative', 
+            zIndex: 1, 
         },
         availableAndTotalResourcesTextStyle: {
             fontWeight: '800',
             fontSize: '2.2em',
             color: 'white',
         },
-
         resourceBorderLeft: {
             background: `
             url('border-res-lt.svg') no-repeat left top,
             url('border-res-lb.svg') no-repeat left bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '100%',
             height: '100%',
             position: 'absolute',
+            pointerEvents: 'none', 
+            zIndex: 2, // above the pseudo-element
         },
         resourceBorderRight: {
             background: `
             url('border-res-rt.svg') no-repeat right top,
             url('border-res-rb.svg') no-repeat right bottom`,
-            'mix-blend-mode': 'soft-light',
+            mixBlendMode: 'soft-light',
             width: '100%',
             height: '100%',
             position: 'absolute',
+            pointerEvents: 'none',
+            zIndex: 2, // above the pseudo-element
         },
     };
 
@@ -86,13 +92,13 @@ const Resources: React.FC<IResourcesProps> = ({
                 togglePopup('pile', {
                     uuid: `${connectedPlayer}-resources`,
                     title: 'Your Resources',
-                    cards:
-                        gameState?.players[connectedPlayer]?.cardPiles['resources'],
+                    cards: gameState?.players[connectedPlayer]?.cardPiles['resources'],
+                    source: PopupSource.User
                 })
             }}
         >
-            <Box sx={styles.resourceBorderRight} /><Box sx={styles.resourceBorderRight} /> 
-            <Box sx={styles.resourceBorderLeft} /><Box sx={styles.resourceBorderLeft} />
+            <Box sx={styles.resourceBorderRight} />
+            <Box sx={styles.resourceBorderLeft} />
 
             <CardContent sx={{ display: 'flex' }}>
                 <Box sx={styles.boxStyle}>

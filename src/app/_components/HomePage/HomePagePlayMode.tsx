@@ -80,7 +80,7 @@ const HomePagePlayMode: React.FC = () => {
     return (
         <Card variant="black" sx={styles.wrapper}>
             <CardContent>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
                     <Tabs value={value} variant="fullWidth" onChange={handleChange}>
                         {user && <Tab sx={styles.tabStyles} label="Play" />}
                         <Tab sx={styles.tabStyles} label="Create" />
@@ -97,18 +97,18 @@ const HomePagePlayMode: React.FC = () => {
                 </TabPanel>
                 {showTestGames && 
                     <TabPanel index={2} value={value}>
-                        <Box pt={2}>
-                            <Typography variant="h6">Test Game Setups</Typography>
+                        <Box>
+                            <Typography variant="h2">Test Game Setups</Typography>
                             {testGameList.map((filename, index) => {
                                 return (
                                     <Box key={index}>
-                                        <Button sx={{ marginTop: 2 }} key={index} onClick={() => handleStartTestGame(filename)}>
+                                        <Button sx={{ marginBottom: 2 }} key={index} onClick={() => handleStartTestGame(filename)}>
                                             {filename}
                                         </Button>
                                     </Box>
                                 );
                             })}
-                            <Button sx={{ marginTop: 2 }} onClick={() => router.push('/GameBoard')}>Join Test Game</Button>
+                            <Button onClick={() => router.push('/GameBoard')}>Join Test Game</Button>
                         </Box>
                     </TabPanel>
                 }

@@ -13,31 +13,27 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
 
     // set connectedPlayer
-    const playerLeader = connectedUser ? connectedUser.deck ? connectedUser.deck.leader[0].card : null : null;
-    const playerBase = connectedUser ? connectedUser.deck ? connectedUser.deck.base[0].card : null : null;
+    const playerLeader = connectedUser.deck?.leader || null;
+    const playerBase = connectedUser.deck?.base || null;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
-    const opponentLeader = opponentUser ? opponentUser.deck ? opponentUser.deck.leader[0].card : null : null;
-    const opponentBase = opponentUser ? opponentUser.deck ? opponentUser.deck.base[0].card : null : null;
+    const opponentLeader = opponentUser ? opponentUser.deck?.leader : null;
+    const opponentBase = opponentUser ? opponentUser.deck?.base : null;
+
+
+
     const cardStyle = {
         borderRadius: '1.1em',
         borderColor: '#FFFFFF00',
-        height:'90vh',  // For small screens and up (600px and above)
-        width: '80%',
-        minWidth: '212px',
+        height:'100%',
+        width: '100%',
         display: 'flex',
         flexDirection: isLobbyView ? 'column' : 'row',
         justifyContent: isLobbyView ? 'flex-start' : 'center',
         pt: '.8em',
         backgroundColor: '#00000080',
         backdropFilter: 'blur(30px)',
-        '@media (max-height: 759px)': {
-            height: '84vh',
-        },
-        '@media (max-height: 1000px)': {
-            maxHeight: '85.5vh',
-        },
     };
 
     const typographyStyle = {
@@ -53,6 +49,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         flexDirection: 'column',
         alignItems: 'center',
         width: '100%',
+        gap: '10px'
     }
     const containerStyle = {
         height: '100%',
@@ -71,7 +68,6 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         fontFamily: 'var(--font-barlow), sans-serif',
         fontWeight: '600',
         fontSize: '1.5em',
-        marginBottom: isLobbyView ? 0 : '0.5em',
         textAlign: 'left',
         color: 'white',
     };
@@ -79,7 +75,6 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         fontFamily: 'var(--font-barlow), sans-serif',
         fontWeight: '600',
         fontSize: '1.5em',
-        marginBottom: '10px',
         textAlign: 'left' as const,
         color: 'white',
         opacity: '15%',
@@ -98,13 +93,11 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 {connectedUser ? connectedUser.username : connectedPlayer}
                             </Typography>
                             <LeaderBaseCard
-                                variant="leader"
-                                isLobbyView={true}
                                 title={connectedUser ? connectedUser.username : connectedPlayer}
                                 card={playerLeader}
                                 disabled={true}
                             />
-                            <LeaderBaseCard variant="base" isLobbyView={true} card={playerBase} disabled={true}></LeaderBaseCard>
+                            <LeaderBaseCard card={playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                     <Grid sx={rowStyle}>
@@ -119,13 +112,11 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 {opponentUser ? opponentUser.username : 'Opponent'}
                             </Typography>
                             <LeaderBaseCard
-                                variant="leader"
-                                isLobbyView={isLobbyView}
                                 title={titleOpponent}
                                 card={opponentLeader}
                                 disabled={true}
                             />
-                            <LeaderBaseCard variant="base" isLobbyView={isLobbyView} card={opponentBase} disabled={true}></LeaderBaseCard>
+                            <LeaderBaseCard card={opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                 </Grid>

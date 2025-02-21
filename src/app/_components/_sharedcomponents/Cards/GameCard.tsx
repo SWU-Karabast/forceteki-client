@@ -1,68 +1,62 @@
 import React from 'react';
 import {
-    Card as MuiCard,
-    CardContent,
     Typography,
     Box,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { IGameCardProps, ICardData, IServerCardData } from './CardTypes';
+import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
+import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
-import { usePathname } from 'next/navigation'
-
-// Type guard to check if the card is ICardData
-const isICardData = (card: ICardData | IServerCardData): card is ICardData => {
-    return (card as ICardData).uuid !== undefined;
-};
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
-    size = 'standard',
     onClick,
+    cardStyle = CardStyle.Plain,
     subcards = [],
-    variant,
+    capturedCards = [],
     disabled = false,
 }) => {
-    const pathname = usePathname();
-    const isLobbyView = pathname === '/lobby';
-    
-    // Determine whether card is ICardData or IServerCardData
-    const cardData = isICardData(card) ? card : card.card;
-    const cardCounter = !isICardData(card) ? card.count : 0;
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt } = useGame();
-    const isFaceUp = !!cardData;
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
-    // default on click
-    const defaultClickFunction = () => {
-        if (cardData.selectable) {
-            sendGameMessage(['cardClicked', cardData.uuid]);
-        }
+
+    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
+    if (showValueAdjuster) {
+        // override when using damage adjuster to show border but prevent click events
+        disabled = true;
     };
 
-    // upgrade on click
-    /* const upgradeClickFunction = (card:ICardData) => {
-		if(card.selectable){
-			sendGameMessage(["cardClicked", card.uuid]);
-		}
-	}*/
+    if (!card) {
+        return null;
+    }
+
+    const defaultClickFunction = () => {
+        if (card.selectable) {
+            sendGameMessage(['cardClicked', card.uuid]);
+        }
+    };
     const handleClick = onClick ?? defaultClickFunction;
 
+    const subcardClick = (subCard: ICardData) => {
+        if (subCard.selectable) {
+            sendGameMessage(['cardClicked', subCard.uuid]);
+        }
+    }
+
+
+    
     // helper function to get the correct aspects for the upgrade cards
     const cardUpgradebackground = (card: ICardData) => {
         if (!card.aspects){
             return null
         }
-
-        // Check if Villainy or Heroism are the sole aspects
         if (card.aspects.includes('villainy') && card.aspects.length === 1) {
             return 'upgrade-black.png';
         }
         if (card.aspects.includes('heroism') && card.aspects.length === 1) {
             return 'upgrade-white.png';
         }
-        // Check other aspects
         switch (true) {
             case card.aspects.includes('aggression'):
                 return 'upgrade-red.png';
@@ -73,280 +67,277 @@ const GameCard: React.FC<IGameCardProps> = ({
             case card.aspects.includes('vigilance'):
                 return 'upgrade-blue.png';
             default:
-                // Fallback for unexpected cases
                 return 'upgrade-grey.png';
         }
     };
-
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
+    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
+    const cardCounter = card.count || 0;
+    const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
 
     // Styles
     const styles = {
-        cardStyles: {
-            borderRadius: '.38em',
-            position: 'relative',
-            ...(variant === 'lobby'
-                ? {
-                    height: '13rem',
-                    width: '10rem',
-                    minWidth: '101px',
-                    minHeight: '151px',
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    backgroundColor: 'transparent',
-                }
-                : {
-                    // For "standard" or other sizes:
-                    height: size === 'standard' ? '10rem' : '7.7rem',
-                    width: size === 'standard' ? '7.18rem' : '8rem',
-                    border: `2px solid ${getBorderColor(cardData, connectedPlayer, getConnectedPlayerPrompt()?.promptType)}`,
-                    ...(cardData?.exhausted && {
-                        transform: 'rotate(4deg)',
-                        transition: 'transform 0.15s ease' }
-                    ),
-
-                }
-            ),
+        cardContainer: {
+            backgroundColor: 'black',
+            borderRadius: '0.5rem',
+            width: cardStyle === CardStyle.InPlay ? '7.18rem' : '8rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            transform: card.exhausted ? 'rotate(4deg)' : 'none',
+            transition: 'transform 0.15s ease',
             '&:hover': {
-                cursor: 'pointer',
+                cursor: disabled ? 'normal' : 'pointer',
             },
         },
-
-        cardContentStyle: {
-            width: '100%',
-            height: '100%',
+        card: {
+            borderRadius: '0.5rem',
             position: 'relative',
-            textAlign: 'center',
-            whiteSpace: 'normal',
-            backgroundColor: variant === 'lobby' ? 'transparent' : 'black',
-            backgroundImage: `url(${s3CardImageURL(cardData)})`,
-            backgroundSize: size === 'standard' ? 'contain' : 'cover',
-            backgroundPosition: size === 'standard' ? 'center' : 'top',
+            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
+            aspectRatio: cardStyle === CardStyle.InPlay ? '1.058' : '.718',
+            width: '100%',
+            border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            boxSizing: 'border-box',
         },
         cardOverlay: {
             position: 'absolute',
             width: '100%',
             height: '100%',
-            backgroundColor: cardData?.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            backgroundColor: card?.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
             filter: 'none',
             clickEvents: 'none',
-        },
-        imageStyle: {
-            width: '2.5rem',
-            height: 'auto',
-        },
-        typographyStyle: {
-            color: 'black',
-            fontWeight: '400',
-            fontSize: '1.3em',
-            margin: 0,
-        },
-
-        counterIconLayer:{
-            position: 'absolute',
-            width: '100%',
             display: 'flex',
-            height: '20%',
-            bottom: '0px',
-            backgroundPosition: 'center',
-            backgroundSize: 'contain',
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        numberFont: {
+            fontSize: '1.85rem',
+            fontWeight: '700',
+            textShadow: '0px 0px 3px black',
+            lineHeight: 1
+        },
+        counterIcon:{
+            position: 'absolute',
+            width: '2rem',
+            aspectRatio: '1 / 1',
+            display: 'flex',
+            bottom: '-5px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/counterIcon.svg)',
             alignItems: 'center',
             justifyContent: 'center',
         },
-        powerIconLayer:{
+        powerIcon:{
             position: 'absolute',
-            width: '2rem',
+            width: '1.9rem',
+            aspectRatio: '3 / 4',
             display: 'flex',
-            height: '2.5rem',
-            bottom: '0px',
-            backgroundPosition: 'left',
+            bottom: '-6px',
+            left: '-4px',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('power-badge')})`,
             alignItems: 'center',
             justifyContent: 'center',
         },
-        healthIconLayer:{
+        healthIcon:{
             position: 'absolute',
-            width: '2rem',
+            width: '1.9rem',
+            aspectRatio: '3 / 4',
             display: 'flex',
-            height: '2.5rem',
-            bottom: '0px',
-            right: '0px',
-            backgroundPosition: 'right',
+            bottom: '-6px',
+            right: '-4px',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('hp-badge')})`,
             alignItems: 'center',
             justifyContent: 'center',
         },
-        damageIconLayer:{
+        damageIcon:{
             position: 'absolute',
             width: '6.5rem',
             display: 'flex',
             height: '2.5rem',
-            bottom: '0px',
-            right: '18px',
+            bottom: '-6px',
+            right: '14px',
             background: 'linear-gradient(90deg, rgba(255, 0, 0, 0) 47.44%, rgba(255, 0, 0, 0.911111) 75.61%, #FF0000 102.56%)',
             alignItems: 'center',
             justifyContent: 'center',
         },
-        shieldIconLayer:{
-            position: 'relative',
-            width: '2rem',
-            display: 'flex',
-            height: '2.5rem',
-            top:'0px',
-            right: '0px',
-            backgroundPosition: 'right',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
-            alignItems: 'center',
-            justifyContent: 'center',
+        damageNumber:{
+            fontSize: '1.9rem',
+            fontWeight: '700',
+            position: 'absolute',
+            right:'16px',
         },
-        shieldContainerStyle: {
+        shieldContainer: {
             position:'absolute',
-            top:'0px',
+            top:'-6px',
+            right: '-4px',
             width: '100%',
             justifyContent: 'right',
             alignItems: 'center',
             columnGap: '4px'
         },
-        upgradeIconLayer:{
-            position: 'relative',
+        shieldIcon:{
+            width: '1.8rem',
+            aspectRatio: '1 / 1',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
+        },
+        upgradeIcon:{
             width: '100%',
+            aspectRatio: '4.85',
             display: 'flex',
-            height: '30px',
-            bottom:'0px',
-            right: '0px',
-            backgroundPosition: 'right',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'transparent',
+            boxSizing: 'content-box',
         },
-        damageNumberStyle:{
-            fontSize: variant === 'lobby' ? '2rem' : '1.9rem',
-            fontWeight: '700',
-            position: 'absolute',
-            right:'16px',
-        },
-        numberStyle:{
-            fontSize: variant === 'lobby' ? '2rem' : '1.9rem',
-            fontWeight: '700',
-        },
-        upgradeNameStyle:{
+        upgradeName:{
             fontSize: '11px',
             marginTop: '2px',
             fontWeight: '800',
             color: 'black'
         },
-        sentinelStyle:{
+        sentinelIcon:{
             position: 'absolute',
-            width: '2rem',
-            display: 'flex',
-            height: '2.5rem',
-            top:'36px',
-            right: '0px',
-            backgroundPosition: 'right',
+            width: '1.8rem',
+            aspectRatio: '1 / 1',
+            top:'32%',
+            right: '-4px',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/SentinelToken.png)',
-            alignItems: 'center',
-            justifyContent: 'center',
         },
-        unimplementedContainerStyle: {
-            position: 'absolute',
-            height: '100%',
-            width: '100%',
-            display: !cardData?.implemented && isFaceUp && !isLobbyView ? 'flex' : 'none',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: '2',
-            top: '0',
-            left: '0'
-        },
-        unimplementedAlertStyle: {
-            fontSize: '1rem',
-            fontWeight: '700',
+        unimplementedAlert: {
+            display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
-            backgroundPosition: 'center',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            height: 'auto',
             aspectRatio: '1/1',
             width: '50%'
+        },
+        damageCounter: {
+            fontWeight: '800',
+            fontSize: '1.9rem',
+            color: 'white',
+            width: '2.5rem',
+            aspectRatio: '1 / 1',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundImage: 'url(/token-background.svg)',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
+            textShadow: '1px 1px #00000033'
+        },
+        capturedCardsDivider:{
+            fontSize: '11px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            color: 'white',
+            width: '100%',
+            backgroundColor:'black',
+            mb:'0px',
+            position:'relative'
         }
     }
-    return (
-        <>
-            <MuiCard sx={styles.cardStyles}
 
-                onClick={disabled ? undefined : handleClick}
-            >
-                <Box sx={{ position: 'relative', height: '100%', width: '100%', backgroundColor: 'transparent' }}>
-                    <Box sx={styles.unimplementedContainerStyle}>
-                        <Box sx={styles.unimplementedAlertStyle}></Box>
-                    </Box>
-                    <CardContent sx={styles.cardContentStyle}>
-                        <Box sx={styles.cardOverlay}></Box>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        </Box>
-                        {variant === 'lobby' ? (
-                            <Box sx={styles.counterIconLayer}>
-                                <Typography sx={styles.numberStyle}>{cardCounter}</Typography>
-                            </Box>
-                        ) : variant === 'gameboard' ? (
-                            <>
-                                <Grid direction="row" container sx={styles.shieldContainerStyle}>
-                                    {shieldCards.map((_, index) => (
-                                        <Box
-                                            key={`${cardData.uuid}-shield-${index}`}
-                                            sx={styles.shieldIconLayer}
-                                        />
-                                    ))}
-                                </Grid>
-                                {cardData.sentinel && (
-                                    <Box sx={styles.sentinelStyle}/>
-                                )}
-                                <Box sx={styles.powerIconLayer}>
-                                    <Typography sx={{ ...styles.numberStyle,marginRight:'2px' }}>{cardData.power}</Typography>
-                                </Box>
-                                {Number(cardData.damage) > 0 && (
-                                    <Box sx={styles.damageIconLayer}>
-                                        <Typography sx={styles.damageNumberStyle}>
-                                            {cardData.damage}
-                                        </Typography>
-                                    </Box>
-                                )}
-                                <Box sx={styles.healthIconLayer}>
-                                    <Typography sx={{ ...styles.numberStyle,marginLeft:'2px' }}>{cardData.hp}</Typography>
-                                </Box>
-                            </>
-                        ) : null}
-                    </CardContent>
+    return (
+        <Box sx={styles.cardContainer}>
+            <Box sx={styles.card} onClick={disabled ? undefined : handleClick}>
+                <Box sx={styles.cardOverlay}>
+                    <Box sx={styles.unimplementedAlert}></Box>
+                    { !!distributionAmount && (
+                        <Typography variant="body1" sx={styles.damageCounter}>
+                            {distributionAmount}
+                        </Typography>
+                    )}
                 </Box>
-            </MuiCard>
-            {otherUpgradeCards.map((subcard, index) => (
+                {cardStyle === CardStyle.Lobby && (
+                    <Box sx={styles.counterIcon}>
+                        <Typography sx={styles.numberFont}>{cardCounter}</Typography>
+                    </Box>
+                )}
+                {cardStyle === CardStyle.InPlay && (
+                    <>
+                        { showValueAdjuster && <CardValueAdjuster cardId={card.uuid} /> }
+                        <Grid direction="row" container sx={styles.shieldContainer}>
+                            {shieldCards.map((shieldCard, index) => (
+                                <Box
+                                    key={`${card.uuid}-shield-${index}`}
+                                    sx={{ ...styles.shieldIcon , border: shieldCard.selectable ? `2px solid ${getBorderColor(shieldCard, connectedPlayer)}` : 'none' }}
+                                    onClick={() => subcardClick(shieldCard)}
+                                />
+                            ))}
+                        </Grid>
+                        {card.sentinel && (
+                            <Box sx={styles.sentinelIcon}/>
+                        )}
+                        <Box sx={styles.powerIcon}>
+                            <Typography sx={styles.numberFont}>{card.power}</Typography>
+                        </Box>
+                        {Number(card.damage) > 0 && (
+                            <Box sx={styles.damageIcon}>
+                                <Typography sx={styles.damageNumber}>
+                                    {card.damage}
+                                </Typography>
+                            </Box>
+                        )}
+                        <Box sx={styles.healthIcon}>
+                            <Typography sx={styles.numberFont}>{card.hp}</Typography>
+                        </Box>
+                    </>
+                )}
+            </Box>
+
+            {otherUpgradeCards.map((subcard) => (
                 <Box
                     key={subcard.uuid}
-                    sx={{ ...styles.upgradeIconLayer,
+                    sx={{ ...styles.upgradeIcon,
                         backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
-                        bottom: `${index * 7 + 2}px`,
+                        border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none'
                     }}
-                    // onClick={() => upgradeClickFunction(subcard)}
+                    onClick={() => subcardClick(subcard)}
                 >
-                    <Typography key={subcard.uuid} sx={styles.upgradeNameStyle}>{subcard.name}</Typography>
+                    <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
                 </Box>
             ))}
-        </>
+
+            {capturedCards.length > 0 && (
+                <>
+                    <Typography sx={styles.capturedCardsDivider}>
+                        Captured
+                    </Typography>
+                    {capturedCards.map((capturedCard) => (
+                        <Box
+                            key={`captured-${capturedCard.uuid}`}
+                            sx={{
+                                ...styles.upgradeIcon,
+                                backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
+                                border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none'
+                            }}
+                            onClick={() => subcardClick(capturedCard)}
+                        >
+                            <Typography sx={styles.upgradeName}>
+                                {capturedCard.name}
+                            </Typography>
+                        </Box>
+                    ))}
+                </>
+            )}
+        </Box>
     );
 };
 

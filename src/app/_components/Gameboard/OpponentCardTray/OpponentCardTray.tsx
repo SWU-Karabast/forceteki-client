@@ -17,11 +17,13 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         router.push('/');
     }
 
+    const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
+
     // ---------------Styles------------------- //
     const styles = {
         leftColumn: {
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'flex-start',
             padding: '1rem 0 1rem 2rem',
             gap: '2rem',
@@ -36,7 +38,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         opponentHandWrapper: {
             width: '100%',
             height: '100%',
-            transform: 'translateY(-30%)',
+            transform: 'translateY(-2rem)',
         },
         rightColumn: {
             display: 'flex',
@@ -75,23 +77,48 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 fontSize: '16px', 
                 fontWeight: 600,
                 userSelect: 'none',
-                color: '#18c1ff',
+                color: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
             }
         },
     };
 
     return (
-        <Grid container sx={{ height: '15%' }}>
-            <Grid size={3} sx={styles.leftColumn}>
+        <Grid
+            container
+            sx={{
+                height: '17%',
+                display: 'flex',
+                flexWrap: 'nowrap',
+                columnGap: '2rem', // 2rem gap between columns
+            }}
+        >
+            {/* Left column (fixed 360px) */}
+            <Grid sx={{
+                flex: '0 0 360px',
+                ...styles.leftColumn,
+            }}
+            >
                 <DeckDiscard trayPlayer={trayPlayer} />
                 <Resources trayPlayer={trayPlayer}/>
             </Grid>
-            <Grid size={6} sx={styles.centerColumn}>
+
+            {/* Center column (flexes to fill space) */}
+            <Grid sx={{
+                flex: 1,
+                ...styles.centerColumn,
+            }}
+            >
                 <Box sx={styles.opponentHandWrapper}>
                     <PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
                 </Box>
             </Grid>
-            <Grid size={3} sx={styles.rightColumn}>
+
+            {/* Right column (fixed 360px) */}
+            <Grid sx={{
+                flex: '0 0 360px',
+                ...styles.rightColumn,
+            }}
+            >
                 <Box sx={styles.initiativeWrapper}>
                     <Typography variant={'h4'}>Initiative</Typography>
                 </Box>
