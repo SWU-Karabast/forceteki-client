@@ -3,6 +3,7 @@ import {
     Typography,
     Box,
     Popover,
+    PopoverOrigin,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
@@ -21,10 +22,12 @@ const GameCard: React.FC<IGameCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
-
+    const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
+    const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
+    
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
-        if (card.controller.id !== connectedPlayer && card.zone === 'hand') {
+        if (cardInOpponentsHand) {
             return;
         }
         setAnchorElement(event.currentTarget);
@@ -33,6 +36,30 @@ const GameCard: React.FC<IGameCardProps> = ({
         setAnchorElement(null);
     };
     const open = Boolean(anchorElement);
+
+    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+        if (cardInPlayersHand) {
+            return { 
+                anchorOrigin:{
+                    vertical: 'top',
+                    horizontal: 'center',
+                },
+                transformOrigin: {
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                } };
+        }
+
+        return { 
+            anchorOrigin:{
+                vertical: 'center',
+                horizontal: 'left',
+            },
+            transformOrigin: {
+                vertical: 'center',
+                horizontal: 'right',
+            } };
+    }
 
     const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
     if (showValueAdjuster) {
@@ -334,17 +361,10 @@ const GameCard: React.FC<IGameCardProps> = ({
                 sx={{ pointerEvents: 'none' }}
                 open={open}
                 anchorEl={anchorElement}
-                anchorOrigin={{
-                    vertical: 'center',
-                    horizontal: 'left',
-                }}
-                transformOrigin={{
-                    vertical: 'center',
-                    horizontal: 'right',
-                }}
                 onClose={handlePreviewClose}
                 disableRestoreFocus
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                {...popoverConfig()}
             >
                 <Box sx={styles.cardPreview} />
             </Popover>
