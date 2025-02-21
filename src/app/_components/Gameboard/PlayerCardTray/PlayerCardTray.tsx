@@ -40,7 +40,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({
             height: '100%',
             display : 'flex',
             alignItems : 'center',
-
         },
     }
 
