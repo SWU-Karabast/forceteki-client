@@ -68,7 +68,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             height: '2rem',
             width: 'auto',
             background: 'rgba(0, 0, 0, 0.5)',
-            borderColor: '#18c1ff',
+            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             h4: {
