@@ -6,7 +6,6 @@ import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
-    sidebarOpen,
     arena
 }) => {
     // ------------------------CONTEXT------------------------//

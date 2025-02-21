@@ -2,7 +2,6 @@ import React from 'react';
 import {
     Typography,
     Box,
-    boxClasses,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
@@ -82,6 +81,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const styles = {
         cardContainer: {
             backgroundColor: 'black',
+            borderRadius: '0.5rem',
             width: cardStyle === CardStyle.InPlay ? '7.18rem' : '8rem',
             display: 'flex',
             flexDirection: 'column',
@@ -93,7 +93,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             },
         },
         card: {
-            borderRadius: '.38em',
+            borderRadius: '0.5rem',
             position: 'relative',
             backgroundImage: `url(${s3CardImageURL(card)})`,
             backgroundSize: 'cover',

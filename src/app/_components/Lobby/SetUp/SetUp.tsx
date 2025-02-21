@@ -55,13 +55,13 @@ const SetUp: React.FC = ({
         },
         exitCard: {
             display: 'flex',
-            pr: '1.2em',
-            pl: '1.2em',
+            p: '1.2em',
             width: '100%',
             height: '10%',
             alignItems: 'center',
             justifyContent: 'space-between',
             cursor: 'pointer',
+            '&:hover': { opacity: '0.8' },
         },
         dividerStyle: {
             backgroundColor: '#fff',

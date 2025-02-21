@@ -1,13 +1,12 @@
 'use client';
 import React, { useEffect } from 'react';
-import { Grid2 as Grid, Typography } from '@mui/material';
+import { Grid2 as Grid } from '@mui/material';
 import { usePathname, useRouter } from 'next/navigation';
 import Players from '../_components/Lobby/Players/Players';
 import Deck from '../_components/Lobby/Deck/Deck';
 import SetUp from '../_components/Lobby/SetUp/SetUp';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useGame } from '@/app/_contexts/Game.context';
-import { Height } from '@mui/icons-material';
 
 const Lobby = () => {
     const pathname = usePathname();

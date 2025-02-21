@@ -51,12 +51,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const handleJoinGameQueue = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setQueueState(true);
-        console.log('Favourite Deck:', favouriteDeck);
-        console.log('Deck Link:', deckLink);
-        console.log('beginning fetch for deck link');
-        const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
-        console.log('fetch complete, deck data:', deckData);
-        console.log('Save Deck To Favourites:', saveDeck);
+        const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;;
         try {
             const payload = {
                 user: user,
