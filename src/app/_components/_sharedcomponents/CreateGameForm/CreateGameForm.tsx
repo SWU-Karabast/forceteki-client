@@ -89,7 +89,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
-                setDeckErrorSummary('Couldn\'t import, deck is invalid.');
+                setDeckErrorSummary('Couldn\'t import, deck is invalid or set to private.');
                 setDeckErrorDetails(errors);
                 showInlineErrorTextFor5s();
                 return;
