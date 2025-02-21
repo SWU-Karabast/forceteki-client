@@ -193,7 +193,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 anchorEl={anchorElement}
                 anchorOrigin={{
                     vertical: 'center',
-                    horizontal: 'left',
+                    horizontal: -5,
                 }}
                 transformOrigin={{
                     vertical: 'center',

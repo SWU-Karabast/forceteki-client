@@ -41,7 +41,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         if (cardInPlayersHand) {
             return { 
                 anchorOrigin:{
-                    vertical: 'top',
+                    vertical: -5,
                     horizontal: 'center',
                 },
                 transformOrigin: {
@@ -53,7 +53,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         return { 
             anchorOrigin:{
                 vertical: 'center',
-                horizontal: 'left',
+                horizontal: -5,
             },
             transformOrigin: {
                 vertical: 'center',
