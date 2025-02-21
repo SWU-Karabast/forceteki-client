@@ -27,6 +27,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [showTooltip, setShowTooltip] = useState(false);
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+    const lobbyFormat = lobbyState ? lobbyState.lobbyFormat : null;
 
     // For deck error display
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
@@ -53,7 +54,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         sendLobbyMessage(['changeDeck', deckData])
     }
 
-    const showInlineErrorTextFor5s = () =>{
+    const showInlineErrorTextFor5s = (deckErrors:IDeckValidationFailures) =>{
         if(errorTextTimer.current) clearTimeout(errorTextTimer.current);
         errorTextTimer.current = setTimeout(() => {
             if(!blockError) {
@@ -61,15 +62,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 setDisplayerror(false);
             }else{
                 setDeckErrorSummary('Deck is invalid.');
+                setDeckErrorDetails(deckErrors);
             }
             // Check if there's any blocking error (not "NotImplemented")
             errorTextTimer.current = null;
         }, 5000);
     }
 
-    // ------------------ Listen for changes to deckValidator ------------------ //
+    // ------------------ Listen for changes to deckErrors ------------------ //
     useEffect(() => {
-        if (!connectedUser?.deckValidator) {
+        if (!connectedUser?.deckErrors) {
             // No validation errors => clear any old error states
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
@@ -79,32 +81,19 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             return;
         }
         // get error messages
-        const validator: IDeckValidationFailures = connectedUser.deckValidator;
-        // set which types belong to temporary
-        const temporaryErrorTypes = new Set([
-            DeckValidationFailureReason.InvalidDeckData,
-            DeckValidationFailureReason.TooManyLeaders,
-            DeckValidationFailureReason.UnknownCardId,
-            DeckValidationFailureReason.IllegalInFormat,
-            DeckValidationFailureReason.TooManyCopiesOfCard,
-        ]);
+        const deckErrors: IDeckValidationFailures = connectedUser.deckErrors;
+        const temporaryErrors: IDeckValidationFailures = connectedUser.importDeckErrors;
         // Determine if a blocking error exists (ignoring NotImplemented and temporary errors)
-        const hasBlockingError = Object.entries(validator).some(([reason, value]) => {
+        const hasBlockingError = Object.entries(deckErrors).some(([reason, value]) => {
             if (reason === DeckValidationFailureReason.NotImplemented) return false;
-            if (temporaryErrorTypes.has(reason as DeckValidationFailureReason)) return false;
             return Array.isArray(value) ? value.length > 0 : !!value;
-        });
-
-        // Determine if there is any temporary error
-        const hasTemporaryError = Object.entries(validator).some(([reason, value]) => {
-            return temporaryErrorTypes.has(reason as DeckValidationFailureReason) && (Array.isArray(value) ? value.length > 0 : !!value);
         });
 
         if (hasBlockingError) {
             // Show a short inline error message and store the full list
             setDisplayerror(true);
             setDeckErrorSummary('Deck is invalid.');
-            setDeckErrorDetails(validator);
+            setDeckErrorDetails(deckErrors);
             setBlockError(true)
         }else{
             setDeckErrorSummary(null);
@@ -113,12 +102,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setDisplayerror(false);
             setBlockError(false);
         }
-        if (hasTemporaryError) {
+        if (temporaryErrors) {
             // Only 'notImplemented' or no errors => clear them out
             setDisplayerror(true);
             setDeckErrorSummary('Couldn\'t import, deck is invalid.');
-            setDeckErrorDetails(validator);
-            showInlineErrorTextFor5s()
+            setDeckErrorDetails(temporaryErrors);
+            showInlineErrorTextFor5s(deckErrors)
         }
     }, [connectedUser]);
 
@@ -351,6 +340,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     open={errorModalOpen}
                     onClose={() => setErrorModalOpen(false)}
                     errors={deckErrorDetails}
+                    format={lobbyFormat}
                 />
             )}
         </Card>

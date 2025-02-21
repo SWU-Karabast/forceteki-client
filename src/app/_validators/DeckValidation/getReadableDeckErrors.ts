@@ -5,7 +5,8 @@ import {
 
 
 export function getReadableDeckErrors(
-    failures: IDeckValidationFailures
+    failures: IDeckValidationFailures,
+    format: string
 ): string[] {
     const messages: string[] = [];
 
@@ -14,7 +15,7 @@ export function getReadableDeckErrors(
         messages.push('Deck is invalid or missing required fields.');
     }
     if (failures[DeckValidationFailureReason.TooManyLeaders]) {
-        messages.push('There are too many Leaders for this format.');
+        messages.push(`There are too many Leaders for ${format}.`);
     }
 
     // Object-like errors (MinDecklistSizeNotMet, etc.)
@@ -55,7 +56,7 @@ export function getReadableDeckErrors(
     if (illegalInFormatList.length > 0) {
         illegalInFormatList.forEach(({ name, id }) => {
             messages.push(
-                `Card "${name}" (set: ${id}) is illegal in this format.`
+                `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${format} format.`
             );
         });
     }

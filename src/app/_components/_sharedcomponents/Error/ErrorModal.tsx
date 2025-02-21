@@ -10,6 +10,7 @@ interface ErrorModalProps {
     onClose: () => void;
     title: string;
     errors?: IDeckValidationFailures;
+    format?: string;
 }
 
 export const ErrorModal: React.FC<ErrorModalProps> = ({
@@ -17,9 +18,10 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
     onClose,
     title,
     errors,
+    format = 'Premier',
 }) => {
     // Inline styling for the modal content
-    const messages = errors ? getReadableDeckErrors(errors) : ['Unknown error'];
+    const messages = errors ? getReadableDeckErrors(errors, format) : ['Unknown error'];
     const modalStyle = {
         position: 'absolute' as const,
         top: '50%',

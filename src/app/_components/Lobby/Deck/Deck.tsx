@@ -67,7 +67,7 @@ const Deck: React.FC = () => {
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     const notImplementedList =
-        connectedUser?.deckValidator?.[DeckValidationFailureReason.NotImplemented] ?? [];
+        connectedUser?.deckErrors?.[DeckValidationFailureReason.NotImplemented] ?? [];
     const isCardNotImplemented = (cardId: number | undefined) =>
         notImplementedList.some((item:ICardData) => item.id === cardId);
     // set decks for connectedUser
