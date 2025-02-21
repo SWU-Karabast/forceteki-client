@@ -49,13 +49,14 @@ const Resources: React.FC<IResourcesProps> = ({
             alignItems: 'center',
             flexDirection: 'row',
             cursor: 'pointer',
+            position: 'relative', 
+            zIndex: 1, 
         },
         availableAndTotalResourcesTextStyle: {
             fontWeight: '800',
             fontSize: '2.2em',
             color: 'white',
         },
-
         resourceBorderLeft: {
             background: `
             url('border-res-lt.svg') no-repeat left top,
@@ -64,6 +65,8 @@ const Resources: React.FC<IResourcesProps> = ({
             width: '100%',
             height: '100%',
             position: 'absolute',
+            pointerEvents: 'none', 
+            zIndex: 2, // above the pseudo-element
         },
         resourceBorderRight: {
             background: `
@@ -73,6 +76,8 @@ const Resources: React.FC<IResourcesProps> = ({
             width: '100%',
             height: '100%',
             position: 'absolute',
+            pointerEvents: 'none',
+            zIndex: 2, // above the pseudo-element
         },
     };
 
@@ -92,8 +97,8 @@ const Resources: React.FC<IResourcesProps> = ({
                 })
             }}
         >
-            <Box sx={styles.resourceBorderRight} /><Box sx={styles.resourceBorderRight} /> 
-            <Box sx={styles.resourceBorderLeft} /><Box sx={styles.resourceBorderLeft} />
+            <Box sx={styles.resourceBorderRight} />
+            <Box sx={styles.resourceBorderLeft} />
 
             <CardContent sx={{ display: 'flex' }}>
                 <Box sx={styles.boxStyle}>
