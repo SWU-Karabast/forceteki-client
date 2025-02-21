@@ -26,16 +26,24 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
     
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
+
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
         if (cardInOpponentsHand) {
             return;
         }
-        setAnchorElement(event.currentTarget);
+        hoverTimeout.current = window.setTimeout(() => {
+            console.log('run', target);
+            setAnchorElement(target);
+        }, 500);
     };
+    
     const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
     };
-    const open = Boolean(anchorElement);
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
         if (cardInPlayersHand) {

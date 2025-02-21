@@ -18,20 +18,28 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     disabled = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
-
+    
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
-    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
-        if (isDeployed) return;
-        setAnchorElement(event.currentTarget);
-    };
-    const handlePreviewClose = () => {
-        setAnchorElement(null);
-    };
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
     
     if (!card) {
         return null
     }
+
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        if (isDeployed) return;
+        hoverTimeout.current = window.setTimeout(() => {
+            console.log('run', target);
+            setAnchorElement(target);
+        }, 500);
+    };
+        
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+    };
         
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
