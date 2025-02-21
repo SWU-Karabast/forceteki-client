@@ -31,7 +31,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         const target = event.currentTarget;
         if (isDeployed) return;
         hoverTimeout.current = window.setTimeout(() => {
-            console.log('run', target);
             setAnchorElement(target);
         }, 500);
     };

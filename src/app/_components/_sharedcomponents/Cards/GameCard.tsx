@@ -35,7 +35,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             return;
         }
         hoverTimeout.current = window.setTimeout(() => {
-            console.log('run', target);
             setAnchorElement(target);
         }, 500);
     };
