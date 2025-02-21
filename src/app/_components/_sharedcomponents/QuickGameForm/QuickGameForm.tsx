@@ -76,7 +76,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             if (!response.ok) {
                 const errors = result.errors || {};
                 setQueueState(false);
-                setDeckErrorSummary('Deck is invalid.');
+                setDeckErrorSummary('Couldn\'t import, deck is invalid.');
                 setDeckErrorDetails(errors);
                 showInlineErrorTextFor5s();
                 return

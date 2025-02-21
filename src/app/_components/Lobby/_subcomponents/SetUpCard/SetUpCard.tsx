@@ -116,7 +116,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         if (hasTemporaryError) {
             // Only 'notImplemented' or no errors => clear them out
             setDisplayerror(true);
-            setDeckErrorSummary('Couldn\'t import, deck is invalid');
+            setDeckErrorSummary('Couldn\'t import, deck is invalid.');
             setDeckErrorDetails(validator);
             showInlineErrorTextFor5s()
         }

@@ -5,6 +5,8 @@ import Grid from '@mui/material/Grid2';
 import { ILobbyUserProps, IPlayersProps } from '../LobbyTypes';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { useGame } from '@/app/_contexts/Game.context';
+import { DeckValidationFailureReason } from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     // ------------------------STYLES------------------------//
@@ -21,7 +23,10 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const opponentLeader = opponentUser ? opponentUser.deck?.leader : null;
     const opponentBase = opponentUser ? opponentUser.deck?.base : null;
 
-
+    const notImplementedList =
+        connectedUser?.deckValidator?.[DeckValidationFailureReason.NotImplemented] ?? [];
+    const isCardNotImplemented = (cardId: number | undefined) =>
+        notImplementedList.some((item:ICardData) => item.id === cardId);
 
     const cardStyle = {
         borderRadius: '1.1em',
@@ -94,10 +99,10 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                             </Typography>
                             <LeaderBaseCard
                                 title={connectedUser ? connectedUser.username : connectedPlayer}
-                                card={playerLeader}
+                                card={{ ...playerLeader,implemented: !isCardNotImplemented(playerLeader.id) }}
                                 disabled={true}
                             />
-                            <LeaderBaseCard card={playerBase} disabled={true}></LeaderBaseCard>
+                            <LeaderBaseCard card={{ ...playerBase, implemented: !isCardNotImplemented(playerBase.id) }} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                     <Grid sx={rowStyle}>
