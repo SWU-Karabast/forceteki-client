@@ -81,7 +81,7 @@ export const theme: Theme = createTheme({
                 body: {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    backgroundImage: 'url(/gamebg.webp)',
+                    backgroundImage: 'url(/default-background.webp)',
                     maxWidth: '100%',
                     height: '100%',
                     margin: '0',
