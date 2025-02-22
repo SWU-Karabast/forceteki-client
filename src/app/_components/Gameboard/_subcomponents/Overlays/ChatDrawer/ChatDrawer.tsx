@@ -50,7 +50,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen }) => {
 
             {/* Use the ChatComponent here */}
             <Chat
-                chatHistory={gameState.gameChat}
+                chatHistory={gameState.messages}
                 chatMessage={chatMessage}
                 setChatMessage={setChatMessage}
                 handleChatSubmit={handleGameChat}

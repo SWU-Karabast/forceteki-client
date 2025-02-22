@@ -8,7 +8,8 @@ import {
     Typography,
 } from '@mui/material';
 import { Send } from '@mui/icons-material';
-import { IChatProps } from './ChatTypes';
+import { IChatProps, IChatEntry } from './ChatTypes';
+import { useGame } from '@/app/_contexts/Game.context';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -16,6 +17,32 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
+    const { connectedPlayer } = useGame();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const formatMessage = (message: any, index: number) => {
+        if (message.hasOwnProperty('alert')) {
+            return (
+                <Typography key={index} sx={styles.alertText}>
+                    {message.alert.message.join('')}
+                </Typography>
+            )
+        } else if (message[0].type === 'playerChat') {
+            console.log(message[0])
+            return (
+                <Typography key={index} sx={styles.messageText}>
+                    <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
+                        {message[0].name}
+                    </Typography>:
+                    {message.slice(1).join('')}
+                </Typography>
+            )
+        }
+        return (
+            <Typography key={index} sx={styles.messageText}>
+                {message[0].name} {message.slice(1).join('')}
+            </Typography>
+        )
+    }
     // ------------------------STYLES------------------------//
 
     const styles = {
@@ -43,6 +70,9 @@ const Chat: React.FC<IChatProps> = ({
         },
         messageText: {
             color: '#fff',
+        },
+        alertText: {
+            color: 'purple'
         },
         inputContainer: {
             display: 'flex',
@@ -80,16 +110,9 @@ const Chat: React.FC<IChatProps> = ({
                 <Typography sx={styles.title}>Chat</Typography>
                 <Divider sx={styles.divider} />
                 <Box sx={styles.chatBox}>
-                    {/* {chatHistory.messages && chatHistory.messages.map((chatEntry, index) => {
-                        // [ { name: 'Order66', email: null }, 'test', 'some message text' ]
-                        // Extract the sender (an object with name) and the text
-                        const [senderObject, _, text] = chatEntry.message;
-                        return (
-                            <Typography key={index} sx={messageTextStyle}>
-                                {senderObject.name}: {text}
-                            </Typography>
-                        );
-                    })} */}
+                    {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
+                        return formatMessage(chatEntry.message, index);
+                    })}
                 </Box>
             </Box>
 
