@@ -4,7 +4,10 @@ import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
-import { IDeckValidationFailures } from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import {
+    DeckValidationFailureReason,
+    IDeckValidationFailures
+} from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 
 interface ICreateGameFormProps {
@@ -51,7 +54,25 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const handleJoinGameQueue = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setQueueState(true);
-        const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;;
+        let deckData = null
+        try {
+            deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+        }catch (error){
+            setQueueState(false);
+            setDeckErrorDetails(undefined);
+            if(error instanceof Error){
+                if(error.message.includes('Forbidden')) {
+                    setDeckErrorSummary('Couldn\'t import, deck. The deck is set to private');
+                    setDeckErrorDetails({
+                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                    });
+                }else{
+                    setDeckErrorSummary('Couldn\'t import, deck is invalid.');
+                }
+            }
+            showInlineErrorTextFor5s();
+            return;
+        }
         try {
             const payload = {
                 user: user,
@@ -71,7 +92,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             if (!response.ok) {
                 const errors = result.errors || {};
                 setQueueState(false);
-                setDeckErrorSummary('Couldn\'t import, deck is invalid or set to private.');
+                setDeckErrorSummary('Couldn\'t import, deck is invalid.');
                 setDeckErrorDetails(errors);
                 showInlineErrorTextFor5s();
                 return
@@ -80,7 +101,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             setDeckErrorDetails(undefined);
             router.push('/quickGame');
         } catch (error) {
-            console.error(error);
             setQueueState(false);
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);

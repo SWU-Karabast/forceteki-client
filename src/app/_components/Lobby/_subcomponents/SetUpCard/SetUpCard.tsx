@@ -48,8 +48,25 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     };
     const handleOnChangeDeck = async () => {
         if (!deckLink || readyStatus) return;
-        const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
-        sendLobbyMessage(['changeDeck', deckData])
+        try {
+            const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+            sendLobbyMessage(['changeDeck', deckData])
+        }catch (error){
+            setDisplayerror(true);
+            setDeckErrorDetails(undefined);
+            if(error instanceof Error){
+                if(error.message.includes('Forbidden')) {
+                    setDeckErrorSummary('Couldn\'t import, deck. The deck is set to private');
+                    setDeckErrorDetails({
+                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                    });
+                }else{
+                    setDeckErrorSummary('Couldn\'t import, deck is invalid.');
+                }
+            }
+            showInlineErrorTextFor5s(connectedUser.deckErrors);
+            return;
+        }
     }
 
     const showInlineErrorTextFor5s = (deckErrors:IDeckValidationFailures) =>{
@@ -69,7 +86,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     // ------------------ Listen for changes to deckErrors ------------------ //
     useEffect(() => {
-        if (!connectedUser?.deckErrors) {
+        // get error messages
+        const deckErrors: IDeckValidationFailures = connectedUser.deckErrors;
+        if (!deckErrors) {
             // No validation errors => clear any old error states
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
@@ -78,8 +97,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setBlockError(false);
             return;
         }
-        // get error messages
-        const deckErrors: IDeckValidationFailures = connectedUser.deckErrors;
+
         const temporaryErrors: IDeckValidationFailures = connectedUser.importDeckErrors;
         // Determine if a blocking error exists (ignoring NotImplemented and temporary errors)
         const hasBlockingError = Object.entries(deckErrors).some(([reason, value]) => {

@@ -16,7 +16,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { IDeckValidationFailures } from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import {
+    DeckValidationFailureReason,
+    IDeckValidationFailures
+} from '@/app/_validators/DeckValidation/DeckValidationTypes';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -70,7 +73,25 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const deckData = deckLink ? await fetchDeckData(deckLink,false) : null;
+        let deckData = null
+
+        try {
+            deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+        }catch (error){
+            setDeckErrorDetails(undefined);
+            if(error instanceof Error){
+                if(error.message.includes('Forbidden')) {
+                    setDeckErrorSummary('Couldn\'t import, deck. The deck is set to private');
+                    setDeckErrorDetails({
+                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                    });
+                }else{
+                    setDeckErrorSummary('Couldn\'t import, deck is invalid.');
+                }
+            }
+            showInlineErrorTextFor5s();
+            return;
+        }
         try {
             const payload = {
                 user: user || sessionStorage.getItem('anonymousUserId'),

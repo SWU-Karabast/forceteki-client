@@ -1,5 +1,6 @@
 export enum DeckValidationFailureReason {
     NotImplemented = 'notImplemented',
+    DeckSetToPrivate = 'deckSetToPrivate',
     IllegalInFormat = 'illegalInFormat',
     TooManyLeaders = 'tooManyLeaders',
     InvalidDeckData = 'invalidDeckData',
@@ -20,6 +21,7 @@ export interface IDeckValidationFailures {
     [DeckValidationFailureReason.IllegalInFormat]?: ICardIdAndName[];
     [DeckValidationFailureReason.TooManyLeaders]?: boolean;
     [DeckValidationFailureReason.InvalidDeckData]?: boolean;
+    [DeckValidationFailureReason.DeckSetToPrivate]?: boolean;
     [DeckValidationFailureReason.MinDecklistSizeNotMet]?: {
         minDecklistSize: number;
         actualDecklistSize: number;

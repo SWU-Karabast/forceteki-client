@@ -17,6 +17,9 @@ export function getReadableDeckErrors(
     if (failures[DeckValidationFailureReason.TooManyLeaders]) {
         messages.push(`There are too many Leaders for ${format}.`);
     }
+    if(failures[DeckValidationFailureReason.DeckSetToPrivate]) {
+        messages.push('The deck is set to private. Change the deck to unlisted on swudb.')
+    }
 
     // Object-like errors (MinDecklistSizeNotMet, etc.)
     if (failures[DeckValidationFailureReason.MinDecklistSizeNotMet]) {

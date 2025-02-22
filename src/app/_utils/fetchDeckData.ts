@@ -46,6 +46,6 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
         } else {
             console.error('Unexpected error:', error);
         }
-        return null; // or throw error again
+        throw error // or throw error again
     }
 };

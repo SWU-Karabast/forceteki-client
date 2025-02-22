@@ -52,7 +52,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
                 <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
                     {messages.map((msg, index) => (
                         <li key={index}>
-                            <Typography variant="body1" sx={{ color: 'white' }}>
+                            <Typography variant="body1" sx={{ color: 'white', pl:'0px' }}>
                                 {msg}
                             </Typography>
                         </li>
