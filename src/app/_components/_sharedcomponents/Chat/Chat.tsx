@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     Box,
     TextField,
@@ -8,7 +8,8 @@ import {
     Typography,
 } from '@mui/material';
 import { Send } from '@mui/icons-material';
-import { IChatProps } from './ChatTypes';
+import { IChatProps, IChatEntry } from './ChatTypes';
+import { useGame } from '@/app/_contexts/Game.context';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -16,88 +17,115 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
+    const { connectedPlayer } = useGame();
+    const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+
+    // TODO: Standardize these chat types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const formatMessage = (message: any, index: number) => {
+        if (message.hasOwnProperty('alert')) {
+            return (
+                <Typography key={index} sx={styles.alertText}>
+                    {message.alert.message.join('')}
+                </Typography>
+            )
+        } else if (message[0].type === 'playerChat') {
+            return (
+                <Typography key={index} sx={styles.messageText}>
+                    <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
+                        {message[0].name}
+                    </Typography>:
+                    {message.slice(1).join('')}
+                </Typography>
+            )
+        }
+        return (
+            <Typography key={index} sx={styles.messageText}>
+                {message[0].name} {message.slice(1).join('')}
+            </Typography>
+        )
+    }
+
+    useEffect(() => {
+        if(chatEndRef.current) {
+            chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [chatHistory]);
     // ------------------------STYLES------------------------//
 
-    const chatContainerStyle = {
-        backgroundColor: '#28282800',
-        height: '55vh',
-        overflowY: 'auto',
-    };
-
-    const titleStyle = {
-        fontWeight: 'bold',
-        color: '#fff',
-        fontSize: '1.5em',
-    };
-
-    const dividerStyle = {
-        backgroundColor: '#fff',
-        mt: '.5vh',
-        mb: '0.5vh',
-    };
-
-    const chatBoxStyle = {
-        p: '10px',
-        borderRadius: '4px',
-        minHeight: '100px',
-        overflowY: 'auto',
-        backgroundColor: '#28282800',
-    };
-
-    const messageTextStyle = {
-        color: '#fff',
-    };
-
-    const inputContainerStyle = {
-        display: 'flex',
-        alignItems: 'center',
-        backgroundColor: '#28282800',
-        p: '10px',
-        mt: 2,
-    };
-    const textFieldStyle = {
-        backgroundColor: '#28282800',
-        color: '#fff',
-        borderRadius: '4px',
-        flexGrow: 1,
-        input: { color: '#fff' },
-        '& .MuiOutlinedInput-root': {
-            // base border style
-            '& fieldset': {
-                borderColor: '#fff',
-            },
+    const styles = {
+        title: {
+            fontWeight: 'bold',
+            color: '#fff',
+            fontSize: '1.5em',
         },
-        '& .MuiOutlinedInput-root.Mui-focused': {
-            // when container is focused
-            '& fieldset': {
-                borderColor: '#fff',
-            },
+        divider: {
+            backgroundColor: '#fff',
+            mt: '.5vh',
+            mb: '0.5vh',
         },
-    };
+        chatBox: {
+            p: '10px',
+            borderRadius: '4px',
+            minHeight: '100px',
+            overflowY: 'auto',
+            backgroundColor: '#28282800',
+            flex: 1,
+        },
+        messageText: {
+            color: '#fff',
+        },
+        alertText: {
+            color: 'purple'
+        },
+        inputContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: '#28282800',
+            p: '10px',
+            mt: 2,
+        },
+        textField: {
+            backgroundColor: '#28282800',
+            color: '#fff',
+            borderRadius: '4px',
+            flexGrow: 1,
+            input: { color: '#fff' },
+            '& .MuiOutlinedInput-root': {
+                // base border style
+                '& fieldset': {
+                    borderColor: '#fff',
+                },
+            },
+            '& .MuiOutlinedInput-root.Mui-focused': {
+                // when container is focused
+                '& fieldset': {
+                    borderColor: '#fff',
+                },
+            },
+        }
+    }
+
+    
 
     return (
         <>
-            <Box sx={chatContainerStyle}>
-                <Typography sx={titleStyle}>Chat</Typography>
-                <Divider sx={dividerStyle} />
-                <Box sx={chatBoxStyle}>
-                    {chatHistory.messages && chatHistory.messages.map((chatEntry, index) => {
-                        // [ { name: 'Order66', email: null }, 'test', 'some message text' ]
-                        // Extract the sender (an object with name) and the text
-                        const [senderObject, _, text] = chatEntry.message;
-                        return (
-                            <Typography key={index} sx={messageTextStyle}>
-                                {senderObject.name}: {text}
-                            </Typography>
-                        );
-                    })}
-                </Box>
+            <Typography sx={styles.title}>Chat</Typography>
+            <Divider sx={styles.divider} />
+            <Box sx={styles.chatBox}>
+                {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
+                    return formatMessage(chatEntry.message, index);
+                })}
+                <Box ref={chatEndRef} />
             </Box>
 
-            <Box sx={inputContainerStyle}>
+
+            <Box sx={styles.inputContainer}>
                 <TextField
                     variant="outlined"
                     placeholder="Chat"
+                    autoComplete="off"
                     value={chatMessage}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setChatMessage(e.target.value)
@@ -107,7 +135,7 @@ const Chat: React.FC<IChatProps> = ({
                             handleChatSubmit();
                         }
                     }}
-                    sx={textFieldStyle}
+                    sx={styles.textField}
                     slotProps={{
                         input: {
                             endAdornment: (
