@@ -23,7 +23,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen }) => {
                 display: 'flex',
                 flexDirection: 'column',
                 width: '280px',
-                padding: '1em'
+                padding: '1em',
+                overflow: 'hidden',
             },
         },
         headerBoxStyle: {

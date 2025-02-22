@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     Box,
     TextField,
@@ -18,6 +18,9 @@ const Chat: React.FC<IChatProps> = ({
     handleChatSubmit,
 }) => {
     const { connectedPlayer } = useGame();
+    const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+
     // TODO: Standardize these chat types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formatMessage = (message: any, index: number) => {
@@ -43,14 +46,15 @@ const Chat: React.FC<IChatProps> = ({
             </Typography>
         )
     }
+
+    useEffect(() => {
+        if(chatEndRef.current) {
+            chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [chatHistory]);
     // ------------------------STYLES------------------------//
 
     const styles = {
-        chatContainer: {
-            backgroundColor: '#28282800',
-            overflowY: 'auto',
-            height: '100%'
-        },
         title: {
             fontWeight: 'bold',
             color: '#fff',
@@ -67,6 +71,7 @@ const Chat: React.FC<IChatProps> = ({
             minHeight: '100px',
             overflowY: 'auto',
             backgroundColor: '#28282800',
+            flex: 1,
         },
         messageText: {
             color: '#fff',
@@ -106,15 +111,15 @@ const Chat: React.FC<IChatProps> = ({
 
     return (
         <>
-            <Box sx={styles.chatContainer}>
-                <Typography sx={styles.title}>Chat</Typography>
-                <Divider sx={styles.divider} />
-                <Box sx={styles.chatBox}>
-                    {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
-                        return formatMessage(chatEntry.message, index);
-                    })}
-                </Box>
+            <Typography sx={styles.title}>Chat</Typography>
+            <Divider sx={styles.divider} />
+            <Box sx={styles.chatBox}>
+                {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
+                    return formatMessage(chatEntry.message, index);
+                })}
+                <Box ref={chatEndRef} />
             </Box>
+
 
             <Box sx={styles.inputContainer}>
                 <TextField
