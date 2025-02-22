@@ -14,17 +14,11 @@ export interface IParticipant {
 
 export interface IChatDrawerProps {
     sidebarOpen: boolean;
-    toggleSidebar: () => void;
-    chatHistory: string[];
-    chatMessage: string;
-    setChatMessage: React.Dispatch<React.SetStateAction<string>>;
-    handleChatSubmit: () => void;
-    currentRound: number;
 }
 
 export interface IPlayerCardTrayProps {
     trayPlayer: string;
-    handleModalToggle: () => void;
+    toggleSidebar: () => void;
 }
 
 export interface IOpponentCardTrayProps {

@@ -18,12 +18,13 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     }
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
+    const initiativeClaimed = gameState.initiativeClaimed;
 
     // ---------------Styles------------------- //
     const styles = {
         leftColumn: {
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'flex-start',
             padding: '1rem 0 1rem 2rem',
             gap: '2rem',
@@ -38,7 +39,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         opponentHandWrapper: {
             width: '100%',
             height: '100%',
-            transform: 'translateY(-30%)',
+            transform: 'translateY(-2rem)',
         },
         rightColumn: {
             display: 'flex',
@@ -74,27 +75,72 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 margin: '0.2rem 1rem 0', 
                 textAlign: 'center', 
                 display: 'block',
-                fontSize: '16px', 
+                fontSize: '1em', 
                 fontWeight: 600,
                 userSelect: 'none',
                 color: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
             }
         },
+        initiativeClaimedWrapper: {
+            borderRadius: '20px',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            height: '2rem',
+            width: 'auto',
+            background: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            h4: {
+                margin: '0.2rem 1rem 0', 
+                textAlign: 'center', 
+                display: 'block',
+                fontSize: '1em', 
+                fontWeight: 600,
+                userSelect: 'none',
+                color: 'black',
+            }
+        }
     };
 
     return (
-        <Grid container sx={{ height: '15%' }}>
-            <Grid size={3} sx={styles.leftColumn}>
+        <Grid
+            container
+            sx={{
+                height: '17%',
+                display: 'flex',
+                flexWrap: 'nowrap',
+                columnGap: '2rem', // 2rem gap between columns
+            }}
+        >
+            {/* Left column (fixed 360px) */}
+            <Grid sx={{
+                flex: '0 0 360px',
+                ...styles.leftColumn,
+            }}
+            >
                 <DeckDiscard trayPlayer={trayPlayer} />
                 <Resources trayPlayer={trayPlayer}/>
             </Grid>
-            <Grid size={6} sx={styles.centerColumn}>
+
+            {/* Center column (flexes to fill space) */}
+            <Grid sx={{
+                flex: 1,
+                ...styles.centerColumn,
+            }}
+            >
                 <Box sx={styles.opponentHandWrapper}>
                     <PlayerHand cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
                 </Box>
             </Grid>
-            <Grid size={3} sx={styles.rightColumn}>
-                <Box sx={styles.initiativeWrapper}>
+
+            {/* Right column (fixed 360px) */}
+            <Grid sx={{
+                flex: '0 0 360px',
+                ...styles.rightColumn,
+            }}
+            >
+                <Box sx={initiativeClaimed ? styles.initiativeClaimedWrapper : styles.initiativeWrapper}>
                     <Typography variant={'h4'}>Initiative</Typography>
                 </Box>
                 <Box sx={styles.lastPlayed}>

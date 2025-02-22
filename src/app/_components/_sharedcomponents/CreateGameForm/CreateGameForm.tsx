@@ -49,12 +49,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        console.log('Favourite Deck:', favouriteDeck);
-        console.log('Deck Link:', deckLink);
-        console.log('beginning fetch for deck link');
         const deckData = deckLink ? await fetchDeckData(deckLink,false) : null;
-        console.log('fetch complete, deck data:', deckData);
-        console.log('Save Deck To Favourites:', saveDeck);
         try {
             const payload = {
                 user: user || sessionStorage.getItem('anonymousUserId'),

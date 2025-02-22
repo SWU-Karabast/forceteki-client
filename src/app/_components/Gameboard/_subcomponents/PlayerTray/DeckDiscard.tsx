@@ -49,7 +49,6 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             },
         },
         deck: {
-
             deckCardStyle: {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
