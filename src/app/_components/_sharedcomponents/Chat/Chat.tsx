@@ -18,6 +18,7 @@ const Chat: React.FC<IChatProps> = ({
     handleChatSubmit,
 }) => {
     const { connectedPlayer } = useGame();
+    // TODO: Standardize these chat types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formatMessage = (message: any, index: number) => {
         if (message.hasOwnProperty('alert')) {
@@ -27,7 +28,6 @@ const Chat: React.FC<IChatProps> = ({
                 </Typography>
             )
         } else if (message[0].type === 'playerChat') {
-            console.log(message[0])
             return (
                 <Typography key={index} sx={styles.messageText}>
                     <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
@@ -120,6 +120,7 @@ const Chat: React.FC<IChatProps> = ({
                 <TextField
                     variant="outlined"
                     placeholder="Chat"
+                    autoComplete="off"
                     value={chatMessage}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setChatMessage(e.target.value)
