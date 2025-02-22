@@ -54,7 +54,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         card: {
             backgroundColor: 'black',
             backgroundImage: `url(${s3CardImageURL(card)})`,
-            borderRadius: '.38em',
+            borderRadius: '0.5rem',
             backgroundSize: 'cover',
             width: '10rem',
             aspectRatio: '1.39',
@@ -68,7 +68,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         deployedPlaceholder: {
             backgroundColor: 'transparent',
-            borderRadius: '.38em',
+            borderRadius: '0.5rem',
             width: '10rem',
             aspectRatio: '1.39',
             cursor: 'normal',
@@ -106,29 +106,28 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             pointerEvents: 'none',
         },
         damageCounter: {
-            fontWeight: '800',
+            fontWeight: '700',
             fontSize: '1.9rem',
             color: 'white',
-            width: '2.5rem',
-            aspectRatio: '1 / 1',
+            minWidth: '2.5rem',
+            padding: '0 10px', 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundImage: 'url(/token-background.svg)',
+            background: 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
-            textShadow: '1px 1px #00000033',
-            mb: 0
+            filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+            textShadow: '2px 2px rgba(0, 0, 0, 0.20)'
         },
         nameplateBox: {
             position: 'absolute',
-            bottom: '-6px',
+            bottom: '0',
             left: '50%',
             transform: 'translateX(-50%)',
             backgroundColor: 'black',
-            borderRadius: '4px',
-            p: '4px 8px',
+            borderRadius: '0.5rem 0.5rem 0 0',
+            p: '5px 10px',
         },
         unimplementedAlert: {
             display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
@@ -160,7 +159,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             width: '16rem',
         },
     }
-
 
     return (
         <Box

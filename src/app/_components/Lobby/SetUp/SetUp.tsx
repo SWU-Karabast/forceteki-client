@@ -55,13 +55,13 @@ const SetUp: React.FC = ({
         },
         exitCard: {
             display: 'flex',
-            pr: '1.2em',
-            pl: '1.2em',
+            p: '1.2em',
             width: '100%',
             height: '10%',
             alignItems: 'center',
             justifyContent: 'space-between',
             cursor: 'pointer',
+            '&:hover': { opacity: '0.8' },
         },
         dividerStyle: {
             backgroundColor: '#fff',
@@ -82,7 +82,7 @@ const SetUp: React.FC = ({
             <SetUpCard owner={lobbyState ? lobbyState.lobbyOwnerId === connectedPlayer : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
             <Card sx={styles.mainCardStyle}>
                 <Chat
-                    chatHistory={lobbyState ? lobbyState.gameChat : []}
+                    chatHistory={lobbyState ? lobbyState.gameChat?.messages : []}
                     chatMessage={chatMessage}
                     setChatMessage={setChatMessage}
                     handleChatSubmit={handleChatSubmit}
