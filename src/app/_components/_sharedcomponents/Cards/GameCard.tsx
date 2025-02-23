@@ -86,7 +86,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            transform: card.exhausted ? 'rotate(4deg)' : 'none',
+            transform: card.exhausted && card.zone !== 'resource' ? 'rotate(4deg)' : 'none',
             transition: 'transform 0.15s ease',
             '&:hover': {
                 cursor: disabled ? 'normal' : 'pointer',
@@ -107,7 +107,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'absolute',
             width: '100%',
             height: '100%',
-            backgroundColor: card?.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            backgroundColor: card?.exhausted && card.zone !== 'resource' ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
             filter: 'none',
             clickEvents: 'none',
             display: 'flex',

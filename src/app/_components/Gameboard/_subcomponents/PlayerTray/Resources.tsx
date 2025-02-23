@@ -30,6 +30,7 @@ const Resources: React.FC<IResourcesProps> = ({
             transition: 'background-color 0.3s ease',
             padding: '1rem 2rem',
             overflow: 'visible',
+            cursor: 'pointer',
             '&:hover': {
                 background:
                     trayPlayer === 'player'
@@ -48,7 +49,6 @@ const Resources: React.FC<IResourcesProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             flexDirection: 'row',
-            cursor: 'pointer',
             position: 'relative', 
             zIndex: 1, 
         },
