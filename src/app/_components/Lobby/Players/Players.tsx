@@ -24,13 +24,12 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const opponentBase = opponentUser ? opponentUser.deck?.base : null;
 
     // check unimplemeneted list for players cards
-    const notImplementedList =
-        connectedUser?.deckErrors?.[DeckValidationFailureReason.NotImplemented] ?? [];
+    const notImplementedList = connectedUser?.unimplementedCards ?? [];
     const isCardNotImplemented = (cardId: number | undefined) =>
         notImplementedList.some((item:ICardData) => item.id === cardId);
 
     // check unimplemeneted list for opponents cards
-    const opponentNotImplementedList = opponentUser?.deckErrors?.[DeckValidationFailureReason.NotImplemented] ?? [];
+    const opponentNotImplementedList = opponentUser?.unimplementedCards ?? [];
     const isOpponentCardNotImplemented = (cardId: number | undefined) =>
         opponentNotImplementedList.some((item:ICardData) => item.id === cardId);
 

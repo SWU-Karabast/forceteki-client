@@ -53,18 +53,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     // For the raw/technical error details
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | undefined>(undefined);
-    // Timer ref for clearing the inline text after 5s
-    const errorTextTimer = useRef<NodeJS.Timeout | null>(null);
-
-    const showInlineErrorTextFor5s = () =>{
-        if(errorTextTimer.current){
-            clearTimeout(errorTextTimer.current);
-        }
-        errorTextTimer.current = setTimeout(() => {
-            setDeckErrorSummary(null);
-            errorTextTimer.current = null;
-        }, 5000);
-    }
 
     // Additional State for Non-Creategame Path
     const [gameName, setGameName] = useState<string>('');
@@ -81,15 +69,14 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             setDeckErrorDetails(undefined);
             if(error instanceof Error){
                 if(error.message.includes('Forbidden')) {
-                    setDeckErrorSummary('Couldn\'t import, deck. The deck is set to private');
+                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
                 }else{
-                    setDeckErrorSummary('Couldn\'t import, deck is invalid.');
+                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                 }
             }
-            showInlineErrorTextFor5s();
             return;
         }
         try {
@@ -110,19 +97,16 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
-                setDeckErrorSummary('Couldn\'t import, deck is invalid or set to private.');
+                setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                 setDeckErrorDetails(errors);
-                showInlineErrorTextFor5s();
                 return;
             }
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             router.push('/lobby');
         } catch (error) {
-            console.error(error);
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
-            showInlineErrorTextFor5s();
         }
     };
 
@@ -210,9 +194,11 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     <StyledTextField
                         type="url"
                         value={deckLink}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setDeckLink(e.target.value)
-                        }
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>{
+                            setDeckLink(e.target.value);
+                            setDeckErrorSummary(null);
+                            setDeckErrorDetails(undefined);
+                        }}
                     />
                     {deckErrorSummary && (
                         <Typography variant={'body1'} sx={styles.errorMessageStyle}>

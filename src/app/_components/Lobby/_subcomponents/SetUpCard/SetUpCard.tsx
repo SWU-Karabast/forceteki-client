@@ -35,8 +35,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [displayError, setDisplayerror] = useState(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
-    // Timer ref for clearing the inline text after 5s
-    const errorTextTimer = useRef<NodeJS.Timeout | null>(null);
 
     // Extract the player from the URL query params
     const router = useRouter();
@@ -56,32 +54,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setDeckErrorDetails(undefined);
             if(error instanceof Error){
                 if(error.message.includes('Forbidden')) {
-                    setDeckErrorSummary('Couldn\'t import, deck. The deck is set to private');
+                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
                 }else{
-                    setDeckErrorSummary('Couldn\'t import, deck is invalid.');
+                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                 }
             }
-            showInlineErrorTextFor5s(connectedUser.deckErrors);
             return;
         }
-    }
-
-    const showInlineErrorTextFor5s = (deckErrors:IDeckValidationFailures) =>{
-        if(errorTextTimer.current) clearTimeout(errorTextTimer.current);
-        errorTextTimer.current = setTimeout(() => {
-            if(!blockError) {
-                setDeckErrorSummary(null);
-                setDisplayerror(false);
-            }else{
-                setDeckErrorSummary('Deck is invalid.');
-                setDeckErrorDetails(deckErrors);
-            }
-            // Check if there's any blocking error (not "NotImplemented")
-            errorTextTimer.current = null;
-        }, 5000);
     }
 
     // ------------------ Listen for changes to deckErrors ------------------ //
@@ -100,12 +82,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
         const temporaryErrors: IDeckValidationFailures = connectedUser.importDeckErrors;
         // Determine if a blocking error exists (ignoring NotImplemented and temporary errors)
-        const hasBlockingError = Object.entries(deckErrors).some(([reason, value]) => {
-            if (reason === DeckValidationFailureReason.NotImplemented) return false;
-            return Array.isArray(value) ? value.length > 0 : !!value;
-        });
 
-        if (hasBlockingError) {
+        if (Object.keys(deckErrors).length > 0) {
             // Show a short inline error message and store the full list
             setDisplayerror(true);
             setDeckErrorSummary('Deck is invalid.');
@@ -121,9 +99,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         if (temporaryErrors) {
             // Only 'notImplemented' or no errors => clear them out
             setDisplayerror(true);
-            setDeckErrorSummary('Couldn\'t import, deck is invalid or set to private.');
+            setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
             setDeckErrorDetails(temporaryErrors);
-            showInlineErrorTextFor5s(deckErrors)
         }
     }, [connectedUser]);
 
@@ -278,10 +255,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         </>
                     ) : (
                         // Not both ready — show toggle-ready button
-                        connectedUser && connectedUser.deck && !blockError ? (
+                        connectedUser && connectedUser.deck ? (
                             <CardActions sx={styles.buttonsContainerStyle}>
                                 <Box sx={styles.readyImg} />
                                 <Button
+                                    disabled={blockError}
                                     variant="contained"
                                     onClick={() => sendLobbyMessage(['setReadyStatus', !readyStatus])}
                                 >
@@ -323,7 +301,18 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         type="url"
                         disabled={readyStatus}
                         value={deckLink}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setDeckLink(e.target.value)}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            setDeckLink(e.target.value);
+                            if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
+                                setDisplayerror(true);
+                                setDeckErrorSummary('Deck is invalid.');
+                                setDeckErrorDetails(connectedUser.deckErrors);
+                            } else {
+                                setDisplayerror(false);
+                                setDeckErrorSummary(null);
+                                setDeckErrorDetails(undefined);
+                            }
+                        }}
                     />
                     {(displayError || blockError) && (
                         <Typography variant={'body1'} color={'error'} sx={styles.errorMessageStyle}>
