@@ -1,9 +1,14 @@
-import React, { ChangeEvent, FormEvent, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useRef, useState } from 'react';
 import { Box, Button, Checkbox, FormControl, FormControlLabel, Link, MenuItem, Typography } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import {
+    DeckValidationFailureReason,
+    IDeckValidationFailures
+} from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -20,17 +25,42 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [queueState, setQueueState] = useState<boolean>(false)
+
+    // error states
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+    // For a short, user-friendly error message
+    const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
+    // For the raw/technical error details
+    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | undefined>(undefined);
+    // Timer ref for clearing the inline text after 5s
+
     const deckOptions: string[] = [
         'Order66',
         'ThisIsTheWay',
     ];
 
-
     // Handle Create Game Submission
     const handleJoinGameQueue = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setQueueState(true);
-        const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;;
+        let deckData = null
+        try {
+            deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+        }catch (error){
+            setQueueState(false);
+            setDeckErrorDetails(undefined);
+            if(error instanceof Error){
+                if(error.message.includes('Forbidden')) {
+                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
+                    setDeckErrorDetails({
+                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                    });
+                }else{
+                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                }
+            }
+            return;
+        }
         try {
             const payload = {
                 user: user,
@@ -46,15 +76,21 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 }
             );
 
+            const result = await response.json();
             if (!response.ok) {
+                const errors = result.errors || {};
                 setQueueState(false);
-                throw new Error('Failed to create game');
+                setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                setDeckErrorDetails(errors);
+                return
             }
-
+            setDeckErrorSummary(null);
+            setDeckErrorDetails(undefined);
             router.push('/quickGame');
         } catch (error) {
-            console.error(error);
             setQueueState(false);
+            setDeckErrorSummary('Error creating game.');
+            setDeckErrorDetails(undefined);
         }
     };
 
@@ -84,7 +120,15 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             display: 'block',
             ml: 'auto',
             mr: 'auto',
-
+        },
+        errorMessageStyle: {
+            color: 'var(--initiative-red);',
+            mt: '0.5rem'
+        },
+        errorMessageLink:{
+            cursor: 'pointer',
+            color: 'var(--selection-red);',
+            textDecorationColor: 'var(--initiative-red);',
         }
     }
     return (
@@ -134,11 +178,23 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     <StyledTextField
                         type="url"
                         value={deckLink}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setDeckLink(e.target.value)
-                        }
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            setDeckLink(e.target.value);
+                            setDeckErrorSummary(null);
+                            setDeckErrorDetails(undefined);
+                        }}
                         required
                     />
+                    {deckErrorSummary && (
+                        <Typography variant={'body1'} sx={styles.errorMessageStyle}>
+                            {deckErrorSummary}{' '}
+                            <Link
+                                sx={styles.errorMessageLink}
+                                onClick={() => setErrorModalOpen(true)}
+                            >Details
+                            </Link>
+                        </Typography>
+                    )}
                 </FormControl>
 
                 {/* Save Deck To Favourites Checkbox */}
@@ -186,6 +242,12 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     </Typography>
                 </Box>
             )}
+            <ErrorModal
+                open={errorModalOpen}
+                onClose={() => setErrorModalOpen(false)}
+                title="Deck Validation Error"
+                errors={deckErrorDetails}
+            />
         </Box>
     );
 };

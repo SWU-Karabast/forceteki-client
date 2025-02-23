@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, ChangeEvent } from 'react';
+import React, { useState, FormEvent, ChangeEvent, useRef } from 'react';
 import {
     Box,
     Button,
@@ -15,6 +15,11 @@ import StyledTextField from '../_styledcomponents/StyledTextField';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
+import {
+    DeckValidationFailureReason,
+    IDeckValidationFailures
+} from '@/app/_validators/DeckValidation/DeckValidationTypes';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -26,7 +31,7 @@ const deckOptions: string[] = [
     'ThisIsTheWay',
 ];
 
-const formatOptions: string[] = ['Premier', 'Twin Suns', 'Draft', 'Sealed'];
+const formatOptions: string[] = ['Premier'];
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     format,
@@ -41,6 +46,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const [favouriteDeck, setFavouriteDeck] = useState<string>('');
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+
+    // For a short, user-friendly error message
+    const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
+
+    // For the raw/technical error details
+    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | undefined>(undefined);
 
     // Additional State for Non-Creategame Path
     const [gameName, setGameName] = useState<string>('');
@@ -49,7 +61,24 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const deckData = deckLink ? await fetchDeckData(deckLink,false) : null;
+        let deckData = null
+
+        try {
+            deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+        }catch (error){
+            setDeckErrorDetails(undefined);
+            if(error instanceof Error){
+                if(error.message.includes('Forbidden')) {
+                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
+                    setDeckErrorDetails({
+                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                    });
+                }else{
+                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                }
+            }
+            return;
+        }
         try {
             const payload = {
                 user: user || sessionStorage.getItem('anonymousUserId'),
@@ -65,49 +94,59 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     body: JSON.stringify(payload),
                 }
             );
-
+            const result = await response.json();
             if (!response.ok) {
-                throw new Error('Failed to create game');
+                const errors = result.errors || {};
+                setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                setDeckErrorDetails(errors);
+                return;
             }
-
+            setDeckErrorSummary(null);
+            setDeckErrorDetails(undefined);
             router.push('/lobby');
         } catch (error) {
-            console.error(error);
+            setDeckErrorSummary('Error creating game.');
+            setDeckErrorDetails(undefined);
         }
     };
 
-    const formControlStyle = {
-        mb: '1rem',
-    };
-
-    const labelTextStyle = {
-        mb: '.5em',
-        color: 'white',
-    };
-
-    const labelTextStyleSecondary = {
-        color: '#aaaaaa',
-        display: 'inline',
-    };
-
-    const checkboxStyle = {
-        color: '#fff',
-        '&.Mui-checked': {
-            color: '#fff',
+    const styles = {
+        formControlStyle: {
+            mb: '1rem',
         },
-    };
-
-    const checkboxAndRadioGroupTextStyle = {
-        color: '#fff',
-        fontSize: '1em',
-    };
-
-    const submitButtonStyle = {
-        display: 'block',
-        ml: 'auto',
-        mr: 'auto',
-    };
-
+        labelTextStyle: {
+            mb: '.5em',
+            color: 'white',
+        },
+        labelTextStyleSecondary: {
+            color: '#aaaaaa',
+            display: 'inline',
+        },
+        checkboxStyle: {
+            color: '#fff',
+            '&.Mui-checked': {
+                color: '#fff',
+            },
+        },
+        checkboxAndRadioGroupTextStyle: {
+            color: '#fff',
+            fontSize: '1em',
+        },
+        submitButtonStyle: {
+            display: 'block',
+            ml: 'auto',
+            mr: 'auto',
+        },
+        errorMessageStyle: {
+            color: 'var(--initiative-red);',
+            mt: '0.5rem'
+        },
+        errorMessageLink:{
+            cursor: 'pointer',
+            color: 'var(--selection-red);',
+            textDecorationColor: 'var(--initiative-red);',
+        }
+    }
     return (
         <Box >
             <Typography variant="h2">
@@ -115,8 +154,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             </Typography>
             <form onSubmit={handleCreateGameSubmit}>
                 {/* Favourite Decks Input */}
-                {user && <FormControl fullWidth sx={formControlStyle}>
-                    <Typography variant="body1" sx={labelTextStyle}>Favourite Decks</Typography>
+                {user && <FormControl fullWidth sx={styles.formControlStyle}>
+                    <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
                     <StyledTextField
                         select
                         value={favouriteDeck}
@@ -135,7 +174,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 }
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={{ mb: 0 }}>
-                    <Box sx={labelTextStyle}>
+                    <Box sx={styles.labelTextStyle}>
                         <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWU Stats
                         </Link>{' '}
@@ -148,17 +187,29 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             SW-Unlimited-DB
                         </Link>{' '} */}
                         Deck Link{' '}
-                        <Typography variant="body1" sx={labelTextStyleSecondary}>
+                        <Typography variant="body1" sx={styles.labelTextStyleSecondary}>
                             (use the URL or &apos;Deck Link&apos; button)
                         </Typography>
                     </Box>
                     <StyledTextField
                         type="url"
                         value={deckLink}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setDeckLink(e.target.value)
-                        }
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>{
+                            setDeckLink(e.target.value);
+                            setDeckErrorSummary(null);
+                            setDeckErrorDetails(undefined);
+                        }}
                     />
+                    {deckErrorSummary && (
+                        <Typography variant={'body1'} sx={styles.errorMessageStyle}>
+                            {deckErrorSummary}{' '}
+                            <Link
+                                sx={styles.errorMessageLink}
+                                onClick={() => setErrorModalOpen(true)}
+                            >Details
+                            </Link>
+                        </Typography>
+                    )}
                 </FormControl>
 
                 {/* Save Deck To Favourites Checkbox */}
@@ -166,7 +217,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     sx={{ mb: '1rem' }}
                     control={
                         <Checkbox
-                            sx={checkboxStyle}
+                            sx={styles.checkboxStyle}
                             checked={saveDeck}
                             onChange={(
                                 e: ChangeEvent<HTMLInputElement>,
@@ -175,7 +226,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         />
                     }
                     label={
-                        <Typography sx={checkboxAndRadioGroupTextStyle}>
+                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
                             Save to Favorite Decks
                         </Typography>
                     }
@@ -186,8 +237,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 {!isCreateGamePath && (
                     <>
                         {/* Game Name Input */}
-                        <FormControl fullWidth sx={formControlStyle}>
-                            <Typography variant="body1" sx={labelTextStyle}>
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            <Typography variant="body1" sx={styles.labelTextStyle}>
                                 Game Name
                             </Typography>
                             <StyledTextField
@@ -201,8 +252,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         </FormControl>
 
                         {/* Format Selection */}
-                        <FormControl fullWidth sx={formControlStyle}>
-                            <Typography variant="body1" sx={labelTextStyle}>Format</Typography>
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
                             <StyledTextField
                                 select
                                 value={format}
@@ -222,7 +273,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             Log In to be able to create public games or join a quick game.
                         </Typography>
                         {/* Privacy Selection */}
-                        <FormControl component="fieldset" sx={formControlStyle}>
+                        <FormControl component="fieldset" sx={styles.formControlStyle}>
                             <RadioGroup
                                 row
                                 value={privacy}
@@ -233,9 +284,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             >
                                 {user && <FormControlLabel
                                     value="Public"
-                                    control={<Radio sx={checkboxStyle} />}
+                                    control={<Radio sx={styles.checkboxStyle} />}
                                     label={
-                                        <Typography sx={checkboxAndRadioGroupTextStyle}>
+                                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
                                             Public
                                         </Typography>
                                     }
@@ -243,9 +294,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 }
                                 <FormControlLabel
                                     value="Private"
-                                    control={<Radio sx={checkboxStyle} />}
+                                    control={<Radio sx={styles.checkboxStyle} />}
                                     label={
-                                        <Typography sx={checkboxAndRadioGroupTextStyle}>
+                                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
                                             Private
                                         </Typography>
                                     }
@@ -256,7 +307,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 )}
 
                 {/* Submit Button */}
-                <Button type="submit" variant="contained" sx={submitButtonStyle}>
+                <Button type="submit" variant="contained" sx={styles.submitButtonStyle}>
                     Create Game
                 </Button>
             </form>
@@ -279,6 +330,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     </Typography>
                 </Box>
             )}
+            <ErrorModal
+                open={errorModalOpen}
+                onClose={() => setErrorModalOpen(false)}
+                title="Deck Validation Error"
+                errors={deckErrorDetails}
+            />
         </Box>
     );
 };

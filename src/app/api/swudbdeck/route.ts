@@ -53,8 +53,10 @@ export async function GET(req: Request) {
             const apiUrl = `https://swudb.com/api/getDeckJson/${deckId}`;
 
             response = await fetch(apiUrl, { method: 'GET' });
-
             if (!response.ok) {
+                if(response.status === 403) {
+                    return NextResponse.json({ error: 'Deck is set to Private. Change deck to unlisted on swudb' }, { status: 403 });
+                }
                 console.error('SWUDB API error:', response.statusText);
                 throw new Error(`SWUDB API error: ${response.statusText}`);
             }

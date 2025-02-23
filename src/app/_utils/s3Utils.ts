@@ -27,7 +27,6 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode, car
     if (cardType === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
         cardNumber += '-side2';
     }
-
     const format = cardStyle === CardStyle.InPlay ? 'truncated' : 'standard';
 
     return s3ImageURL(`cards/${setId.set}/${format}/large/${cardNumber}.webp`);
