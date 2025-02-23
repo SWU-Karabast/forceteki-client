@@ -31,7 +31,7 @@ const deckOptions: string[] = [
     'ThisIsTheWay',
 ];
 
-const formatOptions: string[] = ['Premier', 'Twin Suns', 'Draft', 'Sealed'];
+const formatOptions: string[] = ['Premier'];
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     format,
