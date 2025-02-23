@@ -82,7 +82,7 @@ const SetUp: React.FC = ({
             <SetUpCard owner={lobbyState ? lobbyState.lobbyOwnerId === connectedPlayer : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
             <Card sx={styles.mainCardStyle}>
                 <Chat
-                    chatHistory={lobbyState ? lobbyState.gameChat : []}
+                    chatHistory={lobbyState ? lobbyState.gameChat?.messages : []}
                     chatMessage={chatMessage}
                     setChatMessage={setChatMessage}
                     handleChatSubmit={handleChatSubmit}

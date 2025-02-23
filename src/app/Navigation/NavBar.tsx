@@ -2,13 +2,11 @@
 import { usePathname } from 'next/navigation';
 import { Typography, Grid2 as Grid } from '@mui/material';
 import ControlHub from '../_components/_sharedcomponents/ControlHub/ControlHub';
-import { useSidebar } from '../_contexts/Sidebar.context';
 import { useUser } from '../_contexts/User.context';
 
 const Navbar = () => {
     const { user, logout } = useUser();
     const pathname = usePathname();
-    const { sidebarOpen, toggleSidebar } = useSidebar();
 
     // ---------------------- Styles ---------------------- //
     const navbarStyles = {
@@ -43,8 +41,6 @@ const Navbar = () => {
 
             <ControlHub
                 path={pathname}
-                sidebarOpen={sidebarOpen}
-                toggleSidebar={toggleSidebar}
                 user={user}
                 logout={logout}
             />

@@ -9,7 +9,7 @@ import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import { IPlayerCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 
-const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer }) => {
+const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSidebar }) => {
     const { gameState, connectedPlayer } = useGame();
 
     const styles = {
@@ -92,7 +92,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer }) => {
             >
                 <CardActionTray />
                 <Box ml={2} sx={styles.chatColumn}>
-                    <ChatBubbleOutline />
+                    <ChatBubbleOutline onClick={toggleSidebar} />
                 </Box>
             </Grid>
         </Grid>

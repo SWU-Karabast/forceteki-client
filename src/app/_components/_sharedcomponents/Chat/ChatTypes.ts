@@ -1,12 +1,20 @@
+export interface IChatMessage {
+    name: string;
+    email: string;
+    message: string;
+    type?: string | null;
+}
+
 export interface IChatEntry {
     date: string;
-    message: [{ name: string; email: string | null },string, string];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    message: any;
 }
 export interface IGameChat {
     messages: IChatEntry[];
 }
 export interface IChatProps {
-    chatHistory: IGameChat;
+    chatHistory: IChatEntry[];
     chatMessage: string;
     playerRoll?: number;
     opponentRoll?: number;

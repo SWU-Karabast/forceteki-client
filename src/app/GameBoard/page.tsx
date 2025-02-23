@@ -8,7 +8,6 @@ import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/Opponent
 import Board from '../_components/Gameboard/Board/Board';
 import PlayerCardTray from '../_components/Gameboard/PlayerCardTray/PlayerCardTray';
 import { useGame } from '../_contexts/Game.context';
-import { useSidebar } from '../_contexts/Sidebar.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
@@ -17,35 +16,17 @@ import { MatchType } from '@/app/_constants/constants';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState } = useGame();
-
     const router = useRouter();
-    const { sidebarOpen, toggleSidebar } = useSidebar();
-    const [chatMessage, setChatMessage] = useState('');
-    const [chatHistory, setChatHistory] = useState<string[]>([]);
-    const [round, setRound] = useState(2);
-    const drawerRef = useRef<HTMLDivElement | null>(null);
-    const [drawerWidth, setDrawerWidth] = useState(0);
 
-    // State for resource selection
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
 
-    const handleChatSubmit = () => {
-        if (chatMessage.trim()) {
-            setChatHistory([...chatHistory, chatMessage]);
-            setChatMessage('');
-        }
-    };
 
     useEffect(() => {
-    // Update the drawer width when the drawer opens or closes
-        if (drawerRef.current) {
-            setDrawerWidth(drawerRef.current.offsetWidth);
-        }
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
             router.push('/lobby');
         }
-    }, [sidebarOpen, gameState, lobbyState, router]);
+    }, [lobbyState, router]);
 
     useEffect(() => {
         if (gameState?.winner) {
@@ -55,9 +36,9 @@ const GameBoard = () => {
         }
     }, [gameState?.winner]);
 
-    const handleModalToggle = () => {
-        setIsModalOpen(!isModalOpen);
-    };
+    const toggleSidebar = () => {
+        setSidebarOpen(!sidebarOpen);
+    }
 
     const handlePreferenceToggle = () => {
         setPreferenceOpen(!isPreferenceOpen);
@@ -78,8 +59,8 @@ const GameBoard = () => {
     const styles = {
         mainBoxStyle: {
             flexGrow: 1,
-            transition: 'margin-right 0.3s ease',
-            mr: sidebarOpen ? `${drawerWidth}px` : '0',
+            pr: sidebarOpen ? '280px' : '0',
+            transition: 'padding-right 0.3s ease-in-out',
             height: '100vh',
             position: 'relative',
             backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
@@ -88,9 +69,10 @@ const GameBoard = () => {
         },
         centralPromptContainer: {
             position: 'absolute',
-            top: '50%',
-            left: '50%',
+            top: '48.6%',
+            left: sidebarOpen ? 'calc(50vw - 140px)' : '50vw',
             transform: 'translate(-50%, -50%)',
+            transition: 'left 0.3s ease-in-out',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -126,22 +108,15 @@ const GameBoard = () => {
                 <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
-                    handleModalToggle={handleModalToggle}
+                    toggleSidebar={toggleSidebar}
                 />
             </Box>
 
-            {sidebarOpen && (
-                <ChatDrawer
-                    ref={drawerRef}
-                    toggleSidebar={toggleSidebar}
-                    chatHistory={chatHistory}
-                    chatMessage={chatMessage}
-                    setChatMessage={setChatMessage}
-                    handleChatSubmit={handleChatSubmit}
-                    sidebarOpen={sidebarOpen}
-                    currentRound={round}
-                />
-            )}
+
+            <ChatDrawer
+                sidebarOpen={sidebarOpen}
+            />
+
             <Box sx={styles.centralPromptContainer}>
                 <Box sx={styles.promptStyle}>
                     {gameState.players[connectedPlayer]?.promptState.menuTitle}
