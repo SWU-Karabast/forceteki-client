@@ -6,7 +6,7 @@ export const s3ImageURL = (path: string) => {
     return s3Bucket + path;
 };
 
-export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode, cardStyle: CardStyle ) => {
+export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode, cardStyle: CardStyle = CardStyle.Plain ) => {
     if (((isGameCard(card) || isSetCodeCard(card)) && !card?.setId) && !card?.id) return s3ImageURL('game/swu-cardback.webp');
 
     // we check which type it is
