@@ -79,7 +79,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'absolute',
             height: '100%',
             width: '100%',
-            backgroundColor: card.exhausted ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            backgroundColor: card.exhausted && !isDeployed ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

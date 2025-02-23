@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import {
     Card,
     CardContent,
@@ -12,6 +12,11 @@ import { useRouter } from 'next/navigation'
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import {
+    IDeckValidationFailures,
+    DeckValidationFailureReason,
+} from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -22,6 +27,14 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [showTooltip, setShowTooltip] = useState(false);
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+    const lobbyFormat = lobbyState ? lobbyState.lobbyFormat : null;
+
+    // For deck error display
+    const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
+    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | undefined>(undefined);
+    const [displayError, setDisplayerror] = useState(false);
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const [blockError, setBlockError] = useState(false);
 
     // Extract the player from the URL query params
     const router = useRouter();
@@ -32,9 +45,65 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         router.push('/GameBoard');
     };
     const handleOnChangeDeck = async () => {
-        const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
-        sendLobbyMessage(['changeDeck',deckData, deckData])
+        if (!deckLink || readyStatus) return;
+        try {
+            const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+            sendLobbyMessage(['changeDeck', deckData])
+        }catch (error){
+            setDisplayerror(true);
+            setDeckErrorDetails(undefined);
+            if(error instanceof Error){
+                if(error.message.includes('Forbidden')) {
+                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
+                    setDeckErrorDetails({
+                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                    });
+                }else{
+                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                }
+            }
+            return;
+        }
     }
+
+    // ------------------ Listen for changes to deckErrors ------------------ //
+    useEffect(() => {
+        // get error messages
+        const deckErrors: IDeckValidationFailures = connectedUser.deckErrors;
+        if (!deckErrors) {
+            // No validation errors => clear any old error states
+            setDeckErrorSummary(null);
+            setDeckErrorDetails(undefined);
+            setErrorModalOpen(false);
+            setDisplayerror(false);
+            setBlockError(false);
+            return;
+        }
+
+        const temporaryErrors: IDeckValidationFailures = connectedUser.importDeckErrors;
+        // Determine if a blocking error exists (ignoring NotImplemented and temporary errors)
+
+        if (Object.keys(deckErrors).length > 0) {
+            // Show a short inline error message and store the full list
+            setDisplayerror(true);
+            setDeckErrorSummary('Deck is invalid.');
+            setDeckErrorDetails(deckErrors);
+            setBlockError(true)
+        }else{
+            setDeckErrorSummary(null);
+            setDeckErrorDetails(undefined);
+            setErrorModalOpen(false);
+            setDisplayerror(false);
+            setBlockError(false);
+        }
+        if (temporaryErrors) {
+            // Only 'notImplemented' or no errors => clear them out
+            setDisplayerror(true);
+            setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+            setDeckErrorDetails(temporaryErrors);
+        }
+    }, [connectedUser]);
+
     const handleCopyLink = () => {
         navigator.clipboard.writeText(lobbyState.connectionLink)
             .then(() => {
@@ -117,6 +186,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             mr: 'auto',
             mt: '10px',
         },
+        errorMessageStyle: {
+            color: 'var(--initiative-red);',
+            mt: '0.5rem',
+            mb: '0px'
+        },
+        errorMessageLink:{
+            cursor: 'pointer',
+            color: 'var(--selection-red);',
+            textDecorationColor: 'var(--initiative-red);',
+        }
     }
     return (
         <Card sx={styles.initiativeCardStyle}>
@@ -180,6 +259,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                             <CardActions sx={styles.buttonsContainerStyle}>
                                 <Box sx={styles.readyImg} />
                                 <Button
+                                    disabled={blockError}
                                     variant="contained"
                                     onClick={() => sendLobbyMessage(['setReadyStatus', !readyStatus])}
                                 >
@@ -219,18 +299,53 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     </Box>
                     <StyledTextField
                         type="url"
+                        disabled={readyStatus}
                         value={deckLink}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setDeckLink(e.target.value)}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            setDeckLink(e.target.value);
+                            if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
+                                setDisplayerror(true);
+                                setDeckErrorSummary('Deck is invalid.');
+                                setDeckErrorDetails(connectedUser.deckErrors);
+                            } else {
+                                setDisplayerror(false);
+                                setDeckErrorSummary(null);
+                                setDeckErrorDetails(undefined);
+                            }
+                        }}
                     />
+                    {(displayError || blockError) && (
+                        <Typography variant={'body1'} color={'error'} sx={styles.errorMessageStyle}>
+                            {deckErrorSummary}{' '}
+                            {deckErrorDetails && (
+                                <Link
+                                    sx={styles.errorMessageLink}
+                                    onClick={() => setErrorModalOpen(true)}
+                                >
+                                    Details
+                                </Link>
+                            )}
+                        </Typography>
+                    )}
                     <Button
                         type="button"
                         onClick={handleOnChangeDeck}
                         variant="contained"
+                        disabled={readyStatus}
                         sx={styles.submitButtonStyle}
                     >
                         Change Deck
                     </Button>
                 </>
+            )}
+            {deckErrorDetails && (
+                <ErrorModal
+                    title="Deck Validation Error"
+                    open={errorModalOpen}
+                    onClose={() => setErrorModalOpen(false)}
+                    errors={deckErrorDetails}
+                    format={lobbyFormat}
+                />
             )}
         </Card>
     )

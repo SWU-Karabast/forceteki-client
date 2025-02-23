@@ -142,10 +142,10 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '0.5rem',
             position: 'relative',
-            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: cardStyle === CardStyle.InPlay ? '1.058' : '.718',
+            aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '.718',
             width: '100%',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',

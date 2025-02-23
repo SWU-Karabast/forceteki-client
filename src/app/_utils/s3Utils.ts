@@ -1,4 +1,4 @@
-import { ICardData, IServerCardData, ISetCode } from '../_components/_sharedcomponents/Cards/CardTypes';
+import { ICardData, IServerCardData, ISetCode, CardStyle } from '../_components/_sharedcomponents/Cards/CardTypes';
 import { isGameCard, isSetCodeCard, parseSetId } from '@/app/_components/_sharedcomponents/Cards/cardUtils';
 
 export const s3ImageURL = (path: string) => {
@@ -6,7 +6,7 @@ export const s3ImageURL = (path: string) => {
     return s3Bucket + path;
 };
 
-export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode) => {
+export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode, cardStyle: CardStyle = CardStyle.Plain ) => {
     if (((isGameCard(card) || isSetCodeCard(card)) && !card?.setId) && !card?.id) return s3ImageURL('game/swu-cardback.webp');
 
     // we check which type it is
@@ -27,8 +27,9 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode) => 
     if (cardType === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
         cardNumber += '-side2';
     }
+    const format = cardStyle === CardStyle.InPlay ? 'truncated' : 'standard';
 
-    return s3ImageURL(`cards/${setId.set}/${cardNumber}.webp`);
+    return s3ImageURL(`cards/${setId.set}/${format}/large/${cardNumber}.webp`);
 };
 
 
