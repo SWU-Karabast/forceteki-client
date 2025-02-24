@@ -93,7 +93,7 @@ const HomePagePlayMode: React.FC = () => {
                     </TabPanel>
                 }
                 <TabPanel index={user ? 1 : 0} value={value}>
-                    <CreateGameForm format={'Premier'} />
+                    <CreateGameForm />
                 </TabPanel>
                 {showTestGames && 
                     <TabPanel index={2} value={value}>

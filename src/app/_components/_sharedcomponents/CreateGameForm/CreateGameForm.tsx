@@ -20,23 +20,14 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-
-interface ICreateGameFormProps {
-    format?: string | null;
-    setFormat?: (format: string) => void;
-}
+import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 
 const deckOptions: string[] = [
     'Order66',
     'ThisIsTheWay',
 ];
 
-const formatOptions: string[] = ['Premier'];
-
-const CreateGameForm: React.FC<ICreateGameFormProps> = ({
-    format,
-    setFormat,
-}) => {
+const CreateGameForm = () => {
     const pathname = usePathname();
     const router = useRouter();
     const isCreateGamePath = pathname === '/creategame';
@@ -47,6 +38,10 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
+    const [format, setFormat] = useState<string>(savedFormat);
+
+    const formatOptions = Object.values(SwuGameFormat);
 
     // For a short, user-friendly error message
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
@@ -57,6 +52,11 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     // Additional State for Non-Creategame Path
     const [gameName, setGameName] = useState<string>('');
     const [privacy, setPrivacy] = useState<string>(user ? 'Public' : 'Private');
+
+    const handleChangeFormat = (format: SwuGameFormat) => {
+        localStorage.setItem('format', format);
+        setFormat(format);
+    }
 
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -84,6 +84,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 user: user || sessionStorage.getItem('anonymousUserId'),
                 deck: deckData,
                 isPrivate: privacy === 'Private',
+                format: format,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -257,14 +258,14 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             <StyledTextField
                                 select
                                 value={format}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setFormat ? setFormat(e.target.value) : null
-                                }
                                 required
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    handleChangeFormat(e.target.value as SwuGameFormat)
+                                }
                             >
                                 {formatOptions.map((fmt) => (
                                     <MenuItem key={fmt} value={fmt}>
-                                        {fmt}
+                                        {FormatLabels[fmt] || fmt}
                                     </MenuItem>
                                 ))}
                             </StyledTextField>
