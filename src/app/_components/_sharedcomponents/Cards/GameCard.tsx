@@ -2,6 +2,8 @@ import React from 'react';
 import {
     Typography,
     Box,
+    Popover,
+    PopoverOrigin,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
@@ -20,6 +22,51 @@ const GameCard: React.FC<IGameCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
 
+    const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
+    const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
+    
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
+
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        if (cardInOpponentsHand) {
+            return;
+        }
+        hoverTimeout.current = window.setTimeout(() => {
+            setAnchorElement(target);
+        }, 500);
+    };
+    
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+    };
+
+    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+        if (cardInPlayersHand) {
+            return { 
+                anchorOrigin:{
+                    vertical: -5,
+                    horizontal: 'center',
+                },
+                transformOrigin: {
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                } };
+        }
+
+        return { 
+            anchorOrigin:{
+                vertical: 'center',
+                horizontal: -5,
+            },
+            transformOrigin: {
+                vertical: 'center',
+                horizontal: 'right',
+            } };
+    }
 
     const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
     if (showValueAdjuster) {
@@ -251,12 +298,27 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundColor:'black',
             mb:'0px',
             position:'relative'
-        }
+        },
+        cardPreview: {
+            borderRadius: '.38em',
+            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1 / 1.4',
+            width: '16rem',
+        },
     }
 
     return (
         <Box sx={styles.cardContainer}>
-            <Box sx={styles.card} onClick={disabled ? undefined : handleClick}>
+            <Box 
+                sx={styles.card} 
+                onClick={disabled ? undefined : handleClick}
+                aria-owns={open ? 'mouse-over-popover' : undefined}
+                aria-haspopup="true"
+                onMouseEnter={handlePreviewOpen}
+                onMouseLeave={handlePreviewClose}
+            >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
                     { !!distributionAmount && (
@@ -301,6 +363,19 @@ const GameCard: React.FC<IGameCardProps> = ({
                     </>
                 )}
             </Box>
+
+            <Popover
+                id="mouse-over-popover"
+                sx={{ pointerEvents: 'none' }}
+                open={open}
+                anchorEl={anchorElement}
+                onClose={handlePreviewClose}
+                disableRestoreFocus
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                {...popoverConfig()}
+            >
+                <Box sx={styles.cardPreview} />
+            </Popover>
 
             {otherUpgradeCards.map((subcard) => (
                 <Box

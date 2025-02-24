@@ -33,6 +33,7 @@ export interface ICardData {
     zone?: string;
     epicActionSpent?: boolean;
     onStartingSide?: boolean;
+    controlled: boolean;
 }
 
 export interface IServerCardData {
