@@ -39,7 +39,7 @@ export const getPopupPosition = (type: PopupType, data: PopupData, index: number
 
     const pilePosition = {
         position: 'absolute',
-        left: containCards ? '-23%' : '-30.5%',
+        left: containCards ? '0%' : '-30.5%',
         width: '100%',
     }
 
