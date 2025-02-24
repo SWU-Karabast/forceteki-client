@@ -15,7 +15,6 @@ const overlayStyle = {
     width: '100%',
     height: '100%',
     pointerEvents: 'none',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     display: 'flex',
     zIndex: 10,
 };
@@ -30,36 +29,37 @@ const focusHandlerStyle = (type: PopupType, data: PopupData, index: number, play
 });
 
 export const getPopupPosition = (type: PopupType, data: PopupData, index: number, playerName:string, containCards?:boolean) => {
-    const basePosition = {
+    return {
         position: 'absolute',
         left:'50%',
-        marginTop: '150px',
-        transform: `translate(0px, ${index * 50}px)`,
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '80%'
     };
 
-    const pilePosition = {
-        position: 'absolute',
-        left: containCards ? '-23%' : '-30.5%',
-        width: '100%',
-    }
+    // const pilePosition = {
+    //     position: 'absolute',
+    //     left: containCards ? '-23%' : '-30.5%',
+    //     width: '100%',
+    // }
 
-    if (type === 'pile') {
-        if (data.uuid === `${playerName}-discard`) {
-            return {
-                ...pilePosition,
-                bottom: '400px',
-            } as const;
-        }
-        return {
-            ...pilePosition,
-            top: '350px',
-        } as const;
-    }
+    // if (type === 'pile') {
+    //     if (data.uuid === `${playerName}-discard`) {
+    //         return {
+    //             ...pilePosition,
+    //             bottom: '400px',
+    //         } as const;
+    //     }
+    //     return {
+    //         ...pilePosition,
+    //         top: '350px',
+    //     } as const;
+    // }
     
-    return {
-        ...basePosition,
-        top: '150px',
-    } as const;
+    // return {
+    //     ...basePosition,
+    //     top: '150px',
+    // } as const;
 }
 
 const PopupShell: React.FC = () => {
