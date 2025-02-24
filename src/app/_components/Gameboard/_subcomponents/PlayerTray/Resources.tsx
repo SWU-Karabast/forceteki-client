@@ -34,7 +34,7 @@ const Resources: React.FC<IResourcesProps> = ({
             '&:hover': {
                 background:
                     trayPlayer === connectedPlayer
-                        ? 'linear-gradient(to top, white, transparent)'
+                        ? 'rgba(255, 255, 255, 0.1)'
                         : null,
             },
         },
