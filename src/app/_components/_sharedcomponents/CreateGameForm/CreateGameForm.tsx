@@ -38,7 +38,8 @@ const CreateGameForm = () => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
-    const [format, setFormat] = useState<string>(SwuGameFormat.Premier);
+    const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
+    const [format, setFormat] = useState<string>(savedFormat);
 
     const formatOptions = Object.values(SwuGameFormat);
 
@@ -51,6 +52,11 @@ const CreateGameForm = () => {
     // Additional State for Non-Creategame Path
     const [gameName, setGameName] = useState<string>('');
     const [privacy, setPrivacy] = useState<string>(user ? 'Public' : 'Private');
+
+    const handleChangeFormat = (format: SwuGameFormat) => {
+        localStorage.setItem('format', format);
+        setFormat(format);
+    }
 
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -254,7 +260,7 @@ const CreateGameForm = () => {
                                 value={format}
                                 required
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setFormat(e.target.value)
+                                    handleChangeFormat(e.target.value as SwuGameFormat)
                                 }
                             >
                                 {formatOptions.map((fmt) => (
