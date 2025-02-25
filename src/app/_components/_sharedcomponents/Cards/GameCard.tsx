@@ -26,22 +26,30 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
     
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
+        const imageUrl = target.getAttribute('data-card-url');
+        
+        if (!imageUrl) return;
+
         if (cardInOpponentsHand) {
             return;
         }
+
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
         }, 500);
     };
     
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
+        setPreviewImage(null);
     };
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
@@ -301,7 +309,6 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         cardPreview: {
             borderRadius: '.38em',
-            backgroundImage: `url(${s3CardImageURL(card)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: '1 / 1.4',
@@ -314,10 +321,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             <Box 
                 sx={styles.card} 
                 onClick={disabled ? undefined : handleClick}
-                aria-owns={open ? 'mouse-over-popover' : undefined}
-                aria-haspopup="true"
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
+                data-card-url={s3CardImageURL(card)}
             >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
@@ -374,7 +380,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
                 {...popoverConfig()}
             >
-                <Box sx={styles.cardPreview} />
+                <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
             </Popover>
 
             {otherUpgradeCards.map((subcard) => (
@@ -385,6 +391,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                         border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none'
                     }}
                     onClick={() => subcardClick(subcard)}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    data-card-url={s3CardImageURL(subcard)}
                 >
                     <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
                 </Box>
@@ -395,7 +404,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     <Typography sx={styles.capturedCardsDivider}>
                         Captured
                     </Typography>
-                    {capturedCards.map((capturedCard) => (
+                    {capturedCards.map((capturedCard: ICardData) => (
                         <Box
                             key={`captured-${capturedCard.uuid}`}
                             sx={{
@@ -404,6 +413,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none'
                             }}
                             onClick={() => subcardClick(capturedCard)}
+                            onMouseEnter={handlePreviewOpen}
+                            onMouseLeave={handlePreviewClose}
+                            data-card-url={s3CardImageURL(capturedCard)}
                         >
                             <Typography sx={styles.upgradeName}>
                                 {capturedCard.name}
