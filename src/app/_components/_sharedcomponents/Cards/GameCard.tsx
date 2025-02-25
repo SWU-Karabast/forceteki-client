@@ -33,11 +33,13 @@ const GameCard: React.FC<IGameCardProps> = ({
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
+        
         if (!imageUrl) return;
 
         if (cardInOpponentsHand) {
             return;
         }
+
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
@@ -47,6 +49,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
+        setPreviewImage(null);
     };
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
