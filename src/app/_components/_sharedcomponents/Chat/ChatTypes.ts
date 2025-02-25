@@ -1,3 +1,9 @@
+export interface IChatObject {
+    name: string;
+    label: string;
+    uuid: string;
+}
+
 export interface IChatMessage {
     name: string;
     email: string;

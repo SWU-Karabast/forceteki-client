@@ -8,7 +8,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Send } from '@mui/icons-material';
-import { IChatProps, IChatEntry } from './ChatTypes';
+import { IChatProps, IChatEntry, IChatObject } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 
 const Chat: React.FC<IChatProps> = ({
@@ -31,18 +31,20 @@ const Chat: React.FC<IChatProps> = ({
                 </Typography>
             )
         } else if (message[0].type === 'playerChat') {
+            const stringMessage = message.map((item: IChatObject | string) => typeof item === 'object' ? item.name : item).join('');
             return (
                 <Typography key={index} sx={styles.messageText}>
                     <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
-                        {message[0].name}
+                        {stringMessage}
                     </Typography>:
                     {message.slice(1).join('')}
                 </Typography>
             )
         }
+        const stringMessage = message.map((item: IChatObject | string) => typeof item === 'object' ? item.name : item).join('');
         return (
             <Typography key={index} sx={styles.messageText}>
-                {message[0].name} {message.slice(1).join('')}
+                {stringMessage}
             </Typography>
         )
     }
