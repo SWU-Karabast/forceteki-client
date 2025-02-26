@@ -1,9 +1,17 @@
 import React from 'react';
 import { Card, Box, Typography, Divider } from '@mui/material';
-import { IServerCardData, CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { CardStyle, ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 
-const DeckComponent: React.FC = () => {
+interface DeckComponentProps {
+    mainDeck?: any;
+    sideBoard?: any;
+}
+
+const DeckComponent: React.FC<DeckComponentProps> = ({
+    mainDeck = [],
+    sideBoard = []
+}) => {
     // ------------------------STYLES------------------------//
     const cardStyle = {
         borderRadius: '1.1em',
@@ -56,20 +64,18 @@ const DeckComponent: React.FC = () => {
         p: '1em',
         textWrap: 'wrap',
     };
-    // set decks for connectedUser
-    const newDeck: [] = [];
-    const sideBoard: [] = [];
-    console.log('newDeck', newDeck);
+    // For debugging purposes:
+    console.log('mainDeck', mainDeck);
     console.log('sideBoard', sideBoard);
 
-    // Calculate the total counts
-    const deckCount = newDeck.reduce(
-        (sum: number, item: { count: number; }) => sum + (item.count || 0),
+    // Calculate the total counts from the decks.
+    const deckCount = mainDeck.reduce(
+        (sum: number, item: { count: number }) => sum + (item.count || 0),
         0
     ) ?? 0;
 
     const sideboardCount = sideBoard.reduce(
-        (sum: number, item: { count: number; }) => sum + (item.count || 0),
+        (sum: number, item: { count: number }) => sum + (item.count || 0),
         0
     ) ?? 0;
 
@@ -86,9 +92,9 @@ const DeckComponent: React.FC = () => {
                     sx={scrollableBoxStyle}
                 >
                     <Box sx={mainContainerStyle}>
-                        {newDeck.map((card:IServerCardData) => (
+                        {mainDeck.map((card:ICardData) => (
                             <GameCard
-                                key={card.card.id}
+                                key={card.id}
                                 card={card}
                                 cardStyle={CardStyle.Lobby}
                             />
@@ -108,9 +114,9 @@ const DeckComponent: React.FC = () => {
                             sx={scrollableBoxStyleSideboard}
                         >
                             <Box sx={mainContainerStyle}>
-                                {sideBoard.map((card:IServerCardData) => (
+                                {sideBoard.map((card:ICardData) => (
                                     <GameCard
-                                        key={card.card.id}
+                                        key={card.id}
                                         card={card}
                                         cardStyle={CardStyle.Lobby}
                                     />

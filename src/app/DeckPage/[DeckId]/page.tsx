@@ -1,12 +1,12 @@
 'use client';
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useState, useEffect } from 'react';
 import { Box, MenuItem, Typography } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { useRouter } from 'next/navigation';
-
+import { useRouter, useParams } from 'next/navigation';
+import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 
 const sortByOptions: string[] = [
     'Cost',
@@ -17,10 +17,27 @@ const sortByOptions: string[] = [
 const DeckDetails: React.FC = () => {
     const [sortBy, setSortBy] = useState<string>('');
     const router = useRouter();
+    const [deckData, setDeckData] = useState<any>(null);
+    const params = useParams();
+    const deckId = params?.DeckId; // assuming your route is something like /DeckPage/[deckId]
+
+    // Fetch the deck data when deckId changes
+    useEffect(() => {
+        if (deckId) {
+            (async () => {
+                try {
+                    const data = await fetchDeckData(`https://swudb.com/deck/${deckId}`, false);
+                    setDeckData(data);
+                } catch (error) {
+                    console.error('Error fetching deck data:', error);
+                }
+            })();
+        }
+    }, [deckId]);
+
 
     // Handler to navigate to the deck subpage using the deck's id
     const handleBackButton = () => {
-        console.log('HELLO WORLD');
         router.push('/DeckPage');
     };
 
@@ -160,7 +177,7 @@ const DeckDetails: React.FC = () => {
                         </Box>
                     </Box>
                     <Grid sx={styles.deckGridStyle}>
-                        <DeckComponent />
+                        <DeckComponent mainDeck={deckData ? deckData.deck : []} sideBoard={deckData ? deckData.sideboard : []}/>
                     </Grid>
                 </Box>
             </Box>
