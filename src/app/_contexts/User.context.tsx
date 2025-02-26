@@ -8,7 +8,7 @@ import React, {
     useState,
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { IUserContextType } from './UserTypes';
 import { v4 as uuid } from 'uuid';
 
@@ -27,34 +27,36 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         // check dev user first
+        const storedUser = localStorage.getItem('devUser');
         if (process.env.NODE_ENV === 'development') {
-            const storedUser = localStorage.getItem('devUser');
             if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
                 handleDevSetUser(storedUser);
             }
         }
     
-        // Keep context in sync with next-auth session
         if (session?.user) {
-            setUser({
-                id: session.user.id || null,
-                username: session.user.name || null,
-                email: session.user.email || null,
-                provider: session.user.provider || null,
+            setUser(prevUser => {
+                if (prevUser?.id === session.user.id) return prevUser; // Avoid re-setting same user
+                return {
+                    id: session.user.id || null,
+                    username: session.user.name || null,
+                    email: session.user.email || null,
+                    provider: session.user.provider || null,
+                };
             });
-        } else {
-            // if session not detected assign anonymous user
+        } else if (!storedUser) {
             let anonymousId = sessionStorage.getItem('anonymousUserId');
             if (!anonymousId) {
                 anonymousId = uuid();
                 sessionStorage.setItem('anonymousUserId', anonymousId);
             }
-            setAnonymousUserId(anonymousId);
+            setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId)); // Avoid redundant updates
         }
-    }, [session]);
+    }, [session, pathname]);
 
 
     const login = (provider: 'google' | 'discord') => {

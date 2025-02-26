@@ -29,7 +29,7 @@ function EndGameOptionsCustom() {
             sendLobbyMessage(['requestRematch', 'reset']);
         } else if (rematchRequest.mode === 'reset' && !isInitiator) {
             // Confirm the reset request.
-            sendLobbyMessage(['onStartGame']);
+            sendLobbyMessage(['onStartGameAsync']);
         }
     };
 

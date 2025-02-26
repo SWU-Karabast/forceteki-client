@@ -47,7 +47,7 @@ const KarabastBanner: React.FC = () => {
             flex: 1,
         },
         block1: {
-            backgroundImage: 'url(/leia-sor.jpg)',
+            backgroundImage: `url(${s3ImageURL('ui/leia-banner.webp')})`,
             marginRight: '-152px',
             '@media (max-width:800px)': { marginRight: 0 },
         },
@@ -62,7 +62,7 @@ const KarabastBanner: React.FC = () => {
             '@media (max-width:1200px)': { display: 'none' },
         },
         block4: {
-            backgroundImage: 'url(\'/luke-sor.jpg\')',
+            backgroundImage: `url(${s3ImageURL('ui/luke-banner.webp')})`,
             marginLeft: '-152px',
             '@media (max-width:1600px)': { display: 'none' },
         },

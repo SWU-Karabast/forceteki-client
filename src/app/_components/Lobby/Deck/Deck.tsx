@@ -1,11 +1,42 @@
 import React from 'react';
 import { Card, Box, Typography, Divider } from '@mui/material';
-import { IServerCardData, CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { CardStyle, ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
+import { DeckValidationFailureReason, IDeckValidationFailures } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 
 const Deck: React.FC = () => {
+    const { connectedPlayer, lobbyState, sendLobbyMessage } = useGame();
+    const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+
+    const notImplementedList = connectedUser?.unimplementedCards ?? [];
+    const isCardNotImplemented = (cardId: number | undefined) =>
+        notImplementedList.some((item:ICardData) => item.id === cardId);
+    // set decks for connectedUser
+    const userMain = connectedUser.deck?.deck || []
+    const usersSideboard = connectedUser.deck?.sideboard || []
+
+    // sort main deck and sideboard by card cost ascending
+    const sortedUserMain = [...userMain].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
+    const sortedUsersSideboard = [...usersSideboard].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
+
+    // Calculate the total counts
+    const deckCount = userMain.reduce(
+        (sum: number, item: { count: number; }) => sum + (item.count || 0),
+        0
+    ) ?? 0;
+
+    const sideboardCount = usersSideboard.reduce(
+        (sum: number, item: { count: number; }) => sum + (item.count || 0),
+        0
+    ) ?? 0;
+
+    // check if errors exist
+    const deckErrors: IDeckValidationFailures = connectedUser?.deckErrors ?? {};
+    const mainboardError = Object.keys(deckErrors).includes(DeckValidationFailureReason.MinMainboardSizeNotMet);
+    const sideboardError = Object.keys(deckErrors).includes(DeckValidationFailureReason.MaxSideboardSizeExceeded);
+
     // ------------------------STYLES------------------------//
     const cardStyle = {
         borderRadius: '1.1em',
@@ -26,7 +57,6 @@ const Deck: React.FC = () => {
         position: 'sticky',
         top: '0',
         zIndex: 1,
-        pt: '.2em',
     };
 
     const titleTextStyle = {
@@ -62,68 +92,59 @@ const Deck: React.FC = () => {
         p: '1em',
         textWrap: 'wrap',
     };
-    const { connectedPlayer, lobbyState, sendLobbyMessage } = useGame();
-    const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
-
-    // set decks for connectedUser
-    const newDeck = connectedUser ? connectedUser.deck ? connectedUser.deck.deckCards || [] : [] : [];
-    const sideBoard = connectedUser ? connectedUser.deck ? connectedUser.deck.sideboard || [] : [] : [];
-    console.log('newDeck', newDeck);
-    console.log('sideBoard', sideBoard);
-
-    // Calculate the total counts
-    const deckCount = newDeck.reduce(
-        (sum: number, item: { count: number; }) => sum + (item.count || 0),
-        0
-    ) ?? 0;
-
-    const sideboardCount = sideBoard.reduce(
-        (sum: number, item: { count: number; }) => sum + (item.count || 0),
-        0
-    ) ?? 0;
 
     return (
         <Box sx={{ width:'100%', height:'100%', overflowY: 'scroll' }}>
             <Card sx={cardStyle}>
                 <Box sx={headerBoxStyle}>
                     <Typography sx={titleTextStyle}>Your Deck</Typography>
-                    <Typography sx={deckSizeTextStyle}>
-                        {deckCount}/50
-                    </Typography>
+                    <Box sx={{ display : 'flex' }}>
+                        <Typography sx={{ ...deckSizeTextStyle, mr:'0px',color: mainboardError ? 'red' : deckSizeTextStyle.color }}>
+                            {deckCount}
+                        </Typography>
+                        <Typography sx={deckSizeTextStyle}>/50</Typography>
+                    </Box>
                 </Box>
                 <Box
                     sx={scrollableBoxStyle}
                 >
                     <Box sx={mainContainerStyle}>
-                        {newDeck.map((card:IServerCardData) => (
+                        {sortedUserMain.map((card:ICardData) => (
                             <GameCard
-                                key={card.card.id}
-                                card={card}
+                                key={card.id}
+                                card={{ ...card, implemented: !isCardNotImplemented(card.id) }}
                                 cardStyle={CardStyle.Lobby}
-                                onClick={() => sendLobbyMessage(['updateDeck','Deck', card.card.id])}
+                                disabled={connectedUser.ready}
+                                onClick={() => sendLobbyMessage(['updateDeck','Deck', card.id])}
                             />
                         ))}
                     </Box>
                 </Box>
-                {sideBoard?.length > 0 && (
+                {usersSideboard?.length > 0 && (
                     <>
                         <Box sx={headerBoxStyle}>
                             <Typography sx={titleTextStyle}>Sideboard</Typography>
                             <Divider sx={dividerStyle} />
-                            <Typography sx={deckSizeTextStyle}>
-                                {sideboardCount}/10
-                            </Typography>
+                            <Box sx={{ display : 'flex' }}>
+                                <Typography sx={{ ...deckSizeTextStyle, mr:'0px', color: sideboardError ? 'red' : deckSizeTextStyle.color }}>
+                                    {sideboardCount}
+                                </Typography>
+                                <Typography sx={deckSizeTextStyle}>
+                                    /10
+                                </Typography>
+                            </Box>
                         </Box>
                         <Box
                             sx={scrollableBoxStyleSideboard}
                         >
                             <Box sx={mainContainerStyle}>
-                                {sideBoard.map((card:IServerCardData) => (
+                                {sortedUsersSideboard.map((card:ICardData) => (
                                     <GameCard
-                                        key={card.card.id}
-                                        card={card}
+                                        key={card.id}
+                                        card={{ ...card, implemented: !isCardNotImplemented(card.id) }}
                                         cardStyle={CardStyle.Lobby}
-                                        onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.card.id])}
+                                        disabled={connectedUser.ready}
+                                        onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.id])}
                                     />
                                 ))}
                             </Box>

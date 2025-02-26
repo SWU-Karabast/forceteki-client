@@ -5,6 +5,8 @@ import Grid from '@mui/material/Grid2';
 import { ILobbyUserProps, IPlayersProps } from '../LobbyTypes';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { useGame } from '@/app/_contexts/Game.context';
+import { DeckValidationFailureReason } from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     // ------------------------STYLES------------------------//
@@ -13,13 +15,24 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
 
     // set connectedPlayer
-    const playerLeader = connectedUser ? connectedUser.deck ? connectedUser.deck.leader[0].card : null : null;
-    const playerBase = connectedUser ? connectedUser.deck ? connectedUser.deck.base[0].card : null : null;
+    const playerLeader = connectedUser.deck?.leader || null;
+    const playerBase = connectedUser.deck?.base || null;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
-    const opponentLeader = opponentUser ? opponentUser.deck ? opponentUser.deck.leader[0].card : null : null;
-    const opponentBase = opponentUser ? opponentUser.deck ? opponentUser.deck.base[0].card : null : null;
+    const opponentLeader = opponentUser ? opponentUser.deck?.leader : null;
+    const opponentBase = opponentUser ? opponentUser.deck?.base : null;
+
+    // check unimplemeneted list for players cards
+    const notImplementedList = connectedUser?.unimplementedCards ?? [];
+    const isCardNotImplemented = (cardId: number | undefined) =>
+        notImplementedList.some((item:ICardData) => item.id === cardId);
+
+    // check unimplemeneted list for opponents cards
+    const opponentNotImplementedList = opponentUser?.unimplementedCards ?? [];
+    const isOpponentCardNotImplemented = (cardId: number | undefined) =>
+        opponentNotImplementedList.some((item:ICardData) => item.id === cardId);
+
     const cardStyle = {
         borderRadius: '1.1em',
         borderColor: '#FFFFFF00',
@@ -91,10 +104,10 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                             </Typography>
                             <LeaderBaseCard
                                 title={connectedUser ? connectedUser.username : connectedPlayer}
-                                card={playerLeader}
+                                card={playerLeader ? { ...playerLeader,implemented: !isCardNotImplemented(playerLeader?.id) } : playerLeader}
                                 disabled={true}
                             />
-                            <LeaderBaseCard card={playerBase} disabled={true}></LeaderBaseCard>
+                            <LeaderBaseCard card={playerBase ? { ...playerBase, implemented: !isCardNotImplemented(playerBase?.id) } : playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                     <Grid sx={rowStyle}>
@@ -110,10 +123,10 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                             </Typography>
                             <LeaderBaseCard
                                 title={titleOpponent}
-                                card={opponentLeader}
+                                card={opponentLeader ? { ...opponentLeader,implemented: !isOpponentCardNotImplemented(opponentLeader?.id) } : opponentLeader}
                                 disabled={true}
                             />
-                            <LeaderBaseCard card={opponentBase} disabled={true}></LeaderBaseCard>
+                            <LeaderBaseCard card={opponentBase ? { ...opponentBase,implemented: !isOpponentCardNotImplemented(opponentBase?.id) } : opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                 </Grid>
