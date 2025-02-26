@@ -1,17 +1,50 @@
 import React from 'react';
-import { Card, Box, Typography, Divider } from '@mui/material';
-import { CardStyle, ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
+import { Card, Box, Typography, Divider, Popover, PopoverOrigin } from '@mui/material';
+import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { IDeckData } from '@/app/_utils/fetchDeckData';
 
 interface DeckComponentProps {
-    mainDeck?: any;
-    sideBoard?: any;
+    mainDeck: IDeckData | undefined
 }
 
 const DeckComponent: React.FC<DeckComponentProps> = ({
-    mainDeck = [],
-    sideBoard = []
+    mainDeck
 }) => {
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
+
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        const imageUrl = target.getAttribute('data-card-url');
+
+        if (!imageUrl) return;
+
+        hoverTimeout.current = window.setTimeout(() => {
+            setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
+        }, 500);
+    };
+
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+        setPreviewImage(null);
+    };
+
+    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+        return {
+            anchorOrigin:{
+                vertical: 'center',
+                horizontal: -5,
+            },
+            transformOrigin: {
+                vertical: 'center',
+                horizontal: 'right',
+            } };
+    }
+
     // ------------------------STYLES------------------------//
     const cardStyle = {
         borderRadius: '1.1em',
@@ -64,17 +97,41 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
         p: '1em',
         textWrap: 'wrap',
     };
+
+    const cardPreview = {
+        borderRadius: '.38em',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        aspectRatio: '1 / 1.4',
+        width: '16rem',
+    };
+    const styleCard = {
+        borderRadius: '0.5rem',
+        position: 'relative',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        aspectRatio: '.718',
+        width: '100%',
+        border: '2px solid transparent',
+        boxSizing: 'border-box',
+    };
+    const cardContainer = {
+        backgroundColor: 'black',
+        borderRadius: '0.5rem',
+        width: '8rem',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+    };
     // For debugging purposes:
-    console.log('mainDeck', mainDeck);
-    console.log('sideBoard', sideBoard);
 
     // Calculate the total counts from the decks.
-    const deckCount = mainDeck.reduce(
+    const deckCount = mainDeck?.deck.reduce(
         (sum: number, item: { count: number }) => sum + (item.count || 0),
         0
     ) ?? 0;
 
-    const sideboardCount = sideBoard.reduce(
+    const sideboardCount = mainDeck?.sideboard.reduce(
         (sum: number, item: { count: number }) => sum + (item.count || 0),
         0
     ) ?? 0;
@@ -92,16 +149,32 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
                     sx={scrollableBoxStyle}
                 >
                     <Box sx={mainContainerStyle}>
-                        {mainDeck.map((card:ICardData) => (
-                            <GameCard
-                                key={card.id}
-                                card={card}
-                                cardStyle={CardStyle.Lobby}
-                            />
+                        {mainDeck?.deck.map((card) => (
+                            <Box sx={cardContainer} key={card.id}>
+                                <Box
+                                    key={card.id}
+                                    sx={{ ...styleCard, backgroundImage:`url(${s3CardImageURL(card)})` }}
+                                    onMouseEnter={handlePreviewOpen}
+                                    onMouseLeave={handlePreviewClose}
+                                    data-card-url={s3CardImageURL(card)}
+                                />
+                                <Popover
+                                    id="mouse-over-popover"
+                                    sx={{ pointerEvents: 'none' }}
+                                    open={open}
+                                    anchorEl={anchorElement}
+                                    onClose={handlePreviewClose}
+                                    disableRestoreFocus
+                                    slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                                    {...popoverConfig()}
+                                >
+                                    <Box sx={{ ...cardPreview, backgroundImage: previewImage }} />
+                                </Popover>
+                            </Box>
                         ))}
                     </Box>
                 </Box>
-                {sideBoard?.length > 0 && (
+                {mainDeck && mainDeck.sideboard?.length > 0 && (
                     <>
                         <Box sx={headerBoxStyle}>
                             <Typography sx={titleTextStyle}>Sideboard</Typography>
@@ -114,12 +187,28 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
                             sx={scrollableBoxStyleSideboard}
                         >
                             <Box sx={mainContainerStyle}>
-                                {sideBoard.map((card:ICardData) => (
-                                    <GameCard
-                                        key={card.id}
-                                        card={card}
-                                        cardStyle={CardStyle.Lobby}
-                                    />
+                                {mainDeck?.sideboard.map((card) => (
+                                    <Box sx={cardContainer} key={card.id}>
+                                        <Box
+                                            key={card.id}
+                                            sx={{ ...styleCard, backgroundImage:`url(${s3CardImageURL(card)})` }}
+                                            onMouseEnter={handlePreviewOpen}
+                                            onMouseLeave={handlePreviewClose}
+                                            data-card-url={s3CardImageURL(card)}
+                                        />
+                                        <Popover
+                                            id="mouse-over-popover"
+                                            sx={{ pointerEvents: 'none' }}
+                                            open={open}
+                                            anchorEl={anchorElement}
+                                            onClose={handlePreviewClose}
+                                            disableRestoreFocus
+                                            slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                                            {...popoverConfig()}
+                                        >
+                                            <Box sx={{ ...cardPreview, backgroundImage: previewImage }} />
+                                        </Popover>
+                                    </Box>
                                 ))}
                             </Box>
                         </Box>

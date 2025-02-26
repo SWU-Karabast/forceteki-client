@@ -6,7 +6,8 @@ import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { useRouter, useParams } from 'next/navigation';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
+import { s3CardImageURL } from '@/app/_utils/s3Utils';
 
 const sortByOptions: string[] = [
     'Cost',
@@ -17,7 +18,7 @@ const sortByOptions: string[] = [
 const DeckDetails: React.FC = () => {
     const [sortBy, setSortBy] = useState<string>('');
     const router = useRouter();
-    const [deckData, setDeckData] = useState<any>(null);
+    const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const params = useParams();
     const deckId = params?.DeckId; // assuming your route is something like /DeckPage/[deckId]
 
@@ -88,13 +89,27 @@ const DeckDetails: React.FC = () => {
             flexDirection: 'row',
             alignItems: 'space-between',
         },
-        boxGeneralStyling: {
+        boxGeneralStylingLeader: {
             backgroundColor: 'transparent',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
+            backgroundImage: deckData ? `url(${s3CardImageURL(deckData.leader)})` : 'none',
             width: '14rem',
             height: '10.18rem',
-            backgroundImage: 'url(/leaders/boba.webp)',
+            backgroundRepeat: 'no-repeat',
+            textAlign: 'center' as const,
+            color: 'white',
+            display: 'flex',
+            cursor: 'pointer',
+            position: 'relative' as const,
+        },
+        boxGeneralStylingBase: {
+            backgroundColor: 'transparent',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundImage: deckData ? `url(${s3CardImageURL(deckData.base)})` : 'none',
+            width: '14rem',
+            height: '10.18rem',
             backgroundRepeat: 'no-repeat',
             textAlign: 'center' as const,
             color: 'white',
@@ -148,12 +163,12 @@ const DeckDetails: React.FC = () => {
                 <Box sx={styles.deckMeta}>
                     <Box sx={styles.titleContainer}>
                         <Box sx={styles.backCircle} onClick={handleBackButton}><ArrowBackIosNewIcon fontSize="small" /></Box>
-                        <Typography variant={'h3'} sx={styles.titleText}>Fast & Furious Boba</Typography>
+                        <Typography variant={'h3'} sx={styles.titleText}>{deckData?.metadata.name}</Typography>
                         <Box sx={styles.editBox}></Box>
                     </Box>
                     <Box sx={styles.leaderBaseContainer}>
-                        <Box sx={styles.boxGeneralStyling}></Box>
-                        <Box sx={styles.boxGeneralStyling}></Box>
+                        <Box sx={styles.boxGeneralStylingLeader}></Box>
+                        <Box sx={styles.boxGeneralStylingBase}></Box>
                     </Box>
                 </Box>
                 <Box sx={styles.deckContainer}>
@@ -177,7 +192,7 @@ const DeckDetails: React.FC = () => {
                         </Box>
                     </Box>
                     <Grid sx={styles.deckGridStyle}>
-                        <DeckComponent mainDeck={deckData ? deckData.deck : []} sideBoard={deckData ? deckData.sideboard : []}/>
+                        <DeckComponent mainDeck={deckData}/>
                     </Grid>
                 </Box>
             </Box>
