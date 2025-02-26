@@ -38,7 +38,6 @@ export async function GET(req: Request) {
             }
         }
         else if (deckLink.includes('swudb.com')) {
-            // const match = deckLink.match(/\/deck\/(?:view\/)?([^/?]+)/);
             const match = deckLink.match(/\/([^\/]+)\/?$/);
             const deckId = match ? match[1] : null;
             if(deckId != null) deckIdentifier = deckId;
