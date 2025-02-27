@@ -1,6 +1,6 @@
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
-import { Box, Button, IconButton, MenuItem, Select, SelectChangeEvent, Typography } from '@mui/material';
+import { Autocomplete, Box, Button, IconButton, MenuItem, Select, TextField, Typography } from '@mui/material';
 import { MouseEvent, useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import {
@@ -24,8 +24,12 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
     const [isMinimized, setIsMinimized] = useState(false);
     const [selectedOption, setSelectedOption] = useState('');
 
-    const handleChange = (event: SelectChangeEvent) => {
-        setSelectedOption(event.target.value as string);
+    const handleChange = (event: React.SyntheticEvent) => {
+        const selectedIndex = parseInt(
+            (event.target as HTMLElement).dataset.optionIndex as string,
+            10
+        );
+        setSelectedOption(data.options[selectedIndex]);
     };
     
     const handleDone = () => {
@@ -40,6 +44,19 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
                 {data.description && (
                     <Typography sx={textStyle}>{data.description}</Typography>
                 )}
+
+                <Autocomplete 
+                    options={data.options}
+                    onChange={handleChange}
+                    renderInput={(params) => (
+                        <TextField {...params} />
+                    )}
+                    sx={{ width: '50%', color: 'white' }}
+                    slotProps={{ 
+                        popupIndicator: { sx: { color: 'white' } },
+                        clearIndicator: { sx: { color: 'white' } },
+                    }}
+                />
 
                 <Select value={selectedOption} sx={{ width: '50%', color: 'white' }}
 
