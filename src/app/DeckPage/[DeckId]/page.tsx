@@ -146,6 +146,7 @@ const DeckDetails: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             marginBottom: '1rem',
+            ml:'5px',
         },
         winCircle:{
             width: '64px',
@@ -157,6 +158,19 @@ const DeckDetails: React.FC = () => {
             justifyContent: 'center',
             marginRight: '16px',
         },
+        gamesCircle:{
+            width:'25px',
+            height: '25px',
+            mr:'15px',
+            borderRadius: '50%',
+        },
+        gamesRow:{
+            ml:'30px',
+            display:'flex',
+            flexDirection:'row',
+            alignItems:'center',
+            mb:'5px',
+        }
     }
 
     return (
@@ -184,10 +198,16 @@ const DeckDetails: React.FC = () => {
                     <Box sx={styles.statsContainer}>
                         {/* A row for the big win % circle and quick stats */}
                         <Box sx={styles.overallStatsBox}>
-                            <PercentageCircle percentage={30} size={70} strokeWidth={12} fillColor={'#367684'} trackColor={'#6CF3D3'} textColor="#FFF"/>
+                            <PercentageCircle percentage={30} size={70} strokeWidth={12} fillColor={'#6CF3D3'} trackColor={'#367684'} textColor="#FFF"/>
                             <Box>
-                                <Typography variant={'h5'} sx={{ color: '#fff' }}>Games Played: 55</Typography>
-                                <Typography>Games Won: 30</Typography>
+                                <Box sx={styles.gamesRow}>
+                                    <Box sx={{ ...styles.gamesCircle, backgroundColor:'#367684' }} />
+                                    <Typography variant={'h5'} sx={{ color: '#fff' }}>Games Played: 55</Typography>
+                                </Box>
+                                <Box sx={styles.gamesRow}>
+                                    <Box sx={{ ...styles.gamesCircle, backgroundColor:'#6CF3D3' }} />
+                                    <Typography variant={'h5'}>Games Won: 30</Typography>
+                                </Box>
                             </Box>
                         </Box>
 
@@ -203,10 +223,10 @@ const DeckDetails: React.FC = () => {
                             </TableHead>
                             <TableBody>
                                 <TableRow key={'test'}>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent.leaderName</Typography></TableCell>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent.wins</Typography></TableCell>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent.losses</Typography></TableCell>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent.winPercentage%</Typography></TableCell>
+                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent</Typography></TableCell>
+                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent</Typography></TableCell>
+                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent</Typography></TableCell>
+                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent</Typography></TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>

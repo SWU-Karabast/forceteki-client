@@ -26,7 +26,7 @@ const PercentageCircle: React.FC<PercentageCircleProps> = ({
     const outerStyle = {
         width: `${size}px`,
         height: `${size}px`,
-        borderRadius: '60%',
+        borderRadius: '50%',
         position: 'relative' as const,
         background: `conic-gradient(${fillColor} 0deg ${fillAngle}deg, ${trackColor} ${fillAngle}deg 360deg)`,
         display: 'flex',
@@ -62,7 +62,7 @@ const PercentageCircle: React.FC<PercentageCircleProps> = ({
         <Box sx={outerStyle}>
             <Box sx={innerStyle} />
             <Typography sx={textStyle}>
-                61%
+                {percentage}%
             </Typography>
         </Box>
     );
