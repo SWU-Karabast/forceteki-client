@@ -271,5 +271,21 @@ export const theme: Theme = createTheme({
                 },
             },
         },
+        MuiAutocomplete: {
+            styleOverrides: {
+                input: {
+                    textAlign: 'center',
+                },
+                listbox: {
+                    backgroundColor: '#394452',
+                },
+                option: {
+                    '&:hover': {
+                        backgroundColor: '#4C5C71'
+                    },
+                },
+            }
+        },
+        
     },
 });
