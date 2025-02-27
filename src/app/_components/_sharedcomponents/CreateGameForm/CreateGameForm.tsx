@@ -238,7 +238,7 @@ const CreateGameForm = () => {
                 {/* Additional Fields for Non-Creategame Path */}
                 {!isCreateGamePath && (
                     <>
-                        {/* Game Name Input */}
+                        {/* Game Name Input
                         <FormControl fullWidth sx={styles.formControlStyle}>
                             <Typography variant="body1" sx={styles.labelTextStyle}>
                                 Game Name
@@ -251,7 +251,7 @@ const CreateGameForm = () => {
                                 }
                                 placeholder="Game #"
                             />
-                        </FormControl>
+                        </FormControl>*/}
 
                         {/* Format Selection */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
