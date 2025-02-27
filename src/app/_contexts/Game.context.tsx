@@ -62,7 +62,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
             query: {
-                user: JSON.stringify(user ? user : { username: 'anonymousUser'+anonymousUserId?.substring(0,6), id: anonymousUserId }),
+                user: JSON.stringify(user ? user : { username: 'anonymous '+anonymousUserId?.substring(0,6), id: anonymousUserId }),
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null })
             },
         });

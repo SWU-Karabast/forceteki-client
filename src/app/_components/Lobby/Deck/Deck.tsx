@@ -80,10 +80,12 @@ const Deck: React.FC = () => {
         height: '1px',
     };
     const scrollableBoxStyleSideboard = {
-
+        height: '36vh',
+        overflow:'auto',
     };
     const scrollableBoxStyle = {
-
+        height: usersSideboard?.length > 0 ? '50vh' : '86vh',
+        overflow:'auto',
     };
     const mainContainerStyle = {
         display: 'flex',

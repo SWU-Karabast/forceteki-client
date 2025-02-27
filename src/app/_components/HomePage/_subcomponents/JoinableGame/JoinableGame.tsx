@@ -36,7 +36,7 @@ const JoinableGame: React.FC = () => {
             const payload = {
                 lobbyId: lobbyId,
                 user: { id: user?.id || sessionStorage.getItem('anonymousUserId'),
-                    username:user?.username || 'anonymousUser'+sessionStorage.getItem('anonymousUserId')?.substring(0,6) },
+                    username:user?.username || 'anonymous '+sessionStorage.getItem('anonymousUserId')?.substring(0,6) },
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/join-lobby`, {
                 method: 'POST',
