@@ -63,7 +63,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         }
         try {
             const payload = {
-                user: user,
+                user: { id: user?.id || sessionStorage.getItem('anonymousUserId'),
+                    username:user?.username || 'anonymousUser'+sessionStorage.getItem('anonymousUserId')?.substring(0,6) },
                 deck: deckData,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
@@ -138,24 +139,25 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             </Typography>
             <form onSubmit={handleJoinGameQueue}>
                 {/* Favourite Decks Input */}
-                <FormControl fullWidth sx={styles.formControlStyle}>
-                    <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
-                    <StyledTextField
-                        select
-                        value={favouriteDeck}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setFavouriteDeck(e.target.value)
-                        }
-                        placeholder="Vader Green Ramp"
-                    >
-                        {deckOptions.map((deck) => (
-                            <MenuItem key={deck} value={deck}>
-                                {deck}
-                            </MenuItem>
-                        ))}
-                    </StyledTextField>
-                </FormControl>
-
+                {user &&
+                    <FormControl fullWidth sx={styles.formControlStyle}>
+                        <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
+                        <StyledTextField
+                            select
+                            value={favouriteDeck}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setFavouriteDeck(e.target.value)
+                            }
+                            placeholder="Vader Green Ramp"
+                        >
+                            {deckOptions.map((deck) => (
+                                <MenuItem key={deck} value={deck}>
+                                    {deck}
+                                </MenuItem>
+                            ))}
+                        </StyledTextField>
+                    </FormControl>
+                }
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={{ mb: 0 }}>
                     <Box sx={styles.labelTextStyle}>
@@ -166,10 +168,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
-                        or{' '}
+                        {/* or{' '}
                         <Link href="https://www.sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SW-Unlimited-DB
-                        </Link>{' '}
+                        </Link>{' '} */}
                         Deck Link{' '}
                         <Typography variant="body1" sx={styles.labelTextStyleSecondary}>
                             (use the URL or &apos;Deck Link&apos; button)
@@ -197,7 +199,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     )}
                 </FormControl>
 
-                {/* Save Deck To Favourites Checkbox */}
+                {/* Save Deck To Favourites Checkbox
                 <FormControlLabel
                     sx={{ mb: '1rem' }}
                     control={
@@ -216,6 +218,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         </Typography>
                     }
                 />
+                */}
 
                 {/* Submit Button */}
                 <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,

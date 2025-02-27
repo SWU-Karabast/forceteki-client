@@ -81,7 +81,8 @@ const CreateGameForm = () => {
         }
         try {
             const payload = {
-                user: user || sessionStorage.getItem('anonymousUserId'),
+                user: { id: user?.id || sessionStorage.getItem('anonymousUserId'),
+                    username:user?.username || 'anonymousUser'+sessionStorage.getItem('anonymousUserId')?.substring(0,6) },
                 deck: deckData,
                 isPrivate: privacy === 'Private',
                 format: format,
@@ -283,7 +284,7 @@ const CreateGameForm = () => {
                                     value: string
                                 ) => setPrivacy(value)}
                             >
-                                {user && <FormControlLabel
+                                <FormControlLabel
                                     value="Public"
                                     control={<Radio sx={styles.checkboxStyle} />}
                                     label={
@@ -292,7 +293,6 @@ const CreateGameForm = () => {
                                         </Typography>
                                     }
                                 />
-                                }
                                 <FormControlLabel
                                     value="Private"
                                     control={<Radio sx={styles.checkboxStyle} />}
