@@ -1,6 +1,13 @@
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
-import { Autocomplete, Box, Button, IconButton, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { 
+    Autocomplete,
+    Box,
+    Button,
+    IconButton,
+    TextField,
+    Typography
+} from '@mui/material';
 import { MouseEvent, useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import {
@@ -58,15 +65,6 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
                     }}
                 />
 
-                <Select value={selectedOption} sx={{ width: '50%', color: 'white' }}
-
-                    onChange={handleChange}>
-                    {data.options.map((option, index) => (
-                        <MenuItem key={index} value={option}>
-                            {option}
-                        </MenuItem>
-                    ))}
-                </Select>
                 <Box sx={footerStyle}>
                     <Button
                         onClick={handleDone}
