@@ -1,13 +1,17 @@
 'use client';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Typography, Grid2 as Grid } from '@mui/material';
 import ControlHub from '../_components/_sharedcomponents/ControlHub/ControlHub';
 import { useUser } from '../_contexts/User.context';
+import React from 'react';
 
 const Navbar = () => {
     const { user, logout } = useUser();
     const pathname = usePathname();
-
+    const router = useRouter();
+    const handleExit = () => {
+        router.push('/');
+    }
     // ---------------------- Styles ---------------------- //
     const navbarStyles = {
         container: {
@@ -25,6 +29,16 @@ const Navbar = () => {
             color: '#fff',
             ml: '.5vw',
         },
+        lobbyTextStyle:{
+            ml:'60px',
+            mt:'25px',
+            fontSize: '3.0em',
+            fontWeight: '600',
+            color: 'white',
+            alignSelf: 'flex-start',
+            mb: '0px',
+            cursor: 'pointer',
+        }
     };
     return (
         <Grid
@@ -38,7 +52,10 @@ const Navbar = () => {
                     GAME LOBBY
                 </Typography>
             )}
-
+            {pathname === '/Unimplemented' && (
+                <Typography sx={navbarStyles.lobbyTextStyle} onClick={handleExit}>KARABAST</Typography>
+            )
+            }
             <ControlHub
                 path={pathname}
                 user={user}
