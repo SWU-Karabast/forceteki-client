@@ -38,8 +38,15 @@ const UnimplementedPage = () => {
                     throw new Error(`Error fetching cards: ${response.statusText}`);
                 }
                 const data = await response.json();
-                setUnimplementedCards(data);
-                setFilteredCards(data);
+
+                const sortedData = data.sort((a: IPreviewCard, b: IPreviewCard) => {
+                    if (a.setId && b.setId) {
+                        return a.setId.number - b.setId.number;
+                    }
+                });
+
+                setUnimplementedCards(sortedData);
+                setFilteredCards(sortedData);
 
                 // Extract unique sets for the filter dropdown
                 const sets = data.reduce((acc: string[], card: IPreviewCard) => {
