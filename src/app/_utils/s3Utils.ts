@@ -1,16 +1,27 @@
-import { ICardData, IServerCardData, ISetCode, CardStyle } from '../_components/_sharedcomponents/Cards/CardTypes';
-import { isGameCard, isSetCodeCard, parseSetId } from '@/app/_components/_sharedcomponents/Cards/cardUtils';
+import {
+    ICardData,
+    IServerCardData,
+    ISetCode,
+    CardStyle,
+    IPreviewCard
+} from '../_components/_sharedcomponents/Cards/CardTypes';
+import {
+    isGameCard,
+    isPreviewCard,
+    isSetCodeCard,
+    parseSetId
+} from '@/app/_components/_sharedcomponents/Cards/cardUtils';
 
 export const s3ImageURL = (path: string) => {
     const s3Bucket = 'https://karabast-assets.s3.amazonaws.com/';
     return s3Bucket + path;
 };
 
-export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode, cardStyle: CardStyle = CardStyle.Plain ) => {
-    if (((isGameCard(card) || isSetCodeCard(card)) && !card?.setId) && !card?.id) return s3ImageURL('game/swu-cardback.webp');
+export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IPreviewCard, cardStyle: CardStyle = CardStyle.Plain ) => {
+    if (((isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card)) && !card?.setId) && !card?.id) return s3ImageURL('game/swu-cardback.webp');
 
     // we check which type it is
-    const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card);
+    const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
     const setId = isGameOrSetCard ? card.setId : parseSetId(card.id);
     // check if the card has a type
     const cardType = 'type' in card ? card.type || (Array.isArray(card.types) ? card.types.join() : card.types) : undefined;
