@@ -9,6 +9,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
+import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -26,6 +27,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [queueState, setQueueState] = useState<boolean>(false)
 
+    const formatOptions = Object.values(SwuGameFormat);
+    const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
+    const [format, setFormat] = useState<string>(savedFormat);
+
     // error states
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     // For a short, user-friendly error message
@@ -38,6 +43,11 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         'Order66',
         'ThisIsTheWay',
     ];
+
+    const handleChangeFormat = (format: SwuGameFormat) => {
+        localStorage.setItem('format', format);
+        setFormat(format);
+    }
 
     // Handle Create Game Submission
     const handleJoinGameQueue = async (event: FormEvent<HTMLFormElement>) => {
@@ -66,6 +76,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 user: { id: user?.id || sessionStorage.getItem('anonymousUserId'),
                     username:user?.username || 'anonymous '+sessionStorage.getItem('anonymousUserId')?.substring(0,6) },
                 deck: deckData,
+                format: format,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
@@ -160,7 +171,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     </FormControl>
                 }
                 {/* Deck Link Input */}
-                <FormControl fullWidth sx={{ mb: 0 }}>
+                <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
                         <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWU Stats
@@ -198,6 +209,24 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                             </Link>
                         </Typography>
                     )}
+                </FormControl>
+
+                <FormControl fullWidth sx={styles.formControlStyle}>
+                    <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
+                    <StyledTextField
+                        select
+                        value={format}
+                        required
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleChangeFormat(e.target.value as SwuGameFormat)
+                        }
+                    >
+                        {formatOptions.map((fmt) => (
+                            <MenuItem key={fmt} value={fmt}>
+                                {FormatLabels[fmt] || fmt}
+                            </MenuItem>
+                        ))}
+                    </StyledTextField>
                 </FormControl>
 
                 {/* Save Deck To Favourites Checkbox

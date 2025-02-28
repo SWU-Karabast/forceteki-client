@@ -38,10 +38,11 @@ const CreateGameForm = () => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
+
+    const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
 
-    const formatOptions = Object.values(SwuGameFormat);
 
     // For a short, user-friendly error message
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
@@ -175,7 +176,7 @@ const CreateGameForm = () => {
                 </FormControl>
                 }
                 {/* Deck Link Input */}
-                <FormControl fullWidth sx={{ mb: 0 }}>
+                <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
                         <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWU Stats
