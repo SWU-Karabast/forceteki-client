@@ -82,8 +82,8 @@ const CreateGameForm = () => {
         }
         try {
             const payload = {
-                user: { id: user?.id || sessionStorage.getItem('anonymousUserId'),
-                    username:user?.username || 'anonymous '+sessionStorage.getItem('anonymousUserId')?.substring(0,6) },
+                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
+                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6) },
                 deck: deckData,
                 isPrivate: privacy === 'Private',
                 format: format,
