@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { Box, Grid2 as Grid, Typography } from '@mui/material';
+import { Box, Grid2 as Grid, keyframes, Typography } from '@mui/material';
 import { s3ImageURL } from '../_utils/s3Utils';
 import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
@@ -69,6 +69,26 @@ const GameBoard = () => {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
         },
+        playerTurnAura: {
+            height: '150px',
+            width: '90%',
+            position: 'absolute',
+            bottom: '-100px',
+            borderRadius: '50%',
+            background: 'linear-gradient(transparent, 40%, var(--initiative-blue))',
+            left: '0',
+            right: '0',
+            marginInline: 'auto',
+            animation: '1.5s growAura',
+            '@keyframes growAura': {
+                '0%': {
+                    height: '0px'
+                },
+                '100%': {
+                    height: '150px'
+                }
+            },
+        },
         centralPromptContainer: {
             position: 'absolute',
             top: '48.6%',
@@ -112,6 +132,7 @@ const GameBoard = () => {
                     trayPlayer={connectedPlayer}
                     toggleSidebar={toggleSidebar}
                 />
+                <Box sx={styles.playerTurnAura}></Box>
             </Box>
 
 

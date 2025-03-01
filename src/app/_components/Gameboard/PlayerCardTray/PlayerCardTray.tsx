@@ -38,6 +38,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             display: 'flex',
             alignItems: 'flex-end',
             transform: 'translateY(1.6rem)',
+            zIndex: '1',
         },
         chatColumn: {
             display: 'flex',
