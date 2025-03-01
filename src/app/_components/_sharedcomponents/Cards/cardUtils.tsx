@@ -38,9 +38,9 @@ export const getBorderColor = (card: ICardData, player: string, promptType: stri
     }
 
     if (promptType === 'resource' && card.selected) {
+        return 'var(--selection-blue)';
+    } else if (promptType === 'resource' && card.selectable) {
         return 'var(--selection-yellow)';
-    } else if (promptType === 'resource') {
-        return '';
     }
 
     if (card.selected) {

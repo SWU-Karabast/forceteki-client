@@ -330,7 +330,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         disabled={readyStatus}
                         sx={styles.submitButtonStyle}
                     >
-                        Change Deck
+                        Import Deck
                     </Button>
                 </>
             )}
