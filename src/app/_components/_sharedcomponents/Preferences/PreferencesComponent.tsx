@@ -6,6 +6,7 @@ import { IPreferenceProps } from '@/app/_components/_sharedcomponents/Preference
 
 const PreferencesComponent: React.FC<IPreferenceProps> = ({
     isPreferenceOpen,
+    sidebarOpen,
     preferenceToggle,
     tabs = [],
     title,
@@ -17,10 +18,11 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
         containerStyle:{
             display: isPreferenceOpen && variant ==='gameBoard' ? 'block' : 'none',
             position: 'absolute',
-            width: '100%',
+            width: sidebarOpen ? 'calc(100% - 280px)' : '100%',
             height: '100%',
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 9,
+            zIndex: 999,
+            padding: '2rem',
         },
         overlayStyle:{
             display: isPreferenceOpen ? 'block' : 'none',
@@ -34,17 +36,13 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
 
             borderRadius:'15px',
             ...(variant === 'homePage' ? {
-                width: '95vw',
+                width: '100%',
                 justifySelf:'center',
                 height: '81vh',
             } : {
                 borderColor: '#30434B',
-                height: '90vh',
-                transform: 'translate(-50%, -50%)',
-                top: '50%',
-                left: '50%',
-                position: 'absolute',
-                width: '90vw',
+                height: '100%',
+                width: '100%',
             })
         },
         headerBox:{
@@ -68,19 +66,19 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     return (
         <>
             <Box sx={styles.containerStyle}>
-            </Box>
-            <Box sx={styles.overlayStyle}>
-                {title && (
-                    <Box sx={styles.headerBox}>
-                        <Typography variant="h1">{title}</Typography>
-                        <Typography variant="h2">{subtitle}</Typography>
+                <Box sx={styles.overlayStyle}>
+                    {title && (
+                        <Box sx={styles.headerBox}>
+                            <Typography variant="h1">{title}</Typography>
+                            <Typography variant="h2">{subtitle}</Typography>
+                        </Box>
+                    )}
+                    {variant === 'gameBoard' && (
+                        <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
+                    )}
+                    <Box sx={styles.tabContainer}>
+                        <VerticalTabs tabs={tabs} variant={variant}/>
                     </Box>
-                )}
-                {variant === 'gameBoard' && (
-                    <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
-                )}
-                <Box sx={styles.tabContainer}>
-                    <VerticalTabs tabs={tabs} variant={variant}/>
                 </Box>
             </Box>
         </>

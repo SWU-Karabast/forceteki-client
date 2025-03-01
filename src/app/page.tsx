@@ -40,7 +40,7 @@ const Home: React.FC = () => {
 
             <Grid container size={12} sx={styles.columnContainer}>
                 <Grid size={4} sx={styles.column}>
-                    <PublicGames format={'Premier'} />
+                    <PublicGames />
                 </Grid>
                 <Grid size={4} sx={styles.column}>
                     <HomePagePlayMode />
