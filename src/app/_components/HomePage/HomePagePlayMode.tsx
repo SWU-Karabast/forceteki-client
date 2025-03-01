@@ -80,7 +80,8 @@ const HomePagePlayMode: React.FC = () => {
     return (
         <Card variant="black" sx={styles.wrapper}>
             <CardContent>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
+                <Typography variant="h2">Coming Soon!</Typography>
+                {/* <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
                     <Tabs value={value} variant="fullWidth" onChange={handleChange}>
                         <Tab sx={styles.tabStyles} label="Play" />
                         <Tab sx={styles.tabStyles} label="Create" />
@@ -109,7 +110,7 @@ const HomePagePlayMode: React.FC = () => {
                             <Button onClick={() => router.push('/GameBoard')}>Join Test Game</Button>
                         </Box>
                     </TabPanel>
-                }
+                } */}
             </CardContent>
         </Card>
     );
