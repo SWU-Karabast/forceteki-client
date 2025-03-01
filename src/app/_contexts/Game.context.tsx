@@ -78,6 +78,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 prunePromptStatePopups(promptUuid);
                 if (promptType === 'actionWindow') return;
                 else if (promptType === 'distributeAmongTargets') {
+                    console.log('setting distribute')
                     setDistributionPromptData({ type: promptState.distributeAmongTargets.type, valueDistribution: [] });
                     return;
                 }
