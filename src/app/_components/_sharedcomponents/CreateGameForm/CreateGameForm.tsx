@@ -38,10 +38,11 @@ const CreateGameForm = () => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
+
+    const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
 
-    const formatOptions = Object.values(SwuGameFormat);
 
     // For a short, user-friendly error message
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
@@ -81,7 +82,8 @@ const CreateGameForm = () => {
         }
         try {
             const payload = {
-                user: user || sessionStorage.getItem('anonymousUserId'),
+                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
+                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6) },
                 deck: deckData,
                 isPrivate: privacy === 'Private',
                 format: format,
@@ -174,7 +176,7 @@ const CreateGameForm = () => {
                 </FormControl>
                 }
                 {/* Deck Link Input */}
-                <FormControl fullWidth sx={{ mb: 0 }}>
+                <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
                         <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWU Stats
@@ -237,7 +239,7 @@ const CreateGameForm = () => {
                 {/* Additional Fields for Non-Creategame Path */}
                 {!isCreateGamePath && (
                     <>
-                        {/* Game Name Input */}
+                        {/* Game Name Input
                         <FormControl fullWidth sx={styles.formControlStyle}>
                             <Typography variant="body1" sx={styles.labelTextStyle}>
                                 Game Name
@@ -250,7 +252,7 @@ const CreateGameForm = () => {
                                 }
                                 placeholder="Game #"
                             />
-                        </FormControl>
+                        </FormControl>*/}
 
                         {/* Format Selection */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
@@ -283,7 +285,7 @@ const CreateGameForm = () => {
                                     value: string
                                 ) => setPrivacy(value)}
                             >
-                                {user && <FormControlLabel
+                                <FormControlLabel
                                     value="Public"
                                     control={<Radio sx={styles.checkboxStyle} />}
                                     label={
@@ -292,7 +294,6 @@ const CreateGameForm = () => {
                                         </Typography>
                                     }
                                 />
-                                }
                                 <FormControlLabel
                                     value="Private"
                                     control={<Radio sx={styles.checkboxStyle} />}

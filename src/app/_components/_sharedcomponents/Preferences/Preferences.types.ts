@@ -27,6 +27,7 @@ export type IBlockedUser = {
 
 export interface IPreferenceProps {
     isPreferenceOpen: boolean,
+    sidebarOpen: boolean,
     tabs: string[],
     preferenceToggle?: () => void,
     variant?: 'gameBoard' | 'homePage'

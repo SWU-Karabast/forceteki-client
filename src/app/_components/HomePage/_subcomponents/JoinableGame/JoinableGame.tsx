@@ -1,43 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-interface ILobby {
-    id: string;
-    name: string;
-}
+import { IJoinableGameProps } from '../../HomePageTypes';
 
-const JoinableGame: React.FC = () => {
-    // const randomGameId = Math.floor(Math.random() * 10000);
+const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
     const { user } = useUser();
-    const [lobbies, setLobbies] = useState<ILobby[]>([]);
-    useEffect(() => {
-        // Fetch unfilled lobbies from the server
-        const fetchLobbies = async () => {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/available-lobbies`);
-                if (!response.ok) {
-                    throw new Error(`Error fetching lobbies: ${response.statusText}`);
-                }
-                const data: ILobby[] = await response.json();
-                setLobbies(data);
-            } catch (error) {
-                console.error('Error fetching lobbies:', error);
-            }
-        };
-
-        fetchLobbies();
-    }, []);
-
     const joinLobby = async (lobbyId: string) => {
+        // we need to set the user
         try {
+            const payload = {
+                lobbyId: lobbyId,
+                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
+                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6) },
+            };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/join-lobby`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ lobbyId, user }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -70,12 +53,10 @@ const JoinableGame: React.FC = () => {
 
     return (
         <>
-            {lobbies.map((lobby) => (
-                <Box sx={styles.box} key={lobby.id}>
-                    <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
-                    <Button onClick={() => joinLobby(lobby.id)}>Join Game</Button>
-                </Box>
-            ))}
+            <Box sx={styles.box} key={lobby.id}>
+                <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
+                <Button onClick={() => joinLobby(lobby.id)}>Join Game</Button>
+            </Box>
         </>
     );
 };

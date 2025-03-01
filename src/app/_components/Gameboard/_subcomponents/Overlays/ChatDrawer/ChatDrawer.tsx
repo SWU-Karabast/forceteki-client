@@ -3,8 +3,9 @@ import { Drawer, Box, Typography } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
-const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen }) => {
+const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
     const { gameState, sendGameMessage } = useGame();
     const [chatMessage, setChatMessage] = useState('')
 
@@ -43,10 +44,11 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen }) => {
             variant="persistent"
             sx={styles.drawerStyle}
         >
+            <ChevronRightIcon onClick={toggleSidebar} />
             <Box sx={styles.headerBoxStyle}>
-                <Typography variant="h3">
+                {/* <Typography variant="h3">
                     ROUND
-                </Typography>
+                </Typography> */}
             </Box>
 
             {/* Use the ChatComponent here */}
