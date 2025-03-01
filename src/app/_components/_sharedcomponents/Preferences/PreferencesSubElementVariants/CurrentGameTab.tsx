@@ -12,7 +12,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 function CurrentGameTab() {
     const { sendGameMessage, connectedPlayer, gameState } = useGame();
 
-    const currentPlayerName = gameState.players[connectedPlayer].name
+    const currentPlayerName = gameState.players[connectedPlayer]?.name
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
 
     useEffect(() => {

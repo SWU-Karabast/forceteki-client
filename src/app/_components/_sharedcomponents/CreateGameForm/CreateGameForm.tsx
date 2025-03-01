@@ -284,7 +284,7 @@ const CreateGameForm = () => {
                             </StyledTextField>
                         </FormControl>
                         <Typography>
-                            Log In to be able to create public games or join a quick game.
+                            {/* Log In to be able to create public games or join a quick game. */}
                         </Typography>
                         {/* Privacy Selection */}
                         <FormControl component="fieldset" sx={styles.formControlStyle}>
