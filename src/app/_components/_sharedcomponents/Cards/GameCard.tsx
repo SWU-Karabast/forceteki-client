@@ -230,7 +230,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             fontSize: '1.9rem',
             fontWeight: '700',
             position: 'absolute',
-            right:'16px',
+            right:'18px',
         },
         shieldContainer: {
             position:'absolute',
