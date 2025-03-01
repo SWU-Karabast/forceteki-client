@@ -31,13 +31,19 @@ const JoinableGame: React.FC = () => {
     }, []);
 
     const joinLobby = async (lobbyId: string) => {
+        // we need to set the user
         try {
+            const payload = {
+                lobbyId: lobbyId,
+                user: { id: user?.id || sessionStorage.getItem('anonymousUserId'),
+                    username:user?.username || 'anonymous '+sessionStorage.getItem('anonymousUserId')?.substring(0,6) },
+            };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/join-lobby`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ lobbyId, user }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {

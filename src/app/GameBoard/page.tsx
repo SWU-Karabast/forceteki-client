@@ -18,7 +18,8 @@ const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState } = useGame();
     const router = useRouter();
 
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
+    const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
 
 
@@ -37,6 +38,7 @@ const GameBoard = () => {
     }, [gameState?.winner]);
 
     const toggleSidebar = () => {
+        localStorage.setItem('sidebarState', !sidebarOpen ? 'true' : 'false');
         setSidebarOpen(!sidebarOpen);
     }
 
