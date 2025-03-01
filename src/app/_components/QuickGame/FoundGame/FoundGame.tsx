@@ -111,6 +111,9 @@ const FoundGame: React.FC = () => {
         },
         parentBoxStyling: {
             position:'absolute',
+            display:'flex',
+            width:'100%',
+            justifyContent:'center'
         },
         CardSetContainerStyle:{
             display: 'flex',
@@ -127,6 +130,10 @@ const FoundGame: React.FC = () => {
             height: '12.1rem',
             paddingLeft: '15px',
             marginTop:'20px'
+        },
+        baseParent:{
+            display:'flex',
+            justifyContent: 'center',
         }
     };
 
@@ -140,7 +147,7 @@ const FoundGame: React.FC = () => {
             </Box>
             <Box sx={styles.playersContainer}>
                 <Box sx={styles.CardSetContainerStyle}>
-                    <Box>
+                    <Box sx={styles.baseParent}>
                         <LeaderBaseCard card={playerBase}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
@@ -154,7 +161,7 @@ const FoundGame: React.FC = () => {
                     Vs
                 </Typography>
                 <Box sx={styles.CardSetContainerStyle}>
-                    <Box>
+                    <Box sx={styles.baseParent}>
                         <LeaderBaseCard card={opponentBase}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
