@@ -62,6 +62,7 @@ const GameBoard = () => {
         mainBoxStyle: {
             flexGrow: 1,
             pr: sidebarOpen ? '280px' : '0',
+            width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
             height: '100vh',
             position: 'relative',
