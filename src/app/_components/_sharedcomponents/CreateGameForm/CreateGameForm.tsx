@@ -38,6 +38,7 @@ const CreateGameForm = () => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
 
     const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
@@ -48,7 +49,7 @@ const CreateGameForm = () => {
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
 
     // For the raw/technical error details
-    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | undefined>(undefined);
+    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
 
     // Additional State for Non-Creategame Path
     const [gameName, setGameName] = useState<string>('');
@@ -63,7 +64,6 @@ const CreateGameForm = () => {
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         let deckData = null
-
         try {
             deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
         }catch (error){
@@ -71,10 +71,12 @@ const CreateGameForm = () => {
             if(error instanceof Error){
                 if(error.message.includes('Forbidden')) {
                     setDeckErrorSummary('Couldn\'t import. The deck is set to private');
+                    setErrorTitle('Deck Validation Error');
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
                 }else{
+                    setErrorTitle('Deck Validation Error');
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                 }
             }
@@ -100,16 +102,25 @@ const CreateGameForm = () => {
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
-                setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-                setDeckErrorDetails(errors);
+                if(response.status === 403){
+                    setDeckErrorSummary('You must wait at least 20s before creating a new game.');
+                    setErrorTitle('Creation not allowed')
+                    setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby');
+                }else {
+                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                    setErrorTitle('Deck Validation Error');
+                    setDeckErrorDetails(errors);
+                }
                 return;
             }
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
+            setErrorTitle('Deck Validation Error');
             router.push('/lobby');
         } catch (error) {
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
+            setErrorTitle('Server error');
         }
     };
 
@@ -335,7 +346,7 @@ const CreateGameForm = () => {
             <ErrorModal
                 open={errorModalOpen}
                 onClose={() => setErrorModalOpen(false)}
-                title="Deck Validation Error"
+                title={errorTitle}
                 errors={deckErrorDetails}
             />
         </Box>

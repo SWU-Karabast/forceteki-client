@@ -36,7 +36,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     // For a short, user-friendly error message
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
     // For the raw/technical error details
-    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | undefined>(undefined);
+    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
+    const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     // Timer ref for clearing the inline text after 5s
 
     const deckOptions: string[] = [
@@ -65,8 +66,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
+                    setErrorTitle('Deck Validation Error');
                 }else{
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                    setErrorTitle('Deck Validation Error');
                 }
             }
             return;
@@ -91,18 +94,28 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
-                setQueueState(false);
-                setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-                setDeckErrorDetails(errors);
+                if(response.status === 403) {
+                    setQueueState(false)
+                    setDeckErrorSummary('You must wait at least 20s before creating a new game.');
+                    setErrorTitle('Creation not allowed')
+                    setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby')
+                }else{
+                    setQueueState(false);
+                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                    setDeckErrorDetails(errors);
+                    setErrorTitle('Deck Validation Error');
+                }
                 return
             }
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
+            setErrorTitle('Deck Validation Error');
             router.push('/quickGame');
         } catch (error) {
             setQueueState(false);
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
+            setErrorTitle('Server error');
         }
     };
 
@@ -278,7 +291,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             <ErrorModal
                 open={errorModalOpen}
                 onClose={() => setErrorModalOpen(false)}
-                title="Deck Validation Error"
+                title={errorTitle}
                 errors={deckErrorDetails}
             />
         </Box>
