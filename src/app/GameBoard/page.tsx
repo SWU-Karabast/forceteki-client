@@ -69,26 +69,6 @@ const GameBoard = () => {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
         },
-        playerTurnAura: {
-            height: '150px',
-            width: '90%',
-            position: 'absolute',
-            bottom: '-100px',
-            borderRadius: '50%',
-            background: 'linear-gradient(transparent, 40%, var(--initiative-blue))',
-            left: '0',
-            right: '0',
-            marginInline: 'auto',
-            animation: '1.5s growAura',
-            '@keyframes growAura': {
-                '0%': {
-                    height: '0px'
-                },
-                '100%': {
-                    height: '150px'
-                }
-            },
-        },
         centralPromptContainer: {
             position: 'absolute',
             top: '48.6%',
@@ -117,6 +97,46 @@ const GameBoard = () => {
             background: 'rgba(0, 0, 0, 0.5)',
             filter: 'blur(10px)',
             WebkitFilter: 'blur(10px)'
+        },
+        playerTurnAura: {
+            height: '100px',
+            width: '90%',
+            position: 'absolute',
+            bottom: '-100px',
+            boxShadow: gameState.phase === 'regroup' ? '0px -15px 45px var(--selection-yellow)' : '0px -15px 45px var(--initiative-blue)',
+            borderRadius: '50%',
+            left: '0',
+            right: '0',
+            marginInline: 'auto',
+            animation: '1.5s growAura',
+            '@keyframes growAura': {
+                '0%': {
+                    height: '0px'
+                },
+                '100%': {
+                    height: '100px'
+                }
+            },
+        },
+        opponentTurnAura: {
+            height: '100px',
+            width: '90%',
+            position: 'absolute',
+            top: '-100px',
+            boxShadow: gameState.phase === 'regroup' ? '0px 15px 45px var(--selection-yellow)' : '0px 15px 45px var(--initiative-red)',
+            borderRadius: '50%',
+            left: '0',
+            right: '0',
+            marginInline: 'auto',
+            animation: '1.5s growAura',
+            '@keyframes growAura': {
+                '0%': {
+                    height: '0px'
+                },
+                '100%': {
+                    height: '100px'
+                }
+            },
         }
     };
 
@@ -127,6 +147,7 @@ const GameBoard = () => {
                     trayPlayer={getOpponent(connectedPlayer)}
                     preferenceToggle={handlePreferenceToggle}
                 />
+                <Box sx={styles.opponentTurnAura}></Box>
                 <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}

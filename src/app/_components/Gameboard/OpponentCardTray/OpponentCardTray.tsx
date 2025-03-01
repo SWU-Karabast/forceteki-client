@@ -40,6 +40,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             width: '100%',
             height: '100%',
             transform: 'translateY(-2rem)',
+            zIndex: '1',
         },
         rightColumn: {
             display: 'flex',
