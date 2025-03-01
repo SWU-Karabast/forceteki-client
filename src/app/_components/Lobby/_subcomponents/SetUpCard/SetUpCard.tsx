@@ -36,13 +36,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
 
-    // Extract the player from the URL query params
-    const router = useRouter();
-
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
         sendLobbyMessage(['onStartGameAsync']);
-        router.push('/GameBoard');
     };
     const handleOnChangeDeck = async () => {
         if (!deckLink || readyStatus) return;
