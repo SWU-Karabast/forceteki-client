@@ -1,4 +1,5 @@
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { SwuGameFormat } from '@/app/_constants/constants';
 
 export interface IHexagonProps {
     backgroundColor: string;
@@ -17,8 +18,14 @@ export interface IPublicGameInProgressProps {
     };
 }
 
-export interface IPublicGamesProps {
-    format: string;
+export interface ILobby {
+    id: string;
+    name: string;
+    format: SwuGameFormat;
+}
+
+export interface IJoinableGameProps {
+    lobby: ILobby;
 }
 
 export type IArticle = {
