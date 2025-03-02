@@ -32,7 +32,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         if (isDeployed) return;
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
-        }, 500);
+        }, 200);
     };
         
     const handlePreviewClose = () => {
