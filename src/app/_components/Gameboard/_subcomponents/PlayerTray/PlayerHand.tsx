@@ -86,6 +86,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                             sx={{
                                 width: '8rem',
                                 transition: 'transform 0.2s',
+                                transform: card.selected && card.zone === 'hand' ? 'translateY(-11px)' : 'none',
                                 '&:hover': {
                                     transform: 'translateY(-11px)',
                                 },
@@ -109,10 +110,10 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                             width: '8rem',
                             // Center vertically
                             top: '50%',
-                            transform: 'translateY(-50%)',
                             // Center horizontally using computed left
                             left: overlappedLeftStart + i * overlapOffset,
                             transition: 'transform 0.2s',
+                            transform: card.selected && card.zone === 'hand' ? 'translateY(-50%) translateY(-11px)' : 'translateY(-50%)',
                             '&:hover': {
                                 // Slight lift
                                 transform: 'translateY(-50%) translateY(-10px)',
