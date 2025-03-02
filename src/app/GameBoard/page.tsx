@@ -21,7 +21,22 @@ const GameBoard = () => {
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
+    const [animate, setAnimate] = useState(false);
 
+    const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
+    const phase = gameState.phase;
+
+    const growAura = keyframes`
+  0% { height: 0px; }
+  100% { height: 100px; }
+`;
+
+    useEffect(() => {
+        setAnimate(true);
+        const timeout = setTimeout(() => setAnimate(false), 1500);
+
+        return () => clearTimeout(timeout);
+    }, [activePlayer]);
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -102,43 +117,25 @@ const GameBoard = () => {
         },
         playerTurnAura: {
             height: '100px',
-            width: '90%',
+            width: '85%',
             position: 'absolute',
             bottom: '-100px',
-            boxShadow: gameState.phase === 'regroup' ? '0px -15px 45px var(--selection-yellow)' : '0px -15px 45px var(--initiative-blue)',
+            boxShadow: activePlayer === true ? '0px -20px 35px var(--initiative-blue)' : phase === 'regroup' || phase === 'setup' ? '0px -20px 35px var(--selection-yellow)' : 'none',
             borderRadius: '50%',
             left: '0',
             right: '0',
             marginInline: 'auto',
-            animation: '1.5s growAura',
-            '@keyframes growAura': {
-                '0%': {
-                    height: '0px'
-                },
-                '100%': {
-                    height: '100px'
-                }
-            },
         },
         opponentTurnAura: {
             height: '100px',
             width: '90%',
-            position: 'absolute',
+            position: 'absolute', 
             top: '-100px',
-            boxShadow: gameState.phase === 'regroup' ? '0px 15px 45px var(--selection-yellow)' : '0px 15px 45px var(--initiative-red)',
+            boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 20px 35px var(--selection-yellow)' : 'none',
             borderRadius: '50%',
             left: '0',
             right: '0',
             marginInline: 'auto',
-            animation: '1.5s growAura',
-            '@keyframes growAura': {
-                '0%': {
-                    height: '0px'
-                },
-                '100%': {
-                    height: '100px'
-                }
-            },
         }
     };
 
@@ -149,13 +146,13 @@ const GameBoard = () => {
                     trayPlayer={getOpponent(connectedPlayer)}
                     preferenceToggle={handlePreferenceToggle}
                 />
-                <Box sx={styles.opponentTurnAura}></Box>
+                <Box sx={[{ animation: animate ? `${growAura} 1.5s forwards` : 'none' }, styles.opponentTurnAura]} />
                 <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
                     toggleSidebar={toggleSidebar}
                 />
-                <Box sx={styles.playerTurnAura}></Box>
+                <Box sx={[{ animation: animate ? `${growAura} 1.5s forwards` : 'none' }, styles.playerTurnAura]} />
             </Box>
 
 
