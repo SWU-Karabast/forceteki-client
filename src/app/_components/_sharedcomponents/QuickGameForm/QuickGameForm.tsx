@@ -10,6 +10,7 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
+import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -56,7 +57,18 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         setQueueState(true);
         let deckData = null
         try {
-            deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+            const parsedInput = parseInputAsDeckData(deckLink);
+            if(parsedInput.type === 'url') {
+                deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+            }else if(parsedInput.type === 'json') {
+                deckData = parsedInput.data
+            }else{
+                setQueueState(false);
+                setDeckErrorSummary('Couldn\'t import. Deck is invalid or unsupported deckbuilder');
+                setDeckErrorDetails('Incorrect deck format or unsupported deckbuilder.');
+                setErrorModalOpen(true);
+                return;
+            }
         }catch (error){
             setQueueState(false);
             setDeckErrorDetails(undefined);
@@ -208,7 +220,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         </Typography>
                     </Box>
                     <StyledTextField
-                        type="url"
+                        type="text"
                         value={deckLink}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => {
                             setDeckLink(e.target.value);
