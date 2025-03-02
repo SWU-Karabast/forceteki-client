@@ -48,6 +48,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         }catch (error){
             setDisplayerror(true);
             setDeckErrorDetails(undefined);
+            setErrorModalOpen(true)
             if(error instanceof Error){
                 if(error.message.includes('Forbidden')) {
                     setDeckErrorSummary('Couldn\'t import. The deck is set to private');
@@ -85,18 +86,21 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setDeckErrorSummary('Deck is invalid.');
             setDeckErrorDetails(deckErrors);
             setBlockError(true)
+            setErrorModalOpen(true)
         }else{
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             setErrorModalOpen(false);
             setDisplayerror(false);
             setBlockError(false);
+            setErrorModalOpen(true)
         }
         if (temporaryErrors) {
             // Only 'notImplemented' or no errors => clear them out
             setDisplayerror(true);
             setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
             setDeckErrorDetails(temporaryErrors);
+            setErrorModalOpen(true)
         }
     }, [connectedUser]);
 
@@ -330,7 +334,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         disabled={readyStatus}
                         sx={styles.submitButtonStyle}
                     >
-                        Change Deck
+                        Import Deck
                     </Button>
                 </>
             )}
