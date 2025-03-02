@@ -1,13 +1,13 @@
 'use client';
-import { Box, Button, MenuItem, Typography } from '@mui/material';
+import { Box, MenuItem, Typography } from '@mui/material';
 import React, { ChangeEvent, useState } from 'react';
 import { useRouter } from 'next/navigation'
 import Grid from '@mui/material/Grid2';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
+import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
 
 const sortByOptions: string[] = [
     'Recently Played',
@@ -17,20 +17,14 @@ const sortByOptions: string[] = [
 const DeckPage: React.FC = () => {
     const [sortBy, setSortBy] = useState<string>('');
     const [decks, setDecks] = useState<IDeckData[]>([]);
+    const [addDeckDialogOpen, setAddDeckDialogOpen] = useState<boolean>(false);
     const router = useRouter();
 
-    // TODO delete this when we have database ready
-    const handleAddNewDeck = async () => {
-        try {
-            const data = await fetchDeckData('https://swudb.com/deck/rCCgAehE', false);
-            console.log(data);
-            if(data != undefined) {
-                setDecks(prevDecks => [...prevDecks, data]);
-            }
-        } catch (error) {
-            console.error('Error fetching deck data:', error);
-        }
+    // Handle successful deck addition
+    const handleAddDeckSuccess = (deckData: IDeckData) => {
+        setDecks(prevDecks => [...prevDecks, deckData]);
     };
+
     // Handler to navigate to the deck subpage using the deck's id
     const handleViewDeck = (deckId: string) => {
         router.push(`/DeckPage/${deckId}`);
@@ -148,7 +142,7 @@ const DeckPage: React.FC = () => {
                     </StyledTextField>
                 </Box>
                 <Box>
-                    <PreferenceButton variant={'standard'} text={'Add New Deck'} buttonFnc={handleAddNewDeck}/>
+                    <PreferenceButton variant={'standard'} text={'Add New Deck'} buttonFnc={() => setAddDeckDialogOpen(true)}/>
                 </Box>
             </Box>
             <Grid container alignItems="center" spacing={1} sx={styles.gridContainer}>
@@ -178,24 +172,11 @@ const DeckPage: React.FC = () => {
                         </Box>
                     </Box>
                 ))}
-                <Box sx={styles.deckContainer}>
-                    <Box sx={styles.leaderBaseHolder}>
-                        <Box sx={styles.CardSetContainerStyle}>
-                            <Box>
-                                <Box sx={styles.boxGeneralStyling}/>
-                            </Box>
-                            <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'26px' }}>
-                                <Box sx={styles.boxGeneralStyling}/>
-                            </Box>
-                        </Box>
-                    </Box>
-                    <Box sx={styles.deckMetaContainer}>
-                        <Typography sx={styles.deckTitle} variant={'h3'}>Top 8 - [BN]LegoPizza - SCG Con Columbus</Typography>
-                        <Box sx={styles.viewDeckButton}>
-                            <PreferenceButton variant={'standard'} text={'View Deck'} buttonFnc={() => handleViewDeck('1')}/>
-                        </Box>
-                    </Box>
-                </Box>
+                <AddDeckDialog
+                    open={addDeckDialogOpen}
+                    onClose={() => setAddDeckDialogOpen(false)}
+                    onSuccess={handleAddDeckSuccess}
+                />
             </Grid>
         </>
     );

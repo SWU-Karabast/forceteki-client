@@ -2,9 +2,7 @@
 import React, { ChangeEvent, useState, useEffect, useMemo } from 'react';
 import {
     Box, MenuItem, Typography,
-    Table, TableHead, TableBody, TableRow, TableCell
 } from '@mui/material';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -14,6 +12,7 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/PercentageCircle';
 import AnimatedStatsTable from '@/app/_components/DeckPage/DeckComponent/AnimatedStatsTable';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 
 const sortByOptions: string[] = ['Cost','Power','Most played'];
 
@@ -23,6 +22,10 @@ const DeckDetails: React.FC = () => {
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const params = useParams();
     const deckId = params?.DeckId;
+
+    // State for delete confirmation dialog
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+
 
     const opponentData = useMemo(() => {
         // List of sample leader names
@@ -65,6 +68,29 @@ const DeckDetails: React.FC = () => {
     const handleBackButton = () => {
         router.push('/DeckPage');
     };
+
+    const handleViewOnSWUDB = () => {
+        if (deckId) {
+            window.open(`https://swudb.com/deck/${deckId}`, '_blank');
+        }
+    };
+
+    // Open delete confirmation dialog
+    const handleDeleteClick = () => {
+        setDeleteDialogOpen(true);
+    };
+
+    // Handle delete confirmation
+    const handleConfirmDelete = () => {
+        setDeleteDialogOpen(false);
+        router.push('/DeckPage');
+    };
+
+    // Cancel delete operation
+    const handleCancelDelete = () => {
+        setDeleteDialogOpen(false);
+    };
+
 
     const styles = {
         bodyRow:{
@@ -297,14 +323,21 @@ const DeckDetails: React.FC = () => {
                             </StyledTextField>
                         </Box>
                         <Box sx={styles.editButtons}>
-                            <PreferenceButton variant={'standard'} text={'View Deck on SWDB'} />
-                            <PreferenceButton variant={'concede'} text={'Delete'} />
+                            <PreferenceButton variant={'standard'} text={'View Deck on SWDB'} buttonFnc={handleViewOnSWUDB} />
+                            <PreferenceButton variant={'concede'} text={'Delete'} buttonFnc={handleDeleteClick}/>
                         </Box>
                     </Box>
                     <Grid sx={styles.deckGridStyle}>
                         <DeckComponent mainDeck={deckData} />
                     </Grid>
                 </Box>
+                <ConfirmationDialog
+                    open={deleteDialogOpen}
+                    title="Delete"
+                    message="Do you want to delete this deck?"
+                    onCancel={handleCancelDelete}
+                    onConfirm={handleConfirmDelete}
+                />
             </Box>
         </>
     );

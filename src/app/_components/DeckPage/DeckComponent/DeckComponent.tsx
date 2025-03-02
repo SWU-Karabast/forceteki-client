@@ -46,86 +46,106 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
     }
 
     // ------------------------STYLES------------------------//
-    const cardStyle = {
-        borderRadius: '1.1em',
-        height: '100%',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'transparent',
-    };
-
-    const headerBoxStyle = {
-        display: 'flex',
-        height: '50px',
-        width: '100%',
-        justifyContent: 'space-between',
-        position: 'sticky',
-        top: '0',
-        zIndex: 1,
-    };
-
-    const titleTextStyle = {
-        fontSize: '2em',
-        fontWeight: 'bold',
-        color: 'white',
-    };
-
-    const deckSizeTextStyle = {
-        fontSize: '2em',
-        fontWeight: '400',
-        color: 'white',
-        mr: '.6em',
-    };
-    const dividerStyle = {
-        backgroundColor: '#fff',
-        mt: '.5vh',
-        mb: '0.5vh',
-        alignSelf: 'center',
-        height: '1px',
-    };
-    const scrollableBoxStyleSideboard = {
-        height: '24vh',
-        overflow:'auto',
-    };
-    const scrollableBoxStyle = {
-        height: mainDeck ? mainDeck.sideboard?.length > 0 ? '37vh' : '61vh' : '61vh',
-        overflow:'auto',
-    };
-    const mainContainerStyle = {
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '1em',
-        p: '1em',
-        textWrap: 'wrap',
-    };
-
-    const cardPreview = {
-        borderRadius: '.38em',
-        backgroundSize: 'cover',
-        backgroundRepeat: 'no-repeat',
-        aspectRatio: '1 / 1.4',
-        width: '16rem',
-    };
-    const styleCard = {
-        borderRadius: '0.5rem',
-        position: 'relative',
-        backgroundSize: 'cover',
-        backgroundRepeat: 'no-repeat',
-        aspectRatio: '.718',
-        width: '100%',
-        border: '2px solid transparent',
-        boxSizing: 'border-box',
-    };
-    const cardContainer = {
-        backgroundColor: 'black',
-        borderRadius: '0.5rem',
-        width: '8rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-    };
-    // For debugging purposes:
+    const styles = {
+        cardStyle: {
+            borderRadius: '1.1em',
+            height: '100%',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: 'transparent',
+        },
+        headerBoxStyle: {
+            display: 'flex',
+            height: '50px',
+            width: '100%',
+            justifyContent: 'space-between',
+            position: 'sticky',
+            top: '0',
+            zIndex: 1,
+        },
+        titleTextStyle: {
+            fontSize: '2em',
+            fontWeight: 'bold',
+            color: 'white',
+        },
+        deckSizeTextStyle: {
+            fontSize: '2em',
+            fontWeight: '400',
+            color: 'white',
+            mr: '.6em',
+        },
+        dividerStyle: {
+            backgroundColor: '#fff',
+            mt: '.5vh',
+            mb: '0.5vh',
+            alignSelf: 'center',
+            height: '1px',
+        },
+        scrollableBoxStyleSideboard: {
+            height: '24vh',
+            overflow: 'auto',
+        },
+        scrollableBoxStyle: {
+            height: mainDeck ? mainDeck.sideboard?.length > 0 ? '37vh' : '61vh' : '61vh',
+            overflow: 'auto',
+        },
+        mainContainerStyle: {
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '1em',
+            p: '1em',
+            textWrap: 'wrap',
+        },
+        cardPreview: {
+            borderRadius: '.38em',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1 / 1.4',
+            width: '16rem',
+        },
+        styleCard: {
+            borderRadius: '0.5rem',
+            position: 'relative',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '.718',
+            width: '100%',
+            border: '2px solid transparent',
+            boxSizing: 'border-box',
+        },
+        cardContainer: {
+            backgroundColor: 'black',
+            borderRadius: '0.5rem',
+            width: '8rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            position: 'relative',
+        },
+        counterIcon: {
+            position: 'absolute',
+            width: '2rem',
+            aspectRatio: '1 / 1',
+            display: 'flex',
+            bottom: '-5px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(/counterIcon.svg)',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2,
+        },
+        numberFont: {
+            fontSize: '1.85rem',
+            fontWeight: '700',
+            textShadow: '0px 0px 3px black',
+            lineHeight: 1,
+            color: 'white',
+        },
+    }
 
     // Calculate the total counts from the decks.
     const deckCount = mainDeck?.deck.reduce(
@@ -140,26 +160,31 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
 
     return (
         <Box sx={{ width:'100%', height:'100%', overflowY: 'scroll' }}>
-            <Card sx={cardStyle}>
-                <Box sx={headerBoxStyle}>
-                    <Typography sx={titleTextStyle}>Your Deck</Typography>
-                    <Typography sx={deckSizeTextStyle}>
+            <Card sx={styles.cardStyle}>
+                <Box sx={styles.headerBoxStyle}>
+                    <Typography sx={styles.titleTextStyle}>Your Deck</Typography>
+                    <Typography sx={styles.deckSizeTextStyle}>
                         {deckCount}/50
                     </Typography>
                 </Box>
                 <Box
-                    sx={scrollableBoxStyle}
+                    sx={styles.scrollableBoxStyle}
                 >
-                    <Box sx={mainContainerStyle}>
+                    <Box sx={styles.mainContainerStyle}>
                         {mainDeck?.deck.map((card) => (
-                            <Box sx={cardContainer} key={card.id}>
+                            <Box sx={styles.cardContainer} key={card.id}>
                                 <Box
                                     key={card.id}
-                                    sx={{ ...styleCard, backgroundImage:`url(${s3CardImageURL(card)})` }}
+                                    sx={{ ...styles.styleCard, backgroundImage:`url(${s3CardImageURL(card)})` }}
                                     onMouseEnter={handlePreviewOpen}
                                     onMouseLeave={handlePreviewClose}
                                     data-card-url={s3CardImageURL(card)}
                                 />
+                                <Box sx={styles.counterIcon}>
+                                    <Typography sx={styles.numberFont}>
+                                        {card.count}
+                                    </Typography>
+                                </Box>
                                 <Popover
                                     id="mouse-over-popover"
                                     sx={{ pointerEvents: 'none' }}
@@ -170,7 +195,7 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
                                     slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
                                     {...popoverConfig()}
                                 >
-                                    <Box sx={{ ...cardPreview, backgroundImage: previewImage }} />
+                                    <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
                                 </Popover>
                             </Box>
                         ))}
@@ -178,26 +203,31 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
                 </Box>
                 {mainDeck && mainDeck.sideboard?.length > 0 && (
                     <>
-                        <Box sx={headerBoxStyle}>
-                            <Typography sx={titleTextStyle}>Sideboard</Typography>
-                            <Divider sx={dividerStyle} />
-                            <Typography sx={deckSizeTextStyle}>
+                        <Box sx={styles.headerBoxStyle}>
+                            <Typography sx={styles.titleTextStyle}>Sideboard</Typography>
+                            <Divider sx={styles.dividerStyle} />
+                            <Typography sx={styles.deckSizeTextStyle}>
                                 {sideboardCount}/10
                             </Typography>
                         </Box>
                         <Box
-                            sx={scrollableBoxStyleSideboard}
+                            sx={styles.scrollableBoxStyleSideboard}
                         >
-                            <Box sx={mainContainerStyle}>
+                            <Box sx={styles.mainContainerStyle}>
                                 {mainDeck?.sideboard.map((card) => (
-                                    <Box sx={cardContainer} key={card.id}>
+                                    <Box sx={styles.cardContainer} key={card.id}>
                                         <Box
                                             key={card.id}
-                                            sx={{ ...styleCard, backgroundImage:`url(${s3CardImageURL(card)})` }}
+                                            sx={{ ...styles.styleCard, backgroundImage:`url(${s3CardImageURL(card)})` }}
                                             onMouseEnter={handlePreviewOpen}
                                             onMouseLeave={handlePreviewClose}
                                             data-card-url={s3CardImageURL(card)}
                                         />
+                                        <Box sx={styles.counterIcon}>
+                                            <Typography sx={styles.numberFont}>
+                                                {card.count}
+                                            </Typography>
+                                        </Box>
                                         <Popover
                                             id="mouse-over-popover"
                                             sx={{ pointerEvents: 'none' }}
@@ -208,7 +238,7 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
                                             slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
                                             {...popoverConfig()}
                                         >
-                                            <Box sx={{ ...cardPreview, backgroundImage: previewImage }} />
+                                            <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
                                         </Popover>
                                     </Box>
                                 ))}
