@@ -31,7 +31,6 @@ const Navbar = () => {
         },
         lobbyTextStyle:{
             ml:'60px',
-            mt:'25px',
             fontSize: '3.0em',
             fontWeight: '600',
             color: 'white',
@@ -52,7 +51,7 @@ const Navbar = () => {
                     GAME LOBBY
                 </Typography>
             )}
-            {pathname === '/Unimplemented' && (
+            {(pathname === '/Unimplemented' || pathname.includes('/DeckPage')) && (
                 <Typography sx={navbarStyles.lobbyTextStyle} onClick={handleExit}>KARABAST</Typography>
             )
             }
