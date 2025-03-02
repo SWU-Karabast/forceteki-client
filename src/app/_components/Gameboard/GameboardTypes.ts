@@ -14,6 +14,7 @@ export interface IParticipant {
 
 export interface IChatDrawerProps {
     sidebarOpen: boolean;
+    toggleSidebar: () => void;
 }
 
 export interface IPlayerCardTrayProps {
@@ -45,4 +46,5 @@ export interface IUnitsBoardProps {
 
 export interface IPlayerHandProps {
     cards: ICardData[];
+    clickDisabled?: boolean;
 }

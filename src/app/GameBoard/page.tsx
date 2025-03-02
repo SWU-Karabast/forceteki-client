@@ -50,9 +50,10 @@ const GameBoard = () => {
     const winners = gameState?.winner ? gameState.winner : undefined;
     // const winners = ['order66']
     // we set tabs
+    // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
-        :['currentGame','keyboardShortcuts','cardSleeves','gameOptions']
+        ? ['endGame']
+        :['currentGame']
 
     if (!gameState || !connectedPlayer) {
         return null;
@@ -62,6 +63,7 @@ const GameBoard = () => {
         mainBoxStyle: {
             flexGrow: 1,
             pr: sidebarOpen ? '280px' : '0',
+            width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
             height: '100vh',
             position: 'relative',
@@ -159,6 +161,7 @@ const GameBoard = () => {
 
             <ChatDrawer
                 sidebarOpen={sidebarOpen}
+                toggleSidebar={toggleSidebar}
             />
 
             <Box sx={styles.centralPromptContainer}>
@@ -170,6 +173,7 @@ const GameBoard = () => {
 
             <PopupShell/>
             <PreferencesComponent
+                sidebarOpen={sidebarOpen}
                 isPreferenceOpen={isPreferenceOpen}
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}

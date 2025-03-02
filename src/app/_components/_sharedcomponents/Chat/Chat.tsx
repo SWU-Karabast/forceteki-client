@@ -40,7 +40,7 @@ const Chat: React.FC<IChatProps> = ({
                 </Typography>
             )
         }
-        const stringMessage = message.map((item: IChatObject | string) => typeof item === 'object' ? item.name : item).join('');
+        const stringMessage = message.map((item: IChatObject | string) => typeof item === 'object' ? item?.name : item).join('');
         return (
             <Typography key={index} sx={styles.messageText}>
                 {stringMessage}

@@ -151,7 +151,7 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     </Box>
                     <Box sx={styles.socialIconsBox}>
                         <NextLinkMui
-                            href="https://discord.com"
+                            href="https://discord.gg/hKRaqHND4v"
                             target="_blank"
                             rel="noopener noreferrer"
                         >

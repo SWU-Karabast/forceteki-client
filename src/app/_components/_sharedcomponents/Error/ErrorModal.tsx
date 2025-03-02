@@ -9,7 +9,7 @@ interface ErrorModalProps {
     open: boolean;
     onClose: () => void;
     title: string;
-    errors?: IDeckValidationFailures;
+    errors?: IDeckValidationFailures | string;
     format?: string;
 }
 
@@ -21,7 +21,12 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
     format = 'Premier',
 }) => {
     // Inline styling for the modal content
-    const messages = errors ? getReadableDeckErrors(errors, format) : ['Unknown error'];
+    let messages: string[];
+    if(typeof errors === 'string') {
+        messages = [errors]
+    }else{
+        messages = errors ? getReadableDeckErrors(errors, format) : ['Unknown error'];
+    }
     const modalStyle = {
         position: 'absolute' as const,
         top: '50%',

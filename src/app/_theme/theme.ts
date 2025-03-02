@@ -68,7 +68,7 @@ export const theme: Theme = createTheme({
     },
     components: {
         MuiCssBaseline: {
-            styleOverrides: {
+            styleOverrides: (theme) => ({
                 ':root': {
                     '--selection-green': '#72F979',
                     '--selection-red': '#FF0D0D',
@@ -77,6 +77,29 @@ export const theme: Theme = createTheme({
                     '--selection-grey': '#9DB4A0',
                     '--initiative-blue': '#00BAFF',
                     '--initiative-red': '#FF3231',
+                    '--font-size-xs': '12px',
+                    '--font-size-sm': '14px',
+                    '--font-size-md': '16px',
+                    '--font-size-lg': '17px',
+                    '--font-size-xl': '18px',
+                },
+                html: {
+                    fontSize: 'var(--font-size-md)', // Default to medium
+                    [theme.breakpoints.down('sm')]: {
+                        fontSize: 'var(--font-size-xs)',
+                    },
+                    [theme.breakpoints.between('sm', 'md')]: {
+                        fontSize: 'var(--font-size-sm)',
+                    },
+                    [theme.breakpoints.between('md', 'lg')]: {
+                        fontSize: 'var(--font-size-md)',
+                    },
+                    [theme.breakpoints.between('lg', 'xl')]: {
+                        fontSize: 'var(--font-size-lg)',
+                    },
+                    [theme.breakpoints.up('xl')]: {
+                        fontSize: 'var(--font-size-xl)',
+                    },
                 },
                 body: {
                     backgroundSize: 'cover',
@@ -100,7 +123,7 @@ export const theme: Theme = createTheme({
                 '::-webkit-scrollbar-button': {
                     height: '10px',
                 },
-            },
+            }),
         },
         MuiContainer: {
             styleOverrides: {

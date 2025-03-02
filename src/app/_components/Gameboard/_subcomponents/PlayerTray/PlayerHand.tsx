@@ -4,7 +4,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
 
-const PlayerHand: React.FC<IPlayerHandProps> = ({ cards = [] }) => {
+const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [] }) => {
     const { connectedPlayer } = useGame();
 
     // 1. Track the container width via ResizeObserver
@@ -91,7 +91,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ cards = [] }) => {
                                 },
                             }}
                         >
-                            <GameCard card={card} />
+                            <GameCard card={card} disabled={clickDisabled} />
                         </Box>
                     ))}
                 </Box>
@@ -119,7 +119,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ cards = [] }) => {
                             },
                         }}
                     >
-                        <GameCard card={card} />
+                        <GameCard card={card} disabled={clickDisabled}/>
                     </Box>
                 ))}
         </Box>
