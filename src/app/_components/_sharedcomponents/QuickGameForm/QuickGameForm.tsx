@@ -100,7 +100,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     setQueueState(false)
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
                     setErrorTitle('Creation not allowed')
-                    setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby')
+                    setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buts in the UI and avoid using the back button or closing the browser to leave games.')
                     setErrorModalOpen(true);
                 }else{
                     setQueueState(false);
