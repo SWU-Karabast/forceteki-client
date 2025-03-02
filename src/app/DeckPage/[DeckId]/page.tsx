@@ -1,7 +1,7 @@
 'use client';
 import React, { ChangeEvent, useState, useEffect, useMemo } from 'react';
 import {
-    Box, MenuItem, Typography,
+    Box, MenuItem, Popover, Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
@@ -20,13 +20,34 @@ const DeckDetails: React.FC = () => {
     const [sortBy, setSortBy] = useState<string>('');
     const router = useRouter();
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
+    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+
     const params = useParams();
     const deckId = params?.DeckId;
+
+    // preview states
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
 
     // State for delete confirmation dialog
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
 
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        const imageUrl = target.getAttribute('data-card-url');
+        hoverTimeout.current = window.setTimeout(() => {
+            setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`)
+        }, 500);
+    };
 
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+    };
+
+    // example data
     const opponentData = useMemo(() => {
         // List of sample leader names
         const leaderNames = [
@@ -118,7 +139,6 @@ const DeckDetails: React.FC = () => {
             width: '14rem',
             height: '10.18rem',
             backgroundRepeat: 'no-repeat',
-            cursor: 'pointer',
         },
         boxGeneralStylingBase: {
             backgroundColor: 'transparent',
@@ -128,7 +148,6 @@ const DeckDetails: React.FC = () => {
             width: '14rem',
             height: '10.18rem',
             backgroundRepeat: 'no-repeat',
-            cursor: 'pointer',
         },
         titleContainer:{
             width:'40rem',
@@ -148,21 +167,6 @@ const DeckDetails: React.FC = () => {
             backgroundImage:'url(/edit.svg)',
             ml:'10px',
             cursor: 'pointer',
-        },
-        backCircle: {
-            backgroundColor: '#333',
-            color: '#fff',
-            width: '34px',
-            height: '34px',
-            mr:'10px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            '&:hover': {
-                backgroundColor: '#444',
-            },
         },
         deckButtons:{
             width: '100%',
@@ -204,16 +208,6 @@ const DeckDetails: React.FC = () => {
             marginBottom: '1rem',
             ml:'5px',
         },
-        winCircle:{
-            width: '64px',
-            height: '64px',
-            borderRadius: '50%',
-            backgroundColor: '#3f51b5',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: '16px',
-        },
         gamesCircle:{
             width:'25px',
             height: '25px',
@@ -227,21 +221,6 @@ const DeckDetails: React.FC = () => {
             alignItems:'center',
             mb:'5px',
         },
-        tableContainer: {
-            height: '100%',         // Use available height in parent
-            maxHeight: '25vh',      // Limit maximum height
-            width: '100%',          // Take full width
-            overflow: 'auto',       // Enable scrolling when needed
-            display: 'flex',        // Use flex to maintain structure
-            flexDirection: 'column', // Stack header and body
-        },
-        tableWrapper: {
-            overflowY: 'auto',      // This is where scrolling happens
-            flex: '1 1 auto',       // Take remaining space
-        },
-        tableHead: {
-            backgroundColor: '#333',
-        },
         editButtons:{
             display:'flex',
             width: '15rem',
@@ -253,7 +232,14 @@ const DeckDetails: React.FC = () => {
             display:'flex',
             flexDirection: 'row',
             alignItems:'center',
-        }
+        },
+        cardPreview: {
+            borderRadius: '.38em',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1.4 / 1',
+            width: '21rem',
+        },
     }
 
     return (
@@ -267,9 +253,40 @@ const DeckDetails: React.FC = () => {
 
                     {/* Leader + Base */}
                     <Box sx={styles.leaderBaseContainer}>
-                        <Box sx={styles.boxGeneralStylingLeader} />
-                        <Box sx={styles.boxGeneralStylingBase} />
+                        <Box sx={styles.boxGeneralStylingLeader}
+                            aria-owns={open ? 'mouse-over-popover' : undefined}
+                            aria-haspopup="true"
+                            onMouseEnter={handlePreviewOpen}
+                            onMouseLeave={handlePreviewClose}
+                            data-card-url={deckData ? s3CardImageURL(deckData.leader) : ''}
+                        />
+                        <Box sx={styles.boxGeneralStylingBase}
+                            aria-owns={open ? 'mouse-over-popover' : undefined}
+                            aria-haspopup="true"
+                            onMouseEnter={handlePreviewOpen}
+                            onMouseLeave={handlePreviewClose}
+                            data-card-url={deckData ? s3CardImageURL(deckData.base) : ''}
+                        />
                     </Box>
+                    <Popover
+                        id="mouse-over-popover"
+                        sx={{ pointerEvents: 'none' }}
+                        open={open}
+                        anchorEl={anchorElement}
+                        anchorOrigin={{
+                            vertical: 'center',
+                            horizontal: -5,
+                        }}
+                        transformOrigin={{
+                            vertical: 'center',
+                            horizontal: 'right',
+                        }}
+                        onClose={handlePreviewClose}
+                        disableRestoreFocus
+                        slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                    >
+                        <Box sx={{ ...styles.cardPreview, backgroundImage:`${previewImage}` }} />
+                    </Popover>
                     <Box sx={styles.titleTextContainer}>
                         <Typography variant="h3" sx={styles.titleText}>
                             {deckData?.metadata.name}

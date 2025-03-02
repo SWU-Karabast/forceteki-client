@@ -83,11 +83,11 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
             height: '1px',
         },
         scrollableBoxStyleSideboard: {
-            height: '24vh',
+            height: '19vh',
             overflow: 'auto',
         },
         scrollableBoxStyle: {
-            height: mainDeck ? mainDeck.sideboard?.length > 0 ? '37vh' : '61vh' : '61vh',
+            height: mainDeck ? mainDeck.sideboard?.length > 0 ? '45vh' : '64vh' : '64vh',
             overflow: 'auto',
         },
         mainContainerStyle: {
@@ -185,21 +185,21 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
                                         {card.count}
                                     </Typography>
                                 </Box>
-                                <Popover
-                                    id="mouse-over-popover"
-                                    sx={{ pointerEvents: 'none' }}
-                                    open={open}
-                                    anchorEl={anchorElement}
-                                    onClose={handlePreviewClose}
-                                    disableRestoreFocus
-                                    slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
-                                    {...popoverConfig()}
-                                >
-                                    <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
-                                </Popover>
                             </Box>
                         ))}
                     </Box>
+                    <Popover
+                        id="mouse-over-popover"
+                        sx={{ pointerEvents: 'none' }}
+                        open={open}
+                        anchorEl={anchorElement}
+                        onClose={handlePreviewClose}
+                        disableRestoreFocus
+                        slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                        {...popoverConfig()}
+                    >
+                        <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
+                    </Popover>
                 </Box>
                 {mainDeck && mainDeck.sideboard?.length > 0 && (
                     <>
@@ -228,21 +228,21 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
                                                 {card.count}
                                             </Typography>
                                         </Box>
-                                        <Popover
-                                            id="mouse-over-popover"
-                                            sx={{ pointerEvents: 'none' }}
-                                            open={open}
-                                            anchorEl={anchorElement}
-                                            onClose={handlePreviewClose}
-                                            disableRestoreFocus
-                                            slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
-                                            {...popoverConfig()}
-                                        >
-                                            <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
-                                        </Popover>
                                     </Box>
                                 ))}
                             </Box>
+                            <Popover
+                                id="mouse-over-popover"
+                                sx={{ pointerEvents: 'none' }}
+                                open={open}
+                                anchorEl={anchorElement}
+                                onClose={handlePreviewClose}
+                                disableRestoreFocus
+                                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                                {...popoverConfig()}
+                            >
+                                <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
+                            </Popover>
                         </Box>
                     </>
                 )}
