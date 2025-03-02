@@ -1,5 +1,5 @@
 'use client';
-import React, { ChangeEvent, useState, useEffect } from 'react';
+import React, { ChangeEvent, useState, useEffect, useMemo } from 'react';
 import {
     Box, MenuItem, Typography,
     Table, TableHead, TableBody, TableRow, TableCell
@@ -12,6 +12,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/PercentageCircle';
+import AnimatedStatsTable from '@/app/_components/DeckPage/DeckComponent/AnimatedStatsTable';
+import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 
 const sortByOptions: string[] = ['Cost','Power','Most played'];
 
@@ -21,6 +23,31 @@ const DeckDetails: React.FC = () => {
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const params = useParams();
     const deckId = params?.DeckId;
+
+    const opponentData = useMemo(() => {
+        // List of sample leader names
+        const leaderNames = [
+            'Ahsoka Tano', 'Boba Fett', 'Captain Rex', 'Darth Maul',
+            'Emperor Palpatine', 'General Grievous', 'Han Solo', 'Leia Organa',
+            'Luke Skywalker', 'Mace Windu', 'Obi-Wan Kenobi', 'Qui-Gon Jinn',
+            'Rey Skywalker', 'Thrawn', 'Yoda', 'Darth Vader',
+            'Kylo Ren', 'Ezra Bridger', 'Kanan Jarrus', 'Asajj Ventress'
+        ];
+
+        return leaderNames.sort().map(leader => {
+            const wins = Math.floor(Math.random() * 10);
+            const losses = Math.floor(Math.random() * 10);
+            const total = wins + losses;
+            const winPercentage = total > 0 ? Math.round((wins / total) * 100) : 0;
+
+            return {
+                leader,
+                wins,
+                losses,
+                winPercentage
+            };
+        });
+    }, []);
 
     useEffect(() => {
         if (deckId) {
@@ -117,6 +144,7 @@ const DeckDetails: React.FC = () => {
             minHeight:'3rem',
             display: 'flex',
             flexDirection: 'row',
+            justifyContent: 'space-between',
         },
         sortBy:{
             width: '13rem',
@@ -133,7 +161,7 @@ const DeckDetails: React.FC = () => {
         },
         deckGridStyle:{
             width: '100%',
-            height: '100%',
+            height: '95%',
             justifyContent: 'center',
             backgroundColor: 'transparent',
         },
@@ -141,6 +169,8 @@ const DeckDetails: React.FC = () => {
         // Example style blocks for stats
         statsContainer:{
             marginTop: '1rem',
+            height:'69%',
+            overflowY: 'auto',
         },
         overallStatsBox:{
             display: 'flex',
@@ -170,6 +200,33 @@ const DeckDetails: React.FC = () => {
             flexDirection:'row',
             alignItems:'center',
             mb:'5px',
+        },
+        tableContainer: {
+            height: '100%',         // Use available height in parent
+            maxHeight: '25vh',      // Limit maximum height
+            width: '100%',          // Take full width
+            overflow: 'auto',       // Enable scrolling when needed
+            display: 'flex',        // Use flex to maintain structure
+            flexDirection: 'column', // Stack header and body
+        },
+        tableWrapper: {
+            overflowY: 'auto',      // This is where scrolling happens
+            flex: '1 1 auto',       // Take remaining space
+        },
+        tableHead: {
+            backgroundColor: '#333',
+        },
+        editButtons:{
+            display:'flex',
+            width: '15rem',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+        },
+        titleTextContainer:{
+            ml:'10px',
+            display:'flex',
+            flexDirection: 'row',
+            alignItems:'center',
         }
     }
 
@@ -179,19 +236,19 @@ const DeckDetails: React.FC = () => {
                 <Box sx={styles.deckMeta}>
                     {/* Title Row */}
                     <Box sx={styles.titleContainer}>
-                        <Box sx={styles.backCircle} onClick={handleBackButton}>
-                            <ArrowBackIosNewIcon fontSize="small" />
-                        </Box>
-                        <Typography variant="h3" sx={styles.titleText}>
-                            {deckData?.metadata.name}
-                        </Typography>
-                        <Box sx={styles.editBox} />
+                        <PreferenceButton variant={'standard'} buttonFnc={handleBackButton}/>
                     </Box>
 
                     {/* Leader + Base */}
                     <Box sx={styles.leaderBaseContainer}>
                         <Box sx={styles.boxGeneralStylingLeader} />
                         <Box sx={styles.boxGeneralStylingBase} />
+                    </Box>
+                    <Box sx={styles.titleTextContainer}>
+                        <Typography variant="h3" sx={styles.titleText}>
+                            {deckData?.metadata.name}
+                        </Typography>
+                        <Box sx={styles.editBox} />
                     </Box>
 
                     {/* Stats go here */}
@@ -210,26 +267,12 @@ const DeckDetails: React.FC = () => {
                                 </Box>
                             </Box>
                         </Box>
-
                         {/* A table for Opposing Leaders, Wins, Losses, etc. */}
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>Opposing Leader</Typography></TableCell>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>Wins</Typography></TableCell>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>Losses</Typography></TableCell>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>Win %</Typography></TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                <TableRow key={'test'}>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent</Typography></TableCell>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent</Typography></TableCell>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent</Typography></TableCell>
-                                    <TableCell><Typography sx={{ color: '#fff' }}>opponent</Typography></TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <AnimatedStatsTable
+                            data={opponentData}
+                            animationDuration={2000}
+                            staggerDelay={100}
+                        />
                     </Box>
                 </Box>
 
@@ -252,6 +295,10 @@ const DeckDetails: React.FC = () => {
                                     </MenuItem>
                                 ))}
                             </StyledTextField>
+                        </Box>
+                        <Box sx={styles.editButtons}>
+                            <PreferenceButton variant={'standard'} text={'View Deck on SWDB'} />
+                            <PreferenceButton variant={'concede'} text={'Delete'} />
                         </Box>
                     </Box>
                     <Grid sx={styles.deckGridStyle}>

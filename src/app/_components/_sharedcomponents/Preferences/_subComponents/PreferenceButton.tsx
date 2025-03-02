@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Button } from '@mui/material';
 import { IButtonType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 
 
 function PreferenceButton(buttonType: IButtonType) {
@@ -37,7 +38,7 @@ function PreferenceButton(buttonType: IButtonType) {
             disabled={buttonType.disabled ? buttonType.disabled : !buttonType.buttonFnc}
             onClick={buttonType.buttonFnc}
         >
-            {buttonType.text}
+            {buttonType.text ? buttonType.text : <ArrowBackIosNewIcon fontSize="small" />}
         </Button>
     );
 }

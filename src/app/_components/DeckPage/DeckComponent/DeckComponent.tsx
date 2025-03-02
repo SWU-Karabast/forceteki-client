@@ -85,10 +85,12 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
         height: '1px',
     };
     const scrollableBoxStyleSideboard = {
-
+        height: '24vh',
+        overflow:'auto',
     };
     const scrollableBoxStyle = {
-
+        height: mainDeck ? mainDeck.sideboard?.length > 0 ? '37vh' : '61vh' : '61vh',
+        overflow:'auto',
     };
     const mainContainerStyle = {
         display: 'flex',
