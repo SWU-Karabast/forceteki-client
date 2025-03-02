@@ -44,6 +44,7 @@ const Preferences: React.FC = () => {
         <Box sx={styles.mainContainer}>
             <Typography sx={styles.lobbyTextStyle} onClick={handleExit}>KARABAST</Typography>
             <PreferencesComponent
+                sidebarOpen={false}
                 isPreferenceOpen={true}
                 tabs={['keyboardShortcuts','cardSleeves','gameOptions','blockList']}
                 variant={'homePage'}

@@ -49,10 +49,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 };
             });
         } else if (!storedUser) {
-            let anonymousId = sessionStorage.getItem('anonymousUserId');
+            let anonymousId = localStorage.getItem('anonymousUserId');
             if (!anonymousId) {
                 anonymousId = uuid();
-                sessionStorage.setItem('anonymousUserId', anonymousId);
+                localStorage.setItem('anonymousUserId', anonymousId);
             }
             setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId)); // Avoid redundant updates
         }
@@ -99,7 +99,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     const clearAnonUser = () => {
-        sessionStorage.removeItem('anonymousUserId');
+        localStorage.removeItem('anonymousUserId');
         setAnonymousUserId(null);
     }
 

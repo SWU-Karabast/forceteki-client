@@ -119,6 +119,9 @@ const ControlHub: React.FC<IControlHubProps> = ({
             ) : (
                 <Box sx={styles.defaultMainContainer}>
                     <Box sx={styles.profileBox}>
+                        <NextLinkMui href="/Unimplemented" sx={styles.profileLink}>
+                            Unimplemented
+                        </NextLinkMui>
                         {user ? (
                             <>
                                 <NextLinkMui href="/profile" sx={styles.profileLink}>
@@ -145,12 +148,13 @@ const ControlHub: React.FC<IControlHubProps> = ({
                                 <NextLinkMui href="/auth" sx={styles.profileLink}>
                                     Log In
                                 </NextLinkMui>
+
                             ) : null
                         )}
                     </Box>
                     <Box sx={styles.socialIconsBox}>
                         <NextLinkMui
-                            href="https://discord.com"
+                            href="https://discord.gg/hKRaqHND4v"
                             target="_blank"
                             rel="noopener noreferrer"
                         >
