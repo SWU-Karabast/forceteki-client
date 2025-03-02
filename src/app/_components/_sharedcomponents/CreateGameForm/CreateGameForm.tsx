@@ -53,7 +53,7 @@ const CreateGameForm = () => {
 
     // Additional State for Non-Creategame Path
     const [gameName, setGameName] = useState<string>('');
-    const [privacy, setPrivacy] = useState<string>(user ? 'Public' : 'Private');
+    const [privacy, setPrivacy] = useState<string>('Public');
 
     const handleChangeFormat = (format: SwuGameFormat) => {
         localStorage.setItem('format', format);
@@ -75,9 +75,12 @@ const CreateGameForm = () => {
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
+                    setErrorModalOpen(true);
+                    console.log('here')
                 }else{
                     setErrorTitle('Deck Validation Error');
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                    setErrorModalOpen(true);
                 }
             }
             return;
@@ -106,10 +109,12 @@ const CreateGameForm = () => {
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
                     setErrorTitle('Creation not allowed')
                     setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby');
+                    setErrorModalOpen(true);
                 }else {
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorTitle('Deck Validation Error');
                     setDeckErrorDetails(errors);
+                    setErrorModalOpen(true);
                 }
                 return;
             }
@@ -121,6 +126,7 @@ const CreateGameForm = () => {
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
             setErrorTitle('Server error');
+            setErrorModalOpen(true);
         }
     };
 

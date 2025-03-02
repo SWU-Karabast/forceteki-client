@@ -67,9 +67,11 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
                     setErrorTitle('Deck Validation Error');
+                    setErrorModalOpen(true);
                 }else{
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorTitle('Deck Validation Error');
+                    setErrorModalOpen(true);
                 }
             }
             return;
@@ -99,11 +101,13 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
                     setErrorTitle('Creation not allowed')
                     setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby')
+                    setErrorModalOpen(true);
                 }else{
                     setQueueState(false);
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setDeckErrorDetails(errors);
                     setErrorTitle('Deck Validation Error');
+                    setErrorModalOpen(true);
                 }
                 return
             }
@@ -116,6 +120,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
             setErrorTitle('Server error');
+            setErrorModalOpen(true);
         }
     };
 
