@@ -22,9 +22,6 @@ const GameBoard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
 
-    const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
-    const phase = gameState.phase;
-
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
             router.push('/lobby');
@@ -60,6 +57,9 @@ const GameBoard = () => {
     if (!gameState || !connectedPlayer) {
         return null;
     }
+
+    const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
+    const phase = gameState.phase;
     // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
@@ -108,7 +108,7 @@ const GameBoard = () => {
             position: 'absolute',
             bottom: '-100px',
             boxShadow: activePlayer === true ? '0px -20px 35px var(--initiative-blue)' : phase === 'regroup' || phase === 'setup' ? '0px -20px 35px var(--selection-yellow)' : 'none',
-            transition: 'box-shadow 1.5s 0ms',
+            transition: 'box-shadow 1.5s',
             borderRadius: '50%',
             left: '0',
             right: '0',
@@ -120,7 +120,7 @@ const GameBoard = () => {
             position: 'absolute', 
             top: '-100px',
             boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 20px 35px var(--selection-yellow)' : 'none',
-            transition: 'box-shadow 1.5s 0ms',
+            transition: 'box-shadow 1.5s',
             borderRadius: '50%',
             left: '0',
             right: '0',
