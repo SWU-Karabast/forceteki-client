@@ -76,24 +76,31 @@ const HomePagePlayMode: React.FC = () => {
             color: 'white',
         }
     };
-
+    console.log(process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES);
     return (
         <Card variant="black" sx={styles.wrapper}>
-            <CardContent>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
-                    <Tabs value={value} variant="fullWidth" onChange={handleChange}>
-                        <Tab sx={styles.tabStyles} label="Play" />
-                        <Tab sx={styles.tabStyles} label="Create" />
-                        {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
-                    </Tabs>
-                </Box>
-                <TabPanel index={0} value={value}>
-                    <QuickGameForm/>
-                </TabPanel>
-                <TabPanel index={1} value={value}>
-                    <CreateGameForm />
-                </TabPanel>
-                {showTestGames && 
+            { process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES === 'true' ? 
+                <CardContent>
+                    <Typography variant="h2">MAINTENANCE</Typography>
+                    <Typography variant="h3" sx={{ mb: 1 }}>Karabast is currently under maintenance.</Typography>
+                    <Typography variant="h3">Be back soon!</Typography>
+                </CardContent>
+                :
+                <CardContent>
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
+                        <Tabs value={value} variant="fullWidth" onChange={handleChange}>
+                            <Tab sx={styles.tabStyles} label="Play" />
+                            <Tab sx={styles.tabStyles} label="Create" />
+                            {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
+                        </Tabs>
+                    </Box>
+                    <TabPanel index={0} value={value}>
+                        <QuickGameForm/>
+                    </TabPanel>
+                    <TabPanel index={1} value={value}>
+                        <CreateGameForm />
+                    </TabPanel>
+                    {showTestGames && 
                     <TabPanel index={2} value={value}>
                         <Box>
                             <Typography variant="h2">Test Game Setups</Typography>
@@ -109,8 +116,9 @@ const HomePagePlayMode: React.FC = () => {
                             <Button onClick={() => router.push('/GameBoard')}>Join Test Game</Button>
                         </Box>
                     </TabPanel>
-                }
-            </CardContent>
+                    }
+                </CardContent>
+            }
         </Card>
     );
 };
