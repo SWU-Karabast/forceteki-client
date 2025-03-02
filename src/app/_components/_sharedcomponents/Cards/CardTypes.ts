@@ -111,11 +111,6 @@ export enum LeaderBaseCardStyle {
     Plain = 'plain',
 }
 
-export interface ILeaderBasePreviewProps {
-    leader: ICardData;
-    base: ICardData;
-}
-
 interface ICardPlayer {
     id: string;
     name: string;

@@ -32,15 +32,6 @@ const DeckPage: React.FC = () => {
 
     // ----------------------Styles-----------------------------//
     const styles = {
-        lobbyTextStyle:{
-            ml:'30px',
-            fontSize: '3.0em',
-            fontWeight: '600',
-            color: 'white',
-            alignSelf: 'flex-start',
-            mb: '0px',
-            cursor: 'pointer',
-        },
         header:{
             width: '100%',
             flexDirection: 'row',

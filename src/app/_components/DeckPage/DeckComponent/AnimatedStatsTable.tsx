@@ -166,6 +166,7 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
         };
     }, [animationStarted, data, animationDuration, staggerDelay]);
 
+    // ----------------------Styles-----------------------------//
     const styles = {
         tableContainer: {
             height: '100%',
@@ -175,10 +176,6 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             display: 'flex',
             flexDirection: 'column' as const,
             pr: '10px',
-        },
-        tableWrapper: {
-            overflowY: 'auto' as const,
-            flex: '1 1 auto',
         },
         tableHead: {
             backgroundColor: '#333',
@@ -199,16 +196,16 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                 <TableBody>
                     {animatedData.map((row, index) => (
                         <TableRow key={index}>
-                            <TableCell>
+                            <TableCell sx={{ borderBottom:'none' }}>
                                 <Typography sx={{ color: '#fff' }}>{row.leader}</Typography>
                             </TableCell>
-                            <TableCell>
+                            <TableCell sx={{ borderBottom:'none' }}>
                                 <Typography sx={{ color: '#fff' }}>{row.wins}</Typography>
                             </TableCell>
-                            <TableCell>
+                            <TableCell sx={{ borderBottom:'none' }}>
                                 <Typography sx={{ color: '#fff' }}>{row.losses}</Typography>
                             </TableCell>
-                            <TableCell>
+                            <TableCell sx={{ borderBottom:'none' }}>
                                 <Typography sx={{ color: '#fff' }}>{row.winPercentage}%</Typography>
                             </TableCell>
                         </TableRow>

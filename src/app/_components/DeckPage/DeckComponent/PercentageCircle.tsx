@@ -59,47 +59,46 @@ const PercentageCircle: React.FC<PercentageCircleProps> = ({
         return () => clearInterval(timer);
     }, [percentage, animationDuration]);
 
-    // Outer circle with conic-gradient
-    const outerStyle = {
-        width: `${size}px`,
-        height: `${size}px`,
-        borderRadius: '50%',
-        position: 'relative' as const,
-        background: `conic-gradient(${fillColor} 0deg ${currentAngle}deg, ${trackColor} ${currentAngle}deg 360deg)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex:'9',
-        transition: 'background 0.1s linear'
-    };
-
-    // Inner circle to "cut out" the center
-    const innerStyle = {
-        width: `${size - strokeWidth * 2}px`,
-        height: `${size - strokeWidth * 2}px`,
-        borderRadius: '50%',
-        position: 'absolute' as const,
-        zIndex:'10',
-        backgroundColor: 'rgba(0, 0, 0, 1)',
-    };
-
-    const textStyle = {
-        position: 'absolute' as const,
-        color: textColor,
-        fontWeight: 'bold',
-        fontSize: '0.9rem',
-        zIndex:'11',
-        lineHeight: '13px',
-        maxWidth:'35px',
-        wordWrap: 'break-word',
-        whiteSpace: 'normal',
-        textAlign: 'center',
-    };
-
+    // ----------------------Styles-----------------------------//
+    const styles = {
+        outerStyle: {
+            width: `${size}px`,
+            height: `${size}px`,
+            borderRadius: '50%',
+            position: 'relative' as const,
+            background: `conic-gradient(${fillColor} 0deg ${currentAngle}deg, ${trackColor} ${currentAngle}deg 360deg)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: '9',
+            transition: 'background 0.1s linear'
+        },
+        // Inner circle to "cut out" the center
+        innerStyle: {
+            width: `${size - strokeWidth * 2}px`,
+            height: `${size - strokeWidth * 2}px`,
+            borderRadius: '50%',
+            position: 'absolute' as const,
+            zIndex: '10',
+            backgroundColor: 'rgba(0, 0, 0, 1)',
+        },
+        textStyle: {
+            position: 'absolute' as const,
+            color: textColor,
+            fontWeight: 'bold',
+            fontSize: '0.9rem',
+            zIndex: '11',
+            lineHeight: '13px',
+            maxWidth: '35px',
+            wordWrap: 'break-word',
+            whiteSpace: 'normal',
+            textAlign: 'center',
+        },
+    }
     return (
-        <Box sx={outerStyle}>
-            <Box sx={innerStyle} />
-            <Typography sx={textStyle}>
+        <Box sx={styles.outerStyle}>
+            <Box sx={styles.innerStyle} />
+            <Typography sx={styles.textStyle}>
                 {currentPercentage.toFixed(0)}%
             </Typography>
         </Box>
