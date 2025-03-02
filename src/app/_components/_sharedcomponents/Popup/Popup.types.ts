@@ -55,3 +55,9 @@ export type DropdownPopup = {
     options: string[];
     source: PopupSource;
 };
+
+export type LeaveGamePopup = {
+    type: 'leaveGame';
+    uuid: string;
+    source: PopupSource;
+};
