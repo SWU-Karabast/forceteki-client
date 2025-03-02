@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { Box, Grid2 as Grid, keyframes, Typography } from '@mui/material';
+import { Box, Grid2 as Grid, Typography } from '@mui/material';
 import { s3ImageURL } from '../_utils/s3Utils';
 import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
@@ -21,22 +21,9 @@ const GameBoard = () => {
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
-    const [animate, setAnimate] = useState(false);
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
-
-    const growAura = keyframes`
-  0% { height: 0px; }
-  100% { height: 100px; }
-`;
-
-    useEffect(() => {
-        setAnimate(true);
-        const timeout = setTimeout(() => setAnimate(false), 1500);
-
-        return () => clearTimeout(timeout);
-    }, [activePlayer]);
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -121,6 +108,7 @@ const GameBoard = () => {
             position: 'absolute',
             bottom: '-100px',
             boxShadow: activePlayer === true ? '0px -20px 35px var(--initiative-blue)' : phase === 'regroup' || phase === 'setup' ? '0px -20px 35px var(--selection-yellow)' : 'none',
+            transition: 'box-shadow 1.5s 0ms',
             borderRadius: '50%',
             left: '0',
             right: '0',
@@ -128,10 +116,11 @@ const GameBoard = () => {
         },
         opponentTurnAura: {
             height: '100px',
-            width: '90%',
+            width: '85%',
             position: 'absolute', 
             top: '-100px',
             boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 20px 35px var(--selection-yellow)' : 'none',
+            transition: 'box-shadow 1.5s 0ms',
             borderRadius: '50%',
             left: '0',
             right: '0',
@@ -146,13 +135,13 @@ const GameBoard = () => {
                     trayPlayer={getOpponent(connectedPlayer)}
                     preferenceToggle={handlePreferenceToggle}
                 />
-                <Box sx={[{ animation: animate ? `${growAura} 1.5s forwards` : 'none' }, styles.opponentTurnAura]} />
+                <Box sx={ styles.opponentTurnAura} />
                 <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
                     toggleSidebar={toggleSidebar}
                 />
-                <Box sx={[{ animation: animate ? `${growAura} 1.5s forwards` : 'none' }, styles.playerTurnAura]} />
+                <Box sx={styles.playerTurnAura} />
             </Box>
 
 
