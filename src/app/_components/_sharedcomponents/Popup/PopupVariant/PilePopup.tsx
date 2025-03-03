@@ -3,6 +3,7 @@ import { Box, Button, Grid2, IconButton, Typography } from '@mui/material';
 import { useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import GameCard from '../../Cards/GameCard';
+import GradientBorderButton from '../../_styledcomponents/GradientBorderButton';
 import {
     buttonStyle,
     containerStyle,
@@ -10,8 +11,10 @@ import {
     headerStyle,
     minimizeButtonStyle,
     titleStyle,
+    subtitleStyle,
 } from '../Popup.styles';
-import { PilePopup } from '../Popup.types';
+import { PilePopup, PopupButton } from '../Popup.types';
+import { useGame } from '@/app/_contexts/Game.context';
 
 interface ButtonProps {
     data: PilePopup;
@@ -25,6 +28,7 @@ export const gridContainerStyle = {
 
 export const PilePopupModal = ({ data }: ButtonProps) => {
     const { closePopup } = usePopup();
+    const { sendGameMessage } = useGame();
 
     const [isMinimized, setIsMinimized] = useState(false);
 
@@ -49,9 +53,23 @@ export const PilePopupModal = ({ data }: ButtonProps) => {
                 {data.cards.length === 0 && <Typography>No cards to display</Typography>}
 
                 <Box sx={footerStyle}>
-                    <Button onClick={() => closePopup(data.uuid)} sx={buttonStyle}>
-                        Done
-                    </Button>
+                    { data.buttons !== null ? 
+                        data.buttons.map((button: PopupButton, index: number) => (
+                            <GradientBorderButton
+                                key={`${button.uuid}:${index}`}
+                                fillColor={button.selected ? '#666' : undefined}
+                                onClickHandler={() => {
+                                    sendGameMessage([button.command, button.arg, button.uuid]);
+                                }}
+                            >
+                                {button.text}
+                            </GradientBorderButton>
+                        )) 
+                        :
+                        <Button onClick={() => closePopup(data.uuid)} sx={buttonStyle}>
+                            Close
+                        </Button>
+                    }
                 </Box>
             </>
         );
@@ -74,6 +92,7 @@ export const PilePopupModal = ({ data }: ButtonProps) => {
                     {isMinimized ? <BiPlus /> : <BiMinus />}
                 </IconButton>
             </Box>
+            <Typography sx={subtitleStyle} hidden={isMinimized}>{data.subtitle}</Typography>
 
             {renderPopupContent()}
         </Box>

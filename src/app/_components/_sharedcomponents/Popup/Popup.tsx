@@ -10,15 +10,6 @@ import { contentStyle } from './Popup.styles';
 import { useGame } from '@/app/_contexts/Game.context';
 import { DropdownPopupModal } from './PopupVariant/DropdownPopup';
 
-const overlayStyle = {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
-    display: 'flex',
-    zIndex: 10,
-};
-
 const focusHandlerStyle = (type: PopupType, data: PopupData, index: number, playerName:string, containCards?:boolean): SxProps<Theme> => ({
     zIndex: 11 + index,
     pointerEvents: 'auto',
@@ -62,7 +53,13 @@ export const getPopupPosition = (type: PopupType, data: PopupData, index: number
     // } as const;
 }
 
-const PopupShell: React.FC = () => {
+interface IPopupShellProps {
+    sidebarOpen?: boolean;
+}
+
+const PopupShell: React.FC<IPopupShellProps> = ({
+    sidebarOpen = false
+}) => {
     const { popups, focusPopup } = usePopup();
     const { connectedPlayer }= useGame();
     const isPilePopup = (popup: PopupData): popup is PilePopup => popup.type === 'pile';
@@ -100,6 +97,15 @@ const PopupShell: React.FC = () => {
         popups.filter((popup) => popup.type !== 'default'),
         popups.filter((popup) => popup.type === 'default')
     ];
+
+    const overlayStyle = {
+        position: 'absolute',
+        width: sidebarOpen ? 'calc(100% - 250px)' : '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        display: 'flex',
+        zIndex: 10,
+    };
 
     return (
         <Box sx={overlayStyle}>

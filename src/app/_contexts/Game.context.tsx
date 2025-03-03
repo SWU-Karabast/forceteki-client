@@ -135,13 +135,26 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
             const cardSelectionZones = cardSelectableZones(gameState);
             if (cardSelectionZones.length === 1) {
+                const { buttons, menuTitle } = gameState.players[connectedPlayerId].promptState;
                 switch (cardSelectionZones[0]) {
                     case 'resources':
                         openPopup('pile', {
                             uuid: `${connectedPlayer}-resources`,
                             title: 'Your Resources',
+                            subtitle: menuTitle,
                             cards: gameState?.players[connectedPlayer]?.cardPiles['resources'],
-                            source: PopupSource.User
+                            source: PopupSource.PromptState,
+                            buttons: buttons,
+                        });
+                        break;
+                    case 'discard':
+                        openPopup('pile', {
+                            uuid: `${connectedPlayer}-discard`,
+                            title: 'Your Discard',
+                            subtitle: menuTitle,
+                            cards: gameState?.players[connectedPlayer]?.cardPiles['discard'],
+                            source: PopupSource.PromptState,
+                            buttons: buttons,
                         });
                         break;
                 }

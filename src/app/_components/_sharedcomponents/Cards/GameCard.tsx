@@ -98,7 +98,9 @@ const GameCard: React.FC<IGameCardProps> = ({
         }
     };
     const handleClick = () => {
-        clearPopups();
+        if (getConnectedPlayerPrompt()?.selectCardMode !== 'multiple') {
+            clearPopups();
+        }  
         (onClick || defaultClickFunction)();
     }
 

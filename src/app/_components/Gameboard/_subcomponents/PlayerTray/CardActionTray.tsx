@@ -58,7 +58,7 @@ const CardActionTray: React.FC = () => {
         if ( playerState.promptState.promptType === 'actionWindow' ||
              playerState.promptState.promptType === 'resource' ||
              playerState.promptState.promptType === 'distributeAmongTargets' ||
-             playerState.promptState.selectCardMode === true ) {
+             !!playerState.promptState.selectCardMode === true ) {
             return true;
         }
         return false;
