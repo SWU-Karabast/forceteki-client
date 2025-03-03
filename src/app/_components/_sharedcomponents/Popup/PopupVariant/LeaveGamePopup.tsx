@@ -16,10 +16,10 @@ interface LeaveGamePopupProps {
 }
 
 export const LeaveGamePopupModule = ({ uuid }: LeaveGamePopupProps) => {
-    const { sendMessage } = useGame();
+    const { sendMessage, gameState } = useGame();
     const { closePopup } = usePopup();
     const router = useRouter();
-
+    const hasWinner = !!gameState?.winner;
     const handleConfirm = () => {
         sendMessage('manualDisconnect');
         closePopup(uuid);
@@ -36,7 +36,7 @@ export const LeaveGamePopupModule = ({ uuid }: LeaveGamePopupProps) => {
                 <Typography sx={titleStyle}>Leave Game</Typography>
             </Box>
             <Typography sx={textStyle}>
-                Leaving the game will concede.
+                {hasWinner ? 'Leave the game and return to homescreen?' : 'Leaving the game will concede.' }
             </Typography>
             <Box sx={footerStyle}>
                 <PreferenceButton
