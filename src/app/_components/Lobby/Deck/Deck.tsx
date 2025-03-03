@@ -73,7 +73,7 @@ const Deck: React.FC = () => {
             fontSize: '2em',
             fontWeight: '400',
             color: 'white',
-            mr: '.6em',
+            mb: 0
         },
         dividerStyle: {
             backgroundColor: '#fff',
@@ -104,12 +104,13 @@ const Deck: React.FC = () => {
         },
         lineTypography: {
             fontSize: '1.8em',
-            mr: '2px'
+            mr: '2px',
+            mb: 0
         },
         infiniteSymbol: {
             fontSize: '1.6em',
             color: 'white',
-            mb: '0.7rem'
+            mt: '0.3rem'
         }
     };
     return (
@@ -117,7 +118,7 @@ const Deck: React.FC = () => {
             <Card sx={styles.cardStyle}>
                 <Box sx={styles.headerBoxStyle}>
                     <Typography sx={styles.titleTextStyle}>Your Deck</Typography>
-                    <Box sx={{ display : 'flex' }}>
+                    <Box sx={{ display : 'flex', alignItems: 'center', mr: 1 }}>
                         <Typography sx={{ ...styles.deckSizeTextStyle, mr:'0px',color: mainboardError ? 'red' : styles.deckSizeTextStyle.color }}>
                             {deckCount}
                         </Typography>
@@ -144,8 +145,8 @@ const Deck: React.FC = () => {
                         <Box sx={styles.headerBoxStyle}>
                             <Typography sx={styles.titleTextStyle}>Sideboard</Typography>
                             <Divider sx={styles.dividerStyle} />
-                            <Box sx={{ display : 'flex' }}>
-                                <Typography sx={{ ...styles.deckSizeTextStyle, mr:'0px', color: sideboardError ? 'red' : styles.deckSizeTextStyle.color }}>
+                            <Box sx={{ display : 'flex', alignItems: 'center', mr: 1 }}>
+                                <Typography sx={{ ...styles.deckSizeTextStyle, color: sideboardError ? 'red' : styles.deckSizeTextStyle.color }}>
                                     {sideboardCount}
                                 </Typography>
                                 {maxSideBoard === -1 ? (
