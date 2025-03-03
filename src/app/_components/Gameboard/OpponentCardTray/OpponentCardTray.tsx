@@ -107,7 +107,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         <Grid
             container
             sx={{
-                height: '17%',
+                height: '100%',
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '2rem', // 2rem gap between columns

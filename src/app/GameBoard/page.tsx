@@ -61,7 +61,6 @@ const GameBoard = () => {
     // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
-            flexGrow: 1,
             pr: sidebarOpen ? '280px' : '0',
             width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
@@ -70,6 +69,8 @@ const GameBoard = () => {
             backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            display: 'flex',
+            flexDirection: 'column',
         },
         centralPromptContainer: {
             position: 'absolute',
@@ -105,15 +106,21 @@ const GameBoard = () => {
     return (
         <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>
             <Box component="main" sx={styles.mainBoxStyle}>
-                <OpponentCardTray
-                    trayPlayer={getOpponent(connectedPlayer)}
-                    preferenceToggle={handlePreferenceToggle}
-                />
-                <Board sidebarOpen={sidebarOpen} />
-                <PlayerCardTray
-                    trayPlayer={connectedPlayer}
-                    toggleSidebar={toggleSidebar}
-                />
+                <Box sx={{ height: '15vh' }}>
+                    <OpponentCardTray
+                        trayPlayer={getOpponent(connectedPlayer)}
+                        preferenceToggle={handlePreferenceToggle}
+                    />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                    <Board sidebarOpen={sidebarOpen} />
+                </Box>
+                <Box sx={{ height: '18vh' }}>
+                    <PlayerCardTray
+                        trayPlayer={connectedPlayer}
+                        toggleSidebar={toggleSidebar}
+                    />
+                </Box>
             </Box>
 
 

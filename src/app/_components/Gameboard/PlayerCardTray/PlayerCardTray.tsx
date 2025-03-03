@@ -51,7 +51,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
         <Grid
             container
             sx={{
-                height: '17%',
+                height: '100%',
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '2rem',  // 2rem gap between columns
