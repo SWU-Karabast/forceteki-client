@@ -76,7 +76,7 @@ const HomePagePlayMode: React.FC = () => {
             color: 'white',
         }
     };
-    console.log(process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES);
+
     return (
         <Card variant="black" sx={styles.wrapper}>
             { process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES === 'true' ? 
