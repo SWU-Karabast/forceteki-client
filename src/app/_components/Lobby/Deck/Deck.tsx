@@ -37,6 +37,10 @@ const Deck: React.FC = () => {
     const mainboardError = Object.keys(deckErrors).includes(DeckValidationFailureReason.MinMainboardSizeNotMet);
     const sideboardError = Object.keys(deckErrors).includes(DeckValidationFailureReason.MaxSideboardSizeExceeded);
 
+    // sideboard and deck limits
+    const minDeckSize = connectedUser.minDeckSize;
+    const maxSideBoard = connectedUser.maxSideBoard
+
     // ------------------------STYLES------------------------//
     const cardStyle = {
         borderRadius: '1.1em',
@@ -104,7 +108,7 @@ const Deck: React.FC = () => {
                         <Typography sx={{ ...deckSizeTextStyle, mr:'0px',color: mainboardError ? 'red' : deckSizeTextStyle.color }}>
                             {deckCount}
                         </Typography>
-                        <Typography sx={deckSizeTextStyle}>/50</Typography>
+                        <Typography sx={deckSizeTextStyle}>/{minDeckSize}</Typography>
                     </Box>
                 </Box>
                 <Box
@@ -132,7 +136,7 @@ const Deck: React.FC = () => {
                                     {sideboardCount}
                                 </Typography>
                                 <Typography sx={deckSizeTextStyle}>
-                                    /10
+                                    /{maxSideBoard}
                                 </Typography>
                             </Box>
                         </Box>
