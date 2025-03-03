@@ -17,6 +17,7 @@ import {
     DeckValidationFailureReason,
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
+import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -31,27 +32,35 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     // For deck error display
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
-    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | undefined>(undefined);
+    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
     const [displayError, setDisplayerror] = useState(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
 
-    // Extract the player from the URL query params
-    const router = useRouter();
-
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
         sendLobbyMessage(['onStartGameAsync']);
-        router.push('/GameBoard');
     };
     const handleOnChangeDeck = async () => {
         if (!deckLink || readyStatus) return;
         try {
-            const deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+            let deckData;
+            const parsedInput = parseInputAsDeckData(deckLink);
+            if(parsedInput.type === 'url') {
+                deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+            }else if(parsedInput.type === 'json') {
+                deckData = parsedInput.data
+            }else{
+                setDeckErrorSummary('Couldn\'t import. Deck is invalid or unsupported deckbuilder');
+                setDeckErrorDetails('Incorrect deck format or unsupported deckbuilder.');
+                setErrorModalOpen(true);
+                return;
+            }
             sendLobbyMessage(['changeDeck', deckData])
         }catch (error){
             setDisplayerror(true);
             setDeckErrorDetails(undefined);
+            setErrorModalOpen(true)
             if(error instanceof Error){
                 if(error.message.includes('Forbidden')) {
                     setDeckErrorSummary('Couldn\'t import. The deck is set to private');
@@ -89,18 +98,21 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setDeckErrorSummary('Deck is invalid.');
             setDeckErrorDetails(deckErrors);
             setBlockError(true)
+            setErrorModalOpen(true)
         }else{
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             setErrorModalOpen(false);
             setDisplayerror(false);
             setBlockError(false);
+            setErrorModalOpen(true)
         }
         if (temporaryErrors) {
             // Only 'notImplemented' or no errors => clear them out
             setDisplayerror(true);
             setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
             setDeckErrorDetails(temporaryErrors);
+            setErrorModalOpen(true)
         }
     }, [connectedUser]);
 
@@ -298,7 +310,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         </Typography>
                     </Box>
                     <StyledTextField
-                        type="url"
+                        type="text"
                         disabled={readyStatus}
                         value={deckLink}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => {
@@ -334,7 +346,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         disabled={readyStatus}
                         sx={styles.submitButtonStyle}
                     >
-                        Change Deck
+                        Import Deck
                     </Button>
                 </>
             )}

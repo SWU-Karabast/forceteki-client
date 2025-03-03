@@ -1,3 +1,6 @@
+import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { SwuGameFormat } from '@/app/_constants/constants';
+
 export interface IHexagonProps {
     backgroundColor: string;
 }
@@ -8,13 +11,21 @@ export interface IGameInProgressPlayerProps {
 
 export interface IPublicGameInProgressProps {
     match: {
-        player1: IGameInProgressPlayerProps;
-        player2: IGameInProgressPlayerProps;
+        player1Leader: ICardData;
+        player1Base: ICardData;
+        player2Leader: ICardData;
+        player2Base: ICardData;
     };
 }
 
-export interface IPublicGamesProps {
-    format: string;
+export interface ILobby {
+    id: string;
+    name: string;
+    format: SwuGameFormat;
+}
+
+export interface IJoinableGameProps {
+    lobby: ILobby;
 }
 
 export type IArticle = {

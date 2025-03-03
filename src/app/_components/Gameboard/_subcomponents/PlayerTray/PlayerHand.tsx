@@ -4,7 +4,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
 
-const PlayerHand: React.FC<IPlayerHandProps> = ({ cards = [] }) => {
+const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [] }) => {
     const { connectedPlayer } = useGame();
 
     // 1. Track the container width via ResizeObserver
@@ -86,12 +86,13 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ cards = [] }) => {
                             sx={{
                                 width: '8rem',
                                 transition: 'transform 0.2s',
+                                transform: card.selected && card.zone === 'hand' ? 'translateY(-11px)' : 'none',
                                 '&:hover': {
                                     transform: 'translateY(-11px)',
                                 },
                             }}
                         >
-                            <GameCard card={card} />
+                            <GameCard card={card} disabled={clickDisabled} />
                         </Box>
                     ))}
                 </Box>
@@ -109,17 +110,17 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ cards = [] }) => {
                             width: '8rem',
                             // Center vertically
                             top: '50%',
-                            transform: 'translateY(-50%)',
                             // Center horizontally using computed left
                             left: overlappedLeftStart + i * overlapOffset,
                             transition: 'transform 0.2s',
+                            transform: card.selected && card.zone === 'hand' ? 'translateY(-50%) translateY(-11px)' : 'translateY(-50%)',
                             '&:hover': {
                                 // Slight lift
                                 transform: 'translateY(-50%) translateY(-10px)',
                             },
                         }}
                     >
-                        <GameCard card={card} />
+                        <GameCard card={card} disabled={clickDisabled}/>
                     </Box>
                 ))}
         </Box>

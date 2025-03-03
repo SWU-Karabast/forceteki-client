@@ -2,6 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
+import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -145,9 +146,23 @@ function EndGameOptionsCustom() {
                     </Typography>
                 </Box>
             </Box>
-            <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Statistics</Typography>
+            <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
+                <Typography sx={styles.typographyContainer} variant={'h3'}>Thanks for playing the Beta</Typography>
                 <Divider sx={{ mb: '20px' }}/>
+                <Typography sx={styles.typeographyStyle}>
+                    Thank you for helping us test the beta!
+                </Typography>
+                <Typography sx={styles.typeographyStyle}>
+                    If you run indo any issues, please let us know in  
+                    <MuiLink
+                        href="https://discord.gg/hKRaqHND4v"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ ml: '4px' }}
+                    >
+                        Discord
+                    </MuiLink>. Thanks!
+                </Typography>
             </Box>
         </>
     );

@@ -15,6 +15,7 @@ import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { ZoneName } from '../_constants/constants';
+import { useRouter } from 'next/navigation';
 
 interface IGameContextType {
     gameState: any;
@@ -49,6 +50,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const searchParams = useSearchParams();
+    const router = useRouter();
     const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
 
     useEffect(() => {
@@ -63,7 +65,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
             query: {
-                user: JSON.stringify(user ? user : { username: '', id: anonymousUserId }),
+                user: JSON.stringify(user ? user : { username: 'anonymous '+anonymousUserId?.substring(0,6), id: anonymousUserId }),
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null })
             },
         });
@@ -85,11 +87,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const handleGameStatePopups = (gameState: any) => {
             if (!connectedPlayerId) return;
             if (gameState.players?.[connectedPlayerId].promptState) {
+                setDistributionPromptData(null);
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
                 prunePromptStatePopups(promptUuid);
                 if (promptType === 'actionWindow') return;
                 else if (promptType === 'distributeAmongTargets') {
+                    console.log('setting distribute')
                     setDistributionPromptData({ type: promptState.distributeAmongTargets.type, valueDistribution: [] });
                     return;
                 }
@@ -144,6 +148,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
         };
 
+        newSocket.on('connection_error', (error: any) => {
+            console.error('Connection error:', error);
+            router.push('/');
+        });
+
         newSocket.on('gamestate', (gameState: any) => {
             if (gameState?.id && gameState.id !== lastGameIdRef.current) {
                 clearPopups();
@@ -174,7 +183,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         console.log('sending game message', args);
         if (args[0] === 'statefulPromptResults') {
             args = [args[0], distributionPromptData, args[2]]
-            setDistributionPromptData(null);
+            setDistributionPromptData({ type: distributionPromptData?.type || '', valueDistribution: distributionPromptData?.valueDistribution || [] });
         }
         socket?.emit('game', ...args);
     };

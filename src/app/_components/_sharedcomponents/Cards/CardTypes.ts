@@ -1,6 +1,13 @@
 
 export type GameCardData = ICardData | IServerCardData | IOpponentHiddenCardData | IPromptDisplayCardData;
 
+export interface IPreviewCard {
+    id: string;
+    setId: ICardSetId;
+    types: string;
+    titleAndSubtitle: string;
+}
+
 export interface ICardData {
     uuid: string;
     count?: number;

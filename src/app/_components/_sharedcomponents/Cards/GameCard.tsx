@@ -49,7 +49,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
-        }, 500);
+        }, 200);
     };
     
     const handlePreviewClose = () => {
@@ -137,7 +137,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
-    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
+    const borderColor = !disabled ? getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle) : '';
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
 
@@ -239,7 +239,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             fontSize: '1.9rem',
             fontWeight: '700',
             position: 'absolute',
-            right:'16px',
+            right:'18px',
         },
         shieldContainer: {
             position:'absolute',
