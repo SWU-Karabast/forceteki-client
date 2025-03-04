@@ -98,21 +98,18 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setDeckErrorSummary('Deck is invalid.');
             setDeckErrorDetails(deckErrors);
             setBlockError(true)
-            setErrorModalOpen(true)
         }else{
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             setErrorModalOpen(false);
             setDisplayerror(false);
             setBlockError(false);
-            setErrorModalOpen(true)
         }
         if (temporaryErrors) {
             // Only 'notImplemented' or no errors => clear them out
             setDisplayerror(true);
             setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
             setDeckErrorDetails(temporaryErrors);
-            setErrorModalOpen(true)
         }
     }, [connectedUser]);
 
