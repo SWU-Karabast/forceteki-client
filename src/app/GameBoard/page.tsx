@@ -57,9 +57,6 @@ const GameBoard = () => {
     if (!gameState || !connectedPlayer) {
         return null;
     }
-
-    const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
-    const phase = gameState.phase;
     // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
@@ -101,30 +98,6 @@ const GameBoard = () => {
             background: 'rgba(0, 0, 0, 0.5)',
             filter: 'blur(10px)',
             WebkitFilter: 'blur(10px)'
-        },
-        playerTurnAura: {
-            height: '100px',
-            width: '85%',
-            position: 'absolute',
-            bottom: '-100px',
-            boxShadow: activePlayer === true ? '0px -20px 35px var(--initiative-blue)' : phase === 'regroup' || phase === 'setup' ? '0px -20px 35px var(--selection-yellow)' : 'none',
-            transition: 'box-shadow 1.5s',
-            borderRadius: '50%',
-            left: '0',
-            right: '0',
-            marginInline: 'auto',
-        },
-        opponentTurnAura: {
-            height: '100px',
-            width: '85%',
-            position: 'absolute', 
-            top: '-100px',
-            boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 20px 35px var(--selection-yellow)' : 'none',
-            transition: 'box-shadow 1.5s',
-            borderRadius: '50%',
-            left: '0',
-            right: '0',
-            marginInline: 'auto',
         }
     };
 
@@ -135,13 +108,11 @@ const GameBoard = () => {
                     trayPlayer={getOpponent(connectedPlayer)}
                     preferenceToggle={handlePreferenceToggle}
                 />
-                <Box sx={ styles.opponentTurnAura} />
                 <Board sidebarOpen={sidebarOpen} />
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
                     toggleSidebar={toggleSidebar}
-                />
-                <Box sx={styles.playerTurnAura} />
+                />         
             </Box>
 
 
