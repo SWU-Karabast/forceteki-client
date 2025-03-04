@@ -17,7 +17,6 @@ const PublicGames: React.FC = () => {
                 }
                 const data: ILobby[] = await response.json();
                 setLobbies(data);
-                console.log(data)
             } catch (error) {
                 console.error('Error fetching lobbies:', error);
             }

@@ -73,11 +73,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const handleGameStatePopups = (gameState: any) => {
             if (!connectedPlayerId) return;
             if (gameState.players?.[connectedPlayerId].promptState) {
+                setDistributionPromptData(null);
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
                 prunePromptStatePopups(promptUuid);
                 if (promptType === 'actionWindow') return;
                 else if (promptType === 'distributeAmongTargets') {
+                    console.log('setting distribute')
                     setDistributionPromptData({ type: promptState.distributeAmongTargets.type, valueDistribution: [] });
                     return;
                 }
@@ -154,7 +156,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         console.log('sending game message', args);
         if (args[0] === 'statefulPromptResults') {
             args = [args[0], distributionPromptData, args[2]]
-            setDistributionPromptData(null);
+            setDistributionPromptData({ type: distributionPromptData?.type || '', valueDistribution: distributionPromptData?.valueDistribution || [] });
         }
         socket?.emit('game', ...args);
     };
