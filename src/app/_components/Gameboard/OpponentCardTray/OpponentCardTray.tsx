@@ -6,16 +6,21 @@ import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { useRouter } from 'next/navigation';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { v4 as uuidv4 } from 'uuid';
+import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
-    const { gameState, connectedPlayer, getOpponent, sendMessage } = useGame();
-    const router = useRouter();
-    const handleExitButton = () =>{
-        sendMessage('manualDisconnect');
-        router.push('/');
-    }
+    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { openPopup } = usePopup();
+    const handleExitButton = () => {
+        const popupId = `${uuidv4()}`;
+        openPopup('leaveGame', {
+            uuid: popupId,
+            source: PopupSource.User
+        });
+    };
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
     const initiativeClaimed = gameState.initiativeClaimed;

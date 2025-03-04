@@ -14,6 +14,7 @@ import { useUser } from './User.context';
 import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { ZoneName } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
 
 interface IGameContextType {
@@ -69,13 +70,26 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             },
         });
 
-        // TODO: consider moving this to popup context
+        const cardSelectableZones = (gamestate: any) => {
+            const playerState = gamestate.players[connectedPlayerId];
+            const zones = [];
+            if (playerState.leader.selectable || playerState.base.selectable) {
+                zones.push(ZoneName.Base);
+            }
+            for (const zoneName in playerState.cardPiles) {
+                if (playerState.cardPiles[zoneName].some((card: any) => card.selectable)) {
+                    zones.push(zoneName);
+                }
+            }
+            return zones
+        }
+
         const handleGameStatePopups = (gameState: any) => {
             if (!connectedPlayerId) return;
             if (gameState.players?.[connectedPlayerId].promptState) {
                 setDistributionPromptData(null);
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
-                const { buttons, menuTitle,promptTitle, promptUuid, selectCard, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
+                const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
                 prunePromptStatePopups(promptUuid);
                 if (promptType === 'actionWindow') return;
                 else if (promptType === 'distributeAmongTargets') {
@@ -100,7 +114,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         source: PopupSource.PromptState
                     });
                 }
-                else if (buttons.length > 0 && menuTitle && promptUuid && !selectCard) {
+                else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
                     // make an exception for
                     return openPopup('default', {
                         uuid: promptUuid,
@@ -109,7 +123,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         source: PopupSource.PromptState
                     });
                 }
-                else if (dropdownListOptions.length > 0 && menuTitle && promptUuid && !selectCard) {
+                else if (dropdownListOptions.length > 0 && menuTitle && promptUuid && !selectCardMode) {
                     return openPopup('dropdown', {
                         uuid: promptUuid,
                         title: promptTitle,
@@ -117,6 +131,32 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                         options: dropdownListOptions,
                         source: PopupSource.PromptState
                     });
+                }
+            }
+            const cardSelectionZones = cardSelectableZones(gameState);
+            if (cardSelectionZones.length === 1) {
+                const { buttons, menuTitle } = gameState.players[connectedPlayerId].promptState;
+                switch (cardSelectionZones[0]) {
+                    case 'resources':
+                        openPopup('pile', {
+                            uuid: `${connectedPlayer}-resources`,
+                            title: 'Your Resources',
+                            subtitle: menuTitle,
+                            cards: gameState?.players[connectedPlayer]?.cardPiles['resources'],
+                            source: PopupSource.PromptState,
+                            buttons: buttons,
+                        });
+                        break;
+                    case 'discard':
+                        openPopup('pile', {
+                            uuid: `${connectedPlayer}-discard`,
+                            title: 'Your Discard',
+                            subtitle: menuTitle,
+                            cards: gameState?.players[connectedPlayer]?.cardPiles['discard'],
+                            source: PopupSource.PromptState,
+                            buttons: buttons,
+                        });
+                        break;
                 }
             }
         };

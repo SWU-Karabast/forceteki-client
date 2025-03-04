@@ -55,10 +55,10 @@ const CardActionTray: React.FC = () => {
     const playerState = gameState.players[connectedPlayer];
 
     const showTrayButtons = () => {
-        if ( playerState.promptState.promptType == 'actionWindow' ||
-             playerState.promptState.promptType == 'resource' ||
-             playerState.promptState.promptType == 'distributeAmongTargets' ||
-             playerState.promptState.selectCard == true ) {
+        if ( playerState.promptState.promptType === 'actionWindow' ||
+             playerState.promptState.promptType === 'resource' ||
+             playerState.promptState.promptType === 'distributeAmongTargets' ||
+             !!playerState.promptState.selectCardMode === true ) {
             return true;
         }
         return false;
