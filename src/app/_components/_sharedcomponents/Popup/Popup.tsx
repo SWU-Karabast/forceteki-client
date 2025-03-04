@@ -9,6 +9,7 @@ import { SelectCardsPopupModal } from './PopupVariant/SelectCardsPopup';
 import { contentStyle } from './Popup.styles';
 import { useGame } from '@/app/_contexts/Game.context';
 import { DropdownPopupModal } from './PopupVariant/DropdownPopup';
+import { LeaveGamePopupModule } from '@/app/_components/_sharedcomponents/Popup/PopupVariant/LeaveGamePopup';
 
 const focusHandlerStyle = (type: PopupType, data: PopupData, index: number, playerName:string, containCards?:boolean): SxProps<Theme> => ({
     zIndex: 11 + index,
@@ -76,6 +77,8 @@ const PopupShell: React.FC<IPopupShellProps> = ({
                 return <SelectCardsPopupModal data={data as SelectCardsPopup} />;
             case 'dropdown':
                 return <DropdownPopupModal data={data as DropdownPopup} />;
+            case 'leaveGame':
+                return <LeaveGamePopupModule uuid={data.uuid} />;
             default:
                 return null;
         }
