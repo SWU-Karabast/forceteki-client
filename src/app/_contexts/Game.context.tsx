@@ -139,20 +139,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 switch (cardSelectionZones[0]) {
                     case 'resources':
                         openPopup('pile', {
-                            uuid: `${connectedPlayer}-resources`,
+                            uuid: `${connectedPlayerId}-resources`,
                             title: 'Your Resources',
                             subtitle: menuTitle,
-                            cards: gameState?.players[connectedPlayer]?.cardPiles['resources'],
+                            cards: gameState?.players[connectedPlayerId]?.cardPiles['resources'],
                             source: PopupSource.PromptState,
                             buttons: buttons,
                         });
                         break;
                     case 'discard':
                         openPopup('pile', {
-                            uuid: `${connectedPlayer}-discard`,
+                            uuid: `${connectedPlayerId}-discard`,
                             title: 'Your Discard',
                             subtitle: menuTitle,
-                            cards: gameState?.players[connectedPlayer]?.cardPiles['discard'],
+                            cards: gameState?.players[connectedPlayerId]?.cardPiles['discard'],
                             source: PopupSource.PromptState,
                             buttons: buttons,
                         });
