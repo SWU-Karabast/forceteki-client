@@ -39,17 +39,6 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
                         >
                             {button.text}
                         </GradientBorderButton>
-                        // <Button
-                        //     key={`${button.uuid}:${index}`}
-                        //     sx={{ ...buttonStyle, backgroundColor: button.selected ? 'white' : '' }}
-                        //     variant="contained"
-                        //     onClick={() => {
-                        //         sendGameMessage([button.command, button.arg, button.uuid]);
-                        //         closePopup(data.uuid);
-                        //     }}
-                        // >
-                        //     {button.text}
-                        // </Button>
                     ))}
                 </Box>
             </>

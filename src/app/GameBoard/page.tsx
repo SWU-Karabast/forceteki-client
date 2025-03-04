@@ -129,7 +129,7 @@ const GameBoard = () => {
                 </Box>
             </Box>
 
-            <PopupShell/>
+            <PopupShell sidebarOpen={sidebarOpen}/>
             <PreferencesComponent
                 sidebarOpen={sidebarOpen}
                 isPreferenceOpen={isPreferenceOpen}

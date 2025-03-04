@@ -15,3 +15,15 @@ export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
     [SwuGameFormat.Open]: 'Open',
 };
+
+export enum ZoneName {
+    Base = 'base',
+    Capture = 'capture',
+    Deck = 'deck',
+    Discard = 'discard',
+    GroundArena = 'groundArena',
+    Hand = 'hand',
+    OutsideTheGame = 'outsideTheGame',
+    Resource = 'resource',
+    SpaceArena = 'spaceArena',
+}

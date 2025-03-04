@@ -11,10 +11,31 @@ const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
 }) => {
     const { gameState, connectedPlayer } = useGame();
-    const { togglePopup } = usePopup();
+    const { togglePopup, popups } = usePopup();
 
     const availableResources = gameState.players[trayPlayer].availableResources;
     const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
+
+    const handleResourceToggle = () => {
+        const playerName = connectedPlayer != trayPlayer ? 'Your Opponent\'s' : 'Your';
+        const existingPopup = popups.find(popup => popup.uuid === `${trayPlayer}-resources`);
+
+        if (existingPopup && existingPopup.source === PopupSource.PromptState) {
+            // TODO: allow game propt to be toggled
+            // const { type, ...restData } = existingPopup
+            // togglePopup(type, {
+            //     ...restData
+            // });
+        } else {
+            togglePopup('pile', {
+                uuid: `${trayPlayer}-resources`,
+                title: `${playerName} Resources`,
+                cards: gameState?.players[trayPlayer]?.cardPiles['resources'],
+                source: PopupSource.User,
+                buttons: null
+            })
+        }
+    }
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -86,16 +107,7 @@ const Resources: React.FC<IResourcesProps> = ({
     return (
         <Card
             sx={styles.cardStyle}
-            onClick={() => {
-                if (trayPlayer !== connectedPlayer) return;
-
-                togglePopup('pile', {
-                    uuid: `${connectedPlayer}-resources`,
-                    title: 'Your Resources',
-                    cards: gameState?.players[connectedPlayer]?.cardPiles['resources'],
-                    source: PopupSource.User
-                })
-            }}
+            onClick={handleResourceToggle}
         >
             <Box sx={styles.resourceBorderRight} />
             <Box sx={styles.resourceBorderLeft} />
