@@ -32,11 +32,7 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
     const [selectedOption, setSelectedOption] = useState('');
 
     const handleChange = (event: React.SyntheticEvent) => {
-        const selectedIndex = parseInt(
-            (event.target as HTMLElement).dataset.optionIndex as string,
-            10
-        );
-        setSelectedOption(data.options[selectedIndex]);
+        setSelectedOption((event.target as HTMLElement).innerHTML);
     };
     
     const handleDone = () => {
