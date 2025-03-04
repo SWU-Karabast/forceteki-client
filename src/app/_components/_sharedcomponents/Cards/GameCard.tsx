@@ -24,7 +24,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
     const { clearPopups } = usePopup();
 
-    if (!card.selectable) {
+    if (card.selectable === false) {
         disabled = true;
     }
 

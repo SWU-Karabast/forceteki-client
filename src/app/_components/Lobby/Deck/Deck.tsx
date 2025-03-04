@@ -113,6 +113,7 @@ const Deck: React.FC = () => {
             mt: '0.3rem'
         }
     };
+
     return (
         <Box sx={{ width:'100%', height:'100%', overflowY: 'scroll' }}>
             <Card sx={styles.cardStyle}>
