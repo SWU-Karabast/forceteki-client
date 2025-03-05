@@ -91,13 +91,27 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
         const temporaryErrors: IDeckValidationFailures = connectedUser.importDeckErrors;
         // Determine if a blocking error exists (ignoring NotImplemented and temporary errors)
+        // we want two errors that won't trigger the
 
         if (Object.keys(deckErrors).length > 0) {
             // Show a short inline error message and store the full list
             setDisplayerror(true);
             setDeckErrorSummary('Deck is invalid.');
             setDeckErrorDetails(deckErrors);
-            setBlockError(true)
+            setBlockError(true);
+
+            // Check if any errors other than the specified ones exist
+            const hasOtherErrors = Object.keys(deckErrors).some(key =>
+                key !== DeckValidationFailureReason.MinMainboardSizeNotMet &&
+                key !== DeckValidationFailureReason.MaxSideboardSizeExceeded
+            );
+
+            // Only open modal if there are validation errors besides the two excluded types
+            if (hasOtherErrors) {
+                setErrorModalOpen(true);
+            } else {
+                setErrorModalOpen(false);
+            }
         }else{
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
@@ -110,6 +124,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setDisplayerror(true);
             setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
             setDeckErrorDetails(temporaryErrors);
+            setErrorModalOpen(true);
         }
     }, [connectedUser]);
 
