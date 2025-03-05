@@ -51,9 +51,9 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
         },
         playerTurnAura: {
             height: '100px',
-            width: '85%',
+            width: '90%',
             position: 'absolute',
-            bottom: '-100px',
+            bottom: '-120px',
             boxShadow: activePlayer === true ? '0px -20px 35px var(--initiative-blue)' : phase === 'regroup' || phase === 'setup' ? '0px -15px 35px rgba(216,174,24,255)' : 'none',
             transition: 'box-shadow .5s',
             borderRadius: '50%',
@@ -71,6 +71,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '2rem',  // 2rem gap between columns
+                position: 'relative'
             }}
             className="playerCardTrayWrapper"
         >

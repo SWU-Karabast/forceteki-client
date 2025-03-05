@@ -111,7 +111,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         },
         opponentTurnAura: {
             height: '100px',
-            width: '85%',
+            width: '90%',
             position: 'absolute', 
             top: '-100px',
             boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 15px 35px rgba(216,174,24,255)' : 'none',
@@ -131,6 +131,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '2rem', // 2rem gap between columns
+                position: 'relative'
             }}
         >
             {/* Left column (fixed 360px) */}
