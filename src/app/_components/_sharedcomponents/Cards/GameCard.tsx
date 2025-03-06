@@ -82,8 +82,29 @@ const GameCard: React.FC<IGameCardProps> = ({
             } };
     }
 
-    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
-    if (showValueAdjuster) {
+    const showValueAdjuster = () => {
+        const prompt = getConnectedPlayerPrompt();
+    
+        // Ensure prompt is valid and conditions are met
+        if (!prompt || prompt.promptType !== 'distributeAmongTargets' || !card.selectable || !distributionPromptData) {
+            return false;
+        }
+    
+        const maxTargets = prompt.distributeAmongTargets.maxTargets;
+        const isInDistributionData = distributionPromptData.valueDistribution.some(item => item.uuid === card.uuid);
+    
+        console.log('data', distributionPromptData);
+        console.log('is in it', isInDistributionData);
+    
+        // If maxTargets is defined and already reached, allow only if the card is part of the selection
+        if (maxTargets && distributionPromptData.valueDistribution.length >= maxTargets && !isInDistributionData) {
+            return false;
+        }
+    
+        return true;
+    };
+        getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
+    if (showValueAdjuster()) {
         // override when using damage adjuster to show border but prevent click events
         disabled = true;
     };
@@ -351,7 +372,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
-                        { showValueAdjuster && <CardValueAdjuster cardId={card.uuid} /> }
+                        { showValueAdjuster() && <CardValueAdjuster cardId={card.uuid} /> }
                         <Grid direction="row" container sx={styles.shieldContainer}>
                             {shieldCards.map((shieldCard, index) => (
                                 <Box

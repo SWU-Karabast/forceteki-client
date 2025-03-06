@@ -34,6 +34,9 @@ const styles = {
         transform: 'skew(10deg)',  // Counter-skew the text
         lineHeight: '1.2',
         fontSize: '1.1rem',
+        '& :disabled': {
+            brightness: '0.7',
+        },
     },
 };
 
@@ -51,7 +54,7 @@ interface IButtonsProps {
  * CardActionTray Component
  */
 const CardActionTray: React.FC = () => {
-    const { sendGameMessage, gameState, connectedPlayer } = useGame();
+    const { sendGameMessage, gameState, connectedPlayer, distributionPromptData } = useGame();
     const playerState = gameState.players[connectedPlayer];
 
     const showTrayButtons = () => {
@@ -61,6 +64,24 @@ const CardActionTray: React.FC = () => {
              !!playerState.promptState.selectCardMode === true ) {
             return true;
         }
+        return false;
+    };
+
+    const buttonDisabled = (button: IButtonsProps) => {
+        if (button.arg === 'done') {
+            const distributeValues = playerState.promptState.distributeAmongTargets;
+            if (distributeValues) {
+                if (distributeValues.isIndirectDamage) {
+                    return true;
+                }
+
+                const damageSpent = distributionPromptData?.valueDistribution.reduce((acc, curr) => acc + curr.amount, 0);
+                if (!distributeValues.canDistributeLess && damageSpent !== distributeValues.amount) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     };
 
@@ -79,6 +100,7 @@ const CardActionTray: React.FC = () => {
                   key={button.arg}
                   button={button}
                   sendGameMessage={sendGameMessage}
+                  disabled={buttonDisabled(button)}
               />
           ))}
             </Box>
@@ -93,10 +115,11 @@ const CardActionTray: React.FC = () => {
 interface IPromptButtonProps {
     button: IButtonsProps;
     sendGameMessage: (args: [string, string, string]) => void;
+    disabled?: boolean;
 }
 
 
-const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage }) => {
+const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled }) => {
     const actionTrayStyles = (arg: string) => {
         switch (arg) {
             case 'claimInitiative':
@@ -117,6 +140,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage })
             variant="contained"
             sx={{ ...styles.promptButton, ...actionTrayStyles(button.arg) }}
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
+            disabled={disabled}
         >
             <Box sx={styles.promptButtonText}>
                 {button.text}
