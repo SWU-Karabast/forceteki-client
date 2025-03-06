@@ -69,6 +69,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         setQueueState(true);
         // Get the deck link - either from selected favorite or direct input
         let userDeck = '';
+        console.log(favouriteDeck);
         if(favouriteDeck) {
             const selectedDeck = savedDecks.find(deck => deck.deckID === favouriteDeck);
             if (selectedDeck?.deckLink && !deckLink) {
@@ -82,8 +83,9 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         let deckData = null
         try {
             const parsedInput = parseInputAsDeckData(userDeck);
+            console.log(parsedInput);
             if(parsedInput.type === 'url') {
-                deckData = deckLink ? await fetchDeckData(userDeck, false) : null;
+                deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -128,7 +130,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     body: JSON.stringify(payload),
                 }
             );
-
+            console.log(deckData);
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
@@ -260,7 +262,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                             setDeckErrorSummary(null);
                             setDeckErrorDetails(undefined);
                         }}
-                        required
                     />
                     {deckErrorSummary && (
                         <Typography variant={'body1'} sx={styles.errorMessageStyle}>
