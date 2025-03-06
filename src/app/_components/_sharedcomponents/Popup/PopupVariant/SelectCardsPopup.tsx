@@ -61,6 +61,16 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
     const selectableCards = data.cards.filter((card) => card.selectionState !== 'invalid');
     const invalidCards = data.cards.filter((card) => card.selectionState === 'invalid');
 
+    const clickDisabled = () => {
+        return data.perCardButtons.length > 0;
+    }
+
+    const handleCardClick = (cardUuid: string) => {
+        if (!clickDisabled()) {
+            sendGameMessage(['menuButton', cardUuid, data.uuid])
+        }
+    }
+
     const renderPopupContent = () => {
         if (isMinimized) return null;
         return (
@@ -76,7 +86,8 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                                     key={card.uuid}
                                     cardStyle={CardStyle.Prompt}
                                     card={{ ...card, selectable: card.selectionState === 'selectable', selected: card.selectionState === 'selected' }}
-                                    onClick={() => sendGameMessage(['menuButton', card.uuid, data.uuid])}
+                                    onClick={() => handleCardClick(card.uuid)}
+                                    disabled={clickDisabled()}
                                 />
                                 {selectingCards && (
                                     <Box

@@ -191,6 +191,9 @@ export const theme: Theme = createTheme({
                     '&:hover': {
                         backgroundColor: '#404040',
                     },
+                    '&:disabled': {
+                        color: '#444'
+                    },
                 },
             },
         },

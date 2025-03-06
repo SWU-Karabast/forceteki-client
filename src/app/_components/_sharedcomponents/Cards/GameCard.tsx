@@ -24,10 +24,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
     const { clearPopups } = usePopup();
 
-    if (card.selectable === false) {
-        disabled = true;
-    }
-
     const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
     
@@ -82,10 +78,23 @@ const GameCard: React.FC<IGameCardProps> = ({
             } };
     }
 
-    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
-    if (showValueAdjuster) {
-        // override when using damage adjuster to show border but prevent click events
-        disabled = true;
+    const showValueAdjuster = () => {
+        const prompt = getConnectedPlayerPrompt();
+    
+        // Ensure prompt is valid and conditions are met
+        if (!prompt || prompt.promptType !== 'distributeAmongTargets' || !card.selectable || !distributionPromptData) {
+            return false;
+        }
+    
+        const maxTargets = prompt.distributeAmongTargets.maxTargets;
+        const isInDistributionData = distributionPromptData.valueDistribution.some(item => item.uuid === card.uuid);
+    
+        // If maxTargets is defined and already reached, allow only if the card is part of the selection
+        if (maxTargets && distributionPromptData.valueDistribution.length >= maxTargets && !isInDistributionData) {
+            return false;
+        }
+    
+        return true;
     };
 
     if (!card) {
@@ -97,7 +106,15 @@ const GameCard: React.FC<IGameCardProps> = ({
             sendGameMessage(['cardClicked', card.uuid]);
         }
     };
+
+    const clickDisabled = () => {
+        return showValueAdjuster() || disabled || card.selectable === false;
+    }
+
     const handleClick = () => {
+        if (clickDisabled()) {
+            return;
+        }
         if (getConnectedPlayerPrompt()?.selectCardMode !== 'multiple') {
             clearPopups();
         }  
@@ -139,7 +156,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
-    const borderColor = !disabled ? getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle) : '';
+    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
 
@@ -155,7 +172,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             transform: card.exhausted && card.zone !== 'resource' ? 'rotate(4deg)' : 'none',
             transition: 'transform 0.15s ease',
             '&:hover': {
-                cursor: disabled ? 'normal' : 'pointer',
+                cursor: clickDisabled() ? 'normal' : 'pointer',
             },
         },
         card: {
@@ -331,7 +348,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         <Box sx={styles.cardContainer}>
             <Box 
                 sx={styles.card} 
-                onClick={disabled ? undefined : handleClick}
+                onClick={handleClick}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
                 data-card-url={s3CardImageURL(card)}
@@ -351,7 +368,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
-                        { showValueAdjuster && <CardValueAdjuster cardId={card.uuid} /> }
+                        { showValueAdjuster() && <CardValueAdjuster cardId={card.uuid} /> }
                         <Grid direction="row" container sx={styles.shieldContainer}>
                             {shieldCards.map((shieldCard, index) => (
                                 <Box
