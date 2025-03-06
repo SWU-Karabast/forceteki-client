@@ -12,6 +12,9 @@ import { useGame } from '@/app/_contexts/Game.context';
 const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSidebar }) => {
     const { gameState, connectedPlayer } = useGame();
 
+    const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
+    const phase = gameState.phase;
+
     const styles = {
         leftColumnStyle: {
             display: 'flex',
@@ -38,6 +41,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             display: 'flex',
             alignItems: 'flex-end',
             transform: 'translateY(1.6rem)',
+            zIndex: '1',
         },
         chatColumn: {
             display: 'flex',
@@ -45,6 +49,18 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             height: '5.5rem',
             margin: '0',
         },
+        playerTurnAura: {
+            height: '100px',
+            width: '90%',
+            position: 'absolute',
+            bottom: '-120px',
+            boxShadow: activePlayer === true ? '0px -20px 35px var(--initiative-blue)' : phase === 'regroup' || phase === 'setup' ? '0px -15px 35px rgba(216,174,24,255)' : 'none',
+            transition: 'box-shadow .5s',
+            borderRadius: '50%',
+            left: '0',
+            right: '0',
+            marginInline: 'auto',
+        }
     };
 
     return (
@@ -55,6 +71,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '2rem',  // 2rem gap between columns
+                position: 'relative'
             }}
             className="playerCardTrayWrapper"
         >
@@ -81,6 +98,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                         cards={gameState?.players[connectedPlayer].cardPiles['hand'] || []}
                     />
                 </Box>
+                <Box sx={styles.playerTurnAura} />
             </Grid>
 
             {/* Right column: fixed 360px width */}

@@ -1,6 +1,13 @@
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
-import { Box, Button, IconButton, MenuItem, Select, SelectChangeEvent, Typography } from '@mui/material';
+import { 
+    Autocomplete,
+    Box,
+    Button,
+    IconButton,
+    TextField,
+    Typography
+} from '@mui/material';
 import { MouseEvent, useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import {
@@ -24,8 +31,8 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
     const [isMinimized, setIsMinimized] = useState(false);
     const [selectedOption, setSelectedOption] = useState('');
 
-    const handleChange = (event: SelectChangeEvent) => {
-        setSelectedOption(event.target.value as string);
+    const handleChange = (event: React.SyntheticEvent) => {
+        setSelectedOption((event.target as HTMLElement).innerHTML);
     };
     
     const handleDone = () => {
@@ -41,15 +48,19 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
                     <Typography sx={textStyle}>{data.description}</Typography>
                 )}
 
-                <Select value={selectedOption} sx={{ width: '50%', color: 'white' }}
+                <Autocomplete 
+                    options={data.options}
+                    onChange={handleChange}
+                    renderInput={(params) => (
+                        <TextField {...params} />
+                    )}
+                    sx={{ width: '50%', color: 'white' }}
+                    slotProps={{ 
+                        popupIndicator: { sx: { color: 'white' } },
+                        clearIndicator: { sx: { color: 'white' } },
+                    }}
+                />
 
-                    onChange={handleChange}>
-                    {data.options.map((option, index) => (
-                        <MenuItem key={index} value={option}>
-                            {option}
-                        </MenuItem>
-                    ))}
-                </Select>
                 <Box sx={footerStyle}>
                     <Button
                         onClick={handleDone}

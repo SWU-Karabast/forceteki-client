@@ -21,6 +21,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
+import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 
 const deckOptions: string[] = [
     'Order66',
@@ -65,7 +66,17 @@ const CreateGameForm = () => {
         event.preventDefault();
         let deckData = null
         try {
-            deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+            const parsedInput = parseInputAsDeckData(deckLink);
+            if(parsedInput.type === 'url') {
+                deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+            }else if(parsedInput.type === 'json') {
+                deckData = parsedInput.data
+            }else{
+                setErrorTitle('Deck Validation Error');
+                setDeckErrorDetails('Incorrect deck format or unsupported deckbuilder.');
+                setDeckErrorSummary('Couldn\'t import. Deck is invalid or unsupported deckbuilder');
+                setErrorModalOpen(true);
+            }
         }catch (error){
             setDeckErrorDetails(undefined);
             if(error instanceof Error){
@@ -212,7 +223,7 @@ const CreateGameForm = () => {
                         </Typography>
                     </Box>
                     <StyledTextField
-                        type="url"
+                        type="text"
                         value={deckLink}
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>{
                             setDeckLink(e.target.value);

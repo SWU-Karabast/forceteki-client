@@ -43,8 +43,10 @@ export type PilePopup = {
     type: 'pile';
     uuid: string;
     title: string;
+    subtitle?: string;
     cards: ICardData[];
     source: PopupSource;
+    buttons: PopupButton[] | null;
 };
 
 export type DropdownPopup = {

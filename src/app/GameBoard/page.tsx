@@ -22,7 +22,6 @@ const GameBoard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
 
-
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
             router.push('/lobby');
@@ -113,7 +112,7 @@ const GameBoard = () => {
                 <PlayerCardTray
                     trayPlayer={connectedPlayer}
                     toggleSidebar={toggleSidebar}
-                />
+                />         
             </Box>
 
 
@@ -129,7 +128,7 @@ const GameBoard = () => {
                 </Box>
             </Box>
 
-            <PopupShell/>
+            <PopupShell sidebarOpen={sidebarOpen}/>
             <PreferencesComponent
                 sidebarOpen={sidebarOpen}
                 isPreferenceOpen={isPreferenceOpen}

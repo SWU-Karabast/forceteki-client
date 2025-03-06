@@ -72,6 +72,10 @@ export const headerStyle = (isMinimized: boolean) => ({
     position: 'relative',
 });
 
+export const subtitleStyle = {
+    maxWidth: '80%'
+}
+
 export const footerStyle = {
     display: 'flex',
     gap: '1rem',

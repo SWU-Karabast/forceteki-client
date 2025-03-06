@@ -9,6 +9,7 @@ import Grid from '@mui/material/Grid2';
 import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
+import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 
@@ -21,6 +22,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     disabled = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
+    const { clearPopups } = usePopup();
+
+    if (card.selectable === false) {
+        disabled = true;
+    }
 
     const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
@@ -43,7 +49,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
-        }, 500);
+        }, 200);
     };
     
     const handlePreviewClose = () => {
@@ -91,7 +97,12 @@ const GameCard: React.FC<IGameCardProps> = ({
             sendGameMessage(['cardClicked', card.uuid]);
         }
     };
-    const handleClick = onClick ?? defaultClickFunction;
+    const handleClick = () => {
+        if (getConnectedPlayerPrompt()?.selectCardMode !== 'multiple') {
+            clearPopups();
+        }  
+        (onClick || defaultClickFunction)();
+    }
 
     const subcardClick = (subCard: ICardData) => {
         if (subCard.selectable) {

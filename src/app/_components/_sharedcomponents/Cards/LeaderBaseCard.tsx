@@ -27,12 +27,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         return null
     }
 
+    if (card.selectable === false) {
+        disabled = true;
+    }
+
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         if (isDeployed) return;
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
-        }, 500);
+        }, 200);
     };
         
     const handlePreviewClose = () => {
