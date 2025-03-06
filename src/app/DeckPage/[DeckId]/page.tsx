@@ -101,8 +101,19 @@ const DeckDetails: React.FC = () => {
         setDeleteDialogOpen(true);
     };
 
-    // Handle delete confirmation
+    // handle confirm delete
     const handleConfirmDelete = () => {
+        if (deckId) {
+            try {
+                // Remove the deck from localStorage
+                const storageKey = `swu_deck_${deckId}`;
+                localStorage.removeItem(storageKey);
+                console.log(`Deck ${deckId} removed from localStorage`);
+            } catch (error) {
+                console.error('Error deleting deck from localStorage:', error);
+            }
+        }
+
         setDeleteDialogOpen(false);
         router.push('/DeckPage');
     };
@@ -177,14 +188,14 @@ const DeckDetails: React.FC = () => {
             justifyContent: 'space-between',
         },
         sortBy:{
-            width: '13rem',
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
+            justifyContent: 'space-between',
         },
         sortText:{
-            width: '5rem',
-            mb:'0px'
+            mb:'0px',
+            minWidth:'65px'
         },
         deckContainer:{
             width: '100%',
@@ -223,9 +234,8 @@ const DeckDetails: React.FC = () => {
         },
         editButtons:{
             display:'flex',
-            width: '15rem',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: 'end',
         },
         titleTextContainer:{
             ml:'10px',
@@ -240,6 +250,10 @@ const DeckDetails: React.FC = () => {
             aspectRatio: '1.4 / 1',
             width: '21rem',
         },
+        viewDeck:{
+            width:'380px',
+            ml:'40px'
+        }
     }
 
     return (
@@ -294,9 +308,8 @@ const DeckDetails: React.FC = () => {
                         <Box sx={styles.editBox} />
                     </Box>
 
-                    {/* Stats go here */}
+                    {/* Stats go here
                     <Box sx={styles.statsContainer}>
-                        {/* A row for the big win % circle and quick stats */}
                         <Box sx={styles.overallStatsBox}>
                             <PercentageCircle percentage={30} size={70} strokeWidth={12} fillColor={'#6CF3D3'} trackColor={'#367684'} textColor="#FFF"/>
                             <Box>
@@ -310,13 +323,14 @@ const DeckDetails: React.FC = () => {
                                 </Box>
                             </Box>
                         </Box>
-                        {/* A table for Opposing Leaders, Wins, Losses, etc. */}
+                        {/* A table for Opposing Leaders, Wins, Losses, etc.
                         <AnimatedStatsTable
                             data={opponentData}
                             animationDuration={2000}
                             staggerDelay={100}
                         />
                     </Box>
+                    */}
                 </Box>
 
                 {/* Right side: Sort dropdown & deck cards */}
@@ -338,9 +352,11 @@ const DeckDetails: React.FC = () => {
                                     </MenuItem>
                                 ))}
                             </StyledTextField>
+                            <Box sx={styles.viewDeck}>
+                                <PreferenceButton variant={'standard'} text={'View Deck on SWDB'} buttonFnc={handleViewOnSWUDB} />
+                            </Box>
                         </Box>
                         <Box sx={styles.editButtons}>
-                            <PreferenceButton variant={'standard'} text={'View Deck on SWDB'} buttonFnc={handleViewOnSWUDB} />
                             <PreferenceButton variant={'concede'} text={'Delete'} buttonFnc={handleDeleteClick}/>
                         </Box>
                     </Box>

@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useRef, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import { Box, Button, Checkbox, FormControl, FormControlLabel, Link, MenuItem, Typography } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,15 @@ interface ICreateGameFormProps {
     setFormat?: (format: string) => void;
 }
 
+// Interface for saved decks
+interface StoredDeck {
+    leader: { id: string };
+    base: { id: string };
+    name: string;
+    favourite: boolean;
+    deckID: string;
+    deckLink: string;
+}
 
 const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const router = useRouter();
@@ -27,6 +36,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [queueState, setQueueState] = useState<boolean>(false)
+    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
     const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
@@ -46,6 +56,48 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         'ThisIsTheWay',
     ];
 
+    // Load saved decks when component mounts
+    useEffect(() => {
+        loadSavedDecks();
+    }, []);
+
+    // Load saved decks from localStorage
+    const loadSavedDecks = () => {
+        try {
+            const storedDecks: StoredDeck[] = [];
+
+            // Get all localStorage keys
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // Check if this is a deck key
+                if (key && key.startsWith('swu_deck_')) {
+                    const deckID = key.replace('swu_deck_', '');
+                    const deckDataJSON = localStorage.getItem(key);
+
+                    if (deckDataJSON) {
+                        const deckData = JSON.parse(deckDataJSON) as StoredDeck;
+
+                        // Add to our list with the ID for reference
+                        storedDecks.push({
+                            ...deckData,
+                            deckID: deckID
+                        });
+                    }
+                }
+            }
+
+            // Sort to show favorites first
+            const sortedDecks = [...storedDecks].sort((a, b) => {
+                if (a.favourite && !b.favourite) return -1;
+                if (!a.favourite && b.favourite) return 1;
+                return 0;
+            });
+            setSavedDecks(sortedDecks);
+        } catch (error) {
+            console.error('Error loading decks from localStorage:', error);
+        }
+    };
+
     const handleChangeFormat = (format: SwuGameFormat) => {
         localStorage.setItem('format', format);
         setFormat(format);
@@ -55,11 +107,23 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const handleJoinGameQueue = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setQueueState(true);
+        // Get the deck link - either from selected favorite or direct input
+        let userDeck = '';
+        if(favouriteDeck) {
+            const selectedDeck = savedDecks.find(deck => deck.deckID === favouriteDeck);
+            if (selectedDeck?.deckLink && !deckLink) {
+                userDeck = selectedDeck.deckLink;
+            } else {
+                userDeck = deckLink;
+            }
+        } else {
+            userDeck = deckLink;
+        }
         let deckData = null
         try {
-            const parsedInput = parseInputAsDeckData(deckLink);
+            const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
-                deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+                deckData = deckLink ? await fetchDeckData(userDeck, false) : null;
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -123,6 +187,23 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 }
                 return
             }
+            // Save the deck if needed
+            if (saveDeck && deckData && userDeck) {
+                try {
+                    const deckToSave = {
+                        leader: deckData.leader,
+                        base: deckData.base,
+                        name: deckData.metadata.name,
+                        favourite: false,
+                        deckID: deckData.deckID,
+                        deckLink: userDeck // Store the original link
+                    };
+                    localStorage.setItem(`swu_deck_${deckData.deckID}`, JSON.stringify(deckToSave));
+                } catch (error) {
+                    console.error('Error saving deck to favorites:', error);
+                }
+            }
+
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
@@ -181,25 +262,29 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             </Typography>
             <form onSubmit={handleJoinGameQueue}>
                 {/* Favourite Decks Input */}
-                {user &&
-                    <FormControl fullWidth sx={styles.formControlStyle}>
-                        <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
-                        <StyledTextField
-                            select
-                            value={favouriteDeck}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setFavouriteDeck(e.target.value)
-                            }
-                            placeholder="Vader Green Ramp"
-                        >
-                            {deckOptions.map((deck) => (
-                                <MenuItem key={deck} value={deck}>
-                                    {deck}
+                <FormControl fullWidth sx={styles.formControlStyle}>
+                    <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
+                    <StyledTextField
+                        select
+                        value={favouriteDeck}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setFavouriteDeck(e.target.value)
+                        }
+                        placeholder="Favourite decks"
+                    >
+                        {savedDecks.length === 0 ? (
+                            <MenuItem value="" disabled>
+                                No saved decks found
+                            </MenuItem>
+                        ) : (
+                            savedDecks.map((deck) => (
+                                <MenuItem key={deck.deckID} value={deck.deckID}>
+                                    {deck.favourite ? '★ ' : ''}{deck.name}
                                 </MenuItem>
-                            ))}
-                        </StyledTextField>
-                    </FormControl>
-                }
+                            ))
+                        )}
+                    </StyledTextField>
+                </FormControl>
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
@@ -259,7 +344,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     </StyledTextField>
                 </FormControl>
 
-                {/* Save Deck To Favourites Checkbox
+                {/* Save Deck To Favourites Checkbox */}
                 <FormControlLabel
                     sx={{ mb: '1rem' }}
                     control={
@@ -278,7 +363,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         </Typography>
                     }
                 />
-                */}
 
                 {/* Submit Button */}
                 <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,

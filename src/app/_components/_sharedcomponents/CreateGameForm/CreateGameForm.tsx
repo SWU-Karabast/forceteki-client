@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, ChangeEvent, useRef } from 'react';
+import React, { useState, FormEvent, ChangeEvent, useRef, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -28,6 +28,16 @@ const deckOptions: string[] = [
     'ThisIsTheWay',
 ];
 
+// Interface for saved decks
+interface StoredDeck {
+    leader: { id: string };
+    base: { id: string };
+    name: string;
+    favourite: boolean;
+    deckID: string;
+    deckLink: string;
+}
+
 const CreateGameForm = () => {
     const pathname = usePathname();
     const router = useRouter();
@@ -38,6 +48,7 @@ const CreateGameForm = () => {
     const [favouriteDeck, setFavouriteDeck] = useState<string>('');
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
+    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
 
@@ -56,6 +67,46 @@ const CreateGameForm = () => {
     const [gameName, setGameName] = useState<string>('');
     const [privacy, setPrivacy] = useState<string>('Public');
 
+    useEffect(() => {
+        loadSavedDecks();
+    }, []);
+
+    // Load saved decks from localStorage
+    const loadSavedDecks = () => {
+        try {
+            const storedDecks: StoredDeck[] = [];
+
+            // Get all localStorage keys
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // Check if this is a deck key
+                if (key && key.startsWith('swu_deck_')) {
+                    const deckID = key.replace('swu_deck_', '');
+                    const deckDataJSON = localStorage.getItem(key);
+
+                    if (deckDataJSON) {
+                        const deckData = JSON.parse(deckDataJSON) as StoredDeck;
+
+                        // Add to our list with the ID for reference
+                        storedDecks.push({
+                            ...deckData,
+                            deckID: deckID
+                        });
+                    }
+                }
+            }
+
+            // Sort to show favorites first
+            const sortedDecks = [...storedDecks].sort((a, b) => {
+                if (a.favourite && !b.favourite) return -1;
+                if (!a.favourite && b.favourite) return 1;
+                return 0;
+            });
+            setSavedDecks(sortedDecks);
+        } catch (error) {
+            console.error('Error loading decks from localStorage:', error);
+        }
+    }
     const handleChangeFormat = (format: SwuGameFormat) => {
         localStorage.setItem('format', format);
         setFormat(format);
@@ -64,11 +115,25 @@ const CreateGameForm = () => {
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        let userDeck = '';
+        // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
+        if(favouriteDeck) {
+            const selectedDeck = savedDecks.find(deck => deck.deckID === favouriteDeck);
+            if (selectedDeck?.deckLink && !deckLink) {
+                userDeck = selectedDeck?.deckLink
+            }else{
+                console.log(deckLink);
+                userDeck = deckLink;
+            }
+        }else{
+            userDeck = deckLink;
+        }
+
         let deckData = null
         try {
-            const parsedInput = parseInputAsDeckData(deckLink);
+            const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
-                deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+                deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -87,7 +152,6 @@ const CreateGameForm = () => {
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
                     setErrorModalOpen(true);
-                    console.log('here')
                 }else{
                     setErrorTitle('Deck Validation Error');
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
@@ -96,6 +160,7 @@ const CreateGameForm = () => {
             }
             return;
         }
+        console.log(deckData);
         try {
             const payload = {
                 user: { id: user?.id || localStorage.getItem('anonymousUserId'),
@@ -129,6 +194,23 @@ const CreateGameForm = () => {
                 }
                 return;
             }
+            if (saveDeck && deckData && deckLink){
+                // save new deck to local storage and only if its a new deck
+                try {
+                    const deckToSave = {
+                        leader: deckData.leader,
+                        base: deckData.base,
+                        name: deckData.metadata.name,
+                        favourite: false,
+                        deckID: deckData.deckID,
+                        deckLink: deckLink// Store the original link if we have one
+                    };
+                    localStorage.setItem(`swu_deck_${deckData.deckID}`, JSON.stringify(deckToSave));
+                } catch (error) {
+                    console.error('Error saving deck to favorites:', error);
+                }
+            }
+
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
@@ -185,7 +267,7 @@ const CreateGameForm = () => {
             </Typography>
             <form onSubmit={handleCreateGameSubmit}>
                 {/* Favourite Decks Input */}
-                {user && <FormControl fullWidth sx={styles.formControlStyle}>
+                <FormControl fullWidth sx={styles.formControlStyle}>
                     <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
                     <StyledTextField
                         select
@@ -193,16 +275,21 @@ const CreateGameForm = () => {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setFavouriteDeck(e.target.value)
                         }
-                        placeholder="Vader Green Ramp"
+                        placeholder="Favourite decks"
                     >
-                        {deckOptions.map((deck) => (
-                            <MenuItem key={deck} value={deck}>
-                                {deck}
+                        {savedDecks.length === 0 ? (
+                            <MenuItem value="" disabled>
+                                No saved decks found
                             </MenuItem>
-                        ))}
+                        ) : (
+                            savedDecks.map((deck) => (
+                                <MenuItem key={deck.deckID} value={deck.deckID}>
+                                    {deck.favourite ? '★ ' : ''}{deck.name}
+                                </MenuItem>
+                            ))
+                        )}
                     </StyledTextField>
                 </FormControl>
-                }
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
@@ -244,7 +331,7 @@ const CreateGameForm = () => {
                 </FormControl>
 
                 {/* Save Deck To Favourites Checkbox */}
-                {user && <FormControlLabel
+                <FormControlLabel
                     sx={{ mb: '1rem' }}
                     control={
                         <Checkbox
@@ -262,7 +349,6 @@ const CreateGameForm = () => {
                         </Typography>
                     }
                 />
-                }
 
                 {/* Additional Fields for Non-Creategame Path */}
                 {!isCreateGamePath && (

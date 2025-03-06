@@ -32,6 +32,19 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
         try {
             const deckData = await fetchDeckData(deckLink, false);
             if (deckData) {
+                // Save to localStorage
+                const deckKey = deckData.deckID;
+                const simplifiedDeckData = {
+                    leader: { id: deckData.leader.id },
+                    base: { id: deckData.base.id },
+                    name: deckData.metadata?.name || 'Untitled Deck',
+                    favourite: false,
+                    deckLink:deckLink,
+                    deckLID:deckKey
+                };
+
+                // Save back to localStorage
+                localStorage.setItem('swu_deck_'+deckKey, JSON.stringify(simplifiedDeckData));
                 onSuccess(deckData);
                 onClose();
                 // Reset form
