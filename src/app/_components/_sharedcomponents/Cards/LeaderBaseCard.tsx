@@ -27,10 +27,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         return null
     }
 
-    if (card.selectable === false) {
-        disabled = true;
-    }
-
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         if (isDeployed) return;
@@ -43,16 +39,46 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
     };
+
+    const defaultClickFunction = () => {
+        if (card.selectable) {
+            sendGameMessage(['cardClicked', card.uuid]);
+        }
+    };
+
+    const clickDisabled = () => {
+        return showValueAdjuster() || disabled || card.selectable === false;
+    }
+
+    const handleClick = () => {
+        if (clickDisabled()) {
+            return;
+        }
+        defaultClickFunction();
+    }
+
+    const showValueAdjuster = () => {
+        const prompt = getConnectedPlayerPrompt();
+    
+        // Ensure prompt is valid and conditions are met
+        if (!prompt || prompt.promptType !== 'distributeAmongTargets' || !card.selectable || !distributionPromptData || isDeployed) {
+            return false;
+        }
+    
+        const maxTargets = prompt.distributeAmongTargets.maxTargets;
+        const isInDistributionData = distributionPromptData.valueDistribution.some(item => item.uuid === card.uuid);
+    
+        // If maxTargets is defined and already reached, allow only if the card is part of the selection
+        if (maxTargets && distributionPromptData.valueDistribution.length >= maxTargets && !isInDistributionData) {
+            return false;
+        }
+    
+        return true;
+    };
         
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
-    const showValueAdjuster = getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable && !isDeployed;
-    if (showValueAdjuster) {
-        // override when using damage adjuster to show border but prevent click events
-        disabled = true;
-    };
-
 
     const styles = {
         card: {
@@ -65,7 +91,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            cursor: disabled ? 'normal' : 'pointer',
+            cursor: clickDisabled() ? 'normal' : 'pointer',
             position: 'relative', 
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
@@ -167,11 +193,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     return (
         <Box
             sx={isDeployed ? styles.deployedPlaceholder : styles.card}
-            onClick={() => {
-                if (!disabled && card.selectable) {
-                    sendGameMessage(['cardClicked', card.uuid]);
-                }
-            }}
+            onClick={handleClick}
             aria-owns={open ? 'mouse-over-popover' : undefined}
             aria-haspopup="true"
             onMouseEnter={handlePreviewOpen}
@@ -181,7 +203,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 <Box sx={styles.unimplementedAlert}></Box>
             </Box>
             <Box sx={styles.epicActionIcon}></Box>
-            { showValueAdjuster && <CardValueAdjuster cardId={card.uuid} /> }
+            { showValueAdjuster() && <CardValueAdjuster cardId={card.uuid} /> }
             {cardStyle === LeaderBaseCardStyle.Base && (
                 <Box sx={styles.damageCounterContainer}>
                     { !!distributionAmount && 
