@@ -93,20 +93,13 @@ const GameCard: React.FC<IGameCardProps> = ({
         const maxTargets = prompt.distributeAmongTargets.maxTargets;
         const isInDistributionData = distributionPromptData.valueDistribution.some(item => item.uuid === card.uuid);
     
-        console.log('data', distributionPromptData);
-        console.log('is in it', isInDistributionData);
-    
         // If maxTargets is defined and already reached, allow only if the card is part of the selection
         if (maxTargets && distributionPromptData.valueDistribution.length >= maxTargets && !isInDistributionData) {
+            disabled = true;
             return false;
         }
     
         return true;
-    };
-        getConnectedPlayerPrompt()?.promptType === 'distributeAmongTargets' && card.selectable;
-    if (showValueAdjuster()) {
-        // override when using damage adjuster to show border but prevent click events
-        disabled = true;
     };
 
     if (!card) {
@@ -119,6 +112,9 @@ const GameCard: React.FC<IGameCardProps> = ({
         }
     };
     const handleClick = () => {
+        if (showValueAdjuster()) {
+            return;
+        }
         if (getConnectedPlayerPrompt()?.selectCardMode !== 'multiple') {
             clearPopups();
         }  
