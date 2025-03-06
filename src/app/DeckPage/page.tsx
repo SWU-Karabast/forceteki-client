@@ -9,32 +9,24 @@ import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
+import { DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import {
+    convertToDisplayDecks,
+    loadSavedDecks,
+    removeDeckFromLocalStorage,
+    updateDeckFavoriteInLocalStorage
+} from '@/app/_utils/LocalStorageUtils';
 
-// Define interfaces for deck data
-interface StoredDeck {
-    leader: { id: string };
-    base: { id: string };
-    name: string;
-    favourite: boolean;
-    deckLink: string;
-    deckID: string;
-}
 
-interface DisplayDeck {
-    deckID: string;
-    leader: { id: string, types:string[] };
-    base: { id: string, types:string[] };
-    metadata: { name: string };
-    favourite: boolean;
-}
 
 const sortByOptions: string[] = [
-    'Recently Played',
-    'Win rate',
+    'Favourites',
+    'Deck builder',
+    'Name'
 ];
 
 const DeckPage: React.FC = () => {
-    const [sortBy, setSortBy] = useState<string>('');
+    const [sortBy, setSortBy] = useState<string>('Favourites');
     const [decks, setDecks] = useState<DisplayDeck[]>([]);
     const [addDeckDialogOpen, setAddDeckDialogOpen] = useState<boolean>(false);
     const [selectedDecks, setSelectedDecks] = useState<string[]>([]); // Track selected decks
@@ -43,61 +35,70 @@ const DeckPage: React.FC = () => {
 
     // Load decks from localStorage on component mount
     useEffect(() => {
-        loadDecksFromStorage();
+        loadDecks();
     }, []);
 
-    // Function to load decks from localStorage
-    const loadDecksFromStorage = () => {
-        try {
-            const displayDecks: DisplayDeck[] = [];
+    // sort function
+    const sortDecks = (sort:string) => {
+        const sortedDecks = [...decks]; // Create a new array to avoid modifying state directly
 
-            // Get all localStorage keys
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                // Check if this is a deck key
-                if (key && key.startsWith('swu_deck_')) {
-                    const deckID = key.replace('swu_deck_', '');
-                    const deckDataJSON = localStorage.getItem(key);
+        switch (sort) {
+            case 'Favourites':
+                sortedDecks.sort((a, b) => {
+                    // Favourite decks first
+                    if (a.favourite && !b.favourite) return -1;
+                    if (!a.favourite && b.favourite) return 1;
+                    // Then sort by name
+                    return a.metadata.name.localeCompare(b.metadata.name);
+                });
+                break;
 
-                    if (deckDataJSON) {
-                        const deckData = JSON.parse(deckDataJSON) as StoredDeck;
+            case 'Deck builder':
+                sortedDecks.sort((a, b) => {
+                    // First by builder
+                    const sourceCompare = a.source.localeCompare(b.source);
+                    // If sources are different, sort by source
+                    if (sourceCompare !== 0) return sourceCompare;
+                    // Finally by name within each group
+                    return a.metadata.name.localeCompare(b.metadata.name);
+                });
+                break;
 
-                        // Convert to display format
-                        displayDecks.push({
-                            deckID,
-                            leader: { id: deckData.leader.id, types:['leader'] },
-                            base: { id: deckData.base.id, types:['base'] },
-                            metadata: { name: deckData.name },
-                            favourite: deckData.favourite
-                        });
-                    }
-                }
-            }
+            case 'Name':
+                sortedDecks.sort((a, b) => {
+                    // Alphabetically by name
+                    return a.metadata.name.localeCompare(b.metadata.name);
+                });
+                break;
 
-            // Sort decks to show favorites first
-            const sortedDecks = [...displayDecks].sort((a, b) => {
-                // If one is favorite and other is not, favorite comes first
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-
-                // Otherwise maintain original order or sort by name if needed
-                return 0;
-            });
-
-            setDecks(sortedDecks);
-        } catch (error) {
-            console.error('Error loading decks from localStorage:', error);
+            default:
+                // Default to favourites first if sort option is unrecognized
+                sortedDecks.sort((a, b) => {
+                    if (a.favourite && !b.favourite) return -1;
+                    if (!a.favourite && b.favourite) return 1;
+                    return 0;
+                });
         }
+        setDecks(sortedDecks);
     };
 
+    // Function to load decks from localStorage
+    const loadDecks = () => {
+        const decks = loadSavedDecks();
+        setDecks(convertToDisplayDecks(decks));
+    }
+
     // Handle successful deck addition
-    const handleAddDeckSuccess = (deckData: IDeckData) => {
+    const handleAddDeckSuccess = (deckData: IDeckData, deckLink: string) => {
+        const source = deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB';
         const newDeck: DisplayDeck = {
             deckID: deckData.deckID,
             leader: { id: deckData.leader.id, types:['leader'] },
             base: { id: deckData.base.id, types:['base'] },
             metadata: { name: deckData.metadata?.name || 'Untitled Deck' },
-            favourite: false
+            favourite: false,
+            source: source,
+            deckLink: deckLink,
         };
 
         // Add the new deck and re-sort to maintain favorites first
@@ -113,11 +114,15 @@ const DeckPage: React.FC = () => {
 
     // Handler to navigate to the deck subpage using the deck's id
     const handleViewDeck = (deckId: string) => {
-        // Only navigate if no decks are selected
-        if (selectedDecks.length === 0) {
-            router.push(`/DeckPage/${deckId}`);
-        }
+        router.push(`/DeckPage/${deckId}`);
     };
+
+    const handleRedirect = (deckLink: string, e:React.MouseEvent) => {
+        e.stopPropagation();
+        if (deckLink) {
+            window.open(deckLink, '_blank');
+        }
+    }
 
     // Handle deck selection
     const toggleDeckSelection = (deckId: string) => {
@@ -153,18 +158,7 @@ const DeckPage: React.FC = () => {
         setDecks(sortedDecks);
 
         // Update in localStorage
-        try {
-            const storageKey = `swu_deck_${deckId}`;
-            const deckDataJSON = localStorage.getItem(storageKey);
-
-            if (deckDataJSON) {
-                const deckData = JSON.parse(deckDataJSON) as StoredDeck;
-                deckData.favourite = !deckData.favourite;
-                localStorage.setItem(storageKey, JSON.stringify(deckData));
-            }
-        } catch (error) {
-            console.error('Error updating favorite status:', error);
-        }
+        updateDeckFavoriteInLocalStorage(deckId);
     };
 
     // Open delete confirmation dialog
@@ -178,12 +172,7 @@ const DeckPage: React.FC = () => {
     const handleDeleteSelectedDecks = () => {
         // Delete each selected deck from localStorage
         selectedDecks.forEach(deckId => {
-            try {
-                const storageKey = `swu_deck_${deckId}`;
-                localStorage.removeItem(storageKey);
-            } catch (error) {
-                console.error(`Error deleting deck ${deckId}:`, error);
-            }
+            removeDeckFromLocalStorage(deckId);
         });
 
         // Update deck list in state
@@ -194,6 +183,12 @@ const DeckPage: React.FC = () => {
 
         // Close dialog
         setDeleteDialogOpen(false);
+    };
+
+    // Handle sort option change
+    const handleSortChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setSortBy(e.target.value);
+        sortDecks(e.target.value);
     };
 
     // ----------------------Styles-----------------------------//
@@ -280,6 +275,7 @@ const DeckPage: React.FC = () => {
             display:'flex',
             marginBottom: '7%',
             gap: '0.5rem',
+            width:'fit-content',
         },
         favoriteIcon: {
             position: 'absolute',
@@ -331,7 +327,30 @@ const DeckPage: React.FC = () => {
             color: '#1E2D32',
             fontWeight: 'bold',
             fontSize: '16px',
-        }
+        },
+        sourceTag: {
+            padding: '4px 10px',
+            borderRadius: '15px',
+            fontSize: '0.75rem',
+            fontWeight: '500',
+            display: 'inline-block',
+            marginTop: '8px',
+            marginBottom: '12px',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            border: '1px solid',
+            boxShadow: '0 0 5px',
+            width:'fit-content',
+        },
+        swuStatsTag: {
+            borderColor: '#FFD700', // Blue for SWUStats
+            color: '#FFD700',
+            boxShadow: '0 0 5px #FFD700',
+        },
+        swudbTag: {
+            borderColor: '#4CB5FF', // Purple for SWUDB
+            color: '#4CB5FF',
+            boxShadow: '0 0 5px #4CB5FF',
+        },
     };
 
     return (
@@ -344,9 +363,7 @@ const DeckPage: React.FC = () => {
                         sx={styles.dropdown}
                         value={sortBy}
                         placeholder="Sort by"
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setSortBy(e.target.value)
-                        }
+                        onChange={handleSortChange}
                     >
                         {sortByOptions.map((sortOption) => (
                             <MenuItem key={sortOption} value={sortOption}>
@@ -371,7 +388,6 @@ const DeckPage: React.FC = () => {
                 {decks.length > 0 ? (
                     decks.map((deck) => {
                         const isSelected = selectedDecks.includes(deck.deckID);
-
                         return (
                             <Box
                                 key={deck.deckID}
@@ -394,10 +410,10 @@ const DeckPage: React.FC = () => {
                                 <Box sx={styles.leaderBaseHolder}>
                                     <Box sx={styles.CardSetContainerStyle}>
                                         <Box>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL(deck.base)})` }} />
+                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: deck.base.id, count:0 })})` }} />
                                         </Box>
                                         <Box sx={{ ...styles.parentBoxStyling, left: '-15px', top: '26px' }}>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL(deck.leader)})` }} />
+                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: deck.leader.id, count:0 })})` }} />
                                         </Box>
                                     </Box>
                                 </Box>
@@ -405,13 +421,20 @@ const DeckPage: React.FC = () => {
                                     <Typography sx={styles.deckTitle} variant="h3">
                                         {deck.metadata.name}
                                     </Typography>
-                                    <Box sx={styles.viewDeckButton}>
+                                    <Typography
+                                        sx={{
+                                            ...styles.sourceTag,
+                                            ...(deck.source === 'SWUSTATS' ? styles.swuStatsTag : styles.swudbTag)
+                                        }}
+                                        onClick={(e) => handleRedirect(deck.deckLink, e)}
+                                    >
+                                        {deck.source}
+                                    </Typography>
+                                    <Box sx={styles.viewDeckButton} onClick={(e) => e.stopPropagation()}>
                                         <PreferenceButton
                                             variant="standard"
                                             text="View Deck"
-                                            buttonFnc={() => {
-                                                handleViewDeck(deck.deckID);
-                                            }}
+                                            buttonFnc={() => handleViewDeck(deck.deckID)}
                                         />
                                     </Box>
                                 </Box>

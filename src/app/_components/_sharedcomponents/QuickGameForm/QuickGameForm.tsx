@@ -11,20 +11,12 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
+import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
 
 interface ICreateGameFormProps {
     format?: string | null;
     setFormat?: (format: string) => void;
-}
-
-// Interface for saved decks
-interface StoredDeck {
-    leader: { id: string };
-    base: { id: string };
-    name: string;
-    favourite: boolean;
-    deckID: string;
-    deckLink: string;
 }
 
 const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
@@ -51,51 +43,19 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     // Timer ref for clearing the inline text after 5s
 
-    const deckOptions: string[] = [
-        'Order66',
-        'ThisIsTheWay',
-    ];
-
     // Load saved decks when component mounts
     useEffect(() => {
-        loadSavedDecks();
+        loadDecks();
     }, []);
 
+
     // Load saved decks from localStorage
-    const loadSavedDecks = () => {
-        try {
-            const storedDecks: StoredDeck[] = [];
-
-            // Get all localStorage keys
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                // Check if this is a deck key
-                if (key && key.startsWith('swu_deck_')) {
-                    const deckID = key.replace('swu_deck_', '');
-                    const deckDataJSON = localStorage.getItem(key);
-
-                    if (deckDataJSON) {
-                        const deckData = JSON.parse(deckDataJSON) as StoredDeck;
-
-                        // Add to our list with the ID for reference
-                        storedDecks.push({
-                            ...deckData,
-                            deckID: deckID
-                        });
-                    }
-                }
-            }
-
-            // Sort to show favorites first
-            const sortedDecks = [...storedDecks].sort((a, b) => {
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-                return 0;
-            });
-            setSavedDecks(sortedDecks);
-        } catch (error) {
-            console.error('Error loading decks from localStorage:', error);
+    const loadDecks = () => {
+        const decks = loadSavedDecks();
+        if(decks.length > 0) {
+            setFavouriteDeck(decks[0].deckID);
         }
+        setSavedDecks(decks);
     };
 
     const handleChangeFormat = (format: SwuGameFormat) => {
@@ -189,19 +149,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             }
             // Save the deck if needed
             if (saveDeck && deckData && userDeck) {
-                try {
-                    const deckToSave = {
-                        leader: deckData.leader,
-                        base: deckData.base,
-                        name: deckData.metadata.name,
-                        favourite: false,
-                        deckID: deckData.deckID,
-                        deckLink: userDeck // Store the original link
-                    };
-                    localStorage.setItem(`swu_deck_${deckData.deckID}`, JSON.stringify(deckToSave));
-                } catch (error) {
-                    console.error('Error saving deck to favorites:', error);
-                }
+                saveDeckToLocalStorage(deckData, deckLink);
             }
 
             setDeckErrorSummary(null);

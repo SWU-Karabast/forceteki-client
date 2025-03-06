@@ -1,14 +1,13 @@
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import {
     Card,
     CardContent,
     Typography,
     TextField,
     Button,
-    Box, CardActions, Link, Tooltip,
+    Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel,
 } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
-import { useRouter } from 'next/navigation'
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
@@ -18,17 +17,23 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
+import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
     owner,
 }) => {
     const { lobbyState, connectedPlayer, sendLobbyMessage } = useGame();
+    const [favouriteDeck, setFavouriteDeck] = useState<string>('');
     const [deckLink, setDeckLink] = useState<string>('');
     const [showTooltip, setShowTooltip] = useState(false);
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const lobbyFormat = lobbyState ? lobbyState.lobbyFormat : null;
+
+    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
+    const [saveDeck, setSaveDeck] = useState<boolean>(false);
 
     // For deck error display
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
@@ -41,13 +46,39 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const handleStartGame = async () => {
         sendLobbyMessage(['onStartGameAsync']);
     };
+
+    useEffect(() => {
+        loadDecks();
+    }, []);
+
+    // Load saved decks from localStorage
+    const loadDecks = () => {
+        const decks = loadSavedDecks();
+        if(decks.length > 0) {
+            setFavouriteDeck(decks[0].deckID);
+        }
+        setSavedDecks(decks);
+    };
+
     const handleOnChangeDeck = async () => {
-        if (!deckLink || readyStatus) return;
+        if ((!favouriteDeck && !deckLink) || readyStatus) return;
+        let userDeck;
+        // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
+        if(favouriteDeck) {
+            const selectedDeck = savedDecks.find(deck => deck.deckID === favouriteDeck);
+            if (selectedDeck?.deckLink && !deckLink) {
+                userDeck = selectedDeck?.deckLink
+            }else{
+                userDeck = deckLink;
+            }
+        }else{
+            userDeck = deckLink;
+        }
         try {
             let deckData;
-            const parsedInput = parseInputAsDeckData(deckLink);
+            const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
-                deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+                deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -56,6 +87,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 setErrorModalOpen(true);
                 return;
             }
+            // save deck to local storage
+            if (saveDeck && deckData && deckLink){
+                saveDeckToLocalStorage(deckData, deckLink);
+            }
+
             sendLobbyMessage(['changeDeck', deckData])
         }catch (error){
             setDisplayerror(true);
@@ -181,8 +217,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         initiativeCardStyle: {
             background: '#18325199',
             display: 'flex',
-            padding: '30px',
+            padding: '20px',
             flexDirection: 'column',
+            maxHeight: '45vh',
         },
         buttonsContainerStyle: {
             display: 'flex',
@@ -196,8 +233,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             alignSelf: 'flex-start',
         },
         labelTextStyle: {
+            mt:'1em',
             mb: '.5em',
-            mt: '1.5em',
             color: 'white',
         },
         labelTextStyleSecondary: {
@@ -219,7 +256,17 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             cursor: 'pointer',
             color: 'var(--selection-red);',
             textDecorationColor: 'var(--initiative-red);',
-        }
+        },
+        checkboxStyle: {
+            color: '#fff',
+            '&.Mui-checked': {
+                color: '#fff',
+            },
+        },
+        checkboxAndRadioGroupTextStyle: {
+            color: '#fff',
+            fontSize: '1em',
+        },
     }
     return (
         <Card sx={styles.initiativeCardStyle}>
@@ -300,6 +347,46 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
             {lobbyState && (
                 <>
+                    <Box>
+                        <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
+                        <StyledTextField
+                            select
+                            value={favouriteDeck}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setFavouriteDeck(e.target.value)
+                            }
+                            placeholder="Favourite decks"
+                        >
+                            {savedDecks.length === 0 ? (
+                                <MenuItem value="" disabled>
+                                    No saved decks found
+                                </MenuItem>
+                            ) : (
+                                savedDecks.map((deck) => (
+                                    <MenuItem key={deck.deckID} value={deck.deckID}>
+                                        {deck.favourite ? '★ ' : ''}{deck.name}
+                                    </MenuItem>
+                                ))
+                            )}
+                        </StyledTextField>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    sx={styles.checkboxStyle}
+                                    checked={saveDeck}
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                        checked: boolean
+                                    ) => setSaveDeck(checked)}
+                                />
+                            }
+                            label={
+                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                    Save to Favorite Decks
+                                </Typography>
+                            }
+                        />
+                    </Box>
                     <Box sx={styles.labelTextStyle}>
                         <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWU Stats

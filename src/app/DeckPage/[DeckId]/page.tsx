@@ -1,7 +1,7 @@
 'use client';
 import React, { ChangeEvent, useState, useEffect, useMemo } from 'react';
 import {
-    Box, MenuItem, Popover, Typography,
+    Box, MenuItem, Popover, Typography, useMediaQuery,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
@@ -13,22 +13,45 @@ import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/Percentag
 import AnimatedStatsTable from '@/app/_components/DeckPage/DeckComponent/AnimatedStatsTable';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
+import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
+import {
+    DeckValidationFailureReason,
+    IDeckValidationFailures
+} from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import { removeDeckFromLocalStorage } from '@/app/_utils/LocalStorageUtils';
 
 const sortByOptions: string[] = ['Cost','Power','Most played'];
+
+// Interface for saved decks
+interface StoredDeck {
+    leader: { id: string };
+    base: { id: string };
+    name: string;
+    favourite: boolean;
+    deckID: string;
+    deckLink: string;
+    source: 'SWUSTATS' | 'SWUDB'
+}
 
 const DeckDetails: React.FC = () => {
     const [sortBy, setSortBy] = useState<string>('');
     const router = useRouter();
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-
     const params = useParams();
     const deckId = params?.DeckId;
+
+    // error handling
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+
+    // For the raw/technical error details
+    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
 
     // preview states
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+    const [displayDeck, setDisplayDeck ] = useState<StoredDeck | null>(null);
 
     // State for delete confirmation dialog
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
@@ -77,8 +100,31 @@ const DeckDetails: React.FC = () => {
         if (deckId) {
             (async () => {
                 try {
-                    const data = await fetchDeckData(`https://swudb.com/deck/${deckId}`, false);
-                    setDeckData(data);
+                    // we get the deck from localStorage and set the link
+                    const deckDataJSON = localStorage.getItem('swu_deck_'+deckId);
+                    if (deckDataJSON) {
+                        const deckData = JSON.parse(deckDataJSON) as StoredDeck;
+
+                        // we need to check if the deck is still available
+                        try {
+                            const data = await fetchDeckData(deckData.deckLink, false);
+                            setDeckData(data);
+                            setDisplayDeck(deckData);
+                        }catch (error) {
+                            // check if its set to private
+                            if(error instanceof Error){
+                                setErrorModalOpen(true);
+                                if(error.message.includes('Forbidden')) {
+                                    setDeckErrorDetails({
+                                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                                    });
+                                }else{
+                                    setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
+                                }
+                                return;
+                            }
+                        }
+                    }
                 } catch (error) {
                     console.error('Error fetching deck data:', error);
                 }
@@ -92,7 +138,7 @@ const DeckDetails: React.FC = () => {
 
     const handleViewOnSWUDB = () => {
         if (deckId) {
-            window.open(`https://swudb.com/deck/${deckId}`, '_blank');
+            window.open(displayDeck?.deckLink, '_blank');
         }
     };
 
@@ -104,16 +150,8 @@ const DeckDetails: React.FC = () => {
     // handle confirm delete
     const handleConfirmDelete = () => {
         if (deckId) {
-            try {
-                // Remove the deck from localStorage
-                const storageKey = `swu_deck_${deckId}`;
-                localStorage.removeItem(storageKey);
-                console.log(`Deck ${deckId} removed from localStorage`);
-            } catch (error) {
-                console.error('Error deleting deck from localStorage:', error);
-            }
+            removeDeckFromLocalStorage(deckId)
         }
-
         setDeleteDialogOpen(false);
         router.push('/DeckPage');
     };
@@ -123,17 +161,24 @@ const DeckDetails: React.FC = () => {
         setDeleteDialogOpen(false);
     };
 
+    const onCloseError = () => {
+        setErrorModalOpen(false);
+        router.push('/DeckPage');
+    }
+
+    const isSmallScreen = useMediaQuery('(max-width: 1280px)');
 
     const styles = {
         bodyRow:{
             height:'100%',
             width: '100%',
-            display: 'flex',
-            flexDirection: 'row',
+            gridTemplateColumns: isSmallScreen ? '99%' : '30rem calc(100% - 31rem)',
+            display: 'grid',
+            overflowY: 'auto',
         },
         deckMeta:{
-            width: '34rem',
-            height:'100%',
+            width: '30rem',
+            height:'auto',
         },
         leaderBaseContainer:{
             width: '100%',
@@ -199,12 +244,13 @@ const DeckDetails: React.FC = () => {
         },
         deckContainer:{
             width: '100%',
+            minWidth: '37rem',
         },
         deckGridStyle:{
             width: '100%',
-            height: '95%',
             justifyContent: 'center',
             backgroundColor: 'transparent',
+            overflow:'auto',
         },
 
         // Example style blocks for stats
@@ -251,14 +297,14 @@ const DeckDetails: React.FC = () => {
             width: '21rem',
         },
         viewDeck:{
-            width:'380px',
+            width: !displayDeck || displayDeck.source === 'SWUDB' ? '394px' : '429px',
             ml:'40px'
         }
     }
 
     return (
         <>
-            <Box sx={styles.bodyRow}>
+            <Grid container sx={styles.bodyRow}>
                 <Box sx={styles.deckMeta}>
                     {/* Title Row */}
                     <Box sx={styles.titleContainer}>
@@ -340,6 +386,7 @@ const DeckDetails: React.FC = () => {
                             <Typography sx={styles.sortText}>Sort by</Typography>
                             <StyledTextField
                                 select
+                                disabled
                                 value={sortBy}
                                 placeholder="Sort by"
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -353,7 +400,7 @@ const DeckDetails: React.FC = () => {
                                 ))}
                             </StyledTextField>
                             <Box sx={styles.viewDeck}>
-                                <PreferenceButton variant={'standard'} text={'View Deck on SWDB'} buttonFnc={handleViewOnSWUDB} />
+                                <PreferenceButton variant={'standard'} text={!displayDeck || displayDeck.source === 'SWUDB' ? 'View Deck on SWUDB' : 'View Deck on SWUStats'} buttonFnc={handleViewOnSWUDB} />
                             </Box>
                         </Box>
                         <Box sx={styles.editButtons}>
@@ -371,7 +418,13 @@ const DeckDetails: React.FC = () => {
                     onCancel={handleCancelDelete}
                     onConfirm={handleConfirmDelete}
                 />
-            </Box>
+                <ErrorModal
+                    open={errorModalOpen}
+                    onClose={onCloseError}
+                    title={'Deck Error'}
+                    errors={deckErrorDetails}
+                />
+            </Grid>
         </>
     );
 };

@@ -118,6 +118,24 @@ interface ICardPlayer {
     uuid: string;
 }
 
-export interface IDeckProps {
-    variant?: string;
+
+// Define interfaces for deck data
+export interface StoredDeck {
+    leader: { id: string };
+    base: { id: string };
+    name: string;
+    favourite: boolean;
+    deckLink: string;
+    deckID: string;
+    source: 'SWUSTATS' | 'SWUDB'
+}
+
+export interface DisplayDeck {
+    deckID: string;
+    leader: { id: string, types:string[] };
+    base: { id: string, types:string[] };
+    metadata: { name: string };
+    favourite: boolean;
+    deckLink: string;
+    source: 'SWUSTATS' | 'SWUDB';
 }

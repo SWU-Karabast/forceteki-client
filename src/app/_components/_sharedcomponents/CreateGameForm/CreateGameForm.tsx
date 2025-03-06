@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, ChangeEvent, useRef, useEffect } from 'react';
+import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -22,21 +22,8 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
-
-const deckOptions: string[] = [
-    'Order66',
-    'ThisIsTheWay',
-];
-
-// Interface for saved decks
-interface StoredDeck {
-    leader: { id: string };
-    base: { id: string };
-    name: string;
-    favourite: boolean;
-    deckID: string;
-    deckLink: string;
-}
+import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
 
 const CreateGameForm = () => {
     const pathname = usePathname();
@@ -68,44 +55,16 @@ const CreateGameForm = () => {
     const [privacy, setPrivacy] = useState<string>('Public');
 
     useEffect(() => {
-        loadSavedDecks();
+        loadDecks();
     }, []);
 
     // Load saved decks from localStorage
-    const loadSavedDecks = () => {
-        try {
-            const storedDecks: StoredDeck[] = [];
-
-            // Get all localStorage keys
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                // Check if this is a deck key
-                if (key && key.startsWith('swu_deck_')) {
-                    const deckID = key.replace('swu_deck_', '');
-                    const deckDataJSON = localStorage.getItem(key);
-
-                    if (deckDataJSON) {
-                        const deckData = JSON.parse(deckDataJSON) as StoredDeck;
-
-                        // Add to our list with the ID for reference
-                        storedDecks.push({
-                            ...deckData,
-                            deckID: deckID
-                        });
-                    }
-                }
-            }
-
-            // Sort to show favorites first
-            const sortedDecks = [...storedDecks].sort((a, b) => {
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-                return 0;
-            });
-            setSavedDecks(sortedDecks);
-        } catch (error) {
-            console.error('Error loading decks from localStorage:', error);
+    const loadDecks = () => {
+        const decks = loadSavedDecks();
+        if(decks.length > 0) {
+            setFavouriteDeck(decks[0].deckID);
         }
+        setSavedDecks(decks);
     }
     const handleChangeFormat = (format: SwuGameFormat) => {
         localStorage.setItem('format', format);
@@ -115,14 +74,13 @@ const CreateGameForm = () => {
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        let userDeck = '';
+        let userDeck;
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         if(favouriteDeck) {
             const selectedDeck = savedDecks.find(deck => deck.deckID === favouriteDeck);
             if (selectedDeck?.deckLink && !deckLink) {
                 userDeck = selectedDeck?.deckLink
             }else{
-                console.log(deckLink);
                 userDeck = deckLink;
             }
         }else{
@@ -160,7 +118,6 @@ const CreateGameForm = () => {
             }
             return;
         }
-        console.log(deckData);
         try {
             const payload = {
                 user: { id: user?.id || localStorage.getItem('anonymousUserId'),
@@ -196,19 +153,7 @@ const CreateGameForm = () => {
             }
             if (saveDeck && deckData && deckLink){
                 // save new deck to local storage and only if its a new deck
-                try {
-                    const deckToSave = {
-                        leader: deckData.leader,
-                        base: deckData.base,
-                        name: deckData.metadata.name,
-                        favourite: false,
-                        deckID: deckData.deckID,
-                        deckLink: deckLink// Store the original link if we have one
-                    };
-                    localStorage.setItem(`swu_deck_${deckData.deckID}`, JSON.stringify(deckToSave));
-                } catch (error) {
-                    console.error('Error saving deck to favorites:', error);
-                }
+                saveDeckToLocalStorage(deckData, deckLink);
             }
 
             setDeckErrorSummary(null);

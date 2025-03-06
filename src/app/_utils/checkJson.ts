@@ -14,14 +14,14 @@ export interface DeckJSON {
         id: string;
         count: number;
     };
-    deck: Array<{
+    deck: {
         id: string;
         count: number;
-    }>;
-    sideboard?: Array<{
+    }[];
+    sideboard?: {
         id: string;
         count: number;
-    }>;
+    }[];
     deckID?: string;
     deckSource?: string;
 }

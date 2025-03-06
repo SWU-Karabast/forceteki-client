@@ -9,11 +9,12 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
 
 interface AddDeckDialogProps {
     open: boolean;
     onClose: () => void;
-    onSuccess: (deckData: IDeckData) => void;
+    onSuccess: (deckData: IDeckData, deckLink: string) => void;
 }
 const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
     open,
@@ -32,20 +33,8 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
         try {
             const deckData = await fetchDeckData(deckLink, false);
             if (deckData) {
-                // Save to localStorage
-                const deckKey = deckData.deckID;
-                const simplifiedDeckData = {
-                    leader: { id: deckData.leader.id },
-                    base: { id: deckData.base.id },
-                    name: deckData.metadata?.name || 'Untitled Deck',
-                    favourite: false,
-                    deckLink:deckLink,
-                    deckLID:deckKey
-                };
-
-                // Save back to localStorage
-                localStorage.setItem('swu_deck_'+deckKey, JSON.stringify(simplifiedDeckData));
-                onSuccess(deckData);
+                saveDeckToLocalStorage(deckData, deckLink);
+                onSuccess(deckData, deckLink);
                 onClose();
                 // Reset form
                 setDeckLink('');

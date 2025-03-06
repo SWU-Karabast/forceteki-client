@@ -83,12 +83,8 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
             height: '1px',
         },
         scrollableBoxStyleSideboard: {
-            height: '19vh',
-            overflow: 'auto',
         },
         scrollableBoxStyle: {
-            height: mainDeck ? mainDeck.sideboard?.length > 0 ? '45vh' : '64vh' : '64vh',
-            overflow: 'auto',
         },
         mainContainerStyle: {
             display: 'flex',
@@ -159,7 +155,7 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
     ) ?? 0;
 
     return (
-        <Box sx={{ width:'100%', height:'100%', overflowY: 'scroll' }}>
+        <Box sx={{ width:'100%', height:'100%' }}>
             <Card sx={styles.cardStyle}>
                 <Box sx={styles.headerBoxStyle}>
                     <Typography sx={styles.titleTextStyle}>Your Deck</Typography>
