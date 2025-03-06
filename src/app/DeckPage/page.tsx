@@ -344,11 +344,19 @@ const DeckPage: React.FC = () => {
         swuStatsTag: {
             borderColor: '#FFD700', // Blue for SWUStats
             color: '#FFD700',
+            '&:hover': {
+                backgroundColor: '#FFD700',
+                color: '#000000',
+            },
             boxShadow: '0 0 5px #FFD700',
         },
         swudbTag: {
             borderColor: '#4CB5FF', // Purple for SWUDB
             color: '#4CB5FF',
+            '&:hover': {
+                backgroundColor: '#4CB5FF',
+                color: '#000000',
+            },
             boxShadow: '0 0 5px #4CB5FF',
         },
     };
