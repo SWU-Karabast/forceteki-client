@@ -429,15 +429,17 @@ const DeckPage: React.FC = () => {
                                     <Typography sx={styles.deckTitle} variant="h3">
                                         {deck.metadata.name}
                                     </Typography>
-                                    <Typography
-                                        sx={{
-                                            ...styles.sourceTag,
-                                            ...(deck.source === 'SWUSTATS' ? styles.swuStatsTag : styles.swudbTag)
-                                        }}
-                                        onClick={(e) => handleRedirect(deck.deckLink, e)}
-                                    >
-                                        {deck.source}
-                                    </Typography>
+                                    {deck.source && (
+                                        <Typography
+                                            sx={{
+                                                ...styles.sourceTag,
+                                                ...(deck.source === 'SWUSTATS' ? styles.swuStatsTag : styles.swudbTag)
+                                            }}
+                                            onClick={(e) => handleRedirect(deck.deckLink, e)}
+                                        >
+                                            {deck.source}
+                                        </Typography>
+                                    )}
                                     <Box sx={styles.viewDeckButton} onClick={(e) => e.stopPropagation()}>
                                         <PreferenceButton
                                             variant="standard"
