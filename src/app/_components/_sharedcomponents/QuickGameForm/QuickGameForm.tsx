@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useRef, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import { Box, Button, Checkbox, FormControl, FormControlLabel, Link, MenuItem, Typography } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
@@ -11,12 +11,13 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
+import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
 
 interface ICreateGameFormProps {
     format?: string | null;
     setFormat?: (format: string) => void;
 }
-
 
 const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const router = useRouter();
@@ -27,6 +28,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [queueState, setQueueState] = useState<boolean>(false)
+    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
     const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
@@ -41,10 +43,20 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     // Timer ref for clearing the inline text after 5s
 
-    const deckOptions: string[] = [
-        'Order66',
-        'ThisIsTheWay',
-    ];
+    // Load saved decks when component mounts
+    useEffect(() => {
+        loadDecks();
+    }, []);
+
+
+    // Load saved decks from localStorage
+    const loadDecks = () => {
+        const decks = loadSavedDecks();
+        if(decks.length > 0) {
+            setFavouriteDeck(decks[0].deckID);
+        }
+        setSavedDecks(decks);
+    };
 
     const handleChangeFormat = (format: SwuGameFormat) => {
         localStorage.setItem('format', format);
@@ -55,11 +67,23 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const handleJoinGameQueue = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setQueueState(true);
+        // Get the deck link - either from selected favorite or direct input
+        let userDeck = '';
+        if(favouriteDeck) {
+            const selectedDeck = savedDecks.find(deck => deck.deckID === favouriteDeck);
+            if (selectedDeck?.deckLink && !deckLink) {
+                userDeck = selectedDeck.deckLink;
+            } else {
+                userDeck = deckLink;
+            }
+        } else {
+            userDeck = deckLink;
+        }
         let deckData = null
         try {
-            const parsedInput = parseInputAsDeckData(deckLink);
+            const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
-                deckData = deckLink ? await fetchDeckData(deckLink, false) : null;
+                deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -104,7 +128,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     body: JSON.stringify(payload),
                 }
             );
-
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
@@ -123,6 +146,11 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 }
                 return
             }
+            // Save the deck if needed
+            if (saveDeck && deckData && userDeck) {
+                saveDeckToLocalStorage(deckData, deckLink);
+            }
+
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
@@ -181,25 +209,29 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             </Typography>
             <form onSubmit={handleJoinGameQueue}>
                 {/* Favourite Decks Input */}
-                {user &&
-                    <FormControl fullWidth sx={styles.formControlStyle}>
-                        <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
-                        <StyledTextField
-                            select
-                            value={favouriteDeck}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setFavouriteDeck(e.target.value)
-                            }
-                            placeholder="Vader Green Ramp"
-                        >
-                            {deckOptions.map((deck) => (
-                                <MenuItem key={deck} value={deck}>
-                                    {deck}
+                <FormControl fullWidth sx={styles.formControlStyle}>
+                    <Typography variant="body1" sx={styles.labelTextStyle}>Favorite decks</Typography>
+                    <StyledTextField
+                        select
+                        value={favouriteDeck}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setFavouriteDeck(e.target.value)
+                        }
+                        placeholder="Favorite decks"
+                    >
+                        {savedDecks.length === 0 ? (
+                            <MenuItem value="" disabled>
+                                No saved decks found
+                            </MenuItem>
+                        ) : (
+                            savedDecks.map((deck) => (
+                                <MenuItem key={deck.deckID} value={deck.deckID}>
+                                    {deck.favourite ? '★ ' : ''}{deck.name}
                                 </MenuItem>
-                            ))}
-                        </StyledTextField>
-                    </FormControl>
-                }
+                            ))
+                        )}
+                    </StyledTextField>
+                </FormControl>
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
@@ -227,7 +259,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                             setDeckErrorSummary(null);
                             setDeckErrorDetails(undefined);
                         }}
-                        required
                     />
                     {deckErrorSummary && (
                         <Typography variant={'body1'} sx={styles.errorMessageStyle}>
@@ -259,7 +290,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     </StyledTextField>
                 </FormControl>
 
-                {/* Save Deck To Favourites Checkbox
+                {/* Save Deck To Favourites Checkbox */}
                 <FormControlLabel
                     sx={{ mb: '1rem' }}
                     control={
@@ -274,11 +305,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     }
                     label={
                         <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                            Save to Favorite Decks
+                            Save Deck List
                         </Typography>
                     }
                 />
-                */}
 
                 {/* Submit Button */}
                 <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,

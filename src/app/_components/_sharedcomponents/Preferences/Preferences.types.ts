@@ -1,6 +1,6 @@
 export type IButtonType = {
     variant: 'concede' | 'standard',
-    text: string,
+    text?: string,
     buttonFnc?: () => void
     disabled?: boolean
 }

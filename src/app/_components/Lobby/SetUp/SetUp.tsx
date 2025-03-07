@@ -43,7 +43,7 @@ const SetUp: React.FC = ({
             p: '1.8em',
             backgroundColor: '#00000080',
             backdropFilter: 'blur(30px)',
-            overflow: 'hidden',
+            overflow: 'auto',
             flex: 1,
         },
         lobbyTextStyle:{

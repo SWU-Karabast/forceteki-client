@@ -2,7 +2,7 @@
 
 export interface IDeckMetadata {
     name: string;
-    author: string;
+    author?: string;
 }
 
 export interface IDeckCard {

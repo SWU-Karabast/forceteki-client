@@ -14,14 +14,14 @@ export interface DeckJSON {
         id: string;
         count: number;
     };
-    deck: Array<{
+    deck: {
         id: string;
         count: number;
-    }>;
-    sideboard?: Array<{
+    }[];
+    sideboard?: {
         id: string;
         count: number;
-    }>;
+    }[];
     deckID?: string;
     deckSource?: string;
 }
@@ -186,7 +186,6 @@ export const validateDeckJSON = (jsonString: string): DeckJSON | null => {
         }
 
         // If we got here, the JSON structure is valid with normalized keys
-        console.log(deckData);
         return deckData as DeckJSON;
     } catch (error) {
         // JSON parsing failed
