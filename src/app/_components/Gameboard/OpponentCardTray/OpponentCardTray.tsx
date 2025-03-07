@@ -34,7 +34,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             alignItems: 'flex-start',
             justifyContent: 'flex-start',
             padding: '1rem 0 1rem 2rem',
-            gap: '2rem',
+            gap: '1rem',
         },
         centerColumn: {
             height: '100%',

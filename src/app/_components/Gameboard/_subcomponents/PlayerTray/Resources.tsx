@@ -49,7 +49,7 @@ const Resources: React.FC<IResourcesProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             transition: 'background-color 0.3s ease',
-            padding: '1rem 2rem',
+            padding: '1rem .8rem',
             overflow: 'visible',
             cursor: 'pointer',
             '&:hover': {
