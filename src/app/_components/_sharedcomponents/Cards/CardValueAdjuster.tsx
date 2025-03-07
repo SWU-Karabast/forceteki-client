@@ -8,7 +8,7 @@ interface ICardValueAdjusterProps {
     isIndirect?: boolean;
 }
 
-const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect }) => {
+const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect = false }) => {
     const { updateDistributionPrompt, distributionPromptData } = useGame();
 
     const handleValueAdjusterClick = (amount: number) => {
