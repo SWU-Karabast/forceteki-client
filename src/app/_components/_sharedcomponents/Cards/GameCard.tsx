@@ -159,6 +159,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
+    const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
 
     // Styles
     const styles = {
@@ -368,7 +369,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
-                        { showValueAdjuster() && <CardValueAdjuster cardId={card.uuid} /> }
+                        { showValueAdjuster() && <CardValueAdjuster card={card} isIndirect={isIndirectDamage} /> }
                         <Grid direction="row" container sx={styles.shieldContainer}>
                             {shieldCards.map((shieldCard, index) => (
                                 <Box

@@ -203,7 +203,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 <Box sx={styles.unimplementedAlert}></Box>
             </Box>
             <Box sx={styles.epicActionIcon}></Box>
-            { showValueAdjuster() && <CardValueAdjuster cardId={card.uuid} /> }
+            { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             {cardStyle === LeaderBaseCardStyle.Base && (
                 <Box sx={styles.damageCounterContainer}>
                     { !!distributionAmount && 
