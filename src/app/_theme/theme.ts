@@ -191,6 +191,9 @@ export const theme: Theme = createTheme({
                     '&:hover': {
                         backgroundColor: '#404040',
                     },
+                    '&:disabled': {
+                        color: '#444'
+                    },
                 },
             },
         },
@@ -271,5 +274,21 @@ export const theme: Theme = createTheme({
                 },
             },
         },
+        MuiAutocomplete: {
+            styleOverrides: {
+                input: {
+                    textAlign: 'center',
+                },
+                listbox: {
+                    backgroundColor: '#394452',
+                },
+                option: {
+                    '&:hover': {
+                        backgroundColor: '#4C5C71'
+                    },
+                },
+            }
+        },
+        
     },
 });

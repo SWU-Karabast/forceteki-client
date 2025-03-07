@@ -11,7 +11,28 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
     trayPlayer
 ) => {
     const { gameState, connectedPlayer } = useGame();
-    const { togglePopup } = usePopup();
+    const { togglePopup, popups } = usePopup();
+
+    const handleDiscardToggle = () => {
+        const playerName = connectedPlayer != trayPlayer.trayPlayer ? 'Your Opponent\'s' : 'Your';
+        const existingPopup = popups.find(popup => popup.uuid === `${trayPlayer.trayPlayer}-discard`);
+
+        if (existingPopup && existingPopup.source === PopupSource.PromptState) {
+            // TODO: allow game propt to be toggled
+            // const { type, ...restData } = existingPopup
+            // togglePopup(type, {
+            //     ...restData
+            // });
+        } else {
+            togglePopup('pile', {
+                uuid: `${trayPlayer.trayPlayer}-discard`,
+                title: `${playerName} discard`,
+                cards: gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
+                source: PopupSource.User,
+                buttons: null
+            })
+        }
+    }
 
     const styles = {
         containerStyle: {
@@ -85,16 +106,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         <Box sx={styles.containerStyle}>
             <Card
                 sx={styles.discard.discardCardStyle(gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].at(-1))}
-                onClick={() => {
-                    const playerName = connectedPlayer != trayPlayer.trayPlayer ? 'Your Opponent\'s' : 'Your';
-
-                    togglePopup('pile', {
-                        uuid: `${trayPlayer.trayPlayer}-discard`,
-                        title: `${playerName} discard`,
-                        cards: gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
-                        source: PopupSource.User
-                    })
-                }}
+                onClick={handleDiscardToggle}
             />
             <Card sx={styles.deck.deckCardStyle}>
                 {deckComponent}

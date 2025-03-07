@@ -24,28 +24,33 @@ const Chat: React.FC<IChatProps> = ({
     // TODO: Standardize these chat types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formatMessage = (message: any, index: number) => {
-        if (message.hasOwnProperty('alert')) {
-            return (
-                <Typography key={index} sx={styles.alertText}>
-                    {message.alert.message.join('')}
-                </Typography>
-            )
-        } else if (message[0].type === 'playerChat') {
+        try {
+            if (message.hasOwnProperty('alert')) {
+                return (
+                    <Typography key={index} sx={styles.alertText}>
+                        {message.alert.message.join('')}
+                    </Typography>
+                )
+            } else if (message[0].type === 'playerChat') {
+                return (
+                    <Typography key={index} sx={styles.messageText}>
+                        <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
+                            {message[0].name}
+                        </Typography>:
+                        {message.slice(1).join('')}
+                    </Typography>
+                )
+            }
+            const stringMessage = message.map((item: IChatObject | string) => typeof item === 'object' ? item?.name : item).join('');
             return (
                 <Typography key={index} sx={styles.messageText}>
-                    <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
-                        {message[0].name}
-                    </Typography>:
-                    {message.slice(1).join('')}
+                    {stringMessage}
                 </Typography>
             )
+        } catch (error) {
+            console.error('Error formatting message:', error);
+            return null;
         }
-        const stringMessage = message.map((item: IChatObject | string) => typeof item === 'object' ? item?.name : item).join('');
-        return (
-            <Typography key={index} sx={styles.messageText}>
-                {stringMessage}
-            </Typography>
-        )
     }
 
     useEffect(() => {

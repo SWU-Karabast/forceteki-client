@@ -6,19 +6,26 @@ import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { useRouter } from 'next/navigation';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { v4 as uuidv4 } from 'uuid';
+import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
-    const { gameState, connectedPlayer, getOpponent, sendMessage } = useGame();
-    const router = useRouter();
-    const handleExitButton = () =>{
-        sendMessage('manualDisconnect');
-        router.push('/');
-    }
+    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { openPopup } = usePopup();
+    const handleExitButton = () => {
+        const popupId = `${uuidv4()}`;
+        openPopup('leaveGame', {
+            uuid: popupId,
+            source: PopupSource.User
+        });
+    };
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
     const initiativeClaimed = gameState.initiativeClaimed;
+    const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
+    const phase = gameState.phase;
 
     // ---------------Styles------------------- //
     const styles = {
@@ -40,6 +47,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             width: '100%',
             height: '100%',
             transform: 'translateY(-2rem)',
+            zIndex: '1',
         },
         rightColumn: {
             display: 'flex',
@@ -100,6 +108,18 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 userSelect: 'none',
                 color: 'black',
             }
+        },
+        opponentTurnAura: {
+            height: '100px',
+            width: '90%',
+            position: 'absolute', 
+            top: '-100px',
+            boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 15px 35px rgba(216,174,24,255)' : 'none',
+            transition: 'box-shadow .5s',
+            borderRadius: '50%',
+            left: '0',
+            right: '0',
+            marginInline: 'auto',
         }
     };
 
@@ -111,6 +131,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '2rem', // 2rem gap between columns
+                position: 'relative'
             }}
         >
             {/* Left column (fixed 360px) */}
@@ -132,6 +153,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 <Box sx={styles.opponentHandWrapper}>
                     <PlayerHand clickDisabled={true} cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
                 </Box>
+                <Box sx={ styles.opponentTurnAura} />
             </Grid>
 
             {/* Right column (fixed 360px) */}

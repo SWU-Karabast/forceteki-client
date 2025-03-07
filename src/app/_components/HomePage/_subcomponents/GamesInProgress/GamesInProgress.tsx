@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Divider, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
-import { playerMatches } from '@/app/_constants/mockData';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface GameCardData {
@@ -16,26 +15,50 @@ interface OngoingGamesData {
     ongoingGames: GameCardData[];
 }
 
+const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void) => {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/ongoing-games`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch ongoing games: ${response.status} ${response.statusText}`);
+        }
+
+        const fetchedData: OngoingGamesData = await response.json(); // Expecting an array
+        setGamesData(fetchedData); // Store all games or set to null if empty
+    } catch (err) {
+        console.error('Error fetching ongoing games:', err);
+        setGamesData(null); // Handle error case
+    }
+};
+
+
 const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
 
     useEffect(() => {
-        const fetchOngoingGames = async () => {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/ongoing-games`);
+        let count = 0;
+        let intervalId: NodeJS.Timeout;
 
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch ongoing games: ${response.status} ${response.statusText}`);
-                }
+        const fetchData = () => {
+            fetchOngoingGames(setGamesData);
+            count++;
 
-                const data = await response.json();
-                setGamesData(data);
-            } catch (err) {
-                console.error('Error fetching ongoing games:', err);
+            if (count === 6) {
+                clearInterval(intervalId);
+                intervalId = setInterval(() => {
+                    fetchOngoingGames(setGamesData);
+                    count++;
+                    if (count === 15) {
+                        clearInterval(intervalId);
+                    }
+                }, 60000); // Fetch once per minute
             }
         };
 
-        fetchOngoingGames();
+        fetchData();
+        intervalId = setInterval(fetchData, 10000); // Fetch every 10 seconds
+
+        return () => clearInterval(intervalId);
     }, []);
 
     const styles = {
