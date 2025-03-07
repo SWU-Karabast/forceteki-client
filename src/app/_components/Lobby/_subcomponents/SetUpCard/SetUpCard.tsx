@@ -242,8 +242,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             mt:'1em',
             mb: '.5em',
             color: 'white',
-            display:'flex',
-            flexDirection:'row',
         },
         labelTextStyleSecondary: {
             color: '#aaaaaa',
@@ -357,12 +355,14 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 <>
                     {savedDecks && !showLink ? (
                         <Box>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>
-                                Favorite decks/
-                                <Typography onClick={handleLinkToggle} sx={{ color: 'lightblue', cursor:'pointer' }}>
-                                    Import deck
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography variant="body1" sx={styles.labelTextStyle}>
+                                    Favorite decks
                                 </Typography>
-                            </Typography>
+                                <Typography onClick={handleLinkToggle} sx={{ ...styles.labelTextStyle, color: 'lightblue', cursor:'pointer', textDecoration:'underline' }} >
+                                    Import New Deck
+                                </Typography>
+                            </Box>
                             <StyledTextField
                                 select
                                 value={favouriteDeck}
@@ -387,12 +387,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     ) : (
                         <>
                             {savedDecks && (
-                                <Typography variant="body1" sx={styles.labelTextStyle}>
-                                    <Typography onClick={handleLinkToggle} sx={{ color: 'lightblue', cursor:'pointer' }}>
-                                        Favorite decks
+                                <Box sx={{ display: 'flex', justifyContent: 'end', mt: '1em' }}>
+                                    <Typography onClick={handleLinkToggle} sx={{ color: 'lightblue', cursor:'pointer', textDecoration:'underline' }} >
+                                        Use Favorites Deck
                                     </Typography>
-                                    /Import deck
-                                </Typography>
+                                </Box>
                             )}
                             <Box sx={styles.labelTextStyle}>
                                 <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
