@@ -71,10 +71,6 @@ const CardActionTray: React.FC = () => {
         if (button.arg === 'done') {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
-                if (distributeValues.isIndirectDamage) {
-                    return true;
-                }
-
                 const damageSpent = distributionPromptData?.valueDistribution.reduce((acc, curr) => acc + curr.amount, 0);
                 if (!distributeValues.canDistributeLess && damageSpent !== distributeValues.amount) {
                     return true;

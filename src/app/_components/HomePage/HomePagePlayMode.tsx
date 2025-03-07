@@ -101,7 +101,7 @@ const HomePagePlayMode: React.FC = () => {
                         <CreateGameForm />
                     </TabPanel>
                     {showTestGames && 
-                    <TabPanel index={2} value={value}>
+                    <TabPanel index={1} value={value}>
                         <Box>
                             <Typography variant="h2">Test Game Setups</Typography>
                             {testGameList.map((filename, index) => {
