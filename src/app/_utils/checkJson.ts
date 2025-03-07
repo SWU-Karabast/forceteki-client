@@ -186,7 +186,6 @@ export const validateDeckJSON = (jsonString: string): DeckJSON | null => {
         }
 
         // If we got here, the JSON structure is valid with normalized keys
-        console.log(deckData);
         return deckData as DeckJSON;
     } catch (error) {
         // JSON parsing failed

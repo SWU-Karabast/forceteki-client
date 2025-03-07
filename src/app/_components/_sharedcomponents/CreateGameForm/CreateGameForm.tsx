@@ -213,14 +213,14 @@ const CreateGameForm = () => {
             <form onSubmit={handleCreateGameSubmit}>
                 {/* Favourite Decks Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
-                    <Typography variant="body1" sx={styles.labelTextStyle}>Favourite Decks</Typography>
+                    <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
                     <StyledTextField
                         select
                         value={favouriteDeck}
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setFavouriteDeck(e.target.value)
                         }
-                        placeholder="Favourite decks"
+                        placeholder="Favorite decks"
                     >
                         {savedDecks.length === 0 ? (
                             <MenuItem value="" disabled>
@@ -290,7 +290,7 @@ const CreateGameForm = () => {
                     }
                     label={
                         <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                            Save to Favorite Decks
+                            Save Deck List
                         </Typography>
                     }
                 />
