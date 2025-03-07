@@ -28,6 +28,8 @@ const Board: React.FC<IBoardProps> = ({
         boardWrapper: {
             height: '100%',
             margin: '0 5rem',
+            display: 'flex',
+            flexDirection: 'row',
         },
         containerStyle: {
             height: '100%',
@@ -130,13 +132,13 @@ const Board: React.FC<IBoardProps> = ({
     
     return (
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
-        <Grid container sx={styles.boardWrapper}> 
-            <Grid sx={styles.columnStyle}>
+        <Box sx={styles.boardWrapper}> 
+            <Box sx={styles.columnStyle}>
                 <Box sx={styles.leftColumnBorderLeft} />
                 <Box sx={styles.leftColumnBorderRight} />
                 <UnitsBoard sidebarOpen={sidebarOpen} arena="spaceArena" />
-            </Grid>
-            <Grid container sx={styles.middleColumnStyle}>
+            </Box>
+            <Box sx={styles.middleColumnStyle}>
                 <Box sx={styles.middleColumnBorderLeft} />
                 <Box sx={styles.middleColumnBorderRight} />
                 <Box sx={styles.middleColumnContent}>
@@ -157,15 +159,15 @@ const Board: React.FC<IBoardProps> = ({
                         />
                     </Box>
                 </Box>
-            </Grid>
-            <Grid sx={styles.columnStyle}>
+            </Box>
+            <Box sx={styles.columnStyle}>
                 <Box sx={styles.rightColumnBorderLeft} />
                 <Box sx={styles.rightColumnBorderRight} />
                 <UnitsBoard
                     sidebarOpen={sidebarOpen} arena="groundArena"
                 />
-            </Grid>
-        </Grid>
+            </Box>
+        </Box>
     );
 };
 
