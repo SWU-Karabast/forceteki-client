@@ -51,7 +51,7 @@ const CreateGameForm = () => {
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
 
     // Additional State for Non-Creategame Path
-    const [gameName, setGameName] = useState<string>('');
+    const [lobbyName, setLobbyName] = useState<string>('');
     const [privacy, setPrivacy] = useState<string>('Public');
 
     useEffect(() => {
@@ -125,6 +125,7 @@ const CreateGameForm = () => {
                 deck: deckData,
                 isPrivate: privacy === 'Private',
                 format: format,
+                lobbyName: lobbyName,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -298,20 +299,20 @@ const CreateGameForm = () => {
                 {/* Additional Fields for Non-Creategame Path */}
                 {!isCreateGamePath && (
                     <>
-                        {/* Game Name Input
+                        Game Name Input
                         <FormControl fullWidth sx={styles.formControlStyle}>
                             <Typography variant="body1" sx={styles.labelTextStyle}>
                                 Game Name
                             </Typography>
                             <StyledTextField
                                 type="text"
-                                value={gameName}
+                                value={lobbyName}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setGameName(e.target.value)
+                                    setLobbyName(e.target.value)
                                 }
                                 placeholder="Game #"
                             />
-                        </FormControl>*/}
+                        </FormControl>
 
                         {/* Format Selection */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
