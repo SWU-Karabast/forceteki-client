@@ -1,17 +1,21 @@
 import React from 'react';
 import { Box, Button } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
+import { ICardData } from './CardTypes';
 
 interface ICardValueAdjusterProps {
-    cardId: string;
+    card: ICardData;
+    isIndirect?: boolean;
 }
 
-const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ cardId }) => {
-    const { updateDistributionPrompt } = useGame();
+const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect }) => {
+    const { updateDistributionPrompt, distributionPromptData } = useGame();
 
     const handleValueAdjusterClick = (amount: number) => {
-        updateDistributionPrompt(cardId, amount);
+        updateDistributionPrompt(card.uuid, amount);
     };
+
+    const atMaxAssignable = isIndirect && distributionPromptData && distributionPromptData.valueDistribution.find((entry) => entry.uuid === card.uuid)?.amount === ((card.hp ?? 0) - (card.damage ?? 0));
 
     const styles = {
         valueAdjuster: {
@@ -38,7 +42,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ cardId }) => {
     return (
         <Box sx={styles.valueAdjuster}>
             <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" onClick={() => handleValueAdjusterClick(-1)} >-1</Button>
-            <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" onClick={() => handleValueAdjusterClick(+1)}>+1</Button>
+            <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" disabled={!!atMaxAssignable} onClick={() => handleValueAdjusterClick(+1)}>+1</Button>
         </Box>
     );
 }
