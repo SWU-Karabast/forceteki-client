@@ -171,12 +171,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 lastGameIdRef.current = gameState.id;
             }
             setGameState(gameState);
-            console.log('Game state received:', gameState);
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Game state received:', gameState);
+            }
             handleGameStatePopups(gameState);
         });
         newSocket.on('lobbystate', (lobbyState: any) => {
             setLobbyState(lobbyState);
-            console.log('Lobby state received:', lobbyState);
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Lobby state received:', lobbyState);
+            }
         })
 
         setSocket(newSocket);
@@ -187,12 +191,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups]);
 
     const sendMessage = (message: string, args: any[] = []) => {
-        console.log('sending message', message, args);
         socket?.emit(message, ...args);
     };
 
     const sendGameMessage = (args: any[]) => {
-        console.log('sending game message', args);
         if (args[0] === 'statefulPromptResults') {
             args = [args[0], distributionPromptData, args[2]]
             setDistributionPromptData({ type: distributionPromptData?.type || '', valueDistribution: distributionPromptData?.valueDistribution || [] });
@@ -201,7 +203,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const sendLobbyMessage = (args: any[]) => {
-        console.log('sending lobby message', args);
         socket?.emit('lobby', ...args);
     }
 
