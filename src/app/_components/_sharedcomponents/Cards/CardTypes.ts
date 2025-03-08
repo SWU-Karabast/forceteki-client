@@ -12,7 +12,7 @@ export interface ICardData {
     uuid: string;
     count?: number;
     parentCardId?: string,
-    id?: number;
+    id?: string;
     name?: string;
     implemented?: boolean;
     selected?: boolean;

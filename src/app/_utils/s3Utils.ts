@@ -25,13 +25,13 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
     const setId = isGameOrSetCard ? card.setId : parseSetId(card.id);
     // check if the card has a type
     const cardType = 'type' in card ? card.type || (Array.isArray(card.types) ? card.types.join() : card.types) : undefined;
-
-    if (cardType?.includes('token')) {
+    const tokenIds = ['3941784506', '3463348370', '7268926664', '9415311381', '8752877738', '2007868442']
+    if (cardType?.includes('token') || (card.id && tokenIds.includes(card.id))) {
         return s3ImageURL(`cards/_tokens/${card.id}.webp`);
     }
 
     let cardNumber = setId.number.toString().padStart(3, '0')
-    console.log(cardType)
+
     if (isGameCard(card) && ((cardType === 'leaderUnit' && card.epicDeployActionSpent) || (cardType === 'leaderUpgrade'))) {
         cardNumber += '-portrait';
     }
