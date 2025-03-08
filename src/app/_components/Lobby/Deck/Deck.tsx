@@ -12,7 +12,7 @@ const Deck: React.FC = () => {
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     const notImplementedList = connectedUser?.unimplementedCards ?? [];
-    const isCardNotImplemented = (cardId: number | undefined) =>
+    const isCardNotImplemented = (cardId: string | undefined) =>
         notImplementedList.some((item:ICardData) => item.id === cardId);
     // set decks for connectedUser
     const userMain = connectedUser.deck?.deck || []
