@@ -120,32 +120,42 @@ function EndGameOptionsCustom() {
                     </Typography>
                 </Box>
             </Box>
-            <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Rematch</Typography>
-                <Divider sx={{ mb: '20px' }}/>
-                <Box sx={{ ...styles.contentContainer, mb: '20px' }}>
-                    <PreferenceButton
-                        variant={'standard'}
-                        text={resetButtonText}
-                        buttonFnc={handleResetRequestOrConfirm}
-                        disabled={resetButtonDisabled}
-                    />
+            { process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES === 'true' ?
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Maintenance</Typography>
+                    <Divider sx={{ mb: '20px' }}/>
                     <Typography sx={styles.typeographyStyle}>
-                        Restart the current game with no deck changes.
+                        Rematching has been disabled as we are about to begin a quick maintenance. Be back soon!
                     </Typography>
                 </Box>
-                <Box sx={{ ...styles.contentContainer, mb: '20px' }}>
-                    <PreferenceButton
-                        variant={'standard'}
-                        text={regularButtonText}
-                        buttonFnc={handleRegularRequestOrConfirm}
-                        disabled={regularButtonDisabled}
-                    />
-                    <Typography sx={styles.typeographyStyle}>
-                        Return to lobby to start a new game with the same opponent.
-                    </Typography>
+                :
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Rematch</Typography>
+                    <Divider sx={{ mb: '20px' }}/>
+                    <Box sx={{ ...styles.contentContainer, mb: '20px' }}>
+                        <PreferenceButton
+                            variant={'standard'}
+                            text={resetButtonText}
+                            buttonFnc={handleResetRequestOrConfirm}
+                            disabled={resetButtonDisabled}
+                        />
+                        <Typography sx={styles.typeographyStyle}>
+                            Restart the current game with no deck changes.
+                        </Typography>
+                    </Box>
+                    <Box sx={{ ...styles.contentContainer, mb: '20px' }}>
+                        <PreferenceButton
+                            variant={'standard'}
+                            text={regularButtonText}
+                            buttonFnc={handleRegularRequestOrConfirm}
+                            disabled={regularButtonDisabled}
+                        />
+                        <Typography sx={styles.typeographyStyle}>
+                            Return to lobby to start a new game with the same opponent.
+                        </Typography>
+                    </Box>
                 </Box>
-            </Box>
+            }
             <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Thanks for playing the Beta</Typography>
                 <Divider sx={{ mb: '20px' }}/>
