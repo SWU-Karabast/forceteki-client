@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Grid2 as Grid } from '@mui/material';
+import { Typography, Box, Grid2 as Grid } from '@mui/material';
+import { keyframes } from '@mui/system';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -22,7 +23,17 @@ const Board: React.FC<IBoardProps> = ({
     const opponentLeader = gameState?.players[opponentId].leader;
     const opponentBase = gameState?.players[opponentId].base;
 
+    const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
+    const initiativeClaimed = gameState.initiativeClaimed;
 
+    const slideIn = keyframes`
+    from {
+    transform: translate(100vw);
+    }
+    to {
+    transform: translate(0vw);
+    }
+    `;
     // ----------------Styles----------------//
     const styles = {
         boardWrapper: {
@@ -125,6 +136,106 @@ const Board: React.FC<IBoardProps> = ({
             height: '100%',
             position: 'absolute',
         },
+        opponentInitiativeWrapper: {
+            transform: hasInitiative ? 'translate(300px)' : 'translate(0vw)',
+            transition: 'transform 2s',
+            ml: 'auto',
+            mr: '5px',
+            mt: '5px',
+            borderRadius: '20px',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            height: '2rem',
+            width: 'auto',
+            background: 'rgba(0, 0, 0, 0.5)',
+            borderColor: 'var(--initiative-red)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            h4: {
+                margin: '0.2rem 1rem 0', 
+                textAlign: 'center', 
+                display: 'block',
+                fontSize: '1em', 
+                fontWeight: 600,
+                userSelect: 'none',
+                color: 'var(--initiative-red)',
+            }
+        },
+        playerInitiativeWrapper: {
+            transform: hasInitiative ? 'translate(0px)' : 'translate(300px)',
+            transition: 'transform 2s',
+            ml: 'auto',
+            mr: '5px',
+            mb: '5px',
+            borderRadius: '20px',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            height: '2rem',
+            width: 'auto',
+            background: 'rgba(0, 0, 0, 0.5)',
+            borderColor: 'var(--initiative-blue)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            h4: {
+                margin: '0.2rem 1rem 0', 
+                textAlign: 'center', 
+                display: 'block',
+                fontSize: '1em', 
+                fontWeight: 600,
+                userSelect: 'none',
+                color: 'var(--initiative-blue)',
+            }
+        },
+        opponentInitiativeClaimedWrapper: {
+            transform: hasInitiative ? 'translate(300px)' : 'translate(0vw)',
+            transition: 'transform 1s',
+            animation: hasInitiative ? '' : `${slideIn} 1s ease`,
+            ml: 'auto',
+            mr: '5px',
+            borderRadius: '20px',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            height: '2rem',
+            width: 'auto',
+            background: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            h4: {
+                margin: '0.2rem 1rem 0', 
+                textAlign: 'center', 
+                display: 'block',
+                fontSize: '1em', 
+                fontWeight: 600,
+                userSelect: 'none',
+                color: 'black',
+            },
+        },  
+        playerInitiativeClaimedWrapper: {
+            transform: hasInitiative ? 'translate(0px)' : 'translate(300px)',
+            transition: 'transform 1s',
+            animation: hasInitiative ? `${slideIn} 1s ease` : '',
+            ml: 'auto',
+            mr: '5px',
+            borderRadius: '20px',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            height: '2rem',
+            width: 'auto',
+            background: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            h4: {
+                margin: '0.2rem 1rem 0', 
+                textAlign: 'center', 
+                display: 'block',
+                fontSize: '1em', 
+                fontWeight: 600,
+                userSelect: 'none',
+                color: 'black',
+            },
+        },  
     }
     
     return (
@@ -160,9 +271,16 @@ const Board: React.FC<IBoardProps> = ({
             <Grid container size="grow" sx={styles.ColumnStyle}>
                 <Box sx={styles.rightColumnBorderLeft} />
                 <Box sx={styles.rightColumnBorderRight} />
+                <Box sx={initiativeClaimed ? styles.opponentInitiativeClaimedWrapper : styles.opponentInitiativeWrapper }>
+                    <Typography variant={'h4'}>Initiative</Typography>
+                </Box> 
                 <UnitsBoard
                     sidebarOpen={sidebarOpen} arena="groundArena"
                 />
+                <Box sx={initiativeClaimed ? styles.playerInitiativeClaimedWrapper : styles.playerInitiativeWrapper }>
+                    <Typography variant={'h4'}>Initiative</Typography>
+                </Box> 
+                
             </Grid>
         </Grid>
     );
