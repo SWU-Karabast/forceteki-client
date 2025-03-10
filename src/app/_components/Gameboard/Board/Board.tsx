@@ -137,8 +137,8 @@ const Board: React.FC<IBoardProps> = ({
             position: 'absolute',
         },
         opponentInitiativeWrapper: {
-            transform: hasInitiative ? 'translate(300px)' : 'translate(0vw)',
-            transition: 'transform 2s',
+            transform: hasInitiative ? 'translate(100vw)' : 'translate(0vw)',
+            transition: 'transform 1s',
             ml: 'auto',
             mr: '5px',
             mt: '5px',
@@ -162,8 +162,8 @@ const Board: React.FC<IBoardProps> = ({
             }
         },
         playerInitiativeWrapper: {
-            transform: hasInitiative ? 'translate(0px)' : 'translate(300px)',
-            transition: 'transform 2s',
+            transform: hasInitiative ? 'translate(0vw)' : 'translate(100vw)',
+            transition: 'transform 1s',
             ml: 'auto',
             mr: '5px',
             mb: '5px',
@@ -187,11 +187,12 @@ const Board: React.FC<IBoardProps> = ({
             }
         },
         opponentInitiativeClaimedWrapper: {
-            transform: hasInitiative ? 'translate(300px)' : 'translate(0vw)',
-            transition: 'transform 1s',
+            transform: hasInitiative ? 'translate(100vw)' : 'translate(0vw)',
+            transition: 'transform 2s',
             animation: hasInitiative ? '' : `${slideIn} 1s ease`,
             ml: 'auto',
             mr: '5px',
+            mt: '5px',
             borderRadius: '20px',
             borderWidth: '2px',
             borderStyle: 'solid',
@@ -212,11 +213,12 @@ const Board: React.FC<IBoardProps> = ({
             },
         },  
         playerInitiativeClaimedWrapper: {
-            transform: hasInitiative ? 'translate(0px)' : 'translate(300px)',
-            transition: 'transform 1s',
+            transform: hasInitiative ? 'translate(0vw)' : 'translate(100vw)',
+            transition: 'transform 2s',
             animation: hasInitiative ? `${slideIn} 1s ease` : '',
             ml: 'auto',
             mr: '5px',
+            mb: '5px',
             borderRadius: '20px',
             borderWidth: '2px',
             borderStyle: 'solid',
