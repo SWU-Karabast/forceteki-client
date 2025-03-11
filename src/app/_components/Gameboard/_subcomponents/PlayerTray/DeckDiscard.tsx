@@ -41,12 +41,14 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             gap: '1rem',
             justifyContent: 'center',
             alignItems: 'center',
+            flex: 1
         },
         discard: {
             discardCardStyle: (cardData?: ICardData) => ({
                 backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                width: '4.6rem',
-                height: '6.5rem',
+                width: '100%',
+                aspectRatio: '1 / 1.4',
+                maxHeight: '100%',
                 borderRadius: '5px',
                 display: 'flex',
                 alignItems: 'center',
@@ -79,8 +81,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '4.6rem',
-                height: '6.5rem',
+                width: '100%',
+                aspectRatio: '1 / 1.4',
                 borderRadius: '5px',
             },
 

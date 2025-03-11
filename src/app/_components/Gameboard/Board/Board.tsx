@@ -52,7 +52,12 @@ const Board: React.FC<IBoardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: '12rem',
+            width: {
+                xs: '8rem',
+                sm: '9rem',
+                lg: '10rem',
+                xl: '11rem'
+            },
             margin: '0 1rem',
         },
         middleColumnContent: {
@@ -69,6 +74,7 @@ const Board: React.FC<IBoardProps> = ({
             alignItems: 'center',
             width: '100%',
             gap: '10px',
+            padding: '0 1rem',
         },
         leftColumnBorderLeft: {
             background: `

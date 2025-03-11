@@ -41,15 +41,15 @@ const Resources: React.FC<IResourcesProps> = ({
     const styles = {
         cardStyle: {
             width: 'auto',
+            maxHeight: '100%',
             background: 'transparent',
             display: 'flex',
             position: 'relative',
             borderRadius: '5px',
-            height: '6.5rem',
             justifyContent: 'center',
             alignItems: 'center',
             transition: 'background-color 0.3s ease',
-            padding: '1rem .8rem',
+            padding: '1.5rem .8rem',
             overflow: 'visible',
             cursor: 'pointer',
             '&:hover': {
@@ -61,7 +61,7 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         
         imageStyle: {
-            width: '1.6em',
+            width: '1.4em',
             height: 'auto',
             marginRight: '10px',
         },
@@ -73,9 +73,14 @@ const Resources: React.FC<IResourcesProps> = ({
             position: 'relative', 
             zIndex: 1, 
         },
-        availableAndTotalResourcesTextStyle: {
-            fontWeight: '800',
-            fontSize: '2.2em',
+        availableResourcesText: {
+            fontWeight: '600',
+            fontSize: '1.8rem',
+            color: 'white',
+        },
+        totalResourcesText: {
+            fontWeight: '600',
+            fontSize: '1.8rem',
             color: 'white',
         },
         resourceBorderLeft: {
@@ -121,8 +126,9 @@ const Resources: React.FC<IResourcesProps> = ({
                         height={72}
                         width={54}
                     />
-                    <Typography sx={styles.availableAndTotalResourcesTextStyle}>
-                        {availableResources}/{totalResources}
+                    <Typography sx={styles.availableResourcesText}>
+                        {availableResources}/
+                        <Typography component={'span'} sx={styles.totalResourcesText}>{totalResources}</Typography>
                     </Typography>
                 </Box>
             </CardContent>

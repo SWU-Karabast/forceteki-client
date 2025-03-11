@@ -18,7 +18,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
     const styles = {
         leftColumnStyle: {
             display: 'flex',
-            alignItems: 'flex-end',
+            alignItems: 'center',
             justifyContent: 'flex-start',
             padding: '1rem 0 1rem 2rem',
             gap: '1rem',
@@ -78,7 +78,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             {/* Left column: fixed 360px width */}
             <Grid             
                 sx={{
-                    flex: '0 0 360px',
                     ...styles.leftColumnStyle,
                 }}
             >
@@ -104,7 +103,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             {/* Right column: fixed 360px width */}
             <Grid
                 sx={{
-                    flex: '0 0 360px',
                     ...styles.rightColumnStyle,
                 }}
             >

@@ -111,14 +111,22 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         opponentGridStyle: {
             display: 'grid',
             gap: '10px',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(5rem, 7rem))',
+            gridTemplateColumns: {
+                xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
+                md: 'repeat(auto-fit, minmax(4rem, 6rem))',
+                lg: 'repeat(auto-fit, minmax(5rem, 7rem))',
+            },
             alignContent: 'start',
             justifyContent: arena === 'groundArena' ? 'start' : 'end',
         },
         playerGridStyle: {
             display: 'grid',
             gap: '10px',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(6rem, 7rem))',
+            gridTemplateColumns: {
+                xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
+                md: 'repeat(auto-fit, minmax(4rem, 6rem))',
+                lg: 'repeat(auto-fit, minmax(5rem, 7rem))',
+            },
             alignContent: 'end',
             justifyContent: arena === 'groundArena' ? 'start' : 'end',
             gridAutoFlow: 'dense',

@@ -84,7 +84,11 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                         <Box
                             key={`${connectedPlayer}-hand-${i}`}
                             sx={{
-                                width: '8rem',
+                                width: {
+                                    xs: '6rem',
+                                    md: '7rem',
+                                    lg: '8rem'
+                                },
                                 transition: 'transform 0.2s',
                                 transform: card.selected && card.zone === 'hand' ? 'translateY(-11px)' : 'none',
                                 '&:hover': {

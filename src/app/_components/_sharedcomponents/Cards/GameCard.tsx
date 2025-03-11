@@ -250,7 +250,11 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             height: '2.5rem',
             bottom: '-6px',
-            right: '14px',
+            right: {
+                xs: '8%',
+                md: '10%',
+                lg: '13%',
+            },
             background: 'linear-gradient(90deg, rgba(255, 0, 0, 0) 47.44%, rgba(255, 0, 0, 0.911111) 75.61%, #FF0000 102.56%)',
             alignItems: 'center',
             justifyContent: 'center',
