@@ -86,13 +86,13 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'Welcome to the Karabast Beta!',
+        title: 'Welcome to the Karabast Update!',
         content: `
-		<p>This is it, the beta version of the new Karabast! We’re thrilled to have you on board. Dive in, explore what’s new, and help shape the future of Karabast with us!</p>
+		<p>We're very happy to finally show everyone what we've been working on. We're nearly complete on cards and as we wrap those up we are also focused on bringing you platform features such as user login and small screen/mobile support. We appreciate your patience as we work on these features!</p>
 		<p style="margin-bottom:0;"><a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Join our Discord for the latest progress updates and timelines</a>. If you have coding experience, we are always open to new contributors. Info on how to help out can also be found on <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>.</p>
 	  `,
-        date: '12/25',
-        image: s3ImageURL('ui/beta-post-header.webp'),
+        date: '3/9',
+        image: s3ImageURL('ui/thrawn-banner.webp'),
         imageAlt: 'Beta Announcement',
     },
 ];

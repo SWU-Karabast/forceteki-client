@@ -26,6 +26,7 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
         },
         newsImage: {
             borderRadius: '.5rem',
+            maxHeight: '15rem',
         },
     };
 
