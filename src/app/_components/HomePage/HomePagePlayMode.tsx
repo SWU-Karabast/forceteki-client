@@ -29,6 +29,7 @@ const HomePagePlayMode: React.FC = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ filename: filename }),
+                    credentials: 'include'
                 }
             );
 
@@ -52,6 +53,7 @@ const HomePagePlayMode: React.FC = () => {
                         headers: {
                             'Content-Type': 'application/json',
                         },
+                        credentials: 'include'
                     }
                 );
     
