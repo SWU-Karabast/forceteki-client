@@ -47,4 +47,5 @@ export interface IUnitsBoardProps {
 export interface IPlayerHandProps {
     cards: ICardData[];
     clickDisabled?: boolean;
+    allowHover?: boolean;
 }

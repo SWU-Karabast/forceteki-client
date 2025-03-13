@@ -4,7 +4,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
 
-const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [] }) => {
+const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false }) => {
     const { connectedPlayer } = useGame();
 
     // 1. Track the container width via ResizeObserver
@@ -57,53 +57,54 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         // Relative so absolutely-positioned cards can be placed inside.
         position: 'relative' as const,
         width: '100%',
-        height: '13rem',
-        overflow: 'hidden',
+        height: '100%',
         // We'll center the no-overlap layout with flex, but conditionally:
-        display: needsOverlap ? 'block' : 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        overflow: 'visible hidden'
+
     };
 
     return (
-        <Box ref={containerRef} sx={containerStyle}>
+        <Box ref={containerRef} sx={containerStyle}
+            onWheel={(e) => {
+                e.preventDefault(); // Prevents vertical scrolling
+                e.currentTarget.scrollLeft += e.deltaY; // Converts vertical scroll to horizontal
+            }}>
             {/* NO OVERLAP SCENARIO */}
-            {!needsOverlap && (
-                <Box
-                    sx={{
-                        // A flex row that centers its contents
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: '6px',
-                        // Full height so they're vertically centered
-                        height: '100%',
-                    }}
-                >
-                    {cards.map((card, i) => (
-                        <Box
-                            key={`${connectedPlayer}-hand-${i}`}
-                            sx={{
-                                width: {
-                                    xs: '6rem',
-                                    md: '7rem',
-                                    lg: '8rem'
-                                },
-                                transition: 'transform 0.2s',
-                                transform: card.selected && card.zone === 'hand' ? 'translateY(-11px)' : 'none',
-                                '&:hover': {
-                                    transform: 'translateY(-11px)',
-                                },
-                            }}
-                        >
-                            <GameCard card={card} disabled={clickDisabled} />
-                        </Box>
-                    ))}
-                </Box>
-            )}
+  
+            <Box
+                sx={{
+                    // A flex row that centers its contents
+                    display: 'flex',
+                    gap: '6px',
+                    width: 'fit-content',
+                    margin: '0 auto',
+                    // Full height so they're vertically centered
+                    height: '100%',
+                }}
+            >
+                {cards.map((card, i) => (
+                    <Box
+                        key={`${connectedPlayer}-hand-${i}`}
+                        sx={{
+                            pt: allowHover ? '15px' : 0,
+                            width: 'auto',
+                            height: '100%',
+                            aspectRatio: '1 / 1.4',
+                            transition: 'transform 0.2s',
+                            transform: card.selected && card.zone === 'hand' ? 'translateY(-11px)' : 'none',
+                            '&:hover': {
+                                transform: allowHover ? 'translateY(-11px)' : 'none',
+                            },
+                        }}
+                    >
+                        <GameCard card={card} disabled={clickDisabled} />
+                    </Box>
+                ))}
+            </Box>
+
 
             {/* OVERLAP SCENARIO */}
-            {needsOverlap &&
+            {/* {needsOverlap &&
                 cards.map((card, i) => (
                     <Box
                         key={`${connectedPlayer}-hand-${i}`}
@@ -126,7 +127,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                     >
                         <GameCard card={card} disabled={clickDisabled}/>
                     </Box>
-                ))}
+                ))} */}
         </Box>
     );
 };

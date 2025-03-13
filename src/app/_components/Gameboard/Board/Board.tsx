@@ -75,6 +75,15 @@ const Board: React.FC<IBoardProps> = ({
             width: '100%',
             gap: '10px',
             padding: '0 1rem',
+            flex: 1,
+            minHeight: 0
+        },
+        leaderBaseWrapper: {
+            flex: 1,
+            width: '100%',
+            minHeight: 0,
+            display: 'flex',
+            justifyContent: 'center',
         },
         leftColumnBorderLeft: {
             background: `
@@ -149,20 +158,29 @@ const Board: React.FC<IBoardProps> = ({
                 <Box sx={styles.middleColumnBorderRight} />
                 <Box sx={styles.middleColumnContent}>
                     <Box sx={styles.leaderBaseContainer}>
-                        <LeaderBaseCard
-                            card={opponentLeader}
-                            cardStyle={LeaderBaseCardStyle.Leader}
-                            title={titleOpponent}
-                        />
-                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard
+                                card={opponentLeader}
+                                cardStyle={LeaderBaseCardStyle.Leader}
+                                title={titleOpponent}
+                            />
+                        </Box>
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
+                        </Box>
                     </Box>
+                    <Box sx={{ flex: '0 0 60px', width: '100%' }} />
                     <Box sx={styles.leaderBaseContainer}>
-                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
-                        <LeaderBaseCard
-                            card={playerLeader}
-                            cardStyle={LeaderBaseCardStyle.Leader}
-                            title={titleCurrentPlayer}
-                        />
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
+                        </Box>
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard
+                                card={playerLeader}
+                                cardStyle={LeaderBaseCardStyle.Leader}
+                                title={titleCurrentPlayer}
+                            />
+                        </Box>
                     </Box>
                 </Box>
             </Box>

@@ -20,7 +20,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: '1rem 0 1rem 2rem',
+            padding: '1.5rem 0 1.5rem 2rem',
             gap: '1rem',
         },
         centerColumnStyle: {
@@ -40,7 +40,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             height: '100%',
             display: 'flex',
             alignItems: 'flex-end',
-            transform: 'translateY(1.6rem)',
             zIndex: '1',
         },
         chatColumn: {
@@ -76,7 +75,8 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             className="playerCardTrayWrapper"
         >
             {/* Left column: fixed 360px width */}
-            <Grid             
+            <Grid  
+                size={{ xs: 2, md: 3 }}              
                 sx={{
                     ...styles.leftColumnStyle,
                 }}
@@ -87,13 +87,14 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
 
             {/* Middle column: expands to fill space */}
             <Grid
+                size={{ xs: 8, md: 6 }}
                 sx={{
-                    flex: 1,
                     ...styles.centerColumnStyle,
                 }}
             >
                 <Box sx={styles.playerHandWrapper}>
                     <PlayerHand
+                        allowHover={true}
                         cards={gameState?.players[connectedPlayer].cardPiles['hand'] || []}
                     />
                 </Box>
@@ -102,6 +103,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
 
             {/* Right column: fixed 360px width */}
             <Grid
+                size={{ xs: 2, md: 3 }}   
                 sx={{
                     ...styles.rightColumnStyle,
                 }}

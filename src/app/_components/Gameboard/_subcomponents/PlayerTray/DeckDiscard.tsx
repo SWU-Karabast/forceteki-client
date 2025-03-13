@@ -39,16 +39,15 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             display: 'flex',
             flexDirection: 'row',
             gap: '1rem',
+            flex: 1,
+            height: '100%',
             justifyContent: 'center',
-            alignItems: 'center',
-            flex: 1
         },
         discard: {
             discardCardStyle: (cardData?: ICardData) => ({
                 backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                width: '100%',
+                height: '100%',
                 aspectRatio: '1 / 1.4',
-                maxHeight: '100%',
                 borderRadius: '5px',
                 display: 'flex',
                 alignItems: 'center',
@@ -81,7 +80,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '100%',
+                height: '100%',
                 aspectRatio: '1 / 1.4',
                 borderRadius: '5px',
             },
@@ -106,13 +105,13 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
 
     return (
         <Box sx={styles.containerStyle}>
-            <Card
+            <Box
                 sx={styles.discard.discardCardStyle(gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].at(-1))}
                 onClick={handleDiscardToggle}
             />
-            <Card sx={styles.deck.deckCardStyle}>
+            <Box sx={styles.deck.deckCardStyle}>
                 {deckComponent}
-            </Card>
+            </Box>
         </Box>
     );
 };

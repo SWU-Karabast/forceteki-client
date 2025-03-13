@@ -59,7 +59,11 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         flexDirection: 'column',
         alignItems: 'center',
         width: '100%',
-        gap: '10px'
+        gap: '10px',
+        padding: {
+            xs: '0 1rem',
+            lg: '0 2rem'
+        }
     }
     const containerStyle = {
         height: '100%',
@@ -78,14 +82,14 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         fontFamily: 'var(--font-barlow), sans-serif',
         fontWeight: '600',
         fontSize: '1.5em',
-        textAlign: 'left',
+        textAlign: 'center',
         color: 'white',
     };
     const titleTypographyStyleOpponent = {
         fontFamily: 'var(--font-barlow), sans-serif',
         fontWeight: '600',
         fontSize: '1.5em',
-        textAlign: 'left' as const,
+        textAlign: 'center',
         color: 'white',
         opacity: '15%',
     }
@@ -98,7 +102,10 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                         <Box sx={lobbyLeaderBaseContainer}>
                             <Typography
                                 variant="subtitle1"
-                                sx={titleTypographyStyle}
+                                sx={{
+                                    ...titleTypographyStyle,
+                                    ...(connectedUser?.ready && { color: 'green' })
+                                }}
                             >
                                 {connectedUser ? connectedUser.username : connectedPlayer}
                             </Typography>

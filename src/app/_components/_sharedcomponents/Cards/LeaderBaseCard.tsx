@@ -99,7 +99,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         deployedPlaceholder: {
             backgroundColor: 'transparent',
             borderRadius: '0.5rem',
-            width: '100%',
+            maxHeight: '100%',
             aspectRatio: '1.39',
             cursor: 'normal',
             position: 'relative', 

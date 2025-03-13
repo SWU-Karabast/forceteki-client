@@ -1,3 +1,4 @@
+import { Height } from '@mui/icons-material';
 import { Theme, createTheme } from '@mui/material/styles';
 
 export const theme: Theme = createTheme({
@@ -115,6 +116,7 @@ export const theme: Theme = createTheme({
                 },
                 '::-webkit-scrollbar': {
                     width: '2px',
+                    height: '2px',
                 },
                 '::-webkit-scrollbar-thumb': {
                     backgroundColor: '#D3D3D3B3',
