@@ -48,6 +48,7 @@ export const contentStyle = (index: number) => ({
     background:
     'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
     zIndex: 11 + index,
+    width: 'inherit',
 });
 
 export const containerStyle = {

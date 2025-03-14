@@ -21,10 +21,17 @@ interface ButtonProps {
 
 const styles = {
     selectableCardsContainer: {
-        display: 'flex',
-        gap: '.25rem',
+        display: 'grid',
+        gap: '10px',
         marginTop: '1rem',
-        overflowX: 'auto',
+        gridTemplateColumns: {
+            xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
+            lg: 'repeat(auto-fit, minmax(5rem, 6rem))',
+            xl: 'repeat(auto-fit, minmax(5rem, 7rem))',
+        },
+        width: '100%',
+        overflowY: 'auto',
+        justifyContent: 'center',
     },
     selectionDot: {
         height: '1rem',
@@ -85,7 +92,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                                 <GameCard 
                                     key={card.uuid}
                                     cardStyle={CardStyle.Prompt}
-                                    card={{ ...card, selectable: card.selectionState === 'selectable', selected: card.selectionState === 'selected' }}
+                                    card={{ ...card, selectable: card.selectionState === 'selectable' || card.selectionState === 'selected', selected: card.selectionState === 'selected' }}
                                     onClick={() => handleCardClick(card.uuid)}
                                     disabled={clickDisabled()}
                                 />

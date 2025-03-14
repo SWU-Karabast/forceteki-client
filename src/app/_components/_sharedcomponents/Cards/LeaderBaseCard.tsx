@@ -86,7 +86,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundImage: `url(${s3CardImageURL(card)})`,
             borderRadius: '0.5rem',
             backgroundSize: 'cover',
-            width: '10rem',
+            width: '100%',
             aspectRatio: '1.39',
             display: 'flex',
             justifyContent: 'center',
@@ -99,7 +99,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         deployedPlaceholder: {
             backgroundColor: 'transparent',
             borderRadius: '0.5rem',
-            width: '10rem',
+            maxHeight: '100%',
             aspectRatio: '1.39',
             cursor: 'normal',
             position: 'relative', 

@@ -24,6 +24,15 @@ export const gridContainerStyle = {
     maxHeight: '60vh',
     overflowY: 'auto',
     marginTop: '1rem',
+    display: 'grid',
+    gridTemplateColumns: {
+        xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
+        lg: 'repeat(auto-fit, minmax(5rem, 6rem))',
+        xl: 'repeat(auto-fit, minmax(5rem, 7rem))',
+    },
+    gap: '10px',
+    width: '100%',
+    justifyContent: 'center',
 };
 
 export const PilePopupModal = ({ data }: ButtonProps) => {
@@ -36,19 +45,15 @@ export const PilePopupModal = ({ data }: ButtonProps) => {
         if (isMinimized) return null;
         return (
             <>
-                <Grid2
-                    container
-                    spacing={1}
-                    columnSpacing={3.5}
-                    alignItems={'center'}
+                <Box
                     sx={gridContainerStyle}
                 >
                     {data.cards.map((card, index) => (
-                        <Grid2 key={index}>
+                        <Box key={index}>
                             <GameCard card={card} />
-                        </Grid2>
+                        </Box>
                     ))}
-                </Grid2>
+                </Box>
 
                 {data.cards.length === 0 && <Typography>No cards to display</Typography>}
 

@@ -26,8 +26,10 @@ const Board: React.FC<IBoardProps> = ({
     // ----------------Styles----------------//
     const styles = {
         boardWrapper: {
-            height: '64.18%',
+            height: '100%',
             margin: '0 5rem',
+            display: 'flex',
+            flexDirection: 'row',
         },
         containerStyle: {
             height: '100%',
@@ -39,17 +41,25 @@ const Board: React.FC<IBoardProps> = ({
             flexGrow: 1,
             width: '100%'
         },
-        ColumnStyle: {
+        columnStyle: {
             position: 'relative',
             display: 'flex',
             justifyContent: 'flex-start',
             alignItems: 'center',
+            flex: 1
         },
         middleColumnStyle: {
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: '12rem',
+            width: {
+                xs: '8rem',
+                sm: '9rem',
+                lg: '10rem',
+                xl: '11rem',
+                xxl: '12rem',
+                xxxl: '14rem',
+            },
             margin: '0 1rem',
         },
         middleColumnContent: {
@@ -66,6 +76,16 @@ const Board: React.FC<IBoardProps> = ({
             alignItems: 'center',
             width: '100%',
             gap: '10px',
+            padding: '0 1rem',
+            flex: 1,
+            minHeight: 0
+        },
+        leaderBaseWrapper: {
+            flex: 1,
+            width: '100%',
+            minHeight: 0,
+            display: 'flex',
+            justifyContent: 'center',
         },
         leftColumnBorderLeft: {
             background: `
@@ -129,42 +149,51 @@ const Board: React.FC<IBoardProps> = ({
     
     return (
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
-        <Grid container sx={styles.boardWrapper}> 
-            <Grid container size="grow" sx={styles.ColumnStyle}>
+        <Box sx={styles.boardWrapper}> 
+            <Box sx={styles.columnStyle}>
                 <Box sx={styles.leftColumnBorderLeft} />
                 <Box sx={styles.leftColumnBorderRight} />
                 <UnitsBoard sidebarOpen={sidebarOpen} arena="spaceArena" />
-            </Grid>
-            <Grid container sx={styles.middleColumnStyle}>
+            </Box>
+            <Box sx={styles.middleColumnStyle}>
                 <Box sx={styles.middleColumnBorderLeft} />
                 <Box sx={styles.middleColumnBorderRight} />
                 <Box sx={styles.middleColumnContent}>
                     <Box sx={styles.leaderBaseContainer}>
-                        <LeaderBaseCard
-                            card={opponentLeader}
-                            cardStyle={LeaderBaseCardStyle.Leader}
-                            title={titleOpponent}
-                        />
-                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard
+                                card={opponentLeader}
+                                cardStyle={LeaderBaseCardStyle.Leader}
+                                title={titleOpponent}
+                            />
+                        </Box>
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
+                        </Box>
                     </Box>
+                    <Box sx={{ flex: '0 0 60px', width: '100%' }} />
                     <Box sx={styles.leaderBaseContainer}>
-                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
-                        <LeaderBaseCard
-                            card={playerLeader}
-                            cardStyle={LeaderBaseCardStyle.Leader}
-                            title={titleCurrentPlayer}
-                        />
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
+                        </Box>
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard
+                                card={playerLeader}
+                                cardStyle={LeaderBaseCardStyle.Leader}
+                                title={titleCurrentPlayer}
+                            />
+                        </Box>
                     </Box>
                 </Box>
-            </Grid>
-            <Grid container size="grow" sx={styles.ColumnStyle}>
+            </Box>
+            <Box sx={styles.columnStyle}>
                 <Box sx={styles.rightColumnBorderLeft} />
                 <Box sx={styles.rightColumnBorderRight} />
                 <UnitsBoard
                     sidebarOpen={sidebarOpen} arena="groundArena"
                 />
-            </Grid>
-        </Grid>
+            </Box>
+        </Box>
     );
 };
 
