@@ -56,7 +56,9 @@ const Board: React.FC<IBoardProps> = ({
                 xs: '8rem',
                 sm: '9rem',
                 lg: '10rem',
-                xl: '11rem'
+                xl: '11rem',
+                xxl: '12rem',
+                xxxl: '14rem',
             },
             margin: '0 1rem',
         },
