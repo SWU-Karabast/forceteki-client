@@ -97,9 +97,9 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     const styles = {
         mainBoxStyle: {
             position: 'relative',
-            height: '85%',
+            height: '100%',
             width: '100%',
-            padding: '0rem 2rem',
+            padding: '3rem 2rem',
         },
         containerStyle: {
             height: '100%',
