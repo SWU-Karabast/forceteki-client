@@ -100,49 +100,60 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             height: '100%',
             width: '100%',
             padding: '3rem 2rem',
+            overflow: 'hidden',
         },
         containerStyle: {
             height: '100%',
+            justifyContent: 'space-between',
+            display: 'flex',
+            flexDirection: 'column',
         },
         opponentGridStyle: {
-            height: '50%',
-            display: 'flex',
-            justifyContent: arena == 'groundArena' ? 'flex-start': 'flex-end',
-            alignItems: 'flex-start',
+            display: 'grid',
             gap: '10px',
-            flexWrap: 'wrap',
+            gridTemplateColumns: {
+                xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
+                md: 'repeat(auto-fit, minmax(4rem, 6rem))',
+                lg: 'repeat(auto-fit, minmax(5rem, 7rem))',
+            },
+            alignContent: 'start',
+            justifyContent: arena === 'groundArena' ? 'start' : 'end',
         },
         playerGridStyle: {
-            height: '50%',
-            display: 'flex',
-            justifyContent: arena == 'groundArena' ? 'flex-start': 'flex-end',
-            alignItems: 'flex-end',
+            display: 'grid',
             gap: '10px',
-            flexWrap: 'wrap',
+            gridTemplateColumns: {
+                xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
+                md: 'repeat(auto-fit, minmax(4rem, 6rem))',
+                lg: 'repeat(auto-fit, minmax(5rem, 7rem))',
+            },
+            alignContent: 'end',
+            justifyContent: arena === 'groundArena' ? 'start' : 'end',
+            gridAutoFlow: 'dense',
         },
     };
 
 
     return (
         <Box sx={styles.mainBoxStyle}>
-            <Grid container direction="column" sx={styles.containerStyle}>
+            <Grid direction="column" sx={styles.containerStyle}>
                 {/* Opponent's Ground Units */}
-                <Grid sx={styles.opponentGridStyle}>
+                <Box sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={{ flex: '0 0 auto' }}>
+                        <Box key={card.uuid}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
-                </Grid>
+                </Box>
 
                 {/* Player's Ground Units */}
-                <Grid sx={styles.playerGridStyle}>
+                <Box sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={{ flex: '0 1 auto' }}>
+                        <Box key={card.uuid} >
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
-                </Grid>
+                </Box>
             </Grid>
         </Box>
     );

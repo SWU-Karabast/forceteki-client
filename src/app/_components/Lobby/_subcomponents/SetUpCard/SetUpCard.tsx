@@ -29,6 +29,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [deckLink, setDeckLink] = useState<string>('');
     const [showTooltip, setShowTooltip] = useState(false);
     const [showLink, setshowLink] = useState(false)
+    const [deckImportErrorsSeen, setDeckImportErrorsSeen] = useState(false);
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const lobbyFormat = lobbyState ? lobbyState.lobbyFormat : null;
@@ -70,6 +71,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         if ((!favouriteDeck && !deckLink) || readyStatus) return;
         let userDeck;
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
+        setDeckImportErrorsSeen(false);
         if(favouriteDeck) {
             const selectedDeck = savedDecks.find(deck => deck.deckID === favouriteDeck);
             if (selectedDeck?.deckLink && !deckLink) {
@@ -121,7 +123,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     useEffect(() => {
         // get error messages
         const deckErrors: IDeckValidationFailures = connectedUser.deckErrors;
-        if (!deckErrors) {
+        const temporaryErrors: IDeckValidationFailures = connectedUser.importDeckErrors;
+        console.log('checking deck errors', deckErrors);
+        console.log('checking import errors', temporaryErrors);
+        if ((!deckErrors || Object.entries(deckErrors).length === 0) && (!temporaryErrors || Object.entries(temporaryErrors).length === 0)) {
             // No validation errors => clear any old error states
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
@@ -131,11 +136,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             return;
         }
 
-        const temporaryErrors: IDeckValidationFailures = connectedUser.importDeckErrors;
+
         // Determine if a blocking error exists (ignoring NotImplemented and temporary errors)
         // we want two errors that won't trigger the
 
-        if (Object.keys(deckErrors).length > 0) {
+        if (deckErrors && Object.keys(deckErrors).length > 0) {
             // Show a short inline error message and store the full list
             setDisplayerror(true);
             setDeckErrorSummary('Deck is invalid.');
@@ -161,7 +166,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setDisplayerror(false);
             setBlockError(false);
         }
-        if (temporaryErrors) {
+        if (temporaryErrors && !deckImportErrorsSeen) {
             // Only 'notImplemented' or no errors => clear them out
             setDisplayerror(true);
             setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
@@ -456,7 +461,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                             {deckErrorDetails && (
                                 <Link
                                     sx={styles.errorMessageLink}
-                                    onClick={() => setErrorModalOpen(true)}
+                                    onClick={() => setErrorModalOpen(true) }
                                 >
                                     Details
                                 </Link>
@@ -478,7 +483,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 <ErrorModal
                     title="Deck Validation Error"
                     open={errorModalOpen}
-                    onClose={() => setErrorModalOpen(false)}
+                    onClose={() => {
+                        setErrorModalOpen(false)
+                        setDeckImportErrorsSeen(true);
+                    }}
                     errors={deckErrorDetails}
                     format={lobbyFormat}
                 />

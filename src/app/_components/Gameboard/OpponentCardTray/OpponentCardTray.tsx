@@ -29,10 +29,10 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const styles = {
         leftColumn: {
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             justifyContent: 'flex-start',
             padding: '1rem 0 1rem 2rem',
-            gap: '2rem',
+            gap: '1rem',
         },
         centerColumn: {
             height: '100%',
@@ -44,7 +44,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         opponentHandWrapper: {
             width: '100%',
             height: '100%',
-            transform: 'translateY(-2rem)',
             zIndex: '1',
         },
         rightColumn: {
@@ -85,7 +84,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         <Grid
             container
             sx={{
-                height: '17%',
+                height: '100%',
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '2rem', // 2rem gap between columns
@@ -93,20 +92,22 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             }}
         >
             {/* Left column (fixed 360px) */}
-            <Grid sx={{
-                flex: '0 0 360px',
-                ...styles.leftColumn,
-            }}
+            <Grid 
+                size={3}
+                sx={{
+                    ...styles.leftColumn,
+                }}
             >
                 <DeckDiscard trayPlayer={trayPlayer} />
                 <Resources trayPlayer={trayPlayer}/>
             </Grid>
 
             {/* Center column (flexes to fill space) */}
-            <Grid sx={{
-                flex: 1,
-                ...styles.centerColumn,
-            }}
+            <Grid 
+                size={6}
+                sx={{
+                    ...styles.centerColumn,
+                }}
             >
                 <Box sx={styles.opponentHandWrapper}>
                     <PlayerHand clickDisabled={true} cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
@@ -115,10 +116,11 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             </Grid>
 
             {/* Right column (fixed 360px) */}
-            <Grid sx={{
-                flex: '0 0 360px',
-                ...styles.rightColumn,
-            }}
+            <Grid 
+                size={3}
+                sx={{
+                    ...styles.rightColumn,
+                }}
             >
                 <Box sx={styles.lastPlayed}>
                 </Box>
