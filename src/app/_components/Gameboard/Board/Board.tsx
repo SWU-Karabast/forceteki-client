@@ -132,7 +132,7 @@ const Board: React.FC<IBoardProps> = ({
             right: '5px',
             top : hasInitiative ? '100%' : '5px',
             transform: hasInitiative ? 'translateY(-115%)' : '',
-            transition: 'transform 1s, top 1s',
+            transition: 'transform .7s, top .7s',
             borderRadius: '20px',
             borderWidth: '2px',
             borderStyle: 'solid',
