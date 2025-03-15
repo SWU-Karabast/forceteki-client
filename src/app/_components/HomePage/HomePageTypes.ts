@@ -11,6 +11,7 @@ export interface IGameInProgressPlayerProps {
 
 export interface IPublicGameInProgressProps {
     match: {
+        id: string;
         player1Leader: ICardData;
         player1Base: ICardData;
         player2Leader: ICardData;
