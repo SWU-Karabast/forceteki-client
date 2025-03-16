@@ -316,7 +316,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '1.8rem',
             aspectRatio: '1 / 1',
             top:'32%',
-            right: '-4px',
+            left: '-4px',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/StolenIcon.png)',
