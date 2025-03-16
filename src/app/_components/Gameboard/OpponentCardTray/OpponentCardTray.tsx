@@ -1,6 +1,6 @@
 import React from 'react';
 import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
-import { Box, Grid2 as Grid } from '@mui/material';
+import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
@@ -24,6 +24,37 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
+
+    const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
+
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
+    
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        hoverTimeout.current = window.setTimeout(() => {
+            setAnchorElement(target);
+        }, 200);
+    };
+        
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+    };
+
+    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+        return { 
+            anchorOrigin:{
+                vertical: 'top',
+                horizontal: 'left',
+            },
+            transformOrigin: {
+                vertical: 'top',
+                horizontal: 'right',
+            } 
+        };
+    }
 
     // ---------------Styles------------------- //
     const styles = {
@@ -58,7 +89,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             height: '6.5rem',
             borderRadius: '5px',
             backgroundSize: 'cover',
-            backgroundImage: gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none',
+            backgroundImage: lastPlayedCardUrl,
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
         },
         menuStyles: {
@@ -77,6 +108,14 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             left: '0',
             right: '0',
             marginInline: 'auto',
+        },
+        lastCardPlayedPreview: {
+            borderRadius: '.38em',
+            backgroundImage: lastPlayedCardUrl,
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1 / 1.4',
+            width: '16rem',
         }
     };
 
@@ -122,8 +161,23 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.rightColumn,
                 }}
             >
-                <Box sx={styles.lastPlayed}>
+                <Box
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose} 
+                    sx={styles.lastPlayed}>
                 </Box>
+                <Popover
+                    id="mouse-over-popover"
+                    sx={{ pointerEvents: 'none' }}
+                    open={open}
+                    anchorEl={anchorElement}
+                    onClose={handlePreviewClose}
+                    disableRestoreFocus
+                    slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                    {...popoverConfig()}
+                >
+                    <Box sx={{ ...styles.lastCardPlayedPreview }} />
+                </Popover>
                 <Box sx={styles.menuStyles}>
                     <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
                     <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
