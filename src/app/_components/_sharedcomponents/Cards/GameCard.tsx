@@ -33,7 +33,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const open = Boolean(anchorElement);
 
     const isStolen = React.useMemo(() => card.controller.id !== card.owner.id, [card.controller, card.owner])
-    const isResource = React.useMemo(() => card.zone === 'resource', [card.zone])
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -385,7 +384,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                         <Typography sx={styles.numberFont}>{cardCounter}</Typography>
                     </Box>
                 )}
-                {isStolen && isResource && (
+                {isStolen && (
                     <Box sx={styles.stolenIcon}/>
                 )}
                 {cardStyle === CardStyle.InPlay && (
