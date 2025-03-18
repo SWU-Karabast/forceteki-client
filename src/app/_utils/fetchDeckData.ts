@@ -33,7 +33,7 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
             `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
         );
         if (!response.ok) {
-            throw new Error(`Failed to fetch deck: ${response.statusText}`);
+            throw new Error(`Failed to fetch deck: ${response.status}`);
         }
 
         const data: IDeckData = await response.json();
