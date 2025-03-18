@@ -32,7 +32,12 @@ const GameCard: React.FC<IGameCardProps> = ({
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
-    const isStolen = React.useMemo(() => card.controller?.id !== card.owner?.id, [card.controller, card.owner])
+    const isStolen = React.useMemo(() => {
+        if (!(card.controller && card.owner)) {
+            return false
+        }
+        return card.controller.id !== card.owner.id
+    }, [card.controller, card.owner])
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
