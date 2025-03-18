@@ -71,7 +71,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             width: '90%',
             position: 'absolute', 
             top: '-100px',
-            boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 15px 35px rgba(216,174,24,255)' : 'none',
+            boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 15px 35px rgba(187, 169, 0, 255)' : 'none',
             transition: 'box-shadow .5s',
             borderRadius: '50%',
             left: '0',
