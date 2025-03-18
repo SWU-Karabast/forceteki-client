@@ -42,7 +42,7 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
         } catch (error) {
             setDeckErrorDetails(undefined);
             if (error instanceof Error) {
-                if (error.message.includes('Forbidden')) {
+                if (error.message.includes('403')) {
                     setDeckErrorSummary('Couldn\'t import. The deck is set to private');
                     setErrorTitle('Deck Validation Error');
                     setDeckErrorDetails({
