@@ -19,12 +19,13 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const handleExitButton = () => {
         if (isSpectator){
             router.push('/');
+        }else {
+            const popupId = `${uuidv4()}`;
+            openPopup('leaveGame', {
+                uuid: popupId,
+                source: PopupSource.User
+            });
         }
-        const popupId = `${uuidv4()}`;
-        openPopup('leaveGame', {
-            uuid: popupId,
-            source: PopupSource.User
-        });
     };
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
