@@ -56,7 +56,7 @@ const Resources: React.FC<IResourcesProps> = ({
                 background:
                     trayPlayer === connectedPlayer
                         ? 'rgba(255, 255, 255, 0.1)'
-                        : null,
+                        : 'rgba(0, 0, 0, 0.4)',
             },
         },
         

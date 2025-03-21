@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Grid2 as Grid } from '@mui/material';
+import { Typography, Box, Grid2 as Grid } from '@mui/material';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -21,6 +21,8 @@ const Board: React.FC<IBoardProps> = ({
     const opponentLeader = gameState?.players[opponentId].leader;
     const opponentBase = gameState?.players[opponentId].base;
 
+    const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
+    const initiativeClaimed = gameState.initiativeClaimed;
 
     // ----------------Styles----------------//
     const styles = {
@@ -144,6 +146,31 @@ const Board: React.FC<IBoardProps> = ({
             height: '100%',
             position: 'absolute',
         },
+        initiativeWrapper: {
+            position: 'absolute',
+            right: '5px',
+            top : hasInitiative ? '100%' : '5px',
+            transform: hasInitiative ? 'translateY(-115%)' : '',
+            transition: 'transform .7s, top .7s',
+            borderRadius: '20px',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            height: '2rem',
+            width: 'auto',
+            background: initiativeClaimed && hasInitiative ? 'var(--initiative-blue)' : initiativeClaimed && !hasInitiative ? 'var(--initiative-red)' : 'rgba(0, 0, 0, 0.5)',
+            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            h4: {
+                margin: '0.2rem 1rem 0', 
+                textAlign: 'center',  
+                display: 'block',
+                fontSize: '1em', 
+                fontWeight: 600,
+                userSelect: 'none',
+                color: !initiativeClaimed && hasInitiative ? 'var(--initiative-blue)' : !initiativeClaimed && !hasInitiative ? 'var(--initiative-red)' : 'black',
+            }
+        },
     }
     
     return (
@@ -188,6 +215,9 @@ const Board: React.FC<IBoardProps> = ({
             <Box sx={styles.columnStyle}>
                 <Box sx={styles.rightColumnBorderLeft} />
                 <Box sx={styles.rightColumnBorderRight} />
+                < Box sx={styles.initiativeWrapper}>
+                    <Typography variant={'h4'}>Initiative</Typography>
+                </Box> 
                 <UnitsBoard
                     sidebarOpen={sidebarOpen} arena="groundArena"
                 />
