@@ -19,7 +19,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const handleExitButton = () => {
         if (isSpectator){
             router.push('/');
-        }else {
+        } else {
             const popupId = `${uuidv4()}`;
             openPopup('leaveGame', {
                 uuid: popupId,
