@@ -9,7 +9,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 
 function EndGameOptionsCustom() {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer } = useGame();
+    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator } = useGame();
 
     // ------------------------ Additional button functions ------------------------//
 
@@ -107,7 +107,6 @@ function EndGameOptionsCustom() {
             alignItems: 'center'
         }
     }
-
     return (
         <>
             <Box sx={styles.functionContainer}>
@@ -128,7 +127,7 @@ function EndGameOptionsCustom() {
                         Rematching has been disabled as we are about to begin a quick maintenance. Be back soon!
                     </Typography>
                 </Box>
-                :
+                : (!isSpectator &&
                 <Box sx={styles.functionContainer}>
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Rematch</Typography>
                     <Divider sx={{ mb: '20px' }}/>
@@ -154,7 +153,7 @@ function EndGameOptionsCustom() {
                             Return to lobby to start a new game with the same opponent.
                         </Typography>
                     </Box>
-                </Box>
+                </Box>)
             }
             <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Thanks for playing the Beta</Typography>

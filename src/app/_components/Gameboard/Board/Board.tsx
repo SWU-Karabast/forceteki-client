@@ -13,7 +13,6 @@ const Board: React.FC<IBoardProps> = ({
     const playerIds = Object.keys(gameState.players);
 
     const opponentId = playerIds.find((id) => id !== connectedPlayer) || '';
-
     const titleOpponent = gameState.players[opponentId].user.username;
     const titleCurrentPlayer = gameState.players[connectedPlayer].user.username;
 

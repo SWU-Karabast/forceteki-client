@@ -8,10 +8,12 @@ import { Divider } from '@mui/material';
 import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useRouter } from 'next/navigation';
 
 function CurrentGameTab() {
-    const { sendGameMessage, connectedPlayer, gameState } = useGame();
+    const { sendGameMessage, connectedPlayer, gameState, isSpectator } = useGame();
 
+    const router = useRouter();
     const currentPlayerName = gameState.players[connectedPlayer]?.name
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
 
@@ -32,6 +34,11 @@ function CurrentGameTab() {
             // Reset the confirmation
             setConfirmConcede(false);
         }
+    };
+
+    // Handler for spectators to leave the game
+    const handleLeaveSpectatorMode = () => {
+        router.push('/');
     };
 
     const styles = {
@@ -57,16 +64,29 @@ function CurrentGameTab() {
 
     return (
         <>
-            <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Concede</Typography>
-                <Divider sx={{ mb: '20px' }}/>
-                <Box sx={styles.contentContainer}>
-                    <PreferenceButton variant={'concede'} text={confirmConcede ? 'Are you sure?' : 'Concede Game'} buttonFnc={handleConcede}/>
-                    <Typography sx={styles.typeographyStyle}>
-                        Yield  current game and abandon. This match will count as a loss.
-                    </Typography>
+            {isSpectator ? (
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Leave</Typography>
+                    <Divider sx={{ mb: '20px' }}/>
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton variant={'concede'} text={'Leave game'} buttonFnc={handleLeaveSpectatorMode}/>
+                        <Typography sx={styles.typeographyStyle}>
+                            Stop spectating the game and return to the homepage.
+                        </Typography>
+                    </Box>
                 </Box>
-            </Box>
+            ):(
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Concede</Typography>
+                    <Divider sx={{ mb: '20px' }}/>
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton variant={'concede'} text={confirmConcede ? 'Are you sure?' : 'Concede Game'} buttonFnc={handleConcede}/>
+                        <Typography sx={styles.typeographyStyle}>
+                            Yield  current game and abandon. This match will count as a loss.
+                        </Typography>
+                    </Box>
+                </Box>
+            )}
             {/* <Box sx={styles.functionContainer}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Undo</Typography>
                 <Divider sx={{ mb: '20px' }}/>

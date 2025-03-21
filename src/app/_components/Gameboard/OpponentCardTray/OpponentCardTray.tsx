@@ -10,16 +10,22 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { v4 as uuidv4 } from 'uuid';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { useRouter } from 'next/navigation';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
-    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
     const { openPopup } = usePopup();
+    const router = useRouter();
     const handleExitButton = () => {
-        const popupId = `${uuidv4()}`;
-        openPopup('leaveGame', {
-            uuid: popupId,
-            source: PopupSource.User
-        });
+        if (isSpectator){
+            router.push('/');
+        } else {
+            const popupId = `${uuidv4()}`;
+            openPopup('leaveGame', {
+                uuid: popupId,
+                source: PopupSource.User
+            });
+        }
     };
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
