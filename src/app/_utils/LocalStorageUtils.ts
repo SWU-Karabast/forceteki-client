@@ -6,7 +6,7 @@ import { DeckJSON } from '@/app/_utils/checkJson';
  * Loads saved decks from localStorage
  * @returns Array of stored decks sorted with favorites first
  */
-export const loadSavedDecks = (): StoredDeck[] => {
+export const loadSavedDecks = (deleteAfter: boolean = false): StoredDeck[] => {
     try {
         const storedDecks: StoredDeck[] = [];
 
@@ -25,6 +25,10 @@ export const loadSavedDecks = (): StoredDeck[] => {
                         ...deckData,
                         deckID: deckID
                     });
+                }
+                // remove afterwards
+                if(deleteAfter){
+                    removeDeckFromLocalStorage(deckID);
                 }
             }
         }

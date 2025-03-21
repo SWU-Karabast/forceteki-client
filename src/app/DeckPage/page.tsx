@@ -16,6 +16,7 @@ import {
     removeDeckFromLocalStorage,
     updateDeckFavoriteInLocalStorage
 } from '@/app/_utils/LocalStorageUtils';
+import { useUser } from '@/app/_contexts/User.context';
 
 
 
@@ -32,6 +33,7 @@ const DeckPage: React.FC = () => {
     const [selectedDecks, setSelectedDecks] = useState<string[]>([]); // Track selected decks
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const router = useRouter();
+    const { user } = useUser();
 
     // Load decks from localStorage on component mount
     useEffect(() => {
@@ -83,9 +85,36 @@ const DeckPage: React.FC = () => {
     };
 
     // Function to load decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
-        setDecks(convertToDisplayDecks(decks));
+    const loadDecks = async () => {
+        try{
+            const decks = loadSavedDecks(true);
+            const payload = {
+                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
+                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6) },
+                decks: decks
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-decks`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                }
+            );
+            const result = await response.json();
+            if (!response.ok) {
+                const errors = result.errors || {};
+                console.log(errors);
+                setDecks(convertToDisplayDecks(decks));
+                return
+            }
+            setDecks(convertToDisplayDecks(result));
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     // Handle successful deck addition

@@ -33,7 +33,7 @@ const UnimplementedPage = () => {
         // Fetch unimplemented cards
         const fetchUnimplementedCards = async () => {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-unimplemented`);
+                const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-unimplemented`,{ credentials:'include' });
                 if (!response.ok) {
                     throw new Error(`Error fetching cards: ${response.statusText}`);
                 }

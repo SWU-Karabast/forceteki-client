@@ -12,3 +12,22 @@ export interface IUserContextType {
     devLogin: (user: 'Order66' | 'ThisIsTheWay') => void;
     logout: () => void;
 }
+
+// Extend Next-auth types
+declare module 'next-auth' {
+    interface User {
+        id: string;
+        provider: string;
+    }
+
+    interface Session {
+        jwtToken: string;
+        user: {
+            id: string | null;
+            name?: string | null;
+            email?: string | null;
+            image?: string | null;
+            provider: string;
+        };
+    }
+}
