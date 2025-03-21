@@ -17,7 +17,7 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { connectedPlayer } = useGame();
+    const { connectedPlayer, isSpectator } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
 
@@ -128,32 +128,34 @@ const Chat: React.FC<IChatProps> = ({
 
 
             <Box sx={styles.inputContainer}>
-                <TextField
-                    variant="outlined"
-                    placeholder="Chat"
-                    autoComplete="off"
-                    value={chatMessage}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setChatMessage(e.target.value)
-                    }
-                    onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-                        if (e.key === 'Enter') {
-                            handleChatSubmit();
+                {!isSpectator &&(
+                    <TextField
+                        variant="outlined"
+                        placeholder="Chat"
+                        autoComplete="off"
+                        value={chatMessage}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            setChatMessage(e.target.value)
                         }
-                    }}
-                    sx={styles.textField}
-                    slotProps={{
-                        input: {
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <IconButton onClick={handleChatSubmit}>
-                                        <Send sx={{ color: '#fff' }} />
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
-                        },
-                    }}
-                />
+                        onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                            if (e.key === 'Enter') {
+                                handleChatSubmit();
+                            }
+                        }}
+                        sx={styles.textField}
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton onClick={handleChatSubmit}>
+                                            <Send sx={{ color: '#fff' }} />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            },
+                        }}
+                    />
+                )}
             </Box>
         </>
     );

@@ -93,7 +93,9 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                     </Box>
                 </Box>
             </Box>
-            <Button onClick={handleSpectate}>Spectate</Button>
+            {!match.isPrivate && (
+                <Button onClick={handleSpectate}>Spectate</Button>
+            )}
         </Box>
     );
 };
