@@ -53,14 +53,7 @@ const Board: React.FC<IBoardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: {
-                xs: '8rem',
-                sm: '9rem',
-                lg: '10rem',
-                xl: '11rem',
-                xxl: '12rem',
-                xxxl: '14rem',
-            },
+            width: 'clamp(8rem, 20vh, 14rem)',
             margin: '0 1rem',
         },
         middleColumnContent: {
@@ -76,15 +69,11 @@ const Board: React.FC<IBoardProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             width: '100%',
-            gap: '10px',
+            gap: 'clamp(1px, 1.0vh, 10px)',
             padding: '0 1rem',
-            flex: 1,
-            minHeight: 0
         },
         leaderBaseWrapper: {
-            flex: 1,
             width: '100%',
-            minHeight: 0,
             display: 'flex',
             justifyContent: 'center',
         },
@@ -194,13 +183,19 @@ const Board: React.FC<IBoardProps> = ({
                             />
                         </Box>
                         <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
+                            <LeaderBaseCard
+                                cardStyle={LeaderBaseCardStyle.Base} 
+                                card={opponentBase}
+                            />
                         </Box>
                     </Box>
-                    <Box sx={{ flex: '0 0 60px', width: '100%' }} />
+                    <Box sx={{ flex: '0 1 60px', width: '100%' }} />
                     <Box sx={styles.leaderBaseContainer}>
                         <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
+                            <LeaderBaseCard 
+                                cardStyle={LeaderBaseCardStyle.Base} 
+                                card={playerBase}
+                            />
                         </Box>
                         <Box sx={styles.leaderBaseWrapper}>
                             <LeaderBaseCard
