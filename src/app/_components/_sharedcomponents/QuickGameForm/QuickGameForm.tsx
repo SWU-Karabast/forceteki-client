@@ -12,7 +12,7 @@ import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import { loadDecks, saveDeckToLocalStorage } from '@/app/_utils/DeckStorageUtils';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -45,13 +45,13 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
 
     // Load saved decks when component mounts
     useEffect(() => {
-        loadDecks();
+        fetchDecks();
     }, []);
 
 
     // Load saved decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
+    const fetchDecks = async () => {
+        const decks = await loadDecks(user);
         if(decks.length > 0) {
             setFavouriteDeck(decks[0].deckID);
         }

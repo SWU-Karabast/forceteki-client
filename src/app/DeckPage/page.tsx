@@ -11,11 +11,10 @@ import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckD
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    convertToDisplayDecks,
-    loadSavedDecks,
+    convertToDisplayDecks, loadDecks,
     removeDeckFromLocalStorage,
     updateDeckFavoriteInLocalStorage
-} from '@/app/_utils/LocalStorageUtils';
+} from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 
 
@@ -37,8 +36,20 @@ const DeckPage: React.FC = () => {
 
     // Load decks from localStorage on component mount
     useEffect(() => {
-        loadDecks();
+        fetchDecks();
     }, []);
+
+    // Function to load decks from localStorage and server
+    const fetchDecks = async () => {
+        try {
+            // Call the loadDecks function and await the result
+            const fetchedDecks = await loadDecks(user);
+            // Update state with the fetched decks converted to display format
+            setDecks(convertToDisplayDecks(fetchedDecks));
+        } catch (error) {
+            console.error('Error fetching decks:', error);
+        }
+    };
 
     // sort function
     const sortDecks = (sort:string) => {
@@ -83,39 +94,6 @@ const DeckPage: React.FC = () => {
         }
         setDecks(sortedDecks);
     };
-
-    // Function to load decks from localStorage
-    const loadDecks = async () => {
-        try{
-            const decks = loadSavedDecks(true);
-            const payload = {
-                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
-                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6) },
-                decks: decks
-            }
-
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-decks`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                    credentials: 'include'
-                }
-            );
-            const result = await response.json();
-            if (!response.ok) {
-                const errors = result.errors || {};
-                console.log(errors);
-                setDecks(convertToDisplayDecks(decks));
-                return
-            }
-            setDecks(convertToDisplayDecks(result));
-        } catch (error) {
-            console.log(error)
-        }
-    }
 
     // Handle successful deck addition
     const handleAddDeckSuccess = (deckData: IDeckData, deckLink: string) => {

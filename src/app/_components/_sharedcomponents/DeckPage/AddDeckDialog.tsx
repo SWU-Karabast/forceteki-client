@@ -9,7 +9,9 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import { v4 as uuid } from 'uuid';
+import { useUser } from '@/app/_contexts/User.context';
+import { saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
 
 interface AddDeckDialogProps {
     open: boolean;
@@ -26,18 +28,19 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
+    const { user } = useUser();
 
     const handleSubmit = async () => {
         if (!deckLink) return;
-
         try {
             const deckData = await fetchDeckData(deckLink, false);
             if (deckData) {
-                saveDeckToLocalStorage(deckData, deckLink);
+                const newDeckId = await saveDeckToServer(deckData, deckLink, user);
+                deckData.deckID = newDeckId;
                 onSuccess(deckData, deckLink);
-                onClose();
                 // Reset form
                 setDeckLink('');
+                onClose();
             }
         } catch (error) {
             setDeckErrorDetails(undefined);

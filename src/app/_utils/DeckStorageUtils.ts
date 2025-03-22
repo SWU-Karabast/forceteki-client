@@ -1,9 +1,89 @@
 import { DisplayDeck, StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
+import { v4 as uuid } from 'uuid';
+import { IUser } from '@/app/_contexts/UserTypes';
+
+/* Server */
+export const saveDeckToServer = async (deckData: IDeckData, deckLink: string, user: IUser | null,) => {
+    try {
+        const payload = {
+            deck: {
+                id: deckData.deckID || uuid(), // Use existing ID or generate new one
+                userId: user?.id,
+                deck: {
+                    leader: { id: deckData.leader.id },
+                    base: { id: deckData.base.id },
+                    name: deckData.metadata?.name || 'Untitled Deck',
+                    favourite: false,
+                    deckLink: deckLink,
+                    deckLID: deckData.deckID || uuid(), // Use existing ID or generate new one
+                    source: deckData.deckSource || (deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB')
+                }
+            }
+        };
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/save-deck`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include'
+        });
+        const returnedData = await response.json();
+        if (!response.ok) {
+            const error = await response.json();
+            console.error('Error saving deck to server:', error);
+            throw new Error('Error when attempting to save deck. '+ error);
+        }
+
+        return returnedData.deckId;
+    } catch (error) {
+        console.error('Error saving deck to server:', error);
+        throw error;
+    }
+};
 
 /**
- * Loads saved decks from localStorage
+ * Loads decks from the server
+ * @param user The current user
+ * @returns Promise that resolves to the array of decks
+ */
+export const loadDecks = async (user: IUser | null): Promise<StoredDeck[]> => {
+    try {
+        const decks = loadSavedDecks(true);
+        const payload = {
+            user: user,
+            decks: decks
+        }
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-decks`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            const errors = result.errors || {};
+            console.log(errors);
+            return decks;
+        }
+        return result;
+    } catch (error) {
+        console.log(error);
+        // Return local decks as fallback
+        return loadSavedDecks(false);
+    }
+};
+
+/**
+ * Loads saved decks from localStorage will become depricated at some point.
  * @returns Array of stored decks sorted with favorites first
  */
 export const loadSavedDecks = (deleteAfter: boolean = false): StoredDeck[] => {

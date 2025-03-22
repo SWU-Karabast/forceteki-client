@@ -18,13 +18,15 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import { loadDecks, saveDeckToLocalStorage } from '@/app/_utils/DeckStorageUtils';
+import { useUser } from '@/app/_contexts/User.context';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
     owner,
 }) => {
     const { lobbyState, connectedPlayer, sendLobbyMessage } = useGame();
+    const { user } = useUser();
     const [favouriteDeck, setFavouriteDeck] = useState<string>('');
     const [deckLink, setDeckLink] = useState<string>('');
     const [showTooltip, setShowTooltip] = useState(false);
@@ -50,12 +52,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     };
 
     useEffect(() => {
-        loadDecks();
+        fetchDecks();
     }, []);
 
     // Load saved decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
+    const fetchDecks = async () => {
+        const decks = await loadDecks(user);
         if(decks.length > 0) {
             setFavouriteDeck(decks[0].deckID);
         }

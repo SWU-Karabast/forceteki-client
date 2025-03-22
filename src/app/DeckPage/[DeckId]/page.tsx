@@ -18,7 +18,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { removeDeckFromLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import { removeDeckFromLocalStorage } from '@/app/_utils/DeckStorageUtils';
 
 const sortByOptions: string[] = ['Cost','Power','Most played'];
 
