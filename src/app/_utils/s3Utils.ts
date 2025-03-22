@@ -32,7 +32,7 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
 
     let cardNumber = setId.number.toString().padStart(3, '0')
 
-    if (isGameCard(card) && ((cardType === 'leaderUnit' && card.epicDeployActionSpent) || (cardType === 'leaderUpgrade'))) {
+    if (isGameCard(card) && ((cardType === 'leaderUnit') || (cardType === 'leaderUpgrade'))) {
         cardNumber += '-portrait';
     }
     if (cardType === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
