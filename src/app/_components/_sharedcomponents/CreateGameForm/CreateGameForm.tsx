@@ -23,7 +23,7 @@ import {
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadDecks, saveDeckToLocalStorage } from '@/app/_utils/DeckStorageUtils';
+import { loadDecks, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
 
 const CreateGameForm = () => {
     const pathname = usePathname();
@@ -153,9 +153,10 @@ const CreateGameForm = () => {
                 }
                 return;
             }
+
+            // save deck to local storage
             if (saveDeck && deckData && deckLink){
-                // save new deck to local storage and only if its a new deck
-                saveDeckToLocalStorage(deckData, deckLink);
+                await saveDeckToServer(deckData, deckLink, user);
             }
 
             setDeckErrorSummary(null);

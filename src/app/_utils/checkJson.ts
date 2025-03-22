@@ -10,6 +10,10 @@ export interface DeckJSON {
         id: string;
         count: number;
     };
+    secondLeader?: {
+        id: string;
+        count: number;
+    };
     base: {
         id: string;
         count: number;

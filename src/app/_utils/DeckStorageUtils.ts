@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid';
 import { IUser } from '@/app/_contexts/UserTypes';
 
 /* Server */
-export const saveDeckToServer = async (deckData: IDeckData, deckLink: string, user: IUser | null,) => {
+export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink: string, user: IUser | null,) => {
     try {
         const payload = {
             deck: {
