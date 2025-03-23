@@ -130,7 +130,7 @@ const DeckDetails: React.FC = () => {
                 // check if its set to private
                 if (error instanceof Error) {
                     setErrorModalOpen(true);
-                    if (error.message.includes('Forbidden')) {
+                    if (error.message.includes('403')) {
                         setDeckErrorDetails({
                             [DeckValidationFailureReason.DeckSetToPrivate]: true,
                         });

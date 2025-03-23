@@ -1,3 +1,4 @@
+import { Height } from '@mui/icons-material';
 import { Theme, createTheme } from '@mui/material/styles';
 
 export const theme: Theme = createTheme({
@@ -77,9 +78,9 @@ export const theme: Theme = createTheme({
                     '--selection-grey': '#9DB4A0',
                     '--initiative-blue': '#00BAFF',
                     '--initiative-red': '#FF3231',
-                    '--font-size-xs': '12px',
-                    '--font-size-sm': '14px',
-                    '--font-size-md': '16px',
+                    '--font-size-xs': '10px',
+                    '--font-size-sm': '12px',
+                    '--font-size-md': '14px',
                     '--font-size-lg': '17px',
                     '--font-size-xl': '18px',
                 },
@@ -115,6 +116,7 @@ export const theme: Theme = createTheme({
                 },
                 '::-webkit-scrollbar': {
                     width: '2px',
+                    height: '2px',
                 },
                 '::-webkit-scrollbar-thumb': {
                     backgroundColor: '#D3D3D3B3',

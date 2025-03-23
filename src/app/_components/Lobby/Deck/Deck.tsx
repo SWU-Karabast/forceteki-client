@@ -82,13 +82,12 @@ const Deck: React.FC = () => {
             alignSelf: 'center',
             height: '1px',
         },
-        scrollableBoxStyleSideboard: {
-            height: '36vh',
-            overflow:'auto',
-        },
-        scrollableBoxStyle: {
-            height: usersSideboard?.length > 0 ? '50vh' : '86vh',
-            overflow:'auto',
+        cardWrapper: {
+            width: {
+                xs: '5rem',
+                md: '6rem',
+                xl: '6.8rem'
+            }
         },
         mainContainerStyle: {
             display: 'flex',
@@ -126,11 +125,9 @@ const Deck: React.FC = () => {
                         <Typography sx={styles.deckSizeTextStyle}>/{minDeckSize}</Typography>
                     </Box>
                 </Box>
-                <Box
-                    sx={styles.scrollableBoxStyle}
-                >
-                    <Box sx={styles.mainContainerStyle}>
-                        {sortedUserMain.map((card:ICardData) => (
+                <Box sx={styles.mainContainerStyle}>
+                    {sortedUserMain.map((card:ICardData) => (
+                        <Box key={card.id} sx={styles.cardWrapper}>
                             <GameCard
                                 key={card.id}
                                 card={{ ...card, implemented: !isCardNotImplemented(card.id) }}
@@ -138,8 +135,8 @@ const Deck: React.FC = () => {
                                 disabled={connectedUser.ready}
                                 onClick={() => sendLobbyMessage(['updateDeck','Deck', card.id])}
                             />
-                        ))}
-                    </Box>
+                        </Box>
+                    ))}
                 </Box>
                 {usersSideboard?.length > 0 && (
                     <>
@@ -162,11 +159,10 @@ const Deck: React.FC = () => {
                                 )}
                             </Box>
                         </Box>
-                        <Box
-                            sx={styles.scrollableBoxStyleSideboard}
-                        >
-                            <Box sx={styles.mainContainerStyle}>
-                                {sortedUsersSideboard.map((card:ICardData) => (
+                        {/* <Bo */}
+                        <Box sx={styles.mainContainerStyle}>
+                            {sortedUsersSideboard.map((card:ICardData) => (
+                                <Box key={card.id} sx={styles.cardWrapper}>
                                     <GameCard
                                         key={card.id}
                                         card={{ ...card, implemented: !isCardNotImplemented(card.id) }}
@@ -174,8 +170,8 @@ const Deck: React.FC = () => {
                                         disabled={connectedUser.ready}
                                         onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.id])}
                                     />
-                                ))}
-                            </Box>
+                                </Box>
+                            ))}
                         </Box>
                     </>
                 )}

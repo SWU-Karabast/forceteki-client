@@ -32,6 +32,13 @@ const GameCard: React.FC<IGameCardProps> = ({
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
+    const isStolen = React.useMemo(() => {
+        if (!(card.controller && card.owner)) {
+            return false
+        }
+        return card.controller.id !== card.owner.id
+    }, [card.controller, card.owner])
+
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
@@ -166,7 +173,8 @@ const GameCard: React.FC<IGameCardProps> = ({
         cardContainer: {
             backgroundColor: 'black',
             borderRadius: '0.5rem',
-            width: cardStyle === CardStyle.InPlay ? '7.18rem' : '8rem',
+            width: '100%',
+            maxHeight: '100%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -182,7 +190,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '.718',
+            aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
@@ -250,7 +258,11 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             height: '2.5rem',
             bottom: '-6px',
-            right: '14px',
+            right: {
+                xs: '8%',
+                md: '10%',
+                lg: '13%',
+            },
             background: 'linear-gradient(90deg, rgba(255, 0, 0, 0) 47.44%, rgba(255, 0, 0, 0.911111) 75.61%, #FF0000 102.56%)',
             alignItems: 'center',
             justifyContent: 'center',
@@ -302,6 +314,16 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/SentinelToken.png)',
+        },
+        stolenIcon:{
+            position: 'absolute',
+            width: '1.8rem',
+            aspectRatio: '1 / 1',
+            top:'32%',
+            left: '-4px',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(/StolenIcon.png)',
         },
         unimplementedAlert: {
             display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
@@ -366,6 +388,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                     <Box sx={styles.counterIcon}>
                         <Typography sx={styles.numberFont}>{cardCounter}</Typography>
                     </Box>
+                )}
+                {isStolen && (
+                    <Box sx={styles.stolenIcon}/>
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>

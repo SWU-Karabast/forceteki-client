@@ -4,6 +4,8 @@ import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface GameCardData {
+    id: string;
+    isPrivate:boolean;
     player1Leader: ICardData;
     player1Base: ICardData;
     player2Leader: ICardData;

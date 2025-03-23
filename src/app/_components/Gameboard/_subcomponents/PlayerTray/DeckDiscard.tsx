@@ -1,10 +1,9 @@
 import React from 'react';
-import { Card, Box, Typography } from '@mui/material';
+import { Box, Typography, Popover, PopoverOrigin } from '@mui/material';
 import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = (
@@ -12,6 +11,9 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
 ) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
+
+    const topDiscardCard = gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].at(-1);
+    const topDiscardCardUrl = topDiscardCard && typeof topDiscardCard === 'object' ? `url(${s3CardImageURL(topDiscardCard)})` : 'none';
 
     const handleDiscardToggle = () => {
         const playerName = connectedPlayer != trayPlayer.trayPlayer ? 'Your Opponent\'s' : 'Your';
@@ -34,19 +36,49 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         }
     }
 
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
+
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        hoverTimeout.current = window.setTimeout(() => {
+            setAnchorElement(target);
+        }, 200);
+    };
+ 
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+    };
+
+    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+        return { 
+            anchorOrigin:{
+                vertical: connectedPlayer != trayPlayer.trayPlayer ? 'top' : 'bottom',
+                horizontal: 'right',
+            },
+            transformOrigin: {
+                vertical: connectedPlayer != trayPlayer.trayPlayer ? 'top' : 'bottom',
+                horizontal: 'left',
+            } 
+        };
+    }
+
     const styles = {
         containerStyle: {
             display: 'flex',
             flexDirection: 'row',
             gap: '1rem',
+            flex: 1,
+            height: '100%',
             justifyContent: 'center',
-            alignItems: 'center',
         },
         discard: {
-            discardCardStyle: (cardData?: ICardData) => ({
+            discardCardStyle: {
                 backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                width: '4.6rem',
-                height: '6.5rem',
+                height: '100%',
+                aspectRatio: '1 / 1.4',
                 borderRadius: '5px',
                 display: 'flex',
                 alignItems: 'center',
@@ -58,9 +90,9 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                 },
                 backgroundPosition: 'center',
                 backgroundSize: 'cover',
-                backgroundImage: cardData ? `url(${s3CardImageURL(cardData)})` : null,
+                backgroundImage: topDiscardCardUrl,
                 backgroundRepeat: 'no-repeat',
-            }),
+            },
             discardContentStyle: {
                 fontFamily: 'var(--font-barlow), sans-serif',
                 fontWeight: '800',
@@ -68,6 +100,14 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                 color: 'white',
                 textAlign: 'center',
             },
+            discardTopCardPreview: {
+                borderRadius: '.38em',
+                backgroundImage: topDiscardCardUrl,
+                backgroundSize: 'cover',
+                backgroundRepeat: 'no-repeat',
+                aspectRatio: '1 / 1.4',
+                width: '16rem',
+            }
         },
         deck: {
             deckCardStyle: {
@@ -79,8 +119,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '4.6rem',
-                height: '6.5rem',
+                height: '100%',
+                aspectRatio: '1 / 1.4',
                 borderRadius: '5px',
             },
 
@@ -104,13 +144,27 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
 
     return (
         <Box sx={styles.containerStyle}>
-            <Card
-                sx={styles.discard.discardCardStyle(gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].at(-1))}
+            <Box
+                sx={styles.discard.discardCardStyle}
+                onMouseEnter={handlePreviewOpen}
+                onMouseLeave={handlePreviewClose} 
                 onClick={handleDiscardToggle}
             />
-            <Card sx={styles.deck.deckCardStyle}>
+            <Popover
+                id="mouse-over-popover"
+                sx={{ pointerEvents: 'none' }}
+                open={open}
+                anchorEl={anchorElement}
+                onClose={handlePreviewClose}
+                disableRestoreFocus
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                {...popoverConfig()}
+            >
+                <Box sx={{ ...styles.discard.discardTopCardPreview }} />
+            </Popover>
+            <Box sx={styles.deck.deckCardStyle}>
                 {deckComponent}
-            </Card>
+            </Box>
         </Box>
     );
 };

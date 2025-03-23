@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Grid2 as Grid } from '@mui/material';
+import { Typography, Box, Grid2 as Grid } from '@mui/material';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -13,7 +13,6 @@ const Board: React.FC<IBoardProps> = ({
     const playerIds = Object.keys(gameState.players);
 
     const opponentId = playerIds.find((id) => id !== connectedPlayer) || '';
-
     const titleOpponent = gameState.players[opponentId].user.username;
     const titleCurrentPlayer = gameState.players[connectedPlayer].user.username;
 
@@ -22,12 +21,16 @@ const Board: React.FC<IBoardProps> = ({
     const opponentLeader = gameState?.players[opponentId].leader;
     const opponentBase = gameState?.players[opponentId].base;
 
+    const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
+    const initiativeClaimed = gameState.initiativeClaimed;
 
     // ----------------Styles----------------//
     const styles = {
         boardWrapper: {
-            height: '64.18%',
+            height: '100%',
             margin: '0 5rem',
+            display: 'flex',
+            flexDirection: 'row',
         },
         containerStyle: {
             height: '100%',
@@ -39,17 +42,25 @@ const Board: React.FC<IBoardProps> = ({
             flexGrow: 1,
             width: '100%'
         },
-        ColumnStyle: {
+        columnStyle: {
             position: 'relative',
             display: 'flex',
             justifyContent: 'flex-start',
             alignItems: 'center',
+            flex: 1
         },
         middleColumnStyle: {
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: '12rem',
+            width: {
+                xs: '8rem',
+                sm: '9rem',
+                lg: '10rem',
+                xl: '11rem',
+                xxl: '12rem',
+                xxxl: '14rem',
+            },
             margin: '0 1rem',
         },
         middleColumnContent: {
@@ -66,6 +77,16 @@ const Board: React.FC<IBoardProps> = ({
             alignItems: 'center',
             width: '100%',
             gap: '10px',
+            padding: '0 1rem',
+            flex: 1,
+            minHeight: 0
+        },
+        leaderBaseWrapper: {
+            flex: 1,
+            width: '100%',
+            minHeight: 0,
+            display: 'flex',
+            justifyContent: 'center',
         },
         leftColumnBorderLeft: {
             background: `
@@ -125,46 +146,83 @@ const Board: React.FC<IBoardProps> = ({
             height: '100%',
             position: 'absolute',
         },
+        initiativeWrapper: {
+            position: 'absolute',
+            right: '5px',
+            top : hasInitiative ? '100%' : '5px',
+            transform: hasInitiative ? 'translateY(-115%)' : '',
+            transition: 'transform .7s, top .7s',
+            borderRadius: '20px',
+            borderWidth: '2px',
+            borderStyle: 'solid',
+            height: '2rem',
+            width: 'auto',
+            background: initiativeClaimed && hasInitiative ? 'var(--initiative-blue)' : initiativeClaimed && !hasInitiative ? 'var(--initiative-red)' : 'rgba(0, 0, 0, 0.5)',
+            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            h4: {
+                margin: '0.2rem 1rem 0', 
+                textAlign: 'center',  
+                display: 'block',
+                fontSize: '1em', 
+                fontWeight: 600,
+                userSelect: 'none',
+                color: !initiativeClaimed && hasInitiative ? 'var(--initiative-blue)' : !initiativeClaimed && !hasInitiative ? 'var(--initiative-red)' : 'black',
+            }
+        },
     }
     
     return (
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
-        <Grid container sx={styles.boardWrapper}> 
-            <Grid container size="grow" sx={styles.ColumnStyle}>
+        <Box sx={styles.boardWrapper}> 
+            <Box sx={styles.columnStyle}>
                 <Box sx={styles.leftColumnBorderLeft} />
                 <Box sx={styles.leftColumnBorderRight} />
                 <UnitsBoard sidebarOpen={sidebarOpen} arena="spaceArena" />
-            </Grid>
-            <Grid container sx={styles.middleColumnStyle}>
+            </Box>
+            <Box sx={styles.middleColumnStyle}>
                 <Box sx={styles.middleColumnBorderLeft} />
                 <Box sx={styles.middleColumnBorderRight} />
                 <Box sx={styles.middleColumnContent}>
                     <Box sx={styles.leaderBaseContainer}>
-                        <LeaderBaseCard
-                            card={opponentLeader}
-                            cardStyle={LeaderBaseCardStyle.Leader}
-                            title={titleOpponent}
-                        />
-                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard
+                                card={opponentLeader}
+                                cardStyle={LeaderBaseCardStyle.Leader}
+                                title={titleOpponent}
+                            />
+                        </Box>
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
+                        </Box>
                     </Box>
+                    <Box sx={{ flex: '0 0 60px', width: '100%' }} />
                     <Box sx={styles.leaderBaseContainer}>
-                        <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
-                        <LeaderBaseCard
-                            card={playerLeader}
-                            cardStyle={LeaderBaseCardStyle.Leader}
-                            title={titleCurrentPlayer}
-                        />
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
+                        </Box>
+                        <Box sx={styles.leaderBaseWrapper}>
+                            <LeaderBaseCard
+                                card={playerLeader}
+                                cardStyle={LeaderBaseCardStyle.Leader}
+                                title={titleCurrentPlayer}
+                            />
+                        </Box>
                     </Box>
                 </Box>
-            </Grid>
-            <Grid container size="grow" sx={styles.ColumnStyle}>
+            </Box>
+            <Box sx={styles.columnStyle}>
                 <Box sx={styles.rightColumnBorderLeft} />
                 <Box sx={styles.rightColumnBorderRight} />
+                < Box sx={styles.initiativeWrapper}>
+                    <Typography variant={'h4'}>Initiative</Typography>
+                </Box> 
                 <UnitsBoard
                     sidebarOpen={sidebarOpen} arena="groundArena"
                 />
-            </Grid>
-        </Grid>
+            </Box>
+        </Box>
     );
 };
 

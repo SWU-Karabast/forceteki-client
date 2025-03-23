@@ -99,6 +99,11 @@ export interface ILeaderBaseCardProps {
     cardStyle?: LeaderBaseCardStyle;
 }
 
+// Used to handle the how the display of the card should be in the different scenarios
+// InPlay - when the card is on the gameboard
+// Lobby - When the card is displayed before a game starts
+// Prompt - When you need to select a card to choose from an prompt in the game
+// Plain - Default display style
 export enum CardStyle {
     InPlay = 'inplay',
     Lobby = 'lobby',

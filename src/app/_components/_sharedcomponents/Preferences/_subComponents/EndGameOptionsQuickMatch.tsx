@@ -9,7 +9,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 
 function EndGameOptionsQuickMatch() {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer } = useGame();
+    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator } = useGame();
 
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest;
@@ -83,31 +83,33 @@ function EndGameOptionsQuickMatch() {
                     </Typography>
                 </Box>
             </Box>
-            <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Rematch</Typography>
-                <Divider sx={{ mb: '20px' }}/>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                    <PreferenceButton variant={'standard'} text={'New Quick Match'} buttonFnc={handleRequeue}/>
-                    <Typography sx={styles.typeographyStyle}>
-                        Reenter the queue for a new opponent.
-                    </Typography>
+            {!isSpectator && (
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Rematch</Typography>
+                    <Divider sx={{ mb: '20px' }}/>
+                    <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                        <PreferenceButton variant={'standard'} text={'New Quick Match'} buttonFnc={handleRequeue}/>
+                        <Typography sx={styles.typeographyStyle}>
+                            Reenter the queue for a new opponent.
+                        </Typography>
+                    </Box>
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton
+                            variant={'standard'}
+                            text={rematchButtonText}
+                            buttonFnc={handleRematchClick}
+                            disabled={rematchButtonDisabled}
+                        />
+                        <Typography sx={styles.typeographyStyle}>
+                            {rematchRequest
+                                ? isRequestInitiator
+                                    ? 'Waiting for your opponent to confirm rematch.'
+                                    : 'Confirm you wish to rematch with your opponent.'
+                                : 'Return to lobby to start a new game with the same opponent.'}
+                        </Typography>
+                    </Box>
                 </Box>
-                <Box sx={styles.contentContainer}>
-                    <PreferenceButton
-                        variant={'standard'}
-                        text={rematchButtonText}
-                        buttonFnc={handleRematchClick}
-                        disabled={rematchButtonDisabled}
-                    />
-                    <Typography sx={styles.typeographyStyle}>
-                        {rematchRequest
-                            ? isRequestInitiator
-                                ? 'Waiting for your opponent to confirm rematch.'
-                                : 'Confirm you wish to rematch with your opponent.'
-                            : 'Return to lobby to start a new game with the same opponent.'}
-                    </Typography>
-                </Box>
-            </Box>
+            )}
             <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Thanks for playing the Beta</Typography>
                 <Divider sx={{ mb: '20px' }}/>

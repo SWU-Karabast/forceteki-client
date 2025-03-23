@@ -3,8 +3,39 @@ import { Box, Button, Typography } from '@mui/material';
 import GameInProgressPlayer from '../GameInProgressPlayer/GameInProgressPlayer';
 import { IPublicGameInProgressProps } from '../../HomePageTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/app/_contexts/User.context';
 
 const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
+    const router = useRouter();
+    const { user, anonymousUserId } = useUser();
+
+    const handleSpectate = async () => {
+        try {
+            // Register as a spectator with the server
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/spectate-game`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    gameId: match.id,
+                    user: user || { id: anonymousUserId, username: 'Anonymous' + anonymousUserId?.substring(0, 6) },
+                }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                // Navigate to the game as a spectator
+                router.push('/GameBoard?spectator=true');
+            } else {
+                console.error('Failed to join as spectator:', data.message);
+            }
+        } catch (error) {
+            console.error('Error joining as spectator:', error);
+        }
+    };
+
     const styles = {
         box: {
             width: '100%',
@@ -62,7 +93,9 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                     </Box>
                 </Box>
             </Box>
-            <Button disabled>Spectate</Button>
+            {!match.isPrivate && (
+                <Button onClick={handleSpectate}>Spectate</Button>
+            )}
         </Box>
     );
 };

@@ -1,8 +1,7 @@
 import React from 'react';
 import { Box, Divider, IconButton, Typography } from '@mui/material';
-import { Settings, Menu, ArrowBackIosNew, GitHub } from '@mui/icons-material';
+import { GitHub } from '@mui/icons-material';
 import { FaDiscord } from 'react-icons/fa6';
-import { useRouter } from 'next/navigation';
 import NextLinkMui from './_subcomponents/NextLinkMui/NextLinkMui';
 import { IControlHubProps } from './ControlHubTypes';
 
@@ -13,27 +12,16 @@ const ControlHub: React.FC<IControlHubProps> = ({
     user,
     logout,
 }) => {
-    const router = useRouter();
-    const isLobbyView = path === '/lobby';
-    const isGameboardView = path === '/gameboard';
-
-    const handleBack = () => {
-        if (isLobbyView) {
-            router.push('/');
-        } else {
-            router.back();
-        }
-    };
-
     const styles = {
-        container: (isLobbyView: boolean, isGameboardView: boolean) => ({
+        wrapperContainer:{
             position: 'absolute',
             top: 10,
-            right: isLobbyView || isGameboardView ? 10 : 0,
+            right: 0,
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
             zIndex: 1,
-        }),
+        },
         defaultMainContainer: {
             display: 'flex',
             gap: 2,
@@ -92,88 +80,70 @@ const ControlHub: React.FC<IControlHubProps> = ({
 
 
     return (
-        <Box sx={styles.container(isLobbyView, isGameboardView)}>
-            {isLobbyView ? (
-                <>
-                    <IconButton>
-                        <ArrowBackIosNew
-                            sx={styles.backButton}
-                            onClick={handleBack}
-                        />
-                    </IconButton>
-                    <Typography variant="h5" sx={styles.exitText}>
-                        EXIT
-                    </Typography>
-                </>
-            ) : isGameboardView ? (
-                <>
-                    <IconButton>
-                        <Settings sx={{ color: '#fff' }} />
-                    </IconButton>
-                    {!sidebarOpen && (
-                        <IconButton onClick={toggleSidebar}>
-                            <Menu sx={{ color: '#fff' }} />
-                        </IconButton>
-                    )}
-                </>
-            ) : (
-                <Box sx={styles.defaultMainContainer}>
-                    <Box sx={styles.profileBox}>
-                        <NextLinkMui href="/Unimplemented" sx={styles.profileLink}>
-                            Unimplemented
-                        </NextLinkMui>
-                        {user ? (
-                            <>
-                                <NextLinkMui href="/DeckPage" sx={styles.profileLink}>
-                                    Decks
-                                </NextLinkMui>
-                                <NextLinkMui href="/profile" sx={styles.profileLink}>
-                                    Profile
-                                </NextLinkMui>
-                                <NextLinkMui href="/Preferences" sx={styles.profileLink}>
-                                    Preferences
-                                </NextLinkMui>
-                                <Divider
-                                    orientation="vertical"
-                                    flexItem
-                                    sx={{ borderColor: '#ffffff4D', mx: 1 }}
-                                />
-                                <NextLinkMui href="/" onClick={logout} sx={styles.profileLink}>
-                                    Log Out
-                                </NextLinkMui>
-                            </>
-                        ) : (
-                            // Disable login on Prod for now
-                            process.env.NODE_ENV === 'development' ? (
-                                <NextLinkMui href="/auth" sx={styles.profileLink}>
-                                    Log In
-                                </NextLinkMui>
+        <Box sx={styles.wrapperContainer}>
+            <Box sx={styles.defaultMainContainer}>
+                <Box sx={styles.profileBox}>
+                    <NextLinkMui href="/Unimplemented" sx={styles.profileLink}>
+                        Unimplemented
+                    </NextLinkMui>
+                    {user ? (
+                        <>
+                            <NextLinkMui href="/DeckPage" sx={styles.profileLink}>
+                                Decks
+                            </NextLinkMui>
+                            <NextLinkMui href="/profile" sx={styles.profileLink}>
+                                Profile
+                            </NextLinkMui>
+                            <NextLinkMui href="/Preferences" sx={styles.profileLink}>
+                                Preferences
+                            </NextLinkMui>
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ borderColor: '#ffffff4D', mx: 1 }}
+                            />
+                            <NextLinkMui href="/" onClick={logout} sx={styles.profileLink}>
+                                Log Out
+                            </NextLinkMui>
+                        </>
+                    ) : (
+                        // Disable login on Prod for now
+                        process.env.NODE_ENV === 'development' ? (
+                            <NextLinkMui href="/auth" sx={styles.profileLink}>
+                                Log In
+                            </NextLinkMui>
 
-                            ) : null
-                        )}
-                    </Box>
-                    <Box sx={styles.socialIconsBox}>
-                        <NextLinkMui
-                            href="https://discord.gg/hKRaqHND4v"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            <IconButton sx={styles.iconButton}>
-                                <FaDiscord />
-                            </IconButton>
-                        </NextLinkMui>
-                        <NextLinkMui
-                            href="https://github.com/SWU-Karabast"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            <IconButton sx={styles.iconButton}>
-                                <GitHub />
-                            </IconButton>
-                        </NextLinkMui>
-                    </Box>
+                        ) : null
+                    )}
                 </Box>
-            )}
+                <Box sx={styles.socialIconsBox}>
+                    <NextLinkMui
+                        href="https://discord.gg/hKRaqHND4v"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <IconButton sx={styles.iconButton}>
+                            <FaDiscord />
+                        </IconButton>
+                    </NextLinkMui>
+                    <NextLinkMui
+                        href="https://github.com/SWU-Karabast"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <IconButton sx={styles.iconButton}>
+                            <GitHub />
+                        </IconButton>
+                    </NextLinkMui>
+                </Box>
+            </Box>
+            <Box sx={{ mt: 1 }}>
+                <Box sx={styles.socialIconsBox}>
+                    <Typography>
+                        Looking for <NextLinkMui sx={{ color: 'white', textDecorationColor: 'white' }} href="https://petranaki.net/Arena/MainMenu.php">original Karabast</NextLinkMui>?
+                    </Typography>
+                </Box>
+            </Box>
         </Box>
     );
 };

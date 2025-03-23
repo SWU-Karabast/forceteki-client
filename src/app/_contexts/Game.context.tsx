@@ -30,6 +30,7 @@ interface IGameContextType {
     getConnectedPlayerPrompt: () => any;
     updateDistributionPrompt: (uuid: string, amount: number) => void;
     distributionPromptData: IDistributionPromptData | null;
+    isSpectator: boolean;
 }
 
 interface IDistributionPromptData {
@@ -50,6 +51,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
+    const [isSpectator, setIsSpectator] = useState<boolean>(false);
     const searchParams = useSearchParams();
     const router = useRouter();
     const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
@@ -60,6 +62,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         if (!connectedPlayerId) return;
         setConnectedPlayer(connectedPlayerId);
         clearPopups();
+        const spectatorParam = searchParams.get('spectator');
+        const isSpectatorMode = spectatorParam === 'true';
+        setIsSpectator(isSpectatorMode);
+
 
 
         const token = session?.jwtToken;
@@ -67,7 +73,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             path: '/ws',
             query: {
                 user: JSON.stringify(user ? user : { username: 'anonymous '+anonymousUserId?.substring(0,6), id: anonymousUserId }),
-                lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null })
+                lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null }),
+                spectator: isSpectatorMode ? 'true' : 'false'
             },
             auth: token ? { token } : undefined
         });
@@ -87,7 +94,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const handleGameStatePopups = (gameState: any) => {
-            if (!connectedPlayerId) return;
+            if (!connectedPlayerId || isSpectatorMode) return;
             if (gameState.players?.[connectedPlayerId].promptState) {
                 setDistributionPromptData(null);
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
@@ -168,6 +175,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('gamestate', (gameState: any) => {
+            if(isSpectatorMode){
+                setConnectedPlayer(Object.keys(gameState.players)[0])
+            }
             if (gameState?.id && gameState.id !== lastGameIdRef.current) {
                 clearPopups();
                 lastGameIdRef.current = gameState.id;
@@ -259,7 +269,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 resetStates,
                 getConnectedPlayerPrompt,
                 updateDistributionPrompt,
-                distributionPromptData
+                distributionPromptData,
+                isSpectator
             }}
         >
             {children}

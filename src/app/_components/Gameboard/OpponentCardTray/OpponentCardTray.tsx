@@ -1,6 +1,6 @@
 import React from 'react';
 import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
-import { Typography, Box, Grid2 as Grid } from '@mui/material';
+import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
@@ -10,31 +10,66 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { v4 as uuidv4 } from 'uuid';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { useRouter } from 'next/navigation';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
-    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
     const { openPopup } = usePopup();
+    const router = useRouter();
     const handleExitButton = () => {
-        const popupId = `${uuidv4()}`;
-        openPopup('leaveGame', {
-            uuid: popupId,
-            source: PopupSource.User
-        });
+        if (isSpectator){
+            router.push('/');
+        } else {
+            const popupId = `${uuidv4()}`;
+            openPopup('leaveGame', {
+                uuid: popupId,
+                source: PopupSource.User
+            });
+        }
     };
 
-    const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
-    const initiativeClaimed = gameState.initiativeClaimed;
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
+
+    const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
+
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
+    
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        hoverTimeout.current = window.setTimeout(() => {
+            setAnchorElement(target);
+        }, 200);
+    };
+        
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+    };
+
+    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+        return { 
+            anchorOrigin:{
+                vertical: 'top',
+                horizontal: 'left',
+            },
+            transformOrigin: {
+                vertical: 'top',
+                horizontal: 'right',
+            } 
+        };
+    }
 
     // ---------------Styles------------------- //
     const styles = {
         leftColumn: {
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             justifyContent: 'flex-start',
             padding: '1rem 0 1rem 2rem',
-            gap: '2rem',
+            gap: '1rem',
         },
         centerColumn: {
             height: '100%',
@@ -46,7 +81,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         opponentHandWrapper: {
             width: '100%',
             height: '100%',
-            transform: 'translateY(-2rem)',
             zIndex: '1',
         },
         rightColumn: {
@@ -61,7 +95,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             height: '6.5rem',
             borderRadius: '5px',
             backgroundSize: 'cover',
-            backgroundImage: gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none',
+            backgroundImage: lastPlayedCardUrl,
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
         },
         menuStyles: {
@@ -69,57 +103,25 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             flexDirection: 'column',
             gap: '1rem',
         },
-        initiativeWrapper: {
-            borderRadius: '20px',
-            borderWidth: '2px',
-            borderStyle: 'solid',
-            height: '2rem',
-            width: 'auto',
-            background: 'rgba(0, 0, 0, 0.5)',
-            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            h4: {
-                margin: '0.2rem 1rem 0', 
-                textAlign: 'center', 
-                display: 'block',
-                fontSize: '1em', 
-                fontWeight: 600,
-                userSelect: 'none',
-                color: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-            }
-        },
-        initiativeClaimedWrapper: {
-            borderRadius: '20px',
-            borderWidth: '2px',
-            borderStyle: 'solid',
-            height: '2rem',
-            width: 'auto',
-            background: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-            borderColor: hasInitiative ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            h4: {
-                margin: '0.2rem 1rem 0', 
-                textAlign: 'center', 
-                display: 'block',
-                fontSize: '1em', 
-                fontWeight: 600,
-                userSelect: 'none',
-                color: 'black',
-            }
-        },
         opponentTurnAura: {
             height: '100px',
             width: '90%',
             position: 'absolute', 
             top: '-100px',
-            boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 15px 35px rgba(216,174,24,255)' : 'none',
+            boxShadow: activePlayer === false ? '0px 20px 35px var(--initiative-red)' : phase === 'regroup' || phase === 'setup' ? '0px 15px 35px rgba(187, 169, 0, 255)' : 'none',
             transition: 'box-shadow .5s',
             borderRadius: '50%',
             left: '0',
             right: '0',
             marginInline: 'auto',
+        },
+        lastCardPlayedPreview: {
+            borderRadius: '.38em',
+            backgroundImage: lastPlayedCardUrl,
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1 / 1.4',
+            width: '16rem',
         }
     };
 
@@ -127,7 +129,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         <Grid
             container
             sx={{
-                height: '17%',
+                height: '100%',
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '2rem', // 2rem gap between columns
@@ -135,20 +137,22 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             }}
         >
             {/* Left column (fixed 360px) */}
-            <Grid sx={{
-                flex: '0 0 360px',
-                ...styles.leftColumn,
-            }}
+            <Grid 
+                size={3}
+                sx={{
+                    ...styles.leftColumn,
+                }}
             >
                 <DeckDiscard trayPlayer={trayPlayer} />
                 <Resources trayPlayer={trayPlayer}/>
             </Grid>
 
             {/* Center column (flexes to fill space) */}
-            <Grid sx={{
-                flex: 1,
-                ...styles.centerColumn,
-            }}
+            <Grid 
+                size={6}
+                sx={{
+                    ...styles.centerColumn,
+                }}
             >
                 <Box sx={styles.opponentHandWrapper}>
                     <PlayerHand clickDisabled={true} cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
@@ -157,16 +161,29 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             </Grid>
 
             {/* Right column (fixed 360px) */}
-            <Grid sx={{
-                flex: '0 0 360px',
-                ...styles.rightColumn,
-            }}
+            <Grid 
+                size={3}
+                sx={{
+                    ...styles.rightColumn,
+                }}
             >
-                <Box sx={initiativeClaimed ? styles.initiativeClaimedWrapper : styles.initiativeWrapper}>
-                    <Typography variant={'h4'}>Initiative</Typography>
+                <Box
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose} 
+                    sx={styles.lastPlayed}>
                 </Box>
-                <Box sx={styles.lastPlayed}>
-                </Box>
+                <Popover
+                    id="mouse-over-popover"
+                    sx={{ pointerEvents: 'none' }}
+                    open={open}
+                    anchorEl={anchorElement}
+                    onClose={handlePreviewClose}
+                    disableRestoreFocus
+                    slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                    {...popoverConfig()}
+                >
+                    <Box sx={{ ...styles.lastCardPlayedPreview }} />
+                </Popover>
                 <Box sx={styles.menuStyles}>
                     <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
                     <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
