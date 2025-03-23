@@ -99,8 +99,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             }
             // save deck to local storage
             if (saveDeck && deckData && deckLink){
-                await saveDeckToServer(deckData, deckLink, user);
-                saveDeckToLocalStorage(deckData,deckLink); // TODO DELETE WHEN GOING TO PROD
+                try {
+                    await saveDeckToServer(deckData, deckLink, user);
+                }catch (err) {
+                    console.log(err);
+                    saveDeckToLocalStorage(deckData, deckLink); // TODO DELETE WHEN GOING TO PROD
+                }
             }
 
             sendLobbyMessage(['changeDeck', deckData])

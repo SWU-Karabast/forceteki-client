@@ -152,8 +152,12 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             }
             // Save the deck if needed
             if (saveDeck && deckData && userDeck) {
-                await saveDeckToServer(deckData, deckLink, user);
-                saveDeckToLocalStorage(deckData,deckLink); // TODO DELETE WHEN GOING TO PROD
+                try {
+                    await saveDeckToServer(deckData, deckLink, user);
+                }catch (err) {
+                    console.log(err);
+                    saveDeckToLocalStorage(deckData, deckLink); // TODO DELETE WHEN GOING TO PROD
+                }
             }
 
             setDeckErrorSummary(null);
