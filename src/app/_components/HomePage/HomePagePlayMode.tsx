@@ -89,19 +89,19 @@ const HomePagePlayMode: React.FC = () => {
                 <CardContent>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
                         <Tabs value={value} variant="fullWidth" onChange={handleChange}>
-                            {/* <Tab sx={styles.tabStyles} label="Play" /> */}
+                            <Tab sx={styles.tabStyles} label="Play" />
                             <Tab sx={styles.tabStyles} label="Create" />
                             {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
                         </Tabs>
                     </Box>
-                    {/* <TabPanel index={0} value={value}>
-                        <QuickGameForm/>
-                    </TabPanel> */}
                     <TabPanel index={0} value={value}>
+                        <QuickGameForm/>
+                    </TabPanel>
+                    <TabPanel index={1} value={value}>
                         <CreateGameForm />
                     </TabPanel>
                     {showTestGames && 
-                    <TabPanel index={1} value={value}>
+                    <TabPanel index={2} value={value}>
                         <Box>
                             <Typography variant="h2">Test Game Setups</Typography>
                             {testGameList.map((filename, index) => {
