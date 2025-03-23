@@ -119,6 +119,56 @@ interface ICardPlayer {
     uuid: string;
 }
 
+export interface IOpponentTableStats {
+    leaderId: string,
+    baseId: string,
+    wins: number,
+    losses: number,
+    winPercentage: number,
+    animationComplete?: boolean,
+}
+
+// Interface for opponent stats
+export interface IOpponentStat {
+    leaderId: string;
+    baseId: string;
+    wins: number;
+    losses: number;
+    draws: number;
+}
+
+// deckpage stats
+export interface IDeckPageStats {
+    totalGames: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winPercentage: number;
+}
+
+// stats interface
+export interface IDeckStats {
+    wins: number;
+    losses: number;
+    draws: number;
+    opponentStats?: IOpponentStat[];
+}
+
+// DeckDetailedData
+export interface IDeckDetailedData {
+    id: string;
+    userId: string;
+    deck: {
+        leader: { id: string };
+        base: { id: string };
+        name: string;
+        favourite: boolean;
+        deckLink: string;
+        deckLID: string;
+        source?: string;
+    };
+    stats?: IDeckStats;
+}
 
 // Define interfaces for deck data
 export interface StoredDeck {

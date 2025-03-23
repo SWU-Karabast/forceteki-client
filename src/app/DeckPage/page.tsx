@@ -477,7 +477,7 @@ const DeckPage: React.FC = () => {
             <ConfirmationDialog
                 open={deleteDialogOpen}
                 title="Delete Decks"
-                message={`Are you sure you want to delete ${selectedDecks.length} deck${selectedDecks.length > 1 ? 's' : ''}? This action cannot be undone.`}
+                message={ConfirmationDialogMessage}
                 onCancel={() => setDeleteDialogOpen(false)}
                 onConfirm={handleDeleteSelectedDecks}
                 confirmButtonText="Delete"

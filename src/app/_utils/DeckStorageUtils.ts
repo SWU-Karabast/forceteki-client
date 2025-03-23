@@ -1,4 +1,4 @@
-import { DisplayDeck, StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { DisplayDeck, IDeckDetailedData, StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
@@ -132,7 +132,6 @@ export const loadSavedDecks = (deleteAfter: boolean = false): StoredDeck[] => {
                 }
             }
         }
-        console.log(storedDecks);
         // Sort to show favorites first
         return [...storedDecks].sort((a, b) => {
             if (a.favourite && !b.favourite) return -1;
@@ -221,5 +220,32 @@ export const updateDeckFavoriteInLocalStorage = (deckID: string) => {
         }
     } catch (error) {
         console.error('Error updating favorite status:', error);
+    }
+};
+
+/**
+ * Retrieves a deck by its ID
+ * @param deckId Deck ID to retrieve
+ * @returns Promise that resolves to the deck data
+ */
+export const getDeckFromServer = async (deckId: string | string[]): Promise<IDeckDetailedData> => {
+    try {
+        // Make sure we have an anonymousUserId if needed
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck/${deckId}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error getting deck:', errorText);
+            throw new Error(`Failed to get deck: ${errorText}`);
+        }
+
+        const data = await response.json();
+        return data.deck;
+    } catch (error) {
+        console.error('Error getting deck:', error);
+        throw error;
     }
 };
