@@ -14,6 +14,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
 
     const topDiscardCard = gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].at(-1);
     const topDiscardCardUrl = topDiscardCard && typeof topDiscardCard === 'object' ? `url(${s3CardImageURL(topDiscardCard)})` : 'none';
+    const selectableDiscardCards = gameState.players[trayPlayer.trayPlayer].cardPiles.discard.filter((item: { selectable: boolean }) => item.selectable === true);
+    const isSelectableDiscardCard = selectableDiscardCards.length > 0 ? true : false;
 
     const handleDiscardToggle = () => {
         const playerName = connectedPlayer != trayPlayer.trayPlayer ? 'Your Opponent\'s' : 'Your';
@@ -92,6 +94,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                 backgroundSize: 'cover',
                 backgroundImage: topDiscardCardUrl,
                 backgroundRepeat: 'no-repeat',
+                border: isSelectableDiscardCard ? '2px solid var(--selection-green)' : 'none',
             },
             discardContentStyle: {
                 fontFamily: 'var(--font-barlow), sans-serif',
