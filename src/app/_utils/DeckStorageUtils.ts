@@ -40,7 +40,6 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
 
         return returnedData.deckId;
     } catch (error) {
-        console.error('Error saving deck to server:', error);
         throw error;
     }
 };
@@ -50,11 +49,10 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
  * @param user The current user
  * @returns Promise that resolves to the array of decks
  */
-export const loadDecks = async (user: IUser | null): Promise<StoredDeck[]> => {
+export const loadDecks = async (): Promise<StoredDeck[]> => {
     try {
-        const decks = loadSavedDecks(true);
+        const decks = loadSavedDecks(false);
         const payload = {
-            user: user,
             decks: decks
         }
 
@@ -74,6 +72,7 @@ export const loadDecks = async (user: IUser | null): Promise<StoredDeck[]> => {
             console.log(errors);
             return decks;
         }
+        loadSavedDecks(true);
         return result;
     } catch (error) {
         console.log(error);
@@ -82,6 +81,28 @@ export const loadDecks = async (user: IUser | null): Promise<StoredDeck[]> => {
     }
 };
 
+export const deleteDecks = async (deckIds: string[]): Promise<void> => {
+    const payload = {
+        deckIds: deckIds
+    }
+    const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/delete-decks`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include'
+        }
+    );
+    const result = await response.json();
+    if(!response.ok){
+        const errors = result.errors || {};
+        console.log(errors);
+        throw new Error('Error when attempting to delete decks. '+ errors);
+    }
+}
+
 /**
  * Loads saved decks from localStorage will become depricated at some point.
  * @returns Array of stored decks sorted with favorites first
@@ -89,7 +110,6 @@ export const loadDecks = async (user: IUser | null): Promise<StoredDeck[]> => {
 export const loadSavedDecks = (deleteAfter: boolean = false): StoredDeck[] => {
     try {
         const storedDecks: StoredDeck[] = [];
-
         // Get all localStorage keys
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
@@ -112,7 +132,7 @@ export const loadSavedDecks = (deleteAfter: boolean = false): StoredDeck[] => {
                 }
             }
         }
-
+        console.log(storedDecks);
         // Sort to show favorites first
         return [...storedDecks].sort((a, b) => {
             if (a.favourite && !b.favourite) return -1;
@@ -180,6 +200,8 @@ export const removeDeckFromLocalStorage = (deckID: string | string[]): void => {
         console.error(`Error removing deck ${deckID}:`, error);
     }
 };
+
+
 
 /**
  * Updates the favorite status of a deck

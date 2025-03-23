@@ -11,7 +11,7 @@ import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckD
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    convertToDisplayDecks, loadDecks,
+    convertToDisplayDecks, deleteDecks, loadDecks,
     removeDeckFromLocalStorage,
     updateDeckFavoriteInLocalStorage
 } from '@/app/_utils/DeckStorageUtils';
@@ -31,6 +31,7 @@ const DeckPage: React.FC = () => {
     const [addDeckDialogOpen, setAddDeckDialogOpen] = useState<boolean>(false);
     const [selectedDecks, setSelectedDecks] = useState<string[]>([]); // Track selected decks
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+    const [ConfirmationDialogMessage, setConfirmationDialogMessage] = useState<string>('');
     const router = useRouter();
     const { user } = useUser();
 
@@ -43,7 +44,7 @@ const DeckPage: React.FC = () => {
     const fetchDecks = async () => {
         try {
             // Call the loadDecks function and await the result
-            const fetchedDecks = await loadDecks(user);
+            const fetchedDecks = await loadDecks();
             // Update state with the fetched decks converted to display format
             setDecks(convertToDisplayDecks(fetchedDecks));
         } catch (error) {
@@ -171,23 +172,24 @@ const DeckPage: React.FC = () => {
     // Open delete confirmation dialog
     const openDeleteDialog = () => {
         if (selectedDecks.length > 0) {
+            setConfirmationDialogMessage(`Are you sure you want to delete ${selectedDecks.length} deck${selectedDecks.length > 1 ? 's' : ''}? This action cannot be undone.`)
             setDeleteDialogOpen(true);
         }
     };
 
     // Delete selected decks
-    const handleDeleteSelectedDecks = () => {
+    const handleDeleteSelectedDecks = async () => {
         // Delete each selected deck from localStorage
-        selectedDecks.forEach(deckId => {
-            removeDeckFromLocalStorage(deckId);
-        });
-
-        // Update deck list in state
-        setDecks(prevDecks => prevDecks.filter(deck => !selectedDecks.includes(deck.deckID)));
-
-        // Reset selection
-        setSelectedDecks([]);
-
+        try{
+            await deleteDecks(selectedDecks);
+            // Update deck list in state
+            setDecks(prevDecks => prevDecks.filter(deck => !selectedDecks.includes(deck.deckID)));
+            // Reset selection
+            setSelectedDecks([]);
+        } catch (error){
+            console.log(error);
+            setConfirmationDialogMessage('There was an error when deleting decks. Try again later. '+error);
+        }
         // Close dialog
         setDeleteDialogOpen(false);
     };

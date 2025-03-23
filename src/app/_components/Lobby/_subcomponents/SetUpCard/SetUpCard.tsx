@@ -18,7 +18,7 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadDecks, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
+import { loadDecks, saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
@@ -34,7 +34,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const lobbyFormat = lobbyState ? lobbyState.lobbyFormat : null;
-
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
@@ -57,7 +56,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     // Load saved decks from localStorage
     const fetchDecks = async () => {
-        const decks = await loadDecks(user);
+        const decks = await loadDecks();
         if(decks.length > 0) {
             setFavouriteDeck(decks[0].deckID);
         }
@@ -98,6 +97,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             // save deck to local storage
             if (saveDeck && deckData && deckLink){
                 await saveDeckToServer(deckData, deckLink, user);
+                saveDeckToLocalStorage(deckData,deckLink); // TODO DELETE WHEN GOING TO PROD
             }
 
             sendLobbyMessage(['changeDeck', deckData])

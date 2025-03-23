@@ -11,7 +11,7 @@ import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponen
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { v4 as uuid } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
-import { saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
+import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
 
 interface AddDeckDialogProps {
     open: boolean;
@@ -58,6 +58,8 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                     setErrorModalOpen(true);
                 }
             }
+            const deckData = await fetchDeckData(deckLink, false); // TODO DELETE WHEN GOING TO PROD
+            saveDeckToLocalStorage(deckData,deckLink); // TODO DELETE WHEN GOING TO PROD
         }
     };
 
