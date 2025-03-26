@@ -15,8 +15,7 @@ const Resources: React.FC<IResourcesProps> = ({
 
     const availableResources = gameState.players[trayPlayer].availableResources;
     const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
-    const selectableResources = gameState.players[trayPlayer].cardPiles.resources.filter((item: { selectable: boolean }) => item.selectable === true);
-    const isSelectableResource = selectableResources.length > 0 ? true : false;
+    const selectableResource = gameState.players[trayPlayer].cardPiles.resources.some((item: { selectable: boolean }) => item.selectable === true);
 
     const handleResourceToggle = () => {
         const playerName = connectedPlayer != trayPlayer ? 'Your Opponent\'s' : 'Your';
@@ -44,7 +43,7 @@ const Resources: React.FC<IResourcesProps> = ({
         cardStyle: {
             width: 'auto',
             maxHeight: '100%',
-            background: isSelectableResource ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
+            background: selectableResource ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
             display: 'flex',
             position: 'relative',
             borderRadius: '5px',
@@ -54,7 +53,7 @@ const Resources: React.FC<IResourcesProps> = ({
             padding: '1.5rem .8rem',
             overflow: 'visible',
             cursor: 'pointer',
-            border: isSelectableResource ? '2px solid var(--selection-green)' : 'none',
+            border: selectableResource ? '2px solid var(--selection-green)' : 'none',
             '&:hover': {
                 background:
                     trayPlayer === connectedPlayer
