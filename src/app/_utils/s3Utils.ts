@@ -13,7 +13,7 @@ import {
 } from '@/app/_components/_sharedcomponents/Cards/cardUtils';
 
 export const s3ImageURL = (path: string) => {
-    const s3Bucket = 'https://karabast-assets.s3.amazonaws.com/';
+    const s3Bucket = 'https://karabast-data.s3.amazonaws.com/';
     return s3Bucket + path;
 };
 
@@ -32,11 +32,11 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
 
     let cardNumber = setId.number.toString().padStart(3, '0')
 
-    if (isGameCard(card) && ((cardType === 'leaderUnit' && card.epicDeployActionSpent) || (cardType === 'leaderUpgrade'))) {
-        cardNumber += '-portrait';
+    if (isGameCard(card) && cardType === 'leader' && card.zone === 'base') {
+        cardNumber += '-base';
     }
     if (cardType === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
-        cardNumber += '-side2';
+        cardNumber += '2';
     }
     const format = cardStyle === CardStyle.InPlay ? 'truncated' : 'standard';
 
