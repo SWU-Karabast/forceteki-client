@@ -169,6 +169,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             router.push('/');
         });
 
+        newSocket.on('matchmakingFailed', (error: any) => {
+            console.error('Matchmaking failed with error, requeueing:', error);
+            sendMessage('requeue');
+            resetStates();
+            router.push('/quickGame');
+        });
+
         newSocket.on('gamestate', (gameState: any) => {
             if(isSpectatorMode){
                 setConnectedPlayer(Object.keys(gameState.players)[0])
