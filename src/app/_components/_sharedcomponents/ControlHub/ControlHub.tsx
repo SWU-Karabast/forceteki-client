@@ -86,11 +86,11 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/Unimplemented" sx={styles.profileLink}>
                         Unimplemented
                     </NextLinkMui>
-                    <NextLinkMui href="/DeckPage" sx={styles.profileLink}>
-                        Decks
-                    </NextLinkMui>
                     {user ? (
                         <>
+                            <NextLinkMui href="/DeckPage" sx={styles.profileLink}>
+                                Decks
+                            </NextLinkMui>
                             <NextLinkMui href="/profile" sx={styles.profileLink}>
                                 Profile
                             </NextLinkMui>

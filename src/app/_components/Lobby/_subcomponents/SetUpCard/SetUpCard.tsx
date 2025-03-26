@@ -18,13 +18,15 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import { loadDecks, saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
+import { useUser } from '@/app/_contexts/User.context';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
     owner,
 }) => {
     const { lobbyState, connectedPlayer, sendLobbyMessage } = useGame();
+    const { user } = useUser();
     const [favouriteDeck, setFavouriteDeck] = useState<string>('');
     const [deckLink, setDeckLink] = useState<string>('');
     const [showTooltip, setShowTooltip] = useState(false);
@@ -33,7 +35,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const lobbyFormat = lobbyState ? lobbyState.lobbyFormat : null;
-
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
@@ -51,12 +52,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     };
 
     useEffect(() => {
-        loadDecks();
+        fetchDecks();
     }, []);
 
     // Load saved decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
+    const fetchDecks = async () => {
+        const decks = await loadDecks();
         if(decks.length > 0) {
             setFavouriteDeck(decks[0].deckID);
         }
@@ -87,6 +88,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
+                if(favouriteDeck && deckData && !deckLink) {
+                    deckData.deckID = favouriteDeck
+                }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -97,7 +101,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             }
             // save deck to local storage
             if (saveDeck && deckData && deckLink){
-                saveDeckToLocalStorage(deckData, deckLink);
+                try {
+                    await saveDeckToServer(deckData, deckLink, user);
+                }catch (err) {
+                    console.log(err);
+                    saveDeckToLocalStorage(deckData, deckLink); // TODO DELETE WHEN GOING TO PROD
+                }
             }
 
             sendLobbyMessage(['changeDeck', deckData])

@@ -12,7 +12,7 @@ import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import { loadDecks, saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -45,13 +45,13 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
 
     // Load saved decks when component mounts
     useEffect(() => {
-        loadDecks();
+        fetchDecks();
     }, []);
 
 
     // Load saved decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
+    const fetchDecks = async () => {
+        const decks = await loadDecks();
         if(decks.length > 0) {
             setFavouriteDeck(decks[0].deckID);
         }
@@ -84,6 +84,9 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
+                if(favouriteDeck && deckData && !deckLink) {
+                    deckData.deckID = favouriteDeck
+                }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -126,6 +129,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(payload),
+                    credentials:'include'
                 }
             );
             const result = await response.json();
@@ -148,7 +152,12 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             }
             // Save the deck if needed
             if (saveDeck && deckData && userDeck) {
-                saveDeckToLocalStorage(deckData, deckLink);
+                try {
+                    await saveDeckToServer(deckData, deckLink, user);
+                }catch (err) {
+                    console.log(err);
+                    saveDeckToLocalStorage(deckData, deckLink); // TODO DELETE WHEN GOING TO PROD
+                }
             }
 
             setDeckErrorSummary(null);

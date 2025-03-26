@@ -16,6 +16,7 @@ import { usePopup } from './Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { ZoneName } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface IGameContextType {
     gameState: any;
@@ -54,7 +55,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
-
+    const { data: session } = useSession();
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
         const connectedPlayerId = user?.id || anonymousUserId || '';
@@ -65,6 +66,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const isSpectatorMode = spectatorParam === 'true';
         setIsSpectator(isSpectatorMode);
 
+
+
+        const token = session?.jwtToken;
         const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
             query: {
@@ -72,6 +76,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null }),
                 spectator: isSpectatorMode ? 'true' : 'false'
             },
+            auth: token ? { token } : undefined
         });
 
         const cardSelectableZones = (gamestate: any) => {

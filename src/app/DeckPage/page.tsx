@@ -11,11 +11,11 @@ import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckD
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    convertToDisplayDecks,
-    loadSavedDecks,
+    convertToDisplayDecks, deleteDecks, loadDecks,
     removeDeckFromLocalStorage,
     updateDeckFavoriteInLocalStorage
-} from '@/app/_utils/LocalStorageUtils';
+} from '@/app/_utils/DeckStorageUtils';
+import { useUser } from '@/app/_contexts/User.context';
 
 
 
@@ -31,12 +31,26 @@ const DeckPage: React.FC = () => {
     const [addDeckDialogOpen, setAddDeckDialogOpen] = useState<boolean>(false);
     const [selectedDecks, setSelectedDecks] = useState<string[]>([]); // Track selected decks
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+    const [ConfirmationDialogMessage, setConfirmationDialogMessage] = useState<string>('');
     const router = useRouter();
+    const { user } = useUser();
 
     // Load decks from localStorage on component mount
     useEffect(() => {
-        loadDecks();
+        fetchDecks();
     }, []);
+
+    // Function to load decks from localStorage and server
+    const fetchDecks = async () => {
+        try {
+            // Call the loadDecks function and await the result
+            const fetchedDecks = await loadDecks();
+            // Update state with the fetched decks converted to display format
+            setDecks(convertToDisplayDecks(fetchedDecks));
+        } catch (error) {
+            console.error('Error fetching decks:', error);
+        }
+    };
 
     // sort function
     const sortDecks = (sort:string) => {
@@ -81,12 +95,6 @@ const DeckPage: React.FC = () => {
         }
         setDecks(sortedDecks);
     };
-
-    // Function to load decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
-        setDecks(convertToDisplayDecks(decks));
-    }
 
     // Handle successful deck addition
     const handleAddDeckSuccess = (deckData: IDeckData, deckLink: string) => {
@@ -164,23 +172,24 @@ const DeckPage: React.FC = () => {
     // Open delete confirmation dialog
     const openDeleteDialog = () => {
         if (selectedDecks.length > 0) {
+            setConfirmationDialogMessage(`Are you sure you want to delete ${selectedDecks.length} deck${selectedDecks.length > 1 ? 's' : ''}? This action cannot be undone.`)
             setDeleteDialogOpen(true);
         }
     };
 
     // Delete selected decks
-    const handleDeleteSelectedDecks = () => {
+    const handleDeleteSelectedDecks = async () => {
         // Delete each selected deck from localStorage
-        selectedDecks.forEach(deckId => {
-            removeDeckFromLocalStorage(deckId);
-        });
-
-        // Update deck list in state
-        setDecks(prevDecks => prevDecks.filter(deck => !selectedDecks.includes(deck.deckID)));
-
-        // Reset selection
-        setSelectedDecks([]);
-
+        try{
+            await deleteDecks(selectedDecks);
+            // Update deck list in state
+            setDecks(prevDecks => prevDecks.filter(deck => !selectedDecks.includes(deck.deckID)));
+            // Reset selection
+            setSelectedDecks([]);
+        } catch (error){
+            console.log(error);
+            setConfirmationDialogMessage('There was an error when deleting decks. Try again later. '+error);
+        }
         // Close dialog
         setDeleteDialogOpen(false);
     };
@@ -468,7 +477,7 @@ const DeckPage: React.FC = () => {
             <ConfirmationDialog
                 open={deleteDialogOpen}
                 title="Delete Decks"
-                message={`Are you sure you want to delete ${selectedDecks.length} deck${selectedDecks.length > 1 ? 's' : ''}? This action cannot be undone.`}
+                message={ConfirmationDialogMessage}
                 onCancel={() => setDeleteDialogOpen(false)}
                 onConfirm={handleDeleteSelectedDecks}
                 confirmButtonText="Delete"
