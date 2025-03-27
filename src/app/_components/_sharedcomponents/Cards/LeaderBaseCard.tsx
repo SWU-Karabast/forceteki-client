@@ -207,7 +207,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             {cardStyle === LeaderBaseCardStyle.Base && (
                 <Box sx={styles.damageCounterContainer}>
                     { !!distributionAmount && 
-                        <Typography variant="body1" sx={styles.damageCounter}>
+                    // Need to change background/borderRadius to backgroundImage
+                        <Typography variant="body1" sx={{ ...styles.damageCounter, background: 'blue', borderRadius: '10px' }}>
                             {distributionAmount}
                         </Typography>
                     }

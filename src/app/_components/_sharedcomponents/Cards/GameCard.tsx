@@ -21,8 +21,10 @@ const GameCard: React.FC<IGameCardProps> = ({
     capturedCards = [],
     disabled = false,
 }) => {
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
     const { clearPopups } = usePopup();
+
+    const distributeHealing = gameState.players[connectedPlayer].promptState.distributeAmongTargets?.type === 'distributeHealing';
 
     const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
@@ -342,7 +344,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundImage: 'url(/token-background.svg)',
+            // backgroundImage: 'url(/token-background.svg)',
+            background: distributeHealing ? 'blue' : 'red',
+            borderRadius: '10px',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             filter: 'drop-shadow(0 4px 4px 0 #00000040)',
