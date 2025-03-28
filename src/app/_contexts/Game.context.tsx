@@ -170,7 +170,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('matchmakingFailed', (error: any) => {
-            // console.error('Matchmaking failed with error, requeueing:', error);
+            console.error('Matchmaking failed with error, requeueing:', error);
             // sendMessage('requeue');
             // resetStates();
             router.push('/');
