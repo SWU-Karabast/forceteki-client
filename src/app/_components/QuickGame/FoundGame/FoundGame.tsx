@@ -8,10 +8,9 @@ import { useRouter } from 'next/navigation'
 
 
 const FoundGame: React.FC = () => {
-    const { lobbyState, connectedPlayer, sendLobbyMessage, gameState } = useGame();
+    const { lobbyState, connectedPlayer, gameState } = useGame();
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
-    const lobbyOwner = lobbyState.lobbyOwnerId
     // set connectedPlayer
     const playerLeader = connectedUser.deck?.leader || null;
     const playerBase = connectedUser.deck?.base || null;
@@ -21,38 +20,16 @@ const FoundGame: React.FC = () => {
     const opponentLeader = opponentUser ? opponentUser.deck.leader : null;
     const opponentBase = opponentUser ? opponentUser.deck.base : null;
     const router = useRouter();
-
-    // --- Countdown State ---
-    const [countdown, setCountdown] = useState(5);
-    const [gameStartSent, setGameStart] = useState(false);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const [countdownText, setCountdownText] = useState('Connecting...');
 
     useEffect(() => {
-        timerRef.current = setInterval(() => {
-            setCountdown((prev) => Math.max(prev - 1, 0));
-        }, 1000);
-
-        // Cleanup the timer when the component unmounts
-        return () => {
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-            }
-        };
-    }, []);
-
-    useEffect(() => {
-        if (countdown !== 0) return;
-
         if (gameState) {
             router.push('/GameBoard');
+        } else {
+            setCountdownText(lobbyState.matchingCountdownText);
+            router.push('/quickGame');
         }
-
-        // Only run once—if the connected user is the lobby owner and game start hasn't been sent yet
-        if (connectedUser?.id === lobbyOwner && !gameStartSent) {
-            setGameStart(true);
-            sendLobbyMessage(['onStartGameAsync']);
-        }
-    }, [countdown, connectedUser?.id, lobbyOwner, sendLobbyMessage, router, gameState, gameStartSent]);
+    }, [router, gameState, lobbyState]);
 
     // ------------------------STYLES------------------------//
 
@@ -128,7 +105,7 @@ const FoundGame: React.FC = () => {
                 <Typography sx={styles.connectingText}>
                     Match found!
                 </Typography>
-                <Typography sx={styles.playerText}>Starts in {countdown}</Typography>
+                <Typography sx={styles.playerText}>{countdownText}</Typography>
             </Box>
             <Box sx={styles.playersContainer}>
                 <Box sx={styles.CardSetContainerStyle}>
