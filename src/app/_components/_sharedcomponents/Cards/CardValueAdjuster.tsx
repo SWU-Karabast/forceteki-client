@@ -17,8 +17,9 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
 
     const atMaxAssignable = isIndirect && distributionPromptData && distributionPromptData.valueDistribution.find((entry) => entry.uuid === card.uuid)?.amount === ((card.hp ?? 0) - (card.damage ?? 0));
 
-    const distributeDamage = gameState.players[connectedPlayer]?.promptState.distributeAmongTargets.type === 'distributeDamage';
-    const distributeHealing = gameState.players[connectedPlayer]?.promptState.distributeAmongTargets.type === 'distributeHealing';
+    const type = gameState.players[connectedPlayer]?.promptState.distributeAmongTargets.type;
+    const distributeDamage = type === 'distributeDamage' || type === 'distributeIndirectDamage';
+    const distributeHealing = type === 'distributeHealing';
 
     const styles = {
         valueAdjuster: {
@@ -31,7 +32,10 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
             zIndex: 1
         },
         valueAdjusterButton: {
-            background: distributeDamage ? 'red' : distributeHealing && 'blue',
+            background: distributeDamage ? 'rgba(219, 19, 29, 0.8)' : distributeHealing && 'rgba(0, 186, 255, 0.8)',
+            '&:hover': {
+                background: distributeDamage ? 'rgba(219, 19, 29, 1)' : distributeHealing && 'rgba(0, 186, 255, 1)',
+            },
             flex: 1,
             minWidth: '50%',
             ':first-of-type': {
