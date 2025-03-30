@@ -8,7 +8,7 @@ export async function GET(req: Request) {
             console.error('Error: Missing parameter jsonFile');
             return NextResponse.json({ error: 'Missing parameter jsonFile', status: 400 });
         }
-        const response = await fetch('https://karabast-assets.s3.amazonaws.com/data/'+encodeURIComponent(jsonFile));
+        const response = await fetch('https://karabast-data.s3.amazonaws.com/data/'+encodeURIComponent(jsonFile));
 
         if (!response.ok) {
             console.error('Failed to fetch card mapping:', response.statusText);
