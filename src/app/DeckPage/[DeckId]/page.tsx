@@ -19,6 +19,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { removeDeckFromLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 const sortByOptions: string[] = ['Cost','Power','Most played'];
 
@@ -318,7 +319,7 @@ const DeckDetails: React.FC = () => {
                             aria-haspopup="true"
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
-                            data-card-url={deckData ? s3CardImageURL(deckData.leader) : ''}
+                            data-card-url={deckData ? s3CardImageURL(deckData.leader, CardStyle.PlainLeader) : ''}
                         />
                         <Box sx={styles.boxGeneralStylingBase}
                             aria-owns={open ? 'mouse-over-popover' : undefined}
