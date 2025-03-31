@@ -9,7 +9,7 @@ import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
-import { DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { CardStyle, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
     convertToDisplayDecks,
     loadSavedDecks,
@@ -421,7 +421,7 @@ const DeckPage: React.FC = () => {
                                             <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: deck.base.id, count:0 })})` }} />
                                         </Box>
                                         <Box sx={{ ...styles.parentBoxStyling, left: '-15px', top: '26px' }}>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: deck.leader.id, count:0 })})` }} />
+                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: deck.leader.id, count:0 }, CardStyle.PlainLeader)})` }} />
                                         </Box>
                                     </Box>
                                 </Box>
