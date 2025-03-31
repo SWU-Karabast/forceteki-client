@@ -192,7 +192,7 @@ const DeckDetails: React.FC = () => {
             backgroundColor: 'transparent',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
-            backgroundImage: deckData ? `url(${s3CardImageURL(deckData.leader)})` : 'none',
+            backgroundImage: deckData ? `url(${s3CardImageURL(deckData.leader, CardStyle.PlainLeader)})` : 'none',
             width: '14rem',
             height: '10.18rem',
             backgroundRepeat: 'no-repeat',
