@@ -3,7 +3,8 @@ import {
     IServerCardData,
     ISetCode,
     CardStyle,
-    IPreviewCard
+    IPreviewCard,
+    LeaderBaseCardStyle
 } from '../_components/_sharedcomponents/Cards/CardTypes';
 import {
     isGameCard,
@@ -17,7 +18,7 @@ export const s3ImageURL = (path: string) => {
     return s3Bucket + path;
 };
 
-export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IPreviewCard, cardStyle: CardStyle = CardStyle.Plain ) => {
+export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IPreviewCard, cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain ) => {
     if (((isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card)) && !card?.setId) && !card?.id) return s3ImageURL('game/swu-cardback.webp');
 
     // we check which type it is
@@ -32,8 +33,10 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
 
     let cardNumber = setId.number.toString().padStart(3, '0')
 
-    if (isGameCard(card) && cardType === 'leader' && card.zone === 'base') {
+    if ((isGameCard(card) && cardType === 'leader' && (card.zone === 'base')) ||
+        (cardStyle === CardStyle.PlainLeader)) {
         cardNumber += '-base';
+        console.log(cardNumber);
     }
     if (cardType === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
         cardNumber += '2';
