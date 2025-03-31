@@ -132,6 +132,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 title={titleOpponent}
                                 card={opponentLeader ? { ...opponentLeader,implemented: !isOpponentCardNotImplemented(opponentLeader?.id) } : opponentLeader}
                                 disabled={true}
+                                cardStyle={LeaderBaseCardStyle.PlainLeader}
                             />
                             <LeaderBaseCard card={opponentBase ? { ...opponentBase,implemented: !isOpponentCardNotImplemented(opponentBase?.id) } : opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>

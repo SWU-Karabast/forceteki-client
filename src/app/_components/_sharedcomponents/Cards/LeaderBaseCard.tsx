@@ -83,7 +83,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const styles = {
         card: {
             backgroundColor: 'black',
-            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
             borderRadius: '0.5rem',
             backgroundSize: 'cover',
             width: '100%',
