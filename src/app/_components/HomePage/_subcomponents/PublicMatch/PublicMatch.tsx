@@ -5,6 +5,7 @@ import { IPublicGameInProgressProps } from '../../HomePageTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
+import { LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     const router = useRouter();
@@ -80,7 +81,7 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                         <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Base)})` }}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Leader)})` }}/>
+                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Leader, LeaderBaseCardStyle.PlainLeader)})` }}/>
                     </Box>
                 </Box>
                 <Typography variant="body1" sx={styles.matchType}>vs</Typography>
@@ -89,7 +90,7 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                         <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Base)})` }}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Leader)})` }}/>
+                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Leader, LeaderBaseCardStyle.PlainLeader)})` }}/>
                     </Box>
                 </Box>
             </Box>

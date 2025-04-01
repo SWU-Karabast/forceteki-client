@@ -5,8 +5,7 @@ import Grid from '@mui/material/Grid2';
 import { ILobbyUserProps, IPlayersProps } from '../LobbyTypes';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { useGame } from '@/app/_contexts/Game.context';
-import { DeckValidationFailureReason } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { ICardData, LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     // ------------------------STYLES------------------------//
@@ -113,6 +112,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 title={connectedUser ? connectedUser.username : connectedPlayer}
                                 card={playerLeader ? { ...playerLeader,implemented: !isCardNotImplemented(playerLeader?.id) } : playerLeader}
                                 disabled={true}
+                                cardStyle={LeaderBaseCardStyle.PlainLeader}
                             />
                             <LeaderBaseCard card={playerBase ? { ...playerBase, implemented: !isCardNotImplemented(playerBase?.id) } : playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
@@ -132,6 +132,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 title={titleOpponent}
                                 card={opponentLeader ? { ...opponentLeader,implemented: !isOpponentCardNotImplemented(opponentLeader?.id) } : opponentLeader}
                                 disabled={true}
+                                cardStyle={LeaderBaseCardStyle.PlainLeader}
                             />
                             <LeaderBaseCard card={opponentBase ? { ...opponentBase,implemented: !isOpponentCardNotImplemented(opponentBase?.id) } : opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>
