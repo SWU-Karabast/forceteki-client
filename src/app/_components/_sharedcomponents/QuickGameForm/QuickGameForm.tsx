@@ -134,14 +134,20 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 if(response.status === 403) {
                     setQueueState(false)
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
-                    setErrorTitle('Creation not allowed')
-                    setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buts in the UI and avoid using the back button or closing the browser to leave games.')
+                    setErrorTitle('Matchmaking not allowed')
+                    setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buttons in the UI and avoid using the back button or closing the browser to leave games.')
                     setErrorModalOpen(true);
-                }else{
+                }else if(response.status === 400) {
                     setQueueState(false);
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setDeckErrorDetails(errors);
                     setErrorTitle('Deck Validation Error');
+                    setErrorModalOpen(true);
+                } else {
+                    setQueueState(false);
+                    setDeckErrorSummary('Server error, please try again. If the issue persists, please let us know in the Karabast discord.');
+                    setDeckErrorDetails(errors);
+                    setErrorTitle('Matchmaking Error');
                     setErrorModalOpen(true);
                 }
                 return
