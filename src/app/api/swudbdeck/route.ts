@@ -60,6 +60,27 @@ export async function GET(req: Request) {
                 console.error('SWUDB API error:', response.statusText);
                 throw new Error(`SWUDB API error: ${response.statusText}`);
             }
+        }
+        else if (deckLink.includes('sw-unlimited-db.com')) {
+            const match = deckLink.match(/\/decks\/(\d+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if(deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.SWUnlimitedDB;
+            if (!deckId) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            const apiUrl = `https://sw-unlimited-db.com/umbraco/api/deckapi/get?id=${deckId}`;
+
+            response = await fetch(apiUrl, { method: 'GET' });
+            if (!response.ok) {
+                console.error('SW-Unlimited-DB API error:', response.statusText);
+                throw new Error(`SW-Unlimited-DB API error: ${response.statusText}`);
+            }
         } else {
             console.error('Error: Deckbuilder not supported');
             return NextResponse.json({ error: 'Deckbuilder not supported' }, { status: 400 });

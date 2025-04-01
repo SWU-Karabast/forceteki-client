@@ -251,9 +251,6 @@ const CreateGameForm = () => {
                             SW-Unlimited-DB
                         </Link>{' '}
                         Deck Link{' '}
-                        <Typography variant="body1" sx={styles.labelTextStyleSecondary}>
-                            (use the URL or &apos;Deck Link&apos; button)
-                        </Typography>
                         <br />
                         OR paste deck JSON directly
                     </Box>
