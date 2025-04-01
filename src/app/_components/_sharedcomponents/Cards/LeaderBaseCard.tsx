@@ -84,7 +84,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const styles = {
         card: {
             backgroundColor: 'black',
-            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
             borderRadius: '0.5rem',
             backgroundSize: 'cover',
             width: '100%',
@@ -124,7 +124,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/epicActionToken.png)',
-            display: card.epicActionSpent && !isDeployed ? 'block' : 'none'
+            display: card.epicActionSpent || card.epicDeployActionSpent && !isDeployed ? 'block' : 'none'
         },
         damageCounterContainer: {
             position: 'absolute',
@@ -246,6 +246,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                             {title}
                         </Typography>
                     </Box>
+                    <Box sx={styles.epicActionIcon}></Box>
                 </>
             )}
         </Box>
