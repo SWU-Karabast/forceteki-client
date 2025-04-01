@@ -246,10 +246,10 @@ const CreateGameForm = () => {
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
-                        {/* or{' '}
-                        <Link href="https://www.sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
+                        /{' '}
+                        <Link href="https://sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SW-Unlimited-DB
-                        </Link>{' '} */}
+                        </Link>{' '}
                         Deck Link{' '}
                         <Typography variant="body1" sx={styles.labelTextStyleSecondary}>
                             (use the URL or &apos;Deck Link&apos; button)

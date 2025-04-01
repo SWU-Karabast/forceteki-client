@@ -13,7 +13,8 @@ export interface IDeckCard {
 export enum DeckSource {
     NotSupported = 'NotSupported',
     SWUStats = 'SWUStats',
-    SWUDB = 'SWUDB'
+    SWUDB = 'SWUDB',
+    SWUnlimitedDB = 'SWUnlimitedDB'
 }
 
 export interface IDeckData {
