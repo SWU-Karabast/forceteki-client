@@ -74,6 +74,8 @@ const HomePagePlayMode: React.FC = () => {
         },
         tabStyles: {
             color: 'white',
+            fontWeight: 'bold',
+            typography: 'h3',
         }
     };
 
@@ -89,8 +91,8 @@ const HomePagePlayMode: React.FC = () => {
                 <CardContent>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
                         <Tabs value={value} variant="fullWidth" onChange={handleChange}>
-                            <Tab sx={styles.tabStyles} label="Play" />
-                            <Tab sx={styles.tabStyles} label="Create" />
+                            <Tab sx={styles.tabStyles} label="Quick Match" />
+                            <Tab sx={styles.tabStyles} label="Create Lobby" />
                             {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
                         </Tabs>
                     </Box>
