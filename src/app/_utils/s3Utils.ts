@@ -43,7 +43,7 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
     }
     const format = cardStyle === CardStyle.InPlay ? 'truncated' : 'standard';
 
-    return s3ImageURL(`cards/${setId.set}/${format}/large/${cardNumber}.webp`);
+    return s3ImageURL(`cards/${setId.set}/${format}/large/${cardNumber}.webp?v=2`);
 };
 
 
