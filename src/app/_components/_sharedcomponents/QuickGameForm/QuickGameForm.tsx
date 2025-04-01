@@ -135,7 +135,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     setQueueState(false)
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
                     setErrorTitle('Matchmaking not allowed')
-                    setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buttons in the UI and avoid using the back button or closing the browser to leave games.')
+                    setDeckErrorDetails('You left the previous game/lobby abruptly or are still in one. You can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buttons in the UI and avoid using the back button or closing the browser to leave games.')
                     setErrorModalOpen(true);
                 }else if(response.status === 400) {
                     setQueueState(false);
