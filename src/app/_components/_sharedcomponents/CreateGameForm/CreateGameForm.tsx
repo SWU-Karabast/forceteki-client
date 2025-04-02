@@ -111,7 +111,7 @@ const CreateGameForm = () => {
                     });
                     setErrorModalOpen(true);
                 } else if(error.message.includes('Deck not found')) {
-                    // Handle the specific 404 error message from sw-unlimited-db
+                    // Handle the specific 404 error messages from any deck source
                     setDeckErrorSummary(error.message);
                     setErrorTitle('Deck Not Found');
                     setDeckErrorDetails(error.message);
