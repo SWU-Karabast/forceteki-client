@@ -33,9 +33,10 @@ export async function GET(req: Request) {
             response = await fetch(apiUrl, { method: 'GET' });
 
             if (!response.ok) {
-                if(response.status === 404) {
+                if(response.status === 404 || response.status === 500) {
                     return NextResponse.json({ error: 'Deck not found. Make sure the deck exists on swustats.net.' }, { status: 404 });
                 }
+                
                 console.error('SWUSTATS API error:', response.statusText);
                 throw new Error(`SWUSTATS API error: ${response.statusText}`);
             }
