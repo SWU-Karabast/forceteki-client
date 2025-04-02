@@ -78,6 +78,9 @@ export async function GET(req: Request) {
 
             response = await fetch(apiUrl, { method: 'GET' });
             if (!response.ok) {
+                if(response.status === 404) {
+                    return NextResponse.json({ error: 'Deck not found. Make sure it is set to Published on sw-unlimited-db.' }, { status: 404 });
+                }
                 console.error('SW-Unlimited-DB API error:', response.statusText);
                 throw new Error(`SW-Unlimited-DB API error: ${response.statusText}`);
             }
