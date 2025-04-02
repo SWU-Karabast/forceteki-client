@@ -110,7 +110,13 @@ const CreateGameForm = () => {
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
                     setErrorModalOpen(true);
-                }else{
+                } else if(error.message.includes('Deck not found')) {
+                    // Handle the specific 404 error message from sw-unlimited-db
+                    setDeckErrorSummary(error.message);
+                    setErrorTitle('Deck Not Found');
+                    setDeckErrorDetails(error.message);
+                    setErrorModalOpen(true);
+                } else {
                     setErrorTitle('Deck Validation Error');
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorModalOpen(true);
