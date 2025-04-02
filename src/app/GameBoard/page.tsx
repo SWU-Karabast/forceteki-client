@@ -59,6 +59,7 @@ const GameBoard = () => {
     }
 
     const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
+    const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
     // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
@@ -90,9 +91,9 @@ const GameBoard = () => {
             fontSize: '1.3em',
             padding: '0.5rem',
             position: 'relative',
-            border: promptTitle ? '1px solid var(--initiative-blue)' : '1px solid var(--initiative-red)',
+            border: !menuTitle ? 'none' : promptTitle ? '1px solid var(--initiative-blue)' : '1px solid var(--initiative-red)',
             borderRadius: '20px',
-            boxShadow: promptTitle ? '2px 2px 15px var(--initiative-blue), -2px -2px 15px var(--initiative-blue)' : '2px 2px 15px var(--initiative-red), -2px -2px 15px var(--initiative-red)',
+            boxShadow: !menuTitle ? 'none' : promptTitle ? '2px 2px 15px var(--initiative-blue), -2px -2px 15px var(--initiative-blue)' : '2px 2px 15px var(--initiative-red), -2px -2px 15px var(--initiative-red)',
         },
         promptShadow: {
             position: 'absolute',
