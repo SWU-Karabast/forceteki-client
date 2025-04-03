@@ -11,9 +11,7 @@ import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckD
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    convertToDisplayDecks, deleteDecks, loadDecks,
-    removeDeckFromLocalStorage,
-    updateDeckFavoriteInLocalStorage
+    convertToDisplayDecks, deleteDecks, loadDecks, toggleFavouriteDeck,
 } from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 
@@ -46,6 +44,12 @@ const DeckPage: React.FC = () => {
             // Call the loadDecks function and await the result
             const fetchedDecks = await loadDecks();
             // Update state with the fetched decks converted to display format
+            // Default to favourites first if sort option is unrecognized
+            fetchedDecks.sort((a, b) => {
+                if (a.favourite && !b.favourite) return -1;
+                if (!a.favourite && b.favourite) return 1;
+                return 0;
+            });
             setDecks(convertToDisplayDecks(fetchedDecks));
         } catch (error) {
             console.error('Error fetching decks:', error);
@@ -111,6 +115,8 @@ const DeckPage: React.FC = () => {
 
         // Add the new deck and re-sort to maintain favorites first
         setDecks(prevDecks => {
+            if(prevDecks.some(deck => deck.deckID === newDeck.deckID)) return prevDecks;
+
             const updatedDecks = [...prevDecks, newDeck];
             return updatedDecks.sort((a, b) => {
                 if (a.favourite && !b.favourite) return -1;
@@ -147,26 +153,31 @@ const DeckPage: React.FC = () => {
     };
 
     // Toggle favorite status for a deck
-    const toggleFavorite = (deckId: string, e:React.MouseEvent) => {
+    const toggleFavorite = async (deckId: string, e:React.MouseEvent) => {
         e.stopPropagation();
-        // Update in state and resort
-        const updatedDecks = decks.map(deck =>
-            deck.deckID === deckId
-                ? { ...deck, favourite: !deck.favourite }
-                : deck
-        );
+        // we call the response
+        const deckFav = !decks.find((deck) => deck.deckID === deckId)?.favourite;
+        try {
+            await toggleFavouriteDeck(deckId,deckFav)
+            // Update in state and resort
+            const updatedDecks = decks.map(deck =>
+                deck.deckID === deckId
+                    ? { ...deck, favourite: deckFav }
+                    : deck
+            );
 
-        // Re-sort to ensure favorites appear first
-        const sortedDecks = [...updatedDecks].sort((a, b) => {
-            if (a.favourite && !b.favourite) return -1;
-            if (!a.favourite && b.favourite) return 1;
-            return 0;
-        });
+            // Re-sort to ensure favorites appear first
+            const sortedDecks = [...updatedDecks].sort((a, b) => {
+                if (a.favourite && !b.favourite) return -1;
+                if (!a.favourite && b.favourite) return 1;
+                return 0;
+            });
 
-        setDecks(sortedDecks);
-
-        // Update in localStorage
-        updateDeckFavoriteInLocalStorage(deckId);
+            setDecks(sortedDecks);
+        }catch(error){
+            // TODO throw error to user
+            console.log(error)
+        }
     };
 
     // Open delete confirmation dialog

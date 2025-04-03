@@ -52,6 +52,11 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     // Load saved decks from localStorage
     const fetchDecks = async () => {
         const decks = await loadDecks();
+        decks.sort((a, b) => {
+            if (a.favourite && !b.favourite) return -1;
+            if (!a.favourite && b.favourite) return 1;
+            return 0;
+        });
         if(decks.length > 0) {
             setFavouriteDeck(decks[0].deckID);
         }

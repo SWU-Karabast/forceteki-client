@@ -4,6 +4,7 @@ import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
 import { IUser } from '@/app/_contexts/UserTypes';
 
+/* Server */
 export const getUserFromServer = async(): Promise<{ id: string, username: string }> =>{
     try {
         const decks = loadSavedDecks(false);
@@ -35,7 +36,33 @@ export const getUserFromServer = async(): Promise<{ id: string, username: string
     }
 }
 
-/* Server */
+export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean): Promise<void> => {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/deck/${deckId}/favorite`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                isFavorite
+            }),
+            credentials: 'include' // Necessary to include auth cookies
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error('Failed to toggle deck favorite:', data.message);
+            throw new Error(`Failed to toggle deck favorite:${data.message}`);
+        }
+
+        return;
+    } catch (error) {
+        console.error('Error toggling deck favorite:', error);
+        throw error;
+    }
+}
+
 export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink: string, user: IUser | null,) => {
     try {
         const payload = {
@@ -69,7 +96,7 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
             throw new Error('Error when attempting to save deck. '+ error);
         }
 
-        return returnedData.deckId;
+        return returnedData.deck.id;
     } catch (error) {
         throw error;
     }
@@ -231,29 +258,6 @@ export const removeDeckFromLocalStorage = (deckID: string | string[]): void => {
     }
 };
 
-
-
-/**
- * Updates the favorite status of a deck
- * @param deckID ID of the deck to update
- * @param isFavorite New favorite status
- * @returns True if successful, false otherwise
- */
-export const updateDeckFavoriteInLocalStorage = (deckID: string) => {
-    try {
-        const storageKey = `swu_deck_${deckID}`;
-        const deckDataJSON = localStorage.getItem(storageKey);
-
-        if (deckDataJSON) {
-            const deckData = JSON.parse(deckDataJSON) as StoredDeck;
-            deckData.favourite = !deckData.favourite;
-            localStorage.setItem(storageKey, JSON.stringify(deckData));
-        }
-    } catch (error) {
-        console.error('Error updating favorite status:', error);
-    }
-};
-
 /**
  * Retrieves a deck by its ID
  * @param deckId Deck ID to retrieve
@@ -263,7 +267,7 @@ export const getDeckFromServer = async (deckId: string | string[]): Promise<IDec
     try {
         // Make sure we have an anonymousUserId if needed
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck/${deckId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck${deckId}`, {
             method: 'GET',
             credentials: 'include'
         });
