@@ -9,7 +9,7 @@ import {
     Box, Popover, PopoverOrigin
 } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import { IOpponentTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import {CardStyle, IOpponentTableStats} from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface AnimatedStatsTableProps {
     data: IOpponentTableStats[];
@@ -238,10 +238,10 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                                             />
                                         </Box>
                                         <Box sx={{ ...styles.parentBoxStyling, left: '-8px', top: '14px' }}>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: row.leaderId, count:0 })})` }}
+                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: row.leaderId, count:0 },CardStyle.PlainLeader)})` }}
                                                 onMouseEnter={handlePreviewOpen}
                                                 onMouseLeave={handlePreviewClose}
-                                                data-card-url={s3CardImageURL({ id: row.leaderId, count:0 })}
+                                                data-card-url={s3CardImageURL({ id: row.leaderId, count:0 }, CardStyle.PlainLeader)}
                                             />
                                         </Box>
                                     </Box>
