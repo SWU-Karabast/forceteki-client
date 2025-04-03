@@ -170,7 +170,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         };
 
         newSocket.on('connection_error', (error: any) => {
-            console.error('Connection error:', error);
+            console.error('Error joining lobby:', error);
+            alert(error);
             router.push('/');
         });
 

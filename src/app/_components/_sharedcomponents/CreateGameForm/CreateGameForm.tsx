@@ -258,7 +258,7 @@ const CreateGameForm = () => {
                         <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWU Stats
                         </Link>{' '}
-                        or{' '}
+                        /{' '}
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
@@ -270,6 +270,8 @@ const CreateGameForm = () => {
                         <Typography variant="body1" sx={styles.labelTextStyleSecondary}>
                             (use the URL or &apos;Deck Link&apos; button)
                         </Typography>
+                        <br />
+                        OR paste deck JSON directly
                     </Box>
                     <StyledTextField
                         type="text"

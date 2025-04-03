@@ -17,7 +17,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     cardStyle = LeaderBaseCardStyle.Plain,
     disabled = false,
 }) => {
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
     
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -79,11 +79,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
+    const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
 
     const styles = {
         card: {
             backgroundColor: 'black',
-            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
             borderRadius: '0.5rem',
             backgroundSize: 'cover',
             width: '100%',
@@ -123,7 +124,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/epicActionToken.png)',
-            display: card.epicActionSpent && !isDeployed ? 'block' : 'none'
+            display: card.epicActionSpent || card.epicDeployActionSpent && !isDeployed ? 'block' : 'none'
         },
         damageCounterContainer: {
             position: 'absolute',
@@ -207,7 +208,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             {cardStyle === LeaderBaseCardStyle.Base && (
                 <Box sx={styles.damageCounterContainer}>
                     { !!distributionAmount && 
-                        <Typography variant="body1" sx={styles.damageCounter}>
+                    // Need to change background/borderRadius to backgroundImage
+                        <Typography variant="body1" sx={{ ...styles.damageCounter, background: distributeHealing ? 'rgba(0, 186, 255, 1)' : 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat', borderRadius: distributeHealing ? '17px 8px' : '0px' }}>
                             {distributionAmount}
                         </Typography>
                     }
@@ -244,6 +246,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                             {title}
                         </Typography>
                     </Box>
+                    <Box sx={styles.epicActionIcon}></Box>
                 </>
             )}
         </Box>
