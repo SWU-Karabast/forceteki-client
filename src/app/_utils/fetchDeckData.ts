@@ -37,7 +37,12 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
             // Try to get the error message from the response
             const errorData = await response.json().catch(() => null);
             if (errorData && errorData.error) {
-                throw new Error(errorData.error);
+                // Include the status code in the error message for 403 errors
+                if (response.status === 403) {
+                    throw new Error(`403: ${errorData.error}`);
+                } else {
+                    throw new Error(errorData.error);
+                }
             } else {
                 throw new Error(`Failed to fetch deck: ${response.status}`);
             }
