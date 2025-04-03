@@ -169,7 +169,7 @@ export interface IDeckDetailedData {
         name: string;
         favourite: boolean;
         deckLink: string;
-        deckLID: string;
+        deckLinkID: string;
         source?: string;
     };
     stats?: IDeckStats;

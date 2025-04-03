@@ -46,7 +46,7 @@ const handler = NextAuth({
             const rawToken = jwt.sign(token as object, process.env.NEXTAUTH_SECRET!, { algorithm: 'HS256' });
             session.jwtToken = rawToken
             session.user = {
-                id: token.id as string || token.sub || null,  // Use our formatted ID first
+                id: token.id as string || null,
                 name: token.name || session.user?.name || null,
                 email: token.email || session.user?.email || null,
                 image: token.picture || session.user?.image || null,

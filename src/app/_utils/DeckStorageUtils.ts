@@ -4,6 +4,37 @@ import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
 import { IUser } from '@/app/_contexts/UserTypes';
 
+export const getUserFromServer = async(): Promise<{ id: string, username: string }> =>{
+    try {
+        const decks = loadSavedDecks(false);
+        const payload = {
+            decks: decks
+        }
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-user`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            const errors = result.errors || {};
+            console.log(errors);
+            throw new Error(errors);
+        }
+        loadSavedDecks(true);
+        return result.user;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
 /* Server */
 export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink: string, user: IUser | null,) => {
     try {
@@ -17,7 +48,7 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
                     name: deckData.metadata?.name || 'Untitled Deck',
                     favourite: false,
                     deckLink: deckLink,
-                    deckLID: deckData.deckID || uuid(), // Use existing ID or generate new one
+                    deckLinkID: deckData.deckID, // Use existing ID or generate new one
                     source: deckData.deckSource || (deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB')
                 }
             }
@@ -178,7 +209,7 @@ export const saveDeckToLocalStorage = (deckData:IDeckData | DeckJSON | undefined
             name: deckData.metadata?.name || 'Untitled Deck',
             favourite: false,
             deckLink:deckLink,
-            deckLID:deckKey,
+            deckLinkID:deckKey,
             source: deckSource
         };
         // Save back to localStorage

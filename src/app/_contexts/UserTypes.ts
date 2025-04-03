@@ -3,6 +3,7 @@ export interface IUser {
     username: string | null;
     email: string | null;
     provider: string | null;
+    providerId: string | null;
 }
 
 export interface IUserContextType {

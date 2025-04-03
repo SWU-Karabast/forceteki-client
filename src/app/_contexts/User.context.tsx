@@ -11,6 +11,7 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { IUserContextType } from './UserTypes';
 import { v4 as uuid } from 'uuid';
+import { getUserFromServer } from '@/app/_utils/DeckStorageUtils';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
@@ -37,27 +38,50 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 handleDevSetUser(storedUser);
             }
         }
-    
-        if (session?.user) {
-            setUser(prevUser => {
-                if (prevUser?.id === session.user.id) return prevUser; // Avoid re-setting same user
-                return {
-                    id: session.user.id || null,
-                    username: session.user.name || null,
-                    email: session.user.email || null,
-                    provider: session.user.provider || null,
-                };
-            });
-        } else if (!storedUser) {
-            let anonymousId = localStorage.getItem('anonymousUserId');
-            if (!anonymousId) {
-                anonymousId = uuid();
-                localStorage.setItem('anonymousUserId', anonymousId);
+
+        const syncUserWithServer = async (storedUser: string | null) => {
+            if (session?.user) {
+                try {
+                    // Attempt to get user data from server
+                    const serverUser = await getUserFromServer();
+                    setUser(prevUser => {
+                        if (prevUser?.providerId === serverUser.id) return prevUser;
+                        return {
+                            id: serverUser.id,
+                            username: serverUser.username,
+                            email: session.user.email || null,
+                            provider: session.user.provider || null,
+                            providerId: session.user.id || null,
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error syncing user with server:', error);
+                    // You could set some error state here, or fall back to using just session data
+                    if(!storedUser){
+                        let anonymousId = localStorage.getItem('anonymousUserId');
+                        if (!anonymousId) {
+                            anonymousId = uuid();
+                            localStorage.setItem('anonymousUserId', anonymousId);
+                        }
+                        setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId));
+                    }
+                }
+            } else if (!storedUser) {
+                let anonymousId = localStorage.getItem('anonymousUserId');
+                if (!anonymousId) {
+                    anonymousId = uuid();
+                    localStorage.setItem('anonymousUserId', anonymousId);
+                }
+                setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId));
             }
-            setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId)); // Avoid redundant updates
         }
+
+        syncUserWithServer(storedUser);
     }, [session, pathname]);
 
+
+    const syncUserWithServer = async (storedUser: string | null) => {
+    };
 
     const login = (provider: 'google' | 'discord') => {
         signIn(provider, {
@@ -73,6 +97,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 username: 'Order66',
                 email: null,
                 provider: null,
+                providerId: null,
             });
         } else if (user === 'ThisIsTheWay') {
             setUser({
@@ -80,6 +105,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 username: 'ThisIsTheWay',
                 email: null,
                 provider: null,
+                providerId: null,
             });
         }
     }
