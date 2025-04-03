@@ -127,9 +127,41 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                         linear-gradient(to top, #038FC3, #404040) border-box`,
                     },
                 };
+            case 'pass':
+            case 'done':
+                return {
+                    background: `linear-gradient(rgb(29, 29, 29), #32301E) padding-box, 
+                        linear-gradient(to top, #FFC107, #404040) border-box`,
+                    '&:hover': {
+                        background: `linear-gradient(rgb(29, 29, 29), #423D25) padding-box, 
+                        linear-gradient(to top, #FFD54F, #404040) border-box`,
+                    },
+                    boxShadow: '0 0 10px rgba(255, 193, 7, 0.5)',
+                    minWidth: '9rem',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                };
             default: return {};
         }
     }
+
+    // Custom text styles for specific button types
+    const getTextStyles = (arg: string) => {
+        switch (arg) {
+            case 'pass':
+            case 'done':
+                return {
+                    transform: 'skew(10deg)',
+                    lineHeight: '1.2',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    color: '#FFFFFF',
+                    textShadow: '0 0 5px rgba(255, 193, 7, 0.7)'
+                };
+            default:
+                return styles.promptButtonText;
+        }
+    };
 
     return (
         <Button
@@ -138,7 +170,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
             disabled={disabled}
         >
-            <Box sx={styles.promptButtonText}>
+            <Box sx={getTextStyles(button.arg)}>
                 {button.text}
             </Box>
         </Button>
