@@ -34,10 +34,8 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
             `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
         );
         if (!response.ok) {
-            // Try to get the error message from the response
             const errorData = await response.json().catch(() => null);
             if (errorData && errorData.error) {
-                // Include the status code in the error message for 403 errors
                 if (response.status === 403) {
                     throw new Error(`403: ${errorData.error}`);
                 } else {
