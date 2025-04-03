@@ -9,7 +9,7 @@ import {
     Box, Popover, PopoverOrigin
 } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import {CardStyle, IOpponentTableStats} from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { CardStyle, IOpponentTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface AnimatedStatsTableProps {
     data: IOpponentTableStats[];
