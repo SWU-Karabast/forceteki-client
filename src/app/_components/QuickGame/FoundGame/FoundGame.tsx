@@ -5,6 +5,7 @@ import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBase
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 import { useRouter } from 'next/navigation'
+import { LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 
 
 const FoundGame: React.FC = () => {
@@ -113,7 +114,7 @@ const FoundGame: React.FC = () => {
                         <LeaderBaseCard card={playerBase}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <LeaderBaseCard card={playerLeader}/>
+                        <LeaderBaseCard card={playerLeader} cardStyle={LeaderBaseCardStyle.PlainLeader}/>
                     </Box>
                     <Typography sx={{ ...styles.playerText, marginTop:'24px' }}>
                         {connectedUser.username}
@@ -127,7 +128,7 @@ const FoundGame: React.FC = () => {
                         <LeaderBaseCard card={opponentBase}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <LeaderBaseCard card={opponentLeader}/>
+                        <LeaderBaseCard card={opponentLeader} cardStyle={LeaderBaseCardStyle.PlainLeader}/>
                     </Box>
                     <Typography sx={{ ...styles.playerText, marginTop:'24px' }}>
                         {titleOpponent}
