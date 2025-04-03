@@ -120,7 +120,6 @@ const DeckDetails: React.FC = () => {
             // we get the deck from localStorage and set the link
             const deckDataServer = await getDeckFromServer(deckId);
             // we need to check if the deck is still available
-            console.log(deckDataServer);
             try {
                 const data = await fetchDeckData(deckDataServer.deck.deckLink, false);
                 setDeckData(data);
