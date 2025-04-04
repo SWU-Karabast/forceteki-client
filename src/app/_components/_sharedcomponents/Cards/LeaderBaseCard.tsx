@@ -189,7 +189,22 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             aspectRatio: '1 / 1.4',
             width: '16rem',
         },
+
     }
+
+    const getForceTokenIconStyle = (player: any) => ({
+        position: 'absolute',
+        width: '2.5rem',
+        aspectRatio: '1 / 1',
+        top:'-8px',
+        right: '-12px',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundImage: player.aspects.includes('villainy') 
+            ? 'url(/ForceTokenVillainy.png)'
+            : 'url(/ForceTokenHeroism.png)',
+        filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+    });
 
     return (
         <Box
@@ -216,6 +231,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     <Typography variant="body1" sx={styles.damageCounter}>
                         {card.damage}
                     </Typography>
+                    {(
+                        <Box sx={getForceTokenIconStyle(gameState.players[card.controller.id])}/>
+                    )}
                 </Box>
             )}
 
