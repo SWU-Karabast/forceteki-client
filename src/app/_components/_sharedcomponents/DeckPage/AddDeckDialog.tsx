@@ -56,6 +56,11 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorModalOpen(true);
                 }
+            }else{
+                setErrorTitle('Server error');
+                setDeckErrorSummary('Server error when saving deck to server.');
+                setDeckErrorDetails('There was an error when saving deck to the server. Please contact the developer team on discord.');
+                setErrorModalOpen(true);
             }
         }
     };

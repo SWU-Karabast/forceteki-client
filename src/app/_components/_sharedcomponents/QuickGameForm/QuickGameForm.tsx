@@ -63,7 +63,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             }
             setSavedDecks(decks);
         }catch (err) {
-            alert(err);
+            alert('Server error when fetching decks');
         }
     };
 
@@ -169,7 +169,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     }
                 }catch (err) {
                     console.log(err);
-                    alert(err);
+                    setErrorTitle('Server error');
+                    setDeckErrorSummary('Server error when saving deck to server.');
+                    setDeckErrorDetails('There was an error when saving deck to the server. Please contact the developer team on discord.');
+                    setErrorModalOpen(true);
                 }
             }
 

@@ -70,7 +70,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setSavedDecks(decks);
         } catch (err){
             console.log(err);
-            alert(err);
+            alert('Server error when fetching decks');
         }
     };
 
@@ -119,7 +119,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     }
                 }catch (err) {
                     console.log(err);
-                    alert(err);
+                    setDeckErrorSummary('Server error when saving deck to server.');
+                    setDeckErrorDetails('There was an error when saving deck to the server. Please contact the developer team on discord.');
+                    setErrorModalOpen(true);
                 }
             }
 

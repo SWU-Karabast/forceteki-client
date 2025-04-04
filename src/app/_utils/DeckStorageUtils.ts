@@ -127,8 +127,7 @@ export const loadDecks = async (): Promise<StoredDeck[]> => {
         if (!response.ok) {
             const errors = result.message || {};
             console.log(errors);
-            alert(errors);
-            return decks;
+            throw new Error(errors);
         }
         loadSavedDecks(true);
         return result;
