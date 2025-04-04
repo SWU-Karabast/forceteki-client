@@ -60,17 +60,21 @@ const CreateGameForm = () => {
 
     // Load saved decks from localStorage
     const fetchDecks = async() => {
-        const decks = user ? await loadDecks() : await loadSavedDecks();
-        decks.sort((a, b) => {
-            if (a.favourite && !b.favourite) return -1;
-            if (!a.favourite && b.favourite) return 1;
-            return 0;
-        });
+        try {
+            const decks = user ? await loadDecks() : await loadSavedDecks();
+            decks.sort((a, b) => {
+                if (a.favourite && !b.favourite) return -1;
+                if (!a.favourite && b.favourite) return 1;
+                return 0;
+            });
 
-        if (decks.length > 0) {
-            setFavouriteDeck(decks[0].deckID);
+            if (decks.length > 0) {
+                setFavouriteDeck(decks[0].deckID);
+            }
+            setSavedDecks(decks);
+        }catch (err){
+            alert(err);
         }
-        setSavedDecks(decks);
     }
     const handleChangeFormat = (format: SwuGameFormat) => {
         localStorage.setItem('format', format);
@@ -166,10 +170,14 @@ const CreateGameForm = () => {
             // save deck to local storage
             if (saveDeck && deckData && deckLink){
                 try {
-                    await saveDeckToServer(deckData, deckLink, user);
+                    if(user) {
+                        await saveDeckToServer(deckData, deckLink, user)
+                    }else{
+                        saveDeckToLocalStorage(deckData, deckLink);
+                    }
                 }catch (err) {
                     console.log(err);
-                    saveDeckToLocalStorage(deckData, deckLink); // TODO DELETE WHEN GOING TO PROD
+                    alert(err);
                 }
             }
 

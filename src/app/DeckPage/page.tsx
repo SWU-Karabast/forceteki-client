@@ -52,6 +52,7 @@ const DeckPage: React.FC = () => {
             });
             setDecks(convertToDisplayDecks(fetchedDecks));
         } catch (error) {
+            alert(error);
             console.error('Error fetching decks:', error);
         }
     };
@@ -176,6 +177,7 @@ const DeckPage: React.FC = () => {
             setDecks(sortedDecks);
         }catch(error){
             // TODO throw error to user
+            alert(error);
             console.log(error)
         }
     };

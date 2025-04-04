@@ -117,10 +117,10 @@ const DeckDetails: React.FC = () => {
 
     const fetchDeckFromServer = async (deckId: string | string[]) => {
         if (deckId) {
-            // we get the deck from localStorage and set the link
-            const deckDataServer = await getDeckFromServer(deckId);
             // we need to check if the deck is still available
             try {
+                // we get the deck from localStorage and set the link
+                const deckDataServer = await getDeckFromServer(deckId);
                 const data = await fetchDeckData(deckDataServer.deck.deckLink, false);
                 setDeckData(data);
                 setDisplayDeck(deckDataServer);
@@ -138,6 +138,9 @@ const DeckDetails: React.FC = () => {
                         setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
                     }
                     return;
+                }else{
+                    setErrorModalOpen(true);
+                    setDeckErrorDetails('Server error when attempting to retrieve deck: '+error);
                 }
             }
         }
@@ -160,15 +163,20 @@ const DeckDetails: React.FC = () => {
 
     // handle confirm delete
     const handleConfirmDelete = async () => {
-        if (deckId) {
-            if(typeof deckId === 'string'){
-                await deleteDecks([deckId])
-            }else {
-                await deleteDecks(deckId)
+        try {
+            if (deckId) {
+                if (typeof deckId === 'string') {
+                    await deleteDecks([deckId])
+                } else {
+                    await deleteDecks(deckId)
+                }
             }
+            setDeleteDialogOpen(false);
+            router.push('/DeckPage');
+        }catch(err){
+            setErrorModalOpen(true);
+            setDeckErrorDetails('Error deleting deck/decks: '+err);
         }
-        setDeleteDialogOpen(false);
-        router.push('/DeckPage');
     };
 
     // Cancel delete operation

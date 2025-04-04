@@ -35,8 +35,7 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
         try {
             const deckData = await fetchDeckData(deckLink, false);
             if (deckData) {
-                const newDeckId = await saveDeckToServer(deckData, deckLink, user);
-                deckData.deckID = newDeckId;
+                deckData.deckID = user ? await saveDeckToServer(deckData, deckLink, user) : saveDeckToLocalStorage(deckData,deckLink);
                 onSuccess(deckData, deckLink);
                 // Reset form
                 setDeckLink('');
@@ -58,8 +57,6 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                     setErrorModalOpen(true);
                 }
             }
-            const deckData = await fetchDeckData(deckLink, false); // TODO DELETE WHEN GOING TO PROD
-            saveDeckToLocalStorage(deckData,deckLink); // TODO DELETE WHEN GOING TO PROD
         }
     };
 

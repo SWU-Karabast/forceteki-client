@@ -95,7 +95,6 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
             console.error('Error saving deck to server:', error);
             throw new Error('Error when attempting to save deck. '+ error);
         }
-
         return returnedData.deck.id;
     } catch (error) {
         throw error;
@@ -128,36 +127,40 @@ export const loadDecks = async (): Promise<StoredDeck[]> => {
         if (!response.ok) {
             const errors = result.message || {};
             console.log(errors);
+            alert(errors);
             return decks;
         }
         loadSavedDecks(true);
         return result;
     } catch (error) {
         console.log(error);
-        // Return local decks as fallback
-        return loadSavedDecks(false);
+        throw error;
     }
 };
 
 export const deleteDecks = async (deckIds: string[]): Promise<void> => {
-    const payload = {
-        deckIds: deckIds
-    }
-    const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/delete-decks`,
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-            credentials: 'include'
+    try {
+        const payload = {
+            deckIds: deckIds
         }
-    );
-    const result = await response.json();
-    if(!response.ok){
-        const errors = result.errors || {};
-        console.log(errors);
-        throw new Error('Error when attempting to delete decks. '+ errors);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/delete-decks`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            const errors = result.errors || {};
+            console.log(errors);
+            throw new Error('Error when attempting to delete decks. ' + errors);
+        }
+    }catch(error) {
+        throw error;
     }
 }
 
@@ -224,7 +227,7 @@ export const convertToDisplayDecks = (storedDecks: StoredDeck[]): DisplayDeck[] 
  * @param deckData Deck data we receive from a deckbuilder
  * @param deckLink Unique url of the decks source
  */
-export const saveDeckToLocalStorage = (deckData:IDeckData | DeckJSON | undefined, deckLink: string): void => {
+export const saveDeckToLocalStorage = (deckData:IDeckData | DeckJSON | undefined, deckLink: string) => {
     if(!deckData) return;
     try {
         // Save to localStorage
@@ -241,6 +244,7 @@ export const saveDeckToLocalStorage = (deckData:IDeckData | DeckJSON | undefined
         };
         // Save back to localStorage
         localStorage.setItem('swu_deck_'+deckKey, JSON.stringify(simplifiedDeckData));
+        return deckKey;
     } catch (error) {
         throw error;
     }

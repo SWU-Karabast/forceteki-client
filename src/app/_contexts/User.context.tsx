@@ -56,6 +56,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                     });
                 } catch (error) {
                     console.error('Error syncing user with server:', error);
+                    alert('Server error while logging in');
                     // You could set some error state here, or fall back to using just session data
                     if(!storedUser){
                         let anonymousId = localStorage.getItem('anonymousUserId');
