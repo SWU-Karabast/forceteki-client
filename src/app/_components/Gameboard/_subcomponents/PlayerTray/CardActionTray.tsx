@@ -46,6 +46,7 @@ interface IButtonsProps {
     arg: string;
     text: string;
     uuid: string;
+    disabled?: boolean;
 }
 
 /** --------------------- COMPONENTS --------------------- **/
@@ -78,7 +79,7 @@ const CardActionTray: React.FC = () => {
             }
         }
 
-        return false;
+        return !!button.disabled;
     };
 
     return (
@@ -116,11 +117,11 @@ interface IPromptButtonProps {
 
 
 const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled }) => {
-    const actionTrayStyles = (arg: string) => {
+    const actionTrayStyles = (arg: string, disabled = false) => {
         switch (arg) {
             case 'claimInitiative':
-                return {
-                    background: `linear-gradient(rgb(29, 29, 29), #1E2D32) padding-box, 
+                return disabled ? {} : {
+                    badckground: `linear-gradient(rgb(29, 29, 29), #1E2D32) padding-box, 
                         linear-gradient(to top, #038FC3, #404040) border-box`,
                     '&:hover': {
                         background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
@@ -134,7 +135,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
     return (
         <Button
             variant="contained"
-            sx={{ ...styles.promptButton, ...actionTrayStyles(button.arg) }}
+            sx={{ ...styles.promptButton, ...actionTrayStyles(button.arg, button.disabled) }}
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
             disabled={disabled}
         >
