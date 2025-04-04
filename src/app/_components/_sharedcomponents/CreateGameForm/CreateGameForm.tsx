@@ -23,7 +23,7 @@ import {
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadDecks, saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
+import { loadDecks, loadSavedDecks, saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
 
 const CreateGameForm = () => {
     const pathname = usePathname();
@@ -60,7 +60,7 @@ const CreateGameForm = () => {
 
     // Load saved decks from localStorage
     const fetchDecks = async() => {
-        const decks = await loadDecks();
+        const decks = user ? await loadDecks() : await loadSavedDecks();
         decks.sort((a, b) => {
             if (a.favourite && !b.favourite) return -1;
             if (!a.favourite && b.favourite) return 1;

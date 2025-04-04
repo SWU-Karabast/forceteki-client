@@ -11,7 +11,7 @@ import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckD
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { CardStyle, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    convertToDisplayDecks, deleteDecks, loadDecks, toggleFavouriteDeck,
+    convertToDisplayDecks, deleteDecks, loadDecks, loadSavedDecks, toggleFavouriteDeck,
 } from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 
@@ -42,7 +42,7 @@ const DeckPage: React.FC = () => {
     const fetchDecks = async () => {
         try {
             // Call the loadDecks function and await the result
-            const fetchedDecks = await loadDecks();
+            const fetchedDecks = user ? await loadDecks() : await loadSavedDecks();
             // Update state with the fetched decks converted to display format
             // Default to favourites first if sort option is unrecognized
             fetchedDecks.sort((a, b) => {

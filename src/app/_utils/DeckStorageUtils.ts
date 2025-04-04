@@ -267,7 +267,7 @@ export const getDeckFromServer = async (deckId: string | string[]): Promise<IDec
     try {
         // Make sure we have an anonymousUserId if needed
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck${deckId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck/${deckId}`, {
             method: 'GET',
             credentials: 'include'
         });

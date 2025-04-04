@@ -18,7 +18,7 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadDecks, saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
+import { loadDecks, loadSavedDecks, saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
@@ -57,7 +57,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     // Load saved decks from localStorage
     const fetchDecks = async () => {
-        const decks = await loadDecks();
+        const decks = user ? await loadDecks() : await loadSavedDecks();
         decks.sort((a, b) => {
             if (a.favourite && !b.favourite) return -1;
             if (!a.favourite && b.favourite) return 1;
