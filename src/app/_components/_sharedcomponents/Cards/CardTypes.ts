@@ -126,7 +126,7 @@ interface ICardPlayer {
     uuid: string;
 }
 
-export interface IOpponentTableStats {
+export interface IMatchTableStats {
     leaderId: string,
     baseId: string,
     wins: number,
@@ -136,7 +136,7 @@ export interface IOpponentTableStats {
 }
 
 // Interface for opponent stats
-export interface IOpponentStat {
+export interface IMatchupStatEntity {
     leaderId: string;
     baseId: string;
     wins: number;
@@ -158,7 +158,7 @@ export interface IDeckStats {
     wins: number;
     losses: number;
     draws: number;
-    opponentStats?: IOpponentStat[];
+    statsByMatchup?: IMatchupStatEntity[];
 }
 
 // DeckDetailedData

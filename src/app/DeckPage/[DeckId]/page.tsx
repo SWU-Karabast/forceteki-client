@@ -23,7 +23,7 @@ import {
     IDeckDetailedData,
     IDeckPageStats,
     IDeckStats,
-    IOpponentStat, IOpponentTableStats
+    IMatchupStatEntity, IMatchTableStats
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
@@ -35,7 +35,7 @@ const DeckDetails: React.FC = () => {
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const [deckStats, setDeckStats] = React.useState<IDeckPageStats>({ wins: 0, winPercentage: 0, draws: 0, losses: 0, totalGames: 0 });
-    const [opponentStats, setOpponentStats] = React.useState<IOpponentTableStats[] | null>(null);
+    const [opponentStats, setOpponentStats] = React.useState<IMatchTableStats[] | null>(null);
     const params = useParams();
     const deckId = params?.DeckId;
 
@@ -86,7 +86,7 @@ const DeckDetails: React.FC = () => {
      * @param opponentStats Array of opponent stats from the database
      * @returns Formatted stats with added total and winPercentage fields
      */
-    const getFormattedOpponentStats = (opponentStats: IOpponentStat[] | undefined) => {
+    const getFormattedOpponentStats = (opponentStats: IMatchupStatEntity[] | undefined) => {
         if (!opponentStats || !Array.isArray(opponentStats)) {
             return [];
         }
@@ -125,7 +125,7 @@ const DeckDetails: React.FC = () => {
                 setDeckData(data);
                 setDisplayDeck(deckDataServer);
                 calculateStats(deckDataServer.stats);
-                getFormattedOpponentStats(deckDataServer.stats?.opponentStats);
+                getFormattedOpponentStats(deckDataServer.stats?.statsByMatchup);
             } catch (error) {
                 // check if its set to private
                 if (error instanceof Error) {

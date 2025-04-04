@@ -9,10 +9,10 @@ import {
     Box, Popover, PopoverOrigin
 } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import { CardStyle, IOpponentTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { CardStyle, IMatchTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface AnimatedStatsTableProps {
-    data: IOpponentTableStats[];
+    data: IMatchTableStats[];
     animationDuration?: number; // in ms
     staggerDelay?: number; // delay between row animations in ms
 }
@@ -23,7 +23,7 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     staggerDelay = 100
 }) => {
     // State for animated values
-    const [animatedData, setAnimatedData] = useState<IOpponentTableStats[]>([]);
+    const [animatedData, setAnimatedData] = useState<IMatchTableStats[]>([]);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
