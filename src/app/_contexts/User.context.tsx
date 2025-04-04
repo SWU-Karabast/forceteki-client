@@ -38,14 +38,13 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 handleDevSetUser(storedUser);
             }
         }
-
         const syncUserWithServer = async (storedUser: string | null) => {
             if (session?.user) {
                 try {
                     // Attempt to get user data from server
+                    if(user?.providerId === session.user.id){return}
                     const serverUser = await getUserFromServer();
-                    setUser(prevUser => {
-                        if (prevUser?.providerId === serverUser.id) return prevUser;
+                    setUser(() => {
                         return {
                             id: serverUser.id,
                             username: serverUser.username,

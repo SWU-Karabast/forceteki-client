@@ -56,7 +56,7 @@ const CreateGameForm = () => {
 
     useEffect(() => {
         fetchDecks();
-    }, []);
+    }, [user]);
 
     // Load saved decks from localStorage
     const fetchDecks = async() => {

@@ -46,7 +46,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     // Load saved decks when component mounts
     useEffect(() => {
         fetchDecks();
-    }, []);
+    }, [user]);
 
 
     // Load saved decks from localStorage
