@@ -73,6 +73,7 @@ const CreateGameForm = () => {
             }
             setSavedDecks(decks);
         }catch (err){
+            console.log(err);
             alert('Server error when fetching decks');
         }
     }

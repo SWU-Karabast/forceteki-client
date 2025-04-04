@@ -63,6 +63,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             }
             setSavedDecks(decks);
         }catch (err) {
+            console.log(err);
             alert('Server error when fetching decks');
         }
     };
