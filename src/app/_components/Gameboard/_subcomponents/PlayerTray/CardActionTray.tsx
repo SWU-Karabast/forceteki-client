@@ -120,12 +120,28 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
         switch (arg) {
             case 'claimInitiative':
                 return {
-                    background: `linear-gradient(rgb(29, 29, 29), #1E2D32) padding-box, 
-                        linear-gradient(to top, #038FC3, #404040) border-box`,
+                    background: `linear-gradient(rgb(29, 29, 29), #0A2A4A) padding-box, 
+                        linear-gradient(to top, #0091EA, #2979FF) border-box`,
                     '&:hover': {
-                        background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
-                        linear-gradient(to top, #038FC3, #404040) border-box`,
+                        background: `linear-gradient(rgb(29, 29, 29), #0D47A1) padding-box, 
+                        linear-gradient(to top, #2196F3, #2979FF) border-box`,
                     },
+                    boxShadow: '0 0 15px rgba(33, 150, 243, 0.9)',
+                    minWidth: '9rem',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    animation: 'pulse 2s infinite',
+                    '@keyframes pulse': {
+                        '0%': {
+                            boxShadow: '0 0 15px rgba(33, 150, 243, 0.7)'
+                        },
+                        '50%': {
+                            boxShadow: '0 0 20px rgba(41, 121, 255, 0.9)'
+                        },
+                        '100%': {
+                            boxShadow: '0 0 15px rgba(33, 150, 243, 0.7)'
+                        }
+                    }
                 };
             case 'pass':
             case 'done':
@@ -143,11 +159,20 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                 };
             default: return {};
         }
-    }
+    };
 
     // Custom text styles for specific button types
     const getTextStyles = (arg: string) => {
         switch (arg) {
+            case 'claimInitiative':
+                return {
+                    transform: 'skew(10deg)',
+                    lineHeight: '1.2',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    textShadow: '0 0 8px rgba(33, 150, 243, 1)',
+                    color: '#E3F2FD'
+                };
             case 'pass':
             case 'done':
                 return {
