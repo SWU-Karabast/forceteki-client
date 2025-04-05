@@ -207,7 +207,7 @@ export const parseInputAsDeckData = (input: string): {
         return { type: 'json', data: jsonData };
     }
 
-    if(input.includes('swustats.net') || input.includes('swudb.com')){
+    if(input.includes('swustats.net') || input.includes('swudb.com') || input.includes('sw-unlimited-db.com')){
         return { type: 'url', data: null };
     }
     return { type: 'invalid', data:null }
