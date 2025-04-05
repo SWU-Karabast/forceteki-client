@@ -130,8 +130,8 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                     minWidth: '9rem',
                     fontSize: '1.2rem',
                     fontWeight: 'bold',
-                    animation: 'pulse 2s infinite',
-                    '@keyframes pulse': {
+                    animation: 'pulseBlue 4s infinite',
+                    '@keyframes pulseBlue': {
                         '0%': {
                             boxShadow: '0 0 15px rgba(33, 150, 243, 0.7)'
                         },
@@ -153,6 +153,18 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                         linear-gradient(to top, #FFD54F, #404040) border-box`,
                     },
                     boxShadow: '0 0 10px rgba(255, 193, 7, 0.5)',
+                    animation: 'pulseYellow 4s infinite',
+                    '@keyframes pulseYellow': {
+                        '0%': {
+                            boxShadow: '0 0 10px rgba(255, 193, 7, 0.5)'
+                        },
+                        '50%': {
+                            boxShadow: '0 0 15px rgba(255, 215, 64, 0.7)'
+                        },
+                        '100%': {
+                            boxShadow: '0 0 10px rgba(255, 193, 7, 0.5)'
+                        }
+                    },
                     minWidth: '9rem',
                     fontSize: '1.2rem',
                     fontWeight: 'bold',
