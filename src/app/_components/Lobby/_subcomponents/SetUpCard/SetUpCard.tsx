@@ -18,7 +18,11 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadDecks, loadSavedDecks, saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
+import {
+    retrieveDecksForUser,
+    saveDeckToLocalStorage,
+    saveDeckToServer
+} from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
@@ -58,16 +62,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     // Load saved decks from localStorage
     const fetchDecks = async () => {
         try {
-            const decks = user ? await loadDecks() : await loadSavedDecks();
-            decks.sort((a, b) => {
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-                return 0;
-            });
-            if (decks.length > 0) {
-                setFavouriteDeck(decks[0].deckID);
-            }
-            setSavedDecks(decks);
+            await retrieveDecksForUser(user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
         } catch (err){
             console.log(err);
             alert('Server error when fetching decks');
@@ -113,7 +108,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             if (saveDeck && deckData && deckLink){
                 try {
                     if(user) {
-                        await saveDeckToServer(deckData, deckLink, user)
+                        if(!await saveDeckToServer(deckData, deckLink, user)){
+                            throw new Error('Error saving the deck to server')
+                        }
                     }else{
                         saveDeckToLocalStorage(deckData, deckLink);
                     }

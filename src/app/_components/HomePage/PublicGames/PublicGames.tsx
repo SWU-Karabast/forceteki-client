@@ -7,7 +7,7 @@ import { SwuGameFormat } from '@/app/_constants/constants';
 
 const fetchLobbies = async (setLobbies: (lobbies: ILobby[]) => void) => {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/available-lobbies`,{ credentials:'include' });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/available-lobbies`);
         if (!response.ok) {
             throw new Error(`Error fetching lobbies: ${response.statusText}`);
         }

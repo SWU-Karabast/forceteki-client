@@ -4,6 +4,62 @@ import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
 import { IUser } from '@/app/_contexts/UserTypes';
 
+/* Secondary functions */
+/**
+ * Fetches decks based on authentication status
+ * - For authenticated users: loads from server
+ * - For anonymous users: loads from local storage
+ *
+ * @param user The current user (or null if anonymous)
+ * @param options Configuration options for the fetch operation
+ * @returns Promise that resolves to an array of decks in the requested format
+ */
+export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'stored'>(
+    user: IUser | null,
+    options?: {
+        format?: T;
+        setDecks?: T extends 'display'
+            ? React.Dispatch<React.SetStateAction<DisplayDeck[]>>
+            : React.Dispatch<React.SetStateAction<StoredDeck[]>>;
+        setFirstDeck?: React.Dispatch<React.SetStateAction<string>>;
+    }
+) => {
+    try {
+        // Get decks based on authentication status
+        const decks = user ? await loadDecks() : loadSavedDecks();
+
+        // Sort decks with favorites first
+        const sortedDecks = decks.sort((a, b) => {
+            if (a.favourite && !b.favourite) return -1;
+            if (!a.favourite && b.favourite) return 1;
+            return 0;
+        });
+
+        // Convert to display format if requested
+        const finalDecks = options?.format === 'display'
+            ? convertToDisplayDecks(sortedDecks) as DisplayDeck[]
+            : sortedDecks as StoredDeck[];
+
+        if (options?.setDecks) {
+            // we need to use type assertion.
+            if (options.format === 'display') {
+                (options.setDecks as React.Dispatch<React.SetStateAction<DisplayDeck[]>>)(finalDecks as DisplayDeck[]);
+            } else {
+                (options.setDecks as React.Dispatch<React.SetStateAction<StoredDeck[]>>)(finalDecks as StoredDeck[]);
+            }
+        }
+
+        // Set first deck as selected if we have decks and a setter
+        if (options?.setFirstDeck && decks.length > 0) {
+            options.setFirstDeck(decks[0].deckID);
+        }
+    } catch (err) {
+        console.error('Error fetching decks:', err);
+        throw err;
+    }
+};
+
+
 /* Server */
 export const getUserFromServer = async(): Promise<{ id: string, username: string }> =>{
     try {
@@ -97,7 +153,8 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
         }
         return returnedData.deck.id;
     } catch (error) {
-        throw error;
+        console.log(error);
+        return null;
     }
 };
 
@@ -266,7 +323,7 @@ export const removeDeckFromLocalStorage = (deckID: string | string[]): void => {
  * @param deckId Deck ID to retrieve
  * @returns Promise that resolves to the deck data
  */
-export const getDeckFromServer = async (deckId: string | string[]): Promise<IDeckDetailedData> => {
+export const getDeckFromServer = async (deckId: string): Promise<IDeckDetailedData> => {
     try {
         // Make sure we have an anonymousUserId if needed
 

@@ -11,7 +11,7 @@ import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckD
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { CardStyle, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    convertToDisplayDecks, deleteDecks, loadDecks, loadSavedDecks, toggleFavouriteDeck,
+    convertToDisplayDecks, deleteDecks, retrieveDecksForUser, toggleFavouriteDeck,
 } from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 
@@ -42,15 +42,7 @@ const DeckPage: React.FC = () => {
     const fetchDecks = async () => {
         try {
             // Call the loadDecks function and await the result
-            const fetchedDecks = user ? await loadDecks() : await loadSavedDecks();
-            // Update state with the fetched decks converted to display format
-            // Default to favourites first if sort option is unrecognized
-            fetchedDecks.sort((a, b) => {
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-                return 0;
-            });
-            setDecks(convertToDisplayDecks(fetchedDecks));
+            await retrieveDecksForUser(user,{ format:'display', setDecks: setDecks });
         } catch (error) {
             alert('Server error when fetching decks');
             console.error('Error fetching decks:', error);
@@ -200,7 +192,7 @@ const DeckPage: React.FC = () => {
             setSelectedDecks([]);
         } catch (error){
             console.log(error);
-            setConfirmationDialogMessage('There was an error when deleting decks. Try again later. '+error);
+            setConfirmationDialogMessage('There was an error when deleting decks. Please try again later. '+error);
         }
         // Close dialog
         setDeleteDialogOpen(false);

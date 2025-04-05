@@ -36,6 +36,9 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
             const deckData = await fetchDeckData(deckLink, false);
             if (deckData) {
                 deckData.deckID = user ? await saveDeckToServer(deckData, deckLink, user) : saveDeckToLocalStorage(deckData,deckLink);
+                if(!deckData.deckID){
+                    throw new Error('There was an error when saving the deck to the server.')
+                }
                 onSuccess(deckData, deckLink);
                 // Reset form
                 setDeckLink('');

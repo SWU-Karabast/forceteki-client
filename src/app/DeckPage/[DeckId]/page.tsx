@@ -115,11 +115,12 @@ const DeckDetails: React.FC = () => {
         fetchDeckFromServer(deckId)
     }, [deckId]);
 
-    const fetchDeckFromServer = async (deckId: string | string[]) => {
-        if (deckId) {
+    const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
+        if (rawDeckId) {
             // we need to check if the deck is still available
             try {
                 // we get the deck from localStorage and set the link
+                const deckId = Array.isArray(rawDeckId) ? rawDeckId[0] : rawDeckId;
                 const deckDataServer = await getDeckFromServer(deckId);
                 const data = await fetchDeckData(deckDataServer.deck.deckLink, false);
                 setDeckData(data);
@@ -127,7 +128,6 @@ const DeckDetails: React.FC = () => {
                 calculateStats(deckDataServer.stats);
                 getFormattedOpponentStats(deckDataServer.stats?.statsByMatchup);
             } catch (error) {
-                // check if its set to private
                 if (error instanceof Error) {
                     setErrorModalOpen(true);
                     if (error.message.includes('403')) {

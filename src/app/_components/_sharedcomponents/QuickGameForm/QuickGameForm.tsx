@@ -12,7 +12,11 @@ import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadDecks, loadSavedDecks, saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
+import {
+    retrieveDecksForUser,
+    saveDeckToLocalStorage,
+    saveDeckToServer
+} from '@/app/_utils/DeckStorageUtils';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -52,16 +56,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     // Load saved decks from localStorage
     const fetchDecks = async () => {
         try {
-            const decks = user ? await loadDecks() : await loadSavedDecks();
-            decks.sort((a, b) => {
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-                return 0;
-            });
-            if (decks.length > 0) {
-                setFavouriteDeck(decks[0].deckID);
-            }
-            setSavedDecks(decks);
+            await retrieveDecksForUser(user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
         }catch (err) {
             console.log(err);
             alert('Server error when fetching decks');
@@ -162,18 +157,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             }
             // Save the deck if needed
             if (saveDeck && deckData && userDeck) {
-                try {
-                    if(user) {
-                        await saveDeckToServer(deckData, deckLink, user);
-                    }else{
-                        saveDeckToLocalStorage(deckData, deckLink);
-                    }
-                }catch (err) {
-                    console.log(err);
-                    setErrorTitle('Server error');
-                    setDeckErrorSummary('Server error when saving deck to server.');
-                    setDeckErrorDetails('There was an error when saving deck to the server. Please contact the developer team on discord.');
-                    setErrorModalOpen(true);
+                if(user) {
+                    await saveDeckToServer(deckData, deckLink, user);
+                }else{
+                    saveDeckToLocalStorage(deckData, deckLink);
                 }
             }
 

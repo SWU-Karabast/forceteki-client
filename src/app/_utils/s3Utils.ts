@@ -23,7 +23,6 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
 
     // we check which type it is
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
-    console.log(card.id);
     const setId = isGameOrSetCard ? card.setId : parseSetId(card.id);
     // check if the card has a type
     const cardType = 'type' in card ? card.type || (Array.isArray(card.types) ? card.types.join() : card.types) : undefined;
