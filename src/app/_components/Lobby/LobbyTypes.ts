@@ -8,7 +8,7 @@ export interface ISetUpProps {
     owner: boolean;
 }
 
-export interface IDeckData {
+export interface ILobbyDeckData {
     leader: IServerCardData[];
     base: IServerCardData[];
     deckCards: IServerCardData[];
@@ -19,5 +19,5 @@ export interface ILobbyUserProps {
     id: string;
     username: string;
     ready: boolean;
-    deck: IDeckData;
+    deck: ILobbyDeckData;
 }

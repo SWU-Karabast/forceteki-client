@@ -36,7 +36,6 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
     if ((isGameCard(card) && cardType === 'leader' && (card.zone === 'base')) ||
         (cardStyle === CardStyle.PlainLeader)) {
         cardNumber += '-base';
-        console.log(cardNumber);
     }
     if (cardType === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
         cardNumber += '2';
