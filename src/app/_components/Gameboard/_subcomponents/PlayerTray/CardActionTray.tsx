@@ -35,6 +35,21 @@ const pulseYellowBorder = keyframes`
   }
 `;
 
+const pulseGreenBorder = keyframes`
+  0% {
+    border-color: rgba(0, 170, 70, 0.5);
+    box-shadow: 0 0 5px rgba(0, 170, 70, 0.5);
+  }
+  50% {
+    border-color: rgba(0, 220, 100, 0.8);
+    box-shadow: 0 0 15px rgba(0, 220, 100, 0.8);
+  }
+  100% {
+    border-color: rgba(0, 170, 70, 0.5);
+    box-shadow: 0 0 5px rgba(0, 170, 70, 0.5);
+  }
+`;
+
 const styles = {
     actionContainer: {
         height: '5.5rem',
@@ -174,6 +189,24 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                     animation: `${pulseYellowBorder} 4s infinite ease-in-out`,
                     boxShadow: '0 0 10px rgba(204, 172, 0, 0.7)',
                     border: '1px solid rgba(204, 172, 0, 0.7)',
+                },
+            };
+        }
+        
+        if (button.arg === 'done') {
+            return disabled ? {} : {
+                background: `linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, 
+                    linear-gradient(to top, #1cb34a, #0a3d1e) border-box`,
+                '&:hover': {
+                    background: `linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, 
+                    linear-gradient(to top, #2ad44c, #0a3d1e) border-box`,
+                    boxShadow: '0 0 15px rgba(0, 170, 70, 0.9)',
+                    border: '1px solid rgba(0, 220, 100, 0.9)',
+                },
+                '&:not(:disabled)': {
+                    animation: `${pulseGreenBorder} 4s infinite ease-in-out`,
+                    boxShadow: '0 0 10px rgba(0, 170, 70, 0.7)',
+                    border: '1px solid rgba(0, 170, 70, 0.7)',
                 },
             };
         }
