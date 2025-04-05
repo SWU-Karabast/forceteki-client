@@ -165,8 +165,10 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                 background: `linear-gradient(rgb(29, 29, 29), #3d3a0a) padding-box, 
                     linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
                 '&:hover': {
-                    background: `linear-gradient(rgb(29, 29, 29),rgb(61, 58, 10)) padding-box, 
-                    linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
+                    background: `linear-gradient(rgb(29, 29, 29),rgb(81, 77, 20)) padding-box, 
+                    linear-gradient(to top, #d4c82a, #3d3a0a) border-box`,
+                    boxShadow: '0 0 15px rgba(204, 172, 0, 0.9)',
+                    border: '1px solid rgba(230, 190, 0, 0.9)',
                 },
                 '&:not(:disabled)': {
                     animation: `${pulseYellowBorder} 4s infinite ease-in-out`,
