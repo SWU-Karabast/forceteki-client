@@ -146,11 +146,11 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
     const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
         if (button.arg === 'claimInitiative') {
             return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #1E2D32) padding-box, 
-                    linear-gradient(to top, #038FC3, #404040) border-box`,
+                background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
                 '&:hover': {
                     background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
-                    linear-gradient(to top, #038FC3, #404040) border-box`,
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
                 },
                 '&:not(:disabled)': {
                     animation: `${pulseBorder} 4s infinite ease-in-out`,
@@ -162,6 +162,12 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
 
         if (button.arg === 'pass') {
             return disabled ? {} : {
+                background: `linear-gradient(rgb(29, 29, 29), #3d3a0a) padding-box, 
+                    linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
+                '&:hover': {
+                    background: `linear-gradient(rgb(29, 29, 29),rgb(61, 58, 10)) padding-box, 
+                    linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
+                },
                 '&:not(:disabled)': {
                     animation: `${pulseYellowBorder} 4s infinite ease-in-out`,
                     boxShadow: '0 0 10px rgba(204, 172, 0, 0.7)',
