@@ -17,14 +17,14 @@ function GameOptionsTab() {
     return (
         <>
             <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Graphics & Sound</Typography>
+                <Typography sx={styles.typographyContainer} variant={'h2'}>Graphics & Sound</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <PreferenceOption option={'Dynamic Scaling (beta)'} optionDescription={'UI elements adjust dynamically to the viewport.'}/>
                 <PreferenceOption option={'Accesibility Mode'} optionDescription={'Changes the UI with larger texts, more contrast elements.'}/>
                 <PreferenceOption option={'Mute'} optionDescription={'Remove all in-game sounds.'}/>
             </Box>
             <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Options</Typography>
+                <Typography sx={styles.typographyContainer} variant={'h2'}>Options</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <PreferenceOption option={'Disable Chat'} optionDescription={'Text messages with opponent are not allowed.'}/>
                 <PreferenceOption option={'Disable Stats'} optionDescription={'Game results will not be saved in your profile history.'}/>

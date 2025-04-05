@@ -20,7 +20,6 @@ const ControlHub: React.FC<IControlHubProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
-            zIndex: 1,
         },
         defaultMainContainer: {
             display: 'flex',

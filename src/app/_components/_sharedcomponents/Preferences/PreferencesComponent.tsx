@@ -16,13 +16,13 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     // ------------------------STYLES------------------------//
     const styles = {
         containerStyle:{
-            display: isPreferenceOpen && variant ==='gameBoard' ? 'block' : 'none',
+            display: isPreferenceOpen ? 'block' : 'none',
             position: 'absolute',
             width: sidebarOpen ? 'calc(100% - 280px)' : '100%',
             height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 999,
-            padding: '2rem',
+            backgroundColor: variant ==='gameBoard' ? 'rgba(0, 0, 0, 0.5)' : 'none',
+            zIndex: variant === 'homePage' ? 1 : 999,
+            padding: variant === 'homePage' ? '7rem' : '2rem',
         },
         overlayStyle:{
             display: isPreferenceOpen ? 'block' : 'none',
@@ -33,7 +33,6 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
             border: '3px solid transparent',
             backdropFilter: 'blur(30px)',
-
             borderRadius:'15px',
             ...(variant === 'homePage' ? {
                 width: '100%',

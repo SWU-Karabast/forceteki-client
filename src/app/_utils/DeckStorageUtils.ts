@@ -92,6 +92,32 @@ export const getUserFromServer = async(): Promise<{ id: string, username: string
     }
 }
 
+export const setUsernameOnServer = async(username: string): Promise<string> => {
+    try {
+        const payload = {
+            newUsername: username
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/change-username`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result.username
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean): Promise<void> => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/deck/${deckId}/favorite`, {

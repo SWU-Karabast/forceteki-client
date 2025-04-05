@@ -57,7 +57,6 @@ function BlockListTab() {
             borderBottomLeftRadius:'0px',
             borderTopRightRadius:'5px',
             borderBottomRightRadius:'5px',
-
         }
     }
 

@@ -12,6 +12,7 @@ export interface IUserContextType {
     login: (provider: 'google' | 'discord') => void;
     devLogin: (user: 'Order66' | 'ThisIsTheWay') => void;
     logout: () => void;
+    updateUsername: (username: string) => void,
 }
 
 // Extend Next-auth types

@@ -13,6 +13,7 @@ import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferen
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
 import { useUser } from '@/app/_contexts/User.context';
+import GeneralTab from "@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab";
 
 function tabProps(index: number) {
     return {
@@ -47,6 +48,8 @@ function VerticalTabs({
                 return <EndGameTab/>;
             case 'blockList':
                 return <BlockListTab/>;
+            case 'general':
+                return <GeneralTab/>;
             default:
                 return <Typography>Not Implemented</Typography>;
         }
@@ -67,6 +70,8 @@ function VerticalTabs({
                 return 'Block List';
             case 'logout':
                 return 'Log Out'
+            case 'general':
+                return 'General';
             default:
                 return null;
         }

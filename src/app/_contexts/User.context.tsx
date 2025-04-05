@@ -19,6 +19,7 @@ const UserContext = createContext<IUserContextType>({
     login: () => {},
     devLogin: () => {},
     logout: () => {},
+    updateUsername: () => {},
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
@@ -56,7 +57,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                     });
                 } catch (error) {
                     console.error('Error syncing user with server:', error);
-                    alert('Server error while logging in');
                     // Just flag the error, handle anonymous user setting separately
                 }
             }
@@ -111,6 +111,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         }
     }
 
+    const updateUsername = (newUsername: string) => {
+        setUser((prevUser) => {
+            if (!prevUser) return null;
+            return {
+                ...prevUser,
+                username: newUsername,
+            };
+        });
+    };
+
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
         clearAnonUser();
@@ -131,7 +141,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername }}>
             {children}
         </UserContext.Provider>
     );
