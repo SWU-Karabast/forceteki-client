@@ -72,7 +72,7 @@ const CardActionTray: React.FC = () => {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
                 const damageSpent = distributionPromptData?.valueDistribution.reduce((acc, curr) => acc + curr.amount, 0);
-                if (!distributeValues.canDistributeLess && damageSpent !== distributeValues.amount) {
+                if (!distributeValues.canChooseNoTargets && damageSpent === 0 || !distributeValues.canDistributeLess && damageSpent > 0 && damageSpent < distributeValues.amount) {
                     return true;
                 }
             }
