@@ -116,7 +116,7 @@ interface IPromptButtonProps {
 
 
 const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled }) => {
-    const actionTrayStyles = (arg: string) => {
+    const actionTrayStyles = (arg: string, isDisabled: boolean = false) => {
         switch (arg) {
             case 'claimInitiative':
                 return {
@@ -130,7 +130,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                     minWidth: '9rem',
                     fontSize: '1.2rem',
                     fontWeight: 'bold',
-                    animation: 'pulseBlue 3s infinite',
+                    animation: isDisabled ? 'none' : 'pulseBlue 4s infinite',
                     '@keyframes pulseBlue': {
                         '0%': {
                             boxShadow: '0 0 15px rgba(33, 150, 243, 0.7)'
@@ -153,7 +153,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                         linear-gradient(to top, #FFD54F, #404040) border-box`,
                     },
                     boxShadow: '0 0 10px rgba(255, 193, 7, 0.5)',
-                    animation: 'pulseYellow 3s infinite',
+                    animation: isDisabled ? 'none' : 'pulseYellow 4s infinite',
                     '@keyframes pulseYellow': {
                         '0%': {
                             boxShadow: '0 0 10px rgba(255, 193, 7, 0.5)'
@@ -203,7 +203,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
     return (
         <Button
             variant="contained"
-            sx={{ ...styles.promptButton, ...actionTrayStyles(button.arg) }}
+            sx={{ ...styles.promptButton, ...actionTrayStyles(button.arg, disabled) }}
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
             disabled={disabled}
         >
