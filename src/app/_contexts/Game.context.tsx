@@ -57,8 +57,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     useEffect(() => {
+        // Only proceed when session is loaded (either authenticated or unauthenticated)
+        console.log(status);
+        if (status === 'loading') {
+            return;
+        }
         const lobbyId = searchParams.get('lobbyId');
         const connectedPlayerId = user?.id || anonymousUserId || '';
         if (!connectedPlayerId) return;
@@ -67,9 +72,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const spectatorParam = searchParams.get('spectator');
         const isSpectatorMode = spectatorParam === 'true';
         setIsSpectator(isSpectatorMode);
-
-
-
         const token = session?.jwtToken;
         const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
@@ -78,7 +80,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null }),
                 spectator: isSpectatorMode ? 'true' : 'false'
             },
-            auth: token ? { token } : undefined
+            auth: token ? { token } : undefined,
         });
 
         const cardSelectableZones = (gamestate: any) => {
@@ -213,7 +215,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups]);
+    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups,status]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         socket?.emit(message, ...args);
