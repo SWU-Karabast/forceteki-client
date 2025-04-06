@@ -13,7 +13,7 @@ import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferen
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
 import { useUser } from '@/app/_contexts/User.context';
-import GeneralTab from "@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab";
+import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
 
 function tabProps(index: number) {
     return {
