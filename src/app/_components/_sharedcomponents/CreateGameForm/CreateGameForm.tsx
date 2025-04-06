@@ -118,7 +118,13 @@ const CreateGameForm = () => {
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
                     setErrorModalOpen(true);
-                }else{
+                } else if(error.message.includes('Deck not found')) {
+                    // Handle the specific 404 error messages from any deck source
+                    setDeckErrorSummary(error.message);
+                    setErrorTitle('Deck Not Found');
+                    setDeckErrorDetails(error.message);
+                    setErrorModalOpen(true);
+                } else {
                     setErrorTitle('Deck Validation Error');
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorModalOpen(true);
@@ -223,7 +229,7 @@ const CreateGameForm = () => {
     return (
         <Box >
             <Typography variant="h2">
-                {isCreateGamePath ? 'Choose Your Deck' : 'Create New Game'}
+                {isCreateGamePath ? 'Choose Your Deck' : 'Create New Lobby'}
             </Typography>
             <form onSubmit={handleCreateGameSubmit}>
                 {/* Favourite Decks Input */}
@@ -260,14 +266,11 @@ const CreateGameForm = () => {
                         <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SWUDB
                         </Link>{' '}
-                        {/* or{' '}
-                        <Link href="https://www.sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
+                        /{' '}
+                        <Link href="https://sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
                             SW-Unlimited-DB
-                        </Link>{' '} */}
+                        </Link>{' '}
                         Deck Link{' '}
-                        <Typography variant="body1" sx={styles.labelTextStyleSecondary}>
-                            (use the URL or &apos;Deck Link&apos; button)
-                        </Typography>
                         <br />
                         OR paste deck JSON directly
                     </Box>
