@@ -30,6 +30,7 @@ interface IGameContextType {
     updateDistributionPrompt: (uuid: string, amount: number) => void;
     distributionPromptData: IDistributionPromptData | null;
     isSpectator: boolean;
+    lastQueueHeartbeat: number;
 }
 
 interface IDistributionPromptData {
@@ -47,6 +48,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const lastGameIdRef = useRef<string | null>(null);
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
+    const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
@@ -165,8 +167,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         };
 
         newSocket.on('connection_error', (error: any) => {
-            console.error('Connection error:', error);
+            console.error('Error joining lobby:', error);
+            alert(error);
             router.push('/');
+        });
+
+        newSocket.on('matchmakingFailed', (error: any) => {
+            console.error('Matchmaking failed with error, requeueing:', error);
+            resetStates();
         });
 
         newSocket.on('gamestate', (gameState: any) => {
@@ -183,12 +191,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
             handleGameStatePopups(gameState);
         });
+
         newSocket.on('lobbystate', (lobbyState: any) => {
             setLobbyState(lobbyState);
             if (process.env.NODE_ENV === 'development') {
                 console.log('Lobby state received:', lobbyState);
             }
         })
+        
+        newSocket.on('queueHeartbeat', (timestamp) => {
+            setLastQueueHeartbeat(timestamp);
+        });
 
         setSocket(newSocket);
 
@@ -265,7 +278,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 getConnectedPlayerPrompt,
                 updateDistributionPrompt,
                 distributionPromptData,
-                isSpectator
+                isSpectator,
+                lastQueueHeartbeat
             }}
         >
             {children}

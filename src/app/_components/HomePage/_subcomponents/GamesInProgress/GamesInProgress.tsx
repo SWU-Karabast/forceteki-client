@@ -5,6 +5,7 @@ import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface GameCardData {
     id: string;
+    isPrivate:boolean;
     player1Leader: ICardData;
     player1Base: ICardData;
     player2Leader: ICardData;
@@ -24,8 +25,9 @@ const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) 
             throw new Error(`Failed to fetch ongoing games: ${response.status} ${response.statusText}`);
         }
 
-        const fetchedData: OngoingGamesData = await response.json(); // Expecting an array
-        setGamesData(fetchedData); // Store all games or set to null if empty
+        const fetchedData: OngoingGamesData = await response.json(); 
+        fetchedData.ongoingGames.sort((a, b) => Number(a.isPrivate) - Number(b.isPrivate));
+        setGamesData(fetchedData);
     } catch (err) {
         console.error('Error fetching ongoing games:', err);
         setGamesData(null); // Handle error case

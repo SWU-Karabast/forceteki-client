@@ -13,7 +13,8 @@ export interface IDeckCard {
 export enum DeckSource {
     NotSupported = 'NotSupported',
     SWUStats = 'SWUStats',
-    SWUDB = 'SWUDB'
+    SWUDB = 'SWUDB',
+    SWUnlimitedDB = 'SWUnlimitedDB'
 }
 
 export interface IDeckData {
@@ -33,7 +34,16 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
             `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
         );
         if (!response.ok) {
-            throw new Error(`Failed to fetch deck: ${response.status}`);
+            const errorData = await response.json().catch(() => null);
+            if (errorData && errorData.error) {
+                if (response.status === 403) {
+                    throw new Error(`403: ${errorData.error}`);
+                } else {
+                    throw new Error(errorData.error);
+                }
+            } else {
+                throw new Error(`Failed to fetch deck: ${response.status}`);
+            }
         }
 
         const data: IDeckData = await response.json();

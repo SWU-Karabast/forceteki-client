@@ -33,6 +33,10 @@ export async function GET(req: Request) {
             response = await fetch(apiUrl, { method: 'GET' });
 
             if (!response.ok) {
+                if(response.status === 404 || response.status === 500) {
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck exists on swustats.net.' }, { status: 404 });
+                }
+                
                 console.error('SWUSTATS API error:', response.statusText);
                 throw new Error(`SWUSTATS API error: ${response.statusText}`);
             }
@@ -57,8 +61,35 @@ export async function GET(req: Request) {
                 if(response.status === 403) {
                     return NextResponse.json({ error: 'Deck is set to Private. Change deck to unlisted on swudb' }, { status: 403 });
                 }
+                if(response.status === 404) {
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck exists on swudb.com.' }, { status: 404 });
+                }
                 console.error('SWUDB API error:', response.statusText);
                 throw new Error(`SWUDB API error: ${response.statusText}`);
+            }
+        }
+        else if (deckLink.includes('sw-unlimited-db.com')) {
+            const match = deckLink.match(/\/decks\/(\d+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if(deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.SWUnlimitedDB;
+            if (!deckId) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            const apiUrl = `https://sw-unlimited-db.com/umbraco/api/deckapi/get?id=${deckId}`;
+
+            response = await fetch(apiUrl, { method: 'GET' });
+            if (!response.ok) {
+                if(response.status === 404) {
+                    return NextResponse.json({ error: 'Deck not found. Make sure it is set to Published on sw-unlimited-db.' }, { status: 404 });
+                }
+                console.error('SW-Unlimited-DB API error:', response.statusText);
+                throw new Error(`SW-Unlimited-DB API error: ${response.statusText}`);
             }
         } else {
             console.error('Error: Deckbuilder not supported');

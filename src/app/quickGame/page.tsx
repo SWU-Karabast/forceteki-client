@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import Grid from '@mui/material/Grid2';
 import { Box, Typography } from '@mui/material';
 import FoundGame from '@/app/_components/QuickGame/FoundGame/FoundGame';
@@ -10,11 +10,19 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 
 const QuickGame: React.FC = () => {
     const router = useRouter();
-    const { lobbyState, sendMessage } = useGame();
+    const { lobbyState, gameState, sendMessage } = useGame();
+    
     const handleExit = () => {
         sendMessage('manualDisconnect');
         router.push('/');
     }
+
+    useEffect(() => {
+        if (gameState) {
+            router.push('/GameBoard');
+        }
+    }, [router, gameState]);
+
     // ------------------------STYLES------------------------//
 
     const styles = {

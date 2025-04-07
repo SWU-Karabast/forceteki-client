@@ -109,12 +109,14 @@ export enum CardStyle {
     Lobby = 'lobby',
     Prompt = 'prompt',
     Plain = 'plain',
+    PlainLeader = 'plainLeader'
 }
 
 export enum LeaderBaseCardStyle {
     Leader = 'leader',
     Base = 'base',
     Plain = 'plain',
+    PlainLeader = 'plainLeader', 
 }
 
 interface ICardPlayer {
