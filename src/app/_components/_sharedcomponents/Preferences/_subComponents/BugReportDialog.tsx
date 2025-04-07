@@ -5,15 +5,13 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    Button,
     Typography,
     Alert,
-    CircularProgress,
-    Box,
     styled
 } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 
 interface BugReportDialogProps {
     open: boolean;
@@ -21,7 +19,7 @@ interface BugReportDialogProps {
 }
 
 // Custom styled components to match the design in the image
-const StyledDialog = styled(Dialog)(({ theme }) => ({
+const StyledDialog = styled(Dialog)(() => ({
     '& .MuiDialog-paper': {
         backgroundColor: '#1A2331', // Dark blue-black background
         color: 'white',
@@ -93,10 +91,12 @@ const StyledSuccessAlert = styled(Alert)(({ theme }) => ({
 }));
 
 const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
-    const { sendLobbyMessage } = useGame();
+    const { sendLobbyMessage, lobbyState, connectedPlayer } = useGame();
     const [description, setDescription] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+
+    const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     const MAX_DESCRIPTION_LENGTH = 500;
 
@@ -145,7 +145,7 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
         <StyledDialog open={open} onClose={handleClose}>
             <StyledDialogTitle>Report a Bug</StyledDialogTitle>
             <StyledDialogContent>
-                {success ? (
+                {(success || connectedUser?.reportedBugs > 3) ? (
                     <StyledSuccessAlert severity="success" sx={{ my: 1 }}>
                         Bug report submitted successfully. Thank you for helping improve the game!
                     </StyledSuccessAlert>
