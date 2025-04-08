@@ -140,12 +140,11 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
             setSuccess(false);
         }, 300);
     };
-
     return (
         <StyledDialog open={open} onClose={handleClose}>
             <StyledDialogTitle>Report a Bug</StyledDialogTitle>
             <StyledDialogContent>
-                {(success || connectedUser?.reportedBugs > 3) ? (
+                {(success || connectedUser?.reportedBugs >= 3) ? (
                     <StyledSuccessAlert severity="success" sx={{ my: 1 }}>
                         Bug report submitted successfully. Thank you for helping improve the game!
                     </StyledSuccessAlert>
