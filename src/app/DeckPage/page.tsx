@@ -11,11 +11,9 @@ import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckD
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { CardStyle, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    convertToDisplayDecks,
-    loadSavedDecks,
-    removeDeckFromLocalStorage,
-    updateDeckFavoriteInLocalStorage
-} from '@/app/_utils/LocalStorageUtils';
+    convertToDisplayDecks, deleteDecks, retrieveDecksForUser, toggleFavouriteDeck,
+} from '@/app/_utils/DeckStorageUtils';
+import { useUser } from '@/app/_contexts/User.context';
 
 
 
@@ -31,12 +29,25 @@ const DeckPage: React.FC = () => {
     const [addDeckDialogOpen, setAddDeckDialogOpen] = useState<boolean>(false);
     const [selectedDecks, setSelectedDecks] = useState<string[]>([]); // Track selected decks
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+    const [ConfirmationDialogMessage, setConfirmationDialogMessage] = useState<string>('');
     const router = useRouter();
+    const { user } = useUser();
 
     // Load decks from localStorage on component mount
     useEffect(() => {
-        loadDecks();
+        fetchDecks();
     }, []);
+
+    // Function to load decks from localStorage and server
+    const fetchDecks = async () => {
+        try {
+            // Call the loadDecks function and await the result
+            await retrieveDecksForUser(user,{ format:'display', setDecks: setDecks });
+        } catch (error) {
+            alert('Server error when fetching decks');
+            console.error('Error fetching decks:', error);
+        }
+    };
 
     // sort function
     const sortDecks = (sort:string) => {
@@ -82,12 +93,6 @@ const DeckPage: React.FC = () => {
         setDecks(sortedDecks);
     };
 
-    // Function to load decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
-        setDecks(convertToDisplayDecks(decks));
-    }
-
     // Handle successful deck addition
     const handleAddDeckSuccess = (deckData: IDeckData, deckLink: string) => {
         const source = deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB';
@@ -103,6 +108,8 @@ const DeckPage: React.FC = () => {
 
         // Add the new deck and re-sort to maintain favorites first
         setDecks(prevDecks => {
+            if(prevDecks.some(deck => deck.deckID === newDeck.deckID)) return prevDecks;
+
             const updatedDecks = [...prevDecks, newDeck];
             return updatedDecks.sort((a, b) => {
                 if (a.favourite && !b.favourite) return -1;
@@ -139,48 +146,54 @@ const DeckPage: React.FC = () => {
     };
 
     // Toggle favorite status for a deck
-    const toggleFavorite = (deckId: string, e:React.MouseEvent) => {
+    const toggleFavorite = async (deckId: string, e:React.MouseEvent) => {
         e.stopPropagation();
-        // Update in state and resort
-        const updatedDecks = decks.map(deck =>
-            deck.deckID === deckId
-                ? { ...deck, favourite: !deck.favourite }
-                : deck
-        );
+        // we call the response
+        const deckFav = !decks.find((deck) => deck.deckID === deckId)?.favourite;
+        try {
+            await toggleFavouriteDeck(deckId,deckFav)
+            // Update in state and resort
+            const updatedDecks = decks.map(deck =>
+                deck.deckID === deckId
+                    ? { ...deck, favourite: deckFav }
+                    : deck
+            );
 
-        // Re-sort to ensure favorites appear first
-        const sortedDecks = [...updatedDecks].sort((a, b) => {
-            if (a.favourite && !b.favourite) return -1;
-            if (!a.favourite && b.favourite) return 1;
-            return 0;
-        });
+            // Re-sort to ensure favorites appear first
+            const sortedDecks = [...updatedDecks].sort((a, b) => {
+                if (a.favourite && !b.favourite) return -1;
+                if (!a.favourite && b.favourite) return 1;
+                return 0;
+            });
 
-        setDecks(sortedDecks);
-
-        // Update in localStorage
-        updateDeckFavoriteInLocalStorage(deckId);
+            setDecks(sortedDecks);
+        }catch(error){
+            alert('There was an error when toggling favorite.');
+            console.log(error)
+        }
     };
 
     // Open delete confirmation dialog
     const openDeleteDialog = () => {
         if (selectedDecks.length > 0) {
+            setConfirmationDialogMessage(`Are you sure you want to delete ${selectedDecks.length} deck${selectedDecks.length > 1 ? 's' : ''}? This action cannot be undone.`)
             setDeleteDialogOpen(true);
         }
     };
 
     // Delete selected decks
-    const handleDeleteSelectedDecks = () => {
+    const handleDeleteSelectedDecks = async () => {
         // Delete each selected deck from localStorage
-        selectedDecks.forEach(deckId => {
-            removeDeckFromLocalStorage(deckId);
-        });
-
-        // Update deck list in state
-        setDecks(prevDecks => prevDecks.filter(deck => !selectedDecks.includes(deck.deckID)));
-
-        // Reset selection
-        setSelectedDecks([]);
-
+        try{
+            await deleteDecks(selectedDecks);
+            // Update deck list in state
+            setDecks(prevDecks => prevDecks.filter(deck => !selectedDecks.includes(deck.deckID)));
+            // Reset selection
+            setSelectedDecks([]);
+        } catch (error){
+            console.log(error);
+            setConfirmationDialogMessage('There was an error when deleting decks. Please try again later. '+error);
+        }
         // Close dialog
         setDeleteDialogOpen(false);
     };
@@ -468,7 +481,7 @@ const DeckPage: React.FC = () => {
             <ConfirmationDialog
                 open={deleteDialogOpen}
                 title="Delete Decks"
-                message={`Are you sure you want to delete ${selectedDecks.length} deck${selectedDecks.length > 1 ? 's' : ''}? This action cannot be undone.`}
+                message={ConfirmationDialogMessage}
                 onCancel={() => setDeleteDialogOpen(false)}
                 onConfirm={handleDeleteSelectedDecks}
                 confirmButtonText="Delete"
