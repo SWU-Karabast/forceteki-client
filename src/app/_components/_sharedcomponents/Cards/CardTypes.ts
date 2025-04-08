@@ -184,7 +184,8 @@ export interface StoredDeck {
     name: string;
     favourite: boolean;
     deckLink: string;
-    deckID: string;
+    deckID:string;
+    deckLinkID: string;
     source: 'SWUSTATS' | 'SWUDB'
 }
 

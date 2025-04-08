@@ -322,6 +322,7 @@ export const saveDeckToLocalStorage = (deckData:IDeckData | DeckJSON | undefined
             favourite: false,
             deckLink:deckLink,
             deckLinkID:deckKey,
+            deckID: deckKey,
             source: deckSource
         };
         // Save back to localStorage

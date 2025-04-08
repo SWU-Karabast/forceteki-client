@@ -60,7 +60,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const { data: session, status } = useSession();
     useEffect(() => {
         // Only proceed when session is loaded (either authenticated or unauthenticated)
-        console.log(status);
         if (status === 'loading') {
             return;
         }
