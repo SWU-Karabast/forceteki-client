@@ -7,46 +7,46 @@ import { keyframes } from '@mui/system';
 
 const pulseBorder = keyframes`
   0% {
-    border-color: rgba(0, 140, 255, 0.5);
-    box-shadow: 0 0 5px rgba(0, 140, 255, 0.5);
+    border-color: rgba(0, 140, 255, 0.4);
+    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
   }
   50% {
-    border-color: rgba(0, 200, 255, 0.8);
-    box-shadow: 0 0 15px rgba(0, 200, 255, 0.8);
+    border-color: rgba(0, 180, 255, 0.6);
+    box-shadow: 0 0 8px rgba(0, 180, 255, 0.6);
   }
   100% {
-    border-color: rgba(0, 140, 255, 0.5);
-    box-shadow: 0 0 5px rgba(0, 140, 255, 0.5);
+    border-color: rgba(0, 140, 255, 0.4);
+    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
   }
 `;
 
 const pulseYellowBorder = keyframes`
   0% {
-    border-color: rgba(204, 172, 0, 0.5);
-    box-shadow: 0 0 5px rgba(204, 172, 0, 0.5);
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 4px rgba(204, 172, 0, 0.4);
   }
   50% {
-    border-color: rgba(230, 190, 0, 0.8);
-    box-shadow: 0 0 15px rgba(230, 190, 0, 0.8);
+    border-color: rgba(220, 185, 0, 0.6);
+    box-shadow: 0 0 8px rgba(220, 185, 0, 0.6);
   }
   100% {
-    border-color: rgba(204, 172, 0, 0.5);
-    box-shadow: 0 0 5px rgba(204, 172, 0, 0.5);
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 4px rgba(204, 172, 0, 0.4);
   }
 `;
 
 const pulseGreenBorder = keyframes`
   0% {
-    border-color: rgba(0, 170, 70, 0.5);
-    box-shadow: 0 0 5px rgba(0, 170, 70, 0.5);
+    border-color: rgba(0, 170, 70, 0.4);
+    box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
   }
   50% {
-    border-color: rgba(0, 220, 100, 0.8);
-    box-shadow: 0 0 15px rgba(0, 220, 100, 0.8);
+    border-color: rgba(0, 200, 90, 0.6);
+    box-shadow: 0 0 8px rgba(0, 200, 90, 0.6);
   }
   100% {
-    border-color: rgba(0, 170, 70, 0.5);
-    box-shadow: 0 0 5px rgba(0, 170, 70, 0.5);
+    border-color: rgba(0, 170, 70, 0.4);
+    box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
   }
 `;
 
@@ -169,8 +169,8 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                 },
                 '&:not(:disabled)': {
                     animation: `${pulseBorder} 4s infinite ease-in-out`,
-                    boxShadow: '0 0 10px rgba(0, 140, 255, 0.7)',
-                    border: '1px solid rgba(0, 140, 255, 0.7)',
+                    boxShadow: '0 0 6px rgba(0, 140, 255, 0.5)',
+                    border: '1px solid rgba(0, 140, 255, 0.5)',
                 },
             };
         }
@@ -182,13 +182,13 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                 '&:hover': {
                     background: `linear-gradient(rgb(29, 29, 29),rgb(81, 77, 20)) padding-box, 
                     linear-gradient(to top, #d4c82a, #3d3a0a) border-box`,
-                    boxShadow: '0 0 15px rgba(204, 172, 0, 0.9)',
-                    border: '1px solid rgba(230, 190, 0, 0.9)',
+                    boxShadow: '0 0 8px rgba(204, 172, 0, 0.7)',
+                    border: '1px solid rgba(220, 185, 0, 0.7)',
                 },
                 '&:not(:disabled)': {
                     animation: `${pulseYellowBorder} 4s infinite ease-in-out`,
-                    boxShadow: '0 0 10px rgba(204, 172, 0, 0.7)',
-                    border: '1px solid rgba(204, 172, 0, 0.7)',
+                    boxShadow: '0 0 6px rgba(204, 172, 0, 0.5)',
+                    border: '1px solid rgba(204, 172, 0, 0.5)',
                 },
             };
         }
@@ -200,13 +200,13 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                 '&:hover': {
                     background: `linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, 
                     linear-gradient(to top, #2ad44c, #0a3d1e) border-box`,
-                    boxShadow: '0 0 15px rgba(0, 170, 70, 0.9)',
-                    border: '1px solid rgba(0, 220, 100, 0.9)',
+                    boxShadow: '0 0 8px rgba(0, 170, 70, 0.7)',
+                    border: '1px solid rgba(0, 200, 90, 0.7)',
                 },
                 '&:not(:disabled)': {
                     animation: `${pulseGreenBorder} 4s infinite ease-in-out`,
-                    boxShadow: '0 0 10px rgba(0, 170, 70, 0.7)',
-                    border: '1px solid rgba(0, 170, 70, 0.7)',
+                    boxShadow: '0 0 6px rgba(0, 170, 70, 0.5)',
+                    border: '1px solid rgba(0, 170, 70, 0.5)',
                 },
             };
         }
