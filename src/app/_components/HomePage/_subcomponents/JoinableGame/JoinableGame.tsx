@@ -59,36 +59,17 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             alignItems: 'center',
         },
         cardPreview: {
-            borderRadius: '0.25rem',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            aspectRatio: '1.4 / 1',
-            width: '6rem', // Significantly increased from 4.375rem
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            position: 'relative',
-            cursor: 'pointer',
-            transition: 'transform 0.2s',
-            '&:hover': {
-                '& .fullImage': {
-                    display: 'block',
-                }
-            }
-        },
-        fullImage: {
-            display: 'none',
-            position: 'absolute',
-            top: '0', // Align with the top of the preview
-            left: 'calc(100% + 10px)', // Position to the right with a 10px gap
-            width: '24rem', // Significantly increased from 17.5rem
-            aspectRatio: '1.4 / 1', // Changed to landscape aspect ratio
-            backgroundSize: 'contain', // Changed to 'contain' to show the entire image
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
             borderRadius: '0.5rem',
-            border: '2px solid rgba(255, 255, 255, 0.5)',
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-            zIndex: 9999, // Very high z-index to ensure it's above everything
+            backgroundSize: 'cover',
+            width: 'clamp(3rem, 7vw, 10rem)', // Match the Games in Progress size
+            aspectRatio: '1.39',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative',
+            border: '2px solid transparent',
+            boxSizing: 'border-box',
+            cursor: 'pointer'
         },
         lobbyInfo: {
             display: 'flex',
@@ -127,13 +108,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                 }}
                                 title={`Leader: ${lobby.host.leader.id}`}
                             >
-                                <Box 
-                                    className="fullImage"
-                                    sx={{
-                                        ...styles.fullImage,
-                                        backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)})`
-                                    }}
-                                />
                             </Box>
                             <Box 
                                 sx={{
@@ -142,13 +116,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                 }}
                                 title={`Base: ${lobby.host.base.id}`}
                             >
-                                <Box 
-                                    className="fullImage"
-                                    sx={{
-                                        ...styles.fullImage,
-                                        backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)})`
-                                    }}
-                                />
                             </Box>
                         </Box>
                     )}
