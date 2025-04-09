@@ -11,7 +11,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
     const { user } = useUser();
     const joinLobby = async (lobbyId: string) => {
-        // we need to set the user
         try {
             const payload = {
                 lobbyId: lobbyId,
@@ -61,7 +60,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         cardPreview: {
             borderRadius: '0.5rem',
             backgroundSize: 'cover',
-            width: 'clamp(3rem, 7vw, 10rem)', // Match the Games in Progress size
+            width: 'clamp(3rem, 7vw, 10rem)',
             aspectRatio: '1.39',
             display: 'flex',
             justifyContent: 'center',
@@ -78,7 +77,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         },
     };
 
-    // Helper function to create a card object compatible with s3CardImageURL
     const createCardObject = (cardData: ILobbyCardData): ISetCode => {
         const setCode = cardData.id.split('_')[0];
         const cardNumber = parseInt(cardData.id.split('_')[1], 10);
@@ -89,8 +87,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 set: setCode,
                 number: cardNumber
             },
-            type: 'unit', // Default type, adjust if needed
-            types: ['unit'] // Default types, adjust if needed
+            type: 'unit',
+            types: ['unit']
         };
     };
 
