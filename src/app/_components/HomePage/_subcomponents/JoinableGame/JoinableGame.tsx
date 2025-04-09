@@ -76,9 +76,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         fullImage: {
             display: 'none',
             position: 'absolute',
-            bottom: '100%',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            top: '0', // Align with the top of the preview
+            left: 'calc(100% + 10px)', // Position to the right with a 10px gap
             width: '10rem',
             aspectRatio: '1 / 1.4',
             backgroundSize: 'cover',
@@ -86,7 +85,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             borderRadius: '0.5rem',
             border: '2px solid rgba(255, 255, 255, 0.5)',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-            zIndex: 10,
+            zIndex: 9999, // Very high z-index to ensure it's above everything
         },
         lobbyInfo: {
             display: 'flex',
