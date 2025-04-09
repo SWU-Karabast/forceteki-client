@@ -78,10 +78,11 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             position: 'absolute',
             top: '0', // Align with the top of the preview
             left: 'calc(100% + 10px)', // Position to the right with a 10px gap
-            width: '10rem',
-            aspectRatio: '1 / 1.4',
-            backgroundSize: 'cover',
+            width: '14rem', // Increased width for landscape orientation
+            aspectRatio: '1.4 / 1', // Changed to landscape aspect ratio
+            backgroundSize: 'contain', // Changed to 'contain' to show the entire image
             backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
             borderRadius: '0.5rem',
             border: '2px solid rgba(255, 255, 255, 0.5)',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
