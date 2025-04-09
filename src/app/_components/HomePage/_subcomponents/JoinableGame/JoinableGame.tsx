@@ -64,6 +64,29 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             aspectRatio: '1 / 1.4',
             width: '2.5rem',
             border: '1px solid rgba(255, 255, 255, 0.2)',
+            position: 'relative',
+            cursor: 'pointer',
+            transition: 'transform 0.2s',
+            '&:hover': {
+                '& .fullImage': {
+                    display: 'block',
+                }
+            }
+        },
+        fullImage: {
+            display: 'none',
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '10rem',
+            aspectRatio: '1 / 1.4',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            borderRadius: '0.5rem',
+            border: '2px solid rgba(255, 255, 255, 0.5)',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
+            zIndex: 10,
         },
         lobbyInfo: {
             display: 'flex',
@@ -92,6 +115,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         <>
             <Box sx={styles.box} key={lobby.id}>
                 <Box sx={styles.lobbyInfo}>
+                    <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
                     {lobby.host && (
                         <Box sx={styles.cardsContainer}>
                             <Box 
@@ -100,17 +124,32 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                     backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.Plain)})`
                                 }}
                                 title={`Leader: ${lobby.host.leader.id}`}
-                            />
+                            >
+                                <Box 
+                                    className="fullImage"
+                                    sx={{
+                                        ...styles.fullImage,
+                                        backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.Plain)})`
+                                    }}
+                                />
+                            </Box>
                             <Box 
                                 sx={{
                                     ...styles.cardPreview,
                                     backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)})`
                                 }}
                                 title={`Base: ${lobby.host.base.id}`}
-                            />
+                            >
+                                <Box 
+                                    className="fullImage"
+                                    sx={{
+                                        ...styles.fullImage,
+                                        backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)})`
+                                    }}
+                                />
+                            </Box>
                         </Box>
                     )}
-                    <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
                 </Box>
                 <Button onClick={() => joinLobby(lobby.id)}>Join Game</Button>
             </Box>
