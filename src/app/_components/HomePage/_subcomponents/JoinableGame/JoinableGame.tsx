@@ -47,7 +47,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             justifyContent: 'space-between',
             alignContent: 'center',
             alignItems: 'center',
-            mb: '1rem',
+            mb: '1.25rem',
+            padding: '0.5rem 0',
         },
         matchType: {
             margin: 0,
@@ -63,7 +64,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
             aspectRatio: '1.4 / 1',
-            width: '3.5rem',
+            width: '6rem', // Significantly increased from 4.375rem
             border: '1px solid rgba(255, 255, 255, 0.2)',
             position: 'relative',
             cursor: 'pointer',
@@ -79,7 +80,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             position: 'absolute',
             top: '0', // Align with the top of the preview
             left: 'calc(100% + 10px)', // Position to the right with a 10px gap
-            width: '14rem', // Increased width for landscape orientation
+            width: '24rem', // Significantly increased from 17.5rem
             aspectRatio: '1.4 / 1', // Changed to landscape aspect ratio
             backgroundSize: 'contain', // Changed to 'contain' to show the entire image
             backgroundRepeat: 'no-repeat',
