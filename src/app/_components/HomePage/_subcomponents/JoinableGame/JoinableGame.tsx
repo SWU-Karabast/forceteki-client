@@ -120,7 +120,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                             <Box 
                                 sx={{
                                     ...styles.cardPreview,
-                                    backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.Plain)})`
+                                    backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)})`
                                 }}
                                 title={`Leader: ${lobby.host.leader.id}`}
                             >
@@ -128,7 +128,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                     className="fullImage"
                                     sx={{
                                         ...styles.fullImage,
-                                        backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.Plain)})`
+                                        backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)})`
                                     }}
                                 />
                             </Box>
