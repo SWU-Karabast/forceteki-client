@@ -215,7 +215,7 @@ const CreateGameForm = () => {
     return (
         <Box >
             <Typography variant="h2">
-                {isCreateGamePath ? 'Choose Your Deck' : 'Create New Game'}
+                {isCreateGamePath ? 'Choose Your Deck' : 'Create New Lobby'}
             </Typography>
             <form onSubmit={handleCreateGameSubmit}>
                 {/* Favourite Decks Input */}

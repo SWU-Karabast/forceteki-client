@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Box } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -99,7 +99,8 @@ interface IButtonsProps {
 }
 
 const CardActionTray: React.FC = () => {
-    const { sendGameMessage, gameState, connectedPlayer, distributionPromptData } = useGame();
+    const [ resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverride ] = useState<boolean | null>(null);
+    const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
     const playerState = gameState.players[connectedPlayer];
 
     const showTrayButtons = () => {
@@ -116,15 +117,35 @@ const CardActionTray: React.FC = () => {
         if (button.arg === 'done') {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
-                const damageSpent = distributionPromptData?.valueDistribution.reduce((acc, curr) => acc + curr.amount, 0);
-                if (!distributeValues.canDistributeLess && damageSpent !== distributeValues.amount) {
+                const damageSpent = distributionPromptData?.valueDistribution.reduce((acc, curr) => acc + curr.amount, 0) ?? 0;
+                if ((!distributeValues.canChooseNoTargets && damageSpent === 0) || (!distributeValues.canDistributeLess && damageSpent > 0 && damageSpent < distributeValues.amount)) {
                     return true;
                 }
+            }
+
+            // for a resource prompt, we disable the "done" button briefly to avoid double clicks
+            if (getConnectedPlayerPrompt()?.promptType === 'resource') {
+                if (resourcePromptDoneButtonOverride == null) {
+                    setResourcePromptDoneButtonOverride(true);
+                    setTimeout(() => {
+                        setResourcePromptDoneButtonOverride(false);
+                    }, 500);
+
+                    return true;
+                }
+
+                return resourcePromptDoneButtonOverride;
             }
         }
 
         return !!button.disabled;
     };
+
+    useEffect(() => {
+        if (getConnectedPlayerPrompt()?.promptType !== 'resource') {
+            setResourcePromptDoneButtonOverride(null);
+        }
+    }, [gameState]);
 
     return (
         <Grid
