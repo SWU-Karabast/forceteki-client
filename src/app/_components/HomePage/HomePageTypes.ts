@@ -20,10 +20,23 @@ export interface IPublicGameInProgressProps {
     };
 }
 
+export interface ILobbyCardData {
+    id: string;
+    count: number;
+    internalName: string;
+    cost: number | null;
+}
+
+export interface ILobbyHost {
+    leader: ILobbyCardData;
+    base: ILobbyCardData;
+}
+
 export interface ILobby {
     id: string;
     name: string;
     format: SwuGameFormat;
+    host?: ILobbyHost;
 }
 
 export interface IJoinableGameProps {

@@ -86,12 +86,12 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'Welcome to the Karabast Update!',
+        title: 'Premier Format Updates',
         content: `
-		<p>We're very happy to finally show everyone what we've been working on. We're nearly complete on cards and as we wrap those up we are also focused on bringing you platform features such as user login and small screen/mobile support. We appreciate your patience as we work on these features!</p>
-		<p style="margin-bottom:0;"><a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Join our Discord for the latest progress updates and timelines</a>. If you have coding experience, we are always open to new contributors. Info on how to help out can also be found on <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>.</p>
+        <p>Following the recent suspension announcements, we have updated the Premier format to restrict Jango, Triple Dark Raid, and DJ. These cards can still be played in the Open Format.</p>
+        <p>We have also recently enabled our matchmaking queue to make finding games as simple as clicking a button! Custom games can still be created if you are looking for particular matchups for testing.</p>		<p style="margin-bottom:0;"><a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Join our Discord for the latest progress updates and timelines</a>. If you have coding experience, we are always open to new contributors. Info on how to help out can also be found on <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>.</p>
 	  `,
-        date: '3/9',
+        date: '4/9',
         image: s3ImageURL('ui/thrawn-banner.webp'),
         imageAlt: 'Beta Announcement',
     },
