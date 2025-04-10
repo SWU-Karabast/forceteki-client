@@ -130,7 +130,7 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
         </Box>
     );
 
-    // Function to update the position of the preview based on mouse position
+    // Function to update the position of the preview based on the card's position
     function updatePreviewPosition(e: React.MouseEvent) {
         if (!cardRef.current) return;
 
@@ -140,14 +140,14 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
         const previewWidth = 300; // Same as in styles
         const previewHeight = 216; // Same as in styles
 
-        // Calculate position - prefer right side if there's room
-        let left = e.clientX + 20; // 20px offset from cursor
-        let top = e.clientY - previewHeight / 2; // Center vertically with cursor
+        // Calculate position - always to the right of the card
+        let left = cardRect.right + 20; // 20px offset from the right edge of the card
+        let top = cardRect.top + (cardRect.height / 2) - (previewHeight / 2); // Center vertically with the card
 
         // Check if preview would go off the right edge of the viewport
         if (left + previewWidth > viewportWidth) {
-            // Position to the left of the cursor instead
-            left = e.clientX - previewWidth - 20;
+            // Position to the left of the card instead
+            left = cardRect.left - previewWidth - 20;
         }
 
         // Check if preview would go off the top or bottom of the viewport
