@@ -54,8 +54,12 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         },
         cardsContainer: {
             display: 'flex',
-            gap: '0.5rem',
             alignItems: 'center',
+        },
+        parentBoxStyling: {
+            position: 'absolute',
+            left: '-15px',
+            top: '24px',
         },
         cardPreview: {
             borderRadius: '0.5rem',
@@ -99,21 +103,27 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
                     {lobby.host && (
                         <Box sx={styles.cardsContainer}>
-                            <Box 
-                                sx={{
-                                    ...styles.cardPreview,
-                                    backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)})`
-                                }}
-                                title={`Leader: ${lobby.host.leader.id}`}
-                            >
-                            </Box>
-                            <Box 
-                                sx={{
-                                    ...styles.cardPreview,
-                                    backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)})`
-                                }}
-                                title={`Base: ${lobby.host.base.id}`}
-                            >
+                            <Box sx={{ position: 'relative' }}>
+                                <Box>
+                                    <Box 
+                                        sx={{
+                                            ...styles.cardPreview,
+                                            backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)})`
+                                        }}
+                                        title={`Base: ${lobby.host.base.id}`}
+                                    >
+                                    </Box>
+                                </Box>
+                                <Box sx={styles.parentBoxStyling}>
+                                    <Box 
+                                        sx={{
+                                            ...styles.cardPreview,
+                                            backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)})`
+                                        }}
+                                        title={`Leader: ${lobby.host.leader.id}`}
+                                    >
+                                    </Box>
+                                </Box>
                             </Box>
                         </Box>
                     )}
