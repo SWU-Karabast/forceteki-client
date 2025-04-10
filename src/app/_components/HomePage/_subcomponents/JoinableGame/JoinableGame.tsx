@@ -51,6 +51,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         },
         matchType: {
             margin: 0,
+            fontWeight: 'bold',
         },
         cardsContainer: {
             display: 'flex',
