@@ -75,21 +75,37 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     };
 
     const convertToSetCode = (cardData: ICardData): ISetCode => {
-        if (!cardData.id || !cardData.setId) {
-            // Fallback for missing data
+        // Add console log to debug the card data structure
+        console.log('Card data in PublicMatch:', cardData);
+        
+        // Handle null or undefined cardData
+        if (!cardData) {
             return {
-                id: cardData.id || 'unknown',
-                setId: cardData.setId || { set: 'unknown', number: 0 },
-                type: cardData.type || 'unit',
-                types: cardData.types || ['unit']
+                id: 'unknown',
+                setId: { set: 'unknown', number: 0 },
+                type: 'unit',
+                types: ['unit']
             };
         }
         
+        // Extract set and number from id if setId is not available
+        let setId = cardData.setId;
+        if (!setId && cardData.id) {
+            const parts = cardData.id.split('_');
+            if (parts.length >= 2) {
+                setId = {
+                    set: parts[0],
+                    number: parseInt(parts[1], 10) || 0
+                };
+            }
+        }
+        
+        // Create a valid ISetCode object with fallbacks for all required properties
         return {
-            id: cardData.id,
-            setId: cardData.setId,
-            type: cardData.type,
-            types: cardData.types
+            id: cardData.id || 'unknown',
+            setId: setId || { set: 'unknown', number: 0 },
+            type: cardData.type || 'unit',
+            types: cardData.types || ['unit']
         };
     };
 

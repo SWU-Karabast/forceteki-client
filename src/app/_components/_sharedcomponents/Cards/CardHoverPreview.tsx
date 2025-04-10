@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, ISetCode, LeaderBaseCardStyle } from './CardTypes';
@@ -17,6 +17,23 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
     sx = {}
 }) => {
     const [showLargePreview, setShowLargePreview] = useState(false);
+    const [imageUrl, setImageUrl] = useState<string>('');
+    const [hasError, setHasError] = useState(false);
+    
+    useEffect(() => {
+        try {
+            // Try to get the image URL
+            const url = s3CardImageURL(card, cardStyle);
+            setImageUrl(url);
+            setHasError(false);
+        } catch (error) {
+            console.error('Error getting card image URL:', error);
+            setHasError(true);
+        }
+    }, [card, cardStyle]);
+    
+    // Fallback image URL (card back)
+    const fallbackImageUrl = '/card-back.png';
 
     const styles = {
         cardPreview: {
@@ -63,7 +80,7 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
             <Box 
                 sx={{
                     ...styles.cardPreview,
-                    backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`
+                    backgroundImage: `url(${hasError ? fallbackImageUrl : imageUrl})`
                 }}
                 title={title || `Card: ${card.id}`}
                 onMouseEnter={() => setShowLargePreview(true)}
@@ -73,7 +90,7 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
                 sx={{
                     ...styles.largePreview,
                     ...(showLargePreview ? styles.largePreviewVisible : {}),
-                    backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`
+                    backgroundImage: `url(${hasError ? fallbackImageUrl : imageUrl})`
                 }}
             />
         </Box>

@@ -85,8 +85,26 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     };
 
     const createCardObject = (cardData: ILobbyCardData): ISetCode => {
-        const setCode = cardData.id.split('_')[0];
-        const cardNumber = parseInt(cardData.id.split('_')[1], 10);
+        // Add console log to debug the card data
+        console.log('Card data in JoinableGame:', cardData);
+        
+        // Handle case where cardData might be null or undefined
+        if (!cardData || !cardData.id) {
+            return {
+                id: 'unknown',
+                setId: {
+                    set: 'unknown',
+                    number: 0
+                },
+                type: 'unit',
+                types: ['unit']
+            };
+        }
+        
+        // Split the ID to get set code and card number
+        const parts = cardData.id.split('_');
+        const setCode = parts.length > 0 ? parts[0] : 'unknown';
+        const cardNumber = parts.length > 1 ? parseInt(parts[1], 10) : 0;
         
         return {
             id: cardData.id,
