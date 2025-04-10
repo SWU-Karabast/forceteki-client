@@ -55,6 +55,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         cardsContainer: {
             display: 'flex',
             alignItems: 'center',
+            paddingLeft: '10px',
         },
         parentBoxStyling: {
             position: 'absolute',
@@ -100,7 +101,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         <>
             <Box sx={styles.box} key={lobby.id}>
                 <Box sx={styles.lobbyInfo}>
-                    <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
                     {lobby.host && (
                         <Box sx={styles.cardsContainer}>
                             <Box sx={{ position: 'relative' }}>
@@ -127,6 +127,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                             </Box>
                         </Box>
                     )}
+                    <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
                 </Box>
                 <Button onClick={() => joinLobby(lobby.id)}>Join Game</Button>
             </Box>
