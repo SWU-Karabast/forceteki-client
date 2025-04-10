@@ -2,10 +2,11 @@ import React from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import GameInProgressPlayer from '../GameInProgressPlayer/GameInProgressPlayer';
 import { IPublicGameInProgressProps } from '../../HomePageTypes';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { LeaderBaseCardStyle, ICardData, ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import CardHoverPreview from '@/app/_components/_sharedcomponents/Cards/CardHoverPreview';
+import { s3CardImageURL } from '@/app/_utils/s3Utils';
 
 const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     const router = useRouter();
@@ -73,24 +74,61 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
         },
     };
 
+    const convertToSetCode = (cardData: ICardData): ISetCode => {
+        if (!cardData.id || !cardData.setId) {
+            // Fallback for missing data
+            return {
+                id: cardData.id || 'unknown',
+                setId: cardData.setId || { set: 'unknown', number: 0 },
+                type: cardData.type || 'unit',
+                types: cardData.types || ['unit']
+            };
+        }
+        
+        return {
+            id: cardData.id,
+            setId: cardData.setId,
+            type: cardData.type,
+            types: cardData.types
+        };
+    };
+
     return (
         <Box sx={styles.box}>
             <Box sx={styles.matchItems}>
                 <Box sx={{ position:'relative' }}>
                     <Box>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Base)})` }}/>
+                        <CardHoverPreview 
+                            card={convertToSetCode(match.player1Base)}
+                            title={'Player 1 Base'}
+                            sx={styles.leaderStyleCard}
+                        />
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Leader, LeaderBaseCardStyle.PlainLeader)})` }}/>
+                        <CardHoverPreview 
+                            card={convertToSetCode(match.player1Leader)}
+                            cardStyle={LeaderBaseCardStyle.PlainLeader}
+                            title={'Player 1 Leader'}
+                            sx={styles.leaderStyleCard}
+                        />
                     </Box>
                 </Box>
                 <Typography variant="body1" sx={styles.matchType}>vs</Typography>
                 <Box sx={{ position:'relative' }}>
                     <Box>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Base)})` }}/>
+                        <CardHoverPreview 
+                            card={convertToSetCode(match.player2Base)}
+                            title={'Player 2 Base'}
+                            sx={styles.leaderStyleCard}
+                        />
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Leader, LeaderBaseCardStyle.PlainLeader)})` }}/>
+                        <CardHoverPreview 
+                            card={convertToSetCode(match.player2Leader)}
+                            cardStyle={LeaderBaseCardStyle.PlainLeader}
+                            title={'Player 2 Leader'}
+                            sx={styles.leaderStyleCard}
+                        />
                     </Box>
                 </Box>
             </Box>
