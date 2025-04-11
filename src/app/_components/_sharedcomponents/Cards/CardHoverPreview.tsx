@@ -24,7 +24,6 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
     const [isMounted, setIsMounted] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     
-    // Ensure component is mounted before rendering portal
     useEffect(() => {
         setIsMounted(true);
         return () => setIsMounted(false);
@@ -32,7 +31,6 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
     
     useEffect(() => {
         try {
-            // Try to get the image URL
             const url = s3CardImageURL(card, cardStyle);
             setImageUrl(url);
             setHasError(false);
@@ -42,7 +40,6 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
         }
     }, [card, cardStyle]);
     
-    // Fallback image URL (card back)
     const fallbackImageUrl = '/card-back.png';
 
     const styles = {
@@ -61,14 +58,14 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
             ...sx
         },
         largePreview: {
-            position: 'fixed', // Changed from absolute to fixed
-            zIndex: 9999, // Increased z-index to ensure it's above all other components
-            right: 'auto', // Remove fixed right positioning
-            left: 'auto', // Will be calculated dynamically
-            top: 'auto', // Will be calculated dynamically
-            transform: 'none', // Remove transform as we'll position it dynamically
-            width: '300px', // Increased width for landscape mode
-            height: '216px', // Width / 1.39 to maintain aspect ratio
+            position: 'fixed',
+            zIndex: 9999,
+            right: 'auto',
+            left: 'auto',
+            top: 'auto',
+            transform: 'none',
+            width: '300px',
+            height: '216px',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             borderRadius: '0.5rem',
@@ -76,7 +73,7 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
             opacity: 0,
             visibility: 'hidden',
             transition: 'opacity 0.2s ease, visibility 0.2s ease',
-            pointerEvents: 'none', // Prevent the preview from intercepting mouse events
+            pointerEvents: 'none',
         },
         largePreviewVisible: {
             opacity: 1,
@@ -89,7 +86,6 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
 
     // Create a portal for the preview to render at the root level
     const renderPreview = () => {
-        // Only render the portal on the client side and when component is mounted
         if (!showLargePreview || !isMounted || typeof document === 'undefined') return null;
         
         return createPortal(
@@ -102,7 +98,7 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
                     top: `${previewPosition.top}px`
                 }}
             />,
-            document.body // Render directly in the body
+            document.body
         );
     };
 
@@ -130,31 +126,28 @@ const CardHoverPreview: React.FC<CardHoverPreviewProps> = ({
         </Box>
     );
 
-    // Function to update the position of the preview based on the card's position
     function updatePreviewPosition(e: React.MouseEvent) {
         if (!cardRef.current) return;
 
         const cardRect = cardRef.current.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const previewWidth = 300; // Same as in styles
-        const previewHeight = 216; // Same as in styles
+        const previewWidth = 300;
+        const previewHeight = 216;
 
         // Calculate position - always to the right of the card
-        let left = cardRect.right + 20; // 20px offset from the right edge of the card
-        let top = cardRect.top + (cardRect.height / 2) - (previewHeight / 2); // Center vertically with the card
+        let left = cardRect.right + 20;
+        let top = cardRect.top + (cardRect.height / 2) - (previewHeight / 2);
 
-        // Check if preview would go off the right edge of the viewport
+
         if (left + previewWidth > viewportWidth) {
-            // Position to the left of the card instead
             left = cardRect.left - previewWidth - 20;
         }
 
-        // Check if preview would go off the top or bottom of the viewport
         if (top < 0) {
-            top = 10; // Add some padding from the top
+            top = 10;
         } else if (top + previewHeight > viewportHeight) {
-            top = viewportHeight - previewHeight - 10; // Add some padding from the bottom
+            top = viewportHeight - previewHeight - 10;
         }
 
         setPreviewPosition({ left, top });

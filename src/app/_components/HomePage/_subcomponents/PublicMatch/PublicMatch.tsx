@@ -75,10 +75,6 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     };
 
     const convertToSetCode = (cardData: ICardData): ISetCode => {
-        // Add console log to debug the card data structure
-        console.log('Card data in PublicMatch:', cardData);
-        
-        // Handle null or undefined cardData
         if (!cardData) {
             return {
                 id: 'unknown',
@@ -88,7 +84,6 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
             };
         }
         
-        // Extract set and number from id if setId is not available
         let setId = cardData.setId;
         if (!setId && cardData.id) {
             const parts = cardData.id.split('_');
@@ -100,7 +95,6 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
             }
         }
         
-        // Create a valid ISetCode object with fallbacks for all required properties
         return {
             id: cardData.id || 'unknown',
             setId: setId || { set: 'unknown', number: 0 },
