@@ -178,7 +178,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: '1.4 / 1', // Landscape mode
+            aspectRatio: '1.4 / 1',
             width: '21rem',
         },
     }
