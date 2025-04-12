@@ -28,7 +28,7 @@ const Board: React.FC<IBoardProps> = ({
     const styles = {
         boardWrapper: {
             height: '100%',
-            margin: '0 5rem',
+            margin: '0 3rem',
             display: 'flex',
             flexDirection: 'row',
         },

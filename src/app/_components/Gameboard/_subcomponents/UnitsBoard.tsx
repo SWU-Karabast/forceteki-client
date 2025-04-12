@@ -4,6 +4,7 @@ import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { Height } from '@mui/icons-material';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -99,7 +100,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             position: 'relative',
             height: '100%',
             width: '100%',
-            padding: '3rem 2rem',
+            padding: '2rem 0.5rem',
             overflow: 'hidden',
         },
         containerStyle: {
@@ -110,26 +111,20 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         },
         opponentGridStyle: {
             display: 'grid',
-            gap: '10px',
-            gridTemplateColumns: {
-                xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
-                md: 'repeat(auto-fit, minmax(4rem, 6rem))',
-                lg: 'repeat(auto-fit, minmax(5rem, 7rem))',
-            },
+            gap: 'clamp(5px, .5vw, 10px)',
+            direction: arena === 'groundArena' ? 'ltr' : 'rtl',
+            gridTemplateColumns: 'repeat(4, minmax(2rem, 7rem))',
             alignContent: 'start',
-            justifyContent: arena === 'groundArena' ? 'start' : 'end',
+            justifyContent: 'start',
         },
         playerGridStyle: {
             display: 'grid',
-            gap: '10px',
-            gridTemplateColumns: {
-                xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
-                md: 'repeat(auto-fit, minmax(4rem, 6rem))',
-                lg: 'repeat(auto-fit, minmax(5rem, 7rem))',
-            },
+            gap: 'clamp(5px, .5vw, 10px)',
+            direction: arena === 'groundArena' ? 'ltr' : 'rtl',
+            gridTemplateColumns: 'repeat(4, minmax(2rem, 7rem))',
             alignContent: 'end',
-            justifyContent: arena === 'groundArena' ? 'start' : 'end',
-            gridAutoFlow: 'dense',
+            justifyContent: 'start',
+            
         },
     };
 
@@ -145,7 +140,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                         </Box>
                     ))}
                 </Box>
-
+                <Box sx={{ flex: '1 1 10px', minHeight: '10px', width: '100%' }} />
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
