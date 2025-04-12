@@ -37,11 +37,11 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         return {
             anchorOrigin: {
                 vertical: 'center',
-                horizontal: -5,
+                horizontal: 'right',
             },
             transformOrigin: {
                 vertical: 'center',
-                horizontal: 'right',
+                horizontal: 'left',
             }
         };
     };
@@ -115,7 +115,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: '1 / 1.4',
+            aspectRatio: '1.4 / 1',
             width: '16rem',
         },
         lobbyInfo: {
