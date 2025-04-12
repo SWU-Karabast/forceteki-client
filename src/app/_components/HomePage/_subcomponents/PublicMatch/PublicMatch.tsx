@@ -78,7 +78,7 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: '1.4 / 1',
-            width: '12rem',
+            width: '16rem',
         },
         box: {
             width: '100%',
