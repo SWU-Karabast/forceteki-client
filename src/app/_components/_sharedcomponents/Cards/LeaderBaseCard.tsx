@@ -29,7 +29,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
-        if (isDeployed) return;
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
         }, 200);
@@ -176,19 +175,11 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         cardPreview: {
             borderRadius: '.38em',
-            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: '1.4 / 1',
+            aspectRatio: '1.4 / 1', // Landscape mode
             width: '21rem',
-        },
-        cardPreviewDeployed: {
-            borderRadius: '.38em',
-            backgroundImage: `url(${s3CardImageURL(card)})`,
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            aspectRatio: '1 / 1.4',
-            width: '16rem',
         },
     }
 
