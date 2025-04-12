@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, Popover, PopoverOrigin } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { IJoinableGameProps } from '../../HomePageTypes';
@@ -10,6 +10,41 @@ import { ILobbyCardData } from '../../HomePageTypes';
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
     const { user } = useUser();
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
+
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        const imageUrl = target.getAttribute('data-card-url');
+
+        if (!imageUrl) return;
+
+        hoverTimeout.current = window.setTimeout(() => {
+            setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
+        }, 300);
+    };
+
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+        setPreviewImage(null);
+    };
+
+    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+        return {
+            anchorOrigin: {
+                vertical: 'center',
+                horizontal: -5,
+            },
+            transformOrigin: {
+                vertical: 'center',
+                horizontal: 'right',
+            }
+        };
+    };
     const joinLobby = async (lobbyId: string) => {
         try {
             const payload = {
@@ -76,6 +111,13 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             boxSizing: 'border-box',
             cursor: 'pointer'
         },
+        cardPopover: {
+            borderRadius: '.38em',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1 / 1.4',
+            width: '16rem',
+        },
         lobbyInfo: {
             display: 'flex',
             alignItems: 'center',
@@ -112,6 +154,9 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                             backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)})`
                                         }}
                                         title={`Base: ${lobby.host.base.id}`}
+                                        onMouseEnter={handlePreviewOpen}
+                                        onMouseLeave={handlePreviewClose}
+                                        data-card-url={s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)}
                                     >
                                     </Box>
                                 </Box>
@@ -122,6 +167,9 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                             backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)})`
                                         }}
                                         title={`Leader: ${lobby.host.leader.id}`}
+                                        onMouseEnter={handlePreviewOpen}
+                                        onMouseLeave={handlePreviewClose}
+                                        data-card-url={s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)}
                                     >
                                     </Box>
                                 </Box>
@@ -132,6 +180,18 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 </Box>
                 <Button onClick={() => joinLobby(lobby.id)}>Join Game</Button>
             </Box>
+            <Popover
+                id="mouse-over-popover"
+                sx={{ pointerEvents: 'none' }}
+                open={open}
+                anchorEl={anchorElement}
+                onClose={handlePreviewClose}
+                disableRestoreFocus
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                {...popoverConfig()}
+            >
+                <Box sx={{ ...styles.cardPopover, backgroundImage: previewImage }} />
+            </Popover>
         </>
     );
 };

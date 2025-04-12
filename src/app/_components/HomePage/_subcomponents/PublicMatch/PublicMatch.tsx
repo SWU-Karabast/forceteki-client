@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, Popover, PopoverOrigin } from '@mui/material';
 import GameInProgressPlayer from '../GameInProgressPlayer/GameInProgressPlayer';
 import { IPublicGameInProgressProps } from '../../HomePageTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
@@ -10,6 +10,41 @@ import { LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/C
 const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     const router = useRouter();
     const { user, anonymousUserId } = useUser();
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
+
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        const imageUrl = target.getAttribute('data-card-url');
+
+        if (!imageUrl) return;
+
+        hoverTimeout.current = window.setTimeout(() => {
+            setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
+        }, 300);
+    };
+
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+        setPreviewImage(null);
+    };
+
+    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+        return {
+            anchorOrigin: {
+                vertical: 'center',
+                horizontal: 'right',
+            },
+            transformOrigin: {
+                vertical: 'center',
+                horizontal: 'left',
+            }
+        };
+    };
 
     const handleSpectate = async () => {
         try {
@@ -38,6 +73,13 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     };
 
     const styles = {
+        cardPopover: {
+            borderRadius: '.38em',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1.4 / 1',
+            width: '12rem',
+        },
         box: {
             width: '100%',
             display: 'flex',
@@ -74,30 +116,64 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     };
 
     return (
-        <Box sx={styles.box}>
-            <Box sx={styles.matchItems}>
-                <Box sx={{ position:'relative' }}>
-                    <Box>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Base)})` }}/>
+        <>
+            <Box sx={styles.box}>
+                <Box sx={styles.matchItems}>
+                    <Box sx={{ position:'relative' }}>
+                        <Box>
+                            <Box 
+                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Base)})` }}
+                                onMouseEnter={handlePreviewOpen}
+                                onMouseLeave={handlePreviewClose}
+                                data-card-url={s3CardImageURL(match.player1Base)}
+                            />
+                        </Box>
+                        <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
+                            <Box 
+                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Leader, LeaderBaseCardStyle.PlainLeader)})` }}
+                                onMouseEnter={handlePreviewOpen}
+                                onMouseLeave={handlePreviewClose}
+                                data-card-url={s3CardImageURL(match.player1Leader, LeaderBaseCardStyle.PlainLeader)}
+                            />
+                        </Box>
                     </Box>
-                    <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Leader, LeaderBaseCardStyle.PlainLeader)})` }}/>
+                    <Typography variant="body1" sx={styles.matchType}>vs</Typography>
+                    <Box sx={{ position:'relative' }}>
+                        <Box>
+                            <Box 
+                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Base)})` }}
+                                onMouseEnter={handlePreviewOpen}
+                                onMouseLeave={handlePreviewClose}
+                                data-card-url={s3CardImageURL(match.player2Base)}
+                            />
+                        </Box>
+                        <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
+                            <Box 
+                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Leader, LeaderBaseCardStyle.PlainLeader)})` }}
+                                onMouseEnter={handlePreviewOpen}
+                                onMouseLeave={handlePreviewClose}
+                                data-card-url={s3CardImageURL(match.player2Leader, LeaderBaseCardStyle.PlainLeader)}
+                            />
+                        </Box>
                     </Box>
                 </Box>
-                <Typography variant="body1" sx={styles.matchType}>vs</Typography>
-                <Box sx={{ position:'relative' }}>
-                    <Box>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Base)})` }}/>
-                    </Box>
-                    <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <Box sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Leader, LeaderBaseCardStyle.PlainLeader)})` }}/>
-                    </Box>
-                </Box>
+                {!match.isPrivate && (
+                    <Button onClick={handleSpectate}>Spectate</Button>
+                )}
             </Box>
-            {!match.isPrivate && (
-                <Button onClick={handleSpectate}>Spectate</Button>
-            )}
-        </Box>
+            <Popover
+                id="mouse-over-popover"
+                sx={{ pointerEvents: 'none' }}
+                open={open}
+                anchorEl={anchorElement}
+                onClose={handlePreviewClose}
+                disableRestoreFocus
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                {...popoverConfig()}
+            >
+                <Box sx={{ ...styles.cardPopover, backgroundImage: previewImage }} />
+            </Popover>
+        </>
     );
 };
 
