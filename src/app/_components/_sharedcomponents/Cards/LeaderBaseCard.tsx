@@ -4,7 +4,7 @@ import {
     Box,
     Popover
 } from '@mui/material';
-import { ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
+import { ILeaderBaseCardProps, LeaderBaseCardStyle, CardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
@@ -175,7 +175,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         cardPreview: {
             borderRadius: '.38em',
-            backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
+            backgroundImage: `url(${s3CardImageURL(card, isDeployed ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: '1.4 / 1',
@@ -228,7 +228,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 disableRestoreFocus
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
             >
-                <Box sx={styles.cardPreview} />
+                <Box sx={{
+                    ...styles.cardPreview,
+                    backgroundImage: `url(${s3CardImageURL(card, isDeployed ? CardStyle.PlainLeader : CardStyle.Plain)})`,
+                }} />
             </Popover>
 
             {cardStyle === LeaderBaseCardStyle.Leader && title && (
