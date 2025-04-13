@@ -156,6 +156,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                         </Box>
                     ))}
                 </Box>
+                {/* Enforce some minimum spacing between the two player's grids */}
                 <Box sx={{ flex: '1 1 10px', minHeight: '10px', width: '100%' }} />
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
