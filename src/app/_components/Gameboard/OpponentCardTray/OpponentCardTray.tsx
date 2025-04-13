@@ -1,5 +1,5 @@
-import React from 'react';
-import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
+import React, { useState } from 'react';
+import { CloseOutlined, SettingsOutlined, BugReportOutlined } from '@mui/icons-material';
 import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
@@ -11,10 +11,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { useRouter } from 'next/navigation';
+import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
     const { openPopup } = usePopup();
+    const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
     const router = useRouter();
     const handleExitButton = () => {
         if (isSpectator){
@@ -47,6 +49,16 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
+    };
+
+    // Handler for opening the bug report dialog
+    const handleOpenBugReport = () => {
+        setBugReportOpen(true);
+    };
+
+    // Handler for closing the bug report dialog
+    const handleCloseBugReport = () => {
+        setBugReportOpen(false);
     };
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
@@ -187,9 +199,14 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 <Box sx={styles.menuStyles}>
                     <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
                     <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
+                    <BugReportOutlined onClick={handleOpenBugReport} sx={{ cursor:'pointer' }} />
                 </Box>
-
             </Grid>
+            {/* Bug Report Dialog */}
+            <BugReportDialog
+                open={bugReportOpen}
+                onClose={handleCloseBugReport}
+            />
         </Grid>
     );
 };

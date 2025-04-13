@@ -17,7 +17,6 @@ function CurrentGameTab() {
     const router = useRouter();
     const currentPlayerName = gameState.players[connectedPlayer]?.name
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
-    const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
     useEffect(() => {
         if(confirmConcede){
@@ -36,16 +35,6 @@ function CurrentGameTab() {
             // Reset the confirmation
             setConfirmConcede(false);
         }
-    };
-
-    // Handler for opening the bug report dialog
-    const handleOpenBugReport = () => {
-        setBugReportOpen(true);
-    };
-
-    // Handler for closing the bug report dialog
-    const handleCloseBugReport = () => {
-        setBugReportOpen(false);
     };
 
     // Handler for spectators to leave the game
@@ -132,19 +121,7 @@ function CurrentGameTab() {
                         Discord
                     </MuiLink>. Thanks!
                 </Typography>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                    <PreferenceButton variant={'standard'} text={'Report bug'} buttonFnc={handleOpenBugReport} />
-                    <Typography sx={styles.typeographyStyle}>
-                        Report a bug to the developer team.
-                    </Typography>
-                </Box>
-
             </Box>
-            {/* Bug Report Dialog */}
-            <BugReportDialog
-                open={bugReportOpen}
-                onClose={handleCloseBugReport}
-            />
         </>
     );
 }
