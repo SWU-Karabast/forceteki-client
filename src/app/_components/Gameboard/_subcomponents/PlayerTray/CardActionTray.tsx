@@ -2,8 +2,54 @@ import React, { useEffect, useState } from 'react';
 import { Button, Box } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
+import { keyframes } from '@mui/system';
 
-// ------------------------STYLES------------------------//
+
+const pulseBorder = keyframes`
+  0% {
+    border-color: rgba(0, 140, 255, 0.4);
+    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
+  }
+  50% {
+    border-color: rgba(0, 180, 255, 0.6);
+    box-shadow: 0 0 8px rgba(0, 180, 255, 0.6);
+  }
+  100% {
+    border-color: rgba(0, 140, 255, 0.4);
+    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
+  }
+`;
+
+const pulseYellowBorder = keyframes`
+  0% {
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 4px rgba(204, 172, 0, 0.4);
+  }
+  50% {
+    border-color: rgba(220, 185, 0, 0.6);
+    box-shadow: 0 0 8px rgba(220, 185, 0, 0.6);
+  }
+  100% {
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 4px rgba(204, 172, 0, 0.4);
+  }
+`;
+
+const pulseGreenBorder = keyframes`
+  0% {
+    border-color: rgba(0, 170, 70, 0.4);
+    box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
+  }
+  50% {
+    border-color: rgba(0, 200, 90, 0.6);
+    box-shadow: 0 0 8px rgba(0, 200, 90, 0.6);
+  }
+  100% {
+    border-color: rgba(0, 170, 70, 0.4);
+    box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
+  }
+`;
+
 const styles = {
     actionContainer: {
         height: '5.5rem',
@@ -15,7 +61,7 @@ const styles = {
         alignItems: 'center',
     },
     promptButton: {
-        transform: 'skew(-10deg)', // Skew the button
+        transform: 'skew(-10deg)',
         borderRadius: '1rem',
         height: '3.8rem',
         minWidth: '7rem',
@@ -29,9 +75,12 @@ const styles = {
             background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
             linear-gradient(to top,rgb(50, 81, 93), #404040) border-box`,
         },
+        '&:not(:disabled)': {
+            transition: 'box-shadow 0.3s ease-in-out',
+        },
     },
     promptButtonText: {
-        transform: 'skew(10deg)',  // Counter-skew the text
+        transform: 'skew(10deg)',
         lineHeight: '1.2',
         fontSize: '1.1rem',
         '& :disabled': {
@@ -40,7 +89,7 @@ const styles = {
     },
 };
 
-/** --------------------- TYPES --------------------- **/
+
 interface IButtonsProps {
     command: string;
     arg: string;
@@ -49,11 +98,6 @@ interface IButtonsProps {
     disabled?: boolean;
 }
 
-/** --------------------- COMPONENTS --------------------- **/
-
-/**
- * CardActionTray Component
- */
 const CardActionTray: React.FC = () => {
     const [ resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverride ] = useState<boolean | null>(null);
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
@@ -127,9 +171,6 @@ const CardActionTray: React.FC = () => {
 };
 
 
-/**
- * PromptButton Subcomponent
- */
 interface IPromptButtonProps {
     button: IButtonsProps;
     sendGameMessage: (args: [string, string, string]) => void;
@@ -138,25 +179,66 @@ interface IPromptButtonProps {
 
 
 const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled }) => {
-    const actionTrayStyles = (arg: string, disabled = false) => {
-        switch (arg) {
-            case 'claimInitiative':
-                return disabled ? {} : {
-                    badckground: `linear-gradient(rgb(29, 29, 29), #1E2D32) padding-box, 
-                        linear-gradient(to top, #038FC3, #404040) border-box`,
-                    '&:hover': {
-                        background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
-                        linear-gradient(to top, #038FC3, #404040) border-box`,
-                    },
-                };
-            default: return {};
+    const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
+        if (button.arg === 'claimInitiative') {
+            return disabled ? {} : {
+                background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
+                '&:hover': {
+                    background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
+                },
+                '&:not(:disabled)': {
+                    animation: `${pulseBorder} 4s infinite ease-in-out`,
+                    boxShadow: '0 0 6px rgba(0, 140, 255, 0.5)',
+                    border: '1px solid rgba(0, 140, 255, 0.5)',
+                },
+            };
         }
+
+        if (button.arg === 'pass') {
+            return disabled ? {} : {
+                background: `linear-gradient(rgb(29, 29, 29), #3d3a0a) padding-box, 
+                    linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
+                '&:hover': {
+                    background: `linear-gradient(rgb(29, 29, 29),rgb(81, 77, 20)) padding-box, 
+                    linear-gradient(to top, #d4c82a, #3d3a0a) border-box`,
+                    boxShadow: '0 0 8px rgba(204, 172, 0, 0.7)',
+                    border: '1px solid rgba(220, 185, 0, 0.7)',
+                },
+                '&:not(:disabled)': {
+                    animation: `${pulseYellowBorder} 4s infinite ease-in-out`,
+                    boxShadow: '0 0 6px rgba(204, 172, 0, 0.5)',
+                    border: '1px solid rgba(204, 172, 0, 0.5)',
+                },
+            };
+        }
+        
+        if (button.arg === 'done') {
+            return disabled ? {} : {
+                background: `linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, 
+                    linear-gradient(to top, #1cb34a, #0a3d1e) border-box`,
+                '&:hover': {
+                    background: `linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, 
+                    linear-gradient(to top, #2ad44c, #0a3d1e) border-box`,
+                    boxShadow: '0 0 8px rgba(0, 170, 70, 0.7)',
+                    border: '1px solid rgba(0, 200, 90, 0.7)',
+                },
+                '&:not(:disabled)': {
+                    animation: `${pulseGreenBorder} 4s infinite ease-in-out`,
+                    boxShadow: '0 0 6px rgba(0, 170, 70, 0.5)',
+                    border: '1px solid rgba(0, 170, 70, 0.5)',
+                },
+            };
+        }
+        
+        return {};
     }
 
     return (
         <Button
             variant="contained"
-            sx={{ ...styles.promptButton, ...actionTrayStyles(button.arg, button.disabled) }}
+            sx={{ ...styles.promptButton, ...actionTrayStyles(button, button.disabled) }}
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
             disabled={disabled}
         >

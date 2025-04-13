@@ -100,6 +100,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         deployedPlaceholder: {
             backgroundColor: 'transparent',
             borderRadius: '0.5rem',
+            width: '100%',
             maxHeight: '100%',
             aspectRatio: '1.39',
             cursor: 'normal',
@@ -146,7 +147,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             background: 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat',
-            backgroundSize: 'contain',
+            backgroundSize: '50% 100%, 50% 100%',
             backgroundRepeat: 'no-repeat',
             filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
             textShadow: '2px 2px rgba(0, 0, 0, 0.20)'
