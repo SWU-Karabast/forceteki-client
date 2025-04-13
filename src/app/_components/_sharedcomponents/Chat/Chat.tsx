@@ -34,7 +34,7 @@ const Chat: React.FC<IChatProps> = ({
             } else if (message[0].type === 'playerChat') {
                 return (
                     <Typography key={index} sx={styles.messageText}>
-                        <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
+                        <Typography component="span" sx={{...styles.messageText, color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
                             {message[0].name}
                         </Typography>:
                         {message.slice(1).join('')}
@@ -81,9 +81,11 @@ const Chat: React.FC<IChatProps> = ({
         },
         messageText: {
             color: '#fff',
+            fontSize: '0.85rem'
         },
         alertText: {
-            color: 'purple'
+            color: 'purple',
+            fontSize: '0.85rem'
         },
         inputContainer: {
             display: 'flex',
