@@ -32,6 +32,19 @@ const Board: React.FC<IBoardProps> = ({
             display: 'flex',
             flexDirection: 'row',
         },
+        borderLayer: {
+            display: 'flex',
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+            pointerEvents: 'none', // make it invisible to mouse
+        },  
+        unitsLayer: {
+            position: 'relative',
+            margin: '0 1rem',
+            width: '100%',
+            height: '100%',
+        },
         containerStyle: {
             height: '100%',
             width: '100%',
@@ -82,19 +95,29 @@ const Board: React.FC<IBoardProps> = ({
             url('border-llt.svg') no-repeat left top,
             url('border-llb.svg') no-repeat left bottom`,
             mixBlendMode: 'soft-light',
-            width: '80%',
+            left: '0',
+            width: '250px',
             height: '100%',
-            position: 'absolute',
+            position: 'relative',
+        },
+        leftColumnBorderCenter: {
+            flexGrow: 1,
+            background: `
+            url('border-ct.svg') repeat-x top,
+            url('border-cb.svg') repeat-x bottom`,
+            mixBlendMode: 'soft-light',
+            height: '100%',
+            position: 'relative',
         },
         leftColumnBorderRight: {
             background: `
             url('border-lrt.svg') no-repeat right top,
             url('border-lrb.svg') no-repeat right bottom`,
             mixBlendMode: 'soft-light',
-            width: '20%',
+            width: '250px',
             right: '0',
             height: '100%',
-            position: 'absolute',
+            position: 'relative',
         },
         rightColumnBorderRight: {
             background: `
@@ -102,18 +125,28 @@ const Board: React.FC<IBoardProps> = ({
             url('border-rrb.svg') no-repeat right bottom`,
             mixBlendMode: 'soft-light',
             right: '0',
-            width: '80%',
+            width: '250px',
             height: '100%',
-            position: 'absolute',
+            position: 'relative',
+        },
+        rightColumnBorderCenter: {
+            flexGrow: 1,
+            background: `
+            url('border-ct.svg') repeat-x top,
+            url('border-cb.svg') repeat-x bottom`,
+            mixBlendMode: 'soft-light',
+            height: '100%',
+            position: 'relative',
         },
         rightColumnBorderLeft: {
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
             mixBlendMode: 'soft-light',
-            width: '20%',
+            left: '0',
+            width: '250px',
             height: '100%',
-            position: 'absolute',
+            position: 'relative',
         },
         middleColumnBorderRight: {
             background: `
@@ -166,9 +199,14 @@ const Board: React.FC<IBoardProps> = ({
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
         <Box sx={styles.boardWrapper}> 
             <Box sx={styles.columnStyle}>
-                <Box sx={styles.leftColumnBorderLeft} />
-                <Box sx={styles.leftColumnBorderRight} />
-                <UnitsBoard sidebarOpen={sidebarOpen} arena="spaceArena" />
+                <Box sx={styles.borderLayer}>
+                    <Box sx={styles.leftColumnBorderLeft} />
+                    <Box sx={styles.leftColumnBorderCenter} />
+                    <Box sx={styles.leftColumnBorderRight} />
+                </Box>
+                <Box sx={styles.unitsLayer}>
+                    <UnitsBoard sidebarOpen={sidebarOpen} arena="spaceArena" />
+                </Box>
             </Box>
             <Box sx={styles.middleColumnStyle}>
                 <Box sx={styles.middleColumnBorderLeft} />
@@ -208,14 +246,19 @@ const Board: React.FC<IBoardProps> = ({
                 </Box>
             </Box>
             <Box sx={styles.columnStyle}>
-                <Box sx={styles.rightColumnBorderLeft} />
-                <Box sx={styles.rightColumnBorderRight} />
-                < Box sx={styles.initiativeWrapper}>
-                    <Typography variant={'h4'}>Initiative</Typography>
-                </Box> 
-                <UnitsBoard
-                    sidebarOpen={sidebarOpen} arena="groundArena"
-                />
+                <Box sx={styles.borderLayer}>
+                    <Box sx={styles.rightColumnBorderLeft} />
+                    <Box sx={styles.rightColumnBorderCenter} />
+                    <Box sx={styles.rightColumnBorderRight} />
+                    <Box sx={styles.initiativeWrapper}>
+                        <Typography variant={'h4'}>Initiative</Typography>
+                    </Box> 
+                </Box>
+                <Box sx={styles.unitsLayer}>
+                    <UnitsBoard
+                        sidebarOpen={sidebarOpen} arena="groundArena"
+                    />
+                </Box>
             </Box>
         </Box>
     );
