@@ -4,7 +4,7 @@ import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { Height } from '@mui/icons-material';
+import BreakpointOverlay from './BreakpointOverlay';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -95,6 +95,22 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     const playerUnits = attachCapturedCards(playerUnitsWithUpgrades, allCapturedCards);
     const opponentUnits = attachCapturedCards(opponentUnitsWithUpgrades, allCapturedCards);
 
+    const responsiveGridTemplateColumns = {
+        xs: 'repeat(3, minmax(0.5rem, 5rem))',
+        // sm: 'repeat(3, minmax(0.5rem, 5rem))',
+        // iphoneSE: 'repeat(3, minmax(0.5rem, 5rem))',
+        // iphone12: 'repeat(3, minmax(0.5rem, 5rem))',
+        md: 'repeat(3, minmax(1rem, 5rem))',
+        // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
+        // ipadMini: 'repeat(3, minmax(1rem, 5rem))',
+        // ipadAir: 'repeat(3, minmax(1rem, 5rem))',
+        lg: 'repeat(4, minmax(1rem, 6rem))',
+        // ipadPro: 'repeat(4, minmax(1rem, 6rem))',
+        xl: 'repeat(5, minmax(1rem, 7rem))',
+        xxl: 'repeat(6, minmax(1rem, 7rem))',
+        xxxl: 'repeat(10, minmax(1rem, 7rem))'
+    };
+
     const styles = {
         mainBoxStyle: {
             position: 'relative',
@@ -111,9 +127,9 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         },
         opponentGridStyle: {
             display: 'grid',
-            gap: 'clamp(5px, .5vw, 10px)',
+            gap: 'clamp(2px, .5vw, 10px)',
             direction: arena === 'groundArena' ? 'ltr' : 'rtl',
-            gridTemplateColumns: 'repeat(4, minmax(2rem, 7rem))',
+            gridTemplateColumns: responsiveGridTemplateColumns,
             alignContent: 'start',
             justifyContent: 'start',
         },
@@ -121,7 +137,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             display: 'grid',
             gap: 'clamp(5px, .5vw, 10px)',
             direction: arena === 'groundArena' ? 'ltr' : 'rtl',
-            gridTemplateColumns: 'repeat(4, minmax(2rem, 7rem))',
+            gridTemplateColumns: responsiveGridTemplateColumns,
             alignContent: 'end',
             justifyContent: 'start',
             
@@ -150,6 +166,8 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                     ))}
                 </Box>
             </Grid>
+            { /* Turn this on to get visual feedback of the various breakpoints */}
+            <BreakpointOverlay />
         </Box>
     );
 };
