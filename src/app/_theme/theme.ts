@@ -12,11 +12,17 @@ export const theme: Theme = createTheme({
         values: {
             xs: 0,
             sm: 600,
+            iphoneSE: 667,
+            iphone12: 844,
             md: 900,
+            iphone14max: 932,
+            ipadMini: 1024,
+            ipadAir: 1180,
             lg: 1200,
-            xl: 1536,
-            xxl: 1920,
-            xxxl: 2560,
+            ipadPro: 1386,
+            xl: 1920,
+            xxl: 2560,
+            xxxl: 3840             
         },
     },
     typography: {

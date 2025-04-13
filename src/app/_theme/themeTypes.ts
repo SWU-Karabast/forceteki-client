@@ -10,13 +10,19 @@ declare module '@mui/material/styles' {
         bodyBold?: React.CSSProperties;
     }
     interface BreakpointOverrides {
-        xs: true;
-        sm: true;
-        md: true;
-        lg: true;
-        xl: true;
-        xxl: true;
-        xxxl: true;
+        xs: true,
+        sm: true,
+        iphoneSE: true,
+        iphone12: true,
+        md: true,
+        iphone14max: true,
+        ipadMini: true,
+        ipadAir: true,
+        lg: true,
+        ipadPro: true,
+        xl: true,
+        xxl: true,
+        xxxl: true         
     }
 }
 
