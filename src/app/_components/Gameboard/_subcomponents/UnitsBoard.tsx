@@ -116,7 +116,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             position: 'relative',
             height: '100%',
             width: '100%',
-            padding: '2rem 0.5rem',
+            padding: '3rem 0.5rem',
             overflow: 'hidden',
         },
         containerStyle: {
