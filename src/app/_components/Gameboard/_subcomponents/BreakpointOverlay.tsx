@@ -2,7 +2,7 @@ import React from 'react';
 import { useBreakpointName } from './useBreakpointName';
 import { Box } from '@mui/material';
 
-
+// Debugging component to display the current breakpoint in lower right corner of screen
 const BreakpointOverlay: React.FC = () => {
     const breakpoint = useBreakpointName();
 
