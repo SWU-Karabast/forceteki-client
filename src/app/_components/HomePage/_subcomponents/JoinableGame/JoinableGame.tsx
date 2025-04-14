@@ -116,7 +116,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: '1.4 / 1',
-            width: '16rem',
+            width: '24rem',
         },
         lobbyInfo: {
             display: 'flex',
