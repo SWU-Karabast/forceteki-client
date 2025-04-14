@@ -133,7 +133,7 @@ function CurrentGameTab() {
                     </MuiLink>. Thanks!
                 </Typography>
                 <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                    <PreferenceButton variant={'standard'} text={'Report bug'} buttonFnc={handleOpenBugReport} />
+                    <PreferenceButton variant={'standard'} text={'Report Bug'} buttonFnc={handleOpenBugReport} />
                     <Typography sx={styles.typeographyStyle}>
                         Report a bug to the developer team.
                     </Typography>
