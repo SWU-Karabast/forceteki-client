@@ -228,7 +228,7 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
                 )}
             </StyledDialogContent>
             <StyledDialogActions>
-                {(success || connectedUser?.reportedBugs >= 3) ? (
+                {(success || connectedUser?.reportedBugs >= 3 || isSpectator) ? (
                     <PreferenceButton
                         buttonFnc={handleClose}
                         variant="standard"
