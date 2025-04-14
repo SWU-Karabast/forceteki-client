@@ -99,7 +99,7 @@ const StyledSuccessAlert = styled(Alert)(() => ({
 }));
 
 const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
-    const { sendLobbyMessage, lobbyState, connectedPlayer, bugReportState } = useGame();
+    const { sendLobbyMessage, lobbyState, connectedPlayer, bugReportState, isSpectator } = useGame();
     const [description, setDescription] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(bugReportState?.success);
@@ -158,7 +158,18 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
         <StyledDialog open={open} onClose={handleClose}>
             <StyledDialogTitle>Report a Bug</StyledDialogTitle>
             <StyledDialogContent>
-                {success ? (
+                {isSpectator ? (
+                    <StyledInfoAlert severity="info" sx={{ my: 1 }}>
+                        Bug reporting is disabled for spectators, feel free to report at our <Link
+                            href="https://discord.com/channels/1220057752961814568/1345468050568380568"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ color: 'inherit', textDecoration: 'underline' }}
+                        >
+                            discord channel
+                        </Link>
+                    </StyledInfoAlert>
+                ): success ? (
                     <StyledSuccessAlert severity="success" sx={{ my: 1 }}>
                         Bug report submitted successfully. Thank you for helping improve the game!
                     </StyledSuccessAlert>
