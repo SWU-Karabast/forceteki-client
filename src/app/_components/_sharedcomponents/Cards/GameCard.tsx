@@ -295,17 +295,20 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '100%',
             aspectRatio: '4.85',
             display: 'flex',
-            backgroundSize: 'contain',
+            backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
             alignItems: 'center',
             justifyContent: 'center',
             boxSizing: 'content-box',
         },
-        upgradeName:{
-            fontSize: '11px',
+        upgradeName: {
+            fontSize: 'clamp(4px, .65vw, 12px)',
             marginTop: '2px',
             fontWeight: '800',
-            color: 'black'
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',           
+            color: 'black',
+            textAlign: 'center', 
         },
         sentinelIcon:{
             position: 'absolute',
