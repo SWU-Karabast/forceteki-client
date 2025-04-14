@@ -178,8 +178,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundImage: `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: card.type === 'leader' ? '1 / 1.4' : '1.4 / 1',
-            width: card.type === 'leader' ? '15rem' : '21rem',
+            aspectRatio: (card.type === 'leader' && isDeployed) ? '1 / 1.4' : '1.4 / 1',
+            width: (card.type === 'leader' && isDeployed) ? '15rem' : '24rem',
         },
     }
 
