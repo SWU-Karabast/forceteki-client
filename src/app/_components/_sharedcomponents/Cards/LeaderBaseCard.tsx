@@ -190,7 +190,22 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             aspectRatio: '1 / 1.4',
             width: '16rem',
         },
+
     }
+
+    const getForceTokenIconStyle = (player: any) => ({
+        position: 'absolute',
+        width: '3rem',
+        aspectRatio: '1 / 1',
+        top:'32%',
+        right: '-20px',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundImage: player.aspects.includes('villainy') 
+            ? 'url(/ForceTokenVillainy.png)'
+            : 'url(/ForceTokenHeroism.png)',
+        filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+    });
 
     return (
         <Box
@@ -207,6 +222,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             <Box sx={styles.epicActionIcon}></Box>
             { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             {cardStyle === LeaderBaseCardStyle.Base && (
+                <>
                 <Box sx={styles.damageCounterContainer}>
                     { !!distributionAmount && 
                     // Need to change background/borderRadius to backgroundImage
@@ -218,6 +234,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         {card.damage}
                     </Typography>
                 </Box>
+                {<Box sx={getForceTokenIconStyle(gameState.players[card.controller.id])}/>}
+                </>
             )}
 
             <Popover
