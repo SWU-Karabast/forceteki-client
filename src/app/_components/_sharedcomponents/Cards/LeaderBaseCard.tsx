@@ -175,11 +175,11 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         cardPreview: {
             borderRadius: '.38em',
-            backgroundImage: `url(${s3CardImageURL(card, isDeployed ? CardStyle.PlainLeader : CardStyle.Plain)})`,
+            backgroundImage: `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: '1.4 / 1',
-            width: '21rem',
+            aspectRatio: card.type === 'leader' ? '1 / 1.4' : '1.4 / 1',
+            width: card.type === 'leader' ? '15rem' : '21rem',
         },
     }
 
@@ -230,7 +230,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             >
                 <Box sx={{
                     ...styles.cardPreview,
-                    backgroundImage: `url(${s3CardImageURL(card, isDeployed ? CardStyle.PlainLeader : CardStyle.Plain)})`,
+                    backgroundImage: `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
                 }} />
             </Popover>
 
