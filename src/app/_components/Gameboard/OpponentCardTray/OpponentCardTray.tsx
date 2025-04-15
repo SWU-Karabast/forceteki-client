@@ -188,7 +188,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
                     <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
                 </Box>
-
             </Grid>
         </Grid>
     );

@@ -21,6 +21,7 @@ import { useSession } from 'next-auth/react';
 interface IGameContextType {
     gameState: any;
     lobbyState: any;
+    bugReportState: any;
     sendMessage: (message: string, args?: any[]) => void;
     sendGameMessage: (args: any[]) => void;
     getOpponent: (player: string) => string;
@@ -48,6 +49,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
     const lastGameIdRef = useRef<string | null>(null);
     const [lobbyState, setLobbyState] = useState<any>(null);
+    const [bugReportState, setBugReportState] = useState<any>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
@@ -209,6 +211,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setLastQueueHeartbeat(timestamp);
         });
 
+        newSocket.on('bugReportResult', (result: any) => {
+            setBugReportState(result);
+        })
+
         setSocket(newSocket);
 
         return () => {
@@ -275,6 +281,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             value={{
                 gameState,
                 lobbyState,
+                bugReportState,
                 sendGameMessage,
                 sendMessage,
                 connectedPlayer,
