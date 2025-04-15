@@ -104,11 +104,11 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
         // ipadMini: 'repeat(3, minmax(1rem, 5rem))',
         // ipadAir: 'repeat(3, minmax(1rem, 5rem))',
-        lg: 'repeat(4, minmax(1rem, 6rem))',
-        // ipadPro: 'repeat(4, minmax(1rem, 6rem))',
-        xl: 'repeat(5, minmax(1rem, 7rem))',
-        xxl: 'repeat(6, minmax(1rem, 7rem))',
-        xxxl: 'repeat(10, minmax(1rem, 7rem))'
+        lg: 'repeat(3, minmax(2rem, 6rem))',
+        ipadPro: 'repeat(4, minmax(2rem, 7rem))',
+        xl: 'repeat(5, minmax(2rem, 7rem))',
+        xxl: 'repeat(6, minmax(2rem, 7rem))',
+        xxxl: 'repeat(10, minmax(2rem, 7rem))'
     };
 
     const styles = {
@@ -168,7 +168,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 </Box>
             </Grid>
             { /* Uncomment this to get visual feedback of the various breakpoints */}
-            { /* <BreakpointOverlay /> */}
+            <BreakpointOverlay />
         </Box>
     );
 };
