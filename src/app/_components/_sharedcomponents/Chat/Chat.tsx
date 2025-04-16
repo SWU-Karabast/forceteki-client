@@ -236,10 +236,12 @@ const Chat: React.FC<IChatProps> = ({
     const cardPreviewStyles = {
         cardPreview: {
             borderRadius: '.38em',
-            backgroundSize: 'cover',
+            backgroundSize: 'contain', // Changed from 'cover' to 'contain'
             backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
             aspectRatio: '1.4 / 1',
             width: '24rem',
+            height: '17.14rem', // Added explicit height based on aspect ratio
         },
     };
 
@@ -270,7 +272,16 @@ const Chat: React.FC<IChatProps> = ({
                 }}
                 onClose={handleCardPreviewClose}
                 disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                slotProps={{ 
+                    paper: { 
+                        sx: { 
+                            backgroundColor: 'transparent',
+                            boxShadow: 'none',
+                            border: 'none',
+                            overflow: 'visible'
+                        } 
+                    } 
+                }}
             >
                 {hoveredCard.card && (
                     <Box sx={{
