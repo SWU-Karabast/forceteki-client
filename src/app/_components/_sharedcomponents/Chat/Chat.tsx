@@ -158,7 +158,13 @@ const Chat: React.FC<IChatProps> = ({
                     <Typography component="span" sx={styles.timestamp}>
                         [{timestamp}]
                     </Typography>
-                    <Typography component="span" sx={styles.messageText}>
+                    <Typography 
+                        component="span" 
+                        sx={{
+                            ...styles.messageText,
+                            fontWeight: 'bold'
+                        }}
+                    >
                         <Typography 
                             component="span" 
                             sx={{ 
@@ -325,6 +331,7 @@ const Chat: React.FC<IChatProps> = ({
             aspectRatio: '1.4 / 1',
             width: '24rem',
             height: '17.14rem', // Added explicit height based on aspect ratio
+            marginRight: '-10px', // Move the preview closer to the word
         },
     };
 
@@ -347,7 +354,7 @@ const Chat: React.FC<IChatProps> = ({
                 anchorEl={hoveredCard.element}
                 anchorOrigin={{
                     vertical: 'center',
-                    horizontal: -5,
+                    horizontal: 'left',
                 }}
                 transformOrigin={{
                     vertical: 'center',
