@@ -80,23 +80,34 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         drawerStyle: {
             flexShrink: 0,
             '& .MuiDrawer-paper': {
-                backgroundColor: '#000000CC',
+                backgroundColor: 'rgba(3, 12, 19, 0.9)',
                 color: '#fff',
                 display: 'flex',
                 flexDirection: 'column',
-                width: '280px',
+                width: '380px',
                 padding: '1em',
                 overflow: 'hidden',
+                border: 'none',
+                borderLeft: '1px solid transparent',
+                backgroundClip: 'padding-box',
+                borderImage: 'linear-gradient(to bottom, #30434B, #50717D) 1',
+                boxShadow: '-5px 0 15px rgba(0, 0, 0, 0.5)',
             },
         },
         headerBoxStyle: {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            marginBottom: '0.5em',
+        },
+        closeButton: {
+            color: 'var(--initiative-blue)',
+            '&:hover': {
+                color: 'var(--initiative-red)',
+                backgroundColor: 'rgba(255, 50, 49, 0.1)',
+            },
         }
     }
-
-    
 
     return (
         <Drawer
@@ -105,7 +116,10 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             variant="persistent"
             sx={styles.drawerStyle}
         >
-            <ChevronRightIcon onClick={toggleSidebar} />
+            <ChevronRightIcon 
+                onClick={toggleSidebar} 
+                sx={styles.closeButton}
+            />
             <Box sx={styles.headerBoxStyle}>
                 {/* <Typography variant="h3">
                     ROUND

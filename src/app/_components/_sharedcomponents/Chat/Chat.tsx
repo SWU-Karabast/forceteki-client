@@ -119,15 +119,30 @@ const Chat: React.FC<IChatProps> = ({
         return parts.length > 0 ? parts : content;
     };
 
+    // Format timestamp in Star Wars style
+    const formatTimestamp = (dateString: string) => {
+        const date = new Date(dateString);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+    };
+
     const formatMessage = (entry: IChatEntry, index: number) => {
-        const { message } = entry;
+        const { message, date } = entry;
+        const timestamp = formatTimestamp(date);
         
         // Handle alert messages
         if ('alert' in message) {
             return (
-                <Typography key={index} sx={styles.alertText}>
-                    {message.alert.message.join('')}
-                </Typography>
+                <Box key={index} sx={styles.messageContainer}>
+                    <Typography component="span" sx={styles.timestamp}>
+                        [{timestamp}]
+                    </Typography>
+                    <Typography component="span" sx={styles.alertText}>
+                        {message.alert.message.join('')}
+                    </Typography>
+                </Box>
             );
         }
         
@@ -139,17 +154,24 @@ const Chat: React.FC<IChatProps> = ({
             const chatContent = message.slice(1).join('');
             
             return (
-                <Typography key={index} sx={styles.messageText}>
-                    <Typography 
-                        component="span" 
-                        sx={{ 
-                            color: isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)' 
-                        }}
-                    >
-                        {playerName}
-                    </Typography>:
-                    {processMessageContent(chatContent)}
-                </Typography>
+                <Box key={index} sx={styles.messageContainer}>
+                    <Typography component="span" sx={styles.timestamp}>
+                        [{timestamp}]
+                    </Typography>
+                    <Typography component="span" sx={styles.messageText}>
+                        <Typography 
+                            component="span" 
+                            sx={{ 
+                                color: isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+                                fontWeight: 'bold',
+                                mr: 0.5
+                            }}
+                        >
+                            {playerName}:
+                        </Typography>
+                        {processMessageContent(chatContent)}
+                    </Typography>
+                </Box>
             );
         }
         
@@ -160,9 +182,14 @@ const Chat: React.FC<IChatProps> = ({
             ).join('');
             
             return (
-                <Typography key={index} sx={styles.messageText}>
-                    {processMessageContent(stringMessage)}
-                </Typography>
+                <Box key={index} sx={styles.messageContainer}>
+                    <Typography component="span" sx={styles.timestamp}>
+                        [{timestamp}]
+                    </Typography>
+                    <Typography component="span" sx={styles.gameLogText}>
+                        {processMessageContent(stringMessage)}
+                    </Typography>
+                </Box>
             );
         }
         
@@ -180,57 +207,113 @@ const Chat: React.FC<IChatProps> = ({
     const styles = {
         title: {
             fontWeight: 'bold',
-            color: '#fff',
+            color: 'var(--initiative-blue)',
             fontSize: '1.5em',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+            textShadow: '0 0 5px rgba(0, 186, 255, 0.7)',
         },
         divider: {
-            backgroundColor: '#fff',
+            background: 'linear-gradient(to right, transparent, var(--initiative-blue), transparent)',
+            height: '2px',
             mt: '.5vh',
             mb: '0.5vh',
         },
         chatBox: {
             p: '10px',
-            borderRadius: '4px',
+            borderRadius: '8px',
             minHeight: '100px',
             overflowY: 'auto',
-            backgroundColor: '#28282800',
+            backgroundColor: 'rgba(15, 31, 39, 0.7)',
             flex: 1,
+            border: '1px solid transparent',
+            background: 'linear-gradient(rgba(15, 31, 39, 0.7), rgba(3, 12, 19, 0.7)) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
+            boxShadow: 'inset 0 0 10px rgba(0, 186, 255, 0.2)',
+            '&::-webkit-scrollbar': {
+                width: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'var(--initiative-blue)',
+                borderRadius: '2px',
+            },
+        },
+        messageContainer: {
+            display: 'flex',
+            alignItems: 'flex-start',
+            my: 0.5,
+            px: 1,
+            borderRadius: '4px',
+            '&:hover': {
+                backgroundColor: 'rgba(0, 186, 255, 0.1)',
+            },
+        },
+        timestamp: {
+            color: '#8A8A8A',
+            fontFamily: 'monospace',
+            fontSize: '0.8em',
+            fontWeight: 500,
+            mr: 1,
+            minWidth: '70px',
         },
         messageText: {
-            color: '#fff',
+            color: '#E0E0E0',
+            fontFamily: 'monospace',
+            fontSize: '0.9em',
+            fontWeight: 500,
+            flex: 1,
+        },
+        gameLogText: {
+            color: '#C0C0C0',
+            fontFamily: 'monospace',
+            fontSize: '0.9em',
+            fontStyle: 'italic',
+            fontWeight: 500,
+            flex: 1,
         },
         alertText: {
-            color: 'purple'
+            color: 'var(--initiative-red)',
+            fontWeight: 'bold',
+            textShadow: '0 0 5px rgba(255, 50, 49, 0.7)',
+            fontFamily: 'monospace',
+            fontSize: '0.9em',
+            flex: 1,
         },
         inputContainer: {
             display: 'flex',
             alignItems: 'center',
-            backgroundColor: '#28282800',
             p: '10px',
             mt: 2,
+            borderRadius: '8px',
+            border: '1px solid transparent',
+            background: 'linear-gradient(rgba(15, 31, 39, 0.7), rgba(3, 12, 19, 0.7)) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
         },
         textField: {
-            backgroundColor: '#28282800',
+            backgroundColor: 'transparent',
             color: '#fff',
             borderRadius: '4px',
             flexGrow: 1,
-            input: { color: '#fff' },
+            input: { 
+                color: '#fff',
+                fontFamily: 'monospace',
+            },
             '& .MuiOutlinedInput-root': {
-                // base border style
                 '& fieldset': {
-                    borderColor: '#fff',
+                    borderColor: 'var(--initiative-blue)',
+                    borderWidth: '1px',
+                },
+                '&:hover fieldset': {
+                    borderColor: 'var(--initiative-blue)',
+                    borderWidth: '1px',
                 },
             },
             '& .MuiOutlinedInput-root.Mui-focused': {
-                // when container is focused
                 '& fieldset': {
-                    borderColor: '#fff',
+                    borderColor: 'var(--initiative-blue)',
+                    boxShadow: '0 0 5px var(--initiative-blue)',
                 },
             },
         }
     }
-
-    
 
     // Add card preview styles
     const cardPreviewStyles = {
@@ -247,7 +330,7 @@ const Chat: React.FC<IChatProps> = ({
 
     return (
         <>
-            <Typography sx={styles.title}>Chat</Typography>
+            <Typography sx={styles.title}>CHAT</Typography>
             <Divider sx={styles.divider} />
             <Box sx={styles.chatBox}>
                 {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
@@ -295,7 +378,7 @@ const Chat: React.FC<IChatProps> = ({
                 {!isSpectator &&(
                     <TextField
                         variant="outlined"
-                        placeholder="Chat"
+                        placeholder="Enter message..."
                         autoComplete="off"
                         value={chatMessage}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -311,8 +394,15 @@ const Chat: React.FC<IChatProps> = ({
                             input: {
                                 endAdornment: (
                                     <InputAdornment position="end">
-                                        <IconButton onClick={handleChatSubmit}>
-                                            <Send sx={{ color: '#fff' }} />
+                                        <IconButton 
+                                            onClick={handleChatSubmit}
+                                            sx={{
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(0, 186, 255, 0.2)',
+                                                }
+                                            }}
+                                        >
+                                            <Send sx={{ color: 'var(--initiative-blue)' }} />
                                         </IconButton>
                                     </InputAdornment>
                                 ),
