@@ -100,7 +100,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         // sm: 'repeat(3, minmax(0.5rem, 5rem))',
         // iphoneSE: 'repeat(3, minmax(0.5rem, 5rem))',
         // iphone12: 'repeat(3, minmax(0.5rem, 5rem))',
-        md: 'repeat(3, minmax(1rem, 5rem))',
+        md: 'repeat(3, minmax(1rem, 5.5rem))',
         // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
         // ipadMini: 'repeat(3, minmax(1rem, 5rem))',
         // ipadAir: 'repeat(3, minmax(1rem, 5rem))',
