@@ -17,6 +17,13 @@ export interface IGameChat {
     messages: IChatEntry[];
 }
 
+export interface IChatCardData {
+    id: string;
+    name: string;
+    setId: { set: string; number: number };
+    type: string;
+}
+
 export interface IChatProps {
     chatHistory: IChatEntry[];
     chatMessage: string;
@@ -24,4 +31,5 @@ export interface IChatProps {
     opponentRoll?: number;
     setChatMessage: (message: string) => void;
     handleChatSubmit: () => void;
+    cards?: Record<string, IChatCardData>; // Card data for hover functionality
 }
