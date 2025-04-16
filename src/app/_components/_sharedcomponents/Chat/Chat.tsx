@@ -8,7 +8,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Send } from '@mui/icons-material';
-import { IChatProps, IChatEntry, IChatObject } from './ChatTypes';
+import { IChatProps, IChatEntry, IChatMessageContent, MessageType } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 
 const Chat: React.FC<IChatProps> = ({
@@ -20,37 +20,55 @@ const Chat: React.FC<IChatProps> = ({
     const { connectedPlayer, isSpectator } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-
-    // TODO: Standardize these chat types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formatMessage = (message: any, index: number) => {
-        try {
-            if (message.hasOwnProperty('alert')) {
-                return (
-                    <Typography key={index} sx={styles.alertText}>
-                        {message.alert.message.join('')}
-                    </Typography>
-                )
-            } else if (message[0].type === 'playerChat') {
-                return (
-                    <Typography key={index} sx={styles.messageText}>
-                        <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
-                            {message[0].name}
-                        </Typography>:
-                        {message.slice(1).join('')}
-                    </Typography>
-                )
-            }
-            const stringMessage = message.map((item: IChatObject | string) => typeof item === 'object' ? item?.name : item).join('');
+    const formatMessage = (entry: IChatEntry, index: number) => {
+        const { message } = entry;
+        
+        // Handle alert messages
+        if ('alert' in message) {
+            return (
+                <Typography key={index} sx={styles.alertText}>
+                    {message.alert.message.join('')}
+                </Typography>
+            );
+        }
+        
+        // Handle player chat messages
+        if (Array.isArray(message) && message.length > 0 && message[0].type === 'playerChat') {
+            const playerName = message[0].name || '';
+            const playerId = message[0].id || '';
+            const isCurrentPlayer = connectedPlayer === playerId;
+            const chatContent = message.slice(1).join('');
+            
+            return (
+                <Typography key={index} sx={styles.messageText}>
+                    <Typography 
+                        component="span" 
+                        sx={{ 
+                            color: isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)' 
+                        }}
+                    >
+                        {playerName}
+                    </Typography>:
+                    {chatContent}
+                </Typography>
+            );
+        }
+        
+        // Handle game log messages
+        if (Array.isArray(message)) {
+            const stringMessage = message.map(item => 
+                typeof item === 'object' ? item?.name || '' : item
+            ).join('');
+            
             return (
                 <Typography key={index} sx={styles.messageText}>
                     {stringMessage}
                 </Typography>
-            )
-        } catch (error) {
-            console.error('Error formatting message:', error);
-            return null;
+            );
         }
+        
+        // Fallback for unexpected message format
+        return null;
     }
 
     useEffect(() => {
@@ -121,7 +139,7 @@ const Chat: React.FC<IChatProps> = ({
             <Divider sx={styles.divider} />
             <Box sx={styles.chatBox}>
                 {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
-                    return formatMessage(chatEntry.message, index);
+                    return formatMessage(chatEntry, index);
                 })}
                 <Box ref={chatEndRef} />
             </Box>

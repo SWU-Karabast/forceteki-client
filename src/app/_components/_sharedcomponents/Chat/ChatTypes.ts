@@ -1,24 +1,22 @@
-export interface IChatObject {
-    name: string;
-    label: string;
-    uuid: string;
-}
+export type MessageType = 'alert' | 'playerChat' | 'gameLog';
 
-export interface IChatMessage {
-    name: string;
-    email: string;
-    message: string;
-    type?: string | null;
+export interface IChatMessageContent {
+    id?: string;
+    name?: string;
+    text?: string;
+    type?: MessageType;
+    color?: string;
 }
 
 export interface IChatEntry {
     date: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    message: any;
+    message: IChatMessageContent[] | { alert: { message: string[] } };
 }
+
 export interface IGameChat {
     messages: IChatEntry[];
 }
+
 export interface IChatProps {
     chatHistory: IChatEntry[];
     chatMessage: string;

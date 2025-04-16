@@ -10,8 +10,10 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
     const [chatMessage, setChatMessage] = useState('')
 
     const handleGameChat = () => {
-        sendGameMessage(['chat', chatMessage]);
-        setChatMessage('');
+        if (chatMessage.trim()) {
+            sendGameMessage(['chat', chatMessage]);
+            setChatMessage('');
+        }
     }
 
     // ------------------------STYLES------------------------//
