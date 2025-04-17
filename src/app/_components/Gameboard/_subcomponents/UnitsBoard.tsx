@@ -4,6 +4,7 @@ import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import BreakpointOverlay from './BreakpointOverlay';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -94,12 +95,28 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     const playerUnits = attachCapturedCards(playerUnitsWithUpgrades, allCapturedCards);
     const opponentUnits = attachCapturedCards(opponentUnitsWithUpgrades, allCapturedCards);
 
+    const responsiveGridTemplateColumns = {
+        xs: 'repeat(3, minmax(0.5rem, 5rem))',
+        // sm: 'repeat(3, minmax(0.5rem, 5rem))',
+        // iphoneSE: 'repeat(3, minmax(0.5rem, 5rem))',
+        // iphone12: 'repeat(3, minmax(0.5rem, 5rem))',
+        md: 'repeat(3, minmax(1rem, 5.5rem))',
+        // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
+        // ipadMini: 'repeat(3, minmax(1rem, 5rem))',
+        // ipadAir: 'repeat(3, minmax(1rem, 5rem))',
+        lg: 'repeat(3, minmax(2rem, 6rem))',
+        ipadPro: 'repeat(4, minmax(2rem, 7rem))',
+        xl: 'repeat(5, minmax(2rem, 7rem))',
+        xxl: 'repeat(6, minmax(2rem, 7rem))',
+        xxxl: 'repeat(10, minmax(2rem, 7rem))'
+    };
+
     const styles = {
         mainBoxStyle: {
             position: 'relative',
             height: '100%',
             width: '100%',
-            padding: '3rem 2rem',
+            padding: '3rem 0.5rem',
             overflow: 'hidden',
         },
         containerStyle: {
@@ -110,26 +127,20 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         },
         opponentGridStyle: {
             display: 'grid',
-            gap: '10px',
-            gridTemplateColumns: {
-                xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
-                md: 'repeat(auto-fit, minmax(4rem, 6rem))',
-                lg: 'repeat(auto-fit, minmax(5rem, 7rem))',
-            },
+            gap: 'clamp(2px, .5vw, 10px)',
+            direction: arena === 'groundArena' ? 'ltr' : 'rtl',
+            gridTemplateColumns: responsiveGridTemplateColumns,
             alignContent: 'start',
-            justifyContent: arena === 'groundArena' ? 'start' : 'end',
+            justifyContent: 'start',
         },
         playerGridStyle: {
             display: 'grid',
-            gap: '10px',
-            gridTemplateColumns: {
-                xs: 'repeat(auto-fit, minmax(4rem, 5rem))',
-                md: 'repeat(auto-fit, minmax(4rem, 6rem))',
-                lg: 'repeat(auto-fit, minmax(5rem, 7rem))',
-            },
+            gap: 'clamp(5px, .5vw, 10px)',
+            direction: arena === 'groundArena' ? 'ltr' : 'rtl',
+            gridTemplateColumns: responsiveGridTemplateColumns,
             alignContent: 'end',
-            justifyContent: arena === 'groundArena' ? 'start' : 'end',
-            gridAutoFlow: 'dense',
+            justifyContent: 'start',
+            
         },
     };
 
@@ -145,7 +156,8 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                         </Box>
                     ))}
                 </Box>
-
+                {/* Enforce some minimum spacing between the two player's grids */}
+                <Box sx={{ flex: '1 1 10px', minHeight: '10px', width: '100%' }} />
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
@@ -155,6 +167,8 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                     ))}
                 </Box>
             </Grid>
+            { /* Uncomment this to get visual feedback of the various breakpoints */}
+            { /* <BreakpointOverlay /> */ }
         </Box>
     );
 };
