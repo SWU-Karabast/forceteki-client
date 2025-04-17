@@ -96,15 +96,15 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     const opponentUnits = attachCapturedCards(opponentUnitsWithUpgrades, allCapturedCards);
 
     const responsiveGridTemplateColumns = {
-        xs: 'repeat(3, minmax(0.5rem, 5rem))',
+        xs: 'repeat(1, minmax(3rem, 5.5rem))',
         // sm: 'repeat(3, minmax(0.5rem, 5rem))',
         // iphoneSE: 'repeat(3, minmax(0.5rem, 5rem))',
-        // iphone12: 'repeat(3, minmax(0.5rem, 5rem))',
-        md: 'repeat(3, minmax(1rem, 5.5rem))',
+        iphone12: 'repeat(3, minmax(2rem, 5rem))',
+        md: 'repeat(3, minmax(2rem, 5.5em))',
         // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
-        // ipadMini: 'repeat(3, minmax(1rem, 5rem))',
-        // ipadAir: 'repeat(3, minmax(1rem, 5rem))',
-        lg: 'repeat(3, minmax(2rem, 6rem))',
+        ipadMini: 'repeat(3, minmax(2rem, 5.5rem))',
+        ipadAir: 'repeat(3, minmax(2rem, 6rem))',
+        lg: 'repeat(4, minmax(2rem, 6rem))',
         ipadPro: 'repeat(4, minmax(2rem, 7rem))',
         xl: 'repeat(5, minmax(2rem, 7rem))',
         xxl: 'repeat(6, minmax(2rem, 7rem))',
@@ -168,7 +168,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 </Box>
             </Grid>
             { /* Uncomment this to get visual feedback of the various breakpoints */}
-            { /* <BreakpointOverlay /> */ }
+            <BreakpointOverlay />
         </Box>
     );
 };
