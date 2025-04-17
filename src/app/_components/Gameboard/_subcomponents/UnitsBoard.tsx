@@ -168,7 +168,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 </Box>
             </Grid>
             { /* Uncomment this to get visual feedback of the various breakpoints */}
-            <BreakpointOverlay />
+            { /* <BreakpointOverlay /> */}
         </Box>
     );
 };
