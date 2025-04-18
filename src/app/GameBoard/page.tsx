@@ -63,7 +63,7 @@ const GameBoard = () => {
     // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
-            pr: sidebarOpen ? '280px' : '0',
+            pr: sidebarOpen ? 'min(20%, 300px)' : '0',
             width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
             height: '100vh',

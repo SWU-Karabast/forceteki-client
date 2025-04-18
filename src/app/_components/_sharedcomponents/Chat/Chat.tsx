@@ -72,25 +72,26 @@ const Chat: React.FC<IChatProps> = ({
             mb: '0.5vh',
         },
         chatBox: {
-            p: '10px',
-            borderRadius: '4px',
+            p: '0.5em',
             minHeight: '100px',
             overflowY: 'auto',
             backgroundColor: '#28282800',
             flex: 1,
         },
         messageText: {
+            fontSize: '.9em',
             color: '#fff',
         },
         alertText: {
+            fontSize: '1em',
             color: 'purple'
         },
         inputContainer: {
             display: 'flex',
             alignItems: 'center',
             backgroundColor: '#28282800',
-            p: '10px',
-            mt: 2,
+            p: '0.5em',
+            mb: 2,
         },
         textField: {
             backgroundColor: '#28282800',
