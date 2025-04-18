@@ -18,7 +18,7 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
         containerStyle:{
             display: isPreferenceOpen && variant ==='gameBoard' ? 'block' : 'none',
             position: 'absolute',
-            width: sidebarOpen ? 'calc(100% - 280px)' : '100%',
+            width: sidebarOpen ? 'calc(100% - min(20%, 280px))' : '100%',
             height: '100%',
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
             zIndex: 999,
