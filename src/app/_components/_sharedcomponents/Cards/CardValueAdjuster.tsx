@@ -40,11 +40,12 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
             },
             flex: 1,
             minWidth: '50%',
+            padding: '.4rem', // overrides the variant "contained"'s padding that was breaking layout
             ':first-of-type': {
                 borderRadius: '4px 0px 0px 4px',
                 borderRight: '1px solid #404040',
             },
-            ':last-of-types': {
+            ':last-of-type': {
                 borderRadius: '0px 4px 4px 0px'
             }
         },
