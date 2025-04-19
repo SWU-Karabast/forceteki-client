@@ -86,7 +86,7 @@ const PercentageCircle: React.FC<PercentageCircleProps> = ({
             position: 'absolute' as const,
             color: textColor,
             fontWeight: 'bold',
-            fontSize: '0.9rem',
+            fontSize: '0.8rem',
             zIndex: '11',
             lineHeight: '13px',
             maxWidth: '35px',
