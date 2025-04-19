@@ -19,7 +19,7 @@ import { useUser } from '@/app/_contexts/User.context';
 
 const sortByOptions: string[] = [
     'Favourites',
-    'Deck builder',
+    'Deck Builder',
     'Name'
 ];
 
@@ -64,7 +64,7 @@ const DeckPage: React.FC = () => {
                 });
                 break;
 
-            case 'Deck builder':
+            case 'Deck Builder':
                 sortedDecks.sort((a, b) => {
                     // First by builder
                     const sourceCompare = a.source.localeCompare(b.source);
@@ -91,6 +91,10 @@ const DeckPage: React.FC = () => {
                 });
         }
         setDecks(sortedDecks);
+    };
+
+    const handleBackButton = () => {
+        router.push('/');
     };
 
     // Handle successful deck addition
@@ -372,12 +376,23 @@ const DeckPage: React.FC = () => {
             },
             boxShadow: '0 0 5px #4CB5FF',
         },
+        titleContainer:{
+            width:'6rem',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            height: '7%',
+            minHeight:'3rem',
+        },
     };
 
     return (
         <>
             <Box sx={styles.header}>
                 <Box sx={styles.sortByContainer}>
+                    <Box sx={styles.titleContainer}>
+                        <PreferenceButton variant={'standard'} buttonFnc={handleBackButton}/>
+                    </Box>
                     <Typography variant={'h3'} sx={styles.sortBy}>Sort by</Typography>
                     <StyledTextField
                         select

@@ -141,7 +141,11 @@ export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean): P
         return;
     } catch (error) {
         console.error('Error toggling deck favorite:', error);
-        throw error;
+        if(error instanceof Error && error.message.includes('Authentication error')){
+            updateDeckFavoriteInLocalStorage(deckId)
+        }else{
+            throw error;
+        }
     }
 }
 
@@ -239,6 +243,12 @@ export const deleteDecks = async (deckIds: string[]): Promise<void> => {
         if (!response.ok) {
             const errors = result.errors || {};
             console.log(errors);
+            if(response.status === 401){
+                for(const deck of deckIds){
+                    removeDeckFromLocalStorage(deck)
+                }
+                return;
+            }
             throw new Error('Error when attempting to delete decks. ' + errors);
         }
     }catch(error) {
@@ -345,6 +355,22 @@ export const removeDeckFromLocalStorage = (deckID: string | string[]): void => {
     }
 };
 
+export const convertStoredToDeckDetailedData = (storedDeck: StoredDeck): IDeckDetailedData => {
+    return {
+        id: storedDeck.deckID,
+        userId: '',
+        deck:{
+            leader: storedDeck.leader,
+            base: storedDeck.base,
+            name: storedDeck.name,
+            favourite: storedDeck.favourite,
+            deckLink: storedDeck.deckLink,
+            deckLinkID: storedDeck.deckLinkID,
+            source: storedDeck.source,
+        }
+    }
+}
+
 /**
  * Retrieves a deck by its ID
  * @param deckId Deck ID to retrieve
@@ -361,6 +387,11 @@ export const getDeckFromServer = async (deckId: string): Promise<IDeckDetailedDa
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Error getting deck:', errorText);
+            // we get the deck from localStorage and set the link
+            const deckDataJSON = localStorage.getItem('swu_deck_'+deckId);
+            if (deckDataJSON && errorText.includes('Authentication error')) {
+                return convertStoredToDeckDetailedData(JSON.parse(deckDataJSON) as StoredDeck);
+            }
             throw new Error(`Failed to get deck: ${errorText}`);
         }
 
@@ -369,5 +400,26 @@ export const getDeckFromServer = async (deckId: string): Promise<IDeckDetailedDa
     } catch (error) {
         console.error('Error getting deck:', error);
         throw error;
+    }
+};
+
+
+/**
+ * Updates the favorite status of a deck
+ * @param deckID ID of the deck to update
+ * @returns True if successful, false otherwise
+ */
+export const updateDeckFavoriteInLocalStorage = (deckID: string) => {
+    try {
+        const storageKey = `swu_deck_${deckID}`;
+        const deckDataJSON = localStorage.getItem(storageKey);
+
+        if (deckDataJSON) {
+            const deckData = JSON.parse(deckDataJSON) as StoredDeck;
+            deckData.favourite = !deckData.favourite;
+            localStorage.setItem(storageKey, JSON.stringify(deckData));
+        }
+    } catch (error) {
+        console.error('Error updating favorite status:', error);
     }
 };

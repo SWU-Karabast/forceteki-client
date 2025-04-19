@@ -18,19 +18,19 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { deleteDecks, getDeckFromServer, removeDeckFromLocalStorage } from '@/app/_utils/DeckStorageUtils';
+import {
+    deleteDecks,
+    getDeckFromServer,
+} from '@/app/_utils/DeckStorageUtils';
 import {
     IDeckDetailedData,
     IDeckPageStats,
     IDeckStats,
-    IMatchupStatEntity, IMatchTableStats
+    IMatchupStatEntity, IMatchTableStats, StoredDeck
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
-const sortByOptions: string[] = ['Cost','Power','Most played'];
-
 const DeckDetails: React.FC = () => {
-    const [sortBy, setSortBy] = useState<string>('');
     const router = useRouter();
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -118,9 +118,9 @@ const DeckDetails: React.FC = () => {
     const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
         if (rawDeckId) {
             // we need to check if the deck is still available
+            const deckId = Array.isArray(rawDeckId) ? rawDeckId[0] : rawDeckId;
             try {
                 // we get the deck from localStorage and set the link
-                const deckId = Array.isArray(rawDeckId) ? rawDeckId[0] : rawDeckId;
                 const deckDataServer = await getDeckFromServer(deckId);
                 const data = await fetchDeckData(deckDataServer.deck.deckLink, false);
                 setDeckData(data);
@@ -134,9 +134,12 @@ const DeckDetails: React.FC = () => {
                         setDeckErrorDetails({
                             [DeckValidationFailureReason.DeckSetToPrivate]: true,
                         });
+                    }else if(error.message.includes('Authentication error')){
+
                     } else {
                         setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
                     }
+
                     return;
                 }else{
                     setErrorModalOpen(true);
@@ -148,12 +151,6 @@ const DeckDetails: React.FC = () => {
 
     const handleBackButton = () => {
         router.push('/DeckPage');
-    };
-
-    const handleViewOnSWUDB = () => {
-        if (deckId) {
-            window.open(displayDeck?.deck.deckLink, '_blank');
-        }
     };
 
     // Open delete confirmation dialog
@@ -253,7 +250,7 @@ const DeckDetails: React.FC = () => {
             minHeight:'3rem',
             display: 'flex',
             flexDirection: 'row',
-            justifyContent: 'space-between',
+            justifyContent: 'end',
         },
         sortBy:{
             display: 'flex',
@@ -409,27 +406,6 @@ const DeckDetails: React.FC = () => {
                 {/* Right side: Sort dropdown & deck cards */}
                 <Box sx={styles.deckContainer}>
                     <Box sx={styles.deckButtons}>
-                        <Box sx={styles.sortBy}>
-                            <Typography sx={styles.sortText}>Sort by</Typography>
-                            <StyledTextField
-                                select
-                                disabled
-                                value={sortBy}
-                                placeholder="Sort by"
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setSortBy(e.target.value)
-                                }
-                            >
-                                {sortByOptions.map((sortOption) => (
-                                    <MenuItem key={sortOption} value={sortOption}>
-                                        {sortOption}
-                                    </MenuItem>
-                                ))}
-                            </StyledTextField>
-                            <Box sx={styles.viewDeck}>
-                                <PreferenceButton variant={'standard'} text={!displayDeck || displayDeck.deck.source === 'SWUDB' ? 'View Deck on SWUDB' : 'View Deck on SWUStats'} buttonFnc={handleViewOnSWUDB} />
-                            </Box>
-                        </Box>
                         <Box sx={styles.editButtons}>
                             <PreferenceButton variant={'concede'} text={'Delete'} buttonFnc={handleDeleteClick}/>
                         </Box>

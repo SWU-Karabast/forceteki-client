@@ -3,6 +3,8 @@ import { Box, Typography } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import VerticalTabs from '@/app/_components/_sharedcomponents/Preferences/_subComponents/VerticalTabs';
 import { IPreferenceProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { useRouter } from 'next/navigation';
 
 const PreferencesComponent: React.FC<IPreferenceProps> = ({
     isPreferenceOpen,
@@ -13,6 +15,11 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     variant = 'gameBoard',
     subtitle = undefined,
 }) => {
+    const router = useRouter();
+    const handleBackButton = () => {
+        router.push('/');
+    };
+
     // ------------------------STYLES------------------------//
     const styles = {
         containerStyle:{
@@ -60,12 +67,25 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
         tabContainer:{
             height:'30rem',
             background: 'transparent',
-        }
+        },
+        titleContainer:{
+            width:'6rem',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            height: '7%',
+            minHeight:'3rem',
+        },
     }
     return (
         <>
             <Box sx={styles.containerStyle}>
                 <Box sx={styles.overlayStyle}>
+                    {variant === 'homePage' && (
+                        <Box sx={styles.titleContainer}>
+                            <PreferenceButton variant={'standard'} buttonFnc={handleBackButton}/>
+                        </Box>
+                    )}
                     {title && (
                         <Box sx={styles.headerBox}>
                             <Typography variant="h1">{title}</Typography>

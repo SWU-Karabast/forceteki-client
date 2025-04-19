@@ -15,7 +15,7 @@ function GeneralTab() {
     const [errorTitle, setErrorTitle] = useState<string>('Username error');
     // For a short, user-friendly error message
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
-
+    const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
     // For the raw/technical error details
     const [deckErrorDetails, setDeckErrorDetails] = useState<string | undefined>(undefined);
 
@@ -35,6 +35,10 @@ function GeneralTab() {
 
         try{
             const newUsername = await setUsernameOnServer(trimmedUsername);
+            setSuccesfulUsernameChange(true);
+            setTimeout(() => {
+                setSuccesfulUsernameChange(false);
+            }, 2000);
             updateUsername(newUsername);
         }catch (error){
             console.log(error);
@@ -91,6 +95,10 @@ function GeneralTab() {
             color: 'var(--initiative-red);',
             mt: '0.5rem'
         },
+        successMessageStyle: {
+            color: 'var(--selection-green);',
+            mt: '0.5rem'
+        },
         errorMessageLink:{
             cursor: 'pointer',
             color: 'var(--selection-red);',
@@ -115,11 +123,11 @@ function GeneralTab() {
                             }}
                             sx={styles.textFieldStyle}
                         />
-                        <Button variant="contained" onClick={handleChangeUsername} sx={styles.buttonStyle}>
+                        <Button variant="contained" disabled={username.length === 0 || !(user?.username != username)} onClick={handleChangeUsername} sx={styles.buttonStyle}>
                             Change username
                         </Button>
                     </Box>
-                    {deckErrorSummary && (
+                    {deckErrorSummary ? (
                         <Typography variant={'body1'} sx={styles.errorMessageStyle}>
                             {deckErrorSummary}{' '}
                             { deckErrorDetails && (<Link
@@ -128,7 +136,11 @@ function GeneralTab() {
                             >Details
                             </Link>)}
                         </Typography>
-                    )}
+                    ): successfulUsernameChange ? (
+                        <Typography variant={'body1'} sx={styles.successMessageStyle}>
+                            Username successfully changed!
+                        </Typography>
+                    ) : null}
                 </Box>
             </Box>
             <ErrorModal
