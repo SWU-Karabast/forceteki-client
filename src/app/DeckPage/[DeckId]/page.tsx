@@ -134,8 +134,6 @@ const DeckDetails: React.FC = () => {
                         setDeckErrorDetails({
                             [DeckValidationFailureReason.DeckSetToPrivate]: true,
                         });
-                    }else if(error.message.includes('Authentication error')){
-
                     } else {
                         setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
                     }
