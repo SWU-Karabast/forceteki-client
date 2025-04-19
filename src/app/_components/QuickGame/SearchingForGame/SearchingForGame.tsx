@@ -2,19 +2,21 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Box, Card, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/app/_contexts/User.context';
 
 const SearchingForGame: React.FC = () => {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const { lastQueueHeartbeat } = useGame();
     const router = useRouter();
     const lastQueueHeartbeatState = useRef<number>(0);
+    const { user, anonymousUserId } = useUser();
 
     const checkTimeout = () => {
         timerRef.current = setTimeout(() => {
             const secondsSinceLastHeartbeat = Math.floor((Date.now() - lastQueueHeartbeatState.current) / 1000);
 
             if (secondsSinceLastHeartbeat > 3) {
-                alert('Connection lost. Please try again.');
+                alert(`Connection lost. Please try again.\nUser ID: ${user?.id || anonymousUserId}`);
                 router.push('/');
             } else {
                 checkTimeout();
