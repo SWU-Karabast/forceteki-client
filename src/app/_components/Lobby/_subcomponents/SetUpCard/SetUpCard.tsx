@@ -109,7 +109,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 try {
                     if(user) {
                         if(!await saveDeckToServer(deckData, deckLink, user)){
-                            throw new Error('Error saving the deck to server')
+                            throw new Error('Error saving the deck to server');
                         }
                     }else{
                         saveDeckToLocalStorage(deckData, deckLink);

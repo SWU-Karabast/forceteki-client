@@ -171,7 +171,7 @@ const CreateGameForm = () => {
             // save deck to local storage
             if (saveDeck && deckData && deckLink){
                 if(user) {
-                    await saveDeckToServer(deckData, deckLink, user)
+                    await saveDeckToServer(deckData, deckLink, user);
                 }else{
                     saveDeckToLocalStorage(deckData, deckLink);
                 }
