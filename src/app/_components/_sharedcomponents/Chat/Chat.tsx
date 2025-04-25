@@ -17,9 +17,22 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { connectedPlayer, isSpectator } = useGame();
+    const { connectedPlayer, isSpectator, getOpponent } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
+    // Function to format message items, handling spectator view
+    const formatMessageItem = (item: IChatObject | string) => {
+        if (typeof item === 'object' && item?.id) {
+            // If user is a spectator, show Player 1/Player 2 instead of names
+            if (isSpectator) {
+                return item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
+            }
+            // Otherwise show the actual name
+            return item.name;
+        }
+        // If not an object with ID, just return the string
+        return typeof item === 'string' ? item : item?.name || '';
+    };
 
     // TODO: Standardize these chat types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,13 +48,13 @@ const Chat: React.FC<IChatProps> = ({
                 return (
                     <Typography key={index} sx={styles.messageText}>
                         <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
-                            {message[0].name}
+                            {isSpectator ? connectedPlayer === message[0].id ? 'Player 1' : 'Player 2' : message[0].name}
                         </Typography>:
                         {message.slice(1).join('')}
                     </Typography>
                 )
             }
-            const stringMessage = message.map((item: IChatObject | string) => typeof item === 'object' ? item?.name : item).join('');
+            const stringMessage = message.map((item: IChatObject | string) => formatMessageItem(item)).join('');
             return (
                 <Typography key={index} sx={styles.messageText}>
                     {stringMessage}

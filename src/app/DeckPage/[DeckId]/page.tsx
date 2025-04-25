@@ -26,12 +26,14 @@ import {
     IDeckDetailedData,
     IDeckPageStats,
     IDeckStats,
-    IMatchupStatEntity, IMatchTableStats, StoredDeck
+    IMatchupStatEntity, IMatchTableStats
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { useUser } from '@/app/_contexts/User.context';
 
 const DeckDetails: React.FC = () => {
     const router = useRouter();
+    const { user } = useUser();
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const [deckStats, setDeckStats] = React.useState<IDeckPageStats>({ wins: 0, winPercentage: 0, draws: 0, losses: 0, totalGames: 0 });
@@ -373,7 +375,7 @@ const DeckDetails: React.FC = () => {
                     </Box>
 
                     {/* Stats go here */}
-                    {displayDeck && (
+                    {(user && displayDeck) ? (
                         <Box sx={styles.statsContainer}>
                             <Box sx={styles.overallStatsBox}>
                                 <PercentageCircle percentage={deckStats.winPercentage} size={70} strokeWidth={12} fillColor={'#6CF3D3'} trackColor={'#367684'} textColor="#FFF"/>
@@ -395,6 +397,12 @@ const DeckDetails: React.FC = () => {
                                     staggerDelay={100}
                                 />
                             )}
+                        </Box>
+                    ) : (
+                        <Box sx={styles.statsContainer}>
+                            <Typography variant="h5" sx={{ color: '#fff', textAlign: 'center', padding: 2 }}>
+                                Deck statistics are only available to logged-in users.
+                            </Typography>
                         </Box>
                     )}
                     {/* A table for Opposing Leaders, Wins, Losses, etc. */}

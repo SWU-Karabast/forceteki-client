@@ -90,9 +90,6 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     </NextLinkMui>
                     {user ? (
                         <>
-                            <NextLinkMui href="/profile" sx={styles.profileLink}>
-                                Profile
-                            </NextLinkMui>
                             <NextLinkMui href="/Preferences" sx={styles.profileLink}>
                                 Preferences
                             </NextLinkMui>

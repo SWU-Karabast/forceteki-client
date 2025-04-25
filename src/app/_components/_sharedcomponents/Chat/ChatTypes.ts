@@ -1,4 +1,5 @@
 export interface IChatObject {
+    id: string;
     name: string;
     label: string;
     uuid: string;
