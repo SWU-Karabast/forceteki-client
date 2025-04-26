@@ -13,7 +13,8 @@ const NewsColumn: React.FC = async () => {
         const response = await client.send(command);
     
         secret = response.SecretString ? JSON.parse(response.SecretString) : 'value_1';
-    } catch (_error) {
+    } catch (error) {
+        console.log('Error fetching secret:', error);
         secret = 'value_2';
     }
 
