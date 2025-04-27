@@ -95,6 +95,7 @@ export const getUserFromServer = async(): Promise<{ id: string, username: string
 export const getUsernameChangeInfoFromServer = async(): Promise<{
     canChange: boolean;
     message: string;
+    typeOfMessage: string;
 }> => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-change-username-info`,
@@ -128,6 +129,7 @@ export const getUsernameChangeInfoFromServer = async(): Promise<{
         return {
             canChange: data.result.canChange,
             message: formattedMessage,
+            typeOfMessage: data.result.typeOfMessage
         };
     } catch (error) {
         console.error('Error getting username change information:', error);

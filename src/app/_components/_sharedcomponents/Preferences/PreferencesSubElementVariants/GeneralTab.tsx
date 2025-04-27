@@ -14,8 +14,10 @@ function GeneralTab() {
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Username error');
     const [usernameChangeable, setUsernameChangeable] = useState<boolean>(false);
+    const [messageColor, setMessageColor] = useState<string | null>(null);
     // For a short, user-friendly error message
     const [userErrorSummary, setUserErrorSummary] = useState<string | null>(null);
+    const [userUsernameInfo, setUserUsernameInfo] = useState<string | null>(null);
     const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
     // For the raw/technical error details
     const [deckErrorDetails, setDeckErrorDetails] = useState<string | undefined>(undefined);
@@ -57,10 +59,10 @@ function GeneralTab() {
         }catch (error){
             console.log(error);
             setErrorTitle('Profile error');
-            setUserErrorSummary('Error changing username');
-            if(error instanceof Error){
-                setDeckErrorDetails(error.message);
-            }else{
+            if(error instanceof Error) {
+                setUserErrorSummary(error.message);
+            } else {
+                setUserErrorSummary('Error changing username');
                 setDeckErrorDetails('Server error when changing username');
             }
         }
@@ -69,11 +71,8 @@ function GeneralTab() {
     const getUsernameChangeInfo = async () => {
         const result = await getUsernameChangeInfoFromServer();
         setUsernameChangeable(result.canChange);
-        if(!result.canChange) {
-            setUserErrorSummary(result.message);
-        }else{
-            setUserErrorSummary(null);
-        }
+        setMessageColor(result.typeOfMessage);
+        setUserUsernameInfo(result.message);
     }
 
     useEffect(() => {
@@ -127,6 +126,10 @@ function GeneralTab() {
             color: 'var(--initiative-red);',
             mt: '0.5rem'
         },
+        userUsernameInfoStyle:{
+            color: messageColor ? messageColor === 'yellow' ? '#ffd54f' : '#81c784' : 'var(--initiative-red);',
+            mt: '0.5rem'
+        },
         successMessageStyle: {
             color: 'var(--selection-green);',
             mt: '0.5rem'
@@ -144,8 +147,48 @@ function GeneralTab() {
                 <Typography sx={styles.typographyContainer} variant={'h2'}>Profile</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <Box sx={styles.contentContainer}>
-                    <Typography variant={'h3'}>Unique identifier</Typography>
-                    <Box sx={{ ...styles.boxStyle, mb:'30px' }}>
+                    {user && (
+                        <Box sx={{ mb:'30px' }}>
+                            <Typography variant={'h3'}>Username</Typography>
+                            <Box sx={styles.boxStyle}>
+                                <TextField
+                                    value={username}
+                                    onChange={(e) => {
+                                        setUsername(e.target.value);
+                                        setUserErrorSummary(null);
+                                        setDeckErrorDetails(undefined);
+                                    }}
+                                    sx={styles.textFieldStyle}
+                                />
+                                <Button variant="contained" disabled={!usernameChangeable} onClick={handleChangeUsername} sx={styles.buttonStyle}>
+                                    Change Username
+                                </Button>
+                            </Box>
+                            {userErrorSummary ? (
+                                <Typography variant={'body1'} sx={styles.errorMessageStyle}>
+                                    {userErrorSummary}{' '}
+                                    { deckErrorDetails && (<Link
+                                        sx={styles.errorMessageLink}
+                                        onClick={() => setErrorModalOpen(true)}
+                                    >Details
+                                    </Link>)}
+                                </Typography>
+                            ): successfulUsernameChange ? (
+                                <Typography variant={'body1'} sx={styles.successMessageStyle}>
+                                    Username successfully changed!
+                                </Typography>
+                            ) : null}
+                            <Typography variant={'body1'} sx={styles.userUsernameInfoStyle}>
+                                {userUsernameInfo}{' '}
+                            </Typography>
+                            <Typography variant="body2" sx={{ mt: 1, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: '26rem' }}>
+                                You can change your username as many times as you want during the <strong>first hour after account creation</strong>.
+                                After that, you&#39;re limited to <strong>one</strong> change every <strong>4 months</strong>.
+                            </Typography>
+                        </Box>
+                    )}
+                    <Typography variant={'h3'}>Player ID</Typography>
+                    <Box sx={{ ...styles.boxStyle }}>
                         <TextField
                             value={usersId}
                             sx={styles.textFieldStyle}
@@ -161,43 +204,6 @@ function GeneralTab() {
                             </Button>
                         </Tooltip>
                     </Box>
-                    {user && (
-                        <>
-                            <Typography variant={'h3'}>Username</Typography>
-                            <Box sx={styles.boxStyle}>
-                                <TextField
-                                    value={username}
-                                    onChange={(e) => {
-                                        setUsername(e.target.value);
-                                        setUserErrorSummary(null);
-                                        setDeckErrorDetails(undefined);
-                                    }}
-                                    sx={styles.textFieldStyle}
-                                />
-                                <Button variant="contained" disabled={!usernameChangeable} onClick={handleChangeUsername} sx={styles.buttonStyle}>
-                                    Change username
-                                </Button>
-                            </Box>
-                        </>
-                    )}
-                    {userErrorSummary ? (
-                        <Typography variant={'body1'} sx={styles.errorMessageStyle}>
-                            {userErrorSummary}{' '}
-                            { deckErrorDetails && (<Link
-                                sx={styles.errorMessageLink}
-                                onClick={() => setErrorModalOpen(true)}
-                            >Details
-                            </Link>)}
-                        </Typography>
-                    ): successfulUsernameChange ? (
-                        <Typography variant={'body1'} sx={styles.successMessageStyle}>
-                            Username successfully changed!
-                        </Typography>
-                    ) : null}
-                    <Typography variant="body2" sx={{ mt: 1, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: '26rem' }}>
-                        You can change your username as many times as you want during the <strong>first hour after account creation</strong>.
-                        After that, you&#39;re limited to <strong>one</strong> change every <strong>4 months</strong>.
-                    </Typography>
                 </Box>
             </Box>
             <ErrorModal
