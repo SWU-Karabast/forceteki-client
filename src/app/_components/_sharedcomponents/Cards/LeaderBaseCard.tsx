@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { ILeaderBaseCardProps, LeaderBaseCardStyle, CardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
 
@@ -123,7 +123,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             right: '-4px',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/epicActionToken.png)',
+            backgroundImage: `url(${s3TokenImageURL('epic-action-token')})`,
             display: card.epicActionSpent || card.epicDeployActionSpent && !isDeployed ? 'block' : 'none'
         },
         damageCounterContainer: {

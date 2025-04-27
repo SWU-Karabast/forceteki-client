@@ -325,7 +325,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             right: '-4%',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/SentinelToken.png)',
+            backgroundImage: `url(${s3TokenImageURL('sentinel-icon')})`,
         },
         stolenIcon:{
             position: 'absolute',
@@ -339,7 +339,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         unimplementedAlert: {
             display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
-            backgroundImage: 'url(/not-implemented.svg)',
+            backgroundImage: 'url(/wrench.png)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             aspectRatio: '1/1',
