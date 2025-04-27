@@ -5,7 +5,7 @@ import { Button, Divider, Link, TextField, Tooltip } from '@mui/material';
 import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { setUsernameOnServer } from '@/app/_utils/DeckStorageUtils';
+import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_utils/DeckStorageUtils';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
@@ -13,6 +13,7 @@ function GeneralTab() {
     const [username, setUsername] = useState<string>('');
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Username error');
+    const [usernameChangeable, setUsernameChangeable] = useState<boolean>(false);
     // For a short, user-friendly error message
     const [userErrorSummary, setUserErrorSummary] = useState<string | null>(null);
     const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
@@ -65,9 +66,22 @@ function GeneralTab() {
         }
     };
 
+    const getUsernameChangeInfo = async () => {
+        const result = await getUsernameChangeInfoFromServer();
+        setUsernameChangeable(result.canChange);
+        if(!result.canChange) {
+            setUserErrorSummary(result.message);
+        }else{
+            setUserErrorSummary(null);
+        }
+    }
+
     useEffect(() => {
         setUsername(user?.username ? user?.username : '');
+        getUsernameChangeInfo();
     }, [user]);
+
+
 
     const styles = {
         typographyContainer: {
@@ -160,7 +174,7 @@ function GeneralTab() {
                                     }}
                                     sx={styles.textFieldStyle}
                                 />
-                                <Button variant="contained" disabled={username.length === 0 || !(user?.username != username)} onClick={handleChangeUsername} sx={styles.buttonStyle}>
+                                <Button variant="contained" disabled={!usernameChangeable} onClick={handleChangeUsername} sx={styles.buttonStyle}>
                                     Change username
                                 </Button>
                             </Box>
@@ -180,6 +194,10 @@ function GeneralTab() {
                             Username successfully changed!
                         </Typography>
                     ) : null}
+                    <Typography variant="body2" sx={{ mt: 1, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: '26rem' }}>
+                        You can change your username as many times as you want during the <strong>first hour after account creation</strong>.
+                        After that, you&#39;re limited to <strong>one</strong> change every <strong>4 months</strong>.
+                    </Typography>
                 </Box>
             </Box>
             <ErrorModal

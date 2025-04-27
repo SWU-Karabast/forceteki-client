@@ -133,7 +133,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         signOut({ callbackUrl: '/' });
         localStorage.removeItem('devUser');
         setUser(null);
-        router.push('/');
     };
 
     const clearAnonUser = () => {

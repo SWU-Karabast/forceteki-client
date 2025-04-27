@@ -79,7 +79,6 @@ export const getUserFromServer = async(): Promise<{ id: string, username: string
             }
         );
         const result = await response.json();
-        console.log(result);
         if (!response.ok) {
             const errors = result.errors || {};
             console.log(errors);
@@ -89,6 +88,49 @@ export const getUserFromServer = async(): Promise<{ id: string, username: string
         return result.user;
     } catch (error) {
         console.log(error);
+        throw error;
+    }
+}
+
+export const getUsernameChangeInfoFromServer = async(): Promise<{
+    canChange: boolean;
+    message: string;
+}> => {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-change-username-info`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to get username change information');
+        }
+
+        // Format a detailed message with the date if available
+        let formattedMessage = data.result.message || '';
+        if (data.result.nextChangeAllowedAt) {
+            const date = new Date(data.result.nextChangeAllowedAt);
+            const formattedDate = date.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            formattedMessage += ` (on ${formattedDate})`;
+        }
+
+        return {
+            canChange: data.result.canChange,
+            message: formattedMessage,
+        };
+    } catch (error) {
+        console.error('Error getting username change information:', error);
         throw error;
     }
 }
@@ -191,7 +233,6 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
 
 /**
  * Loads decks from the server
- * @param user The current user
  * @returns Promise that resolves to the array of decks
  */
 export const loadDecks = async (): Promise<StoredDeck[]> => {
@@ -200,7 +241,6 @@ export const loadDecks = async (): Promise<StoredDeck[]> => {
         const payload = {
             decks: decks
         }
-
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-decks`,
             {
                 method: 'POST',

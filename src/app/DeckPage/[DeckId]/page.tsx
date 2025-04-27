@@ -20,7 +20,7 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import {
     deleteDecks,
-    getDeckFromServer,
+    getDeckFromServer, removeDeckFromLocalStorage,
 } from '@/app/_utils/DeckStorageUtils';
 import {
     IDeckDetailedData,
@@ -163,9 +163,17 @@ const DeckDetails: React.FC = () => {
         try {
             if (deckId) {
                 if (typeof deckId === 'string') {
-                    await deleteDecks([deckId])
+                    if(user){
+                        await deleteDecks([deckId])
+                    }else{
+                        removeDeckFromLocalStorage([deckId])
+                    }
                 } else {
-                    await deleteDecks(deckId)
+                    if(user){
+                        await deleteDecks(deckId)
+                    }else{
+                        removeDeckFromLocalStorage(deckId)
+                    }
                 }
             }
             setDeleteDialogOpen(false);

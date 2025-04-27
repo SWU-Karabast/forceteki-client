@@ -11,7 +11,12 @@ import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckD
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { CardStyle, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    convertToDisplayDecks, deleteDecks, retrieveDecksForUser, toggleFavouriteDeck,
+    convertToDisplayDecks,
+    deleteDecks,
+    removeDeckFromLocalStorage,
+    retrieveDecksForUser,
+    toggleFavouriteDeck,
+    updateDeckFavoriteInLocalStorage,
 } from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 
@@ -36,7 +41,7 @@ const DeckPage: React.FC = () => {
     // Load decks from localStorage on component mount
     useEffect(() => {
         fetchDecks();
-    }, []);
+    }, [user]);
 
     // Function to load decks from localStorage and server
     const fetchDecks = async () => {
@@ -155,7 +160,11 @@ const DeckPage: React.FC = () => {
         // we call the response
         const deckFav = !decks.find((deck) => deck.deckID === deckId)?.favourite;
         try {
-            await toggleFavouriteDeck(deckId,deckFav)
+            if (user) {
+                await toggleFavouriteDeck(deckId, deckFav)
+            }else{
+                updateDeckFavoriteInLocalStorage(deckId)
+            }
             // Update in state and resort
             const updatedDecks = decks.map(deck =>
                 deck.deckID === deckId
@@ -189,7 +198,11 @@ const DeckPage: React.FC = () => {
     const handleDeleteSelectedDecks = async () => {
         // Delete each selected deck from localStorage
         try{
-            await deleteDecks(selectedDecks);
+            if(user) {
+                await deleteDecks(selectedDecks);
+            }else{
+                removeDeckFromLocalStorage(selectedDecks);
+            }
             // Update deck list in state
             setDecks(prevDecks => prevDecks.filter(deck => !selectedDecks.includes(deck.deckID)));
             // Reset selection
