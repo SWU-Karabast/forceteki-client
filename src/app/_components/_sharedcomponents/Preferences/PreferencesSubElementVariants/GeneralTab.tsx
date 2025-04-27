@@ -1,35 +1,48 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { Button, Divider, Link, TextField } from '@mui/material';
+import { Button, Divider, Link, TextField, Tooltip } from '@mui/material';
 import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { setUsernameOnServer } from '@/app/_utils/DeckStorageUtils';
 
 function GeneralTab() {
-    const { user, updateUsername } = useUser();
+    const { user, updateUsername, anonymousUserId } = useUser();
 
     const [username, setUsername] = useState<string>('');
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Username error');
     // For a short, user-friendly error message
-    const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
+    const [userErrorSummary, setUserErrorSummary] = useState<string | null>(null);
     const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
     // For the raw/technical error details
     const [deckErrorDetails, setDeckErrorDetails] = useState<string | undefined>(undefined);
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    const usersId = user?.id ? user.id : anonymousUserId ? anonymousUserId : ''
+
+    const handleCopyLink = (userId: string) => {
+        navigator.clipboard.writeText(userId)
+            .then(() => {
+                setShowTooltip(true);
+                // Hide the tooltip after 1 second
+                setTimeout(() => setShowTooltip(false), 1000);
+            })
+            .catch(err => console.error('Failed to copy link', err));
+    };
 
     const handleChangeUsername = async () => {
         const trimmedUsername = username.trim();
         if (!trimmedUsername) {
             setErrorTitle('Validation Error');
-            setDeckErrorSummary('Username cannot be empty');
+            setUserErrorSummary('Username cannot be empty');
             return;
         }
 
         if (trimmedUsername.length < 3) {
             setErrorTitle('Validation Error');
-            setDeckErrorSummary('Username must be at least 3 characters long');
+            setUserErrorSummary('Username must be at least 3 characters long');
             return;
         }
 
@@ -43,7 +56,7 @@ function GeneralTab() {
         }catch (error){
             console.log(error);
             setErrorTitle('Profile error');
-            setDeckErrorSummary('Error changing username');
+            setUserErrorSummary('Error changing username');
             if(error instanceof Error){
                 setDeckErrorDetails(error.message);
             }else{
@@ -66,6 +79,11 @@ function GeneralTab() {
         contentContainer:{
             display:'flex',
             flexDirection:'column',
+        },
+        identifierContainer:{
+            display:'flex',
+            flexDirection:'row',
+            alignItems:'center',
         },
         boxStyle: {
             display: 'flex',
@@ -112,24 +130,45 @@ function GeneralTab() {
                 <Typography sx={styles.typographyContainer} variant={'h2'}>Profile</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <Box sx={styles.contentContainer}>
-                    <Typography variant={'h3'}>Username</Typography>
-                    <Box sx={styles.boxStyle}>
+                    <Typography variant={'h3'}>Unique identifier</Typography>
+                    <Box sx={{ ...styles.boxStyle, mb:'30px' }}>
                         <TextField
-                            value={username}
-                            onChange={(e) => {
-                                setUsername(e.target.value);
-                                setDeckErrorSummary(null);
-                                setDeckErrorDetails(undefined);
-                            }}
+                            value={usersId}
                             sx={styles.textFieldStyle}
                         />
-                        <Button variant="contained" disabled={username.length === 0 || !(user?.username != username)} onClick={handleChangeUsername} sx={styles.buttonStyle}>
-                            Change username
-                        </Button>
+                        <Tooltip
+                            open={showTooltip}
+                            title="Copied!"
+                            arrow
+                            placement="top"
+                        >
+                            <Button variant="contained" onClick={() => handleCopyLink(usersId)} sx={styles.buttonStyle}>
+                                Copy Identifier
+                            </Button>
+                        </Tooltip>
                     </Box>
-                    {deckErrorSummary ? (
+                    {user && (
+                        <>
+                            <Typography variant={'h3'}>Username</Typography>
+                            <Box sx={styles.boxStyle}>
+                                <TextField
+                                    value={username}
+                                    onChange={(e) => {
+                                        setUsername(e.target.value);
+                                        setUserErrorSummary(null);
+                                        setDeckErrorDetails(undefined);
+                                    }}
+                                    sx={styles.textFieldStyle}
+                                />
+                                <Button variant="contained" disabled={username.length === 0 || !(user?.username != username)} onClick={handleChangeUsername} sx={styles.buttonStyle}>
+                                    Change username
+                                </Button>
+                            </Box>
+                        </>
+                    )}
+                    {userErrorSummary ? (
                         <Typography variant={'body1'} sx={styles.errorMessageStyle}>
-                            {deckErrorSummary}{' '}
+                            {userErrorSummary}{' '}
                             { deckErrorDetails && (<Link
                                 sx={styles.errorMessageLink}
                                 onClick={() => setErrorModalOpen(true)}

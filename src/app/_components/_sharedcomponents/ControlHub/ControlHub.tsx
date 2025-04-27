@@ -88,11 +88,11 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/DeckPage" sx={styles.profileLink}>
                         Decks
                     </NextLinkMui>
+                    <NextLinkMui href="/Preferences" sx={styles.profileLink}>
+                        Preferences
+                    </NextLinkMui>
                     {user ? (
                         <>
-                            <NextLinkMui href="/Preferences" sx={styles.profileLink}>
-                                Preferences
-                            </NextLinkMui>
                             <Divider
                                 orientation="vertical"
                                 flexItem

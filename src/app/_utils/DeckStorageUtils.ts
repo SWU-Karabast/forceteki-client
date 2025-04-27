@@ -79,6 +79,7 @@ export const getUserFromServer = async(): Promise<{ id: string, username: string
             }
         );
         const result = await response.json();
+        console.log(result);
         if (!response.ok) {
             const errors = result.errors || {};
             console.log(errors);
@@ -213,7 +214,11 @@ export const loadDecks = async (): Promise<StoredDeck[]> => {
         const result = await response.json();
         if (!response.ok) {
             const errors = result.message || {};
-            console.log(errors);
+            // We check here if the error was a response of not being authenticated which we should handle by loading up
+            // localstorage decks if they exist.
+            if(response.status === 403){
+                return decks;
+            }
             throw new Error(errors);
         }
         loadSavedDecks(true);
