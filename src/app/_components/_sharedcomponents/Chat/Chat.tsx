@@ -66,7 +66,7 @@ const Chat: React.FC<IChatProps> = ({
             mt: '.5vh',
             mb: '0.5vh',
         },
-        chatBox: {
+        chatBox: { 
             p: '0.5em',
             minHeight: '100px',
             overflowY: 'auto',
@@ -74,18 +74,18 @@ const Chat: React.FC<IChatProps> = ({
             flex: 1,
         },
         messageText: {
-            fontSize: { xs: '0.75em', md: '.9em' },
+            fontSize: { xs: '0.75em', md: '1em' },
             color: '#fff',
-            lineHeight: { xs: '0.75rem', md: '.9rem' },
+            lineHeight: { xs: '0.75rem', md: '1rem' },
         },
         playerName: {
-            fontSize: { xs: '0.75em', md: '.9em' },
-            lineHeight: { xs: '0.75rem', md: '.9rem' },
+            fontSize: { xs: '0.75em', md: '1em' },
+            lineHeight: { xs: '0.75rem', md: '1rem' },
         },
         alertText: {
             fontSize: { xs: '0.85em', md: '1em' },
             color: 'purple',
-            lineHeight: { xs: '0.85rem', md: '.9em' },
+            lineHeight: { xs: '0.85rem', md: '1em' },
         },
         inputContainer: {
             display: 'flex',
@@ -103,6 +103,8 @@ const Chat: React.FC<IChatProps> = ({
             flexGrow: 1,
             flex: 1,
             maxWidth: '100%',
+            minWidth: 0,
+            width: '100%',
             fontSize: { xs: '0.75em', md: '1em' },
             height: { xs: '1.8rem', md: '2.2rem' },
             input: { color: '#fff', padding: '0.3em 0.5em' },
@@ -152,10 +154,11 @@ const Chat: React.FC<IChatProps> = ({
                         sx={styles.textField}
                         slotProps={{
                             input: {
+                                style: { fontSize: '1em' },
                                 endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton onClick={handleChatSubmit}>
-                                            <Send sx={{ color: '#fff' }} />
+                                    <InputAdornment position="end" sx={{ ml: 0, p: 0 }}>
+                                        <IconButton size="small" onClick={handleChatSubmit}>
+                                            <Send sx={{ color: '#fff', fontSize: '1.1em' }} />
                                         </IconButton>
                                     </InputAdornment>
                                 ),
