@@ -10,7 +10,6 @@
 		"lint": "npx tsc --noemit && next lint"
 	},
 	"dependencies": {
-		"@aws-sdk/client-secrets-manager": "^3.797.0",
 		"@emotion/react": "^11.13.5",
 		"@emotion/styled": "^11.13.5",
 		"@mui/icons-material": "^6.1.8",
