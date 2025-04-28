@@ -69,10 +69,12 @@ function GeneralTab() {
     };
 
     const getUsernameChangeInfo = async () => {
-        const result = await getUsernameChangeInfoFromServer();
-        setUsernameChangeable(result.canChange);
-        setMessageColor(result.typeOfMessage);
-        setUserUsernameInfo(result.message);
+        if(user) {
+            const result = await getUsernameChangeInfoFromServer();
+            setUsernameChangeable(result.canChange);
+            setMessageColor(result.typeOfMessage);
+            setUserUsernameInfo(result.message);
+        }
     }
 
     useEffect(() => {
@@ -121,6 +123,10 @@ function GeneralTab() {
             borderBottomLeftRadius:'0px',
             borderTopRightRadius:'5px',
             borderBottomRightRadius:'5px',
+            '&:disabled': {
+                backgroundColor: '#404040',
+                color:'#FFF'
+            },
         },
         errorMessageStyle: {
             color: 'var(--initiative-red);',
