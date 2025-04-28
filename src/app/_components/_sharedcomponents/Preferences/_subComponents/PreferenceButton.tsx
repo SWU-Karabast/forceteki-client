@@ -5,12 +5,18 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 
 
 function PreferenceButton(buttonType: IButtonType) {
-    console.log(buttonType.disabled);
+    const hasBackgroundColor = buttonType.sx &&
+        typeof buttonType.sx === 'object' &&
+        'backgroundColor' in buttonType.sx;
+    const hasHoverStyle = buttonType.sx &&
+        typeof buttonType.sx === 'object' &&
+        '&:hover' in buttonType.sx;
     const styles = {
         buttonStyle:{
-            background: buttonType.disabled ? '#404040' : buttonType.variant === 'concede' ? 'linear-gradient(#380707, #380707) padding-box,' +
+            ...(hasBackgroundColor ? {} : { background: buttonType.disabled ? '#404040' : buttonType.variant === 'concede' ? 'linear-gradient(#380707, #380707) padding-box,' +
                 'linear-gradient(#7C0707, #C40000) border-box' : 'linear-gradient(#1E2D32, #1E2D32) padding-box,' +
                 'linear-gradient(#404040, #008FC4) border-box',
+            }),
             color: '#FFF',
             fontSize: '16px',
             border: '1px solid transparent',
@@ -18,9 +24,9 @@ function PreferenceButton(buttonType: IButtonType) {
             pt:'10px',
             pb:'10px',
             '&:hover': {
-                background: buttonType.variant === 'concede' ? 'linear-gradient(#7C0707, #C40000) padding-box, ' +
+                ...(hasHoverStyle ? {} : { background: buttonType.variant === 'concede' ? 'linear-gradient(#7C0707, #C40000) padding-box, ' +
                     'linear-gradient(#7C0707, #C40000) border-box' : 'linear-gradient(#2C4046, #2C4046) padding-box,' +
-                    'linear-gradient(#404040, #008FC4) border-box',
+                    'linear-gradient(#404040, #008FC4) border-box' }),
                 boxShadow: 'none',
             },
             '&:disabled': {
@@ -28,6 +34,7 @@ function PreferenceButton(buttonType: IButtonType) {
                 color:'#FFF'
             },
             transform: 'skewX(-5deg)',
+            ...(buttonType.sx || {})
         },
         buttonContainer:{
             alignItems: 'center',

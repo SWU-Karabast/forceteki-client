@@ -3,10 +3,12 @@
 import React from 'react';
 import { Box, Button, Card, CardContent, Typography } from '@mui/material';
 import { useUser } from '@/app/_contexts/User.context';
+import { useRouter } from 'next/navigation';
 
 const Login: React.FC = () => {
     const isDev = process.env.NODE_ENV === 'development';
     const { login, devLogin } = useUser();
+    const router = useRouter();
     // ------------------------STYLES------------------------//
     const loginStyles = {
         container: {
@@ -78,6 +80,13 @@ const Login: React.FC = () => {
 						        onClick={() => devLogin('ThisIsTheWay')}
 						    >
     Login as ThisIsTheWay
+						    </Button>
+						    <Button
+						        variant="contained"
+						        sx={{ ...loginStyles.button }}
+						        onClick={() => router.push('/')}
+						    >
+    Back to homepage
 						    </Button>
 						</>
                     }
