@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Box, Typography, Dialog, DialogContent, DialogActions, Button, TextField, Link } from '@mui/material';
 import { useUser } from '@/app/_contexts/User.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { setUsernameOnServer } from '@/app/_utils/DeckStorageUtils';
+import { setUsernameOnServer, setWelcomeMessage } from '@/app/_utils/DeckStorageUtils';
 
 interface WelcomePopupProps {
     open: boolean;
@@ -17,7 +17,8 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
     const [canSubmitUsername, setCanSubmitUsername] = useState(false);
 
-    const handleSkip = () => {
+    const handleSkip = async () => {
+        await setWelcomeMessage();
         onClose();
     };
 
@@ -40,6 +41,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
                 setSuccesfulUsernameChange(false);
             }, 2000);
             updateUsername(newUsername);
+            onClose();
         }catch (error){
             console.log(error);
             if(error instanceof Error) {
@@ -183,10 +185,13 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
                 ) : null}
                 <Box sx={styles.infoList}>
                     <Typography variant="body2" sx={styles.infoItem}>
-                        • You can change your username freely for 1 hour. After that, changes are allowed every 4 months.
+                        • You can change your username <strong>freely for 1 hour</strong>. After that, changes are allowed every <strong>4 months</strong>.
                     </Typography>
                     <Typography variant="body2" sx={styles.infoItem}>
                         • Usernames must be respectful, non-offensive, and free of impersonation, hate speech, slurs, or inappropriate content.
+                    </Typography>
+                    <Typography variant="body2" sx={styles.infoItem}>
+                        • You can also change your username in the <strong>Preference tab</strong>.
                     </Typography>
                 </Box>
             </DialogContent>

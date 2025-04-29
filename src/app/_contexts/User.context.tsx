@@ -20,6 +20,7 @@ const UserContext = createContext<IUserContextType>({
     devLogin: () => {},
     logout: () => {},
     updateUsername: () => {},
+    updateWelcomeMessage: () => {},
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
@@ -54,6 +55,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         email: session.user.email || null,
                         provider: session.user.provider || null,
                         providerId: session.user.id || null,
+                        welcomeMessage: serverUser.welcomeMessage,
                     });
                 } catch (error) {
                     console.error('Error syncing user with server:', error);
@@ -121,6 +123,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
     };
 
+    const updateWelcomeMessage = () => {
+        setUser((prevUser) => {
+            if(!prevUser) return null;
+            return {
+                ...prevUser,
+                welcomeMessage: false
+            }
+        })
+    }
+
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
         clearAnonUser();
@@ -141,7 +153,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage }}>
             {children}
         </UserContext.Provider>
     );

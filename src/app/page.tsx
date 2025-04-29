@@ -1,28 +1,12 @@
 'use client';
-import React, { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography } from '@mui/material';
 import KarabastBanner from './_components/_sharedcomponents/Banner/Banner';
 import PublicGames from './_components/HomePage/PublicGames/PublicGames';
 import HomePagePlayMode from './_components/HomePage/HomePagePlayMode';
 import NewsColumn from './_components/HomePage/News/News';
-import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/WelcomePopup';
 
 const Home: React.FC = () => {
-    const [showWelcomePopup, setShowWelcomePopup] = useState(false);
-    const closeWelcomePopup = () => {
-        localStorage.setItem('hasSeenWelcomePopup', 'true');
-        setShowWelcomePopup(false);
-    };
-    // Check if we should show the welcome popup
-    useEffect(() => {
-        // Check if the user has seen the popup before
-        const hasSeenWelcomePopup = localStorage.getItem('hasSeenWelcomePopup');
-        if (hasSeenWelcomePopup === 'true') {
-            // Show popup once authentication is complete
-            setShowWelcomePopup(true);
-        }
-    }, [showWelcomePopup]);
     const styles = {
         gridContainer: {
             position: 'relative',

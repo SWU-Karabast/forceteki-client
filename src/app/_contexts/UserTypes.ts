@@ -4,6 +4,7 @@ export interface IUser {
     email: string | null;
     provider: string | null;
     providerId: string | null;
+    welcomeMessage?: boolean,
 }
 
 export interface IUserContextType {
@@ -12,7 +13,8 @@ export interface IUserContextType {
     login: (provider: 'google' | 'discord') => void;
     devLogin: (user: 'Order66' | 'ThisIsTheWay') => void;
     logout: () => void;
-    updateUsername: (username: string) => void,
+    updateUsername: (username: string) => void
+    updateWelcomeMessage: () => void
 }
 
 // Extend Next-auth types
