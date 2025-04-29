@@ -4,7 +4,7 @@ export interface IUser {
     email: string | null;
     provider: string | null;
     providerId: string | null;
-    welcomeMessage?: boolean,
+    welcomeMessageSeen?: boolean,
 }
 
 export interface IUserContextType {

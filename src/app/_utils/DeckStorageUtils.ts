@@ -61,7 +61,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, welcomeMessage: boolean }> =>{
+export const getUserFromServer = async(): Promise<{ id: string, username: string, welcomeMessageSeen: boolean }> =>{
     try {
         const decks = loadSavedDecks(false);
         const payload = {
@@ -164,7 +164,7 @@ export const setUsernameOnServer = async(username: string): Promise<string> => {
 
 export const setWelcomeMessage = async(): Promise<boolean> => {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/toogle-welcome-message`,
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/toggle-welcome-message`,
             {
                 method: 'POST',
                 headers: {

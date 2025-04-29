@@ -75,7 +75,7 @@ const HomePagePlayMode: React.FC = () => {
             }
         };
         // Check if the user has seen the popup before
-        if(user && user.welcomeMessage){
+        if(user && user.welcomeMessageSeen){
             setShowWelcomePopup(true);
         }
         fetchGameList();

@@ -55,7 +55,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         email: session.user.email || null,
                         provider: session.user.provider || null,
                         providerId: session.user.id || null,
-                        welcomeMessage: serverUser.welcomeMessage,
+                        welcomeMessageSeen: serverUser.welcomeMessageSeen,
                     });
                 } catch (error) {
                     console.error('Error syncing user with server:', error);
@@ -128,7 +128,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             if(!prevUser) return null;
             return {
                 ...prevUser,
-                welcomeMessage: false
+                welcomeMessageSeen: false
             }
         })
     }
