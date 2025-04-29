@@ -31,8 +31,6 @@ const Home: React.FC = () => {
             fontSize: '0.75rem',
         },
     };
-    // i need to fix sync and add functionality to the popup for changing usernames.
-    // <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
     return (
         <Grid container sx={styles.gridContainer}>
 
