@@ -27,6 +27,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         return null
     }
 
+    const controller = gameState.players[card.controller.id];
+
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         hoverTimeout.current = window.setTimeout(() => {
@@ -214,18 +216,18 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             {cardStyle === LeaderBaseCardStyle.Base && (
                 <>
-                <Box sx={styles.damageCounterContainer}>
-                    { !!distributionAmount && 
-                    // Need to change background/borderRadius to backgroundImage
+                    <Box sx={styles.damageCounterContainer}>
+                        { !!distributionAmount && 
+                        // Need to change background/borderRadius to backgroundImage
                         <Typography variant="body1" sx={{ ...styles.damageCounter, background: distributeHealing ? 'rgba(0, 186, 255, 1)' : 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat', borderRadius: distributeHealing ? '17px 8px' : '0px' }}>
                             {distributionAmount}
                         </Typography>
-                    }
-                    <Typography variant="body1" sx={styles.damageCounter}>
-                        {card.damage}
-                    </Typography>
-                </Box>
-                {<Box sx={getForceTokenIconStyle(gameState.players[card.controller.id])}/>}
+                        }
+                        <Typography variant="body1" sx={styles.damageCounter}>
+                            {card.damage}
+                        </Typography>
+                    </Box>
+                    {controller.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
                 </>
             )}
 

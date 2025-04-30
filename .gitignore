@@ -36,3 +36,7 @@ yarn-error.log*
 next-env.d.ts
 src/app/ref.css
 yarn.lock
+
+# repo-specific files
+images-scripts/**/*.png
+images-scripts/**/*.webp
