@@ -164,7 +164,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 
                 <Box sx={styles.textFieldContainer}>
                     <TextField
-                        placeholder="Your Username"
+                        placeholder={user?.username}
                         value={username}
                         onChange={(e) => {
                             const newUsername = e.target.value;

@@ -65,6 +65,13 @@ const Login: React.FC = () => {
                     >
                         Login with Discord
                     </Button>
+                    <Button
+                        variant="contained"
+                        sx={{ ...loginStyles.button }}
+                        onClick={() => router.push('/')}
+                    >
+                        Back
+                    </Button>
                     { isDev && 
 						<>
 						    <Button
@@ -80,13 +87,6 @@ const Login: React.FC = () => {
 						        onClick={() => devLogin('ThisIsTheWay')}
 						    >
     Login as ThisIsTheWay
-						    </Button>
-						    <Button
-						        variant="contained"
-						        sx={{ ...loginStyles.button }}
-						        onClick={() => router.push('/')}
-						    >
-    Back to homepage
 						    </Button>
 						</>
                     }

@@ -1,6 +1,6 @@
 export interface IUser {
-    id: string | null;
-    username: string | null;
+    id?: string;
+    username?: string;
     email: string | null;
     provider: string | null;
     providerId: string | null;
