@@ -27,7 +27,7 @@ const NewsColumn: React.FC = () => {;
             <Card variant="blue" sx={styles.notice}>
                 <CardContent>
                     <Typography variant="bodyBold">Pardon our dust!</Typography>
-                    <Typography variant="body1">We are working on bringing you important platform features. This will often result in a brief mainentnence downtime which we are doing in the mornings EST. These will become less frequent as we get closer to being feature complete.</Typography>
+                    <Typography variant="body1">We are working on bringing you important platform features. This will often result in a brief maintenance downtime which we are doing in the mornings EST. These will become less frequent as we get closer to being feature complete.</Typography>
                     <Typography variant="body1">We appreciate your patience as we make Karabast the best it can be!</Typography>
                 </CardContent>
             </Card>

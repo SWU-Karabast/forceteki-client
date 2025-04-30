@@ -28,9 +28,22 @@ const Board: React.FC<IBoardProps> = ({
     const styles = {
         boardWrapper: {
             height: '100%',
-            margin: '0 5rem',
+            margin: '0 3rem',
             display: 'flex',
             flexDirection: 'row',
+        },
+        borderLayer: {
+            display: 'flex',
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+            pointerEvents: 'none', // make it invisible to mouse
+        },  
+        unitsLayer: {
+            position: 'relative',
+            margin: '0 1rem',
+            width: '100%',
+            height: '100%',
         },
         containerStyle: {
             height: '100%',
@@ -53,14 +66,7 @@ const Board: React.FC<IBoardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: {
-                xs: '8rem',
-                sm: '9rem',
-                lg: '10rem',
-                xl: '11rem',
-                xxl: '12rem',
-                xxxl: '14rem',
-            },
+            width: 'clamp(8rem, 20vh, 14rem)',
             margin: '0 1rem',
         },
         middleColumnContent: {
@@ -76,15 +82,11 @@ const Board: React.FC<IBoardProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             width: '100%',
-            gap: '10px',
+            gap: 'clamp(1px, 1.0vh, 10px)',
             padding: '0 1rem',
-            flex: 1,
-            minHeight: 0
         },
         leaderBaseWrapper: {
-            flex: 1,
             width: '100%',
-            minHeight: 0,
             display: 'flex',
             justifyContent: 'center',
         },
@@ -93,19 +95,29 @@ const Board: React.FC<IBoardProps> = ({
             url('border-llt.svg') no-repeat left top,
             url('border-llb.svg') no-repeat left bottom`,
             mixBlendMode: 'soft-light',
-            width: '80%',
+            left: '0',
+            width: '250px',
             height: '100%',
-            position: 'absolute',
+            position: 'relative',
+        },
+        leftColumnBorderCenter: {
+            flexGrow: 1,
+            background: `
+            url('border-ct.svg') repeat-x top,
+            url('border-cb.svg') repeat-x bottom`,
+            mixBlendMode: 'soft-light',
+            height: '100%',
+            position: 'relative',
         },
         leftColumnBorderRight: {
             background: `
             url('border-lrt.svg') no-repeat right top,
             url('border-lrb.svg') no-repeat right bottom`,
             mixBlendMode: 'soft-light',
-            width: '20%',
+            width: '50px',
             right: '0',
             height: '100%',
-            position: 'absolute',
+            position: 'relative',
         },
         rightColumnBorderRight: {
             background: `
@@ -113,18 +125,28 @@ const Board: React.FC<IBoardProps> = ({
             url('border-rrb.svg') no-repeat right bottom`,
             mixBlendMode: 'soft-light',
             right: '0',
-            width: '80%',
+            width: '250px',
             height: '100%',
-            position: 'absolute',
+            position: 'relative',
+        },
+        rightColumnBorderCenter: {
+            flexGrow: 1,
+            background: `
+            url('border-ct.svg') repeat-x top,
+            url('border-cb.svg') repeat-x bottom`,
+            mixBlendMode: 'soft-light',
+            height: '100%',
+            position: 'relative',
         },
         rightColumnBorderLeft: {
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
             mixBlendMode: 'soft-light',
-            width: '20%',
+            left: '0',
+            width: '50px',
             height: '100%',
-            position: 'absolute',
+            position: 'relative',
         },
         middleColumnBorderRight: {
             background: `
@@ -177,9 +199,14 @@ const Board: React.FC<IBoardProps> = ({
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
         <Box sx={styles.boardWrapper}> 
             <Box sx={styles.columnStyle}>
-                <Box sx={styles.leftColumnBorderLeft} />
-                <Box sx={styles.leftColumnBorderRight} />
-                <UnitsBoard sidebarOpen={sidebarOpen} arena="spaceArena" />
+                <Box sx={styles.borderLayer}>
+                    <Box sx={styles.leftColumnBorderLeft} />
+                    <Box sx={styles.leftColumnBorderCenter} />
+                    <Box sx={styles.leftColumnBorderRight} />
+                </Box>
+                <Box sx={styles.unitsLayer}>
+                    <UnitsBoard sidebarOpen={sidebarOpen} arena="spaceArena" />
+                </Box>
             </Box>
             <Box sx={styles.middleColumnStyle}>
                 <Box sx={styles.middleColumnBorderLeft} />
@@ -194,13 +221,19 @@ const Board: React.FC<IBoardProps> = ({
                             />
                         </Box>
                         <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={opponentBase}></LeaderBaseCard>
+                            <LeaderBaseCard
+                                cardStyle={LeaderBaseCardStyle.Base} 
+                                card={opponentBase}
+                            />
                         </Box>
                     </Box>
-                    <Box sx={{ flex: '0 0 60px', width: '100%' }} />
+                    <Box sx={{ flex: '0 1 60px', width: '100%' }} />
                     <Box sx={styles.leaderBaseContainer}>
                         <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard cardStyle={LeaderBaseCardStyle.Base} card={playerBase}></LeaderBaseCard>
+                            <LeaderBaseCard 
+                                cardStyle={LeaderBaseCardStyle.Base} 
+                                card={playerBase}
+                            />
                         </Box>
                         <Box sx={styles.leaderBaseWrapper}>
                             <LeaderBaseCard
@@ -213,14 +246,19 @@ const Board: React.FC<IBoardProps> = ({
                 </Box>
             </Box>
             <Box sx={styles.columnStyle}>
-                <Box sx={styles.rightColumnBorderLeft} />
-                <Box sx={styles.rightColumnBorderRight} />
-                < Box sx={styles.initiativeWrapper}>
-                    <Typography variant={'h4'}>Initiative</Typography>
-                </Box> 
-                <UnitsBoard
-                    sidebarOpen={sidebarOpen} arena="groundArena"
-                />
+                <Box sx={styles.borderLayer}>
+                    <Box sx={styles.rightColumnBorderLeft} />
+                    <Box sx={styles.rightColumnBorderCenter} />
+                    <Box sx={styles.rightColumnBorderRight} />
+                    <Box sx={styles.initiativeWrapper}>
+                        <Typography variant={'h4'}>Initiative</Typography>
+                    </Box> 
+                </Box>
+                <Box sx={styles.unitsLayer}>
+                    <UnitsBoard
+                        sidebarOpen={sidebarOpen} arena="groundArena"
+                    />
+                </Box>
             </Box>
         </Box>
     );

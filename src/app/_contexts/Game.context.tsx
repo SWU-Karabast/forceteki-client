@@ -16,10 +16,12 @@ import { usePopup } from './Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { ZoneName } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface IGameContextType {
     gameState: any;
     lobbyState: any;
+    bugReportState: any;
     sendMessage: (message: string, args?: any[]) => void;
     sendGameMessage: (args: any[]) => void;
     getOpponent: (player: string) => string;
@@ -30,6 +32,7 @@ interface IGameContextType {
     updateDistributionPrompt: (uuid: string, amount: number) => void;
     distributionPromptData: IDistributionPromptData | null;
     isSpectator: boolean;
+    lastQueueHeartbeat: number;
 }
 
 interface IDistributionPromptData {
@@ -46,7 +49,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
     const lastGameIdRef = useRef<string | null>(null);
     const [lobbyState, setLobbyState] = useState<any>(null);
+    const [bugReportState, setBugReportState] = useState<any>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
+    const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
@@ -54,11 +59,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
+    const { status } = useSession();
+
 
     useEffect(() => {
         const lobbyId = searchParams.get('lobbyId');
         const connectedPlayerId = user?.id || anonymousUserId || '';
         if (!connectedPlayerId) return;
+        if(status === 'loading'){
+            return;
+        }
         setConnectedPlayer(connectedPlayerId);
         clearPopups();
         const spectatorParam = searchParams.get('spectator');
@@ -170,6 +180,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             router.push('/');
         });
 
+        newSocket.on('matchmakingFailed', (error: any) => {
+            console.error('Matchmaking failed with error, requeueing:', error);
+            resetStates();
+        });
+
         newSocket.on('gamestate', (gameState: any) => {
             if(isSpectatorMode){
                 setConnectedPlayer(Object.keys(gameState.players)[0])
@@ -184,11 +199,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
             handleGameStatePopups(gameState);
         });
+
         newSocket.on('lobbystate', (lobbyState: any) => {
             setLobbyState(lobbyState);
             if (process.env.NODE_ENV === 'development') {
                 console.log('Lobby state received:', lobbyState);
             }
+        })
+        
+        newSocket.on('queueHeartbeat', (timestamp) => {
+            setLastQueueHeartbeat(timestamp);
+        });
+
+        newSocket.on('bugReportResult', (result: any) => {
+            setBugReportState(result);
         })
 
         setSocket(newSocket);
@@ -196,7 +220,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups]);
+    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups, status]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         socket?.emit(message, ...args);
@@ -257,6 +281,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             value={{
                 gameState,
                 lobbyState,
+                bugReportState,
                 sendGameMessage,
                 sendMessage,
                 connectedPlayer,
@@ -266,7 +291,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 getConnectedPlayerPrompt,
                 updateDistributionPrompt,
                 distributionPromptData,
-                isSpectator
+                isSpectator,
+                lastQueueHeartbeat
             }}
         >
             {children}

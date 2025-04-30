@@ -4,7 +4,7 @@ import {
     Box,
     Popover
 } from '@mui/material';
-import { ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
+import { ILeaderBaseCardProps, LeaderBaseCardStyle, CardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
@@ -29,7 +29,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
-        if (isDeployed) return;
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
         }, 200);
@@ -100,6 +99,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         deployedPlaceholder: {
             backgroundColor: 'transparent',
             borderRadius: '0.5rem',
+            width: '100%',
             maxHeight: '100%',
             aspectRatio: '1.39',
             cursor: 'normal',
@@ -146,7 +146,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             background: 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat',
-            backgroundSize: 'contain',
+            backgroundSize: '50% 100%, 50% 100%',
             backgroundRepeat: 'no-repeat',
             filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
             textShadow: '2px 2px rgba(0, 0, 0, 0.20)'
@@ -175,19 +175,11 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         cardPreview: {
             borderRadius: '.38em',
-            backgroundImage: `url(${s3CardImageURL(card)})`,
+            backgroundImage: `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: '1.4 / 1',
-            width: '21rem',
-        },
-        cardPreviewDeployed: {
-            borderRadius: '.38em',
-            backgroundImage: `url(${s3CardImageURL(card)})`,
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            aspectRatio: '1 / 1.4',
-            width: '16rem',
+            aspectRatio: (card.type === 'leader' && isDeployed) ? '1 / 1.4' : '1.4 / 1',
+            width: (card.type === 'leader' && isDeployed) ? '15rem' : '24rem',
         },
 
     }
@@ -254,7 +246,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 disableRestoreFocus
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
             >
-                <Box sx={styles.cardPreview} />
+                <Box sx={{
+                    ...styles.cardPreview,
+                    backgroundImage: `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
+                }} />
             </Popover>
 
             {cardStyle === LeaderBaseCardStyle.Leader && title && (
