@@ -52,19 +52,30 @@ const pulseGreenBorder = keyframes`
 
 const styles = {
     actionContainer: {
-        height: '5.5rem',
-        justifyContent: 'right',
+        height: '100%',
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        padding: { xs: '0.25rem', md: '0.5rem' },
     },
     buttonsContainer: {
+        border: '1px dashed white',
         display: 'flex',
-        gap: '10px',
+        flexWrap: 'nowrap',
+        gap: { xs: '0.5rem', md: '.75rem' },
         alignItems: 'center',
+        justifyContent: 'flex-end',
+        width: '100%', // Take full width of parent
+        maxWidth: '100%',
     },
     promptButton: {
         transform: 'skew(-10deg)',
         borderRadius: '1rem',
-        height: '3.8rem',
-        minWidth: '7rem',
+        height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
+        minWidth: { xs: '1.5rem'},
+        maxWidth: { xs: '5rem', sm: '7rem' },
+        
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -78,11 +89,13 @@ const styles = {
         '&:not(:disabled)': {
             transition: 'box-shadow 0.3s ease-in-out',
         },
+        // Improve touch target size for mobile
+        touchAction: 'manipulation',
     },
     promptButtonText: {
         transform: 'skew(10deg)',
         lineHeight: '1.2',
-        fontSize: '1.1rem',
+        fontSize: { xs: '0.6rem', sm: '0.9em', md: '1.1rem' },
         '& :disabled': {
             brightness: '0.7',
         },

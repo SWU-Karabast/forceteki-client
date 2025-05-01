@@ -20,7 +20,11 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: '1.5rem 0 1.5rem 2rem',
+            padding: { 
+                xs: '0.5rem 0 0.5rem 0.5rem', 
+                sm: '0.75rem 0 0.75rem 1rem', 
+                md: '1.5rem 0 1.5rem 2rem'
+            },
             gap: '1rem',
         },
         centerColumnStyle: {
@@ -32,8 +36,11 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'flex-end',
-            padding: '1rem 2rem 1rem 0',
-            gap: '2rem',
+            padding: { 
+                xs: '0.5rem 0.5rem 0.5rem 0', 
+                sm: '0.75rem 1rem 0.75rem 0',
+                md: '1rem 2rem 1rem 0'
+            },
         },
         playerHandWrapper: {
             width: '100%',
@@ -45,8 +52,9 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
         chatColumn: {
             display: 'flex',
             alignItems: 'center',
-            height: '5.5rem',
+            height: '100%',
             margin: '0',
+            width: 'auto',
         },
         playerTurnAura: {
             height: '100px',
@@ -69,14 +77,13 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                 height: '100%',
                 display: 'flex',
                 flexWrap: 'nowrap',
-                columnGap: '2rem',  // 2rem gap between columns
+                columnGap: '1rem',
                 position: 'relative'
             }}
             className="playerCardTrayWrapper"
         >
-            {/* Left column: fixed 360px width */}
             <Grid  
-                size={{ xs: 2, md: 3 }}              
+                size={{ xs: 3, md: 3 }}              
                 sx={{
                     ...styles.leftColumnStyle,
                 }}
@@ -87,7 +94,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
 
             {/* Middle column: expands to fill space */}
             <Grid
-                size={{ xs: 8, md: 6 }}
+                size={{ xs: 6, md: 6 }}
                 sx={{
                     ...styles.centerColumnStyle,
                 }}
@@ -99,11 +106,9 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                     />
                 </Box>
                 <Box sx={styles.playerTurnAura} />
-            </Grid>
-
-            {/* Right column: fixed 360px width */}
+            </Grid>            
             <Grid
-                size={{ xs: 2, md: 3 }}   
+                size={{ xs: 3, md: 3 }}
                 sx={{
                     ...styles.rightColumnStyle,
                 }}
