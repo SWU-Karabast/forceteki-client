@@ -77,7 +77,7 @@ const Chat: React.FC<IChatProps> = ({
                         sx={{
                             color: 'var(--initiative-blue)',
                             cursor: 'pointer',
-                            textDecoration: 'underline',
+                            fontWeight: 'bold',
                             '&:hover': {
                                 color: 'var(--initiative-red)',
                             }
