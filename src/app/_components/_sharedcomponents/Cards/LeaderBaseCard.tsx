@@ -4,7 +4,7 @@ import {
     Box,
     Popover
 } from '@mui/material';
-import { ILeaderBaseCardProps, LeaderBaseCardStyle, CardStyle } from './CardTypes';
+import { ILeaderBaseCardProps, LeaderBaseCardStyle, CardStyle, ICardData } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
@@ -54,6 +54,20 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             return;
         }
         defaultClickFunction();
+    }
+
+    const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
+    
+    const getBackgroundColor = (card: ICardData) => {
+        if (notImplemented(card)) {
+            return 'rgba(0, 0, 0, 0.3)';
+        }
+    
+        if (card.exhausted && !isDeployed) {
+            return 'rgba(0, 0, 0, 0.5)';
+        }
+    
+        return 'transparent';
     }
 
     const showValueAdjuster = () => {
@@ -110,7 +124,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'absolute',
             height: '100%',
             width: '100%',
-            backgroundColor: card.exhausted && !isDeployed ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            backgroundColor: getBackgroundColor(card),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -161,7 +175,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             p: '5px 10px',
         },
         unimplementedAlert: {
-            display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
+            display: notImplemented(card) ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
