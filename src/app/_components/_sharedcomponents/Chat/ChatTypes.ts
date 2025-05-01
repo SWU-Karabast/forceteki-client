@@ -31,5 +31,4 @@ export interface IChatProps {
     opponentRoll?: number;
     setChatMessage: (message: string) => void;
     handleChatSubmit: () => void;
-    cards?: Record<string, IChatCardData>; // Card data for hover functionality
-}
+    cards?: Record<string, IChatCardData>;

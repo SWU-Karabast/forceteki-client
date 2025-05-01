@@ -6,7 +6,6 @@ import { useGame } from '@/app/_contexts/Game.context';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { IChatCardData } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 
-// Define interfaces for type safety
 interface IGameCard {
     id: string;
     name: string;
@@ -24,17 +23,14 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
     const { gameState, sendGameMessage, connectedPlayer } = useGame();
     const [chatMessage, setChatMessage] = useState('');
 
-    // Extract card data from the game state
     const cardData = useMemo(() => {
         if (!gameState || !gameState.players) return {};
 
         const cards: Record<string, IChatCardData> = {};
         
-        // Process all players' cards
         Object.values(gameState.players).forEach((player) => {
             const typedPlayer = player as IGamePlayer;
             
-            // Process leader
             if (typedPlayer.leader && typedPlayer.leader.name) {
                 cards[typedPlayer.leader.name] = {
                     id: typedPlayer.leader.id,
@@ -44,7 +40,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 };
             }
 
-            // Process cards in different zones
             if (typedPlayer.cardPiles) {
                 Object.values(typedPlayer.cardPiles).forEach((pile) => {
                     const typedPile = pile as IGameCard[];
@@ -75,7 +70,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         }
     }
 
-    // ------------------------STYLES------------------------//
     const styles = {
         drawerStyle: {
             flexShrink: 0,

@@ -42,23 +42,17 @@ const Chat: React.FC<IChatProps> = ({
         setHoveredCard({ element: null, card: null });
     };
 
-    // Function to identify card names in a message and wrap them with hover functionality
     const processMessageContent = (content: string) => {
         if (!cards || Object.keys(cards).length === 0) {
             return content;
         }
 
-        // Create an array of card names sorted by length (longest first)
-        // This ensures that longer card names are matched before shorter ones
-        // (e.g. "Darth Vader" before "Vader")
         const cardNames = Object.keys(cards).sort((a, b) => b.length - a.length);
         
-        // Split the content into parts that are either card names or regular text
         const parts: JSX.Element[] = [];
         let remainingContent = content;
         let key = 0;
         
-        // Process each card name
         cardNames.forEach(cardName => {
             const cardNameRegex = new RegExp(`\\b${cardName}\\b`, 'gi');
             let match;
@@ -66,9 +60,7 @@ const Chat: React.FC<IChatProps> = ({
             const tempContent = remainingContent;
             remainingContent = '';
             
-            // Find all occurrences of the card name
             while ((match = cardNameRegex.exec(tempContent)) !== null) {
-                // Add the text before the match
                 if (match.index > lastIndex) {
                     parts.push(
                         <React.Fragment key={key++}>
@@ -77,7 +69,6 @@ const Chat: React.FC<IChatProps> = ({
                     );
                 }
                 
-                // Add the card name with hover functionality
                 const card = cards[cardName];
                 parts.push(
                     <Typography
@@ -100,14 +91,12 @@ const Chat: React.FC<IChatProps> = ({
                 
                 lastIndex = match.index + match[0].length;
             }
-            
-            // Add the remaining text
+
             if (lastIndex < tempContent.length) {
                 remainingContent += tempContent.substring(lastIndex);
             }
         });
         
-        // Add any remaining content
         if (remainingContent) {
             parts.push(
                 <React.Fragment key={key++}>
@@ -122,7 +111,6 @@ const Chat: React.FC<IChatProps> = ({
     const formatMessage = (entry: IChatEntry, index: number) => {
         const { message } = entry;
         
-        // Handle alert messages
         if ('alert' in message) {
             return (
                 <Typography key={index} sx={styles.alertText}>
@@ -131,7 +119,6 @@ const Chat: React.FC<IChatProps> = ({
             );
         }
         
-        // Handle player chat messages
         if (Array.isArray(message) && message.length > 0 && message[0].type === 'playerChat') {
             const playerName = message[0].name || '';
             const playerId = message[0].id || '';
@@ -153,7 +140,6 @@ const Chat: React.FC<IChatProps> = ({
             );
         }
         
-        // Handle game log messages
         if (Array.isArray(message)) {
             const stringMessage = message.map(item => 
                 typeof item === 'object' ? item?.name || '' : item
@@ -166,7 +152,6 @@ const Chat: React.FC<IChatProps> = ({
             );
         }
         
-        // Fallback for unexpected message format
         return null;
     }
 
@@ -175,7 +160,6 @@ const Chat: React.FC<IChatProps> = ({
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [chatHistory]);
-    // ------------------------STYLES------------------------//
 
     const styles = {
         title: {
@@ -216,13 +200,11 @@ const Chat: React.FC<IChatProps> = ({
             flexGrow: 1,
             input: { color: '#fff' },
             '& .MuiOutlinedInput-root': {
-                // base border style
                 '& fieldset': {
                     borderColor: '#fff',
                 },
             },
             '& .MuiOutlinedInput-root.Mui-focused': {
-                // when container is focused
                 '& fieldset': {
                     borderColor: '#fff',
                 },
@@ -231,17 +213,15 @@ const Chat: React.FC<IChatProps> = ({
     }
 
     
-
-    // Add card preview styles
     const cardPreviewStyles = {
         cardPreview: {
             borderRadius: '.38em',
-            backgroundSize: 'contain', // Changed from 'cover' to 'contain'
+            backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
             aspectRatio: '1.4 / 1',
             width: '24rem',
-            height: '17.14rem', // Added explicit height based on aspect ratio
+            height: '17.14rem',
         },
     };
 
