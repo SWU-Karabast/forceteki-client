@@ -56,7 +56,7 @@ const styles = {
         width: '100%',
         display: 'flex',
         justifyContent: 'flex-end',
-        alignItems: 'center',
+        alignItems: 'flex-end', // Changed from 'center' to 'flex-end' to align at bottom
         padding: { xs: '0.25rem', md: '0.5rem' },
     },
     buttonsContainer: {

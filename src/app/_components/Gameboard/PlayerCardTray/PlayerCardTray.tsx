@@ -51,10 +51,11 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
         },
         chatColumn: {
             display: 'flex',
-            alignItems: 'center',
-            height: '100%',
-            margin: '0',
+            alignItems: 'center', 
+            alignSelf: 'flex-end', 
+            height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
             width: 'auto',
+            marginBottom: { xs: '0.25rem', md: '0.5rem' }, // Match the padding of actionContainer
         },
         playerTurnAura: {
             height: '100px',
