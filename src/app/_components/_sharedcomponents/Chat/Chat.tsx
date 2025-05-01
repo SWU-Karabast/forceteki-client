@@ -185,7 +185,8 @@ const Chat: React.FC<IChatProps> = ({
             color: '#fff',
         },
         alertText: {
-            color: 'purple'
+            color: 'purple',
+            fontWeight: 'bold'
         },
         inputContainer: {
             display: 'flex',
