@@ -60,7 +60,6 @@ const styles = {
         padding: { xs: '0.25rem', md: '0.5rem' },
     },
     buttonsContainer: {
-        border: '1px dashed white',
         display: 'flex',
         flexWrap: 'nowrap',
         gap: { xs: '0.5rem', md: '.75rem' },
@@ -73,8 +72,9 @@ const styles = {
         transform: 'skew(-10deg)',
         borderRadius: '1rem',
         height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
-        minWidth: { xs: '1.5rem'},
-        maxWidth: { xs: '5rem', sm: '7rem' },
+        minWidth: { xs: '1.5rem', md: '2.5rem' },
+        maxWidth: { xs: '5rem', sm: '8rem', md: '12rem'},
+        flex: '1 1 auto', // Allow buttons to grow and shrink
         
         display: 'flex',
         alignItems: 'center',
@@ -95,7 +95,8 @@ const styles = {
     promptButtonText: {
         transform: 'skew(10deg)',
         lineHeight: '1.2',
-        fontSize: { xs: '0.6rem', sm: '0.9em', md: '1.1rem' },
+        fontSize: { xs: '0.6rem', sm: '0.9rem', md: '1.1rem', lg: '1.2rem' },     
+        textAlign: 'center',
         '& :disabled': {
             brightness: '0.7',
         },
