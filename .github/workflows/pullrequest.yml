@@ -5,18 +5,19 @@ on:
     branches:
       - main
 jobs:
-  lint:
-    if: github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22.x"
-          cache: "npm"
-      - run: npm install
+  # TODO: re-enable linting if we can get vscode auto-lint working
+  # lint:
+  #   if: github.event.pull_request.draft == false
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: "22.x"
+  #         cache: "npm"
+  #     - run: npm install
 
-      - run: npm run lint
+  #     - run: npm run lint
 
   build:
     if: github.event.pull_request.draft == false
