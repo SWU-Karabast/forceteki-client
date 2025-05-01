@@ -23,6 +23,7 @@ export interface IChatCardData {
     setId: { set: string; number: number };
     type: string;
     ownerId?: string;
+    zone?: string;
 }
 
 export interface IChatProps {

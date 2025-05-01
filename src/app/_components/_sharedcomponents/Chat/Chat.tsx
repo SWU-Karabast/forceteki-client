@@ -269,7 +269,11 @@ const Chat: React.FC<IChatProps> = ({
                 {hoveredCard.card && (
                     <Box sx={{
                         ...cardPreviewStyles.cardPreview,
-                        backgroundImage: `url(${s3CardImageURL(hoveredCard.card, CardStyle.Plain)})`,
+                        backgroundImage: `url(${s3CardImageURL(hoveredCard.card, 
+                            hoveredCard.card.type === 'leader' && hoveredCard.card.zone === 'base' 
+                                ? CardStyle.PlainLeader 
+                                : CardStyle.Plain
+                        )})`,
                     }} />
                 )}
             </Popover>

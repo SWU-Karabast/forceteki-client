@@ -12,10 +12,12 @@ interface IGameCard {
     setId: { set: string; number: number };
     type?: string;
     uuid?: string;
+    zone?: string;
 }
 
 interface IGamePlayer {
     leader?: IGameCard;
+    base?: IGameCard;
     cardPiles?: Record<string, IGameCard[]>;
 }
 
@@ -37,7 +39,19 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     name: typedPlayer.leader.name,
                     setId: typedPlayer.leader.setId,
                     type: typedPlayer.leader.type || 'leader',
-                    ownerId: playerId
+                    ownerId: playerId,
+                    zone: typedPlayer.leader.zone
+                };
+            }
+
+            if (typedPlayer.base && typedPlayer.base.name) {
+                cards[typedPlayer.base.name] = {
+                    id: typedPlayer.base.id,
+                    name: typedPlayer.base.name,
+                    setId: typedPlayer.base.setId,
+                    type: typedPlayer.base.type || 'leader',
+                    ownerId: playerId,
+                    zone: 'base'
                 };
             }
 
@@ -53,7 +67,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                                     name: typedCard.name,
                                     setId: typedCard.setId,
                                     type: typedCard.type || 'card',
-                                    ownerId: playerId
+                                    ownerId: playerId,
+                                    zone: typedCard.zone
                                 };
                             }
                         });
