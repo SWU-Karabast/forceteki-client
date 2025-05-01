@@ -73,7 +73,7 @@ const styles = {
         borderRadius: '1rem',
         height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
         minWidth: { xs: '1.5rem', md: '2.5rem' },
-        maxWidth: { xs: '5rem', sm: '8rem', md: '12rem'},
+        maxWidth: { xs: '5rem', sm: '8rem', md: '10rem'},
         flex: '1 1 auto', // Allow buttons to grow and shrink
         
         display: 'flex',
@@ -95,7 +95,7 @@ const styles = {
     promptButtonText: {
         transform: 'skew(10deg)',
         lineHeight: '1.2',
-        fontSize: { xs: '0.6rem', sm: '0.9rem', md: '1.1rem', lg: '1.2rem' },     
+        fontSize: { xs: '0.6rem', sm: '0.9rem', md: '1.0rem', lg: '1.1rem' },     
         textAlign: 'center',
         '& :disabled': {
             brightness: '0.7',
