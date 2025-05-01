@@ -20,8 +20,10 @@ const QuickGame: React.FC = () => {
     useEffect(() => {
         if (gameState) {
             router.push('/GameBoard');
+        } else {
+            router.push('/quickGame');
         }
-    }, [router, gameState]);
+    }, [router, gameState, lobbyState]);
 
     // ------------------------STYLES------------------------//
 
