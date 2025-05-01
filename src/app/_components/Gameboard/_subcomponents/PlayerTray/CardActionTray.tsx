@@ -96,7 +96,7 @@ const styles = {
     promptButtonText: {
         transform: 'skew(10deg)',
         lineHeight: '1.2',
-        fontSize: { xs: '0.6rem', sm: '0.9rem', md: '1.0rem' },     
+        fontSize: { xs: '0.6rem', sm: '0.9rem', md: '1.05rem' },     
         textAlign: 'center',
         '& :disabled': {
             brightness: '0.7',
