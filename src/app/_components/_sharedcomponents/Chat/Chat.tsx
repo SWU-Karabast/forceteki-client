@@ -131,7 +131,8 @@ const Chat: React.FC<IChatProps> = ({
                     <Typography 
                         component="span" 
                         sx={{ 
-                            color: isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)' 
+                            color: isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+                            fontWeight: 'bold'
                         }}
                     >
                         {playerName}
