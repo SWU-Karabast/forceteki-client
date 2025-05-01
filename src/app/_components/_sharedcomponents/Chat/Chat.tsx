@@ -70,16 +70,17 @@ const Chat: React.FC<IChatProps> = ({
                 }
                 
                 const card = cards[cardName];
+                const isCurrentPlayerCard = card.ownerId === connectedPlayer;
                 parts.push(
                     <Typography
                         key={key++}
                         component="span"
                         sx={{
-                            color: 'var(--initiative-blue)',
+                            color: isCurrentPlayerCard ? 'var(--initiative-blue)' : 'var(--initiative-red)',
                             cursor: 'pointer',
                             fontWeight: 'bold',
                             '&:hover': {
-                                color: 'var(--initiative-red)',
+                                color: 'purple',
                             }
                         }}
                         onMouseEnter={(e) => handleCardPreviewOpen(e, card)}

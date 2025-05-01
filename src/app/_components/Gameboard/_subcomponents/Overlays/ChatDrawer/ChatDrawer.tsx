@@ -28,7 +28,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
 
         const cards: Record<string, IChatCardData> = {};
         
-        Object.values(gameState.players).forEach((player) => {
+        Object.entries(gameState.players).forEach(([playerId, player]) => {
             const typedPlayer = player as IGamePlayer;
             
             if (typedPlayer.leader && typedPlayer.leader.name) {
@@ -36,7 +36,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     id: typedPlayer.leader.id,
                     name: typedPlayer.leader.name,
                     setId: typedPlayer.leader.setId,
-                    type: typedPlayer.leader.type || 'leader'
+                    type: typedPlayer.leader.type || 'leader',
+                    ownerId: playerId
                 };
             }
 
@@ -51,7 +52,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                                     id: typedCard.id,
                                     name: typedCard.name,
                                     setId: typedCard.setId,
-                                    type: typedCard.type || 'card'
+                                    type: typedCard.type || 'card',
+                                    ownerId: playerId
                                 };
                             }
                         });

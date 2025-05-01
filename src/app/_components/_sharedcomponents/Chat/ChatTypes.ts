@@ -22,6 +22,7 @@ export interface IChatCardData {
     name: string;
     setId: { set: string; number: number };
     type: string;
+    ownerId?: string;
 }
 
 export interface IChatProps {
@@ -32,3 +33,4 @@ export interface IChatProps {
     setChatMessage: (message: string) => void;
     handleChatSubmit: () => void;
     cards?: Record<string, IChatCardData>;
+}
