@@ -19,6 +19,7 @@ import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import { SwuGameFormat } from '@/app/_constants/constants';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -32,7 +33,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [deckImportErrorsSeen, setDeckImportErrorsSeen] = useState(false);
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
-    const lobbyFormat = lobbyState ? lobbyState.lobbyFormat : null;
+    const lobbyFormat = lobbyState ? lobbyState.gameFormat : null;
 
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
@@ -184,6 +185,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             })
             .catch(err => console.error('Failed to copy link', err));
     };
+
+    const handleUseForceBase = () => {
+        sendLobbyMessage(['useForceBase'])
+    }
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -491,6 +496,17 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
+            <Button 
+                type="button" 
+                onClick={handleUseForceBase} 
+                variant="contained" 
+                sx={{
+                    ...styles.submitButtonStyle,
+                    display: lobbyFormat != 'nextSetPreview' ? 'none' : 'block'
+                }}
+            >
+                Use Force Base
+            </Button>
         </Card>
     )
 };
