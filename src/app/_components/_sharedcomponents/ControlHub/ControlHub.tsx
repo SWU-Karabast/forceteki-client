@@ -13,6 +13,7 @@ const ControlHub: React.FC<IControlHubProps> = ({
     logout,
 }) => {
     const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
+    const isDev = process.env.NODE_ENV === 'development';
     const styles = {
         wrapperContainer:{
             position: 'absolute',
@@ -92,7 +93,7 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/Preferences" sx={styles.profileLink}>
                         Preferences
                     </NextLinkMui>
-                    {(user && !hideLogin) ? (
+                    {(user && !hideLogin && isDev) ? (
                         <>
                             <Divider
                                 orientation="vertical"
@@ -103,12 +104,12 @@ const ControlHub: React.FC<IControlHubProps> = ({
                                 Log Out
                             </NextLinkMui>
                         </>
-                    ) : (!hideLogin && (
+                    ) : (!hideLogin && isDev) ? (
                         // Disable login on Prod for now
                         <NextLinkMui href="/auth" sx={styles.profileLink}>
                             Log In
                         </NextLinkMui>
-                    ))}
+                    ): null}
                 </Box>
                 <Box sx={styles.socialIconsBox}>
                     <NextLinkMui
