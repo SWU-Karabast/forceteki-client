@@ -348,12 +348,9 @@ const Chat: React.FC<IChatProps> = ({
     const cardPreviewStyles = {
         cardPreview: {
             borderRadius: '.38em',
-            backgroundSize: 'contain',
+            backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            aspectRatio: '1.4 / 1',
-            width: '24rem',
-            height: '17.14rem',
+            width: '16rem',
         },
     };
 
@@ -384,20 +381,12 @@ const Chat: React.FC<IChatProps> = ({
                 }}
                 onClose={handleCardPreviewClose}
                 disableRestoreFocus
-                slotProps={{ 
-                    paper: { 
-                        sx: { 
-                            backgroundColor: 'transparent',
-                            boxShadow: 'none',
-                            border: 'none',
-                            overflow: 'visible'
-                        } 
-                    } 
-                }}
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
             >
                 {hoveredCard.card && (
                     <Box sx={{
                         ...cardPreviewStyles.cardPreview,
+                        aspectRatio: hoveredCard.card.zone === 'base' ? '1.4 / 1' : '1 / 1.4',
                         backgroundImage: `url(${s3CardImageURL(hoveredCard.card, 
                             hoveredCard.card.type === 'leader' && hoveredCard.card.zone === 'base' 
                                 ? CardStyle.PlainLeader 
