@@ -337,6 +337,16 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/StolenIcon.png)',
         },
+        isHidden:{
+            position: 'absolute',
+            width: '28%',
+            aspectRatio: '1 / 1',
+            top:'32%',
+            left: '-4%',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(/HiddenIcon.png)',
+        },
         unimplementedAlert: {
             display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
@@ -404,6 +414,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {isStolen && (
                     <Box sx={styles.stolenIcon}/>
+                )}
+                {card.isHidden && (
+                    <Box sx={styles.isHidden}/>
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
