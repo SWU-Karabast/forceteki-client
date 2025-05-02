@@ -59,11 +59,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
     
     const getBackgroundColor = (card: ICardData) => {
-        if (notImplemented(card)) {
-            return 'rgba(0, 0, 0, 0.3)';
-        }
-    
-        if (card.exhausted && !isDeployed) {
+        if (
+            (notImplemented(card) || card.exhausted) && !isDeployed
+        ) {
             return 'rgba(0, 0, 0, 0.5)';
         }
     
@@ -175,7 +173,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             p: '5px 10px',
         },
         unimplementedAlert: {
-            display: notImplemented(card) ? 'flex' : 'none',
+            display: notImplemented(card) && !isDeployed ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',

@@ -113,11 +113,10 @@ const GameCard: React.FC<IGameCardProps> = ({
     const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
 
     const getBackgroundColor = (card: ICardData) => {
-        if (notImplemented(card)) {
-            return 'rgba(0, 0, 0, 0.3)';
-        }
-
-        if (card?.exhausted && card.zone !== 'resource') {
+        if (
+            notImplemented(card) ||
+            card?.exhausted && card.zone !== 'resource'
+        ) {
             return 'rgba(0, 0, 0, 0.5)';
         }
 
