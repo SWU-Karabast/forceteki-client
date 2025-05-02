@@ -29,12 +29,14 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         if (!gameState || !gameState.players) return {};
 
         const cards: Record<string, IChatCardData> = {};
-        
+    
         Object.entries(gameState.players).forEach(([playerId, player]) => {
             const typedPlayer = player as IGamePlayer;
-            
+        
             if (typedPlayer.leader && typedPlayer.leader.name) {
-                cards[typedPlayer.leader.name] = {
+            // Use a unique key combining name and owner ID
+                const uniqueKey = `${typedPlayer.leader.name}:${playerId}`;
+                cards[uniqueKey] = {
                     id: typedPlayer.leader.id,
                     name: typedPlayer.leader.name,
                     setId: typedPlayer.leader.setId,
@@ -45,7 +47,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             }
 
             if (typedPlayer.base && typedPlayer.base.name) {
-                cards[typedPlayer.base.name] = {
+            // Use a unique key combining name and owner ID
+                const uniqueKey = `${typedPlayer.base.name}:${playerId}`;
+                cards[uniqueKey] = {
                     id: typedPlayer.base.id,
                     name: typedPlayer.base.name,
                     setId: typedPlayer.base.setId,
@@ -62,7 +66,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                         typedPile.forEach((card) => {
                             const typedCard = card as IGameCard;
                             if (typedCard && typedCard.name) {
-                                cards[typedCard.name] = {
+                            // Use a unique key combining name and owner ID
+                                const uniqueKey = `${typedCard.name}:${playerId}`;
+                                cards[uniqueKey] = {
                                     id: typedCard.id,
                                     name: typedCard.name,
                                     setId: typedCard.setId,

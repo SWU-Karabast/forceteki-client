@@ -120,8 +120,19 @@ const Chat: React.FC<IChatProps> = ({
         // Create a map of positions to styled elements
         const positionMap: Record<number, { length: number, element: JSX.Element }> = {};
 
+        // Create a map of card names to their corresponding card data entries, grouped by owner
+        const cardNameMap: Record<string, Record<string, IChatCardData>> = {};
+        
+        Object.entries(cards).forEach(([key, card]) => {
+            const cardName = card.name;
+            if (!cardNameMap[cardName]) {
+                cardNameMap[cardName] = {};
+            }
+            cardNameMap[cardName][card.ownerId || ''] = card;
+        });
+
         // Process card names
-        Object.keys(cards).forEach(cardName => {
+        Object.keys(cardNameMap).forEach(cardName => {
             // Find all occurrences of the card name in the content
             const occurrences = findAllOccurrences(content, cardName);
             
@@ -134,29 +145,80 @@ const Chat: React.FC<IChatProps> = ({
                 });
                 
                 if (!isOverlapping) {
-                    const card = cards[cardName];
-                    const isCurrentPlayerCard = card.ownerId === connectedPlayer;
+                    // Determine which player's card it is based on the context
+                    // Look for player names or IDs before this position in the content
+                    const contentBeforeCard = content.substring(0, position);
                     
-                    positionMap[position] = {
-                        length: cardName.length,
-                        element: (
-                            <Typography
-                                component="span"
-                                sx={{
-                                    color: isCurrentPlayerCard ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    '&:hover': {
-                                        color: 'purple',
-                                    }
-                                }}
-                                onMouseEnter={(e) => handleCardPreviewOpen(e, card)}
-                                onMouseLeave={handleCardPreviewClose}
-                            >
-                                {content.substring(position, position + cardName.length)}
-                            </Typography>
-                        )
-                    };
+                    // Default to the first card we find with this name
+                    let cardToUse: IChatCardData | null = null;
+                    let isCurrentPlayerCard = false;
+                    
+                    // If we have cards from both players with this name
+                    if (Object.keys(cardNameMap[cardName]).length > 1) {
+                        // Try to determine ownership based on context
+                        let foundOwner = false;
+                        
+                        // Check if any player name appears in the content before this card
+                        Object.entries(playerNames).forEach(([playerName, playerId]) => {
+                            if (contentBeforeCard.includes(playerName) && cardNameMap[cardName][playerId]) {
+                                cardToUse = cardNameMap[cardName][playerId];
+                                isCurrentPlayerCard = playerId === connectedPlayer;
+                                foundOwner = true;
+                            }
+                        });
+                        
+                        // If we couldn't determine ownership from context, use the card that matches the message type
+                        if (!foundOwner) {
+                            // If the message mentions "attacks" or similar action verbs, 
+                            // the first card is likely the attacker (current player) and the second is the target
+                            const isAttackMessage = contentBeforeCard.includes('attacks') || 
+                                                   contentBeforeCard.includes('targets') ||
+                                                   contentBeforeCard.includes('uses');
+                            
+                            if (isAttackMessage) {
+                                // For the first occurrence in an attack message, use the current player's card
+                                const isFirstOccurrence = occurrences.indexOf(position) === 0;
+                                
+                                if (isFirstOccurrence && cardNameMap[cardName][connectedPlayer]) {
+                                    cardToUse = cardNameMap[cardName][connectedPlayer];
+                                    isCurrentPlayerCard = true;
+                                } else if (!isFirstOccurrence && cardNameMap[cardName][opponentId]) {
+                                    cardToUse = cardNameMap[cardName][opponentId];
+                                    isCurrentPlayerCard = false;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // If we still don't have a card to use, just use the first one
+                    if (!cardToUse) {
+                        const firstOwnerId = Object.keys(cardNameMap[cardName])[0];
+                        cardToUse = cardNameMap[cardName][firstOwnerId];
+                        isCurrentPlayerCard = firstOwnerId === connectedPlayer;
+                    }
+                    
+                    if (cardToUse) {
+                        positionMap[position] = {
+                            length: cardName.length,
+                            element: (
+                                <Typography
+                                    component="span"
+                                    sx={{
+                                        color: isCurrentPlayerCard ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        '&:hover': {
+                                            color: 'purple',
+                                        }
+                                    }}
+                                    onMouseEnter={(e) => handleCardPreviewOpen(e, cardToUse!)}
+                                    onMouseLeave={handleCardPreviewClose}
+                                >
+                                    {content.substring(position, position + cardName.length)}
+                                </Typography>
+                            )
+                        };
+                    }
                 }
             });
         });
