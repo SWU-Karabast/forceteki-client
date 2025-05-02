@@ -339,6 +339,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('sentinel-icon')})`,
+            filter: 'drop-shadow(0 6px 6px 0 #00000040)'
         },
         stolenIcon:{
             position: 'absolute',
