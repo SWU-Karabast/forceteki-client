@@ -87,15 +87,8 @@ const Chat: React.FC<IChatProps> = ({
             });
         }
         
-        // Log the extracted player names for debugging
-        console.log('Extracted player names:', names);
         return names;
     }, [chatHistory, gameState, connectedPlayer]);
-
-    // Helper function to escape special regex characters
-    const escapeRegExp = (string: string) => {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    };
 
     // Helper function to find all occurrences of a substring in a string
     const findAllOccurrences = (str: string, substr: string): number[] => {
@@ -108,14 +101,130 @@ const Chat: React.FC<IChatProps> = ({
         return result;
     };
 
+    // Helper function to check if a position overlaps with existing matches
+    const isPositionOverlapping = (
+        position: number, 
+        length: number, 
+        positionMap: Record<number, { length: number, element: JSX.Element }>
+    ): boolean => {
+        return Object.keys(positionMap).some(pos => {
+            const p = parseInt(pos);
+            return (position >= p && position < p + positionMap[p].length) ||
+                   (position + length > p && position < p);
+        });
+    };
+
+    // Helper function to create a styled element for a card
+    const createCardElement = (
+        card: IChatCardData, 
+        isCurrentPlayerCard: boolean, 
+        content: string, 
+        position: number
+    ): JSX.Element => {
+        return (
+            <Typography
+                component="span"
+                sx={{
+                    color: isCurrentPlayerCard ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    '&:hover': {
+                        color: 'purple',
+                    }
+                }}
+                onMouseEnter={(e) => handleCardPreviewOpen(e, card)}
+                onMouseLeave={handleCardPreviewClose}
+            >
+                {content.substring(position, position + card.name.length)}
+            </Typography>
+        );
+    };
+
+    // Helper function to create a styled element for a player name
+    const createPlayerNameElement = (
+        playerName: string, 
+        isCurrentPlayer: boolean, 
+        content: string, 
+        position: number
+    ): JSX.Element => {
+        return (
+            <Typography
+                component="span"
+                sx={{
+                    color: isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+                    fontWeight: 'bold'
+                }}
+            >
+                {content.substring(position, position + playerName.length)}
+            </Typography>
+        );
+    };
+
+    // Helper function to determine which card to use based on context
+    const determineCardToUse = (
+        cardName: string,
+        cardsByOwner: Record<string, IChatCardData>,
+        contentBeforeCard: string,
+        position: number,
+        occurrences: number[]
+    ): { card: IChatCardData, isCurrentPlayerCard: boolean } => {
+        // Default to the first card we find with this name
+        let cardToUse: IChatCardData | null = null;
+        let isCurrentPlayerCard = false;
+        
+        // If we have cards from both players with this name
+        if (Object.keys(cardsByOwner).length > 1) {
+            // Try to determine ownership based on context
+            let foundOwner = false;
+            
+            // Check if any player name appears in the content before this card
+            Object.entries(playerNames).forEach(([playerName, playerId]) => {
+                if (contentBeforeCard.includes(playerName) && cardsByOwner[playerId]) {
+                    cardToUse = cardsByOwner[playerId];
+                    isCurrentPlayerCard = playerId === connectedPlayer;
+                    foundOwner = true;
+                }
+            });
+            
+            // If we couldn't determine ownership from context, use the card that matches the message type
+            if (!foundOwner) {
+                // If the message mentions "attacks" or similar action verbs, 
+                // the first card is likely the attacker (current player) and the second is the target
+                const isAttackMessage = contentBeforeCard.includes('attacks') || 
+                                       contentBeforeCard.includes('targets') ||
+                                       contentBeforeCard.includes('uses');
+                
+                if (isAttackMessage) {
+                    // For the first occurrence in an attack message, use the current player's card
+                    const isFirstOccurrence = occurrences.indexOf(position) === 0;
+                    
+                    if (isFirstOccurrence && cardsByOwner[connectedPlayer]) {
+                        cardToUse = cardsByOwner[connectedPlayer];
+                        isCurrentPlayerCard = true;
+                    } else if (!isFirstOccurrence && cardsByOwner[opponentId]) {
+                        cardToUse = cardsByOwner[opponentId];
+                        isCurrentPlayerCard = false;
+                    }
+                }
+            }
+        }
+        
+        // If we still don't have a card to use, just use the first one
+        if (!cardToUse) {
+            const firstOwnerId = Object.keys(cardsByOwner)[0];
+            cardToUse = cardsByOwner[firstOwnerId];
+            isCurrentPlayerCard = firstOwnerId === connectedPlayer;
+        }
+        
+        return { card: cardToUse, isCurrentPlayerCard };
+    };
+
+    // Process message content to highlight cards and player names
     const processMessageContent = (content: string) => {
         if ((!cards || Object.keys(cards).length === 0) && 
             (!playerNames || Object.keys(playerNames).length === 0)) {
             return content;
         }
-
-        // Log the content for debugging
-        console.log('Processing content:', content);
 
         // Create a map of positions to styled elements
         const positionMap: Record<number, { length: number, element: JSX.Element }> = {};
@@ -138,85 +247,22 @@ const Chat: React.FC<IChatProps> = ({
             
             occurrences.forEach(position => {
                 // Check if this position is already occupied by a longer match
-                const isOverlapping = Object.keys(positionMap).some(pos => {
-                    const p = parseInt(pos);
-                    return (position >= p && position < p + positionMap[p].length) ||
-                           (position + cardName.length > p && position < p);
-                });
-                
-                if (!isOverlapping) {
+                if (!isPositionOverlapping(position, cardName.length, positionMap)) {
                     // Determine which player's card it is based on the context
-                    // Look for player names or IDs before this position in the content
                     const contentBeforeCard = content.substring(0, position);
                     
-                    // Default to the first card we find with this name
-                    let cardToUse: IChatCardData | null = null;
-                    let isCurrentPlayerCard = false;
+                    const { card, isCurrentPlayerCard } = determineCardToUse(
+                        cardName,
+                        cardNameMap[cardName],
+                        contentBeforeCard,
+                        position,
+                        occurrences
+                    );
                     
-                    // If we have cards from both players with this name
-                    if (Object.keys(cardNameMap[cardName]).length > 1) {
-                        // Try to determine ownership based on context
-                        let foundOwner = false;
-                        
-                        // Check if any player name appears in the content before this card
-                        Object.entries(playerNames).forEach(([playerName, playerId]) => {
-                            if (contentBeforeCard.includes(playerName) && cardNameMap[cardName][playerId]) {
-                                cardToUse = cardNameMap[cardName][playerId];
-                                isCurrentPlayerCard = playerId === connectedPlayer;
-                                foundOwner = true;
-                            }
-                        });
-                        
-                        // If we couldn't determine ownership from context, use the card that matches the message type
-                        if (!foundOwner) {
-                            // If the message mentions "attacks" or similar action verbs, 
-                            // the first card is likely the attacker (current player) and the second is the target
-                            const isAttackMessage = contentBeforeCard.includes('attacks') || 
-                                                   contentBeforeCard.includes('targets') ||
-                                                   contentBeforeCard.includes('uses');
-                            
-                            if (isAttackMessage) {
-                                // For the first occurrence in an attack message, use the current player's card
-                                const isFirstOccurrence = occurrences.indexOf(position) === 0;
-                                
-                                if (isFirstOccurrence && cardNameMap[cardName][connectedPlayer]) {
-                                    cardToUse = cardNameMap[cardName][connectedPlayer];
-                                    isCurrentPlayerCard = true;
-                                } else if (!isFirstOccurrence && cardNameMap[cardName][opponentId]) {
-                                    cardToUse = cardNameMap[cardName][opponentId];
-                                    isCurrentPlayerCard = false;
-                                }
-                            }
-                        }
-                    }
-                    
-                    // If we still don't have a card to use, just use the first one
-                    if (!cardToUse) {
-                        const firstOwnerId = Object.keys(cardNameMap[cardName])[0];
-                        cardToUse = cardNameMap[cardName][firstOwnerId];
-                        isCurrentPlayerCard = firstOwnerId === connectedPlayer;
-                    }
-                    
-                    if (cardToUse) {
+                    if (card) {
                         positionMap[position] = {
                             length: cardName.length,
-                            element: (
-                                <Typography
-                                    component="span"
-                                    sx={{
-                                        color: isCurrentPlayerCard ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        '&:hover': {
-                                            color: 'purple',
-                                        }
-                                    }}
-                                    onMouseEnter={(e) => handleCardPreviewOpen(e, cardToUse!)}
-                                    onMouseLeave={handleCardPreviewClose}
-                                >
-                                    {content.substring(position, position + cardName.length)}
-                                </Typography>
-                            )
+                            element: createCardElement(card, isCurrentPlayerCard, content, position)
                         };
                     }
                 }
@@ -230,29 +276,13 @@ const Chat: React.FC<IChatProps> = ({
             
             occurrences.forEach(position => {
                 // Check if this position is already occupied by a longer match
-                const isOverlapping = Object.keys(positionMap).some(pos => {
-                    const p = parseInt(pos);
-                    return (position >= p && position < p + positionMap[p].length) ||
-                           (position + playerName.length > p && position < p);
-                });
-                
-                if (!isOverlapping) {
+                if (!isPositionOverlapping(position, playerName.length, positionMap)) {
                     const playerId = playerNames[playerName];
                     const isCurrentPlayer = playerId === connectedPlayer;
                     
                     positionMap[position] = {
                         length: playerName.length,
-                        element: (
-                            <Typography
-                                component="span"
-                                sx={{
-                                    color: isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-                                    fontWeight: 'bold'
-                                }}
-                            >
-                                {content.substring(position, position + playerName.length)}
-                            </Typography>
-                        )
+                        element: createPlayerNameElement(playerName, isCurrentPlayer, content, position)
                     };
                 }
             });
@@ -263,6 +293,15 @@ const Chat: React.FC<IChatProps> = ({
             return content;
         }
 
+        // Build the final result by combining original text with styled elements
+        return buildStyledContent(content, positionMap);
+    };
+
+    // Helper function to build the final styled content
+    const buildStyledContent = (
+        content: string, 
+        positionMap: Record<number, { length: number, element: JSX.Element }>
+    ): JSX.Element[] => {
         // Sort the positions
         const positions = Object.keys(positionMap).map(Number).sort((a, b) => a - b);
 
