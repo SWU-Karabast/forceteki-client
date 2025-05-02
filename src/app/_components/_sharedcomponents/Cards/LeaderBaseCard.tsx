@@ -27,7 +27,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         return null
     }
 
-    const controller = gameState.players[card.controller.id];
+    const controller = gameState?.players[card.controller?.id];
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -227,7 +227,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                             {card.damage}
                         </Typography>
                     </Box>
-                    {controller.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
+                    {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
                 </>
             )}
 
