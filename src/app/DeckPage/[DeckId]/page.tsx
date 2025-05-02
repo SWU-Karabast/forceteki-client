@@ -19,6 +19,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import {
+    convertStoredToDeckDetailedData,
     deleteDecks,
     getDeckFromServer, removeDeckFromLocalStorage,
 } from '@/app/_utils/DeckStorageUtils';
@@ -26,7 +27,7 @@ import {
     IDeckDetailedData,
     IDeckPageStats,
     IDeckStats,
-    IMatchupStatEntity, IMatchTableStats
+    IMatchupStatEntity, IMatchTableStats, StoredDeck
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useUser } from '@/app/_contexts/User.context';
@@ -123,7 +124,17 @@ const DeckDetails: React.FC = () => {
             const deckId = Array.isArray(rawDeckId) ? rawDeckId[0] : rawDeckId;
             try {
                 // we get the deck from localStorage and set the link
-                const deckDataServer = await getDeckFromServer(deckId);
+                let deckDataServer;
+                if(user) {
+                    deckDataServer = await getDeckFromServer(deckId);
+                }else{
+                    const deckDataJSON = localStorage.getItem('swu_deck_'+deckId);
+                    if (deckDataJSON) {
+                        deckDataServer = convertStoredToDeckDetailedData(JSON.parse(deckDataJSON) as StoredDeck);
+                    }else{
+                        throw new Error('Unknown deck data');
+                    }
+                }
                 const data = await fetchDeckData(deckDataServer.deck.deckLink, false);
                 setDeckData(data);
                 setDisplayDeck(deckDataServer);

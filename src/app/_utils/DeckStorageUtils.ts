@@ -347,10 +347,10 @@ export const loadSavedDecks = (deleteAfter: boolean = false): StoredDeck[] => {
                         deckID: deckID
                     });
                 }
-                // remove afterwards
-                if(deleteAfter){
+                // remove afterwards TODO uncomment when we are ready to deploy logins
+                /* if(deleteAfter){
                     removeDeckFromLocalStorage(deckID);
-                }
+                } */
             }
         }
         // Sort to show favorites first
@@ -447,7 +447,6 @@ export const convertStoredToDeckDetailedData = (storedDeck: StoredDeck): IDeckDe
 export const getDeckFromServer = async (deckId: string): Promise<IDeckDetailedData> => {
     try {
         // Make sure we have an anonymousUserId if needed
-
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck/${deckId}`, {
             method: 'GET',
             credentials: 'include'

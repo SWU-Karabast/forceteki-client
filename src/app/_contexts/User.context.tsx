@@ -31,6 +31,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
     const pathname = usePathname();
+    const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
 
     useEffect(() => {
         // check dev user first
@@ -82,7 +83,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             await syncUserWithServer();
             setupAnonymousUserIfNeeded(storedUser);
         };
-
+        if(hideLogin && (session?.user || storedUser)){
+            logout();
+        }
         initializeUser(storedUser);
     }, [session, pathname]);
 
