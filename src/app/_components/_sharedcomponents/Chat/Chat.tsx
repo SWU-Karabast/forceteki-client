@@ -21,7 +21,7 @@ const Chat: React.FC<IChatProps> = ({
     handleChatSubmit,
     cards = {},
 }) => {
-    const { connectedPlayer, isSpectator } = useGame();
+    const { connectedPlayer, isSpectator, gameState } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const [hoveredCard, setHoveredCard] = useState<{ 
         element: HTMLElement | null, 
@@ -42,17 +42,70 @@ const Chat: React.FC<IChatProps> = ({
         setHoveredCard({ element: null, card: null });
     };
 
+    // Add a direct approach to style player names
+    const getOpponentName = () => {
+        const opponent = gameState?.players ? Object.keys(gameState.players).find(id => id !== connectedPlayer) : '';
+        return opponent || '';
+    };
+    
+    const opponentId = getOpponentName();
+    
+    // Extract player names from chat messages
+    const playerNames = React.useMemo(() => {
+        const names: Record<string, string> = {};
+        
+        // Extract from chat messages
+        if (chatHistory && chatHistory.length > 0) {
+            chatHistory.forEach(entry => {
+                const { message } = entry;
+                
+                if (Array.isArray(message) && message.length > 0 && message[0].type === 'playerChat') {
+                    const playerName = message[0].name || '';
+                    const playerId = message[0].id || '';
+                    
+                    if (playerName && playerId) {
+                        names[playerName] = playerId;
+                    }
+                }
+            });
+        }
+        
+        // Add direct player names if we have them
+        if (gameState && gameState.players) {
+            Object.entries(gameState.players).forEach(([playerId, playerData]) => {
+                if (playerData && typeof playerData === 'object') {
+                    // Try to get the player name from various possible properties
+                    const player = playerData as Record<string, unknown>;
+                    if (player.name && typeof player.name === 'string') {
+                        names[player.name as string] = playerId;
+                    } else if (player.username && typeof player.username === 'string') {
+                        names[player.username as string] = playerId;
+                    } else if (player.displayName && typeof player.displayName === 'string') {
+                        names[player.displayName as string] = playerId;
+                    }
+                }
+            });
+        }
+        
+        // Log the extracted player names for debugging
+        console.log('Extracted player names:', names);
+        return names;
+    }, [chatHistory, gameState, connectedPlayer]);
+
     const processMessageContent = (content: string) => {
-        if (!cards || Object.keys(cards).length === 0) {
+        if ((!cards || Object.keys(cards).length === 0) && 
+            (!playerNames || Object.keys(playerNames).length === 0)) {
             return content;
         }
 
         const cardNames = Object.keys(cards).sort((a, b) => b.length - a.length);
+        const playerNamesList = Object.keys(playerNames).sort((a, b) => b.length - a.length);
         
         const parts: JSX.Element[] = [];
         let remainingContent = content;
         let key = 0;
         
+        // Process card names first
         cardNames.forEach(cardName => {
             const cardNameRegex = new RegExp(`\\b${cardName}\\b`, 'gi');
             let match;
@@ -98,7 +151,61 @@ const Chat: React.FC<IChatProps> = ({
             }
         });
         
-        if (remainingContent) {
+        // Now process player names in the remaining content
+        if (remainingContent && Object.keys(playerNames).length > 0) {
+            const finalParts: JSX.Element[] = [];
+            let finalKey = 0;
+            
+            playerNamesList.forEach(playerName => {
+                const playerNameRegex = new RegExp(`\\b${playerName}\\b`, 'gi');
+                let match;
+                let lastIndex = 0;
+                const tempContent = remainingContent;
+                remainingContent = '';
+                
+                while ((match = playerNameRegex.exec(tempContent)) !== null) {
+                    if (match.index > lastIndex) {
+                        finalParts.push(
+                            <React.Fragment key={finalKey++}>
+                                {tempContent.substring(lastIndex, match.index)}
+                            </React.Fragment>
+                        );
+                    }
+                    
+                    const playerId = playerNames[playerName];
+                    const isCurrentPlayer = playerId === connectedPlayer;
+                    
+                    finalParts.push(
+                        <Typography
+                            key={finalKey++}
+                            component="span"
+                            sx={{
+                                color: isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            {match[0]}
+                        </Typography>
+                    );
+                    
+                    lastIndex = match.index + match[0].length;
+                }
+
+                if (lastIndex < tempContent.length) {
+                    remainingContent += tempContent.substring(lastIndex);
+                }
+            });
+            
+            if (remainingContent) {
+                finalParts.push(
+                    <React.Fragment key={finalKey++}>
+                        {remainingContent}
+                    </React.Fragment>
+                );
+            }
+            
+            parts.push(...finalParts);
+        } else if (remainingContent) {
             parts.push(
                 <React.Fragment key={key++}>
                     {remainingContent}
