@@ -22,7 +22,7 @@ const SetUp: React.FC = ({
     
     const handleChatSubmit = () => {
         if (chatMessage.trim()) {
-            sendLobbyMessage(['sendChatMessage',chatMessage]);
+            sendLobbyMessage(['sendChatMessage', chatMessage]);
             setChatMessage('');
         }
     };

@@ -1,20 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Drawer, Box, Typography } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { IChatCardData } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
+
+interface IGameCard {
+    id: string;
+    name: string;
+    setId: { set: string; number: number };
+    type?: string;
+    uuid?: string;
+    zone?: string;
+}
+
+interface IGamePlayer {
+    leader?: IGameCard;
+    base?: IGameCard;
+    cardPiles?: Record<string, IGameCard[]>;
+}
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
-    const { gameState, sendGameMessage } = useGame();
-    const [chatMessage, setChatMessage] = useState('')
+    const { gameState, sendGameMessage, connectedPlayer } = useGame();
+    const [chatMessage, setChatMessage] = useState('');
+
+    const createChatCardData = (card: IGameCard, playerId: string, zone?: string): IChatCardData => {
+        return {
+            id: card.id,
+            name: card.name,
+            setId: card.setId,
+            type: card.type || (zone === 'base' ? 'leader' : 'card'),
+            ownerId: playerId,
+            zone: zone || card.zone
+        };
+    };
+
+    const cardData = useMemo(() => {
+        if (!gameState?.players) return {};
+
+        const cards: Record<string, IChatCardData> = {};
+    
+        Object.entries(gameState.players).forEach(([playerId, player]) => {
+            const typedPlayer = player as IGamePlayer;
+            
+            if (typedPlayer.leader?.name) {
+                const uniqueKey = `${typedPlayer.leader.name}:${playerId}`;
+                cards[uniqueKey] = createChatCardData(typedPlayer.leader, playerId);
+            }
+
+            if (typedPlayer.base?.name) {
+                const uniqueKey = `${typedPlayer.base.name}:${playerId}`;
+                cards[uniqueKey] = createChatCardData(typedPlayer.base, playerId, 'base');
+            }
+
+            if (typedPlayer.cardPiles) {
+                Object.values(typedPlayer.cardPiles).forEach(pile => {
+                    if (Array.isArray(pile)) {
+                        pile.forEach(card => {
+                            if (card?.name) {
+                                const uniqueKey = `${card.name}:${playerId}`;
+                                cards[uniqueKey] = createChatCardData(card, playerId);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        return cards;
+    }, [gameState]);
 
     const handleGameChat = () => {
-        sendGameMessage(['chat', chatMessage]);
-        setChatMessage('');
+        if (chatMessage.trim()) {
+            sendGameMessage(['chat', chatMessage]);
+            setChatMessage('');
+        }
     }
 
-    // ------------------------STYLES------------------------//
     const styles = {
         drawerStyle: {
             flexShrink: 0,
@@ -35,8 +98,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         }
     }
 
-    
-
     return (
         <Drawer
             anchor="right"
@@ -46,17 +107,14 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         >
             <ChevronRightIcon onClick={toggleSidebar} />
             <Box sx={styles.headerBoxStyle}>
-                {/* <Typography variant="h3">
-                    ROUND
-                </Typography> */}
             </Box>
 
-            {/* Use the ChatComponent here */}
             <Chat
                 chatHistory={gameState.messages}
                 chatMessage={chatMessage}
                 setChatMessage={setChatMessage}
                 handleChatSubmit={handleGameChat}
+                cards={cardData}
             />
         </Drawer>
     );
