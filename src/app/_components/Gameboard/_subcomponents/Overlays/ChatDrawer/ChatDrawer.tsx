@@ -25,7 +25,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
     const { gameState, sendGameMessage, connectedPlayer } = useGame();
     const [chatMessage, setChatMessage] = useState('');
 
-    // Helper function to create a chat card data entry
     const createChatCardData = (card: IGameCard, playerId: string, zone?: string): IChatCardData => {
         return {
             id: card.id,
@@ -37,7 +36,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         };
     };
 
-    // Create card data for the chat component
     const cardData = useMemo(() => {
         if (!gameState?.players) return {};
 
@@ -46,19 +44,16 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         Object.entries(gameState.players).forEach(([playerId, player]) => {
             const typedPlayer = player as IGamePlayer;
             
-            // Process leader card
             if (typedPlayer.leader?.name) {
                 const uniqueKey = `${typedPlayer.leader.name}:${playerId}`;
                 cards[uniqueKey] = createChatCardData(typedPlayer.leader, playerId);
             }
 
-            // Process base card
             if (typedPlayer.base?.name) {
                 const uniqueKey = `${typedPlayer.base.name}:${playerId}`;
                 cards[uniqueKey] = createChatCardData(typedPlayer.base, playerId, 'base');
             }
 
-            // Process cards in card piles
             if (typedPlayer.cardPiles) {
                 Object.values(typedPlayer.cardPiles).forEach(pile => {
                     if (Array.isArray(pile)) {
@@ -103,8 +98,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         }
     }
 
-    
-
     return (
         <Drawer
             anchor="right"
@@ -114,12 +107,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         >
             <ChevronRightIcon onClick={toggleSidebar} />
             <Box sx={styles.headerBoxStyle}>
-                {/* <Typography variant="h3">
-                    ROUND
-                </Typography> */}
             </Box>
 
-            {/* Use the ChatComponent here */}
             <Chat
                 chatHistory={gameState.messages}
                 chatMessage={chatMessage}
