@@ -27,6 +27,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         return null
     }
 
+    const controller = gameState?.players[card.controller?.id];
+
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         hoverTimeout.current = window.setTimeout(() => {
@@ -193,7 +195,22 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             aspectRatio: (card.type === 'leader' && isDeployed) ? '1 / 1.4' : '1.4 / 1',
             width: (card.type === 'leader' && isDeployed) ? '15rem' : '24rem',
         },
+
     }
+
+    const getForceTokenIconStyle = (player: any) => ({
+        position: 'absolute',
+        width: '3rem',
+        aspectRatio: '1 / 1',
+        top:'32%',
+        right: '-20px',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundImage: player.aspects.includes('villainy') 
+            ? 'url(/ForceTokenVillainy.png)'
+            : 'url(/ForceTokenHeroism.png)',
+        filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+    });
 
     return (
         <Box
@@ -210,17 +227,20 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             <Box sx={styles.epicActionIcon}></Box>
             { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             {cardStyle === LeaderBaseCardStyle.Base && (
-                <Box sx={styles.damageCounterContainer}>
-                    { !!distributionAmount && 
-                    // Need to change background/borderRadius to backgroundImage
+                <>
+                    <Box sx={styles.damageCounterContainer}>
+                        { !!distributionAmount && 
+                        // Need to change background/borderRadius to backgroundImage
                         <Typography variant="body1" sx={{ ...styles.damageCounter, background: distributeHealing ? 'rgba(0, 186, 255, 1)' : 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat', borderRadius: distributeHealing ? '17px 8px' : '0px' }}>
                             {distributionAmount}
                         </Typography>
-                    }
-                    <Typography variant="body1" sx={styles.damageCounter}>
-                        {card.damage}
-                    </Typography>
-                </Box>
+                        }
+                        <Typography variant="body1" sx={styles.damageCounter}>
+                            {card.damage}
+                        </Typography>
+                    </Box>
+                    {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
+                </>
             )}
 
             <Popover

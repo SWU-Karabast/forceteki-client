@@ -9,7 +9,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
+import { SwuGameFormat } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
@@ -287,11 +287,12 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                             handleChangeFormat(e.target.value as SwuGameFormat)
                         }
                     >
-                        {formatOptions.map((fmt) => (
-                            <MenuItem key={fmt} value={fmt}>
-                                {FormatLabels[fmt] || fmt}
-                            </MenuItem>
-                        ))}
+                        <MenuItem key={SwuGameFormat.Premier} value={SwuGameFormat.Premier}>
+                            {'Premier'}
+                        </MenuItem>
+                        <MenuItem key={SwuGameFormat.Open} value={SwuGameFormat.Open}>
+                            {'Open'}
+                        </MenuItem>
                     </StyledTextField>
                 </FormControl>
 
