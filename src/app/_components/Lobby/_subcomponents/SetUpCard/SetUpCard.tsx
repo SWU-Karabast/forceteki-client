@@ -5,7 +5,7 @@ import {
     Typography,
     TextField,
     Button,
-    Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel,
+    Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider
 } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
@@ -496,17 +496,27 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
-            <Button 
-                type="button" 
-                onClick={handleUseForceBase} 
-                variant="contained" 
-                sx={{
-                    ...styles.submitButtonStyle,
-                    display: lobbyFormat != 'nextSetPreview' ? 'none' : 'block'
-                }}
-            >
-                Use Force Base
-            </Button>
+            <Divider sx={{ mt: 1, borderColor: '#666' }} />
+            <Box>
+                <Button 
+                    type="button" 
+                    onClick={handleUseForceBase} 
+                    variant="contained" 
+                    sx={{
+                        ...styles.submitButtonStyle,
+                        display: lobbyFormat != 'nextSetPreview' ? 'none' : 'block',
+                        mt: '1em',
+                        ml: 0
+
+                    }}
+                >
+                    Use Force Base
+                </Button>
+                <Typography sx={{ fontSize: '.9em', mt: 1 }}>
+                    Replaces your base with a Force Base of the same aspect.
+                </Typography>
+
+            </Box>
         </Card>
     )
 };
