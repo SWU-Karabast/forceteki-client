@@ -63,7 +63,7 @@ const GameBoard = () => {
     // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
-            pr: sidebarOpen ? '280px' : '0',
+            pr: sidebarOpen ? 'min(20%, 280px)' : '0',
             width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
             height: '100vh',
@@ -77,7 +77,7 @@ const GameBoard = () => {
         centralPromptContainer: {
             position: 'absolute',
             top: '48.6%',
-            left: sidebarOpen ? 'calc(50vw - 140px)' : '50vw',
+            left: sidebarOpen ? 'calc(50vw - min(10%, 140px))' : '50vw',
             transform: 'translate(-50%, -50%)',
             transition: 'left 0.3s ease-in-out',
             display: 'flex',

@@ -4,9 +4,9 @@ import {
     Box,
     Popover
 } from '@mui/material';
-import { ILeaderBaseCardProps, LeaderBaseCardStyle, CardStyle } from './CardTypes';
+import { ILeaderBaseCardProps, LeaderBaseCardStyle, CardStyle, ICardData } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
 
@@ -26,6 +26,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     if (!card) {
         return null
     }
+
+    const controller = gameState?.players[card.controller?.id];
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -54,6 +56,18 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             return;
         }
         defaultClickFunction();
+    }
+
+    const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
+    
+    const getBackgroundColor = (card: ICardData) => {
+        if (
+            (notImplemented(card) || card.exhausted) && !isDeployed
+        ) {
+            return 'rgba(0, 0, 0, 0.5)';
+        }
+    
+        return 'transparent';
     }
 
     const showValueAdjuster = () => {
@@ -110,7 +124,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'absolute',
             height: '100%',
             width: '100%',
-            backgroundColor: card.exhausted && !isDeployed ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            backgroundColor: getBackgroundColor(card),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -123,7 +137,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             right: '-4px',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/epicActionToken.png)',
+            backgroundImage: `url(${s3TokenImageURL('epic-action-token')})`,
             display: card.epicActionSpent || card.epicDeployActionSpent && !isDeployed ? 'block' : 'none'
         },
         damageCounterContainer: {
@@ -161,7 +175,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             p: '5px 10px',
         },
         unimplementedAlert: {
-            display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
+            display: notImplemented(card) && !isDeployed ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
@@ -181,7 +195,22 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             aspectRatio: (card.type === 'leader' && isDeployed) ? '1 / 1.4' : '1.4 / 1',
             width: (card.type === 'leader' && isDeployed) ? '15rem' : '24rem',
         },
+
     }
+
+    const getForceTokenIconStyle = (player: any) => ({
+        position: 'absolute',
+        width: '3rem',
+        aspectRatio: '1 / 1',
+        top:'32%',
+        right: '-20px',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundImage: player.aspects.includes('villainy') 
+            ? 'url(/ForceTokenVillainy.png)'
+            : 'url(/ForceTokenHeroism.png)',
+        filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+    });
 
     return (
         <Box
@@ -198,17 +227,20 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             <Box sx={styles.epicActionIcon}></Box>
             { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             {cardStyle === LeaderBaseCardStyle.Base && (
-                <Box sx={styles.damageCounterContainer}>
-                    { !!distributionAmount && 
-                    // Need to change background/borderRadius to backgroundImage
+                <>
+                    <Box sx={styles.damageCounterContainer}>
+                        { !!distributionAmount && 
+                        // Need to change background/borderRadius to backgroundImage
                         <Typography variant="body1" sx={{ ...styles.damageCounter, background: distributeHealing ? 'rgba(0, 186, 255, 1)' : 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat', borderRadius: distributeHealing ? '17px 8px' : '0px' }}>
                             {distributionAmount}
                         </Typography>
-                    }
-                    <Typography variant="body1" sx={styles.damageCounter}>
-                        {card.damage}
-                    </Typography>
-                </Box>
+                        }
+                        <Typography variant="body1" sx={styles.damageCounter}>
+                            {card.damage}
+                        </Typography>
+                    </Box>
+                    {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
+                </>
             )}
 
             <Popover
