@@ -110,6 +110,19 @@ const GameCard: React.FC<IGameCardProps> = ({
         return null;
     }
 
+    const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
+
+    const getBackgroundColor = (card: ICardData) => {
+        if (
+            notImplemented(card) ||
+            card?.exhausted && card.zone !== 'resource'
+        ) {
+            return 'rgba(0, 0, 0, 0.5)';
+        }
+
+        return 'transparent';
+    }
+
     const defaultClickFunction = () => {
         if (card.selectable) {
             sendGameMessage(['cardClicked', card.uuid]);
@@ -201,7 +214,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'absolute',
             width: '100%',
             height: '100%',
-            backgroundColor: card?.exhausted && card.zone !== 'resource' ? 'rgba(0, 0, 0, 0.5)' : 'transparent',
+            backgroundColor: getBackgroundColor(card),
             filter: 'none',
             clickEvents: 'none',
             display: 'flex',
@@ -325,7 +338,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             right: '-4%',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/SentinelToken.png)',
+            backgroundImage: `url(${s3TokenImageURL('sentinel-icon')})`,
+            filter: 'drop-shadow(0 6px 6px 0 #00000040)'
         },
         stolenIcon:{
             position: 'absolute',
@@ -338,7 +352,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: 'url(/StolenIcon.png)',
         },
         unimplementedAlert: {
-            display: card?.hasOwnProperty('implemented') && !card?.implemented ? 'flex' : 'none',
+            display: notImplemented(card) ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
