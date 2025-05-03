@@ -10,7 +10,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
     const [chatMessage, setChatMessage] = useState('')
 
     const handleGameChat = () => {
-        sendGameMessage(['chat', chatMessage]);
+        const trimmed = chatMessage.trim();
+        if (!trimmed) return; // don't send empty messages
+        sendGameMessage(['chat', trimmed]);
         setChatMessage('');
     }
 
@@ -23,15 +25,16 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 color: '#fff',
                 display: 'flex',
                 flexDirection: 'column',
-                width: '280px',
-                padding: '1em',
+                width: 'min(20%, 280px)',
+                padding: '0.75em',
                 overflow: 'hidden',
             },
         },
         headerBoxStyle: {
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'center',
+            position: 'relative',
+            height: '2.5em',
         }
     }
 
@@ -44,11 +47,17 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             variant="persistent"
             sx={styles.drawerStyle}
         >
-            <ChevronRightIcon onClick={toggleSidebar} />
             <Box sx={styles.headerBoxStyle}>
-                {/* <Typography variant="h3">
-                    ROUND
-                </Typography> */}
+                <ChevronRightIcon onClick={toggleSidebar} />
+                <Typography sx={{
+                    fontWeight: 'bold',
+                    color: '#fff',
+                    fontSize: '1.5em',
+                    position: 'absolute',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 'max-content',
+                }}>Chat</Typography>
             </Box>
 
             {/* Use the ChatComponent here */}
