@@ -207,7 +207,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
-            border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            border: borderColor && card.selected === true ? `4px solid ${borderColor}` : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            boxShadow: card.selected === true && `0 0 7px 3px ${borderColor}`,
             boxSizing: 'border-box',
         },
         cardOverlay: {
