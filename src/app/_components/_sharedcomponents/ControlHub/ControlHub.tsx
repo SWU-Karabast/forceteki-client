@@ -93,7 +93,7 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/Preferences" sx={styles.profileLink}>
                         Preferences
                     </NextLinkMui>
-                    {(user && !hideLogin && isDev) ? (
+                    {(user) ? (
                         <>
                             <Divider
                                 orientation="vertical"
