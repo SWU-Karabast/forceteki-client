@@ -52,6 +52,9 @@ const HomePagePlayMode: React.FC = () => {
     }
 
     useEffect(() => {
+        if(user && user.welcomeMessageSeen){
+            setShowWelcomePopup(true);
+        }
         if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {
             try {
@@ -74,10 +77,6 @@ const HomePagePlayMode: React.FC = () => {
                 console.error(error);
             }
         };
-        // Check if the user has seen the popup before
-        if(user && user.welcomeMessageSeen){
-            setShowWelcomePopup(true);
-        }
         fetchGameList();
     }, [user]);
 
