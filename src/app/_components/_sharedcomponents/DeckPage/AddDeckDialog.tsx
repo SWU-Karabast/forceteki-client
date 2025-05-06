@@ -9,7 +9,9 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import { v4 as uuid } from 'uuid';
+import { useUser } from '@/app/_contexts/User.context';
+import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
 
 interface AddDeckDialogProps {
     open: boolean;
@@ -26,18 +28,21 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
+    const { user } = useUser();
 
     const handleSubmit = async () => {
         if (!deckLink) return;
-
         try {
             const deckData = await fetchDeckData(deckLink, false);
             if (deckData) {
-                saveDeckToLocalStorage(deckData, deckLink);
+                deckData.deckID = user ? await saveDeckToServer(deckData, deckLink, user) : saveDeckToLocalStorage(deckData,deckLink);
+                if(!deckData.deckID){
+                    throw new Error('There was an error when saving the deck to the server.');
+                }
                 onSuccess(deckData, deckLink);
-                onClose();
                 // Reset form
                 setDeckLink('');
+                onClose();
             }
         } catch (error) {
             setDeckErrorDetails(undefined);
@@ -54,6 +59,11 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorModalOpen(true);
                 }
+            }else{
+                setErrorTitle('Server error');
+                setDeckErrorSummary('Server error when saving deck to server.');
+                setDeckErrorDetails('There was an error when saving deck to the server. Please contact the developer team on discord.');
+                setErrorModalOpen(true);
             }
         }
     };

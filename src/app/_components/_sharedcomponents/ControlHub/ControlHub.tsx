@@ -12,6 +12,8 @@ const ControlHub: React.FC<IControlHubProps> = ({
     user,
     logout,
 }) => {
+    const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
+    const isDev = process.env.NODE_ENV === 'development';
     const styles = {
         wrapperContainer:{
             position: 'absolute',
@@ -20,7 +22,6 @@ const ControlHub: React.FC<IControlHubProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
-            zIndex: 1,
         },
         defaultMainContainer: {
             display: 'flex',
@@ -89,14 +90,11 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/DeckPage" sx={styles.profileLink}>
                         Decks
                     </NextLinkMui>
-                    {user ? (
+                    <NextLinkMui href="/Preferences" sx={styles.profileLink}>
+                        Preferences
+                    </NextLinkMui>
+                    {(user) ? (
                         <>
-                            <NextLinkMui href="/profile" sx={styles.profileLink}>
-                                Profile
-                            </NextLinkMui>
-                            <NextLinkMui href="/Preferences" sx={styles.profileLink}>
-                                Preferences
-                            </NextLinkMui>
                             <Divider
                                 orientation="vertical"
                                 flexItem
@@ -106,15 +104,12 @@ const ControlHub: React.FC<IControlHubProps> = ({
                                 Log Out
                             </NextLinkMui>
                         </>
-                    ) : (
+                    ) : (!hideLogin && isDev) ? (
                         // Disable login on Prod for now
-                        process.env.NODE_ENV === 'development' ? (
-                            <NextLinkMui href="/auth" sx={styles.profileLink}>
-                                Log In
-                            </NextLinkMui>
-
-                        ) : null
-                    )}
+                        <NextLinkMui href="/auth" sx={styles.profileLink}>
+                            Log In
+                        </NextLinkMui>
+                    ): null}
                 </Box>
                 <Box sx={styles.socialIconsBox}>
                     <NextLinkMui
