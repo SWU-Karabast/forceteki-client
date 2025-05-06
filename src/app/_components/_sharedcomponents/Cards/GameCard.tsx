@@ -208,8 +208,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
-            border: borderColor && card.selected || card.isDefender || card.isAttacker ? `4px solid ${borderColor}` : borderColor && isOpponentEffect ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
-            boxShadow: card.selected || card.isDefender || card.isAttacker ? `0 0 7px 3px ${borderColor}` : 'none',
+            border: borderColor && card.selectable && !isOpponentEffect ? `2px solid ${borderColor}` : (borderColor && card.selected ) || (card.isDefender) || (card.isAttacker) ? `4px solid ${borderColor}` : borderColor && isOpponentEffect ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            boxShadow: borderColor && card.selectable ? 'none' : (card.selected) || (card.isDefender) || (card.isAttacker) ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },
         cardOverlay: {
