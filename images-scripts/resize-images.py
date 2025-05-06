@@ -5,7 +5,7 @@ from PIL import Image, ImageFilter
 
 # === CONFIGURATION ===
 INPUT_DIR = "downloaded_images\LOF"  # Adjust per set
-OUTPUT_DIR = "processed_images/LOF/large"
+OUTPUT_DIR = "LOF/standard/large"
 MAX_DIMENSION = 400  # Maximum width or height
 WEBP_QUALITY = 90
 
