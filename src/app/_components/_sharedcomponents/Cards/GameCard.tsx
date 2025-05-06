@@ -26,6 +26,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
+    const phase = gameState?.phase;
 
     const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
@@ -203,13 +204,13 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '0.5rem',
             position: 'relative',
-            backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
+            backgroundImage: (phase === 'setup' || phase === 'regroup') && card.selected ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.2)), url(${s3CardImageURL(card, cardStyle)})` : `url(${s3CardImageURL(card, cardStyle)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
-            border: borderColor && card.selectable && !isOpponentEffect ? `2px solid ${borderColor}` : (borderColor && card.selected ) || (card.isDefender) || (card.isAttacker) ? `4px solid ${borderColor}` : borderColor && isOpponentEffect ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
-            boxShadow: borderColor && card.selectable ? 'none' : (card.selected) || (card.isDefender) || (card.isAttacker) ? `0 0 7px 3px ${borderColor}` : 'none',
+            border: (card.selectable && !card.selected && !isOpponentEffect) ? `2px solid ${borderColor}` : (card.selected) && (phase === 'setup' || phase === 'regroup') ? '2px solid var(--selection-yellow)' : (card.selected) || (card.isDefender && !card.selectable) || (card.isAttacker && !card.selectable) ? `4px solid ${borderColor}` : isOpponentEffect && card.selectable ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            boxShadow: phase === 'regroup' || phase === 'setup' ? 'none' : (card.selected) || (card.isDefender && !card.selectable) || (card.isAttacker && !card.selectable) ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },
         cardOverlay: {
