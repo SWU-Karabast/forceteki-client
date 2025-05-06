@@ -47,10 +47,10 @@ const Chat: React.FC<IChatProps> = ({
             } else if (message[0].type === 'playerChat') {
                 return (
                     <Typography key={index} sx={styles.messageText}>
-                        <Typography component="span" sx={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
+                        <span style={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
                             {isSpectator ? connectedPlayer === message[0].id ? 'Player 1' : 'Player 2' : message[0].name}
-                        </Typography>:
-                        {message.slice(1).join('')}
+                        </span>
+                        : {message.slice(1).join('')}
                     </Typography>
                 )
             }
@@ -74,43 +74,53 @@ const Chat: React.FC<IChatProps> = ({
     // ------------------------STYLES------------------------//
 
     const styles = {
-        title: {
-            fontWeight: 'bold',
-            color: '#fff',
-            fontSize: '1.5em',
-        },
         divider: {
             backgroundColor: '#fff',
             mt: '.5vh',
             mb: '0.5vh',
         },
         chatBox: {
-            p: '10px',
-            borderRadius: '4px',
+            p: '0.5em',
             minHeight: '100px',
             overflowY: 'auto',
             backgroundColor: '#28282800',
             flex: 1,
         },
         messageText: {
+            fontSize: { xs: '0.75em', md: '1em' },
             color: '#fff',
+            lineHeight: { xs: '0.75rem', md: '1rem' },
+        },
+        playerName: {
+            fontSize: { xs: '0.75em', md: '1em' },
+            lineHeight: { xs: '0.75rem', md: '1rem' },
         },
         alertText: {
-            color: 'purple'
+            fontSize: { xs: '0.85em', md: '1em' },
+            color: 'purple',
+            lineHeight: { xs: '0.85rem', md: '1em' },
         },
         inputContainer: {
             display: 'flex',
             alignItems: 'center',
+            width: '100%',
             backgroundColor: '#28282800',
-            p: '10px',
-            mt: 2,
+            px: { xs: '0.2em', md: '0.5em' },
+            mb: 2,
+            minHeight: { xs: '1.5rem', md: '2.6rem' },
         },
         textField: {
             backgroundColor: '#28282800',
             color: '#fff',
             borderRadius: '4px',
             flexGrow: 1,
-            input: { color: '#fff' },
+            flex: 1,
+            maxWidth: '100%',
+            minWidth: 0,
+            width: '100%',
+            fontSize: { xs: '0.75em', md: '1em' },
+            height: { xs: '1.8rem', md: '2.2rem' },
+            input: { color: '#fff', padding: '0.3em 0.5em' },
             '& .MuiOutlinedInput-root': {
                 // base border style
                 '& fieldset': {
@@ -130,7 +140,6 @@ const Chat: React.FC<IChatProps> = ({
 
     return (
         <>
-            <Typography sx={styles.title}>Chat</Typography>
             <Divider sx={styles.divider} />
             <Box sx={styles.chatBox}>
                 {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
@@ -158,10 +167,11 @@ const Chat: React.FC<IChatProps> = ({
                         sx={styles.textField}
                         slotProps={{
                             input: {
+                                style: { fontSize: '1em' },
                                 endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton onClick={handleChatSubmit}>
-                                            <Send sx={{ color: '#fff' }} />
+                                    <InputAdornment position="end" sx={{ ml: 0, p: 0 }}>
+                                        <IconButton size="small" onClick={handleChatSubmit}>
+                                            <Send sx={{ color: '#fff', fontSize: '1.1em' }} />
                                         </IconButton>
                                     </InputAdornment>
                                 ),

@@ -42,6 +42,7 @@ export interface ICardData {
     onStartingSide?: boolean;
     controlled: boolean;
     epicDeployActionSpent?: boolean;
+    hidden?: boolean;
 }
 
 export interface IServerCardData {

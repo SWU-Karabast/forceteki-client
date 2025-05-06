@@ -2,8 +2,8 @@ import os
 from PIL import Image
 
 # === CONFIGURATION ===
-INPUT_DIR = "processed_images/JTL/large"  # Folder with original processed images
-OUTPUT_DIR = "truncated_images/JTL/small"
+INPUT_DIR = "processed_images/LOF/large"  # Folder with original processed images
+OUTPUT_DIR = "truncated_images/LOF/small"
 TOP_CROP_HEIGHT = 255   # Keep the top 200px
 BOTTOM_CROP_HEIGHT = 32 # Keep the bottom 15px and move it up
 FINAL_SIZE = 100        # Target size (max width or height)
