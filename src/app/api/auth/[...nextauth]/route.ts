@@ -19,6 +19,35 @@ const handler = NextAuth({
     session: {
         strategy: 'jwt'
     },
+    cookies: {
+        sessionToken: {
+            name: 'next-auth.session-token',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production'
+            }
+        },
+        callbackUrl: {
+            name: 'next-auth.callback-url',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production'
+            }
+        },
+        csrfToken: {
+            name: 'next-auth.csrf-token',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production'
+            }
+        }
+    },
     jwt: {
         // Provide your own encode/decode so NextAuth doesn't encrypt
         async encode({ secret, token }) {
