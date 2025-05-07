@@ -23,6 +23,7 @@ const handler = NextAuth({
         sessionToken: {
             name: 'next-auth.session-token',
             options: {
+                domain: '.karabast.net',
                 httpOnly: true,
                 sameSite: 'lax',
                 path: '/',
@@ -32,6 +33,7 @@ const handler = NextAuth({
         callbackUrl: {
             name: 'next-auth.callback-url',
             options: {
+                domain: '.karabast.net',
                 httpOnly: true,
                 sameSite: 'lax',
                 path: '/',
@@ -41,6 +43,7 @@ const handler = NextAuth({
         csrfToken: {
             name: 'next-auth.csrf-token',
             options: {
+                domain: '.karabast.net',
                 httpOnly: true,
                 sameSite: 'lax',
                 path: '/',
