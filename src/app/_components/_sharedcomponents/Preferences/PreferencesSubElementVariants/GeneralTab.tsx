@@ -50,7 +50,7 @@ function GeneralTab() {
         }
 
         try{
-            const newUsername = await setUsernameOnServer(trimmedUsername);
+            const newUsername = await setUsernameOnServer(user, trimmedUsername);
             setSuccesfulUsernameChange(true);
             setTimeout(() => {
                 setSuccesfulUsernameChange(false);
@@ -70,7 +70,7 @@ function GeneralTab() {
 
     const getUsernameChangeInfo = async () => {
         if(user) {
-            const result = await getUsernameChangeInfoFromServer();
+            const result = await getUsernameChangeInfoFromServer(user);
             setUsernameChangeable(result.canChange);
             setMessageColor(result.typeOfMessage);
             setUserUsernameInfo(result.message);

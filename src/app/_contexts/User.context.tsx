@@ -57,9 +57,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         provider: session.user.provider || null,
                         providerId: session.user.id || null,
                         welcomeMessageSeen: serverUser.welcomeMessageSeen,
+                        authenticated: true,
+                        preferences: serverUser.preferences
                     });
                 } catch (error) {
                     console.error('Error syncing user with server:', error);
+                    logout();
                     // Just flag the error, handle anonymous user setting separately
                 }
             }
@@ -104,6 +107,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 email: null,
                 provider: null,
                 providerId: null,
+                authenticated: true,
+                preferences: { cardback: undefined }
             });
         } else if (user === 'ThisIsTheWay') {
             setUser({
@@ -112,6 +117,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 email: null,
                 provider: null,
                 providerId: null,
+                authenticated: true,
+                preferences: { cardback: undefined }
             });
         }
     }
