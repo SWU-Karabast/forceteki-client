@@ -47,6 +47,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 return;
             }
             // If user is logged in with session but needs to sync with server
+            let needsLogout = false;
             if (session?.user) {
                 try {
                     const serverUser = await getUserFromServer();
@@ -61,10 +62,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         preferences: serverUser.preferences
                     });
                 } catch (error) {
-                    console.error('Error syncing user with server:', error);
-                    logout();
                     // Just flag the error, handle anonymous user setting separately
+                    console.error('Error syncing user with server:', error);
+                    // we need to logout the user when an error with getting the user happens
+                    needsLogout = true;
                 }
+            }
+            if(needsLogout){
+                logout();
             }
         };
 

@@ -6,6 +6,7 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { getUserPayload } from '@/app/_utils/DeckStorageUtils';
 
 const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     const router = useRouter();
@@ -56,7 +57,7 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                 },
                 body: JSON.stringify({
                     gameId: match.id,
-                    user: user || { id: anonymousUserId, username: 'Anonymous' + anonymousUserId?.substring(0, 6) },
+                    user: getUserPayload(user),
                 }),
             });
 

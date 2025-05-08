@@ -13,6 +13,7 @@ import { SwuGameFormat } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
+    getUserPayload,
     retrieveDecksForUser,
     saveDeckToLocalStorage,
     saveDeckToServer
@@ -122,9 +123,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         }
         try {
             const payload = {
-                user: user || { id: localStorage.getItem('anonymousUserId'),
-                    username:'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6),
-                },
+                user: getUserPayload(user),
                 deck: deckData,
                 format: format,
             };
