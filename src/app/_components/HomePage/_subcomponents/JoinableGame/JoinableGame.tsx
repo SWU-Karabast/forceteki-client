@@ -49,10 +49,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         try {
             const payload = {
                 lobbyId: lobbyId,
-                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
-                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6),
-                    preferences: user?.preferences || null,
-                    welcomeMessageSeen: user?.welcomeMessageSeen || null
+                user: user || { id: localStorage.getItem('anonymousUserId'),
+                    username: 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6),
                 },
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/join-lobby`, {
