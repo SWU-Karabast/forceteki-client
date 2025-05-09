@@ -49,13 +49,5 @@ export const getBorderColor = (card: ICardData, player: string, promptType: stri
         return card.controller.id === player ? 'var(--selection-green)' : 'var(--selection-red)';
     };
 
-    if (card.isAttacker) {
-        return 'var(--selection-green)';
-    }
-
-    if (card.isDefender) {
-        return 'var(--selection-red)';
-    }
-
     return '';
 }

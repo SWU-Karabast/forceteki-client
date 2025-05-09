@@ -27,6 +27,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
     const phase = gameState?.phase;
+    const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
     const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
@@ -188,6 +189,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Styles
     const styles = {
         cardContainer: {
+            position: 'relative',
             backgroundColor: 'black',
             borderRadius: '0.5rem',
             width: '100%',
@@ -209,8 +211,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
-            border: (card.selectable && !card.selected && !isOpponentEffect) ? `2px solid ${borderColor}` : (card.selected) && (phase === 'setup' || phase === 'regroup') ? '2px solid var(--selection-yellow)' : (card.selected) || (card.isDefender && !card.selectable) || (card.isAttacker && !card.selectable) ? `4px solid ${borderColor}` : isOpponentEffect && card.selectable ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
-            boxShadow: phase === 'regroup' || phase === 'setup' ? 'none' : (card.selected) || (card.isDefender && !card.selectable) || (card.isAttacker && !card.selectable) ? `0 0 7px 3px ${borderColor}` : 'none',
+            border: borderColor && card.selected ? `4px solid ${borderColor}` : isOpponentEffect && card.selectable ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            boxShadow: card.selected ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },
         cardOverlay: {
@@ -405,6 +407,32 @@ const GameCard: React.FC<IGameCardProps> = ({
             aspectRatio: '1 / 1.4',
             width: '16rem',
         },
+        attackIcon: {
+            position: 'absolute',
+            backgroundImage: card.isAttacker ? 'url(/Attacking.svg)' : 'none',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            width: '60%',
+            height: '10%',
+            top: activePlayer ? '-9%' : '',
+            bottom: !activePlayer ? '-9%' : '',
+            left: '50%',
+            transform: !activePlayer ? 'translate(-50%, 0) rotate(180deg)' : 'translate(-50%, 0)',
+            zIndex: '1',
+        },
+        defendIcon: {
+            position: 'absolute',
+            backgroundImage: card.isDefender ? 'url(/defending.svg)' : 'none',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            width: '60%',
+            height: '10%',
+            top: !activePlayer ? '-10%' : '',
+            bottom: activePlayer ? '-10%' : '',
+            left: '50%',
+            transform: !activePlayer ? 'translate(-50%, 0) rotate(180deg)' : 'translate(-50%, 0)',
+            zIndex: '1',
+        },
     }
 
     return (
@@ -466,6 +494,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                     </>
                 )}
             </Box>
+
+            <Box sx={styles.attackIcon}></Box>
+            <Box sx={styles.defendIcon}></Box>
 
             <Popover
                 id="mouse-over-popover"
