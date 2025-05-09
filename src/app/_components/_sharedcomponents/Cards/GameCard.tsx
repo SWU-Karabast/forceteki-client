@@ -414,8 +414,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             width: '60%',
             height: '10%',
-            top: activePlayer ? '-11%' : '',
-            bottom: !activePlayer ? '-11%' : '',
+            top: activePlayer ? '-7%' : '',
+            bottom: !activePlayer ? '-7%' : '',
             left: '50%',
             transform: !activePlayer ? 'translate(-50%, 0) rotate(180deg)' : 'translate(-50%, 0)',
             zIndex: '1',
@@ -427,8 +427,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             width: '60%',
             height: '10%',
-            top: !activePlayer ? '-12%' : '',
-            bottom: activePlayer ? '-12%' : '',
+            top: !activePlayer ? '-10%' : '',
+            bottom: activePlayer ? '-10%' : '',
             left: '50%',
             transform: !activePlayer ? 'translate(-50%, 0) rotate(180deg)' : 'translate(-50%, 0)',
             zIndex: '1',
@@ -438,12 +438,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: card.selected && card.zone === 'hand' && (phase === 'setup' || phase === 'regroup') ? 'url(resource-icon.png)' : '',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            // width: '15%',
-            // height: '15%',
-            // top: '-10%',
             left: '50%',
             transform: 'translate(-50%, 0)',   
-            
             width: '25%',
             height: '25%',
         },
@@ -506,11 +502,12 @@ const GameCard: React.FC<IGameCardProps> = ({
                         <Box sx={styles.healthIcon}>
                             <Typography sx={styles.numberFont}>{card.hp}</Typography>
                         </Box>
-                        {card.isAttacker && <Box sx={styles.attackIcon}/>}
-                        {card.isDefender && <Box sx={styles.defendIcon}/>}
                     </>
                 )}
             </Box>
+
+            {card.isAttacker && <Box sx={styles.attackIcon}/>}
+            {card.isDefender && <Box sx={styles.defendIcon}/>}
 
             <Popover
                 id="mouse-over-popover"
