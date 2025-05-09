@@ -1,8 +1,12 @@
+import { SxProps } from '@mui/material';
+import { Theme } from '@mui/material/styles';
+
 export type IButtonType = {
     variant: 'concede' | 'standard',
     text?: string,
-    buttonFnc?: () => void
-    disabled?: boolean
+    buttonFnc?: () => void,
+    disabled?: boolean,
+    sx?: SxProps<Theme>,
 }
 
 export type ISleeve = {

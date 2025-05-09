@@ -18,27 +18,27 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { removeDeckFromLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import {
+    convertStoredToDeckDetailedData,
+    deleteDecks,
+    getDeckFromServer, removeDeckFromLocalStorage,
+} from '@/app/_utils/DeckStorageUtils';
+import {
+    IDeckDetailedData,
+    IDeckPageStats,
+    IDeckStats,
+    IMatchupStatEntity, IMatchTableStats, StoredDeck
+} from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-
-const sortByOptions: string[] = ['Cost','Power','Most played'];
-
-// Interface for saved decks
-interface StoredDeck {
-    leader: { id: string };
-    base: { id: string };
-    name: string;
-    favourite: boolean;
-    deckID: string;
-    deckLink: string;
-    source: 'SWUSTATS' | 'SWUDB'
-}
+import { useUser } from '@/app/_contexts/User.context';
 
 const DeckDetails: React.FC = () => {
-    const [sortBy, setSortBy] = useState<string>('');
     const router = useRouter();
+    const { user } = useUser();
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const [deckStats, setDeckStats] = React.useState<IDeckPageStats>({ wins: 0, winPercentage: 0, draws: 0, losses: 0, totalGames: 0 });
+    const [opponentStats, setOpponentStats] = React.useState<IMatchTableStats[] | null>(null);
     const params = useParams();
     const deckId = params?.DeckId;
 
@@ -52,7 +52,7 @@ const DeckDetails: React.FC = () => {
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    const [displayDeck, setDisplayDeck ] = useState<StoredDeck | null>(null);
+    const [displayDeck, setDisplayDeck ] = useState<IDeckDetailedData | null>(null);
 
     // State for delete confirmation dialog
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
@@ -71,76 +71,97 @@ const DeckDetails: React.FC = () => {
         setAnchorElement(null);
     };
 
-    // example data
-    const opponentData = useMemo(() => {
-        // List of sample leader names
-        const leaderNames = [
-            'Ahsoka Tano', 'Boba Fett', 'Captain Rex', 'Darth Maul',
-            'Emperor Palpatine', 'General Grievous', 'Han Solo', 'Leia Organa',
-            'Luke Skywalker', 'Mace Windu', 'Obi-Wan Kenobi', 'Qui-Gon Jinn',
-            'Rey Skywalker', 'Thrawn', 'Yoda', 'Darth Vader',
-            'Kylo Ren', 'Ezra Bridger', 'Kanan Jarrus', 'Asajj Ventress'
-        ];
+    const calculateStats = (deckDataStats: IDeckStats | undefined) => {
+        const totalGames = deckDataStats ? deckDataStats.wins + deckDataStats.losses + deckDataStats.draws : 0;
+        const winPercentage = totalGames > 0 && deckDataStats ? Math.round((deckDataStats?.wins / totalGames) * 100) : 0;
+        const calculatedStats: IDeckPageStats = {
+            wins: deckDataStats?.wins ?? 0,
+            losses: deckDataStats?.losses ?? 0,
+            draws: deckDataStats?.draws ?? 0,
+            totalGames,
+            winPercentage
+        }
+        setDeckStats(calculatedStats);
+    }
 
-        return leaderNames.sort().map(leader => {
-            const wins = Math.floor(Math.random() * 10);
-            const losses = Math.floor(Math.random() * 10);
-            const total = wins + losses;
+    /**
+     * Formats opponent statistics with additional calculated fields
+     * @param opponentStats Array of opponent stats from the database
+     * @returns Formatted stats with added total and winPercentage fields
+     */
+    const getFormattedOpponentStats = (opponentStats: IMatchupStatEntity[] | undefined) => {
+        if (!opponentStats || !Array.isArray(opponentStats)) {
+            return [];
+        }
+
+        const oppStats = opponentStats.map(stat => {
+            const wins = stat.wins || 0;
+            const losses = stat.losses || 0;
+            const draws = stat.draws || 0;
+            const total = wins + losses + draws;
             const winPercentage = total > 0 ? Math.round((wins / total) * 100) : 0;
 
             return {
-                leader,
+                leaderId: stat.leaderId,
+                baseId: stat.baseId,
                 wins,
                 losses,
+                draws,
+                total,
                 winPercentage
             };
         });
-    }, []);
+        setOpponentStats(oppStats);
+    };
 
     useEffect(() => {
-        if (deckId) {
-            (async () => {
-                try {
-                    // we get the deck from localStorage and set the link
+        fetchDeckFromServer(deckId)
+    }, [deckId]);
+
+    const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
+        if (rawDeckId) {
+            // we need to check if the deck is still available
+            const deckId = Array.isArray(rawDeckId) ? rawDeckId[0] : rawDeckId;
+            try {
+                // we get the deck from localStorage and set the link
+                let deckDataServer;
+                if(user) {
+                    deckDataServer = await getDeckFromServer(deckId);
+                }else{
                     const deckDataJSON = localStorage.getItem('swu_deck_'+deckId);
                     if (deckDataJSON) {
-                        const deckData = JSON.parse(deckDataJSON) as StoredDeck;
-
-                        // we need to check if the deck is still available
-                        try {
-                            const data = await fetchDeckData(deckData.deckLink, false);
-                            setDeckData(data);
-                            setDisplayDeck(deckData);
-                        }catch (error) {
-                            // check if its set to private
-                            if(error instanceof Error){
-                                setErrorModalOpen(true);
-                                if(error.message.includes('403')) {
-                                    setDeckErrorDetails({
-                                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
-                                    });
-                                }else{
-                                    setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
-                                }
-                                return;
-                            }
-                        }
+                        deckDataServer = convertStoredToDeckDetailedData(JSON.parse(deckDataJSON) as StoredDeck);
+                    }else{
+                        throw new Error('Unknown deck data');
                     }
-                } catch (error) {
-                    console.error('Error fetching deck data:', error);
                 }
-            })();
+                const data = await fetchDeckData(deckDataServer.deck.deckLink, false);
+                setDeckData(data);
+                setDisplayDeck(deckDataServer);
+                calculateStats(deckDataServer.stats);
+                getFormattedOpponentStats(deckDataServer.stats?.statsByMatchup);
+            } catch (error) {
+                if (error instanceof Error) {
+                    setErrorModalOpen(true);
+                    if (error.message.includes('403')) {
+                        setDeckErrorDetails({
+                            [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                        });
+                    } else {
+                        setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
+                    }
+
+                    return;
+                }else{
+                    setErrorModalOpen(true);
+                    setDeckErrorDetails('Server error when attempting to retrieve deck: '+error);
+                }
+            }
         }
-    }, [deckId]);
+    }
 
     const handleBackButton = () => {
         router.push('/DeckPage');
-    };
-
-    const handleViewOnSWUDB = () => {
-        if (deckId) {
-            window.open(displayDeck?.deckLink, '_blank');
-        }
     };
 
     // Open delete confirmation dialog
@@ -149,12 +170,29 @@ const DeckDetails: React.FC = () => {
     };
 
     // handle confirm delete
-    const handleConfirmDelete = () => {
-        if (deckId) {
-            removeDeckFromLocalStorage(deckId)
+    const handleConfirmDelete = async () => {
+        try {
+            if (deckId) {
+                if (typeof deckId === 'string') {
+                    if(user){
+                        await deleteDecks([deckId])
+                    }else{
+                        removeDeckFromLocalStorage([deckId])
+                    }
+                } else {
+                    if(user){
+                        await deleteDecks(deckId)
+                    }else{
+                        removeDeckFromLocalStorage(deckId)
+                    }
+                }
+            }
+            setDeleteDialogOpen(false);
+            router.push('/DeckPage');
+        }catch(err){
+            setErrorModalOpen(true);
+            setDeckErrorDetails('Error deleting deck/decks: '+err);
         }
-        setDeleteDialogOpen(false);
-        router.push('/DeckPage');
     };
 
     // Cancel delete operation
@@ -231,7 +269,7 @@ const DeckDetails: React.FC = () => {
             minHeight:'3rem',
             display: 'flex',
             flexDirection: 'row',
-            justifyContent: 'space-between',
+            justifyContent: 'end',
         },
         sortBy:{
             display: 'flex',
@@ -298,7 +336,7 @@ const DeckDetails: React.FC = () => {
             width: '21rem',
         },
         viewDeck:{
-            width: !displayDeck || displayDeck.source === 'SWUDB' ? '394px' : '429px',
+            width: !displayDeck || displayDeck.deck.source === 'SWUDB' ? '394px' : '429px',
             ml:'40px'
         }
     }
@@ -352,58 +390,47 @@ const DeckDetails: React.FC = () => {
                         <Typography variant="h3" sx={styles.titleText}>
                             {deckData?.metadata.name}
                         </Typography>
-                        <Box sx={styles.editBox} />
+                        {/* <Box sx={styles.editBox} />*/}
                     </Box>
 
-                    {/* Stats go here
-                    <Box sx={styles.statsContainer}>
-                        <Box sx={styles.overallStatsBox}>
-                            <PercentageCircle percentage={30} size={70} strokeWidth={12} fillColor={'#6CF3D3'} trackColor={'#367684'} textColor="#FFF"/>
-                            <Box>
-                                <Box sx={styles.gamesRow}>
-                                    <Box sx={{ ...styles.gamesCircle, backgroundColor:'#367684' }} />
-                                    <Typography variant={'h5'} sx={{ color: '#fff' }}>Games Played: 55</Typography>
-                                </Box>
-                                <Box sx={styles.gamesRow}>
-                                    <Box sx={{ ...styles.gamesCircle, backgroundColor:'#6CF3D3' }} />
-                                    <Typography variant={'h5'}>Games Won: 30</Typography>
+                    {/* Stats go here */}
+                    {(user && displayDeck) ? (
+                        <Box sx={styles.statsContainer}>
+                            <Box sx={styles.overallStatsBox}>
+                                <PercentageCircle percentage={deckStats.winPercentage} size={70} strokeWidth={12} fillColor={'#6CF3D3'} trackColor={'#367684'} textColor="#FFF"/>
+                                <Box>
+                                    <Box sx={styles.gamesRow}>
+                                        <Box sx={{ ...styles.gamesCircle, backgroundColor:'#367684' }} />
+                                        <Typography variant={'h5'} sx={{ color: '#fff' }}>Games Played: {deckStats.totalGames}</Typography>
+                                    </Box>
+                                    <Box sx={styles.gamesRow}>
+                                        <Box sx={{ ...styles.gamesCircle, backgroundColor:'#6CF3D3' }} />
+                                        <Typography variant={'h5'}>Games Won: {deckStats.wins}</Typography>
+                                    </Box>
                                 </Box>
                             </Box>
+                            {opponentStats && (
+                                <AnimatedStatsTable
+                                    data={opponentStats}
+                                    animationDuration={2000}
+                                    staggerDelay={100}
+                                />
+                            )}
                         </Box>
-                        {/* A table for Opposing Leaders, Wins, Losses, etc.
-                        <AnimatedStatsTable
-                            data={opponentData}
-                            animationDuration={2000}
-                            staggerDelay={100}
-                        />
-                    </Box>
-                    */}
+                    ) : (
+                        <Box sx={styles.statsContainer}>
+                            <Typography variant="h5" sx={{ color: '#fff', textAlign: 'center', padding: 2 }}>
+                                Deck statistics are only available to logged-in users.
+                            </Typography>
+                        </Box>
+                    )}
+                    {/* A table for Opposing Leaders, Wins, Losses, etc. */}
+
                 </Box>
 
                 {/* Right side: Sort dropdown & deck cards */}
                 <Box sx={styles.deckContainer}>
                     <Box sx={styles.deckButtons}>
-                        <Box sx={styles.sortBy}>
-                            <Typography sx={styles.sortText}>Sort by</Typography>
-                            <StyledTextField
-                                select
-                                disabled
-                                value={sortBy}
-                                placeholder="Sort by"
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setSortBy(e.target.value)
-                                }
-                            >
-                                {sortByOptions.map((sortOption) => (
-                                    <MenuItem key={sortOption} value={sortOption}>
-                                        {sortOption}
-                                    </MenuItem>
-                                ))}
-                            </StyledTextField>
-                            <Box sx={styles.viewDeck}>
-                                <PreferenceButton variant={'standard'} text={!displayDeck || displayDeck.source === 'SWUDB' ? 'View Deck on SWUDB' : 'View Deck on SWUStats'} buttonFnc={handleViewOnSWUDB} />
-                            </Box>
-                        </Box>
                         <Box sx={styles.editButtons}>
                             <PreferenceButton variant={'concede'} text={'Delete'} buttonFnc={handleDeleteClick}/>
                         </Box>
