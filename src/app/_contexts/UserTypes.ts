@@ -5,6 +5,12 @@ export interface IUser {
     provider: string | null;
     providerId: string | null;
     welcomeMessageSeen?: boolean,
+    authenticated: boolean,
+    preferences: Preferences,
+}
+
+export interface Preferences {
+    cardback?: string;
 }
 
 export interface IUserContextType {

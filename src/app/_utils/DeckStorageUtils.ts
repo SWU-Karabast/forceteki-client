@@ -1,8 +1,12 @@
-import { DisplayDeck, IDeckDetailedData, StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import {
+    DisplayDeck,
+    IDeckDetailedData,
+    StoredDeck
+} from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
-import { IUser } from '@/app/_contexts/UserTypes';
+import { IUser, Preferences } from '@/app/_contexts/UserTypes';
 
 /* Secondary functions */
 /**
@@ -26,7 +30,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
 ) => {
     try {
         // Get decks based on authentication status
-        const decks = user ? await loadDecks() : loadSavedDecks();
+        const decks = user ? await loadDecks(user) : loadSavedDecks();
 
         // Sort decks with favorites first
         const sortedDecks = decks.sort((a, b) => {
@@ -59,9 +63,26 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
     }
 };
 
+/**
+ * Gets user information for a payload, using anonymous user if none provided
+ * @param {Object} user - Optional user object
+ * @return {Object} The user object to use in payloads
+ */
+export const getUserPayload = (user: IUser | null): object => {
+    if (user) {
+        return user;
+    }
+
+    const anonymousId = localStorage.getItem('anonymousUserId');
+    return {
+        id: anonymousId,
+        username: 'anonymous ' + anonymousId?.substring(0, 6),
+    };
+}
+
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, welcomeMessageSeen: boolean }> =>{
+export const getUserFromServer = async(): Promise<{ id: string, username: string, welcomeMessageSeen: boolean, preferences: Preferences }> =>{
     try {
         const decks = loadSavedDecks(false);
         const payload = {
@@ -91,18 +112,22 @@ export const getUserFromServer = async(): Promise<{ id: string, username: string
     }
 }
 
-export const getUsernameChangeInfoFromServer = async(): Promise<{
+export const getUsernameChangeInfoFromServer = async(user: IUser): Promise<{
     canChange: boolean;
     message: string;
     typeOfMessage: string;
 }> => {
     try {
+        const payload = {
+            user
+        };
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-change-username-info`,
             {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                body: JSON.stringify(payload),
                 credentials: 'include'
             }
         );
@@ -136,10 +161,11 @@ export const getUsernameChangeInfoFromServer = async(): Promise<{
     }
 }
 
-export const setUsernameOnServer = async(username: string): Promise<string> => {
+export const setUsernameOnServer = async(user: IUser | null, username: string): Promise<string> => {
     try {
         const payload = {
-            newUsername: username
+            newUsername: username,
+            user
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/change-username`,
             {
@@ -162,14 +188,18 @@ export const setUsernameOnServer = async(username: string): Promise<string> => {
     }
 }
 
-export const setWelcomeMessage = async(): Promise<boolean> => {
+export const setWelcomeMessage = async(user: IUser | null): Promise<boolean> => {
     try {
+        const payload = {
+            user
+        }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/toggle-welcome-message`,
             {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                body: JSON.stringify(payload),
                 credentials: 'include'
             }
         );
@@ -184,7 +214,7 @@ export const setWelcomeMessage = async(): Promise<boolean> => {
     }
 }
 
-export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean): Promise<void> => {
+export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean, user: IUser): Promise<void> => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/deck/${deckId}/favorite`, {
             method: 'PUT',
@@ -192,7 +222,8 @@ export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean): P
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                isFavorite
+                isFavorite,
+                user
             }),
             credentials: 'include' // Necessary to include auth cookies
         });
@@ -218,6 +249,7 @@ export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean): P
 export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink: string, user: IUser | null,) => {
     try {
         const payload = {
+            user,
             deck: {
                 id: deckData.deckID || uuid(), // Use existing ID or generate new one
                 userId: user?.id,
@@ -258,10 +290,11 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
  * Loads decks from the server
  * @returns Promise that resolves to the array of decks
  */
-export const loadDecks = async (): Promise<StoredDeck[]> => {
+export const loadDecks = async (user: IUser): Promise<StoredDeck[]> => {
     try {
         const decks = loadSavedDecks(false);
         const payload = {
+            user,
             decks: decks
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-decks`,
@@ -292,9 +325,10 @@ export const loadDecks = async (): Promise<StoredDeck[]> => {
     }
 };
 
-export const deleteDecks = async (deckIds: string[]): Promise<void> => {
+export const deleteDecks = async (deckIds: string[], user: IUser): Promise<void> => {
     try {
         const payload = {
+            user,
             deckIds: deckIds
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/delete-decks`,
@@ -442,14 +476,19 @@ export const convertStoredToDeckDetailedData = (storedDeck: StoredDeck): IDeckDe
 /**
  * Retrieves a deck by its ID
  * @param deckId Deck ID to retrieve
+ * @param user
  * @returns Promise that resolves to the deck data
  */
-export const getDeckFromServer = async (deckId: string): Promise<IDeckDetailedData> => {
+export const getDeckFromServer = async (deckId: string, user:IUser): Promise<IDeckDetailedData> => {
     try {
         // Make sure we have an anonymousUserId if needed
+        const payload = {
+            user
+        }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck/${deckId}`, {
-            method: 'GET',
-            credentials: 'include'
+            method: 'POST',
+            credentials: 'include',
+            body: JSON.stringify(payload),
         });
         if (!response.ok) {
             const errorText = await response.text();

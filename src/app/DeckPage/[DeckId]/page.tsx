@@ -126,7 +126,7 @@ const DeckDetails: React.FC = () => {
                 // we get the deck from localStorage and set the link
                 let deckDataServer;
                 if(user) {
-                    deckDataServer = await getDeckFromServer(deckId);
+                    deckDataServer = await getDeckFromServer(deckId, user);
                 }else{
                     const deckDataJSON = localStorage.getItem('swu_deck_'+deckId);
                     if (deckDataJSON) {
@@ -175,13 +175,13 @@ const DeckDetails: React.FC = () => {
             if (deckId) {
                 if (typeof deckId === 'string') {
                     if(user){
-                        await deleteDecks([deckId])
+                        await deleteDecks([deckId], user)
                     }else{
                         removeDeckFromLocalStorage([deckId])
                     }
                 } else {
                     if(user){
-                        await deleteDecks(deckId)
+                        await deleteDecks(deckId, user)
                     }else{
                         removeDeckFromLocalStorage(deckId)
                     }
