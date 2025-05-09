@@ -211,8 +211,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
-            border: borderColor && card.selected ? `4px solid ${borderColor}` : isOpponentEffect && card.selectable ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
-            boxShadow: card.selected ? `0 0 7px 3px ${borderColor}` : 'none',
+            border: borderColor && card.selected && card.zone !== 'hand' ? `4px solid ${borderColor}` : isOpponentEffect && card.selectable ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            boxShadow: borderColor && card.selected && card.zone !== 'hand' ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },
         cardOverlay: {
@@ -409,29 +409,43 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         attackIcon: {
             position: 'absolute',
-            backgroundImage: card.isAttacker ? 'url(/Attacking.svg)' : 'none',
+            backgroundImage: 'url(/Attacking.svg)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             width: '60%',
             height: '10%',
-            top: activePlayer ? '-9%' : '',
-            bottom: !activePlayer ? '-9%' : '',
+            top: activePlayer ? '-11%' : '',
+            bottom: !activePlayer ? '-11%' : '',
             left: '50%',
             transform: !activePlayer ? 'translate(-50%, 0) rotate(180deg)' : 'translate(-50%, 0)',
             zIndex: '1',
         },
         defendIcon: {
             position: 'absolute',
-            backgroundImage: card.isDefender ? 'url(/defending.svg)' : 'none',
+            backgroundImage: 'url(/defending.svg)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             width: '60%',
             height: '10%',
-            top: !activePlayer ? '-10%' : '',
-            bottom: activePlayer ? '-10%' : '',
+            top: !activePlayer ? '-12%' : '',
+            bottom: activePlayer ? '-12%' : '',
             left: '50%',
             transform: !activePlayer ? 'translate(-50%, 0) rotate(180deg)' : 'translate(-50%, 0)',
             zIndex: '1',
+        },
+        resourceIcon: {
+            position: 'absolute', 
+            backgroundImage: card.selected && card.zone === 'hand' && (phase === 'setup' || phase === 'regroup') ? 'url(resource-icon.png)' : '',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            // width: '15%',
+            // height: '15%',
+            // top: '-10%',
+            left: '50%',
+            transform: 'translate(-50%, 0)',   
+            
+            width: '25%',
+            height: '25%',
         },
     }
 
@@ -446,6 +460,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
+                    <Box sx={styles.resourceIcon}/>
                     { !!distributionAmount && (
                         <Typography variant="body1" sx={styles.damageCounter}>
                             {distributionAmount}
@@ -491,12 +506,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                         <Box sx={styles.healthIcon}>
                             <Typography sx={styles.numberFont}>{card.hp}</Typography>
                         </Box>
+                        {card.isAttacker && <Box sx={styles.attackIcon}/>}
+                        {card.isDefender && <Box sx={styles.defendIcon}/>}
                     </>
                 )}
             </Box>
-
-            <Box sx={styles.attackIcon}></Box>
-            <Box sx={styles.defendIcon}></Box>
 
             <Popover
                 id="mouse-over-popover"
