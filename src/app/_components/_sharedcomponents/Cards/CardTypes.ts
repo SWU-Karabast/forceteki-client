@@ -43,6 +43,8 @@ export interface ICardData {
     controlled: boolean;
     epicDeployActionSpent?: boolean;
     hidden?: boolean;
+    isAttacker?: boolean;
+    isDefender?: boolean;
 }
 
 export interface IServerCardData {

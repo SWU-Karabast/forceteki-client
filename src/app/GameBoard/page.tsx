@@ -85,6 +85,7 @@ const GameBoard = () => {
             alignItems: 'center',
             width: '50vw',
             pointerEvents: 'none',
+            zIndex: '1',
         },
         promptStyle: {
             textAlign: 'center',

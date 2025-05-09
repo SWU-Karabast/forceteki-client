@@ -93,6 +93,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
+    const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
     const styles = {
         card: {
@@ -195,7 +196,18 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             aspectRatio: (card.type === 'leader' && isDeployed) ? '1 / 1.4' : '1.4 / 1',
             width: (card.type === 'leader' && isDeployed) ? '15rem' : '24rem',
         },
-
+        defendIcon: {
+            position: 'absolute',
+            backgroundImage:  'url(/defending.svg)',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            width: '60%',
+            height: '10%',
+            top: !activePlayer ? '-11%' : '',
+            bottom: activePlayer ? '-11%' : '',
+            left: '50%',
+            transform: !activePlayer ? 'translate(-50%, 0) rotate(180deg)' : 'translate(-50%, 0)',
+        },
     }
 
     const getForceTokenIconStyle = (player: any) => ({
@@ -240,6 +252,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         </Typography>
                     </Box>
                     {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
+                    {card.isDefender && <Box sx={styles.defendIcon}/>}
                 </>
             )}
 
