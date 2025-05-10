@@ -34,6 +34,6 @@ For testing on mobile devices connected to your local network:
 
 1. Copy the `.env.local.example` file to `.env.local`
 2. Edit `.env.local` and replace `your-local-ip` with your computer's IP address (e.g., 192.168.4.40)
-3. Restart the development server
-
-This configures the Front-End to allow mobile devices on your local network to connect to your development server. You will still need to configure the Back-End to allow connections from your local network.
+3. Restart the development server for the Front-End
+4. Update the Back-End with its instructions to to allow mobile local connections
+5. Connect to your-local-ip:3000 on the web browser of your mobile device
