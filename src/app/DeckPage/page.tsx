@@ -161,7 +161,7 @@ const DeckPage: React.FC = () => {
         const deckFav = !decks.find((deck) => deck.deckID === deckId)?.favourite;
         try {
             if (user) {
-                await toggleFavouriteDeck(deckId, deckFav)
+                await toggleFavouriteDeck(deckId, deckFav, user)
             }else{
                 updateDeckFavoriteInLocalStorage(deckId)
             }
@@ -199,7 +199,7 @@ const DeckPage: React.FC = () => {
         // Delete each selected deck from localStorage
         try{
             if(user) {
-                await deleteDecks(selectedDecks);
+                await deleteDecks(selectedDecks, user);
             }else{
                 removeDeckFromLocalStorage(selectedDecks);
             }

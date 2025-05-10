@@ -6,6 +6,7 @@ import { IJoinableGameProps } from '../../HomePageTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { ILobbyCardData } from '../../HomePageTypes';
+import { getUserPayload } from '@/app/_utils/DeckStorageUtils';
 
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
@@ -49,8 +50,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         try {
             const payload = {
                 lobbyId: lobbyId,
-                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
-                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6) },
+                user: getUserPayload(user)
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/join-lobby`, {
                 method: 'POST',

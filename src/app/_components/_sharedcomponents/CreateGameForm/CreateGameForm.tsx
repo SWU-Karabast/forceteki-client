@@ -24,6 +24,7 @@ import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
+    getUserPayload,
     retrieveDecksForUser,
     saveDeckToLocalStorage,
     saveDeckToServer
@@ -134,8 +135,7 @@ const CreateGameForm = () => {
         }
         try {
             const payload = {
-                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
-                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6) },
+                user: getUserPayload(user),
                 deck: deckData,
                 isPrivate: privacy === 'Private',
                 format: format,

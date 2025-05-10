@@ -18,7 +18,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     const [canSubmitUsername, setCanSubmitUsername] = useState(false);
 
     const handleSkip = async () => {
-        await setWelcomeMessage();
+        await setWelcomeMessage(user);
         onClose();
     };
 
@@ -35,7 +35,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         }
 
         try{
-            const newUsername = await setUsernameOnServer(trimmedUsername);
+            const newUsername = await setUsernameOnServer(user, trimmedUsername);
             setSuccesfulUsernameChange(true);
             setTimeout(() => {
                 setSuccesfulUsernameChange(false);
