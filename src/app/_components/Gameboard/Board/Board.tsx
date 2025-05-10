@@ -9,7 +9,7 @@ import { LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
 }) => {
-    const { gameState, connectedPlayer } = useGame();
+    const { gameState, connectedPlayer, isSpectator } = useGame();
     const playerIds = Object.keys(gameState.players);
 
     const opponentId = playerIds.find((id) => id !== connectedPlayer) || '';
@@ -217,7 +217,7 @@ const Board: React.FC<IBoardProps> = ({
                             <LeaderBaseCard
                                 card={opponentLeader}
                                 cardStyle={LeaderBaseCardStyle.Leader}
-                                title={titleOpponent}
+                                title={isSpectator ? 'Player2' : titleOpponent}
                             />
                         </Box>
                         <Box sx={styles.leaderBaseWrapper}>
@@ -239,7 +239,7 @@ const Board: React.FC<IBoardProps> = ({
                             <LeaderBaseCard
                                 card={playerLeader}
                                 cardStyle={LeaderBaseCardStyle.Leader}
-                                title={titleCurrentPlayer}
+                                title={isSpectator ? 'Player1' : titleCurrentPlayer}
                             />
                         </Box>
                     </Box>

@@ -21,6 +21,7 @@ const Preferences: React.FC = () => {
             alignSelf: 'flex-start',
             mb: '0px',
             cursor: 'pointer',
+            zIndex: 2
         },
         mainContainer:{
             height: '100vh',
@@ -46,7 +47,7 @@ const Preferences: React.FC = () => {
             <PreferencesComponent
                 sidebarOpen={false}
                 isPreferenceOpen={true}
-                tabs={['keyboardShortcuts','cardSleeves','gameOptions','blockList']}
+                tabs={['general']}
                 variant={'homePage'}
             />
             <Typography variant="body1" sx={styles.disclaimer}>
