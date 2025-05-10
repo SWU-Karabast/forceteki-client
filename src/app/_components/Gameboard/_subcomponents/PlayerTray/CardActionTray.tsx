@@ -66,7 +66,7 @@ const createStyles = (isPortrait: boolean) => ({
         gap: { xs: '0.5rem', md: '.75rem' },
         alignItems: isPortrait ? 'stretch' : 'center',
         justifyContent: 'flex-end',
-        width: '100%', 
+        width: isPortrait ? 'auto' : '100%', 
         maxWidth: '100%',
     },
     promptButton: {
