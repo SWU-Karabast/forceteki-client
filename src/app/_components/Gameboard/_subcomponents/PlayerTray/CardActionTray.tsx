@@ -49,7 +49,7 @@ const pulseGreenBorder = keyframes`
     box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
   }
 `;
-    
+
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
         height: '100%',
