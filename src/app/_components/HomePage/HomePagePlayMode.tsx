@@ -11,6 +11,7 @@ const HomePagePlayMode: React.FC = () => {
     const [testGameList, setTestGameList] = React.useState([]);
     const { user } = useUser();
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
+    const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -91,19 +92,20 @@ const HomePagePlayMode: React.FC = () => {
                 <CardContent>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
                         <Tabs value={value} variant="fullWidth" onChange={handleChange}>
-                            <Tab sx={styles.tabStyles} label="Quick Match" />
+                            {showQuickMatch && <Tab sx={styles.tabStyles} label="Quick Match" />}
                             <Tab sx={styles.tabStyles} label="Create Lobby" />
                             {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
                         </Tabs>
                     </Box>
+                    {showQuickMatch && 
                     <TabPanel index={0} value={value}>
                         <QuickGameForm/>
-                    </TabPanel>
-                    <TabPanel index={1} value={value}>
+                    </TabPanel>}
+                    <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
                         <CreateGameForm />
                     </TabPanel>
                     {showTestGames && 
-                    <TabPanel index={2} value={value}>
+                    <TabPanel index={showQuickMatch ? 2 : 1} value={value}>
                         <Box>
                             <Typography variant="h2">Test Game Setups</Typography>
                             {testGameList.map((filename, index) => {

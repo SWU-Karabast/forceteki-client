@@ -26,4 +26,14 @@ Once this is running you can go to http://localhost:3000 to get to the home page
 
 To start a game with 2 players open one tab to http://localhost:300/Gameboard and another tab to http://localhost:3000/GameBoard?player=ThisIsTheWay
 
+### Mobile Testing and Custom Environment
+
+For testing on mobile devices connected to your local network:
+
+1. Copy the `.env.local.example` file to `.env.local`
+2. Edit `.env.local` and replace `your-local-ip` with your computer's IP address (e.g., 192.168.4.40)
+3. Restart the development server
+
+This configures the Front-End to allow mobile devices on your local network to connect to your development server. You will still need to configure the Back-End to allow connections from your local network.
+
 The state updater is currently set to log game state updates to the console as they are received. 
