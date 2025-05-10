@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Grid2 as Grid } from '@mui/material';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
@@ -9,6 +10,7 @@ import BreakpointOverlay from './BreakpointOverlay';
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
 }) => {
+    const { isPortrait } = useScreenOrientation();
     // ------------------------CONTEXT------------------------//
     /**
 	 * Takes an array of cards which can be main units or upgrades,
@@ -95,21 +97,43 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     const playerUnits = attachCapturedCards(playerUnitsWithUpgrades, allCapturedCards);
     const opponentUnits = attachCapturedCards(opponentUnitsWithUpgrades, allCapturedCards);
 
-    const responsiveGridTemplateColumns = {
-        xs: 'repeat(1, minmax(3rem, 5.5rem))',
+    // Portrait mode grid configuration -- far less here as we are dealing with
+    // one set of breakpoints (we don't have landscape ones.. yet)
+    const portraitGridTemplateColumns = {
+        xs: 'repeat(2, minmax(3.5rem, 5.5rem))',
+        //sm: 'repeat(3, minmax(0.5rem, 5rem))',
+        // iphoneSE: 'repeat(3, minmax(0.5rem, 5rem))',
+        //iphone12: 'repeat(3, minmax(3.5rem, 5rem))',
+        md: 'repeat(3, minmax(3.5rem, 5.5em))',
+        // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
+       // ipadMini: 'repeat(3, minmax(3.5rem, 5.5rem))',
+       // ipadAir: 'repeat(3, minmax(3.5rem, 6rem))',
+        lg: 'repeat(3, minmax(3.5rem, 6rem))',
+       // ipadPro: 'repeat(3, minmax(3.5rem, 7rem))',
+        //xl: 'repeat(5, minmax(3.5rem, 7rem))',
+        //xxl: 'repeat(6, minmax(3.5rem, 7rem))',
+        //xxxl: 'repeat(10, minmax(3.5rem, 7rem))'
+    };
+    
+    // Landscape mode grid configuration
+    const landscapeGridTemplateColumns = {
+        xs: 'repeat(4, minmax(3.0rem, 5.5rem))',
         // sm: 'repeat(3, minmax(0.5rem, 5rem))',
         // iphoneSE: 'repeat(3, minmax(0.5rem, 5rem))',
-        iphone12: 'repeat(3, minmax(2rem, 5rem))',
-        md: 'repeat(3, minmax(2rem, 5.5em))',
+        // iphone12: 'repeat(3, minmax(3.5rem, 5rem))',
+        //md: 'repeat(3, minmax(3.5rem, 5.5em))',
         // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
-        ipadMini: 'repeat(3, minmax(2rem, 5.5rem))',
-        ipadAir: 'repeat(3, minmax(2rem, 6rem))',
-        lg: 'repeat(4, minmax(2rem, 6rem))',
-        ipadPro: 'repeat(4, minmax(2rem, 7rem))',
-        xl: 'repeat(5, minmax(2rem, 7rem))',
-        xxl: 'repeat(6, minmax(2rem, 7rem))',
-        xxxl: 'repeat(10, minmax(2rem, 7rem))'
+        ipadMini: 'repeat(4, minmax(3.5rem, 5.5rem))',
+        //ipadAir: 'repeat(3, minmax(3.5rem, 6rem))',
+        lg: 'repeat(4, minmax(3.5rem, 6rem))',
+        ipadPro: 'repeat(4, minmax(3.5rem, 7rem))',
+        xl: 'repeat(5, minmax(3.5rem, 7rem))',
+        xxl: 'repeat(6, minmax(3.5rem, 7rem))',
+        xxxl: 'repeat(10, minmax(3.5rem, 7rem))'
     };
+    
+    // Use appropriate grid template based on orientation
+    const responsiveGridTemplateColumns = isPortrait ? portraitGridTemplateColumns : landscapeGridTemplateColumns;
 
     const styles = {
         mainBoxStyle: {
