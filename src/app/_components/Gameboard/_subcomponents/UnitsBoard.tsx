@@ -167,8 +167,8 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                     ))}
                 </Box>
             </Grid>
-            { /* Uncomment this to get visual feedback of the various breakpoints */}
-            { /* <BreakpointOverlay /> */}
+            {/* Show BreakpointOverlay when enabled in environment variables */}
+            {process.env.NEXT_PUBLIC_SHOW_BREAKPOINT_OVERLAY === 'true' && <BreakpointOverlay />}
         </Box>
     );
 };
