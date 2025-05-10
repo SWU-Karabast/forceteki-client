@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Box } from '@mui/material';
+import { Button, Box, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
 import { keyframes } from '@mui/system';
-import { Md10K } from 'react-icons/md';
-
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const pulseBorder = keyframes`
   0% {
@@ -50,23 +49,24 @@ const pulseGreenBorder = keyframes`
     box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
   }
 `;
-
-const styles = {
+    
+const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
         height: '100%',
         width: '100%',
         display: 'flex',
         justifyContent: 'flex-end',
-        alignItems: 'flex-end', // Changed from 'center' to 'flex-end' to align at bottom
+        alignItems: 'flex-end', 
         padding: { xs: '0.25rem', md: '0.5rem' },
     },
     buttonsContainer: {
         display: 'flex',
-        flexWrap: 'nowrap',
+        flexWrap: isPortrait ? 'wrap' : 'nowrap',
+        flexDirection: isPortrait ? 'column' : 'row',
         gap: { xs: '0.5rem', md: '.75rem' },
-        alignItems: 'center',
+        alignItems: isPortrait ? 'stretch' : 'center',
         justifyContent: 'flex-end',
-        width: '100%', // Take full width of parent
+        width: '100%', 
         maxWidth: '100%',
     },
     promptButton: {
@@ -75,7 +75,7 @@ const styles = {
         height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
         minWidth: { xs: '1.5rem', md: '2.5rem' },
         maxWidth: { xs: '5rem', sm: '7rem', md: '9rem'},
-        flex: '1 1 auto', // Allow buttons to grow and shrink
+        flex: '1 1 auto', 
         
         display: 'flex',
         alignItems: 'center',
@@ -102,7 +102,7 @@ const styles = {
             brightness: '0.7',
         },
     },
-};
+});
 
 
 interface IButtonsProps {
@@ -114,9 +114,12 @@ interface IButtonsProps {
 }
 
 const CardActionTray: React.FC = () => {
+    const { isPortrait } = useScreenOrientation();
     const [ resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverride ] = useState<boolean | null>(null);
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
     const playerState = gameState.players[connectedPlayer];
+
+    const styles = createStyles(isPortrait);
 
     const showTrayButtons = () => {
         if ( playerState.promptState.promptType === 'actionWindow' ||
@@ -194,6 +197,9 @@ interface IPromptButtonProps {
 
 
 const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled }) => {
+    const { isPortrait } = useScreenOrientation();
+    const styles = createStyles(isPortrait);
+    
     const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
         if (button.arg === 'claimInitiative') {
             return disabled ? {} : {
