@@ -206,7 +206,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '0.5rem',
             position: 'relative',
-            backgroundImage: (phase === 'setup' || phase === 'regroup') && card.selected ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.2)), url(${s3CardImageURL(card, cardStyle)})` : `url(${s3CardImageURL(card, cardStyle)})`,
+            backgroundImage: card.selected && (phase === 'setup' || phase === 'regroup') ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL(card, cardStyle)})` : `url(${s3CardImageURL(card, cardStyle)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
@@ -438,10 +438,11 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: card.selected && card.zone === 'hand' && (phase === 'setup' || phase === 'regroup') ? 'url(resource-icon.png)' : '',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
+            top: '20%',
             left: '50%',
             transform: 'translate(-50%, 0)',   
-            width: '25%',
-            height: '25%',
+            width: '24%',
+            height: '24%',
         },
     }
 
