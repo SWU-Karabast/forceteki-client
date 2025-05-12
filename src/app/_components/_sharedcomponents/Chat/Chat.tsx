@@ -44,13 +44,7 @@ const Chat: React.FC<IChatProps> = ({
             let textStyle;
             let messageText;
 
-            if (message.hasOwnProperty('alert')) {
-                // return (
-                //     <Typography key={index} sx={styles.alertText}>
-                //         {message.alert.message.join('')}
-                //     </Typography>
-                // )
-                
+            if (message.hasOwnProperty('alert')) {                
                 switch (message.alert.type) {
                     case 'notification':
                         textStyle = styles.notificationText;
