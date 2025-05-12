@@ -36,7 +36,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
     const formatOptions = Object.values(SwuGameFormat);
-    const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
+    const savedFormat = localStorage.getItem('format') !== SwuGameFormat.Premier && localStorage.getItem('format') !== SwuGameFormat.Open ? SwuGameFormat.Premier : localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
 
     // error states
