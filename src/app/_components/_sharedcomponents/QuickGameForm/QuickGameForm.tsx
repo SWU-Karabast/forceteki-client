@@ -12,7 +12,12 @@ import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal
 import { SwuGameFormat } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import {
+    getUserPayload,
+    retrieveDecksForUser,
+    saveDeckToLocalStorage,
+    saveDeckToServer
+} from '@/app/_utils/DeckStorageUtils';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -45,17 +50,18 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
 
     // Load saved decks when component mounts
     useEffect(() => {
-        loadDecks();
-    }, []);
+        fetchDecks();
+    }, [user]);
 
 
     // Load saved decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
-        if(decks.length > 0) {
-            setFavouriteDeck(decks[0].deckID);
+    const fetchDecks = async () => {
+        try {
+            await retrieveDecksForUser(user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
+        }catch (err) {
+            console.log(err);
+            alert('Server error when fetching decks');
         }
-        setSavedDecks(decks);
     };
 
     const handleChangeFormat = (format: SwuGameFormat) => {
@@ -84,6 +90,9 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
+                if(favouriteDeck && deckData && !deckLink) {
+                    deckData.deckID = favouriteDeck
+                }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -114,8 +123,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         }
         try {
             const payload = {
-                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
-                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6) },
+                user: getUserPayload(user),
                 deck: deckData,
                 format: format,
             };
@@ -126,6 +134,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(payload),
+                    credentials:'include'
                 }
             );
             const result = await response.json();
@@ -154,7 +163,11 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             }
             // Save the deck if needed
             if (saveDeck && deckData && userDeck) {
-                saveDeckToLocalStorage(deckData, deckLink);
+                if(user) {
+                    await saveDeckToServer(deckData, deckLink, user);
+                }else{
+                    saveDeckToLocalStorage(deckData, deckLink);
+                }
             }
 
             setDeckErrorSummary(null);

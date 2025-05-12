@@ -6,19 +6,13 @@ import {
     TableRow,
     TableCell,
     Typography,
-    Box
+    Box, Popover, PopoverOrigin
 } from '@mui/material';
-
-// Interface for our table data
-interface OpponentStats {
-    leader: string;
-    wins: number;
-    losses: number;
-    winPercentage: number;
-}
+import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { CardStyle, IMatchTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface AnimatedStatsTableProps {
-    data: OpponentStats[];
+    data: IMatchTableStats[];
     animationDuration?: number; // in ms
     staggerDelay?: number; // delay between row animations in ms
 }
@@ -29,48 +23,17 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     staggerDelay = 100
 }) => {
     // State for animated values
-    const [animatedData, setAnimatedData] = useState<Array<{
-        leader: string;
-        wins: number;
-        losses: number;
-        winPercentage: number;
-        animationComplete: boolean;
-    }>>([]);
+    const [animatedData, setAnimatedData] = useState<IMatchTableStats[]>([]);
+    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const open = Boolean(anchorElement);
 
     // State to track if animation has started
     const [animationStarted, setAnimationStarted] = useState(false);
 
     // Refs for animation frames
     const animationFrames = useRef<number[]>([]);
-
-    // Characters for text scrambling effect
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    // Function to generate scrambled text
-    const generateScrambledText = (targetText: string, progress: number) => {
-        // If animation is complete, return the final text
-        if (progress >= 1) return targetText;
-
-        // Calculate how many characters should be revealed
-        const revealedChars = Math.floor(targetText.length * progress);
-
-        // Build the result string
-        let result = '';
-        for (let i = 0; i < targetText.length; i++) {
-            if (i < revealedChars) {
-                // This character is revealed
-                result += targetText[i];
-            } else if (targetText[i] === ' ') {
-                // Preserve spaces
-                result += ' ';
-            } else {
-                // Replace with random character
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-        }
-
-        return result;
-    };
 
     // Function to animate a counter
     const animateCounter = (start: number, end: number, progress: number) => {
@@ -131,7 +94,6 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
 
                     if (newData[rowIndex]) {
                         // Animate text for leader
-                        const scrambledLeader = generateScrambledText(rowData.leader, progress);
 
                         // Animate counters
                         const animatedWins = animateCounter(0, rowData.wins, progress);
@@ -139,7 +101,8 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                         const animatedWinPercentage = animateCounter(0, rowData.winPercentage, progress);
 
                         newData[rowIndex] = {
-                            leader: scrambledLeader,
+                            leaderId:rowData.leaderId,
+                            baseId: rowData.baseId,
                             wins: animatedWins,
                             losses: animatedLosses,
                             winPercentage: animatedWinPercentage,
@@ -165,6 +128,37 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             animationFrames.current.forEach(frame => cancelAnimationFrame(frame));
         };
     }, [animationStarted, data, animationDuration, staggerDelay]);
+    // preview functions
+
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        const imageUrl = target.getAttribute('data-card-url');
+
+        if (!imageUrl) return;
+
+        hoverTimeout.current = window.setTimeout(() => {
+            setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
+        }, 500);
+    };
+
+    const handlePreviewClose = () => {
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+        setPreviewImage(null);
+    };
+
+    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+        return {
+            anchorOrigin:{
+                vertical: 'center',
+                horizontal: -5,
+            },
+            transformOrigin: {
+                vertical: 'center',
+                horizontal: 'right',
+            } };
+    }
 
     // ----------------------Styles-----------------------------//
     const styles = {
@@ -179,7 +173,44 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
         },
         tableHead: {
             backgroundColor: '#333',
-        }
+        },
+        leaderBaseHolder:{
+            display:'flex',
+            alignItems:'center',
+            height:'100%',
+            width: 'calc(55% - 5px)'
+        },
+        CardSetContainerStyle:{
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'relative',
+            width: '4.2rem',
+            height: '4.1rem'
+        },
+        boxGeneralStyling: {
+            backgroundColor: 'transparent',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            width: '7rem',
+            height: '4.18rem',
+            backgroundImage: 'url(/leaders/boba.webp)',
+            backgroundRepeat: 'no-repeat',
+            textAlign: 'center' as const,
+            color: 'white',
+            display: 'flex',
+            cursor: 'pointer',
+            position: 'relative' as const,
+        },
+        parentBoxStyling: {
+            position:'absolute',
+        },
+        cardPreview: {
+            borderRadius: '.38em',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '1.4 / 1',
+            width: '21rem',
+        },
     };
 
     return (
@@ -187,7 +218,7 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             <Table stickyHeader>
                 <TableHead sx={styles.tableHead}>
                     <TableRow>
-                        <TableCell><Typography sx={{ color: '#fff' }}>Opposing Leader</Typography></TableCell>
+                        <TableCell><Typography sx={{ color: '#fff' }}>Opponent</Typography></TableCell>
                         <TableCell><Typography sx={{ color: '#fff' }}>Wins</Typography></TableCell>
                         <TableCell><Typography sx={{ color: '#fff' }}>Losses</Typography></TableCell>
                         <TableCell><Typography sx={{ color: '#fff' }}>Win %</Typography></TableCell>
@@ -197,7 +228,24 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                     {animatedData.map((row, index) => (
                         <TableRow key={index}>
                             <TableCell sx={{ borderBottom:'none' }}>
-                                <Typography sx={{ color: '#fff' }}>{row.leader}</Typography>
+                                <Box sx={styles.leaderBaseHolder}>
+                                    <Box sx={styles.CardSetContainerStyle}>
+                                        <Box>
+                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: row.baseId, count:0 })})` }}
+                                                onMouseEnter={handlePreviewOpen}
+                                                onMouseLeave={handlePreviewClose}
+                                                data-card-url={s3CardImageURL({ id: row.baseId, count:0 })}
+                                            />
+                                        </Box>
+                                        <Box sx={{ ...styles.parentBoxStyling, left: '-8px', top: '14px' }}>
+                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: row.leaderId, count:0 },CardStyle.PlainLeader)})` }}
+                                                onMouseEnter={handlePreviewOpen}
+                                                onMouseLeave={handlePreviewClose}
+                                                data-card-url={s3CardImageURL({ id: row.leaderId, count:0 }, CardStyle.PlainLeader)}
+                                            />
+                                        </Box>
+                                    </Box>
+                                </Box>
                             </TableCell>
                             <TableCell sx={{ borderBottom:'none' }}>
                                 <Typography sx={{ color: '#fff' }}>{row.wins}</Typography>
@@ -211,6 +259,18 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                         </TableRow>
                     ))}
                 </TableBody>
+                <Popover
+                    id="mouse-over-popover"
+                    sx={{ pointerEvents: 'none' }}
+                    open={open}
+                    anchorEl={anchorElement}
+                    onClose={handlePreviewClose}
+                    disableRestoreFocus
+                    slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                    {...popoverConfig()}
+                >
+                    <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
+                </Popover>
             </Table>
         </Box>
     );

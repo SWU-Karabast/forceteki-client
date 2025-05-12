@@ -103,9 +103,37 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
     const [description, setDescription] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(bugReportState?.success);
+    const [screenResolution, setScreenResolution] = useState<{ width: number; height: number } | null>(null);
+    const [viewport, setViewport] = useState<{ width: number; height: number } | null>(null);
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
 
     const MAX_DESCRIPTION_LENGTH = 1000;
+
+    // Capture both physical screen resolution and browser viewport dimensions
+    useEffect(() => {
+        // Set physical screen resolution (monitor dimensions)
+        setScreenResolution({
+            width: window.screen.width,
+            height: window.screen.height
+        });
+        
+        const updateViewportSize = () => {
+            // Set browser viewport dimensions
+            setViewport({
+                width: window.innerWidth,
+                height: window.innerHeight
+            });
+        };
+        
+        // Set initial viewport size
+        updateViewportSize();
+        
+        // Update viewport on window resize
+        window.addEventListener('resize', updateViewportSize);
+        
+        // Clean up event listener on component unmount
+        return () => window.removeEventListener('resize', updateViewportSize);
+    }, []);
 
     // Clear form error if server error changes
     useEffect(() => {
@@ -137,8 +165,15 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
         setError('');
 
         try {
+            // Format bug report as JSON with description, screen resolution, and viewport
+            const bugReportMessage = {
+                description,
+                screenResolution,
+                viewport
+            };
+            
             // Send the bug report to the server
-            sendLobbyMessage(['reportBug', description]);
+            sendLobbyMessage(['reportBug', bugReportMessage]);
         } catch (err) {
             setError('An error occurred while submitting the bug report');
             console.error('Error submitting bug report:', err);

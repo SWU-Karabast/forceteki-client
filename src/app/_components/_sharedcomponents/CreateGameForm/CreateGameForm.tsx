@@ -23,7 +23,12 @@ import {
 import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import {
+    getUserPayload,
+    retrieveDecksForUser,
+    saveDeckToLocalStorage,
+    saveDeckToServer
+} from '@/app/_utils/DeckStorageUtils';
 
 const CreateGameForm = () => {
     const pathname = usePathname();
@@ -55,16 +60,17 @@ const CreateGameForm = () => {
     const [privacy, setPrivacy] = useState<string>('Public');
 
     useEffect(() => {
-        loadDecks();
-    }, []);
+        fetchDecks();
+    }, [user]);
 
     // Load saved decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
-        if(decks.length > 0) {
-            setFavouriteDeck(decks[0].deckID);
+    const fetchDecks = async() => {
+        try {
+            await retrieveDecksForUser(user, { setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
+        }catch (err){
+            console.log(err);
+            alert('Server error when fetching decks');
         }
-        setSavedDecks(decks);
     }
     const handleChangeFormat = (format: SwuGameFormat) => {
         localStorage.setItem('format', format);
@@ -92,6 +98,9 @@ const CreateGameForm = () => {
             const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
+                if(favouriteDeck && deckData && !deckLink) {
+                    deckData.deckID = favouriteDeck
+                }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -126,8 +135,7 @@ const CreateGameForm = () => {
         }
         try {
             const payload = {
-                user: { id: user?.id || localStorage.getItem('anonymousUserId'),
-                    username:user?.username || 'anonymous '+ localStorage.getItem('anonymousUserId')?.substring(0,6) },
+                user: getUserPayload(user),
                 deck: deckData,
                 isPrivate: privacy === 'Private',
                 format: format,
@@ -140,6 +148,7 @@ const CreateGameForm = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(payload),
+                    credentials: 'include'
                 }
             );
             const result = await response.json();
@@ -158,9 +167,14 @@ const CreateGameForm = () => {
                 }
                 return;
             }
+
+            // save deck to local storage
             if (saveDeck && deckData && deckLink){
-                // save new deck to local storage and only if its a new deck
-                saveDeckToLocalStorage(deckData, deckLink);
+                if(user) {
+                    await saveDeckToServer(deckData, deckLink, user);
+                }else{
+                    saveDeckToLocalStorage(deckData, deckLink);
+                }
             }
 
             setDeckErrorSummary(null);
