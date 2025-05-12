@@ -215,6 +215,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setBugReportState(result);
         })
 
+        if (socket) {
+            socket.disconnect();
+        }
         setSocket(newSocket);
 
         return () => {
