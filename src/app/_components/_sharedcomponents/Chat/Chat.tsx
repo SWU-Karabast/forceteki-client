@@ -21,17 +21,20 @@ const Chat: React.FC<IChatProps> = ({
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
     // Function to format message items, handling spectator view
-    const formatMessageItem = (item: IChatObject | string) => {
-        if (typeof item === 'object' && item?.id) {
+    const formatMessageItem = (item: IChatObject | string | number) => {
+        if (typeof item === 'object') {
             // If user is a spectator, show Player 1/Player 2 instead of names
-            if (isSpectator) {
+            if (isSpectator && item.id) {
                 return item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
             }
             // Otherwise show the actual name
             return item.name;
         }
-        // If not an object with ID, just return the string
-        return typeof item === 'string' ? item : item?.name || '';
+        // If not an object, just return the string
+        if (typeof item === 'string' || typeof item === 'number') {
+            return item;
+        }
+        return '';
     };
 
     // TODO: Standardize these chat types
