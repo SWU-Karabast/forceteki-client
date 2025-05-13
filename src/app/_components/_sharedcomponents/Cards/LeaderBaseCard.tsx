@@ -210,19 +210,23 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
     }
 
-    const getForceTokenIconStyle = (player: any) => ({
-        position: 'absolute',
-        width: '3rem',
-        aspectRatio: '1 / 1',
-        top:'32%',
-        right: '-20px',
-        backgroundSize: 'contain',
-        backgroundRepeat: 'no-repeat',
-        backgroundImage: player.aspects.includes('villainy') 
-            ? 'url(/ForceTokenVillainy.png)'
-            : 'url(/ForceTokenHeroism.png)',
-        filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
-    });
+    const getForceTokenIconStyle = (player: any) => { 
+        const imageAspect = player.aspects.includes('villainy') ? 'Villainy' : 'Heroism';
+        const opponentStr = player.id !== connectedPlayer ? 'Opponent' : '';
+        const backgroundImage = `url(/ForceToken${imageAspect}${opponentStr}.png)`;
+
+        return {
+            position: 'absolute',
+            width: '3rem',
+            aspectRatio: '1 / 1',
+            top:'32%',
+            right: '-20px',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage,
+            filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+        };
+    }
 
     return (
         <Box
