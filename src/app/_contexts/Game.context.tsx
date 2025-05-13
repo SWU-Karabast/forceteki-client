@@ -186,7 +186,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('inactiveDisconnect', () => {            
-            router.push('/');
+            alert('You have been disconnected due to inactivity');
             newSocket.disconnect();
         });
 
