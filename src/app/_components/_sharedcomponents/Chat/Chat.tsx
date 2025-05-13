@@ -116,7 +116,8 @@ const Chat: React.FC<IChatProps> = ({
         },
         notificationText: {
             fontSize: { xs: '0.85em', md: '1em' },
-            color: 'purple',
+            color: '#d500f9',
+            fontWeight: 'bold',
             lineHeight: { xs: '0.85rem', md: '1em' },
         },
         warningText: {
