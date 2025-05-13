@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import Grid from '@mui/material/Grid2';
 import { Typography } from '@mui/material';
 import KarabastBanner from './_components/_sharedcomponents/Banner/Banner';
@@ -32,7 +31,6 @@ const Home: React.FC = () => {
             fontSize: '0.75rem',
         },
     };
-
     return (
         <Grid container sx={styles.gridContainer}>
 

@@ -15,7 +15,8 @@
 		"@mui/icons-material": "^6.1.8",
 		"@mui/material": "^6.1.8",
 		"html-react-parser": "^5.1.18",
-		"next": "14.2.22",
+		"jsonwebtoken": "^9.0.2",
+		"next": "14.2.26",
 		"next-auth": "^4.24.10",
 		"react": "^18",
 		"react-dom": "^18",
@@ -25,6 +26,7 @@
 	},
 	"devDependencies": {
 		"@stylistic/eslint-plugin": "^2.12.1",
+		"@types/jsonwebtoken": "^9.0.9",
 		"@types/node": "^20",
 		"@types/react": "^18",
 		"@types/react-dom": "^18",

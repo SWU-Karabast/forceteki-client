@@ -18,7 +18,12 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { loadSavedDecks, saveDeckToLocalStorage } from '@/app/_utils/LocalStorageUtils';
+import {
+    retrieveDecksForUser,
+    saveDeckToLocalStorage,
+    saveDeckToServer
+} from '@/app/_utils/DeckStorageUtils';
+import { useUser } from '@/app/_contexts/User.context';
 import { SwuGameFormat } from '@/app/_constants/constants';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
@@ -26,6 +31,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     owner,
 }) => {
     const { lobbyState, connectedPlayer, sendLobbyMessage } = useGame();
+    const { user } = useUser();
     const [favouriteDeck, setFavouriteDeck] = useState<string>('');
     const [deckLink, setDeckLink] = useState<string>('');
     const [showTooltip, setShowTooltip] = useState(false);
@@ -34,7 +40,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const lobbyFormat = lobbyState ? lobbyState.gameFormat : null;
-
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
@@ -52,16 +57,17 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     };
 
     useEffect(() => {
-        loadDecks();
+        fetchDecks();
     }, []);
 
     // Load saved decks from localStorage
-    const loadDecks = () => {
-        const decks = loadSavedDecks();
-        if(decks.length > 0) {
-            setFavouriteDeck(decks[0].deckID);
+    const fetchDecks = async () => {
+        try {
+            await retrieveDecksForUser(user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
+        } catch (err){
+            console.log(err);
+            alert('Server error when fetching decks');
         }
-        setSavedDecks(decks);
     };
 
     const handleLinkToggle = () =>{
@@ -88,6 +94,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
+                if(favouriteDeck && deckData && !deckLink) {
+                    deckData.deckID = favouriteDeck
+                }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
@@ -98,7 +107,20 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             }
             // save deck to local storage
             if (saveDeck && deckData && deckLink){
-                saveDeckToLocalStorage(deckData, deckLink);
+                try {
+                    if(user) {
+                        if(!await saveDeckToServer(deckData, deckLink, user)){
+                            throw new Error('Error saving the deck to server');
+                        }
+                    }else{
+                        saveDeckToLocalStorage(deckData, deckLink);
+                    }
+                }catch (err) {
+                    console.log(err);
+                    setDeckErrorSummary('Server error when saving deck to server.');
+                    setDeckErrorDetails('There was an error when saving deck to the server. Please contact the developer team on discord.');
+                    setErrorModalOpen(true);
+                }
             }
 
             sendLobbyMessage(['changeDeck', deckData])
@@ -493,10 +515,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             )}
             <Divider sx={{ mt: 1, borderColor: '#666', display: lobbyFormat != 'nextSetPreview' ? 'none' : 'block' }} />
             <Box sx={{ display: lobbyFormat != 'nextSetPreview' ? 'none' : 'block' }}>
-                <Button 
-                    type="button" 
-                    onClick={handleUseForceBase} 
-                    variant="contained" 
+                <Button
+                    type="button"
+                    onClick={handleUseForceBase}
+                    variant="contained"
                     sx={{
                         ...styles.submitButtonStyle,
                         mt: '1em',

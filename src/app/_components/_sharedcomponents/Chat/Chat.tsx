@@ -17,9 +17,25 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { connectedPlayer, isSpectator } = useGame();
+    const { connectedPlayer, isSpectator, getOpponent } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
+    // Function to format message items, handling spectator view
+    const formatMessageItem = (item: IChatObject | string | number) => {
+        if (typeof item === 'object') {
+            // If user is a spectator, show Player 1/Player 2 instead of names
+            if (isSpectator && item.id) {
+                return item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
+            }
+            // Otherwise show the actual name
+            return item.name;
+        }
+        // If not an object, just return the string
+        if (typeof item === 'string' || typeof item === 'number') {
+            return item;
+        }
+        return '';
+    };
 
     // TODO: Standardize these chat types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,13 +51,13 @@ const Chat: React.FC<IChatProps> = ({
                 return (
                     <Typography key={index} sx={styles.messageText}>
                         <span style={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
-                            {message[0].name}
+                            {isSpectator ? connectedPlayer === message[0].id ? 'Player 1' : 'Player 2' : message[0].name}
                         </span>
                         : {message.slice(1).join('')}
                     </Typography>
                 )
             }
-            const stringMessage = message.map((item: IChatObject | string) => typeof item === 'object' ? item?.name : item).join('');
+            const stringMessage = message.map((item: IChatObject | string) => formatMessageItem(item)).join('');
             return (
                 <Typography key={index} sx={styles.messageText}>
                     {stringMessage}
@@ -66,7 +82,7 @@ const Chat: React.FC<IChatProps> = ({
             mt: '.5vh',
             mb: '0.5vh',
         },
-        chatBox: { 
+        chatBox: {
             p: '0.5em',
             minHeight: '100px',
             overflowY: 'auto',
@@ -127,7 +143,7 @@ const Chat: React.FC<IChatProps> = ({
 
     return (
         <>
-            <Divider sx={styles.divider} /> 
+            <Divider sx={styles.divider} />
             <Box sx={styles.chatBox}>
                 {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
                     return formatMessage(chatEntry.message, index);

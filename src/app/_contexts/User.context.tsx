@@ -11,6 +11,7 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { IUserContextType } from './UserTypes';
 import { v4 as uuid } from 'uuid';
+import { getUserFromServer } from '@/app/_utils/DeckStorageUtils';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
@@ -18,6 +19,8 @@ const UserContext = createContext<IUserContextType>({
     login: () => {},
     devLogin: () => {},
     logout: () => {},
+    updateUsername: () => {},
+    updateWelcomeMessage: () => {},
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
@@ -28,6 +31,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
     const pathname = usePathname();
+    const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
 
     useEffect(() => {
         // check dev user first
@@ -37,27 +41,61 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 handleDevSetUser(storedUser);
             }
         }
-    
-        if (session?.user) {
-            setUser(prevUser => {
-                if (prevUser?.id === session.user.id) return prevUser; // Avoid re-setting same user
-                return {
-                    id: session.user.id || null,
-                    username: session.user.name || null,
-                    email: session.user.email || null,
-                    provider: session.user.provider || null,
-                };
-            });
-        } else if (!storedUser) {
-            let anonymousId = localStorage.getItem('anonymousUserId');
-            if (!anonymousId) {
-                anonymousId = uuid();
-                localStorage.setItem('anonymousUserId', anonymousId);
+        const syncUserWithServer = async () => {
+            // If user is already logged in with the current session, do nothing
+            if (session?.user && user?.providerId === session.user.id) {
+                return;
             }
-            setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId)); // Avoid redundant updates
-        }
-    }, [session, pathname]);
+            // If user is logged in with session but needs to sync with server
+            let needsLogout = false;
+            if (session?.user) {
+                try {
+                    const serverUser = await getUserFromServer();
+                    setUser({
+                        id: serverUser.id,
+                        username: serverUser.username,
+                        email: session.user.email || null,
+                        provider: session.user.provider || null,
+                        providerId: session.user.id || null,
+                        welcomeMessageSeen: serverUser.welcomeMessageSeen,
+                        authenticated: true,
+                        preferences: serverUser.preferences
+                    });
+                } catch (error) {
+                    // Just flag the error, handle anonymous user setting separately
+                    console.error('Error syncing user with server:', error);
+                    // we need to logout the user when an error with getting the user happens
+                    needsLogout = true;
+                }
+            }
+            if(needsLogout){
+                logout();
+            }
+        };
 
+        // Handle setting anonymous user if needed
+        const setupAnonymousUserIfNeeded = (storedUser: string | null) => {
+            // Only set anonymous user if no session exists
+            if (!session?.user && !storedUser) {
+                let anonymousId = localStorage.getItem('anonymousUserId');
+                if (!anonymousId) {
+                    anonymousId = uuid();
+                    localStorage.setItem('anonymousUserId', anonymousId);
+                }
+                setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId));
+            }
+        };
+
+        // to prevent race conditions
+        const initializeUser = async (storedUser: string | null) => {
+            await syncUserWithServer();
+            setupAnonymousUserIfNeeded(storedUser);
+        };
+        if(hideLogin && (session?.user || storedUser)){
+            logout();
+        }
+        initializeUser(storedUser);
+    }, [session, pathname]);
 
     const login = (provider: 'google' | 'discord') => {
         signIn(provider, {
@@ -73,6 +111,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 username: 'Order66',
                 email: null,
                 provider: null,
+                providerId: null,
+                authenticated: true,
+                preferences: { cardback: undefined }
             });
         } else if (user === 'ThisIsTheWay') {
             setUser({
@@ -80,8 +121,31 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 username: 'ThisIsTheWay',
                 email: null,
                 provider: null,
+                providerId: null,
+                authenticated: true,
+                preferences: { cardback: undefined }
             });
         }
+    }
+
+    const updateUsername = (newUsername: string) => {
+        setUser((prevUser) => {
+            if (!prevUser) return null;
+            return {
+                ...prevUser,
+                username: newUsername,
+            };
+        });
+    };
+
+    const updateWelcomeMessage = () => {
+        setUser((prevUser) => {
+            if(!prevUser) return null;
+            return {
+                ...prevUser,
+                welcomeMessageSeen: false
+            }
+        })
     }
 
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
@@ -104,7 +168,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage }}>
             {children}
         </UserContext.Provider>
     );
