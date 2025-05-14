@@ -513,8 +513,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
-            <Divider sx={{ mt: 1, borderColor: '#666', display: lobbyFormat != 'nextSetPreview' ? 'none' : 'block' }} />
-            <Box sx={{ display: lobbyFormat != 'nextSetPreview' ? 'none' : 'block' }}>
+            <Divider sx={{ mt: 1, borderColor: '#666', display: lobbyFormat !== 'premier' ? 'block': 'none' }} />
+            <Box sx={{ display: lobbyFormat !== 'premier' ? 'block': 'none' }}>
                 <Button
                     type="button"
                     onClick={handleUseForceBase}
