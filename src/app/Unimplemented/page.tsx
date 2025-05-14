@@ -212,7 +212,7 @@ const UnimplementedPage = () => {
             aspectRatio: '1 / 1.4',
             width: '16rem',
         },
-        cardLeaderBasePreview:{
+        cardBasePreview:{
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
@@ -289,7 +289,7 @@ const UnimplementedPage = () => {
                         {filteredCards.map((card: IPreviewCard) => (
                             <Box sx={styles.cardContainer} key={card.id}>
                                 <Box
-                                    sx={card.types === 'leader' || card.types === 'base' ? {
+                                    sx={card.types === 'base' ? {
                                         ...styles.leaderStyleCard,
                                         backgroundImage: `url(${s3CardImageURL(card)})`,
                                     } : {
@@ -326,8 +326,8 @@ const UnimplementedPage = () => {
             >
                 <Box
                     sx={
-                        previewCardType === 'leader' || previewCardType === 'base'
-                            ? { ...styles.cardLeaderBasePreview, backgroundImage: previewImage }
+                        previewCardType === 'base'
+                            ? { ...styles.cardBasePreview, backgroundImage: previewImage }
                             : { ...styles.cardPreview, backgroundImage: previewImage }
                     }
                     tabIndex={-1}
