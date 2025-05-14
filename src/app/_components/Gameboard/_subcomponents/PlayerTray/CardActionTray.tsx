@@ -74,7 +74,7 @@ const createStyles = (isPortrait: boolean) => ({
         borderRadius: '1rem',
         height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
         minWidth: { xs: '1.5rem', md: '2.5rem' },
-        maxWidth: { xs: '5rem', sm: '7rem', md: '9rem'},
+        maxWidth: { xs: '5rem', sm: '7rem', md: '9rem' },
         flex: '1 1 auto', 
         
         display: 'flex',
@@ -217,7 +217,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
             };
         }
 
-        if (button.arg === 'pass') {
+        if (button.arg === 'pass' || button.arg === 'passAbility') {
             return disabled ? {} : {
                 background: `linear-gradient(rgb(29, 29, 29), #3d3a0a) padding-box, 
                     linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
