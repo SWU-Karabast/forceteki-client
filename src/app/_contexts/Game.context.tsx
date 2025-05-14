@@ -185,6 +185,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             resetStates();
         });
 
+        newSocket.on('inactiveDisconnect', () => {            
+            alert('You have been disconnected due to inactivity');
+            newSocket.disconnect();
+        });
+
         newSocket.on('gamestate', (gameState: any) => {
             if(isSpectatorMode){
                 setConnectedPlayer(Object.keys(gameState.players)[0])
