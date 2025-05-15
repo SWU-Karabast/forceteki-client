@@ -515,21 +515,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             )}
             <Divider sx={{ mt: 1, borderColor: '#666', display: lobbyFormat !== 'premier' ? 'block': 'none' }} />
             <Box sx={{ display: lobbyFormat !== 'premier' ? 'block': 'none' }}>
-                <Button
-                    type="button"
-                    onClick={handleUseForceBase}
-                    variant="contained"
-                    sx={{
-                        ...styles.submitButtonStyle,
-                        mt: '1em',
-                        ml: 0
-
-                    }}
-                >
-                    Use Force Base
-                </Button>
                 <Typography sx={{ fontSize: '.9em', mt: 1 }}>
-                    Replaces your base with a Force Base of the same aspect.
+                    Official Force bases are now available on SWUDB!
                 </Typography>
 
             </Box>
