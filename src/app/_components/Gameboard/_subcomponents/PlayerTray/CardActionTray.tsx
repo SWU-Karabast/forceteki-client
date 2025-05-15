@@ -35,6 +35,21 @@ const pulseYellowBorder = keyframes`
   }
 `;
 
+const pulseYellowBorderAbility = keyframes`
+  0% {
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 8px rgba(204, 172, 0, 0.6);
+  }
+  50% {
+    border-color: rgba(220, 185, 0, 0.6);
+    box-shadow: 0 0 16px rgba(220, 185, 0, 0.8);
+  }
+  100% {
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 8px rgba(204, 172, 0, 0.6);
+  }
+`;
+
 const pulseGreenBorder = keyframes`
   0% {
     border-color: rgba(0, 170, 70, 0.4);
@@ -228,7 +243,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                     border: '1px solid rgba(220, 185, 0, 0.7)',
                 },
                 '&:not(:disabled)': {
-                    animation: `${pulseYellowBorder} 4s infinite ease-in-out`,
+                    animation: button.arg === 'pass' ? `${pulseYellowBorder} 4s infinite ease-in-out` : `${pulseYellowBorderAbility} 3s infinite ease-in-out`,
                     boxShadow: '0 0 6px rgba(204, 172, 0, 0.5)',
                     border: '1px solid rgba(204, 172, 0, 0.5)',
                 },
