@@ -41,12 +41,25 @@ const Chat: React.FC<IChatProps> = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const formatMessage = (message: any, index: number) => {
         try {
-            if (message.hasOwnProperty('alert')) {
-                return (
-                    <Typography key={index} sx={styles.alertText}>
-                        {message.alert.message.join('')}
-                    </Typography>
-                )
+            let textStyle;
+            let messageText;
+
+            if (message.hasOwnProperty('alert')) {                
+                switch (message.alert.type) {
+                    case 'notification':
+                        textStyle = styles.notificationText;
+                        break;
+                    case 'warning':
+                        textStyle = styles.warningText;
+                        break;
+                    case 'danger':
+                        textStyle = styles.alertText;
+                        break;
+                    default:
+                        textStyle = styles.messageText;
+                }
+
+                messageText = message.alert.message;
             } else if (message[0].type === 'playerChat') {
                 return (
                     <Typography key={index} sx={styles.messageText}>
@@ -56,10 +69,13 @@ const Chat: React.FC<IChatProps> = ({
                         : {message.slice(1).join('')}
                     </Typography>
                 )
+            } else {
+                messageText = message;
+                textStyle = styles.messageText;
             }
-            const stringMessage = message.map((item: IChatObject | string) => formatMessageItem(item)).join('');
+            const stringMessage = messageText.map((item: IChatObject | string) => formatMessageItem(item)).join('');
             return (
-                <Typography key={index} sx={styles.messageText}>
+                <Typography key={index} sx={textStyle}>
                     {stringMessage}
                 </Typography>
             )
@@ -98,9 +114,20 @@ const Chat: React.FC<IChatProps> = ({
             fontSize: { xs: '0.75em', md: '1em' },
             lineHeight: { xs: '0.75rem', md: '1rem' },
         },
+        notificationText: {
+            fontSize: { xs: '0.85em', md: '1em' },
+            color: '#d500f9',
+            fontWeight: 'bold',
+            lineHeight: { xs: '0.85rem', md: '1em' },
+        },
+        warningText: {
+            fontSize: { xs: '0.85em', md: '1em' },
+            color: 'yellow',
+            lineHeight: { xs: '0.85rem', md: '1em' },
+        },
         alertText: {
             fontSize: { xs: '0.85em', md: '1em' },
-            color: 'purple',
+            color: 'red',
             lineHeight: { xs: '0.85rem', md: '1em' },
         },
         inputContainer: {

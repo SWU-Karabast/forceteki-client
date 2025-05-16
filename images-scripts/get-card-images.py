@@ -5,8 +5,9 @@ import requests
 BASE_URL = "https://swudb.com/images/cards/{set_code}/{card_number}.png"
 SET_CODE = "LOF"  # Change this manually when switching sets
 OUTPUT_DIR = f"downloaded_images/{SET_CODE}"
-MAX_ATTEMPTS = 300  # Safety limit (adjust if needed)
+MAX_ATTEMPTS = 256  # Safety limit (adjust if needed)
 LEADER_ATTEMPTS = 30
+OVERWRITE = False
 
 # Ensure output directory exists
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -18,6 +19,11 @@ def download_image(card_number):
     leader_url = BASE_URL.format(set_code=SET_CODE, card_number=f"{str(card_number).zfill(3)}-portrait")
     leader_url_alt = BASE_URL.format(set_code=SET_CODE, card_number=f"{str(card_number).zfill(3)}-back")
     leader_save_path = os.path.join(OUTPUT_DIR, f"{str(card_number).zfill(3)}-base.png")
+
+    # Check if the file already exists
+    if os.path.exists(save_path) and not OVERWRITE:
+        print(f"✅ Already exists: {save_path}")
+        return
 
     try:
         response = requests.get(url, stream=True, timeout=10)
