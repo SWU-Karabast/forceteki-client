@@ -65,6 +65,21 @@ const pulseGreenBorder = keyframes`
   }
 `;
 
+const pulseRedBorder = keyframes`
+  0% {
+    border-color: rgba(230, 0, 60, 0.4);
+    box-shadow: 0 0 4px rgba(230, 0, 60, 0.4);
+  }
+  50% {
+    border-color: rgba(255, 0, 70, 0.6);
+    box-shadow: 0 0 8px rgba(255, 0, 70, 0.6);
+  }
+  100% {
+    border-color: rgba(230, 0, 60, 0.4);
+    box-shadow: 0 0 4px rgba(230, 0, 60, 0.4);
+  }
+`;
+
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
         height: '100%',
@@ -264,6 +279,24 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                     animation: `${pulseGreenBorder} 4s infinite ease-in-out`,
                     boxShadow: '0 0 6px rgba(0, 170, 70, 0.5)',
                     border: '1px solid rgba(0, 170, 70, 0.5)',
+                },
+            };
+        }
+
+        if (button.arg === 'cancel') {
+            return disabled ? {} : {
+                background: `linear-gradient(rgb(29, 29, 29), #641515) padding-box, 
+                    linear-gradient(to top, #b82121, #641515) border-box`,
+                '&:hover': {
+                    background: `linear-gradient(rgb(29, 29, 29),rgb(110, 25, 25)) padding-box, 
+                    linear-gradient(to top, #e02929, #641515) border-box`,
+                    boxShadow: '0 0 8px rgba(230, 0, 60, 0.7)',
+                    border: '1px solid rgba(255, 0, 70, 0.7)',
+                },
+                '&:not(:disabled)': {
+                    animation: `${pulseRedBorder} 4s infinite ease-in-out`,
+                    boxShadow: '0 0 6px rgba(230, 0, 60, 0.5)',
+                    border: '1px solid rgba(230, 0, 60, 0.5)',
                 },
             };
         }
