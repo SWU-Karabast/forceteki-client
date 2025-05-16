@@ -7,12 +7,14 @@ import { IResourcesProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
 }) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
+    const { isPortrait } = useScreenOrientation();
 
     const availableResources = gameState.players[trayPlayer].availableResources;
     const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;

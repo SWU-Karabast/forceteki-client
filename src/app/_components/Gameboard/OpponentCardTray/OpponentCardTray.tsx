@@ -12,10 +12,12 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { useRouter } from 'next/navigation';
 import { debugBorder } from '@/app/_utils/debug';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
     const { openPopup } = usePopup();
+    const { isPortrait } = useScreenOrientation();
     const router = useRouter();
     const handleExitButton = () => {
         if (isSpectator){
@@ -67,11 +69,14 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const styles = {
         leftColumn: {
             ...debugBorder('red'),
+            flexDirection: isPortrait ? 'column' : 'row',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: '1rem 0 1rem 2rem',
+            padding: isPortrait ? '0.5rem' : '1.0rem',
             gap: '1rem',
+            height: '100%',
+            boxSizing: 'border-box',
         },
         centerColumn: {
             ...debugBorder('green'),
@@ -138,7 +143,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 height: '100%',
                 display: 'flex',
                 flexWrap: 'nowrap',
-                columnGap: '2rem', // 2rem gap between columns
+                columnGap: '1rem', // 2rem gap between columns
                 position: 'relative'
             }}
         >

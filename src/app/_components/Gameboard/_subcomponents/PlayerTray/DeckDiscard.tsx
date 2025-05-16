@@ -6,12 +6,14 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { debugBorder } from '@/app/_utils/debug';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = (
     trayPlayer
 ) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
+    const { isPortrait } = useScreenOrientation();
 
     const topDiscardCard = gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].at(-1);
     const topDiscardCardUrl = topDiscardCard && typeof topDiscardCard === 'object' ? `url(${s3CardImageURL(topDiscardCard)})` : 'none';
@@ -72,10 +74,12 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             ...debugBorder('yellow'),
             display: 'flex',
             flexDirection: 'row',
-            gap: '1rem',
-            flex: 1,
-            height: '100%',
+            gap: isPortrait ? '0.5rem' : '1rem',
+            flex: isPortrait ? '0 0 auto' : 1,
+            width: isPortrait ? '100%' : 'auto',
+            height: isPortrait ? '50%' : '100%',
             justifyContent: 'center',
+            alignItems: 'center',
         },
         discard: {
             discardCardStyle: {
