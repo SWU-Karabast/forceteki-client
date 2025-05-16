@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { debugBorder } from '@/app/_utils/debug';
 import { IResourcesProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
@@ -54,6 +55,7 @@ const Resources: React.FC<IResourcesProps> = ({
             overflow: 'visible',
             cursor: 'pointer',
             border: selectableResource ? '2px solid var(--selection-green)' : 'none',
+            ...(!selectableResource && debugBorder('purple')),
             '&:hover': {
                 background:
                     trayPlayer === connectedPlayer

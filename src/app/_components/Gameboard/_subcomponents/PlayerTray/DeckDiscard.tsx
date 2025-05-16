@@ -5,6 +5,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { debugBorder } from '@/app/_utils/debug';
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = (
     trayPlayer
@@ -68,6 +69,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
 
     const styles = {
         containerStyle: {
+            ...debugBorder('yellow'),
             display: 'flex',
             flexDirection: 'row',
             gap: '1rem',

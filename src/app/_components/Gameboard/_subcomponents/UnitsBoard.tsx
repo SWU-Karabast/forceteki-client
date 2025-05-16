@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Grid2 as Grid } from '@mui/material';
+import { debugBorder, isBreakpointOverlayEnabled } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
@@ -106,10 +107,10 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         //iphone12: 'repeat(3, minmax(3.5rem, 5rem))',
         md: 'repeat(3, minmax(3.5rem, 5.5em))',
         // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
-       // ipadMini: 'repeat(3, minmax(3.5rem, 5.5rem))',
-       // ipadAir: 'repeat(3, minmax(3.5rem, 6rem))',
+        // ipadMini: 'repeat(3, minmax(3.5rem, 5.5rem))',
+        // ipadAir: 'repeat(3, minmax(3.5rem, 6rem))',
         lg: 'repeat(3, minmax(3.5rem, 6rem))',
-       // ipadPro: 'repeat(3, minmax(3.5rem, 7rem))',
+        // ipadPro: 'repeat(3, minmax(3.5rem, 7rem))',
         //xl: 'repeat(5, minmax(3.5rem, 7rem))',
         //xxl: 'repeat(6, minmax(3.5rem, 7rem))',
         //xxxl: 'repeat(10, minmax(3.5rem, 7rem))'
@@ -144,12 +145,14 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             overflow: 'hidden',
         },
         containerStyle: {
+            ...debugBorder('green'),
             height: '100%',
             justifyContent: 'space-between',
             display: 'flex',
             flexDirection: 'column',
         },
         opponentGridStyle: {
+            ...debugBorder('red'),
             display: 'grid',
             gap: 'clamp(2px, .5vw, 10px)',
             direction: arena === 'groundArena' ? 'ltr' : 'rtl',
@@ -158,6 +161,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             justifyContent: 'start',
         },
         playerGridStyle: {
+            ...debugBorder('blue'),
             display: 'grid',
             gap: 'clamp(5px, .5vw, 10px)',
             direction: arena === 'groundArena' ? 'ltr' : 'rtl',
@@ -192,7 +196,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 </Box>
             </Grid>
             {/* Show BreakpointOverlay when enabled in environment variables */}
-            {process.env.NEXT_PUBLIC_SHOW_BREAKPOINT_OVERLAY === 'true' && <BreakpointOverlay />}
+            {isBreakpointOverlayEnabled() && <BreakpointOverlay />}
         </Box>
     );
 };

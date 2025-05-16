@@ -1,5 +1,6 @@
 import React from 'react';
 import { Typography, Box, Grid2 as Grid } from '@mui/material';
+import { debugBorder } from '@/app/_utils/debug';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -78,6 +79,7 @@ const Board: React.FC<IBoardProps> = ({
             padding: '2rem 0',
         },
         leaderBaseContainer: {
+            ...debugBorder('yellow'),
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',

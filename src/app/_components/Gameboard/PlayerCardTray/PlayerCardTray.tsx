@@ -8,6 +8,7 @@ import CardActionTray from '../_subcomponents/PlayerTray/CardActionTray';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import { IPlayerCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { debugBorder, breakpointBorder } from '@/app/_utils/debug';
 
 const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSidebar }) => {
     const { gameState, connectedPlayer } = useGame();
@@ -17,6 +18,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
 
     const styles = {
         leftColumnStyle: {
+            ...debugBorder('red'),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
@@ -28,11 +30,13 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             gap: '1rem',
         },
         centerColumnStyle: {
+            ...debugBorder('green'),
             display: 'flex',
             alignItems: 'flex-end',
             height: '100%',
         },
         rightColumnStyle: {
+            ...debugBorder('red'),
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'flex-end',
@@ -50,6 +54,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             zIndex: '1',
         },
         chatColumn: {
+            ...debugBorder('yellow'),
             display: 'flex',
             alignItems: 'center', 
             alignSelf: 'flex-end', 

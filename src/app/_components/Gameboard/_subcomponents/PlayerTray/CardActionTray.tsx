@@ -3,6 +3,7 @@ import { Button, Box, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
 import { keyframes } from '@mui/system';
+import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const pulseBorder = keyframes`
@@ -52,6 +53,7 @@ const pulseGreenBorder = keyframes`
 
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
+        ...debugBorder('yellow'),
         height: '100%',
         width: '100%',
         display: 'flex',
@@ -60,6 +62,7 @@ const createStyles = (isPortrait: boolean) => ({
         padding: { xs: '0.25rem', md: '0.5rem' },
     },
     buttonsContainer: {
+        ...debugBorder('purple'),
         display: 'flex',
         flexWrap: isPortrait ? 'wrap' : 'nowrap',
         flexDirection: isPortrait ? 'column' : 'row',
