@@ -102,18 +102,18 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     // one set of breakpoints (we don't have landscape ones.. yet)
     const portraitGridTemplateColumns = {
         xs: 'repeat(2, minmax(3.5rem, 5.5rem))',
-        //sm: 'repeat(3, minmax(0.5rem, 5rem))',
+        // sm: 'repeat(3, minmax(0.5rem, 5rem))',
         // iphoneSE: 'repeat(3, minmax(0.5rem, 5rem))',
-        //iphone12: 'repeat(3, minmax(3.5rem, 5rem))',
+        // iphone12: 'repeat(3, minmax(3.5rem, 5rem))',
         md: 'repeat(3, minmax(3.5rem, 5.5em))',
         // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
         // ipadMini: 'repeat(3, minmax(3.5rem, 5.5rem))',
         // ipadAir: 'repeat(3, minmax(3.5rem, 6rem))',
         lg: 'repeat(3, minmax(3.5rem, 6rem))',
         // ipadPro: 'repeat(3, minmax(3.5rem, 7rem))',
-        //xl: 'repeat(5, minmax(3.5rem, 7rem))',
-        //xxl: 'repeat(6, minmax(3.5rem, 7rem))',
-        //xxxl: 'repeat(10, minmax(3.5rem, 7rem))'
+        // xl: 'repeat(5, minmax(3.5rem, 7rem))',
+        // xxl: 'repeat(6, minmax(3.5rem, 7rem))',
+        // xxxl: 'repeat(10, minmax(3.5rem, 7rem))'
     };
     
     // Landscape mode grid configuration
@@ -122,10 +122,10 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         // sm: 'repeat(3, minmax(0.5rem, 5rem))',
         // iphoneSE: 'repeat(3, minmax(0.5rem, 5rem))',
         // iphone12: 'repeat(3, minmax(3.5rem, 5rem))',
-        //md: 'repeat(3, minmax(3.5rem, 5.5em))',
+        // md: 'repeat(3, minmax(3.5rem, 5.5em))',
         // iphone14max: 'repeat(3, minmax(1rem, 5rem))',
         ipadMini: 'repeat(4, minmax(3.5rem, 5.5rem))',
-        //ipadAir: 'repeat(3, minmax(3.5rem, 6rem))',
+        // ipadAir: 'repeat(3, minmax(3.5rem, 6rem))',
         lg: 'repeat(4, minmax(3.5rem, 6rem))',
         ipadPro: 'repeat(4, minmax(3.5rem, 7rem))',
         xl: 'repeat(5, minmax(3.5rem, 7rem))',

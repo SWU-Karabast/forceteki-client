@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Box, Typography } from '@mui/material';
+import { Button, Box } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
 import { keyframes } from '@mui/system';
@@ -77,7 +77,7 @@ const createStyles = (isPortrait: boolean) => ({
         borderRadius: '1rem',
         height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
         minWidth: { xs: '1.5rem', md: '2.5rem' },
-        maxWidth: { xs: '5rem', sm: '7rem', md: '9rem'},
+        maxWidth: { xs: '5rem', sm: '7rem', md: '9rem' },
         flex: '1 1 auto', 
         
         display: 'flex',
