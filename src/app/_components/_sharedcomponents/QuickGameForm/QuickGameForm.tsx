@@ -9,7 +9,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { SwuGameFormat } from '@/app/_constants/constants';
+import { FormatLabels, SwuGameFormat } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -35,8 +35,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [queueState, setQueueState] = useState<boolean>(false)
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
-    const formatOptions = Object.values(SwuGameFormat);
-    const savedFormat = localStorage.getItem('format') !== SwuGameFormat.Premier && localStorage.getItem('format') !== SwuGameFormat.Open ? SwuGameFormat.Premier : localStorage.getItem('format') || SwuGameFormat.Premier;
+    const formatOptions = Object.values(SwuGameFormat);    
+    const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
 
     // error states
@@ -300,14 +300,19 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                             handleChangeFormat(e.target.value as SwuGameFormat)
                         }
                     >
-                        <MenuItem key={SwuGameFormat.Premier} value={SwuGameFormat.Premier}>
-                            {'Premier'}
-                        </MenuItem>
-                        <MenuItem key={SwuGameFormat.Open} value={SwuGameFormat.Open}>
-                            {'Open'}
-                        </MenuItem>
+                        {formatOptions.map((fmt) => (
+                            <MenuItem key={fmt} value={fmt}>
+                                {FormatLabels[fmt] || fmt}
+                            </MenuItem>
+                        ))}
                     </StyledTextField>
                 </FormControl>
+
+                <Box>
+                    <Typography variant="body1" color="yellow">
+                        Next Set Preview format is now available for Quick Match!
+                    </Typography>
+                </Box>
 
                 {/* Save Deck To Favourites Checkbox */}
                 <FormControlLabel
