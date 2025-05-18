@@ -18,7 +18,7 @@ const GradientBorderButton: React.FC<IGradientBorderButtonProps> = ({ fillColor 
                 background:
                 `linear-gradient(${fillColor}, ${fillColor}) padding-box, linear-gradient(to top, #038FC3, #595A5B) border-box`,
                 '&:hover': {
-                    background: 'hsl(195, 25%, 16%)',
+                    filter: 'brightness(1.2)',
                 },
                 '&:disabled': {
                     color: '#666666',
