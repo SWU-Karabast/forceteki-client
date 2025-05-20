@@ -148,6 +148,8 @@ const GameCard: React.FC<IGameCardProps> = ({
 
     const subcardClick = (subCard: ICardData) => {
         if (subCard.selectable) {
+            setAnchorElement(null);
+            setPreviewImage(null);
             sendGameMessage(['cardClicked', subCard.uuid]);
         }
     }
@@ -334,6 +336,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             overflow: 'hidden',           
             color: 'black',
             textAlign: 'center', 
+            userSelect: 'none'
         },
         sentinelIcon:{
             position: 'absolute',
@@ -482,7 +485,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                             {shieldCards.map((shieldCard, index) => (
                                 <Box
                                     key={`${card.uuid}-shield-${index}`}
-                                    sx={{ ...styles.shieldIcon , border: shieldCard.selectable ? `2px solid ${getBorderColor(shieldCard, connectedPlayer)}` : 'none' }}
+                                    sx={{ 
+                                        ...styles.shieldIcon, 
+                                        border: shieldCard.selectable ? `2px solid ${getBorderColor(shieldCard, connectedPlayer)}` : 'none',
+                                        cursor: shieldCard.selectable ? 'pointer' : 'normal'
+                                    }}
                                     onClick={() => subcardClick(shieldCard)}
                                 />
                             ))}
@@ -517,7 +524,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 anchorEl={anchorElement}
                 onClose={handlePreviewClose}
                 disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent' }, tabIndex: -1 } }}
                 {...popoverConfig()}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
@@ -528,7 +535,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                     key={subcard.uuid}
                     sx={{ ...styles.upgradeIcon,
                         backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
-                        border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none'
+                        border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none',
+                        cursor: subcard.selectable ? 'pointer' : 'normal'
                     }}
                     onClick={() => subcardClick(subcard)}
                     onMouseEnter={handlePreviewOpen}
@@ -550,7 +558,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                             sx={{
                                 ...styles.upgradeIcon,
                                 backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
-                                border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none'
+                                border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none',
+                                cursor: capturedCard.selectable ? 'pointer' : 'normal'
                             }}
                             onClick={() => subcardClick(capturedCard)}
                             onMouseEnter={handlePreviewOpen}
