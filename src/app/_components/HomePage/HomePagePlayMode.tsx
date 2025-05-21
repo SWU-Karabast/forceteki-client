@@ -110,7 +110,7 @@ const HomePagePlayMode: React.FC = () => {
                                 {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
                             </Tabs>
                         </Box>
-                    {showQuickMatch && 
+                        {showQuickMatch && 
                         <TabPanel index={0} value={value}>
                             <QuickGameForm/>
                         </TabPanel>}
