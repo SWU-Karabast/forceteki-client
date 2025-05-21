@@ -69,7 +69,7 @@ const Board: React.FC<IBoardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: isPortrait ? '25%' :
+            width: isPortrait ? '20%' :
                 'clamp(8rem, 20vh, 14rem)',
             margin: isPortrait ? '0 .1rem' : '0 1rem',
         },
