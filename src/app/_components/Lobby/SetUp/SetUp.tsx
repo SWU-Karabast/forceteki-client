@@ -118,7 +118,7 @@ const SetUp: React.FC = ({
             <SetUpCard owner={lobbyState ? lobbyState.lobbyOwnerId === connectedPlayer : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
             <Card sx={styles.mainCardStyle}>
                 <Box sx={{ position: 'relative' }}>
-                    <Tooltip title={isMuted ? "Show Player Messages" : "Hide Player Messages"}>
+                    <Tooltip title={isMuted ? 'Show Player Messages' : 'Hide Player Messages'}>
                         <IconButton 
                             onClick={toggleMute}
                             size="small"

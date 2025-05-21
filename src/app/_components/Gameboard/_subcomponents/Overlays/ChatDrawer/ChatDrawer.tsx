@@ -94,7 +94,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     transform: 'translateX(-50%)',
                     width: 'max-content',
                 }}>Chat</Typography>
-                <Tooltip title={isMuted ? "Show Player Messages" : "Hide Player Messages"}>
+                <Tooltip title={isMuted ? 'Show Player Messages' : 'Hide Player Messages'}>
                     <IconButton 
                         onClick={toggleMute}
                         size="small"
