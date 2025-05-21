@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useLayoutEffect, useState } from 'react';
 import { Box, Typography, Popover, PopoverOrigin } from '@mui/material';
 import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -14,6 +14,58 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
     const { isPortrait } = useScreenOrientation();
+    
+    // Refs for individual card containers
+    const discardRef = useRef<HTMLDivElement>(null);
+    const deckRef = useRef<HTMLDivElement>(null);
+    
+    // Individual ratio states
+    const [isDiscardWiderThanTall, setIsDiscardWiderThanTall] = useState(false);
+    const [isDeckWiderThanTall, setIsDeckWiderThanTall] = useState(false);
+    
+    // Use a more stable layout effect for dimension measurements
+    useLayoutEffect(() => {
+        let debounceTimer: number;
+        const containerRatio = 1 / 1.4; // Card aspect ratio
+        
+        const checkRatios = () => {
+            // Clear any pending timer
+            clearTimeout(debounceTimer);
+            
+            // Debounce the check to avoid feedback loops
+            debounceTimer = window.setTimeout(() => {
+                // Check discard ratio
+                if (discardRef.current) {
+                    const { width, height } = discardRef.current.getBoundingClientRect();
+                    const spaceRatio = width / height;
+                    // Only update if there's a significant difference to avoid oscillation
+                    if (Math.abs(spaceRatio - containerRatio) > 0.05) {
+                        setIsDiscardWiderThanTall(spaceRatio > containerRatio);
+                    }
+                }
+                
+                // Check deck ratio
+                if (deckRef.current) {
+                    const { width, height } = deckRef.current.getBoundingClientRect();
+                    const spaceRatio = width / height;
+                    if (Math.abs(spaceRatio - containerRatio) > 0.05) {
+                        setIsDeckWiderThanTall(spaceRatio > containerRatio);
+                    }
+                }
+            }, 100); // 100ms debounce
+        };
+        
+        // Check initially
+        checkRatios();
+        
+        // Attach resize listener
+        window.addEventListener('resize', checkRatios);
+        
+        return () => {
+            clearTimeout(debounceTimer);
+            window.removeEventListener('resize', checkRatios);
+        };
+    }, [isPortrait]); // Re-run when portrait mode changes
 
     const topDiscardCard = gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].at(-1);
     const topDiscardCardUrl = topDiscardCard && typeof topDiscardCard === 'object' ? `url(${s3CardImageURL(topDiscardCard)})` : 'none';
@@ -74,9 +126,9 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             ...debugBorder('yellow'),
             display: 'flex',
             flexDirection: 'row',
-            gap: isPortrait ? '0.5rem' : '1rem',
+            gap: isPortrait ? '0.5rem' : isDiscardWiderThanTall ? '1rem' : '0.2rem',
             flex: isPortrait ? '0 0 auto' : 1,
-            width: isPortrait ? '100%' : 'auto',
+            width: isPortrait ? '100%' : '60%',
             height: isPortrait ? '50%' : '100%',
             justifyContent: 'center',
             alignItems: 'center',
@@ -84,7 +136,17 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         discard: {
             discardCardStyle: {
                 backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                height: '100%',
+                ...(isDiscardWiderThanTall
+                    ? {
+                        height: '100%',
+                        width: 'auto',
+                        maxWidth: '50%',
+                    }
+                    : {
+                        maxHeight: '100%',
+                        height: 'auto',
+                        width: '50%',
+                    }),
                 aspectRatio: '1 / 1.4',
                 borderRadius: '5px',
                 display: 'flex',
@@ -127,7 +189,17 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                height: '100%',
+                ...(isDeckWiderThanTall
+                    ? {
+                        height: '100%',
+                        width: 'auto',
+                        maxWidth: '50%',
+                    }
+                    : {
+                        maxHeight: '100%',
+                        height: 'auto',
+                        width: '50%',
+                    }),
                 aspectRatio: '1 / 1.4',
                 borderRadius: '5px',
             },
@@ -153,6 +225,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
     return (
         <Box sx={styles.containerStyle}>
             <Box
+                ref={discardRef}
                 sx={styles.discard.discardCardStyle}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose} 
@@ -170,7 +243,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             >
                 <Box sx={{ ...styles.discard.discardTopCardPreview }} />
             </Popover>
-            <Box sx={styles.deck.deckCardStyle}>
+            <Box ref={deckRef} sx={styles.deck.deckCardStyle}>
                 {deckComponent}
             </Box>
         </Box>
