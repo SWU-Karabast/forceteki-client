@@ -11,6 +11,7 @@ export interface IUser {
 
 export interface Preferences {
     cardback?: string;
+    muteChat?: boolean;
 }
 
 export interface IUserContextType {
