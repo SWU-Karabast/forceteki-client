@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useLayoutEffect, useState } from 'react';
 import { Card, CardContent, Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { s3TokenImageURL } from '@/app/_utils/s3Utils';
@@ -15,6 +15,42 @@ const Resources: React.FC<IResourcesProps> = ({
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
     const { isPortrait } = useScreenOrientation();
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [isTallerThanWide, setIsTallerThanWide] = useState(false);
+    
+    // Check container dimensions to determine layout
+    useLayoutEffect(() => {
+        let debounceTimer: number;
+        
+        const checkRatio = () => {
+            // Clear any pending timer
+            clearTimeout(debounceTimer);
+            
+            // Debounce to prevent flickering
+            debounceTimer = window.setTimeout(() => {
+                if (containerRef.current) {
+                    const { width, height } = containerRef.current.getBoundingClientRect();
+                    const spaceRatio = width / height;
+                    
+                    // Only update if there's a significant difference
+                    if (Math.abs(spaceRatio - 1) > 0.05) { // Using 1:1 as threshold
+                        setIsTallerThanWide(spaceRatio < 1); // If width < height, it's taller than wide
+                    }
+                }
+            }, 100); // 100ms debounce
+        };
+        
+        // Check initially
+        checkRatio();
+        
+        // Attach resize listener
+        window.addEventListener('resize', checkRatio);
+        
+        return () => {
+            clearTimeout(debounceTimer);
+            window.removeEventListener('resize', checkRatio);
+        };
+    }, [isPortrait]); // Re-run when orientation changes
 
     const availableResources = gameState.players[trayPlayer].availableResources;
     const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
@@ -44,7 +80,7 @@ const Resources: React.FC<IResourcesProps> = ({
     // ------------------------STYLES------------------------//
     const styles = {
         cardStyle: {
-            width: 'auto',
+            width: isPortrait ? 'auto' : '30%',
             maxHeight: '100%',
             background: selectableResource ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
             display: 'flex',
@@ -69,13 +105,15 @@ const Resources: React.FC<IResourcesProps> = ({
         imageStyle: {
             width: '1.4em',
             height: 'auto',
-            marginRight: '10px',
+            margin: isPortrait || !isTallerThanWide ? '0 0.5rem 0 0' : '0',
+            alignSelf: isPortrait ? 'auto' : 'center',
         },
         boxStyle: {
+            ...debugBorder('green'),
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            flexDirection: 'row',
+            flexDirection: isPortrait ? 'row' : isTallerThanWide ? 'column' : 'row',
             position: 'relative', 
             zIndex: 1, 
         },
@@ -117,6 +155,7 @@ const Resources: React.FC<IResourcesProps> = ({
 
     return (
         <Card
+            ref={containerRef}
             sx={styles.cardStyle}
             onClick={handleResourceToggle}
         >
