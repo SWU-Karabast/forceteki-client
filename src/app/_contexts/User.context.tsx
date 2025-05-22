@@ -113,7 +113,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                preferences: { cardback: undefined }
+                preferences: { cardback: undefined, muteChat: false }
             });
         } else if (user === 'ThisIsTheWay') {
             setUser({
@@ -123,7 +123,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                preferences: { cardback: undefined }
+                preferences: { cardback: undefined, muteChat: false }
             });
         }
     }
