@@ -145,8 +145,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     // ------------------ Listen for changes to deckErrors ------------------ //
     useEffect(() => {
         // get error messages
-        const deckErrors: IDeckValidationFailures = connectedUser.deckErrors;
-        const temporaryErrors: IDeckValidationFailures = connectedUser.importDeckErrors;
+        const deckErrors: IDeckValidationFailures = connectedUser?.deckErrors ?? [];
+        const temporaryErrors: IDeckValidationFailures = connectedUser?.importDeckErrors ?? [];
         console.log('checking deck errors', deckErrors);
         console.log('checking import errors', temporaryErrors);
         if ((!deckErrors || Object.entries(deckErrors).length === 0) && (!temporaryErrors || Object.entries(temporaryErrors).length === 0)) {

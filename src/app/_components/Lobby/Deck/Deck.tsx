@@ -15,8 +15,8 @@ const Deck: React.FC = () => {
     const isCardNotImplemented = (cardId: string | undefined) =>
         notImplementedList.some((item:ICardData) => item.id === cardId);
     // set decks for connectedUser
-    const userMain = connectedUser.deck?.deck || []
-    const usersSideboard = connectedUser.deck?.sideboard || []
+    const userMain = connectedUser?.deck?.deck ?? []
+    const usersSideboard = connectedUser?.deck?.sideboard ?? []
 
     // sort main deck and sideboard by card cost ascending
     const sortedUserMain = [...userMain].sort((a: { cost: number }, b: { cost: number }) => a.cost - b.cost);
@@ -39,8 +39,8 @@ const Deck: React.FC = () => {
     const sideboardError = Object.keys(deckErrors).includes(DeckValidationFailureReason.MaxSideboardSizeExceeded);
 
     // sideboard and deck limits
-    const minDeckSize = connectedUser.minDeckSize;
-    const maxSideBoard = connectedUser.maxSideBoard
+    const minDeckSize = connectedUser?.minDeckSize ?? 50;
+    const maxSideBoard = connectedUser?.maxSideBoard ?? 10;
 
     // ------------------------STYLES------------------------//
     const styles = {
