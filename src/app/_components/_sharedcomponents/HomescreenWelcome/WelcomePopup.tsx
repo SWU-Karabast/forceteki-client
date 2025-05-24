@@ -102,7 +102,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         subtitle: {
             fontSize: '1.2rem',
             color: '#fff',
-            marginTop: '1.5rem',
+            marginTop: '0.5rem',
             marginBottom: '0.5rem'
         },
         message: {
@@ -113,7 +113,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         textFieldContainer: {
             display: 'flex',
             mt: '1em',
-            mb: '1.5em',
+            mb: '0.5em',
             justifyContent: 'center'
         },
         textField: {
@@ -234,8 +234,8 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
                 <Box component="ul" sx={styles.infoList}>
                     <li>
                         <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            You can change your username <strong>freely for 1 hour</strong>. After that, changes are allowed every
-                            <strong> 4 months</strong>.
+                            You can change your username <strong>freely for 1 week</strong>. After that, changes are allowed every
+                            <strong> month</strong>.
                         </Typography>
                     </li>
                     <li>

@@ -224,8 +224,8 @@ function GeneralTab() {
                             </Box>
 
                             <Typography variant="body2" sx={{ mt: 2, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
-                                You can change your username as many times as you want during the <strong>first hour after account creation</strong>.
-                                After that, you&#39;re limited to <strong>one</strong> change every <strong>4 months</strong>.
+                                You can change your username as many times as you want during the <strong>first week after account creation</strong>.
+                                After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
                             </Typography>
                         </Box>
                     )}
