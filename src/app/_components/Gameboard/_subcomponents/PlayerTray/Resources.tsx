@@ -1,5 +1,6 @@
-import React, { useRef, useLayoutEffect, useState } from 'react';
-import { Card, CardContent, Box, Typography } from '@mui/material';
+import React, { useRef } from 'react';
+import { Card, CardContent, Box, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import Image from 'next/image';
 import { s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { debugBorder } from '@/app/_utils/debug';
@@ -9,48 +10,32 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
+/**
+ * Determines if resources should use column style based on screen size and orientation
+ */
+const useResourceLayout = () => {
+    const theme = useTheme();
+    const { isPortrait } = useScreenOrientation();
+    
+    // Ensure we include the exact ipadPro breakpoint (1366px)
+    const belowIpadPro = useMediaQuery(theme.breakpoints.down('ipadPro'));
+    const exactlyIpadPro = useMediaQuery(`(width: ${theme.breakpoints.values.ipadPro}px)`);
+    const isSmallScreen = belowIpadPro || exactlyIpadPro;
+       
+    // Never use column style in portrait mode, regardless of screen size
+    // In landscape, use column style only on smaller screens
+    const shouldUseColumnStyle = !isPortrait && isSmallScreen;
+    
+    return { shouldUseColumnStyle, isPortrait };
+};
+
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
 }) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
-    const { isPortrait } = useScreenOrientation();
     const containerRef = useRef<HTMLDivElement>(null);
-    const [isTallerThanWide, setIsTallerThanWide] = useState(false);
-    
-    // Check container dimensions to determine layout
-    useLayoutEffect(() => {
-        let debounceTimer: number;
-        
-        const checkRatio = () => {
-            // Clear any pending timer
-            clearTimeout(debounceTimer);
-            
-            // Debounce to prevent flickering
-            debounceTimer = window.setTimeout(() => {
-                if (containerRef.current) {
-                    const { width, height } = containerRef.current.getBoundingClientRect();
-                    const spaceRatio = width / height;
-                    
-                    // Only update if there's a significant difference
-                    if (Math.abs(spaceRatio - 1) > 0.05) { // Using 1:1 as threshold
-                        setIsTallerThanWide(spaceRatio < 1); // If width < height, it's taller than wide
-                    }
-                }
-            }, 100); // 100ms debounce
-        };
-        
-        // Check initially
-        checkRatio();
-        
-        // Attach resize listener
-        window.addEventListener('resize', checkRatio);
-        
-        return () => {
-            clearTimeout(debounceTimer);
-            window.removeEventListener('resize', checkRatio);
-        };
-    }, [isPortrait]); // Re-run when orientation changes
+    const { shouldUseColumnStyle, isPortrait } = useResourceLayout();
 
     const availableResources = gameState.players[trayPlayer].availableResources;
     const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
@@ -103,9 +88,9 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         
         imageStyle: {
-            width: '1.4em',
+            width: 'clamp(1.1em, 0.85rem + 1.2vw, 1.4em)',
             height: 'auto',
-            margin: isPortrait || !isTallerThanWide ? '0 0.5rem 0 0' : '0',
+            margin: isPortrait || !shouldUseColumnStyle ? '0 0.5rem 0 0' : '0',
             alignSelf: isPortrait ? 'auto' : 'center',
         },
         boxStyle: {
@@ -113,18 +98,20 @@ const Resources: React.FC<IResourcesProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            flexDirection: isPortrait ? 'row' : isTallerThanWide ? 'column' : 'row',
+            flexDirection: isPortrait ? 'row' : shouldUseColumnStyle ? 'column' : 'row',
             position: 'relative', 
             zIndex: 1, 
         },
         availableResourcesText: {
             fontWeight: '600',
-            fontSize: '1.8rem',
+            fontSize: isPortrait ? 'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)' :
+                'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)',
             color: 'white',
         },
         totalResourcesText: {
             fontWeight: '600',
-            fontSize: '1.8rem',
+            fontSize: isPortrait ? 'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)' :
+                'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)',
             color: 'white',
         },
         resourceBorderLeft: {
