@@ -1,23 +1,13 @@
-// Updated WelcomePopup.tsx
-// Adds a brief "What's New" section informing users about
-// 1. The new Decks page with cloud-saved decks
-// 2. Newly added personal statistics panel for logged-in users
-// 3. Displays a highlighted screenshot illustrating the new Stats panel
-
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    Typography,
-    Dialog,
-    DialogContent,
-    DialogActions,
-    TextField
+    Box, Typography, Dialog, DialogContent, DialogActions, TextField, Link
 } from '@mui/material';
 import Image from 'next/image';
 import { useUser } from '@/app/_contexts/User.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { setUsernameOnServer, setWelcomeMessage } from '@/app/_utils/DeckStorageUtils';
+import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 
 interface WelcomePopupProps {
     open: boolean;
@@ -26,10 +16,26 @@ interface WelcomePopupProps {
 
 const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     const { user, updateUsername } = useUser();
-    const [username, setUsername] = useState<string>(user?.username || '');
+    // Initialize username from user context or empty string
+    const [username, setUsername] = useState<string>('');
     const [userErrorSummary, setUserErrorSummary] = useState<string | null>(null);
     const [successfulUsernameChange, setSuccessfulUsernameChange] = useState(false);
     const [canSubmitUsername, setCanSubmitUsername] = useState(false);
+
+    useEffect(() => {
+        if (open) {
+            const initialUsername = user?.username || '';
+            setUsername(initialUsername); // Pre-fill the username input
+            const validationError = validateDiscordUsername(initialUsername);
+            setUserErrorSummary(validationError);
+            setCanSubmitUsername(validationError === null && initialUsername.trim() !== '');
+        } else {
+            // Reset states when dialog is closed
+            setUserErrorSummary(null);
+            setSuccesfulUsernameChange(false);
+            setCanSubmitUsername(false);
+        }
+    }, [open, user?.username]); // Rerun when dialog opens or the initial username changes
 
     const handleSkip = async () => {
         await setWelcomeMessage(user);
@@ -38,28 +44,43 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 
     const handleSetUsername = async () => {
         const trimmedUsername = username.trim();
-        if (!trimmedUsername) {
-            setUserErrorSummary('Username cannot be empty');
+        const validationError = validateDiscordUsername(username);
+
+        if (validationError) {
+            setUserErrorSummary(validationError);
+            setCanSubmitUsername(false);
             return;
         }
-        if (trimmedUsername.length < 3) {
-            setUserErrorSummary('Username must be at least 3 characters long');
-            return;
-        }
+        setUserErrorSummary(null);
+
         try {
-            const newUsername = await setUsernameOnServer(user, trimmedUsername);
-            setSuccessfulUsernameChange(true);
-            setTimeout(() => setSuccessfulUsernameChange(false), 2000);
-            updateUsername(newUsername);
-            onClose();
+            const newUsernameFromServer = await setUsernameOnServer(user, username.trim());
+            setSuccesfulUsernameChange(true);
+            updateUsername(newUsernameFromServer);
+            setTimeout(() => {
+                onClose();
+            }, 1500); // Give user time to see success message
         } catch (error) {
+            console.log(error);
             if (error instanceof Error) {
                 setUserErrorSummary(error.message);
             } else {
-                setUserErrorSummary('Error changing username');
+                setUserErrorSummary('An unexpected error occurred while changing username.');
             }
+            setCanSubmitUsername(false);
         }
     };
+
+    const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newUsername = e.target.value;
+        setUsername(newUsername);
+        setSuccesfulUsernameChange(false);
+
+        const validationError = validateDiscordUsername(newUsername);
+        setUserErrorSummary(validationError);
+        setCanSubmitUsername(validationError === null && newUsername.trim() !== '');
+    };
+
     const styles = {
         dialog: {
             '& .MuiDialog-paper': {
@@ -100,12 +121,13 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
             backgroundColor: '#3B4252',
             borderRadius: '5px',
             width: '100%',
-            '& .MuiInputBase-input': {
-                color: '#fff'
-            },
-            '& .MuiInputBase-input::placeholder': {
-                color: '#fff'
-            }
+            '& .MuiInputBase-input': { color: '#fff' },
+            '& .MuiInputBase-input::placeholder': { color: '#B0B0B0', opacity: 0.7 },
+        },
+        validationMessagesContainer: {
+            marginTop: '4px',
+            minHeight: '24px',
+            marginBottom: '12px',
         },
         infoList: {
             marginTop: '8px',
@@ -149,7 +171,19 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         screenshotWrapper: {
             mt: '12px',
             display: 'flex',
-            justifyContent: 'center'
+            justifyContent: 'center',
+        },
+        successMessageStyle: {
+            color: 'var(--selection-green)',
+            fontSize: '0.9rem'
+        },
+        errorMessageStyle: {
+            color: 'var(--initiative-red)',
+            fontSize: '0.9rem'
+        },
+        preferenceAddedStyle: {
+            backgroundColor: '#3590D2',
+            '&:hover':{ backgroundColor: '#4BA3E8' }
         }
     } as const;
 
@@ -170,34 +204,33 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
                 <Typography variant="body1" sx={styles.message}>
                     Before you start playing, we recommend setting a username that other players will see during games.
                 </Typography>
+
                 <Typography variant="body1" sx={styles.message}>
                     Would you like to set your username now?
                 </Typography>
 
                 <Box sx={styles.textFieldContainer}>
                     <TextField
-                        placeholder={user?.username}
+                        placeholder={user?.username || 'Enter your username'}
                         value={username}
-                        onChange={(e) => {
-                            const newUsername = e.target.value;
-                            setUsername(newUsername);
-                            setCanSubmitUsername(newUsername.trim().length >= 3);
-                        }}
+                        onChange={handleUsernameChange}
                         sx={styles.textField}
+                        error={!!userErrorSummary}
+                        fullWidth
                     />
                 </Box>
 
-                {/* Validation / success messages */}
-                {userErrorSummary && (
-                    <Typography variant="body1" sx={styles.errorMessage}>
-                        {userErrorSummary}
-                    </Typography>
-                )}
-                {successfulUsernameChange && (
-                    <Typography variant="body1" sx={styles.successMessage}>
-                        Username successfully changed!
-                    </Typography>
-                )}
+                <Box sx={styles.validationMessagesContainer}>
+                    {userErrorSummary ? (
+                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                            {userErrorSummary}
+                        </Typography>
+                    ) : successfulUsernameChange ? (
+                        <Typography variant={'body2'} sx={styles.successMessageStyle}>
+                            Username successfully changed!
+                        </Typography>
+                    ) : null}
+                </Box>
 
                 <Box component="ul" sx={styles.infoList}>
                     <li>
