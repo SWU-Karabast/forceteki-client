@@ -4,8 +4,8 @@ export const validateDiscordUsername = (username: string): string | null => {
     if (!trimmedUsername.trim()) {
         return 'Username cannot be empty.';
     }
-    if (trimmedUsername.length < 2) {
-        return 'Username must be at least 2 characters long.';
+    if (trimmedUsername.length < 3) {
+        return 'Username must be at least 3 characters long.';
     }
     if (trimmedUsername.length > 32) {
         return 'Username cannot be more than 32 characters long.';

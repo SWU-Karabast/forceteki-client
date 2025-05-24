@@ -32,7 +32,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         } else {
             // Reset states when dialog is closed
             setUserErrorSummary(null);
-            setSuccesfulUsernameChange(false);
+            setSuccessfulUsernameChange(false);
             setCanSubmitUsername(false);
         }
     }, [open, user?.username]); // Rerun when dialog opens or the initial username changes
@@ -43,7 +43,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     };
 
     const handleSetUsername = async () => {
-        const trimmedUsername = username.trim();
         const validationError = validateDiscordUsername(username);
 
         if (validationError) {
@@ -55,7 +54,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 
         try {
             const newUsernameFromServer = await setUsernameOnServer(user, username.trim());
-            setSuccesfulUsernameChange(true);
+            setSuccessfulUsernameChange(true);
             updateUsername(newUsernameFromServer);
             setTimeout(() => {
                 onClose();
@@ -74,7 +73,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newUsername = e.target.value;
         setUsername(newUsername);
-        setSuccesfulUsernameChange(false);
+        setSuccessfulUsernameChange(false);
 
         const validationError = validateDiscordUsername(newUsername);
         setUserErrorSummary(validationError);
@@ -127,10 +126,10 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         validationMessagesContainer: {
             marginTop: '4px',
             minHeight: '24px',
-            marginBottom: '12px',
+            marginBottom: '2px',
         },
         infoList: {
-            marginTop: '8px',
+            marginTop:'2px',
             paddingLeft: '16px',
             '& li::marker': { color: '#B8860B' }
         },
@@ -273,10 +272,20 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
                     <Image
                         src="/statsExample.png"
                         alt="Highlighted Stats Panel"
-                        width={500}
-                        height={260}
-                        style={{ borderRadius: '8px' }}
+                        width={200}
+                        height={240}
+                        style={{ borderRadius: '8px', width:'12em', height:'14em' }}
                     />
+                </Box>
+                <Typography variant="h5" sx={styles.subtitle}>
+                    🔨 In progress
+                </Typography>
+                <Box component="ul" sx={styles.whatsNewList}>
+                    <li>
+                        <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
+                            <strong>SWUSTATS integration</strong> - We are actively working on bringing you SwuStats compatibility.
+                        </Typography>
+                    </li>
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>
