@@ -21,6 +21,7 @@ const UserContext = createContext<IUserContextType>({
     logout: () => {},
     updateUsername: () => {},
     updateWelcomeMessage: () => {},
+    updateUpdateMessage: () => {},
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
@@ -57,7 +58,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         email: session.user.email || null,
                         provider: session.user.provider || null,
                         providerId: session.user.id || null,
-                        welcomeMessageSeen: serverUser.welcomeMessageSeen,
+                        showWelcomeMessage: serverUser.showWelcomeMessage,
+                        showUpdateMessage: serverUser.showUpdateMessage,
                         authenticated: true,
                         preferences: serverUser.preferences
                     });
@@ -143,7 +145,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             if(!prevUser) return null;
             return {
                 ...prevUser,
-                welcomeMessageSeen: false
+                showWelcomeMessage: false
+            }
+        })
+    }
+
+    const updateUpdateMessage = () => {
+        setUser((prevUser) => {
+            if(!prevUser) return null;
+            return {
+                ...prevUser,
+                showUpdateMessage: false
             }
         })
     }
@@ -168,7 +180,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateUpdateMessage }}>
             {children}
         </UserContext.Provider>
     );

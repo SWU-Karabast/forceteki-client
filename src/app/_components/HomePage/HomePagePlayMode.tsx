@@ -5,19 +5,26 @@ import CreateGameForm from '../_sharedcomponents/CreateGameForm/CreateGameForm';
 import { useUser } from '@/app/_contexts/User.context';
 import QuickGameForm from '@/app/_components/_sharedcomponents/QuickGameForm/QuickGameForm';
 import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/WelcomePopup';
+import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
     const [value, setValue] = React.useState(0);
     const [testGameList, setTestGameList] = React.useState([]);
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
-    const { user, updateWelcomeMessage } = useUser();
+    const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+    const { user, updateWelcomeMessage, updateUpdateMessage } = useUser();
 
 
     const closeWelcomePopup = () => {
         setShowWelcomePopup(false);
         updateWelcomeMessage();
     };
+
+    const closeUpdatePopup = () => {
+        setShowUpdatePopup(false);
+        updateUpdateMessage();
+    }
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
@@ -53,8 +60,11 @@ const HomePagePlayMode: React.FC = () => {
     }
 
     useEffect(() => {
-        if(user && user.welcomeMessageSeen){
+        if(user && user.showWelcomeMessage){
             setShowWelcomePopup(true);
+        }
+        if(user && !user.showWelcomeMessage && user.showUpdateMessage){
+            setShowUpdatePopup(true);
         }
         if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {
@@ -138,6 +148,7 @@ const HomePagePlayMode: React.FC = () => {
                 }
             </Card>
             <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
+            <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
         </>
     );
 };

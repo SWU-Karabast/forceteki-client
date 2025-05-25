@@ -6,7 +6,7 @@ import {
 import Image from 'next/image';
 import { useUser } from '@/app/_contexts/User.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { setUsernameOnServer, setWelcomeMessage } from '@/app/_utils/DeckStorageUtils';
+import { setUsernameOnServer, setWelcomeUpdateMessage } from '@/app/_utils/DeckStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 
 interface WelcomePopupProps {
@@ -38,7 +38,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     }, [open, user?.username]); // Rerun when dialog opens or the initial username changes
 
     const handleSkip = async () => {
-        await setWelcomeMessage(user);
+        await setWelcomeUpdateMessage(user,'welcome');
         onClose();
     };
 
@@ -56,9 +56,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
             const newUsernameFromServer = await setUsernameOnServer(user, username.trim());
             setSuccessfulUsernameChange(true);
             updateUsername(newUsernameFromServer);
-            setTimeout(() => {
-                onClose();
-            }, 1500); // Give user time to see success message
+            onClose();
         } catch (error) {
             console.log(error);
             if (error instanceof Error) {
@@ -247,43 +245,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
                     <li>
                         <Typography component="span" variant="body2" sx={styles.infoItem}>
                             You can also change your username later in the <strong>Preference</strong> tab.
-                        </Typography>
-                    </li>
-                </Box>
-
-                <Typography variant="h5" sx={styles.subtitle}>
-                    ✨ What’s New in this update
-                </Typography>
-                <Box component="ul" sx={styles.whatsNewList}>
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                            <strong>Decks Anywhere</strong> – Build, save, and favorite decks in the new <em>Decks</em> tab. <em>When</em> logged in all of your creations
-                            are saved to the server, so they automatically appear on any device where you log in.
-                        </Typography>
-                    </li>
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                            <strong>Player Stats</strong> – Track your wins, losses, and match-up win‑rates! A new statistics panel lives in the
-                            bottom-left of the deck screen and updates automatically after every game.
-                        </Typography>
-                    </li>
-                </Box>
-                <Box sx={styles.screenshotWrapper}>
-                    <Image
-                        src="/statsExample.png"
-                        alt="Highlighted Stats Panel"
-                        width={200}
-                        height={240}
-                        style={{ borderRadius: '8px', width:'12em', height:'14em' }}
-                    />
-                </Box>
-                <Typography variant="h5" sx={styles.subtitle}>
-                    🔨 In progress
-                </Typography>
-                <Box component="ul" sx={styles.whatsNewList}>
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                            <strong>SWUSTATS integration</strong> - We are actively working on bringing you SwuStats compatibility.
                         </Typography>
                     </li>
                 </Box>
