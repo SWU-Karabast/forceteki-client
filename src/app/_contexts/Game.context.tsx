@@ -87,10 +87,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const cardSelectableZones = (gamestate: any) => {
             const playerState = gamestate.players[connectedPlayerId];
             const zones = [];
-            if (playerState.leader.selectable || playerState.base.selectable) {
+            if (playerState?.leader.selectable || playerState?.base.selectable) {
                 zones.push(ZoneName.Base);
             }
-            for (const zoneName in playerState.cardPiles) {
+            for (const zoneName in playerState?.cardPiles) {
                 if (playerState.cardPiles[zoneName].some((card: any) => card.selectable)) {
                     zones.push(zoneName);
                 }
@@ -100,7 +100,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
         const handleGameStatePopups = (gameState: any) => {
             if (!connectedPlayerId || isSpectatorMode) return;
-            if (gameState.players?.[connectedPlayerId].promptState) {
+            if (gameState.players?.[connectedPlayerId]?.promptState) {
                 setDistributionPromptData(null);
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;

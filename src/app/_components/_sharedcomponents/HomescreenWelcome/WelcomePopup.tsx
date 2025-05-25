@@ -19,7 +19,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     // Initialize username from user context or empty string
     const [username, setUsername] = useState<string>('');
     const [userErrorSummary, setUserErrorSummary] = useState<string | null>(null);
-    const [successfulUsernameChange, setSuccessfulUsernameChange] = useState(false);
     const [canSubmitUsername, setCanSubmitUsername] = useState(false);
 
     useEffect(() => {
@@ -32,7 +31,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         } else {
             // Reset states when dialog is closed
             setUserErrorSummary(null);
-            setSuccessfulUsernameChange(false);
             setCanSubmitUsername(false);
         }
     }, [open, user?.username]); // Rerun when dialog opens or the initial username changes
@@ -54,7 +52,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 
         try {
             const newUsernameFromServer = await setUsernameOnServer(user, username.trim());
-            setSuccessfulUsernameChange(true);
             updateUsername(newUsernameFromServer);
             onClose();
         } catch (error) {
@@ -71,7 +68,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newUsername = e.target.value;
         setUsername(newUsername);
-        setSuccessfulUsernameChange(false);
 
         const validationError = validateDiscordUsername(newUsername);
         setUserErrorSummary(validationError);
@@ -218,17 +214,12 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
                 </Box>
 
                 <Box sx={styles.validationMessagesContainer}>
-                    {userErrorSummary ? (
+                    {userErrorSummary && (
                         <Typography variant={'body2'} sx={styles.errorMessageStyle}>
                             {userErrorSummary}
                         </Typography>
-                    ) : successfulUsernameChange ? (
-                        <Typography variant={'body2'} sx={styles.successMessageStyle}>
-                            Username successfully changed!
-                        </Typography>
-                    ) : null}
+                    )}
                 </Box>
-
                 <Box component="ul" sx={styles.infoList}>
                     <li>
                         <Typography component="span" variant="body2" sx={styles.infoItem}>

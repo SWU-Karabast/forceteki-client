@@ -14,8 +14,8 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
 
     // set connectedPlayer
-    const playerLeader = connectedUser.deck?.leader || null;
-    const playerBase = connectedUser.deck?.base || null;
+    const playerLeader = connectedUser?.deck?.leader ?? null;
+    const playerBase = connectedUser?.deck?.base || null;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
