@@ -14,7 +14,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     const { user, updateUsername } = useUser();
     const [username, setUsername] = useState<string>(user?.username || '');
     const [userErrorSummary, setUserErrorSummary] = useState<string | null>(null);
-    const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
     const [canSubmitUsername, setCanSubmitUsername] = useState(false);
 
     const handleSkip = async () => {
@@ -36,10 +35,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 
         try{
             const newUsername = await setUsernameOnServer(user, trimmedUsername);
-            setSuccesfulUsernameChange(true);
-            setTimeout(() => {
-                setSuccesfulUsernameChange(false);
-            }, 2000);
             updateUsername(newUsername);
             onClose();
         }catch (error){
@@ -174,15 +169,11 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
                         sx={styles.textField}
                     />
                 </Box>
-                {userErrorSummary ? (
+                {userErrorSummary && (
                     <Typography variant={'body1'} sx={styles.errorMessageStyle}>
                         {userErrorSummary}{' '}
                     </Typography>
-                ): successfulUsernameChange ? (
-                    <Typography variant={'body1'} sx={styles.successMessageStyle}>
-                        Username successfully changed!
-                    </Typography>
-                ) : null}
+                )}
                 <Box sx={styles.infoList}>
                     <Typography variant="body2" sx={styles.infoItem}>
                         • You can change your username <strong>freely for 1 hour</strong>. After that, changes are allowed every <strong>4 months</strong>.
