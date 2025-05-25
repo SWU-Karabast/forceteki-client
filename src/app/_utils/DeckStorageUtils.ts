@@ -82,7 +82,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: Preferences, showUpdateMessage: boolean }> =>{
+export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: Preferences }> =>{
     try {
         const decks = loadSavedDecks(false);
         const payload = {
@@ -188,11 +188,10 @@ export const setUsernameOnServer = async(user: IUser | null, username: string): 
     }
 }
 
-export const setWelcomeUpdateMessage = async(user: IUser | null, typeOfWelcomeMessage: string): Promise<boolean> => {
+export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
-            user,
-            typeOfWelcomeMessage
+            user
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/toggle-welcome-message`,
             {

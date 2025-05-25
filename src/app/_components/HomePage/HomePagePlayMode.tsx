@@ -13,17 +13,17 @@ const HomePagePlayMode: React.FC = () => {
     const [testGameList, setTestGameList] = React.useState([]);
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
-    const { user, updateWelcomeMessage, updateUpdateMessage } = useUser();
+    const { user, updateWelcomeMessage } = useUser();
 
 
     const closeWelcomePopup = () => {
         setShowWelcomePopup(false);
-        updateWelcomeMessage();
+        setShowUpdatePopup(true);
     };
 
     const closeUpdatePopup = () => {
         setShowUpdatePopup(false);
-        updateUpdateMessage();
+        updateWelcomeMessage();
     }
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
@@ -62,9 +62,6 @@ const HomePagePlayMode: React.FC = () => {
     useEffect(() => {
         if(user && user.showWelcomeMessage){
             setShowWelcomePopup(true);
-        }
-        if(user && !user.showWelcomeMessage && user.showUpdateMessage){
-            setShowUpdatePopup(true);
         }
         if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {

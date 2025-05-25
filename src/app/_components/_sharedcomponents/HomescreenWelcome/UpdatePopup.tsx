@@ -22,10 +22,9 @@ const WhatsNewPopup: React.FC<WhatsNewPopupProps> = ({ open, onClose }) => {
     const { user } = useUser();
 
     const handleClose = async () => {
-        await setWelcomeUpdateMessage(user,'update');
+        await setWelcomeUpdateMessage(user);
         onClose();
     };
-
 
     const styles = {
         dialog: {

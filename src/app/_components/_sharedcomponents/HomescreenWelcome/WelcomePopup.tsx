@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Dialog, DialogContent, DialogActions, TextField, Link
 } from '@mui/material';
-import Image from 'next/image';
+
 import { useUser } from '@/app/_contexts/User.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { setUsernameOnServer, setWelcomeUpdateMessage } from '@/app/_utils/DeckStorageUtils';
+import { setUsernameOnServer } from '@/app/_utils/DeckStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 
 interface WelcomePopupProps {
@@ -36,7 +36,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     }, [open, user?.username]); // Rerun when dialog opens or the initial username changes
 
     const handleSkip = async () => {
-        await setWelcomeUpdateMessage(user,'welcome');
         onClose();
     };
 

@@ -5,7 +5,6 @@ export interface IUser {
     provider: string | null;
     providerId: string | null;
     showWelcomeMessage?: boolean,
-    showUpdateMessage?: boolean,
     authenticated: boolean,
     preferences: Preferences,
 }
@@ -22,7 +21,6 @@ export interface IUserContextType {
     logout: () => void;
     updateUsername: (username: string) => void
     updateWelcomeMessage: () => void
-    updateUpdateMessage: () => void
 }
 
 // Extend Next-auth types

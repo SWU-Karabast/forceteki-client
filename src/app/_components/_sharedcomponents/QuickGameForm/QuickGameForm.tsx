@@ -64,6 +64,9 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         fetchDecks();
     }, [user]);
 
+    const handleDeckManagement = () => {
+        router.push('/DeckPage');
+    }
 
     // Load saved decks from localStorage
     const fetchDecks = async () => {
@@ -232,15 +235,14 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             textDecorationColor: 'var(--initiative-red);',
         },
         manageDecks:{
+            mt: '1rem',
             display: 'flex',
             alignItems: 'center',
-            ml: 1.5,
-            color: 'lightblue',
-            '&:hover': { textDecoration: 'underline', color: '#7ec8ff' },
+            justifyContent: 'center',
         },
         manageDecksContainer:{
             display: 'flex',
-            justifyContent: 'end',
+            justifyContent: 'start',
             width: '100%',
         }
     }
@@ -274,20 +276,12 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         )}
                     </StyledTextField>
                     <Box sx={styles.manageDecksContainer}>
-                        <Link
-                            href="/DeckPage"
-                            underline="none"
+                        <Button
+                            onClick={handleDeckManagement}
                             sx={styles.manageDecks}
                         >
-                            <IconButton
-                                aria-label="Deck Management"
-                                size="small"
-                                sx={{ color: 'inherit', mr: 0.25 }}
-                            >
-                                <SWUDeckIcon fontSize="small" />
-                            </IconButton>
-                            <Typography variant="body1" sx={{ color:'inherit' }}>Manage&nbsp;Decks</Typography>
-                        </Link>
+                            Manage&nbsp;Decks
+                        </Button>
                     </Box>
                 </FormControl>
                 {/* Deck Link Input */}
