@@ -9,8 +9,9 @@ import {
     Typography,
     Radio,
     RadioGroup,
-    Link,
+    Link, IconButton,
 } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
@@ -29,6 +30,7 @@ import {
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/DeckStorageUtils';
+import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
 
 const CreateGameForm = () => {
     const pathname = usePathname();
@@ -224,6 +226,18 @@ const CreateGameForm = () => {
             cursor: 'pointer',
             color: 'var(--selection-red);',
             textDecorationColor: 'var(--initiative-red);',
+        },
+        manageDecks:{
+            display: 'flex',
+            alignItems: 'center',
+            ml: 1.5,
+            color: 'lightblue',
+            '&:hover': { textDecoration: 'underline', color: '#7ec8ff' },
+        },
+        manageDecksContainer:{
+            display: 'flex',
+            justifyContent: 'end',
+            width: '100%',
         }
     }
     return (
@@ -255,6 +269,22 @@ const CreateGameForm = () => {
                             ))
                         )}
                     </StyledTextField>
+                    <Box sx={styles.manageDecksContainer}>
+                        <Link
+                            href="/DeckPage"
+                            underline="none"
+                            sx={styles.manageDecks}
+                        >
+                            <IconButton
+                                aria-label="Deck Management"
+                                size="small"
+                                sx={{ color: 'inherit', mr: 0.25 }}
+                            >
+                                <SWUDeckIcon fontSize="small" />
+                            </IconButton>
+                            <Typography variant="body1" sx={{ color:'inherit' }}>Manage&nbsp;Decks</Typography>
+                        </Link>
+                    </Box>
                 </FormControl>
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>

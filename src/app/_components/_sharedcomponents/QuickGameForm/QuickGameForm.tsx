@@ -1,5 +1,15 @@
 import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
-import { Box, Button, Checkbox, FormControl, FormControlLabel, Link, MenuItem, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    Checkbox,
+    FormControl,
+    FormControlLabel,
+    IconButton,
+    Link,
+    MenuItem,
+    Typography
+} from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
@@ -18,6 +28,7 @@ import {
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/DeckStorageUtils';
+import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -219,6 +230,18 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             cursor: 'pointer',
             color: 'var(--selection-red);',
             textDecorationColor: 'var(--initiative-red);',
+        },
+        manageDecks:{
+            display: 'flex',
+            alignItems: 'center',
+            ml: 1.5,
+            color: 'lightblue',
+            '&:hover': { textDecoration: 'underline', color: '#7ec8ff' },
+        },
+        manageDecksContainer:{
+            display: 'flex',
+            justifyContent: 'end',
+            width: '100%',
         }
     }
     return (
@@ -250,6 +273,22 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                             ))
                         )}
                     </StyledTextField>
+                    <Box sx={styles.manageDecksContainer}>
+                        <Link
+                            href="/DeckPage"
+                            underline="none"
+                            sx={styles.manageDecks}
+                        >
+                            <IconButton
+                                aria-label="Deck Management"
+                                size="small"
+                                sx={{ color: 'inherit', mr: 0.25 }}
+                            >
+                                <SWUDeckIcon fontSize="small" />
+                            </IconButton>
+                            <Typography variant="body1" sx={{ color:'inherit' }}>Manage&nbsp;Decks</Typography>
+                        </Link>
+                    </Box>
                 </FormControl>
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
