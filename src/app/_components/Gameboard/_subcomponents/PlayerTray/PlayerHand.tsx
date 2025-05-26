@@ -1,11 +1,13 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
 
 const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false }) => {
     const { connectedPlayer } = useGame();
+    const { isPortrait } = useScreenOrientation();
 
     // 1. Track the container dimensions via ResizeObserver and manual measurements
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -57,16 +59,19 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
 
     // We always want to maintain the ratio of the cards width/height = 1/1.4
     const ASPECT_RATIO = 1 / 1.4;
-
+    
+    // Calculate card height - use 55% of container height in portrait mode
+    const cardHeightPx = isPortrait ? containerHeight * 0.55 : containerHeight;
+    
     // Manually scale the card width with aspect ratio for the calculations
-    const CARD_WIDTH_PX = containerHeight * ASPECT_RATIO;
+    const cardWidthPx = cardHeightPx * ASPECT_RATIO;
 
     // Gap between cards if no overlap needed
     const GAP_PX = 6;
 
     // Total width if laid out side-by-side with  gaps included
     const totalNeededWidth =
-        cards.length * CARD_WIDTH_PX + (cards.length - 1) * GAP_PX;
+        cards.length * cardWidthPx + (cards.length - 1) * GAP_PX;
 
     // Decide whether to overlap should be triggered
     const needsOverlap = totalNeededWidth > containerWidth && cards.length > 1;
@@ -75,7 +80,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     let overlapWidthPx = 0;
     if (needsOverlap && cards.length > 1) {
         // Calculate overlap needed to fit all cards in the container width
-        overlapWidthPx = ((cards.length * CARD_WIDTH_PX) - containerWidth) / (cards.length - 1);
+        overlapWidthPx = ((cards.length * cardWidthPx) - containerWidth) / (cards.length - 1);
     } 
     const containerStyle = {
         // Relative so absolutely-positioned cards can be placed inside.
@@ -91,23 +96,25 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                 sx={{
                     position: 'absolute',
                     left: '10px',
-                    top: '10px',
+                    top: '5px',
                     backgroundColor: 'rgba(0, 0, 0, 0.7)',
                     color: 'white',
-                    padding: '10px',
+                    padding: '5px',
                     borderRadius: '4px',
-                    fontSize: '12px',
+                    fontSize: '11px',
                     zIndex: 1000,
                     fontFamily: 'monospace',
                     pointerEvents: 'none',
                 }}
             >
-                <div>Card Count: {cards.length}</div>
-                <div>Container Width: {containerWidth}px</div>
-                <div>Container Height: {containerHeight}px</div>
-                <div>Card Width: {CARD_WIDTH_PX}px</div>
-                <div>Overlap: {overlapWidthPx.toFixed(2)}px</div>
-                <div>Needs Overlap: {needsOverlap ? 'Yes' : 'No'}</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Card Count: {cards.length}</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Container Width: {containerWidth.toFixed(2)}px</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Container Height: {containerHeight.toFixed(2)}px</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Card Height: {cardHeightPx.toFixed(2)}px</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Card Width: {cardWidthPx.toFixed(2)}px</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Overlap: {overlapWidthPx.toFixed(2)}px ({((overlapWidthPx / cardWidthPx) * 100).toFixed(1)}%)</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Needs Overlap: {needsOverlap ? 'Yes' : 'No'}</div>
+                <div style={{ lineHeight: '1' }}>Portrait Mode: {isPortrait ? 'Yes' : 'No'}</div>
             </Box>
 
             <Box
@@ -129,6 +136,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                             margin: '0 auto',
                             height: '100%',
                             justifyContent: 'center',
+                            alignItems: 'center',
                         }}
                     >
                         {cards.map((card, i) => (
@@ -136,7 +144,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                 key={`${connectedPlayer}-hand-${i}`}
                                 sx={{
                                     width: 'auto',
-                                    height: containerHeight,
+                                    height: cardHeightPx,
                                     zIndex: 1,
                                     aspectRatio: '1 / 1.4',
                                     transition: 'transform 0.2s',
@@ -167,9 +175,11 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                 sx={{
                                     position: 'absolute',
                                     width: 'auto',
-                                    height: containerHeight,
+                                    height: cardHeightPx,
                                     aspectRatio: '1 / 1.4',
-                                    left: i === 0 ? 0: i * (CARD_WIDTH_PX - overlapWidthPx),
+                                    left: i === 0 ? 0: i * (cardWidthPx - overlapWidthPx),
+                                    // Center vertically in portrait mode
+                                    top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : 0,
                                     zIndex: i+1,
                                     transition: 'transform 0.2s',
                                     transform: card.selected && card.zone === 'hand' ? 'translateY(-11px)' : 'none',
