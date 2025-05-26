@@ -207,15 +207,17 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             deckContentStyle: {
                 fontFamily: 'var(--font-barlow), sans-serif',
                 fontWeight: '800',
-                fontSize: '2em',
+                fontSize: 'clamp(0.8rem, 0.6rem + 0.6vw, 1.5rem)',
                 color: 'white',
                 textAlign: 'center',
-                lineHeight: '50px',
-                // Text shadowBox
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 backgroundColor: 'rgba(0, 0, 0, .75)',
                 borderRadius: '100px',
-                width: '50px',
-                height: '50px',
+                width: '35%',
+                height: 'auto',
+                aspectRatio: '1 / 1',
             }
         }
     }
