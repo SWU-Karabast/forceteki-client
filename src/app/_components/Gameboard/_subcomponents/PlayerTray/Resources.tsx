@@ -9,6 +9,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import { AspectRatio } from '@mui/icons-material';
 
 /**
  * Determines if resources should use column style based on screen size and orientation
@@ -17,11 +18,8 @@ const useResourceLayout = () => {
     const theme = useTheme();
     const { isPortrait } = useScreenOrientation();
     
-    // Ensure we include the exact ipadPro breakpoint (1366px)
-    const belowIpadPro = useMediaQuery(theme.breakpoints.down('ipadPro'));
-    const exactlyIpadPro = useMediaQuery(`(width: ${theme.breakpoints.values.ipadPro}px)`);
-    const isSmallScreen = belowIpadPro || exactlyIpadPro;
-       
+    // use desktopHD (1600px) as breakpoint for going 'narrow'
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('desktopHD'));
     // Never use column style in portrait mode, regardless of screen size
     // In landscape, use column style only on smaller screens
     const shouldUseColumnStyle = !isPortrait && isSmallScreen;
@@ -88,8 +86,10 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         
         imageStyle: {
-            width: 'clamp(1.1em, 0.85rem + 1.2vw, 1.4em)',
+            width: shouldUseColumnStyle ? 'clamp(0.6em, 0.4rem + 0.8vw, 1.2em)' :
+                'clamp(1.0em, 0.75rem + 1.2vw, 1.3em)',
             height: 'auto',
+            aspectRatio: '1 / 1.4',
             margin: isPortrait || !shouldUseColumnStyle ? '0 0.5rem 0 0' : '0',
             alignSelf: isPortrait ? 'auto' : 'center',
         },
