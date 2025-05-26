@@ -87,7 +87,7 @@ const Resources: React.FC<IResourcesProps> = ({
         
         imageStyle: {
             width: shouldUseColumnStyle ? 'clamp(0.6em, 0.4rem + 0.8vw, 1.2em)' :
-                'clamp(1.0em, 0.75rem + 1.2vw, 1.3em)',
+                'clamp(1.0em, 0.55rem + 1.2vw, 1.3em)',
             height: 'auto',
             aspectRatio: '1 / 1.4',
             margin: isPortrait || !shouldUseColumnStyle ? '0 0.5rem 0 0' : '0',
@@ -105,13 +105,13 @@ const Resources: React.FC<IResourcesProps> = ({
         availableResourcesText: {
             fontWeight: '600',
             fontSize: isPortrait ? 'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)' :
-                'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)',
+                'clamp(1.1rem, 0.50rem + 1.0vw, 1.8rem)',
             color: 'white',
         },
         totalResourcesText: {
             fontWeight: '600',
             fontSize: isPortrait ? 'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)' :
-                'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)',
+                'clamp(1.1rem, 0.50rem + 1.0vw, 1.8rem)',
             color: 'white',
         },
         resourceBorderLeft: {
