@@ -86,7 +86,7 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         
         imageStyle: {
-            width: shouldUseColumnStyle ? 'clamp(0.6em, 0.4rem + 0.8vw, 1.2em)' :
+            width: shouldUseColumnStyle ? 'clamp(0.8em, 0.4rem + 0.7vw, 1.2em)' :
                 'clamp(1.0em, 0.55rem + 0.6vw, 1.4em)',
             height: 'auto',
             aspectRatio: '1 / 1.4',
