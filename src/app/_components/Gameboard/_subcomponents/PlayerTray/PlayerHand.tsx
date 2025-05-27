@@ -17,9 +17,16 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     // Function to manually measure the container dimensions
     const measureContainerDimensions = React.useCallback(() => {
         if (containerRef.current) {
-            // Get the actual rendered dimensions from the DOM
-            const actualWidth = containerRef.current.offsetWidth;
-            const actualHeight = containerRef.current.offsetHeight;
+            // Use getBoundingClientRect to get the full outer dimensions
+            // This gives us the actual size of the element including borders
+            // and is not affected by scrollbar presence - perfect for getting
+            // the true height regardless of scrollbar presence
+            const rect = containerRef.current.getBoundingClientRect();
+            
+            // Get dimensions from the bounding rectangle
+            const actualWidth = rect.width;
+            const actualHeight = rect.height;
+            
             if (actualWidth > 0) {
                 setContainerWidth(actualWidth);
             }
@@ -36,11 +43,16 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         // Initial measurement
         measureContainerDimensions();
         
-        const ro = new ResizeObserver((entries) => {
-            if (entries[0].contentRect) {
-                const { width, height } = entries[0].contentRect;
-                if (width) setContainerWidth(width);
-                if (height) setContainerHeight(height);
+        const ro = new ResizeObserver(() => {
+            // Instead of using contentRect from the observer (which can be affected by scrollbars),
+            // we'll use the same getBoundingClientRect method for consistency
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                const actualWidth = rect.width;
+                const actualHeight = rect.height;
+                
+                if (actualWidth > 0) setContainerWidth(actualWidth);
+                if (actualHeight > 0) setContainerHeight(actualHeight);
             }
         });
         
@@ -61,20 +73,19 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     const CARD_ASPECT_RATIO = 1 / 1.4;
     const MAX_OVERLAP_RATIO = 0.50;
     const CARD_HOVER_TRANSLATE_PERCENT = 0.10;
+    const SCROLLBAR_HEIGHT_PX = 16;
+    const CARD_GAP_PX = 6;
     
     // Calculate card height - use 55% of container height in portrait mode
     const cardHeightPx = isPortrait ? containerHeight * 0.55 : containerHeight;
     
     // Manually scale the card width with aspect ratio for the calculations
     const cardWidthPx = cardHeightPx * CARD_ASPECT_RATIO;
-
-
-    // Gap between cards if no overlap needed
-    const GAP_PX = 6;
+   
 
     // Total width if laid out side-by-side with  gaps included
     const totalNeededWidth =
-        cards.length * cardWidthPx + (cards.length - 1) * GAP_PX;
+        cards.length * cardWidthPx + (cards.length - 1) * CARD_GAP_PX;
 
     // Decide whether to overlap should be triggered
     const needsOverlap = totalNeededWidth > containerWidth && cards.length > 1;
@@ -128,7 +139,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                 ref={containerRef}
                 sx={{
                     ...containerStyle,
-                    border: '1px solid red',
+                    //border: '1px solid red',
                     // Allow horizontal scrolling with visible overflow on top
                     overflowX: 'auto',       // horizontal scroll
                     overflowY: 'clip',
@@ -139,7 +150,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                     
                     // Webkit scrollbar styling (Chrome, Safari, newer Edge)
                     '&::-webkit-scrollbar': {
-                        height: '16px', // Thicker scrollbar
+                        height: SCROLLBAR_HEIGHT_PX,
                         backgroundColor: '#000000', // Ensure base is black
                     },
                     '&::-webkit-scrollbar-thumb': {
@@ -163,7 +174,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                     <Box
                         sx={{
                             display: 'flex',
-                            gap: `${GAP_PX}px`,
+                            gap: `${CARD_GAP_PX}px`,
                             width: 'fit-content',
                             margin: '0 auto',
                             height: '100%',
@@ -176,7 +187,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                 key={`${connectedPlayer}-hand-${i}`}
                                 sx={{
                                     width: 'auto',
-                                    height: cardHeightPx,
+                                    height: '100%',
                                     zIndex: 1,
                                     aspectRatio: '1 / 1.4',
                                     transition: 'transform 0.2s',
