@@ -58,13 +58,16 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     }, [measureContainerDimensions, cards.length]);
 
     // We always want to maintain the ratio of the cards width/height = 1/1.4
-    const ASPECT_RATIO = 1 / 1.4;
+    const CARD_ASPECT_RATIO = 1 / 1.4;
+    const MAX_OVERLAP_RATIO = 0.50;
+    const CARD_HOVER_TRANSLATE_PERCENT = 0.10;
     
     // Calculate card height - use 55% of container height in portrait mode
     const cardHeightPx = isPortrait ? containerHeight * 0.55 : containerHeight;
     
     // Manually scale the card width with aspect ratio for the calculations
-    const cardWidthPx = cardHeightPx * ASPECT_RATIO;
+    const cardWidthPx = cardHeightPx * CARD_ASPECT_RATIO;
+
 
     // Gap between cards if no overlap needed
     const GAP_PX = 6;
@@ -82,6 +85,10 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         // Calculate overlap needed to fit all cards in the container width
         overlapWidthPx = ((cards.length * cardWidthPx) - containerWidth) / (cards.length - 1);
     } 
+
+    // Cap it by the max ratio 
+    overlapWidthPx = Math.min(overlapWidthPx, cardWidthPx * MAX_OVERLAP_RATIO);
+
     const containerStyle = {
         // Relative so absolutely-positioned cards can be placed inside.
         position: 'relative' as const,
@@ -119,7 +126,32 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
 
             <Box
                 ref={containerRef}
-                sx={containerStyle}
+                sx={{
+                    ...containerStyle,
+                    border: '1px solid red',
+                    // Allow horizontal scrolling with visible overflow on top
+                    overflowX: 'auto',       // horizontal scroll
+                    overflowY: 'clip',
+                    // Scrollbar styling
+                    // Firefox scrollbar styling
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(255, 255, 255, 0.5) #000000',
+                    
+                    // Webkit scrollbar styling (Chrome, Safari, newer Edge)
+                    '&::-webkit-scrollbar': {
+                        height: '16px', // Thicker scrollbar
+                        backgroundColor: '#000000', // Ensure base is black
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.5)', // Brighter thumb
+                        borderRadius: '4px',
+                        border: '1px solid #000000', // Add border to ensure contrast
+                    },
+                    '&::-webkit-scrollbar-track': {
+                        backgroundColor: '#000000', // Pure black background
+                        borderRadius: '4px',
+                    }
+                }}
                 onWheel={(e) => {
                     e.preventDefault(); // Prevents vertical scrolling
                     e.currentTarget.scrollLeft += e.deltaY; // Converts vertical scroll to horizontal
@@ -148,9 +180,9 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                     zIndex: 1,
                                     aspectRatio: '1 / 1.4',
                                     transition: 'transform 0.2s',
-                                    transform: card.selected && card.zone === 'hand' ? 'translateY(-11px)' : 'none',
+                                    transform: card.selected && card.zone === 'hand' ? `translateY(-${cardHeightPx * CARD_HOVER_TRANSLATE_PERCENT}px)` : 'none',
                                     '&:hover': {
-                                        transform: allowHover ? 'translateY(-11px)' : 'none',
+                                        transform: allowHover ? `translateY(-${cardHeightPx * CARD_HOVER_TRANSLATE_PERCENT}px)` : 'none',
                                     },
                                 }}
                             >
@@ -182,9 +214,9 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                     top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : 0,
                                     zIndex: i+1,
                                     transition: 'transform 0.2s',
-                                    transform: card.selected && card.zone === 'hand' ? 'translateY(-11px)' : 'none',
+                                    transform: card.selected && card.zone === 'hand' ? `translateY(-${cardHeightPx * CARD_HOVER_TRANSLATE_PERCENT}px)` : 'none',
                                     '&:hover': {
-                                        transform: allowHover ? 'translateY(-11px)' : 'none',
+                                        transform: allowHover ? `translateY(-${cardHeightPx * CARD_HOVER_TRANSLATE_PERCENT}px)` : 'none',
                                     },
                                 }}
                             >
