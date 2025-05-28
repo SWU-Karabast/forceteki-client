@@ -201,7 +201,7 @@ const DeckPage: React.FC = () => {
             if(user) {
                 await deleteDecks(selectedDecks, user);
             }else{
-                removeDeckFromLocalStorage(selectedDecks);
+                selectedDecks.forEach(removeDeckFromLocalStorage);
             }
             // Update deck list in state
             setDecks(prevDecks => prevDecks.filter(deck => !selectedDecks.includes(deck.deckID)));
