@@ -261,7 +261,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setFavouriteDeck(e.target.value)
                         }
-                        placeholder="Favorite decks"
+                        placeholder="Favorite Decks"
                     >
                         {savedDecks.length === 0 ? (
                             <MenuItem value="" disabled>

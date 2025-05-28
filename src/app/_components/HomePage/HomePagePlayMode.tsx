@@ -60,7 +60,7 @@ const HomePagePlayMode: React.FC = () => {
     }
 
     useEffect(() => {
-        if(user && user.showWelcomeMessage){
+        if(user && user.showWelcomeMessage && !showUpdatePopup){
             setShowWelcomePopup(true);
         }
         if (process.env.NODE_ENV !== 'development') return;

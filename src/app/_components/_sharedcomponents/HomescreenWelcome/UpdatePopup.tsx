@@ -92,7 +92,7 @@ const WhatsNewPopup: React.FC<WhatsNewPopupProps> = ({ open, onClose }) => {
         >
             <DialogContent>
                 <Typography variant="h4" sx={styles.title} id="whats-new-dialog-title">
-                    ✨ What’s New in this update
+                    ✨ Deck management
                 </Typography>
 
                 <Box component="ul" sx={styles.whatsNewList}>
