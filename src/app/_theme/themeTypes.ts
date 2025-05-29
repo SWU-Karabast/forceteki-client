@@ -20,6 +20,7 @@ declare module '@mui/material/styles' {
         ipadAir: true,
         lg: true,
         ipadPro: true,
+        desktopHD: true,
         xl: true,
         xxl: true,
         xxxl: true         

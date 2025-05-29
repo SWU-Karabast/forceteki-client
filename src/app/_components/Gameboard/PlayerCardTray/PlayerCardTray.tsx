@@ -8,31 +8,36 @@ import CardActionTray from '../_subcomponents/PlayerTray/CardActionTray';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import { IPlayerCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { debugBorder } from '@/app/_utils/debug';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSidebar }) => {
     const { gameState, connectedPlayer } = useGame();
+    const { isPortrait } = useScreenOrientation();
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
 
     const styles = {
         leftColumnStyle: {
+            ...debugBorder('red'),
             display: 'flex',
+            flexDirection: isPortrait ? 'column-reverse' : 'row',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: { 
-                xs: '0.5rem 0 0.5rem 0.5rem', 
-                sm: '0.75rem 0 0.75rem 1rem', 
-                md: '1.5rem 0 1.5rem 2rem'
-            },
+            padding: isPortrait ? '0.5rem' : '1.0rem',
             gap: '1rem',
+            height: '100%',
+            boxSizing: 'border-box',
         },
         centerColumnStyle: {
+            ...debugBorder('green'),
             display: 'flex',
             alignItems: 'flex-end',
             height: '100%',
         },
         rightColumnStyle: {
+            ...debugBorder('red'),
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'flex-end',
@@ -50,6 +55,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             zIndex: '1',
         },
         chatColumn: {
+            ...debugBorder('yellow'),
             display: 'flex',
             alignItems: 'center', 
             alignSelf: 'flex-end', 
