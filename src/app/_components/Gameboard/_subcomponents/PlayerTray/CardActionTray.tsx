@@ -36,6 +36,21 @@ const pulseYellowBorder = keyframes`
   }
 `;
 
+const pulseYellowBorderAbility = keyframes`
+  0% {
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 8px rgba(204, 172, 0, 0.6);
+  }
+  50% {
+    border-color: rgba(220, 185, 0, 0.6);
+    box-shadow: 0 0 16px rgba(220, 185, 0, 0.8);
+  }
+  100% {
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 8px rgba(204, 172, 0, 0.6);
+  }
+`;
+
 const pulseGreenBorder = keyframes`
   0% {
     border-color: rgba(0, 170, 70, 0.4);
@@ -48,6 +63,21 @@ const pulseGreenBorder = keyframes`
   100% {
     border-color: rgba(0, 170, 70, 0.4);
     box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
+  }
+`;
+
+const pulseRedBorder = keyframes`
+  0% {
+    border-color: rgba(230, 0, 60, 0.4);
+    box-shadow: 0 0 4px rgba(230, 0, 60, 0.4);
+  }
+  50% {
+    border-color: rgba(255, 0, 70, 0.6);
+    box-shadow: 0 0 8px rgba(255, 0, 70, 0.6);
+  }
+  100% {
+    border-color: rgba(230, 0, 60, 0.4);
+    box-shadow: 0 0 4px rgba(230, 0, 60, 0.4);
   }
 `;
 
@@ -220,7 +250,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
             };
         }
 
-        if (button.arg === 'pass') {
+        if (button.arg === 'pass' || button.arg === 'passAbility') {
             return disabled ? {} : {
                 background: `linear-gradient(rgb(29, 29, 29), #3d3a0a) padding-box, 
                     linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
@@ -231,7 +261,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                     border: '1px solid rgba(220, 185, 0, 0.7)',
                 },
                 '&:not(:disabled)': {
-                    animation: `${pulseYellowBorder} 4s infinite ease-in-out`,
+                    animation: button.arg === 'pass' ? `${pulseYellowBorder} 4s infinite ease-in-out` : `${pulseYellowBorderAbility} 3s infinite ease-in-out`,
                     boxShadow: '0 0 6px rgba(204, 172, 0, 0.5)',
                     border: '1px solid rgba(204, 172, 0, 0.5)',
                 },
@@ -252,6 +282,24 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                     animation: `${pulseGreenBorder} 4s infinite ease-in-out`,
                     boxShadow: '0 0 6px rgba(0, 170, 70, 0.5)',
                     border: '1px solid rgba(0, 170, 70, 0.5)',
+                },
+            };
+        }
+
+        if (button.arg === 'cancel') {
+            return disabled ? {} : {
+                background: `linear-gradient(rgb(29, 29, 29), #641515) padding-box, 
+                    linear-gradient(to top, #b82121, #641515) border-box`,
+                '&:hover': {
+                    background: `linear-gradient(rgb(29, 29, 29),rgb(110, 25, 25)) padding-box, 
+                    linear-gradient(to top, #e02929, #641515) border-box`,
+                    boxShadow: '0 0 8px rgba(230, 0, 60, 0.7)',
+                    border: '1px solid rgba(255, 0, 70, 0.7)',
+                },
+                '&:not(:disabled)': {
+                    animation: `${pulseRedBorder} 4s infinite ease-in-out`,
+                    boxShadow: '0 0 6px rgba(230, 0, 60, 0.5)',
+                    border: '1px solid rgba(230, 0, 60, 0.5)',
                 },
             };
         }
