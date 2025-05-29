@@ -1,15 +1,18 @@
 import React from 'react';
 import { Typography, Box, Grid2 as Grid } from '@mui/material';
+import { debugBorder } from '@/app/_utils/debug';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
 }) => {
     const { gameState, connectedPlayer, isSpectator } = useGame();
+    const { isPortrait } = useScreenOrientation();
     const playerIds = Object.keys(gameState.players);
 
     const opponentId = playerIds.find((id) => id !== connectedPlayer) || '';
@@ -28,7 +31,7 @@ const Board: React.FC<IBoardProps> = ({
     const styles = {
         boardWrapper: {
             height: '100%',
-            margin: '0 3rem',
+            margin: isPortrait ? '0 0.5rem' : '0 2.5rem',
             display: 'flex',
             flexDirection: 'row',
         },
@@ -41,7 +44,7 @@ const Board: React.FC<IBoardProps> = ({
         },  
         unitsLayer: {
             position: 'relative',
-            margin: '0 1rem',
+            margin: isPortrait ? '0 0.2em' : '0 1rem',
             width: '100%',
             height: '100%',
         },
@@ -66,8 +69,9 @@ const Board: React.FC<IBoardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: 'clamp(8rem, 20vh, 14rem)',
-            margin: '0 1rem',
+            width: isPortrait ? '20%' :
+                'clamp(8rem, 20vh, 14rem)',
+            margin: isPortrait ? '0 .1rem' : '0 1rem',
         },
         middleColumnContent: {
             display: 'flex',
@@ -78,12 +82,13 @@ const Board: React.FC<IBoardProps> = ({
             padding: '2rem 0',
         },
         leaderBaseContainer: {
+            ...debugBorder('yellow'),
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             width: '100%',
             gap: 'clamp(1px, 1.0vh, 10px)',
-            padding: '0 1rem',
+            padding: isPortrait ? '0 .1rem' : '0 1rem',
         },
         leaderBaseWrapper: {
             width: '100%',
