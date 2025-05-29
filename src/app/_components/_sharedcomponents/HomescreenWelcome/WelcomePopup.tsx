@@ -1,9 +1,13 @@
 'use client';
-import React, { useState } from 'react';
-import { Box, Typography, Dialog, DialogContent, DialogActions, Button, TextField, Link } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+    Box, Typography, Dialog, DialogContent, DialogActions, TextField, Link
+} from '@mui/material';
+
 import { useUser } from '@/app/_contexts/User.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { setUsernameOnServer, setWelcomeMessage } from '@/app/_utils/DeckStorageUtils';
+import { setUsernameOnServer } from '@/app/_utils/DeckStorageUtils';
+import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 
 interface WelcomePopupProps {
     open: boolean;
@@ -12,44 +16,61 @@ interface WelcomePopupProps {
 
 const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     const { user, updateUsername } = useUser();
-    const [username, setUsername] = useState<string>(user?.username || '');
+    // Initialize username from user context or empty string
+    const [username, setUsername] = useState<string>('');
     const [userErrorSummary, setUserErrorSummary] = useState<string | null>(null);
-    const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
     const [canSubmitUsername, setCanSubmitUsername] = useState(false);
 
+    useEffect(() => {
+        if (open) {
+            const initialUsername = user?.username || '';
+            setUsername(initialUsername); // Pre-fill the username input
+            const validationError = validateDiscordUsername(initialUsername);
+            setUserErrorSummary(validationError);
+            setCanSubmitUsername(validationError === null && initialUsername.trim() !== '');
+        } else {
+            // Reset states when dialog is closed
+            setUserErrorSummary(null);
+            setCanSubmitUsername(false);
+        }
+    }, [open, user?.username]); // Rerun when dialog opens or the initial username changes
+
     const handleSkip = async () => {
-        await setWelcomeMessage(user);
         onClose();
     };
 
     const handleSetUsername = async () => {
-        const trimmedUsername = username.trim();
-        if (!trimmedUsername) {
-            setUserErrorSummary('Username cannot be empty');
+        const validationError = validateDiscordUsername(username);
+
+        if (validationError) {
+            setUserErrorSummary(validationError);
+            setCanSubmitUsername(false);
             return;
         }
+        setUserErrorSummary(null);
 
-        if (trimmedUsername.length < 3) {
-            setUserErrorSummary('Username must be at least 3 characters long');
-            return;
-        }
-
-        try{
-            const newUsername = await setUsernameOnServer(user, trimmedUsername);
-            setSuccesfulUsernameChange(true);
-            setTimeout(() => {
-                setSuccesfulUsernameChange(false);
-            }, 2000);
-            updateUsername(newUsername);
+        try {
+            const newUsernameFromServer = await setUsernameOnServer(user, username.trim());
+            updateUsername(newUsernameFromServer);
             onClose();
-        }catch (error){
+        } catch (error) {
             console.log(error);
-            if(error instanceof Error) {
+            if (error instanceof Error) {
                 setUserErrorSummary(error.message);
             } else {
-                setUserErrorSummary('Error changing username');
+                setUserErrorSummary('An unexpected error occurred while changing username.');
             }
+            setCanSubmitUsername(false);
         }
+    };
+
+    const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newUsername = e.target.value;
+        setUsername(newUsername);
+
+        const validationError = validateDiscordUsername(newUsername);
+        setUserErrorSummary(validationError);
+        setCanSubmitUsername(validationError === null && newUsername.trim() !== '');
     };
 
     const styles = {
@@ -57,101 +78,119 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
             '& .MuiDialog-paper': {
                 backgroundColor: '#1E2D32',
                 borderRadius: '20px',
-                maxWidth: '600px',
+                maxWidth: '720px',
                 width: '100%',
                 padding: '20px',
                 border: '2px solid transparent',
-                background: 'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
-            },
+                background:
+                    'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box'
+            }
         },
         title: {
             color: '#018DC1',
             fontSize: '2rem',
             textAlign: 'left',
-            marginBottom: '16px',
+            marginBottom: '16px'
+        },
+        subtitle: {
+            fontSize: '1.2rem',
+            color: '#fff',
+            marginTop: '0.5rem',
+            marginBottom: '0.5rem'
         },
         message: {
             fontSize: '1rem',
             color: '#fff',
-            marginBottom: '16px',
+            marginBottom: '16px'
         },
         textFieldContainer: {
             display: 'flex',
             mt: '1em',
-            mb: '1.5em',
-            justifyContent: 'center',
+            mb: '0.5em',
+            justifyContent: 'center'
         },
         textField: {
             backgroundColor: '#3B4252',
             borderRadius: '5px',
             width: '100%',
-            '& .MuiInputBase-input': {
-                color: '#fff',
-            },
-            '& .MuiInputBase-input::placeholder': {
-                color: '#fff',
-            },
+            '& .MuiInputBase-input': { color: '#fff' },
+            '& .MuiInputBase-input::placeholder': { color: '#B0B0B0', opacity: 0.7 },
+        },
+        validationMessagesContainer: {
+            marginTop: '4px',
+            minHeight: '24px',
+            marginBottom: '2px',
         },
         infoList: {
-            marginTop: '8px',
+            marginTop:'2px',
             paddingLeft: '16px',
+            '& li::marker': { color: '#B8860B' }
         },
         infoItem: {
             color: '#B8860B',
             fontSize: '0.85rem',
-            marginBottom: '4px',
+            marginBottom: '4px'
+        },
+        whatsNewList: {
+            pl: '16px',
+            mt: '4px',
+            '& li::marker': { color: '#B4DCEB' }
+        },
+        whatsNewItem: {
+            color: '#B4DCEB',
+            fontSize: '0.9rem',
+            marginBottom: '6px'
         },
         actions: {
             justifyContent: 'center',
             padding: '16px 0',
-            gap: '16px',
+            gap: '16px'
         },
         skipButton: {
             backgroundColor: '#2F4055',
             color: '#fff',
-            '&:hover': {
-                backgroundColor: '#3A5169',
-            },
-            minWidth: '120px',
+            '&:hover': { backgroundColor: '#3A5169' },
+            minWidth: '120px'
         },
         setUsernameButton: {
             backgroundColor: '#2F7DB6',
             color: '#fff',
-            '&:hover': {
-                backgroundColor: '#3590D2',
-            },
-            minWidth: '120px',
+            '&:hover': { backgroundColor: '#3590D2' },
+            minWidth: '120px'
+        },
+        successMessage: { color: 'var(--selection-green)', mt: '0.5rem' },
+        errorMessage: { color: 'var(--initiative-red)', mt: '0.5rem' },
+        screenshotWrapper: {
+            mt: '12px',
+            display: 'flex',
+            justifyContent: 'center',
         },
         successMessageStyle: {
-            color: 'var(--selection-green);',
-            mt: '0.5rem'
-        },
-        errorMessageLink:{
-            cursor: 'pointer',
-            color: 'var(--selection-red);',
-            textDecorationColor: 'var(--initiative-red);',
+            color: 'var(--selection-green)',
+            fontSize: '0.9rem'
         },
         errorMessageStyle: {
-            color: 'var(--initiative-red);',
-            mt: '0.5rem'
+            color: 'var(--initiative-red)',
+            fontSize: '0.9rem'
         },
         preferenceAddedStyle: {
             backgroundColor: '#3590D2',
-            '&:hover':{
-                backgroundColor: '#4BA3E8',
-            }
+            '&:hover':{ backgroundColor: '#4BA3E8' }
         }
-    };
+    } as const;
 
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={(event, reason) => {
+                if (reason === 'backdropClick') return; // disable backdrop closing
+            }}
+            disableEscapeKeyDown
             aria-labelledby="welcome-dialog-title"
             sx={styles.dialog}
         >
             <DialogContent>
-                <Typography variant="h4" sx={styles.title}>
+                <Typography variant="h4" sx={styles.title} id="welcome-dialog-title">
                     Welcome to Karabast!
                 </Typography>
                 <Typography variant="body1" sx={styles.message}>
@@ -164,48 +203,49 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 
                 <Box sx={styles.textFieldContainer}>
                     <TextField
-                        placeholder={user?.username}
+                        placeholder={user?.username || 'Enter your username'}
                         value={username}
-                        onChange={(e) => {
-                            const newUsername = e.target.value;
-                            setUsername(newUsername);
-                            setCanSubmitUsername(newUsername.length >= 3);
-                        }}
+                        onChange={handleUsernameChange}
                         sx={styles.textField}
+                        error={!!userErrorSummary}
+                        fullWidth
                     />
                 </Box>
-                {userErrorSummary ? (
-                    <Typography variant={'body1'} sx={styles.errorMessageStyle}>
-                        {userErrorSummary}{' '}
-                    </Typography>
-                ): successfulUsernameChange ? (
-                    <Typography variant={'body1'} sx={styles.successMessageStyle}>
-                        Username successfully changed!
-                    </Typography>
-                ) : null}
-                <Box sx={styles.infoList}>
-                    <Typography variant="body2" sx={styles.infoItem}>
-                        • You can change your username <strong>freely for 1 hour</strong>. After that, changes are allowed every <strong>4 months</strong>.
-                    </Typography>
-                    <Typography variant="body2" sx={styles.infoItem}>
-                        • Usernames must be respectful, non-offensive, and free of impersonation, hate speech, slurs, or inappropriate content.
-                    </Typography>
-                    <Typography variant="body2" sx={styles.infoItem}>
-                        • You can also change your username in the <strong>Preference tab</strong>.
-                    </Typography>
+
+                <Box sx={styles.validationMessagesContainer}>
+                    {userErrorSummary && (
+                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                            {userErrorSummary}
+                        </Typography>
+                    )}
+                </Box>
+                <Box component="ul" sx={styles.infoList}>
+                    <li>
+                        <Typography component="span" variant="body2" sx={styles.infoItem}>
+                            You can change your username <strong>freely for 1 week</strong>. After that, changes are allowed every
+                            <strong> month</strong>.
+                        </Typography>
+                    </li>
+                    <li>
+                        <Typography component="span" variant="body2" sx={styles.infoItem}>
+                            Usernames must be respectful, non-offensive, and free of impersonation, hate speech, slurs, or inappropriate
+                            content.
+                        </Typography>
+                    </li>
+                    <li>
+                        <Typography component="span" variant="body2" sx={styles.infoItem}>
+                            You can also change your username later in the <strong>Preference</strong> tab.
+                        </Typography>
+                    </li>
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>
-                <PreferenceButton
-                    buttonFnc={handleSkip}
-                    text={'Skip'}
-                    variant={'standard'}
-                />
+                <PreferenceButton buttonFnc={handleSkip} text="Skip" variant="standard" />
                 <PreferenceButton
                     buttonFnc={handleSetUsername}
-                    text={'Set Username'}
-                    variant={'standard'}
-                    sx={canSubmitUsername ? styles.preferenceAddedStyle : {}}
+                    text="Set Username"
+                    variant="standard"
+                    sx={canSubmitUsername ? { backgroundColor: '#3590D2', '&:hover': { backgroundColor: '#4BA3E8' } } : {}}
                     disabled={!canSubmitUsername}
                 />
             </DialogActions>

@@ -1,5 +1,15 @@
 import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
-import { Box, Button, Checkbox, FormControl, FormControlLabel, Link, MenuItem, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    Checkbox,
+    FormControl,
+    FormControlLabel,
+    IconButton,
+    Link,
+    MenuItem,
+    Typography
+} from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
@@ -18,6 +28,7 @@ import {
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/DeckStorageUtils';
+import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -53,6 +64,9 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         fetchDecks();
     }, [user]);
 
+    const handleDeckManagement = () => {
+        router.push('/DeckPage');
+    }
 
     // Load saved decks from localStorage
     const fetchDecks = async () => {
@@ -219,6 +233,17 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             cursor: 'pointer',
             color: 'var(--selection-red);',
             textDecorationColor: 'var(--initiative-red);',
+        },
+        manageDecks:{
+            mt: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        manageDecksContainer:{
+            display: 'flex',
+            justifyContent: 'start',
+            width: '100%',
         }
     }
     return (
@@ -236,7 +261,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setFavouriteDeck(e.target.value)
                         }
-                        placeholder="Favorite decks"
+                        placeholder="Favorite Decks"
                     >
                         {savedDecks.length === 0 ? (
                             <MenuItem value="" disabled>
@@ -250,6 +275,14 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                             ))
                         )}
                     </StyledTextField>
+                    <Box sx={styles.manageDecksContainer}>
+                        <Button
+                            onClick={handleDeckManagement}
+                            sx={styles.manageDecks}
+                        >
+                            Manage&nbsp;Decks
+                        </Button>
+                    </Box>
                 </FormControl>
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>

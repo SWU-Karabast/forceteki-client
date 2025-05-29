@@ -82,7 +82,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, welcomeMessageSeen: boolean, preferences: Preferences }> =>{
+export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: Preferences }> =>{
     try {
         const decks = loadSavedDecks(false);
         const payload = {
@@ -188,7 +188,7 @@ export const setUsernameOnServer = async(user: IUser | null, username: string): 
     }
 }
 
-export const setWelcomeMessage = async(user: IUser | null): Promise<boolean> => {
+export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
             user

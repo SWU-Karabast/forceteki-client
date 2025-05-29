@@ -57,7 +57,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         email: session.user.email || null,
                         provider: session.user.provider || null,
                         providerId: session.user.id || null,
-                        welcomeMessageSeen: serverUser.welcomeMessageSeen,
+                        showWelcomeMessage: serverUser.showWelcomeMessage,
                         authenticated: true,
                         preferences: serverUser.preferences
                     });
@@ -143,7 +143,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             if(!prevUser) return null;
             return {
                 ...prevUser,
-                welcomeMessageSeen: false
+                showWelcomeMessage: false
             }
         })
     }
