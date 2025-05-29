@@ -98,7 +98,7 @@ const WhatsNewPopup: React.FC<WhatsNewPopupProps> = ({ open, onClose }) => {
                 <Box component="ul" sx={styles.whatsNewList}>
                     <li>
                         <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                            <strong>Decks Anywhere</strong> – Build, save, and favorite decks in the new <em>Decks</em> tab. <em>When</em> logged in all of your
+                            <strong>Decks Anywhere</strong> – Build, save, and favorite decks in the new <em>Decks</em> tab. When logged in all of your
                             creations are saved to the server, so they automatically appear on any device where you log in.
                         </Typography>
                     </li>
