@@ -156,13 +156,10 @@ function EndGameOptionsCustom() {
                 </Box>)
             }
             <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Thanks for playing the Beta</Typography>
+                <Typography sx={styles.typographyContainer} variant={'h3'}>Thanks for playing</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <Typography sx={styles.typeographyStyle}>
-                    Thank you for helping us test the beta!
-                </Typography>
-                <Typography sx={styles.typeographyStyle}>
-                    If you run indo any issues, please let us know in  
+                    If you run into any issues, please let us know in
                     <MuiLink
                         href="https://discord.gg/hKRaqHND4v"
                         target="_blank"
