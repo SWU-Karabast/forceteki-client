@@ -175,13 +175,15 @@ const DeckDetails: React.FC = () => {
             if (deckId) {
                 if (typeof deckId === 'string') {
                     if(user){
-                        await deleteDecks([deckId], user)
+                        const removedDecks = await deleteDecks([deckId], user)
+                        removeDeckFromLocalStorage(removedDecks);
                     }else{
                         removeDeckFromLocalStorage([deckId])
                     }
                 } else {
                     if(user){
-                        await deleteDecks(deckId, user)
+                        const removedDecks = await deleteDecks(deckId, user)
+                        removeDeckFromLocalStorage(removedDecks)
                     }else{
                         removeDeckFromLocalStorage(deckId)
                     }

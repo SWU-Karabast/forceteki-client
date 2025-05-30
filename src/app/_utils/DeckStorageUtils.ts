@@ -325,7 +325,7 @@ export const loadDecks = async (user: IUser): Promise<StoredDeck[]> => {
     }
 };
 
-export const deleteDecks = async (deckIds: string[], user: IUser): Promise<void> => {
+export const deleteDecks = async (deckIds: string[], user: IUser): Promise<string[]> => {
     try {
         const payload = {
             user,
@@ -349,10 +349,11 @@ export const deleteDecks = async (deckIds: string[], user: IUser): Promise<void>
                 for(const deck of deckIds){
                     removeDeckFromLocalStorage(deck)
                 }
-                return;
+                return [];
             }
             throw new Error('Error when attempting to delete decks. ' + errors);
         }
+        return result.removedDeckLinks
     }catch(error) {
         throw error;
     }
