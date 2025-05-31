@@ -1,15 +1,10 @@
-import React from 'react';
-import {
-    Typography,
-    Box,
-    Popover
-} from '@mui/material';
-import { ILeaderBaseCardProps, LeaderBaseCardStyle, CardStyle, ICardData } from './CardTypes';
+import React, { useEffect } from 'react';
+import { Box, Popover, Typography } from '@mui/material';
+import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
-
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -18,11 +13,49 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     disabled = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
-    
+    const [leaderBackgroundImage, setLeaderBackgroundImage] = React.useState<string | null>(null);
+    const [isCtrl, setIsCtrl] = React.useState<boolean>(false);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    
+
+    useEffect(() => {
+        if (!anchorElement && !card) return;
+        const isLeaderHovered = anchorElement?.getAttribute('data-card-type') === 'leader';
+        if (!isLeaderHovered) return;
+        if(card) {
+            setIsCtrl(false)
+            setLeaderBackgroundImage(`url(${s3CardImageURL({
+                id: card.setId.set + '_' + card.setId.number,
+                count: 0
+            }, CardStyle.PlainLeader)})`);
+        }
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Control') {
+                if(card) {
+                    setLeaderBackgroundImage(`url(${s3CardImageURL({ id: card.setId.set+'_'+card.setId.number, count: 0 }, CardStyle.Plain)})`);
+                    setIsCtrl(true)
+                }
+            }
+        };
+
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.key === 'Control') {
+                if(card) {
+                    setLeaderBackgroundImage(`url(${s3CardImageURL({ id: card.setId.set+'_'+card.setId.number, count: 0 }, CardStyle.PlainLeader)})`);
+                    setIsCtrl(false)
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [anchorElement, card, cardStyle]);
+
     if (!card) {
         return null
     }
@@ -88,12 +121,30 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     
         return true;
     };
-        
+
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
+
+    const getForceTokenIconStyle = (player: any) => {
+        const imageAspect = player.aspects.includes('villainy') ? 'Villainy' : 'Heroism';
+        const opponentStr = player.id !== connectedPlayer ? 'Opponent' : '';
+        const backgroundImage = `url(/ForceToken${imageAspect}${opponentStr}.png)`;
+
+        return {
+            position: 'absolute',
+            width: '3rem',
+            aspectRatio: '1 / 1',
+            top:'32%',
+            right: '-20px',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage,
+            filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+        };
+    }
 
     const styles = {
         card: {
@@ -190,11 +241,11 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         cardPreview: {
             borderRadius: '.38em',
-            backgroundImage: `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
+            backgroundImage: card.type === 'leader' ? leaderBackgroundImage : `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: (card.type === 'leader' && isDeployed) ? '1 / 1.4' : '1.4 / 1',
-            width: (card.type === 'leader' && isDeployed) ? '15rem' : '24rem',
+            aspectRatio: (card.type === 'leader' && (isDeployed || isCtrl)) ? '1 / 1.4' : '1.4 / 1',
+            width: (card.type === 'leader' && (isDeployed || isCtrl)) ? '15rem' : '24rem',
         },
         defendIcon: {
             position: 'absolute',
@@ -208,24 +259,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             left: '50%',
             transform: !activePlayer ? 'translate(-50%, 0) rotate(180deg)' : 'translate(-50%, 0)',
         },
-    }
-
-    const getForceTokenIconStyle = (player: any) => { 
-        const imageAspect = player.aspects.includes('villainy') ? 'Villainy' : 'Heroism';
-        const opponentStr = player.id !== connectedPlayer ? 'Opponent' : '';
-        const backgroundImage = `url(/ForceToken${imageAspect}${opponentStr}.png)`;
-
-        return {
-            position: 'absolute',
-            width: '3rem',
-            aspectRatio: '1 / 1',
-            top:'32%',
-            right: '-20px',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage,
-            filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
-        };
+        ctrlText: {
+            bottom: '0px',
+            display: 'flex',
+            justifySelf: 'center',
+            width: 'fit-content',
+            height: '2rem',
+            color: 'white',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+        },
     }
 
     return (
@@ -234,6 +277,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             onClick={handleClick}
             aria-owns={open ? 'mouse-over-popover' : undefined}
             aria-haspopup="true"
+            data-card-type={card.type}
             onMouseEnter={handlePreviewOpen}
             onMouseLeave={handlePreviewClose}
         >
@@ -275,12 +319,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 }}
                 onClose={handlePreviewClose}
                 disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}
             >
                 <Box sx={{
                     ...styles.cardPreview,
-                    backgroundImage: `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
-                }} />
+                }} >
+                </Box>
+                {card.type === 'leader' && (
+                    <Typography variant={'body1'} sx={styles.ctrlText}
+                    >CTRL: View Flipside</Typography>
+                )}
             </Popover>
 
             {cardStyle === LeaderBaseCardStyle.Leader && title && (
