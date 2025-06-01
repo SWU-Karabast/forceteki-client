@@ -96,6 +96,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                                     onClick={() => handleCardClick(card.uuid)}
                                     disabled={clickDisabled()}
                                 />
+                                <Typography>{card.displayText}</Typography>
                                 {selectingCards && (
                                     <Box
                                         sx={{

@@ -18,8 +18,10 @@ interface ButtonProps {
 }
 
 export const DefaultPopupModal = ({ data }: ButtonProps) => {
-    const { sendGameMessage } = useGame();
+    const { sendGameMessage, gameState, connectedPlayer } = useGame();
     const [isMinimized, setIsMinimized] = useState(false);
+
+    const triggerWindow = gameState?.players[connectedPlayer]?.promptState?.promptType;
 
     const renderPopupContent = () => {
         if (isMinimized) return null;
@@ -28,7 +30,7 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
                 {data.description && (
                     <Typography sx={textStyle}>{data.description}</Typography>
                 )}
-                <Box sx={footerStyle}>
+                <Box sx={{ ...footerStyle, flexDirection: triggerWindow ? 'column' : 'row' }}>
                     {data.buttons.map((button: PopupButton, index: number) => (
                         <GradientBorderButton
                             key={`${button.uuid}:${index}`}

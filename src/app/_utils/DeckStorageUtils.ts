@@ -82,7 +82,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, welcomeMessageSeen: boolean, preferences: Preferences }> =>{
+export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: Preferences }> =>{
     try {
         const decks = loadSavedDecks(false);
         const payload = {
@@ -188,7 +188,7 @@ export const setUsernameOnServer = async(user: IUser | null, username: string): 
     }
 }
 
-export const setWelcomeMessage = async(user: IUser | null): Promise<boolean> => {
+export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
             user
@@ -325,7 +325,7 @@ export const loadDecks = async (user: IUser): Promise<StoredDeck[]> => {
     }
 };
 
-export const deleteDecks = async (deckIds: string[], user: IUser): Promise<void> => {
+export const deleteDecks = async (deckIds: string[], user: IUser): Promise<string[]> => {
     try {
         const payload = {
             user,
@@ -349,10 +349,11 @@ export const deleteDecks = async (deckIds: string[], user: IUser): Promise<void>
                 for(const deck of deckIds){
                     removeDeckFromLocalStorage(deck)
                 }
-                return;
+                return [];
             }
             throw new Error('Error when attempting to delete decks. ' + errors);
         }
+        return result.removedDeckLinks
     }catch(error) {
         throw error;
     }

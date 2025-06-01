@@ -9,8 +9,9 @@ import {
     Typography,
     Radio,
     RadioGroup,
-    Link,
+    Link, IconButton,
 } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
@@ -29,6 +30,7 @@ import {
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/DeckStorageUtils';
+import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
 
 const CreateGameForm = () => {
     const pathname = usePathname();
@@ -62,6 +64,10 @@ const CreateGameForm = () => {
     useEffect(() => {
         fetchDecks();
     }, [user]);
+
+    const handleDeckManagement = () => {
+        router.push('/DeckPage');
+    }
 
     // Load saved decks from localStorage
     const fetchDecks = async() => {
@@ -224,6 +230,17 @@ const CreateGameForm = () => {
             cursor: 'pointer',
             color: 'var(--selection-red);',
             textDecorationColor: 'var(--initiative-red);',
+        },
+        manageDecks:{
+            mt: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        manageDecksContainer:{
+            display: 'flex',
+            justifyContent: 'start',
+            width: '100%',
         }
     }
     return (
@@ -241,7 +258,7 @@ const CreateGameForm = () => {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setFavouriteDeck(e.target.value)
                         }
-                        placeholder="Favorite decks"
+                        placeholder="Favorite Decks"
                     >
                         {savedDecks.length === 0 ? (
                             <MenuItem value="" disabled>
@@ -255,6 +272,14 @@ const CreateGameForm = () => {
                             ))
                         )}
                     </StyledTextField>
+                    <Box sx={styles.manageDecksContainer}>
+                        <Button
+                            onClick={handleDeckManagement}
+                            sx={styles.manageDecks}
+                        >
+                            Manage&nbsp;Decks
+                        </Button>
+                    </Box>
                 </FormControl>
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>

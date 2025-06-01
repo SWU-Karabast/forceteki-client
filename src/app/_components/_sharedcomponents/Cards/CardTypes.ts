@@ -45,6 +45,7 @@ export interface ICardData {
     hidden?: boolean;
     isAttacker?: boolean;
     isDefender?: boolean;
+    displayText?: string;
 }
 
 export interface IServerCardData {
