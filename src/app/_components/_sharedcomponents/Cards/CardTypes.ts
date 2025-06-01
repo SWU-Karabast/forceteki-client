@@ -32,6 +32,7 @@ export interface ICardData {
     subcards?: ICardData[];
     capturedCards?: ICardData[];
     aspects?: IAspect[];
+    printedType?: string;
     sentinel?: boolean;
     types?: string[];
     owner: ICardPlayer;

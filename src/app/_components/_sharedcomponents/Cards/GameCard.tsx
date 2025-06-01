@@ -68,33 +68,11 @@ const GameCard: React.FC<IGameCardProps> = ({
         setPreviewImage(null);
     };
 
-    // Add this function inside your GameCard component
-    const isRealLeaderUnit = (card: ICardData, subcards: ICardData[] = []) => {
-        // Check if the card itself is a leader unit
-        const cardTypes = Array.isArray(card.types) ? card.types : [card.type].filter(Boolean);
-        const isLeaderUnit = cardTypes.some(type => type?.toLowerCase().includes('leader'));
-        if (!isLeaderUnit) {
-            return false;
-        }
-
-        // Check if any subcards (upgrades) are leader upgrades
-        const hasLeaderUpgrade = subcards.some(subcard => {
-            const subcardTypes = Array.isArray(subcard.types) ? subcard.types : [subcard.type].filter(Boolean);
-            return subcardTypes.some(type => type?.toLowerCase().includes('leader'));
-        });
-
-        // If it's a leader unit but has no leader upgrades, it's a "real" leader unit
-        // If it has leader upgrades, it's not a "real" leader unit (became one due to upgrade)
-        return !hasLeaderUpgrade;
-    };
-
-    const realLeaderUnit = isRealLeaderUnit(card, subcards);
-
 
     useEffect(() => {
         if (!anchorElement) return;
         setIsLeader(false);
-        const isLeaderHovered = (anchorElement?.getAttribute('data-card-type') === 'leaderUnit' && realLeaderUnit) || anchorElement?.getAttribute('data-card-type') === 'leaderUpgrade';
+        const isLeaderHovered = anchorElement?.getAttribute('data-card-type') === 'leader';
         if (!isLeaderHovered) return;
         const cardId = anchorElement?.getAttribute('data-card-id');
         setIsLeader(true);
@@ -122,7 +100,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [anchorElement, cardStyle, realLeaderUnit]);
+    }, [anchorElement, cardStyle]);
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
         if (cardInPlayersHand) {
@@ -245,7 +223,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
-
     // Styles
     const styles = {
         cardContainer: {
@@ -524,7 +501,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
                 data-card-url={s3CardImageURL(card)}
-                data-card-type={card.type}
+                data-card-type={card.printedType}
                 data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >
                 <Box sx={styles.cardOverlay}>
@@ -615,7 +592,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     data-card-url={s3CardImageURL(subcard)}
-                    data-card-type={subcard.type}
+                    data-card-type={subcard.printedType}
                     data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
                 >
                     <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
@@ -640,7 +617,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-url={s3CardImageURL(capturedCard)}
-                            data-card-type={capturedCard.type}
+                            data-card-type={capturedCard.printedType}
                             data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
                         >
                             <Typography sx={styles.upgradeName}>
