@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Typography,
     Box,
@@ -34,6 +34,8 @@ const GameCard: React.FC<IGameCardProps> = ({
     
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const [isCtrl, setIsCtrl] = React.useState<boolean>(false);
+    const [isLeader, setIsLeader] = React.useState<boolean>(false);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
@@ -47,12 +49,12 @@ const GameCard: React.FC<IGameCardProps> = ({
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
-        
         if (!imageUrl) return;
 
         if (cardInOpponentsHand) {
             return;
         }
+
 
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
@@ -65,6 +67,62 @@ const GameCard: React.FC<IGameCardProps> = ({
         setAnchorElement(null);
         setPreviewImage(null);
     };
+
+    // Add this function inside your GameCard component
+    const isRealLeaderUnit = (card: ICardData, subcards: ICardData[] = []) => {
+        // Check if the card itself is a leader unit
+        const cardTypes = Array.isArray(card.types) ? card.types : [card.type].filter(Boolean);
+        const isLeaderUnit = cardTypes.some(type => type?.toLowerCase().includes('leader'));
+        if (!isLeaderUnit) {
+            return false;
+        }
+
+        // Check if any subcards (upgrades) are leader upgrades
+        const hasLeaderUpgrade = subcards.some(subcard => {
+            const subcardTypes = Array.isArray(subcard.types) ? subcard.types : [subcard.type].filter(Boolean);
+            return subcardTypes.some(type => type?.toLowerCase().includes('leader'));
+        });
+
+        // If it's a leader unit but has no leader upgrades, it's a "real" leader unit
+        // If it has leader upgrades, it's not a "real" leader unit (became one due to upgrade)
+        return !hasLeaderUpgrade;
+    };
+
+    const realLeaderUnit = isRealLeaderUnit(card, subcards);
+
+
+    useEffect(() => {
+        if (!anchorElement) return;
+        setIsLeader(false);
+        const isLeaderHovered = (anchorElement?.getAttribute('data-card-type') === 'leaderUnit' && realLeaderUnit) || anchorElement?.getAttribute('data-card-type') === 'leaderUpgrade';
+        if (!isLeaderHovered) return;
+        const cardId = anchorElement?.getAttribute('data-card-id');
+        setIsLeader(true);
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Control') {
+                if(cardId) {
+                    setPreviewImage(`url(${s3CardImageURL({ id: cardId, count: 0 }, CardStyle.PlainLeader)})`);
+                    setIsCtrl(true)
+                }
+            }
+        };
+
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.key === 'Control') {
+                if(cardId) {
+                    setPreviewImage(`url(${s3CardImageURL({ id: cardId, count: 0 }, CardStyle.Plain)})`);
+                    setIsCtrl(false)
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, [anchorElement, cardStyle, realLeaderUnit]);
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
         if (cardInPlayersHand) {
@@ -407,8 +465,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: '1 / 1.4',
-            width: '16rem',
+            aspectRatio: isCtrl ? '1.4 / 1' : '1 / 1.4',
+            width: isCtrl ? '25rem' : '16rem',
         },
         attackIcon: {
             position: 'absolute',
@@ -447,8 +505,17 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '24%',
             height: '24%',
         },
+        ctrlText: {
+            bottom: '0px',
+            display: 'flex',
+            justifySelf: 'center',
+            width: 'fit-content',
+            height: '2rem',
+            color: 'white',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+        },
     }
-
     return (
         <Box sx={styles.cardContainer}>
             <Box 
@@ -457,6 +524,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
                 data-card-url={s3CardImageURL(card)}
+                data-card-type={card.type}
+                data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
@@ -524,10 +593,14 @@ const GameCard: React.FC<IGameCardProps> = ({
                 anchorEl={anchorElement}
                 onClose={handlePreviewClose}
                 disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent' }, tabIndex: -1 } }}
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' }, tabIndex: -1 } }}
                 {...popoverConfig()}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
+                {(isLeader) && (
+                    <Typography variant={'body1'} sx={styles.ctrlText}
+                    >CTRL: View Flipside</Typography>
+                )}
             </Popover>
 
             {otherUpgradeCards.map((subcard) => (
@@ -542,6 +615,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     data-card-url={s3CardImageURL(subcard)}
+                    data-card-type={subcard.type}
+                    data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
                 >
                     <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
                 </Box>
@@ -565,6 +640,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-url={s3CardImageURL(capturedCard)}
+                            data-card-type={capturedCard.type}
+                            data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
                         >
                             <Typography sx={styles.upgradeName}>
                                 {capturedCard.name}

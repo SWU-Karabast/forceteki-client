@@ -11,6 +11,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     title,
     cardStyle = LeaderBaseCardStyle.Plain,
     disabled = false,
+    isLeader = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
     const [leaderBackgroundImage, setLeaderBackgroundImage] = React.useState<string | null>(null);
@@ -21,40 +22,47 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     useEffect(() => {
         if (!anchorElement && !card) return;
-        const isLeaderHovered = anchorElement?.getAttribute('data-card-type') === 'leader';
-        if (!isLeaderHovered) return;
+        if (!isLeader) return;
         if(card) {
             setIsCtrl(false)
-            setLeaderBackgroundImage(`url(${s3CardImageURL({
-                id: card.setId.set + '_' + card.setId.number,
-                count: 0
-            }, CardStyle.PlainLeader)})`);
+            const cardId = card.setId ? card.setId.set + '_' + card.setId.number : card.id
+            if(cardId) {
+                setLeaderBackgroundImage(`url(${s3CardImageURL({
+                    id: cardId,
+                    count: 0
+                }, CardStyle.PlainLeader)})`);
+            }
+            const handleKeyDown = (e: KeyboardEvent) => {
+                if (e.key === 'Control') {
+                    if(cardId) {
+                        setLeaderBackgroundImage(`url(${s3CardImageURL({
+                            id: cardId,
+                            count: 0
+                        }, CardStyle.Plain)})`);
+                        setIsCtrl(true)
+                    }
+                }
+            };
+
+            const handleKeyUp = (e: KeyboardEvent) => {
+                if (e.key === 'Control') {
+                    if(cardId) {
+                        setLeaderBackgroundImage(`url(${s3CardImageURL({
+                            id: cardId,
+                            count: 0
+                        }, CardStyle.PlainLeader)})`);
+                        setIsCtrl(false)
+                    }
+                }
+            };
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+            return () => {
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+            };
         }
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Control') {
-                if(card) {
-                    setLeaderBackgroundImage(`url(${s3CardImageURL({ id: card.setId.set+'_'+card.setId.number, count: 0 }, CardStyle.Plain)})`);
-                    setIsCtrl(true)
-                }
-            }
-        };
-
-        const handleKeyUp = (e: KeyboardEvent) => {
-            if (e.key === 'Control') {
-                if(card) {
-                    setLeaderBackgroundImage(`url(${s3CardImageURL({ id: card.setId.set+'_'+card.setId.number, count: 0 }, CardStyle.PlainLeader)})`);
-                    setIsCtrl(false)
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-        };
-    }, [anchorElement, card, cardStyle]);
+    }, [anchorElement, card, cardStyle, isLeader]);
 
     if (!card) {
         return null
@@ -241,11 +249,11 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         cardPreview: {
             borderRadius: '.38em',
-            backgroundImage: card.type === 'leader' ? leaderBackgroundImage : `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
+            backgroundImage: isLeader ? leaderBackgroundImage : `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: (card.type === 'leader' && (isDeployed || isCtrl)) ? '1 / 1.4' : '1.4 / 1',
-            width: (card.type === 'leader' && (isDeployed || isCtrl)) ? '15rem' : '24rem',
+            aspectRatio: (isLeader && (isDeployed || isCtrl)) ? '1 / 1.4' : '1.4 / 1',
+            width: (isLeader && (isDeployed || isCtrl)) ? '15rem' : '24rem',
         },
         defendIcon: {
             position: 'absolute',
@@ -270,7 +278,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             fontWeight: 'bold',
         },
     }
-
+    console.log(card);
     return (
         <Box
             sx={isDeployed ? styles.deployedPlaceholder : styles.card}
@@ -325,7 +333,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     ...styles.cardPreview,
                 }} >
                 </Box>
-                {card.type === 'leader' && (
+                {isLeader && (
                     <Typography variant={'body1'} sx={styles.ctrlText}
                     >CTRL: View Flipside</Typography>
                 )}

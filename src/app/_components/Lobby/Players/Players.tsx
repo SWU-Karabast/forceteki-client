@@ -113,6 +113,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 card={playerLeader ? { ...playerLeader,implemented: !isCardNotImplemented(playerLeader?.id) } : playerLeader}
                                 disabled={true}
                                 cardStyle={LeaderBaseCardStyle.PlainLeader}
+                                isLeader={true}
                             />
                             <LeaderBaseCard card={playerBase ? { ...playerBase, implemented: !isCardNotImplemented(playerBase?.id) } : playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
@@ -133,6 +134,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 card={opponentLeader ? { ...opponentLeader,implemented: !isOpponentCardNotImplemented(opponentLeader?.id) } : opponentLeader}
                                 disabled={true}
                                 cardStyle={LeaderBaseCardStyle.PlainLeader}
+                                isLeader={true}
                             />
                             <LeaderBaseCard card={opponentBase ? { ...opponentBase,implemented: !isOpponentCardNotImplemented(opponentBase?.id) } : opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>

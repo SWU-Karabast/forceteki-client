@@ -101,6 +101,7 @@ export interface ILeaderBaseCardProps {
     card: ICardData | null;
     disabled?: boolean;
     cardStyle?: LeaderBaseCardStyle;
+    isLeader?: boolean;
 }
 
 // Used to handle the how the display of the card should be in the different scenarios
