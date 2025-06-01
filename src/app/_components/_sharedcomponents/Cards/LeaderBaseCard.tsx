@@ -278,7 +278,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             fontWeight: 'bold',
         },
     }
-    console.log(card);
     return (
         <Box
             sx={isDeployed ? styles.deployedPlaceholder : styles.card}
