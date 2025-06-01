@@ -1,5 +1,5 @@
 import React from 'react';
-import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
+import { CloseOutlined, SettingsOutlined, AccessAlarm } from '@mui/icons-material';
 import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { useRouter } from 'next/navigation';
+import { keyframes } from '@mui/system';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
@@ -30,6 +31,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
+    const warning = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Warning';
+    const danger = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Danger';
 
     const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
 
@@ -61,6 +64,36 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             } 
         };
     }
+
+    const pulseYellowTimer = keyframes`
+  0% {
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 16px rgba(204, 172, 0, 0.8);
+  }
+  50% {
+    border-color: rgba(220, 185, 0, 0.6);
+    box-shadow: 0 0 32px rgba(220, 185, 0, 1);
+  }
+  100% {
+    border-color: rgba(204, 172, 0, 0.4);
+    box-shadow: 0 0 16px rgba(204, 172, 0, 0.8);
+  }
+`;
+
+    const pulseRedTimer = keyframes`
+      0% {
+        border-color: rgba(230, 0, 60, 0.4);
+        box-shadow: 0 0 16px rgba(230, 0, 60, 0.8);
+      }
+      50% {
+        border-color: rgba(255, 0, 70, 0.6);
+        box-shadow: 0 0 32px rgba(255, 0, 70, 1);
+      }
+      100% {
+        border-color: rgba(230, 0, 60, 0.4);
+        box-shadow: 0 0 16px rgba(230, 0, 60, 0.8);
+      }
+    `;
 
     // ---------------Styles------------------- //
     const styles = {
@@ -122,6 +155,14 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             backgroundRepeat: 'no-repeat',
             aspectRatio: '1 / 1.4',
             width: '16rem',
+        },
+        timer: {
+            fontSize: '4rem',
+            borderRadius: '50%',
+            color: warning ? 'rgba(204, 172, 0, 1)' : danger ? 'rgba(230, 0, 60, 1)' : 'transparent',
+            border: warning ? '4px solid rgba(204, 172, 0, 0.5)' : danger ? '4px solid rgba(230, 0, 60, 0.5)' : 'transparent',
+            boxShadow: warning ? '0 0 6px rgba(204, 172, 0, 0.5)' : danger ? '0 0 6px rgba(230, 0, 60, 0.5)' : 'transparent',
+            animation: warning ? `${pulseYellowTimer} 2.5s infinite ease-in-out` : danger ? `${pulseRedTimer} 2.5s infinite ease-in-out` : '',
         }
     };
 
@@ -167,6 +208,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.rightColumn,
                 }}
             >
+                <AccessAlarm sx={styles.timer}/>
                 <Box
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose} 
