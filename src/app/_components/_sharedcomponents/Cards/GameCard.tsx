@@ -1,17 +1,13 @@
-import React, { useEffect } from 'react';
-import {
-    Typography,
-    Box,
-    Popover,
-    PopoverOrigin,
-} from '@mui/material';
+import React from 'react';
+import { Box, Popover, PopoverOrigin, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
+import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
+import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -69,38 +65,15 @@ const GameCard: React.FC<IGameCardProps> = ({
     };
 
 
-    useEffect(() => {
-        if (!anchorElement) return;
-        setIsLeader(false);
-        const isLeaderHovered = anchorElement?.getAttribute('data-card-type') === 'leader';
-        if (!isLeaderHovered) return;
-        const cardId = anchorElement?.getAttribute('data-card-id');
-        setIsLeader(true);
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Control') {
-                if(cardId) {
-                    setPreviewImage(`url(${s3CardImageURL({ id: cardId, count: 0 }, CardStyle.PlainLeader)})`);
-                    setIsCtrl(true)
-                }
-            }
-        };
-
-        const handleKeyUp = (e: KeyboardEvent) => {
-            if (e.key === 'Control') {
-                if(cardId) {
-                    setPreviewImage(`url(${s3CardImageURL({ id: cardId, count: 0 }, CardStyle.Plain)})`);
-                    setIsCtrl(false)
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-        };
-    }, [anchorElement, cardStyle]);
+    useLeaderCardFlipPreview(
+        anchorElement,
+        anchorElement?.getAttribute('data-card-id') || undefined,
+        setPreviewImage,
+        CardStyle.Plain,
+        CardStyle.PlainLeader,
+        setIsCtrl,
+        setIsLeader
+    )
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
         if (cardInPlayersHand) {
@@ -491,6 +464,12 @@ const GameCard: React.FC<IGameCardProps> = ({
             color: 'white',
             fontSize: '1rem',
             fontWeight: 'bold',
+            textShadow: `
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000
+            `
         },
     }
     return (

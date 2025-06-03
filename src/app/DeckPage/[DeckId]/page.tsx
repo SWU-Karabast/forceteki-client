@@ -31,7 +31,7 @@ import {
     StoredDeck
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useUser } from '@/app/_contexts/User.context';
-import { keyframes } from '@mui/system';
+import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 
 const DeckDetails: React.FC = () => {
     const router = useRouter();
@@ -121,37 +121,14 @@ const DeckDetails: React.FC = () => {
         fetchDeckFromServer(deckId)
     }, [deckId]);
 
-    useEffect(() => {
-        if (!anchorElement || !deckData) return;
-
-        const isLeaderHovered = anchorElement?.getAttribute('data-card-type') === 'leader';
-
-        if (!isLeaderHovered) return;
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Control') {
-                setLeaderSecondSide(true);
-                const backImageUrl = s3CardImageURL(deckData.leader, CardStyle.Plain);
-                setPreviewImage(`url(${backImageUrl})`);
-            }
-        };
-
-        const handleKeyUp = (e: KeyboardEvent) => {
-            if (e.key === 'Control') {
-                setLeaderSecondSide(false);
-                const frontImageUrl = s3CardImageURL(deckData.leader, CardStyle.PlainLeader);
-                setPreviewImage(`url(${frontImageUrl})`);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('keyup', handleKeyUp);
-
-        return () => {
-            window.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('keyup', handleKeyUp);
-        };
-    }, [anchorElement, deckData]);
+    useLeaderCardFlipPreview(
+        anchorElement,
+        deckData?.leader.id,
+        setPreviewImage,
+        CardStyle.PlainLeader,
+        CardStyle.Plain,
+        setLeaderSecondSide
+    )
 
     const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
         if (rawDeckId) {
@@ -387,6 +364,12 @@ const DeckDetails: React.FC = () => {
             color: 'white',
             fontSize: '1rem',
             fontWeight: 'bold',
+            textShadow: `
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000
+            `
         },
     }
 
@@ -436,8 +419,10 @@ const DeckDetails: React.FC = () => {
                     >
                         <Box sx={{ ...styles.cardPreview, backgroundImage:`${previewImage}` }} >
                         </Box>
-                        <Typography variant={'body1'} sx={styles.ctrlText}
-                        >CTRL: View Flipside</Typography>
+                        {anchorElement?.getAttribute('data-card-type') === 'leader' && (
+                            <Typography variant={'body1'} sx={styles.ctrlText}
+                            >CTRL: View Flipside</Typography>
+                        )}
                     </Popover>
                     <Box sx={styles.titleTextContainer}>
                         <Typography variant="h3" sx={styles.titleText}>

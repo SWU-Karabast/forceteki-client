@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box, Popover, Typography } from '@mui/material';
 import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
+import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -19,50 +20,15 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-
-    useEffect(() => {
-        if (!anchorElement && !card) return;
-        if (!isLeader) return;
-        if(card) {
-            setIsCtrl(false)
-            const cardId = card.setId ? card.setId.set + '_' + card.setId.number : card.id
-            if(cardId) {
-                setLeaderBackgroundImage(`url(${s3CardImageURL({
-                    id: cardId,
-                    count: 0
-                }, CardStyle.PlainLeader)})`);
-            }
-            const handleKeyDown = (e: KeyboardEvent) => {
-                if (e.key === 'Control') {
-                    if(cardId) {
-                        setLeaderBackgroundImage(`url(${s3CardImageURL({
-                            id: cardId,
-                            count: 0
-                        }, CardStyle.Plain)})`);
-                        setIsCtrl(true)
-                    }
-                }
-            };
-
-            const handleKeyUp = (e: KeyboardEvent) => {
-                if (e.key === 'Control') {
-                    if(cardId) {
-                        setLeaderBackgroundImage(`url(${s3CardImageURL({
-                            id: cardId,
-                            count: 0
-                        }, CardStyle.PlainLeader)})`);
-                        setIsCtrl(false)
-                    }
-                }
-            };
-            window.addEventListener('keydown', handleKeyDown);
-            window.addEventListener('keyup', handleKeyUp);
-            return () => {
-                window.removeEventListener('keydown', handleKeyDown);
-                window.removeEventListener('keyup', handleKeyUp);
-            };
-        }
-    }, [anchorElement, card, cardStyle, isLeader]);
+    console.log(card?.setId);
+    useLeaderCardFlipPreview(
+        anchorElement,
+        card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
+        setLeaderBackgroundImage,
+        CardStyle.PlainLeader,
+        CardStyle.Plain,
+        setIsCtrl
+    )
 
     if (!card) {
         return null
@@ -276,6 +242,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             color: 'white',
             fontSize: '1rem',
             fontWeight: 'bold',
+            textShadow: `
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000
+            `
         },
     }
     return (
@@ -284,7 +256,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             onClick={handleClick}
             aria-owns={open ? 'mouse-over-popover' : undefined}
             aria-haspopup="true"
-            data-card-type={card.type}
+            data-card-type={isLeader ? 'leader' : 'base'}
             onMouseEnter={handlePreviewOpen}
             onMouseLeave={handlePreviewClose}
         >
