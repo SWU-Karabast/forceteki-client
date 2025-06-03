@@ -21,7 +21,7 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
     const { sendGameMessage, gameState, connectedPlayer } = useGame();
     const [isMinimized, setIsMinimized] = useState(false);
 
-    const triggerWindow = gameState?.players[connectedPlayer]?.promptState?.promptType;
+    const triggerWindow = gameState?.players[connectedPlayer]?.promptState?.promptType === 'triggerWindow';
 
     const renderPopupContent = () => {
         if (isMinimized) return null;
