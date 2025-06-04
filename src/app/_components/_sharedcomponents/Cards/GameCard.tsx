@@ -62,6 +62,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
         setPreviewImage(null);
+        setIsCtrl(false);
     };
 
 

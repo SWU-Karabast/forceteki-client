@@ -45,6 +45,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
+        setLeaderBackgroundImage(null);
+        setIsCtrl(false);
     };
 
     const defaultClickFunction = () => {
