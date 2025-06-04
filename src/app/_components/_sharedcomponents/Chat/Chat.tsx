@@ -16,6 +16,7 @@ const Chat: React.FC<IChatProps> = ({
     chatMessage,
     setChatMessage,
     handleChatSubmit,
+    muteChat = false,
 }) => {
     const { connectedPlayer, isSpectator, getOpponent } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -43,6 +44,11 @@ const Chat: React.FC<IChatProps> = ({
         try {
             let textStyle;
             let messageText;
+            
+            // Skip player chat messages if mute is enabled
+            if (message[0]?.type === 'playerChat' && muteChat) {
+                return null;
+            }
 
             if (message.hasOwnProperty('alert')) {                
                 switch (message.alert.type) {
@@ -60,7 +66,7 @@ const Chat: React.FC<IChatProps> = ({
                 }
 
                 messageText = message.alert.message;
-            } else if (message[0].type === 'playerChat') {
+            } else if (message[0]?.type === 'playerChat') {
                 return (
                     <Typography key={index} sx={styles.messageText}>
                         <span style={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
@@ -180,7 +186,7 @@ const Chat: React.FC<IChatProps> = ({
 
 
             <Box sx={styles.inputContainer}>
-                {!isSpectator &&(
+                {!isSpectator && !muteChat && (
                     <TextField
                         variant="outlined"
                         placeholder="Chat"
@@ -208,6 +214,11 @@ const Chat: React.FC<IChatProps> = ({
                             },
                         }}
                     />
+                )}
+                {!isSpectator && muteChat && (
+                    <Typography sx={{ color: '#ff5252', fontSize: '0.9em', fontStyle: 'italic', textAlign: 'center', width: '100%', py: 1 }}>
+                        Player messages are disabled
+                    </Typography>
                 )}
             </Box>
         </>

@@ -27,4 +27,5 @@ export interface IChatProps {
     opponentRoll?: number;
     setChatMessage: (message: string) => void;
     handleChatSubmit: () => void;
+    muteChat?: boolean;
 }
