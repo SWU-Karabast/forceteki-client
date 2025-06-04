@@ -20,7 +20,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    console.log(card?.setId);
     useLeaderCardFlipPreview(
         anchorElement,
         card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,

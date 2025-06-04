@@ -26,9 +26,7 @@ export function useLeaderCardFlipPreview(
 
 ) {
     useEffect(() => {
-        console.log(cardId);
         if (!anchorElement || !cardId) return;
-        console.log(anchorElement.getAttribute('data-card-type'));
         const isLeaderHovered = anchorElement.getAttribute('data-card-type') === 'leader';
         if (!isLeaderHovered) return;
         const frontURL = s3CardImageURL({ id: cardId, count: 0 }, frontCardStyle);
