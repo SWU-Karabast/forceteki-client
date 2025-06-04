@@ -44,6 +44,7 @@ interface IDistributionPromptData {
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
+const clickSound = typeof Audio !== 'undefined' ? new Audio('/click1.mp3') : null;
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
@@ -238,6 +239,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         if (args[0] === 'statefulPromptResults') {
             args = [args[0], distributionPromptData, args[2]]
             setDistributionPromptData({ type: distributionPromptData?.type || '', valueDistribution: distributionPromptData?.valueDistribution || [] });
+        }
+        let isPlayersTurn = false
+        if(gameState.players[connectedPlayer]) {
+            isPlayersTurn = gameState.players[connectedPlayer].isActionPhaseActivePlayer
+        }
+        const typeOfMessage = args[0];
+        if (clickSound && (isPlayersTurn || (typeOfMessage === 'chat' || typeOfMessage === 'statefulPromptResults'))) {
+            clickSound.currentTime = 0; // reset in case it's still playing
+            clickSound.play().catch((e) => {
+                console.warn('Click sound failed to play:', e);
+            });
         }
         socket?.emit('game', ...args);
     };
