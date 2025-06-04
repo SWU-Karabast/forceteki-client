@@ -1,17 +1,13 @@
 import React from 'react';
-import {
-    Typography,
-    Box,
-    Popover,
-    PopoverOrigin,
-} from '@mui/material';
+import { Box, Popover, PopoverOrigin, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
+import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
+import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -34,6 +30,8 @@ const GameCard: React.FC<IGameCardProps> = ({
     
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const [isCtrl, setIsCtrl] = React.useState<boolean>(false);
+    const [isLeader, setIsLeader] = React.useState<boolean>(false);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
@@ -47,12 +45,12 @@ const GameCard: React.FC<IGameCardProps> = ({
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
-        
         if (!imageUrl) return;
 
         if (cardInOpponentsHand) {
             return;
         }
+
 
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
@@ -64,7 +62,19 @@ const GameCard: React.FC<IGameCardProps> = ({
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
         setPreviewImage(null);
+        setIsCtrl(false);
     };
+
+
+    useLeaderCardFlipPreview(
+        anchorElement,
+        anchorElement?.getAttribute('data-card-id') || undefined,
+        setPreviewImage,
+        CardStyle.Plain,
+        CardStyle.PlainLeader,
+        setIsCtrl,
+        setIsLeader
+    )
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
         if (cardInPlayersHand) {
@@ -187,7 +197,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
-
     // Styles
     const styles = {
         cardContainer: {
@@ -407,8 +416,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: '1 / 1.4',
-            width: '16rem',
+            aspectRatio: isCtrl ? '1.4 / 1' : '1 / 1.4',
+            width: isCtrl ? '25rem' : '16rem',
         },
         attackIcon: {
             position: 'absolute',
@@ -447,8 +456,23 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '24%',
             height: '24%',
         },
+        ctrlText: {
+            bottom: '0px',
+            display: 'flex',
+            justifySelf: 'center',
+            width: 'fit-content',
+            height: '2rem',
+            color: 'white',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            textShadow: `
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000
+            `
+        },
     }
-
     return (
         <Box sx={styles.cardContainer}>
             <Box 
@@ -457,6 +481,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
                 data-card-url={s3CardImageURL(card)}
+                data-card-type={card.printedType}
+                data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
@@ -524,10 +550,14 @@ const GameCard: React.FC<IGameCardProps> = ({
                 anchorEl={anchorElement}
                 onClose={handlePreviewClose}
                 disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent' }, tabIndex: -1 } }}
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' }, tabIndex: -1 } }}
                 {...popoverConfig()}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
+                {(isLeader) && (
+                    <Typography variant={'body1'} sx={styles.ctrlText}
+                    >CTRL: View Flipside</Typography>
+                )}
             </Popover>
 
             {otherUpgradeCards.map((subcard) => (
@@ -542,6 +572,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     data-card-url={s3CardImageURL(subcard)}
+                    data-card-type={subcard.printedType}
+                    data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
                 >
                     <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
                 </Box>
@@ -565,6 +597,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-url={s3CardImageURL(capturedCard)}
+                            data-card-type={capturedCard.printedType}
+                            data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
                         >
                             <Typography sx={styles.upgradeName}>
                                 {capturedCard.name}
