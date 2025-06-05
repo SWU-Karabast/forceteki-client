@@ -17,7 +17,7 @@ import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.typ
 import { ZoneName } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useDistributionPrompt } from '@/app/_hooks/useDistributionPrompt';
+import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/useDistributionPrompt';
 
 interface IGameContextType {
     gameState: any;

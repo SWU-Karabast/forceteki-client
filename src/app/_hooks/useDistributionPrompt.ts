@@ -2,17 +2,14 @@
 
 import { useState, useRef } from 'react';
 
-interface IDistributionPrompt {
-    setDistributionPrompt: (uuid: string, amount: number, promptData: any) => void;
-    clearDistributionPrompt: () => void;
+export interface DistributionEntry {
+    uuid: string;
+    amount: number;
 }
 
-interface IDistributionPromptData {
+export interface IDistributionPromptData {
     type: string;
-    valueDistribution: {
-        uuid: string;
-        amount: number;
-    }[];
+    valueDistribution: DistributionEntry[];
 }
 
 export function useDistributionPrompt() {
