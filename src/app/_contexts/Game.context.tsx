@@ -17,6 +17,7 @@ import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.typ
 import { ZoneName } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useDistributionPrompt } from '@/app/_hooks/useDistributionPrompt';
 
 interface IGameContextType {
     gameState: any;
@@ -35,14 +36,6 @@ interface IGameContextType {
     lastQueueHeartbeat: number;
 }
 
-interface IDistributionPromptData {
-    type: string;
-    valueDistribution: {
-        uuid: string;
-        amount: number;
-    }[];
-}
-
 const GameContext = createContext<IGameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
@@ -58,8 +51,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
     const searchParams = useSearchParams();
     const router = useRouter();
-    const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
+    const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
+
     useEffect(() => {
         // Only proceed when session is loaded (either authenticated or unauthenticated)
         if (status === 'loading') {
@@ -101,13 +95,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const handleGameStatePopups = (gameState: any) => {
             if (!connectedPlayerId || isSpectatorMode) return;
             if (gameState.players?.[connectedPlayerId]?.promptState) {
-                setDistributionPromptData(null);
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
                 prunePromptStatePopups(promptUuid);
                 if (promptType === 'actionWindow') return;
                 else if (promptType === 'distributeAmongTargets') {
-                    setDistributionPromptData({ type: promptState.distributeAmongTargets.type, valueDistribution: [] });
+                    initDistributionPrompt(promptState.distributeAmongTargets)
                     return;
                 }
                 else if (promptType === 'displayCards') {
@@ -237,7 +230,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const sendGameMessage = (args: any[]) => {
         if (args[0] === 'statefulPromptResults') {
             args = [args[0], distributionPromptData, args[2]]
-            setDistributionPromptData({ type: distributionPromptData?.type || '', valueDistribution: distributionPromptData?.valueDistribution || [] });
+            clearDistributionPrompt();
         }
         socket?.emit('game', ...args);
     };
@@ -263,25 +256,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const updateDistributionPrompt = (uuid: string, amount: number) => {
-        const totalAmount = gameState.players[connectedPlayer].promptState.distributeAmongTargets?.amount;
-
-        setDistributionPromptData((prevData) => {
-            if (!prevData) return null;
-            const targets = prevData.valueDistribution;
-            const currentTotal = targets.reduce((sum, item) => sum + item.amount, 0);
-            if (currentTotal + amount > totalAmount) return prevData;
-    
-
-            const newTargetData = targets.map(item =>
-                item.uuid === uuid ? { ...item, amount: item.amount + amount } : item
-            ).filter(item => item.amount > 0);
-    
-            if (!targets.some(item => item.uuid === uuid) && amount > 0) {
-                newTargetData.push({ uuid, amount });
-            }
-    
-            return { ...prevData, valueDistribution: newTargetData };
-        });
+        const promptData = gameState.players[connectedPlayer]?.promptState?.distributeAmongTargets;
+        setDistributionPrompt(uuid, amount, promptData);
+        
     };
 
     return (
