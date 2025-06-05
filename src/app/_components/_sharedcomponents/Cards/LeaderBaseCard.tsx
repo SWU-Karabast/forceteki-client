@@ -104,6 +104,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getForceTokenIconStyle = (player: any) => {
         const imageAspect = player.aspects.includes('villainy') ? 'Villainy' : 'Heroism';
         const opponentStr = player.id !== connectedPlayer ? 'Opponent' : '';

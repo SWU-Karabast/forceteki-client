@@ -12,11 +12,20 @@ export interface IDistributionPromptData {
     valueDistribution: DistributionEntry[];
 }
 
+export interface IUIDistributionPromptData {
+    amount: number;
+    type: string;
+    canChooseNoTargets?: boolean;
+    canDistributeLess?: boolean;
+    isIndirectDamage?: boolean;
+    maxTargets?: number | null;
+}
+
 export function useDistributionPrompt() {
     const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
     const distributionPromptDataRef = useRef<IDistributionPromptData | null>(null);
 
-    const setDistributionPrompt = (uuid: string, amount: number, promptData: any): void => {
+    const setDistributionPrompt = (uuid: string, amount: number, promptData: IUIDistributionPromptData): void => {
         const totalAmount = promptData.amount;
 
         setDistributionPromptData((prevData) => {
@@ -41,7 +50,7 @@ export function useDistributionPrompt() {
         });
     }
 
-    const initDistributionPrompt = (promptData: any) => {
+    const initDistributionPrompt = (promptData: IUIDistributionPromptData) => {
         if (distributionPromptDataRef.current) {
             setDistributionPromptData(distributionPromptDataRef.current);
         } else {

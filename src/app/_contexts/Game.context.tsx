@@ -258,7 +258,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const updateDistributionPrompt = (uuid: string, amount: number) => {
         const promptData = gameState.players[connectedPlayer]?.promptState?.distributeAmongTargets;
         setDistributionPrompt(uuid, amount, promptData);
-        
     };
 
     return (
