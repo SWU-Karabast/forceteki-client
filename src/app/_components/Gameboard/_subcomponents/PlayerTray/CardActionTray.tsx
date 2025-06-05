@@ -5,6 +5,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 
 const pulseBorder = keyframes`
   0% {
@@ -168,7 +169,7 @@ const CardActionTray: React.FC = () => {
         if (button.arg === 'done') {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
-                const damageSpent = distributionPromptData?.valueDistribution.reduce((acc, curr) => acc + curr.amount, 0) ?? 0;
+                const damageSpent = distributionPromptData?.valueDistribution.reduce((acc: number, curr: DistributionEntry) => acc + curr.amount, 0) ?? 0;
                 if ((!distributeValues.canChooseNoTargets && damageSpent === 0) || (!distributeValues.canDistributeLess && damageSpent > 0 && damageSpent < distributeValues.amount)) {
                     return true;
                 }

@@ -8,6 +8,7 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -109,7 +110,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         }
     
         const maxTargets = prompt.distributeAmongTargets.maxTargets;
-        const isInDistributionData = distributionPromptData.valueDistribution.some(item => item.uuid === card.uuid);
+        const isInDistributionData = distributionPromptData.valueDistribution.some((item: DistributionEntry) => item.uuid === card.uuid);
     
         // If maxTargets is defined and already reached, allow only if the card is part of the selection
         if (maxTargets && distributionPromptData.valueDistribution.length >= maxTargets && !isInDistributionData) {
@@ -195,7 +196,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
     const cardCounter = card.count || 0;
-    const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
+    const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
     // Styles
     const styles = {

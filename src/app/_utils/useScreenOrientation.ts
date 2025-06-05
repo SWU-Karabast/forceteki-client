@@ -5,13 +5,13 @@ import { useMediaQuery, useTheme } from '@mui/material';
  * @returns {Object} An object containing isPortrait and isLandscape boolean values
  */
 export const useScreenOrientation = () => {
-  const theme = useTheme();
-  const isPortrait = useMediaQuery('(orientation: portrait)');
-  
-  return {
-    isPortrait,
-    isLandscape: !isPortrait
-  };
+    const theme = useTheme();
+    const isPortrait = useMediaQuery('(orientation: portrait)');
+
+    return {
+        isPortrait,
+        isLandscape: !isPortrait
+    };
 };
 
 export default useScreenOrientation;
