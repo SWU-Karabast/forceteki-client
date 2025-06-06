@@ -20,13 +20,21 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+    let startingSide = card?.onStartingSide
+    // TODO fix this when we refactor S3utils and gamecard this is for chancelor palpatine
+    if(startingSide === undefined && card?.id === 'TWI_017'){
+        startingSide = true;
+    }
     useLeaderCardFlipPreview(
         anchorElement,
         card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
         setLeaderBackgroundImage,
         CardStyle.PlainLeader,
         CardStyle.Plain,
-        setIsCtrl
+        setIsCtrl,
+        undefined,
+        undefined,
+        startingSide
     )
 
     if (!card) {
@@ -219,8 +227,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundImage: isLeader ? leaderBackgroundImage : `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: (isLeader && (isDeployed || isCtrl)) ? '1 / 1.4' : '1.4 / 1',
-            width: (isLeader && (isDeployed || isCtrl)) ? '15rem' : '24rem',
+            aspectRatio: (isLeader && (isDeployed || isCtrl)) ? startingSide != undefined ? '1.4 / 1' : '1 / 1.4' : '1.4 / 1',
+            width: (isLeader && (isDeployed || isCtrl)) ? startingSide != undefined ? '24rem' : '15rem' : '24rem',
         },
         defendIcon: {
             position: 'absolute',

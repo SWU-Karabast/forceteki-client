@@ -13,6 +13,7 @@ import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
  * @param setIsCtrl Optional setter for whether CTRL is pressed
  * @param setIsLeader Optional setter for whether hovering a leader card
  * @param setLeaderSecondSide Optional setter for whether hovering a leader card
+ * @param isLeaderStartingPosition specific to leaders like chancelor palpatine that don't have deploy
  */
 export function useLeaderCardFlipPreview(
     anchorElement: HTMLElement | null,
@@ -23,14 +24,37 @@ export function useLeaderCardFlipPreview(
     setIsCtrl?: (state: boolean) => void,
     setIsLeader?: (state: boolean) => void,
     setLeaderSecondSide?: (state: boolean) => void,
-
+    isLeaderStartingPosition?: boolean | undefined,
 ) {
     useEffect(() => {
         if (!anchorElement || !cardId) return;
         const isLeaderHovered = anchorElement.getAttribute('data-card-type') === 'leader';
         if (!isLeaderHovered) return;
-        const frontURL = s3CardImageURL({ id: cardId, count: 0 }, frontCardStyle);
-        const backURL = s3CardImageURL({ id: cardId, count: 0 }, backCardStyle);
+        let frontURL,backURL;
+        // this is specific for cards like chancelor palpatine and this is for the lobby specifically.
+        if(isLeaderStartingPosition != undefined) {
+            frontURL = s3CardImageURL({
+                id: cardId,
+                count: 0,
+                types: 'leader',
+                onStartingSide: isLeaderStartingPosition
+            }, frontCardStyle);
+            backURL = s3CardImageURL({
+                id: cardId,
+                count: 0,
+                types: 'leader',
+                onStartingSide: !isLeaderStartingPosition
+            }, frontCardStyle);
+        }else{
+            frontURL = s3CardImageURL({
+                id: cardId,
+                count: 0,
+            }, frontCardStyle);
+            backURL = s3CardImageURL({
+                id: cardId,
+                count: 0,
+            }, backCardStyle);
+        }
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Control') {
