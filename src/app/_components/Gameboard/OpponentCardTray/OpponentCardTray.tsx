@@ -69,32 +69,28 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     }
 
     const pulseYellowTimer = keyframes`
-  0% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 16px rgba(204, 172, 0, 0.8);
-  }
-  50% {
-    border-color: rgba(220, 185, 0, 0.6);
-    box-shadow: 0 0 32px rgba(220, 185, 0, 1);
-  }
-  100% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 16px rgba(204, 172, 0, 0.8);
-  }
-`;
+      0% {
+        background: transparent;
+      }
+      50% {
+        background: rgba(220, 185, 0, 0.3);
+        box-shadow: 0 0 16px rgba(220, 185, 0, 0.7);
+      }
+      100% {
+        background: transparent;
+      }
+    `;
 
     const pulseRedTimer = keyframes`
       0% {
-        border-color: rgba(230, 0, 60, 0.4);
-        box-shadow: 0 0 16px rgba(230, 0, 60, 0.8);
+        transparent;
       }
       50% {
-        border-color: rgba(255, 0, 70, 0.6);
-        box-shadow: 0 0 32px rgba(255, 0, 70, 1);
+        background: rgba(255, 0, 0, 0.3);
+        box-shadow: 0 0 16px rgba(255, 0, 0, 0.7);
       }
       100% {
-        border-color: rgba(230, 0, 60, 0.4);
-        box-shadow: 0 0 16px rgba(230, 0, 60, 0.8);
+        transparent;
       }
     `;
 
@@ -167,13 +163,14 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             aspectRatio: '1 / 1.4',
             width: '16rem',
         },
+        timerBox: {
+            display: !warning && !danger ? 'none' : 'block',
+            borderRadius: '50%',
+            animation: warning ? `${pulseYellowTimer} 3s infinite ease-in-out` : danger ? `${pulseRedTimer} 3s infinite ease-in-out` : 'transparent',
+        },
         timer: {
             fontSize: '4rem',
-            borderRadius: '50%',
-            color: warning ? 'rgba(204, 172, 0, 1)' : danger ? 'rgba(230, 0, 60, 1)' : 'transparent',
-            border: warning ? '4px solid rgba(204, 172, 0, 0.5)' : danger ? '4px solid rgba(230, 0, 60, 0.5)' : 'transparent',
-            boxShadow: warning ? '0 0 6px rgba(204, 172, 0, 0.5)' : danger ? '0 0 6px rgba(230, 0, 60, 0.5)' : 'transparent',
-            animation: warning ? `${pulseYellowTimer} 2.5s infinite ease-in-out` : danger ? `${pulseRedTimer} 2.5s infinite ease-in-out` : '',
+            color: warning ? 'rgba(220, 185, 0, 1)' : danger ? 'rgba(255, 0, 0, 1)' : 'transparent',
         }
     };
 
@@ -219,7 +216,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.rightColumn,
                 }}
             >
-                <AccessAlarm sx={styles.timer}/>
+                <Box sx={styles.timerBox}>
+                    <AccessAlarm sx={styles.timer}/>
+                </Box>
                 <Box
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose} 
