@@ -83,14 +83,14 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
 
     const pulseRedTimer = keyframes`
       0% {
-        transparent;
+        background: transparent;
       }
       50% {
         background: rgba(255, 0, 0, 0.3);
         box-shadow: 0 0 16px rgba(255, 0, 0, 0.7);
       }
       100% {
-        transparent;
+        background: transparent;
       }
     `;
 
