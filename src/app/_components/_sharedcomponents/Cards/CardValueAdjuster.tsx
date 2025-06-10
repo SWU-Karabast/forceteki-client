@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Button } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ICardData } from './CardTypes';
+import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 
 interface ICardValueAdjusterProps {
     card: ICardData;
@@ -15,7 +16,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
         updateDistributionPrompt(card.uuid, amount);
     };
 
-    const atMaxAssignable = isIndirect && distributionPromptData && distributionPromptData.valueDistribution.find((entry) => entry.uuid === card.uuid)?.amount === ((card.hp ?? 0) - (card.damage ?? 0));
+    const atMaxAssignable = isIndirect && distributionPromptData && distributionPromptData.valueDistribution.find((entry: DistributionEntry) => entry.uuid === card.uuid)?.amount === ((card.hp ?? 0) - (card.damage ?? 0));
 
     const type = gameState.players[connectedPlayer]?.promptState.distributeAmongTargets.type;
     const distributeDamage = type === 'distributeDamage' || type === 'distributeIndirectDamage';
