@@ -43,6 +43,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         setPreviewImage,
         frontCardStyle: CardStyle.Plain,
         backCardStyle: CardStyle.PlainLeader,
+        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
         isDeployed: true,
     });
 

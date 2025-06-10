@@ -30,6 +30,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         frontCardStyle: CardStyle.PlainLeader,
         backCardStyle: CardStyle.Plain,
         isDeployed: false,
+        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
         card: card ? {
             onStartingSide: card.onStartingSide,
             id: card.id

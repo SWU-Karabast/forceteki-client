@@ -15,6 +15,7 @@ interface UseLeaderCardFlipPreviewParams {
     frontCardStyle: CardStyle;
     backCardStyle: CardStyle;
     isDeployed?: boolean;
+    isLeader: boolean;
     // Card object for starting side logic
     card?: {
         onStartingSide?: boolean;
@@ -33,6 +34,7 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
         frontCardStyle,
         backCardStyle,
         isDeployed = false,
+        isLeader = false,
         card,
     } = params;
 
@@ -50,11 +52,10 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
 
     // Internal states
     const [internalIsCtrl, setInternalIsCtrl] = useState(false);
-    const [internalIsLeader, setInternalIsLeader] = useState(false);
 
     // Calculate style properties
     const styleSetter = useMemo(() => {
-        if(!internalIsLeader){
+        if(!isLeader){
             if(anchorElement?.getAttribute('data-card-type') === 'base'){
                 return {
                     aspectRatio: '1.4 / 1',
@@ -68,25 +69,19 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
                 width: '16rem',
             };
         }
-        const isLeaderActive = internalIsLeader && isDeployed;
+        const isLeaderActive = isLeader && isDeployed;
         const hasDefinedStartingSide = startingSide !== undefined;
         const usePortraitMode = !hasDefinedStartingSide && ((isLeaderActive && !internalIsCtrl) || (!isLeaderActive && internalIsCtrl));
         return {
             aspectRatio: usePortraitMode ? '1 / 1.4' : '1.4 / 1',
             width: usePortraitMode ? '15rem' : '24rem',
-
-            // Internal flags for debugging/testing
-            isLeaderActive,
-            hasDefinedStartingSide,
-            usePortraitMode,
         };
-    }, [internalIsLeader, isDeployed, internalIsCtrl, startingSide, anchorElement]);
+    }, [isLeader, isDeployed, internalIsCtrl, startingSide, anchorElement]);
 
     useEffect(() => {
         if (!anchorElement || !cardId) return;
 
-        const isLeaderHovered = anchorElement.getAttribute('data-card-type') === 'leader';
-        if (!isLeaderHovered) return;
+        if (!isLeader) return;
 
         let frontURL, backURL;
 
@@ -117,7 +112,6 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Control') {
-                setInternalIsLeader(true);
                 setInternalIsCtrl(true);
                 setPreviewImage(`url(${backURL})`);
             }
@@ -125,31 +119,20 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
 
         const handleKeyUp = (e: KeyboardEvent) => {
             if (e.key === 'Control') {
-                setInternalIsLeader(true);
                 setInternalIsCtrl(false);
                 setPreviewImage(`url(${frontURL})`);
             }
         };
-
-        setInternalIsLeader(true);
         setPreviewImage(`url(${frontURL})`);
 
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
 
         return () => {
-            setInternalIsLeader(false);
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [
-        anchorElement,
-        backCardStyle,
-        cardId,
-        frontCardStyle,
-        setPreviewImage,
-        startingSide
-    ]);
+    }, [anchorElement, backCardStyle, cardId, frontCardStyle, isLeader, setPreviewImage, startingSide]);
 
     return {
         // Calculated style properties

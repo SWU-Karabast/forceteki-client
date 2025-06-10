@@ -129,6 +129,7 @@ const DeckDetails: React.FC = () => {
         frontCardStyle: CardStyle.PlainLeader,
         backCardStyle: CardStyle.Plain,
         isDeployed: false,
+        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
         card: deckData?.leader ? {
             onStartingSide: undefined,
             id: deckData.leader.id
