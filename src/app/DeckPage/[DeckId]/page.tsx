@@ -58,8 +58,6 @@ const DeckDetails: React.FC = () => {
 
     // State for delete confirmation dialog
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false)
-    // TODO fix this when we refactor s3utils and cards
-    const startingSide = deckData?.leader.id === 'TWI_017' ? true : undefined;
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -122,17 +120,24 @@ const DeckDetails: React.FC = () => {
     useEffect(() => {
         fetchDeckFromServer(deckId)
     }, [deckId]);
-    useLeaderCardFlipPreview(
+
+    const {
+        isLeader,
+        aspectRatio,
+        width,
+    } = useLeaderCardFlipPreview({
         anchorElement,
-        deckData?.leader.id,
+        cardId: deckData?.leader.id,
         setPreviewImage,
-        CardStyle.PlainLeader,
-        CardStyle.Plain,
+        frontCardStyle: CardStyle.PlainLeader,
+        backCardStyle: CardStyle.Plain,
         setLeaderSecondSide,
-        undefined,
-        undefined,
-        startingSide
-    )
+        isDeployed: false,
+        card: deckData?.leader ? {
+            onStartingSide: undefined,
+            id: deckData.leader.id
+        } : undefined,
+    });
 
     const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
         if (rawDeckId) {
@@ -351,8 +356,8 @@ const DeckDetails: React.FC = () => {
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: leaderSecondSide ? startingSide ? '1.4 / 1' : '1 / 1.4' : '1.4 / 1',
-            width: '21rem',
+            aspectRatio,
+            width,
             position: 'relative',
         },
         viewDeck:{

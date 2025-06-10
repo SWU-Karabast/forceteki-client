@@ -16,26 +16,26 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
     const [leaderBackgroundImage, setLeaderBackgroundImage] = React.useState<string | null>(null);
-    const [isCtrl, setIsCtrl] = React.useState<boolean>(false);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    let startingSide = card?.onStartingSide
-    // TODO fix this when we refactor S3utils and gamecard this is for chancelor palpatine
-    if(startingSide === undefined && card?.id === 'TWI_017'){
-        startingSide = true;
-    }
-    useLeaderCardFlipPreview(
+    const {
+        isCtrl,
+        isLeader: isLeaderFromHook,
+        aspectRatio,
+        width,
+    } = useLeaderCardFlipPreview({
         anchorElement,
-        card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
-        setLeaderBackgroundImage,
-        CardStyle.PlainLeader,
-        CardStyle.Plain,
-        setIsCtrl,
-        undefined,
-        undefined,
-        startingSide
-    )
+        cardId: card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
+        setPreviewImage: setLeaderBackgroundImage,
+        frontCardStyle: CardStyle.PlainLeader,
+        backCardStyle: CardStyle.Plain,
+        isDeployed: false,
+        card: card ? {
+            onStartingSide: card.onStartingSide,
+            id: card.id
+        } : undefined,
+    });
 
     if (!card) {
         return null
@@ -54,7 +54,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
         setLeaderBackgroundImage(null);
-        setIsCtrl(false);
     };
 
     const defaultClickFunction = () => {
@@ -227,8 +226,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundImage: isLeader ? leaderBackgroundImage : `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: (isLeader && (isDeployed || isCtrl)) ? startingSide != undefined ? '1.4 / 1' : '1 / 1.4' : '1.4 / 1',
-            width: (isLeader && (isDeployed || isCtrl)) ? startingSide != undefined ? '24rem' : '15rem' : '24rem',
+            aspectRatio,
+            width,
         },
         defendIcon: {
             position: 'absolute',
