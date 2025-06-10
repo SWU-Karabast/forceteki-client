@@ -21,8 +21,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
     const {
-        isCtrl,
-        isLeader: isLeaderFromHook,
         aspectRatio,
         width,
     } = useLeaderCardFlipPreview({

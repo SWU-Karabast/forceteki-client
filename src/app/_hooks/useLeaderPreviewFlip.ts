@@ -1,18 +1,9 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface UseLeaderCardFlipPreviewReturn {
-    // State values
-    isCtrl: boolean;
-    isLeader: boolean;
-
-    // State setters (optional - only called if provided)
-    setIsCtrl?: (state: boolean) => void;
-    setIsLeader?: (state: boolean) => void;
-    setLeaderSecondSide?: (state: boolean) => void;
-
-    // Calculated style properties
+    // style properties
     aspectRatio: string;
     width: string;
 }
@@ -23,10 +14,6 @@ interface UseLeaderCardFlipPreviewParams {
     setPreviewImage: (url: string | null) => void;
     frontCardStyle: CardStyle;
     backCardStyle: CardStyle;
-    setIsCtrl?: (state: boolean) => void;
-    setIsLeader?: (state: boolean) => void;
-    setLeaderSecondSide?: (state: boolean) => void;
-    // New parameters for calculations
     isDeployed?: boolean;
     // Card object for starting side logic
     card?: {
@@ -45,9 +32,6 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
         setPreviewImage,
         frontCardStyle,
         backCardStyle,
-        setIsCtrl: externalSetIsCtrl,
-        setIsLeader: externalSetIsLeader,
-        setLeaderSecondSide: externalSetLeaderSecondSide,
         isDeployed = false,
         card,
     } = params;
@@ -64,31 +48,13 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
         return StartingSide;
     }, [card]);
 
-    // Internal state
+    // Internal states
     const [internalIsCtrl, setInternalIsCtrl] = useState(false);
     const [internalIsLeader, setInternalIsLeader] = useState(false);
 
-    // Use external setters if provided, otherwise use internal state
-    const isCtrl = internalIsCtrl;
-    const isLeader = internalIsLeader;
-
-    const setIsCtrl = useCallback((value: boolean) => {
-        setInternalIsCtrl(value);
-        externalSetIsCtrl?.(value);
-    }, [externalSetIsCtrl]);
-
-    const setIsLeader = useCallback((value: boolean) => {
-        setInternalIsLeader(value);
-        externalSetIsLeader?.(value);
-    }, [externalSetIsLeader]);
-
-    const setLeaderSecondSide = useCallback((value: boolean) => {
-        externalSetLeaderSecondSide?.(value);
-    }, [externalSetLeaderSecondSide]);
-
     // Calculate style properties
-    const styleCalculations = useMemo(() => {
-        if(!isLeader){
+    const styleSetter = useMemo(() => {
+        if(!internalIsLeader){
             if(anchorElement?.getAttribute('data-card-type') === 'base'){
                 return {
                     aspectRatio: '1.4 / 1',
@@ -102,9 +68,9 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
                 width: '16rem',
             };
         }
-        const isLeaderActive = isLeader && isDeployed;
+        const isLeaderActive = internalIsLeader && isDeployed;
         const hasDefinedStartingSide = startingSide !== undefined;
-        const usePortraitMode = !hasDefinedStartingSide && ((isLeaderActive && !isCtrl) || (!isLeaderActive && isCtrl));
+        const usePortraitMode = !hasDefinedStartingSide && ((isLeaderActive && !internalIsCtrl) || (!isLeaderActive && internalIsCtrl));
         return {
             aspectRatio: usePortraitMode ? '1 / 1.4' : '1.4 / 1',
             width: usePortraitMode ? '15rem' : '24rem',
@@ -114,7 +80,7 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
             hasDefinedStartingSide,
             usePortraitMode,
         };
-    }, [isLeader, isDeployed, isCtrl, startingSide,anchorElement]);
+    }, [internalIsLeader, isDeployed, internalIsCtrl, startingSide, anchorElement]);
 
     useEffect(() => {
         if (!anchorElement || !cardId) return;
@@ -151,28 +117,28 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Control') {
-                setLeaderSecondSide(true);
-                setIsCtrl(true);
+                setInternalIsLeader(true);
+                setInternalIsCtrl(true);
                 setPreviewImage(`url(${backURL})`);
             }
         };
 
         const handleKeyUp = (e: KeyboardEvent) => {
             if (e.key === 'Control') {
-                setLeaderSecondSide(false);
-                setIsCtrl(false);
+                setInternalIsLeader(true);
+                setInternalIsCtrl(false);
                 setPreviewImage(`url(${frontURL})`);
             }
         };
 
-        setIsLeader(true);
+        setInternalIsLeader(true);
         setPreviewImage(`url(${frontURL})`);
 
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
 
         return () => {
-            setIsLeader(false);
+            setInternalIsLeader(false);
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
@@ -181,25 +147,13 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
         backCardStyle,
         cardId,
         frontCardStyle,
-        setIsCtrl,
-        setIsLeader,
-        setLeaderSecondSide,
         setPreviewImage,
         startingSide
     ]);
 
     return {
-        // State values
-        isCtrl,
-        isLeader,
-
-        // State setters (only include if external setters were provided)
-        ...(externalSetIsCtrl && { setIsCtrl }),
-        ...(externalSetIsLeader && { setIsLeader }),
-        ...(externalSetLeaderSecondSide && { setLeaderSecondSide }),
-
         // Calculated style properties
-        aspectRatio: styleCalculations.aspectRatio,
-        width: styleCalculations.width,
+        aspectRatio: styleSetter.aspectRatio,
+        width: styleSetter.width,
     };
 }

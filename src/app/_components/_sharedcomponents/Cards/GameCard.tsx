@@ -35,7 +35,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const open = Boolean(anchorElement);
 
     const {
-        isLeader,
         aspectRatio,
         width,
     } = useLeaderCardFlipPreview({
@@ -62,7 +61,6 @@ const GameCard: React.FC<IGameCardProps> = ({
         if (cardInOpponentsHand) {
             return;
         }
-
 
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
@@ -555,7 +553,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 {...popoverConfig()}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
-                {(isLeader) && (
+                {(card.printedType === 'leader') && (
                     <Typography variant={'body1'} sx={styles.ctrlText}
                     >CTRL: View Flipside</Typography>
                 )}

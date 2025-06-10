@@ -42,7 +42,6 @@ const DeckDetails: React.FC = () => {
     const [opponentStats, setOpponentStats] = React.useState<IMatchTableStats[] | null>(null);
     const params = useParams();
     const deckId = params?.DeckId;
-    const [leaderSecondSide, setLeaderSecondSide] = useState<boolean>(false)
 
     // error handling
     const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -70,7 +69,6 @@ const DeckDetails: React.FC = () => {
 
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
-        setLeaderSecondSide(false);
         setAnchorElement(null);
     };
 
@@ -122,7 +120,6 @@ const DeckDetails: React.FC = () => {
     }, [deckId]);
 
     const {
-        isLeader,
         aspectRatio,
         width,
     } = useLeaderCardFlipPreview({
@@ -131,7 +128,6 @@ const DeckDetails: React.FC = () => {
         setPreviewImage,
         frontCardStyle: CardStyle.PlainLeader,
         backCardStyle: CardStyle.Plain,
-        setLeaderSecondSide,
         isDeployed: false,
         card: deckData?.leader ? {
             onStartingSide: undefined,
@@ -406,6 +402,7 @@ const DeckDetails: React.FC = () => {
                             aria-haspopup="true"
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
+                            data-card-type="base"
                             data-card-url={deckData ? s3CardImageURL(deckData.base) : ''}
                         />
                     </Box>
