@@ -6,6 +6,7 @@ import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -94,7 +95,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         }
     
         const maxTargets = prompt.distributeAmongTargets.maxTargets;
-        const isInDistributionData = distributionPromptData.valueDistribution.some(item => item.uuid === card.uuid);
+        const isInDistributionData = distributionPromptData.valueDistribution.some((item: DistributionEntry) => item.uuid === card.uuid);
     
         // If maxTargets is defined and already reached, allow only if the card is part of the selection
         if (maxTargets && distributionPromptData.valueDistribution.length >= maxTargets && !isInDistributionData) {
@@ -106,10 +107,11 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
-    const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
+    const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getForceTokenIconStyle = (player: any) => {
         const imageAspect = player.aspects.includes('villainy') ? 'Villainy' : 'Heroism';
         const opponentStr = player.id !== connectedPlayer ? 'Opponent' : '';

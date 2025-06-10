@@ -81,7 +81,7 @@ const BreakpointOverlay: React.FC = () => {
             Breakpoint: {breakpoint ?? 'unknown'}
             {isFractionalZoom && <>
                 <br />
-                <span style={{fontWeight: 'bold'}}>Fractional Zoom Detected: {zoomLevel}%</span>
+                <span style={{ fontWeight: 'bold' }}>Fractional Zoom Detected: {zoomLevel}%</span>
             </>}
         </Box>
     );
