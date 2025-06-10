@@ -24,7 +24,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
     useEffect(() => {
         if (open) {
             const initialUsername = user?.username || '';
-            setUsername(initialUsername); // Pre-fill the username input
+            // setUsername(initialUsername); // Pre-fill the username input
             const validationError = validateDiscordUsername(initialUsername);
             setUserErrorSummary(validationError);
             setCanSubmitUsername(validationError === null && initialUsername.trim() !== '');
