@@ -69,6 +69,7 @@ const DeckDetails: React.FC = () => {
 
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
+        setPreviewImage(null);
         setAnchorElement(null);
     };
 

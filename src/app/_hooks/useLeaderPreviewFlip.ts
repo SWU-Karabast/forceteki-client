@@ -124,7 +124,7 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
             }
         };
         setPreviewImage(`url(${frontURL})`);
-
+        setInternalIsCtrl(false);
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
 
