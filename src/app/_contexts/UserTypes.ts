@@ -38,6 +38,19 @@ declare module 'next-auth' {
             email?: string | null;
             image?: string | null;
             provider: string;
+            uuid?: string | null;
         };
+    }
+}
+
+declare module 'next-auth/jwt'{
+    interface JWT {
+        id?: string;
+        name?: string;
+        email?: string;
+        picture?: string;
+        provider?: string;
+        providerId?: string;
+        uuid?: string;
     }
 }

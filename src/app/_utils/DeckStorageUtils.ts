@@ -59,7 +59,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
         }
     } catch (err) {
         console.error('Error fetching decks:', err);
-        throw err;
+        loadSavedDecks();
     }
 };
 
