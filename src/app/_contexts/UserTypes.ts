@@ -38,7 +38,7 @@ declare module 'next-auth' {
             email?: string | null;
             image?: string | null;
             provider: string;
-            uuid?: string | null;
+            userId?: string | null;
         };
     }
 }
@@ -51,6 +51,6 @@ declare module 'next-auth/jwt'{
         picture?: string;
         provider?: string;
         providerId?: string;
-        uuid?: string;
+        userId?: string;
     }
 }

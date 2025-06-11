@@ -49,7 +49,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             // If user is logged in with session but needs to sync with server
             let needsLogout = false;
             if (session?.user) {
-                if(status === 'authenticated' && !session.user.uuid) {
+                if(status === 'authenticated' && !session.user.userId) {
                     try {
                         const serverUser = await getUserFromServer();
                         setUser({
@@ -62,7 +62,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                             authenticated: true,
                             preferences: serverUser.preferences
                         });
-                        update({ uuid: serverUser.id });
+                        update({ userId: serverUser.id });
                     } catch (error) {
                         // Just flag the error, handle anonymous user setting separately
                         console.error('Error syncing user with server:', error);

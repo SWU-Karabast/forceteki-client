@@ -7,6 +7,7 @@ import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
 import { IUser, Preferences } from '@/app/_contexts/UserTypes';
+import { Session } from 'next-auth';
 
 /* Secondary functions */
 /**
@@ -14,11 +15,13 @@ import { IUser, Preferences } from '@/app/_contexts/UserTypes';
  * - For authenticated users: loads from server
  * - For anonymous users: loads from local storage
  *
+ * @param SessionUser the session user with userId
  * @param user The current user (or null if anonymous)
  * @param options Configuration options for the fetch operation
  * @returns Promise that resolves to an array of decks in the requested format
  */
 export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'stored'>(
+    SessionUser: Session['user'] | undefined,
     user: IUser | null,
     options?: {
         format?: T;
@@ -30,7 +33,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
 ) => {
     try {
         // Get decks based on authentication status
-        const decks = user ? await loadDecks(user) : loadSavedDecks();
+        const decks = SessionUser?.userId && user ? await loadDecks(user) : loadSavedDecks();
 
         // Sort decks with favorites first
         const sortedDecks = decks.sort((a, b) => {
@@ -59,7 +62,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
         }
     } catch (err) {
         console.error('Error fetching decks:', err);
-        loadSavedDecks();
+        throw err
     }
 };
 
