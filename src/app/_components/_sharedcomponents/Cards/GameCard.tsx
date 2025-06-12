@@ -31,10 +31,21 @@ const GameCard: React.FC<IGameCardProps> = ({
     
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const [isCtrl, setIsCtrl] = React.useState<boolean>(false);
-    const [isLeader, setIsLeader] = React.useState<boolean>(false);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+
+    const {
+        aspectRatio,
+        width,
+    } = useLeaderCardFlipPreview({
+        anchorElement,
+        cardId: anchorElement?.getAttribute('data-card-id') || undefined,
+        setPreviewImage,
+        frontCardStyle: CardStyle.Plain,
+        backCardStyle: CardStyle.PlainLeader,
+        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
+        isDeployed: true,
+    });
 
     const isStolen = React.useMemo(() => {
         if (!(card.controller && card.owner)) {
@@ -52,7 +63,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             return;
         }
 
-
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
@@ -63,19 +73,8 @@ const GameCard: React.FC<IGameCardProps> = ({
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
         setPreviewImage(null);
-        setIsCtrl(false);
     };
 
-
-    useLeaderCardFlipPreview(
-        anchorElement,
-        anchorElement?.getAttribute('data-card-id') || undefined,
-        setPreviewImage,
-        CardStyle.Plain,
-        CardStyle.PlainLeader,
-        setIsCtrl,
-        setIsLeader
-    )
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
         if (cardInPlayersHand) {
@@ -417,8 +416,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: isCtrl ? '1.4 / 1' : '1 / 1.4',
-            width: isCtrl ? '25rem' : '16rem',
+            aspectRatio,
+            width,
         },
         attackIcon: {
             position: 'absolute',
@@ -555,7 +554,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 {...popoverConfig()}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
-                {(isLeader) && (
+                {(card.printedType === 'leader') && (
                     <Typography variant={'body1'} sx={styles.ctrlText}
                     >CTRL: View Flipside</Typography>
                 )}

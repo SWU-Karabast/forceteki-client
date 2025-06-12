@@ -42,7 +42,6 @@ const DeckDetails: React.FC = () => {
     const [opponentStats, setOpponentStats] = React.useState<IMatchTableStats[] | null>(null);
     const params = useParams();
     const deckId = params?.DeckId;
-    const [leaderSecondSide, setLeaderSecondSide] = useState<boolean>(false)
 
     // error handling
     const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -57,7 +56,7 @@ const DeckDetails: React.FC = () => {
     const [displayDeck, setDisplayDeck ] = useState<IDeckDetailedData | null>(null);
 
     // State for delete confirmation dialog
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false)
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -70,7 +69,7 @@ const DeckDetails: React.FC = () => {
 
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
-        setLeaderSecondSide(false);
+        setPreviewImage(null);
         setAnchorElement(null);
     };
 
@@ -121,14 +120,22 @@ const DeckDetails: React.FC = () => {
         fetchDeckFromServer(deckId)
     }, [deckId]);
 
-    useLeaderCardFlipPreview(
+    const {
+        aspectRatio,
+        width,
+    } = useLeaderCardFlipPreview({
         anchorElement,
-        deckData?.leader.id,
+        cardId: deckData?.leader.id,
         setPreviewImage,
-        CardStyle.PlainLeader,
-        CardStyle.Plain,
-        setLeaderSecondSide
-    )
+        frontCardStyle: CardStyle.PlainLeader,
+        backCardStyle: CardStyle.Plain,
+        isDeployed: false,
+        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
+        card: deckData?.leader ? {
+            onStartingSide: undefined,
+            id: deckData.leader.id
+        } : undefined,
+    });
 
     const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
         if (rawDeckId) {
@@ -347,8 +354,8 @@ const DeckDetails: React.FC = () => {
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: leaderSecondSide ? '1 / 1.4' : '1.4 / 1',
-            width: '21rem',
+            aspectRatio,
+            width,
             position: 'relative',
         },
         viewDeck:{
@@ -397,6 +404,7 @@ const DeckDetails: React.FC = () => {
                             aria-haspopup="true"
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
+                            data-card-type="base"
                             data-card-url={deckData ? s3CardImageURL(deckData.base) : ''}
                         />
                     </Box>
