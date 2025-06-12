@@ -32,6 +32,7 @@ export interface ICardData {
     subcards?: ICardData[];
     capturedCards?: ICardData[];
     aspects?: IAspect[];
+    printedType?: string;
     sentinel?: boolean;
     types?: string[];
     owner: ICardPlayer;
@@ -101,6 +102,7 @@ export interface ILeaderBaseCardProps {
     card: ICardData | null;
     disabled?: boolean;
     cardStyle?: LeaderBaseCardStyle;
+    isLeader?: boolean;
 }
 
 // Used to handle the how the display of the card should be in the different scenarios
