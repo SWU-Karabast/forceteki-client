@@ -11,7 +11,6 @@ import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckD
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { CardStyle, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    convertToDisplayDecks,
     deleteDecks,
     removeDeckFromLocalStorage,
     retrieveDecksForUser,
@@ -19,7 +18,7 @@ import {
     updateDeckFavoriteInLocalStorage,
 } from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-
+import { useSession } from 'next-auth/react';
 
 
 const sortByOptions: string[] = [
@@ -36,6 +35,7 @@ const DeckPage: React.FC = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
     const [ConfirmationDialogMessage, setConfirmationDialogMessage] = useState<string>('');
     const router = useRouter();
+    const { data: session } = useSession(); // Get session from next-auth
     const { user } = useUser();
 
     // Load decks from localStorage on component mount
@@ -47,7 +47,7 @@ const DeckPage: React.FC = () => {
     const fetchDecks = async () => {
         try {
             // Call the loadDecks function and await the result
-            await retrieveDecksForUser(user,{ format:'display', setDecks: setDecks });
+            await retrieveDecksForUser(session?.user, user,{ format:'display', setDecks: setDecks });
         } catch (error) {
             alert('Server error when fetching decks');
             console.error('Error fetching decks:', error);
@@ -199,9 +199,10 @@ const DeckPage: React.FC = () => {
         // Delete each selected deck from localStorage
         try{
             if(user) {
-                await deleteDecks(selectedDecks, user);
+                const deckLinks = await deleteDecks(selectedDecks, user);
+                deckLinks.forEach(removeDeckFromLocalStorage);
             }else{
-                removeDeckFromLocalStorage(selectedDecks);
+                selectedDecks.forEach(removeDeckFromLocalStorage);
             }
             // Update deck list in state
             setDecks(prevDecks => prevDecks.filter(deck => !selectedDecks.includes(deck.deckID)));

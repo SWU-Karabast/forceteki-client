@@ -24,7 +24,7 @@ import {
     saveDeckToServer
 } from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { SwuGameFormat } from '@/app/_constants/constants';
+import { useSession } from 'next-auth/react';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -43,6 +43,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
+    const { data: session } = useSession(); // Get session from next-auth
 
     // For deck error display
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
@@ -63,7 +64,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     // Load saved decks from localStorage
     const fetchDecks = async () => {
         try {
-            await retrieveDecksForUser(user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
+            await retrieveDecksForUser(session?.user,user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
         } catch (err){
             console.log(err);
             alert('Server error when fetching decks');
@@ -145,8 +146,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     // ------------------ Listen for changes to deckErrors ------------------ //
     useEffect(() => {
         // get error messages
-        const deckErrors: IDeckValidationFailures = connectedUser.deckErrors;
-        const temporaryErrors: IDeckValidationFailures = connectedUser.importDeckErrors;
+        const deckErrors: IDeckValidationFailures = connectedUser?.deckErrors ?? [];
+        const temporaryErrors: IDeckValidationFailures = connectedUser?.importDeckErrors ?? [];
         console.log('checking deck errors', deckErrors);
         console.log('checking import errors', temporaryErrors);
         if ((!deckErrors || Object.entries(deckErrors).length === 0) && (!temporaryErrors || Object.entries(temporaryErrors).length === 0)) {
@@ -389,7 +390,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         <Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="body1" sx={styles.labelTextStyle}>
-                                    Favorite decks
+                                    Favorite Decks
                                 </Typography>
                                 <Typography onClick={handleLinkToggle} sx={{ ...styles.labelTextStyle, color: 'lightblue', cursor:'pointer', textDecoration:'underline' }} >
                                     Import New Deck
@@ -401,7 +402,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                     setFavouriteDeck(e.target.value)
                                 }
-                                placeholder="Favorite decks"
+                                placeholder="Favorite Decks"
                             >
                                 {savedDecks.length === 0 ? (
                                     <MenuItem value="" disabled>

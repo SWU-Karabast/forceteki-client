@@ -4,7 +4,7 @@ export interface IUser {
     email: string | null;
     provider: string | null;
     providerId: string | null;
-    welcomeMessageSeen?: boolean,
+    showWelcomeMessage?: boolean,
     authenticated: boolean,
     preferences: Preferences,
 }
@@ -38,6 +38,19 @@ declare module 'next-auth' {
             email?: string | null;
             image?: string | null;
             provider: string;
+            userId?: string | null;
         };
+    }
+}
+
+declare module 'next-auth/jwt'{
+    interface JWT {
+        id?: string;
+        name?: string;
+        email?: string;
+        picture?: string;
+        provider?: string;
+        providerId?: string;
+        userId?: string;
     }
 }

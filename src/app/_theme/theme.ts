@@ -20,6 +20,7 @@ export const theme: Theme = createTheme({
             ipadAir: 1180,
             lg: 1200,
             ipadPro: 1366,
+            desktopHD: 1600,
             xl: 1920,
             xxl: 2560,
             xxxl: 3840             

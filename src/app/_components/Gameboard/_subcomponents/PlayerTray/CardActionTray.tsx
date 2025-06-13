@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Box, Typography } from '@mui/material';
+import { Button, Box } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
 import { keyframes } from '@mui/system';
+import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 
 const pulseBorder = keyframes`
   0% {
@@ -82,6 +84,7 @@ const pulseRedBorder = keyframes`
 
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
+        ...debugBorder('yellow'),
         height: '100%',
         width: '100%',
         display: 'flex',
@@ -90,6 +93,7 @@ const createStyles = (isPortrait: boolean) => ({
         padding: { xs: '0.25rem', md: '0.5rem' },
     },
     buttonsContainer: {
+        ...debugBorder('purple'),
         display: 'flex',
         flexWrap: isPortrait ? 'wrap' : 'nowrap',
         flexDirection: isPortrait ? 'column' : 'row',
@@ -165,7 +169,7 @@ const CardActionTray: React.FC = () => {
         if (button.arg === 'done') {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
-                const damageSpent = distributionPromptData?.valueDistribution.reduce((acc, curr) => acc + curr.amount, 0) ?? 0;
+                const damageSpent = distributionPromptData?.valueDistribution.reduce((acc: number, curr: DistributionEntry) => acc + curr.amount, 0) ?? 0;
                 if ((!distributeValues.canChooseNoTargets && damageSpent === 0) || (!distributeValues.canDistributeLess && damageSpent > 0 && damageSpent < distributeValues.amount)) {
                     return true;
                 }

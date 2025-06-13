@@ -9,8 +9,9 @@ import {
     Typography,
     Radio,
     RadioGroup,
-    Link,
+    Link, IconButton,
 } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
@@ -29,6 +30,8 @@ import {
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/DeckStorageUtils';
+import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
+import { useSession } from 'next-auth/react';
 
 const CreateGameForm = () => {
     const pathname = usePathname();
@@ -43,7 +46,7 @@ const CreateGameForm = () => {
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
-
+    const { data: session } = useSession(); // Get session from next-auth
     const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
@@ -63,10 +66,14 @@ const CreateGameForm = () => {
         fetchDecks();
     }, [user]);
 
+    const handleDeckManagement = () => {
+        router.push('/DeckPage');
+    }
+
     // Load saved decks from localStorage
     const fetchDecks = async() => {
         try {
-            await retrieveDecksForUser(user, { setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
+            await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
         }catch (err){
             console.log(err);
             alert('Server error when fetching decks');
@@ -224,6 +231,17 @@ const CreateGameForm = () => {
             cursor: 'pointer',
             color: 'var(--selection-red);',
             textDecorationColor: 'var(--initiative-red);',
+        },
+        manageDecks:{
+            mt: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        manageDecksContainer:{
+            display: 'flex',
+            justifyContent: 'start',
+            width: '100%',
         }
     }
     return (
@@ -241,7 +259,7 @@ const CreateGameForm = () => {
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             setFavouriteDeck(e.target.value)
                         }
-                        placeholder="Favorite decks"
+                        placeholder="Favorite Decks"
                     >
                         {savedDecks.length === 0 ? (
                             <MenuItem value="" disabled>
@@ -255,6 +273,14 @@ const CreateGameForm = () => {
                             ))
                         )}
                     </StyledTextField>
+                    <Box sx={styles.manageDecksContainer}>
+                        <Button
+                            onClick={handleDeckManagement}
+                            sx={styles.manageDecks}
+                        >
+                            Manage&nbsp;Decks
+                        </Button>
+                    </Box>
                 </FormControl>
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>

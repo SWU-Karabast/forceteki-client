@@ -54,7 +54,7 @@ const GameBoard = () => {
         ? ['endGame']
         :['currentGame']
 
-    if (!gameState || !connectedPlayer) {
+    if (!gameState || !connectedPlayer || (!(connectedPlayer in gameState?.players) && !(connectedPlayer in gameState?.spectators))) {
         return null;
     }
 

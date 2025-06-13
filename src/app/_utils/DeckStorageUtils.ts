@@ -7,6 +7,7 @@ import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
 import { IUser, Preferences } from '@/app/_contexts/UserTypes';
+import { Session } from 'next-auth';
 
 /* Secondary functions */
 /**
@@ -14,11 +15,13 @@ import { IUser, Preferences } from '@/app/_contexts/UserTypes';
  * - For authenticated users: loads from server
  * - For anonymous users: loads from local storage
  *
+ * @param SessionUser the session user with userId
  * @param user The current user (or null if anonymous)
  * @param options Configuration options for the fetch operation
  * @returns Promise that resolves to an array of decks in the requested format
  */
 export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'stored'>(
+    SessionUser: Session['user'] | undefined,
     user: IUser | null,
     options?: {
         format?: T;
@@ -30,7 +33,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
 ) => {
     try {
         // Get decks based on authentication status
-        const decks = user ? await loadDecks(user) : loadSavedDecks();
+        const decks = SessionUser?.userId && user ? await loadDecks(user) : loadSavedDecks();
 
         // Sort decks with favorites first
         const sortedDecks = decks.sort((a, b) => {
@@ -82,7 +85,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, welcomeMessageSeen: boolean, preferences: Preferences }> =>{
+export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: Preferences }> =>{
     try {
         const decks = loadSavedDecks(false);
         const payload = {
@@ -188,7 +191,7 @@ export const setUsernameOnServer = async(user: IUser | null, username: string): 
     }
 }
 
-export const setWelcomeMessage = async(user: IUser | null): Promise<boolean> => {
+export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
             user
@@ -325,7 +328,7 @@ export const loadDecks = async (user: IUser): Promise<StoredDeck[]> => {
     }
 };
 
-export const deleteDecks = async (deckIds: string[], user: IUser): Promise<void> => {
+export const deleteDecks = async (deckIds: string[], user: IUser): Promise<string[]> => {
     try {
         const payload = {
             user,
@@ -349,10 +352,11 @@ export const deleteDecks = async (deckIds: string[], user: IUser): Promise<void>
                 for(const deck of deckIds){
                     removeDeckFromLocalStorage(deck)
                 }
-                return;
+                return [];
             }
             throw new Error('Error when attempting to delete decks. ' + errors);
         }
+        return result.removedDeckLinks
     }catch(error) {
         throw error;
     }

@@ -14,8 +14,8 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
 
     // set connectedPlayer
-    const playerLeader = connectedUser.deck?.leader || null;
-    const playerBase = connectedUser.deck?.base || null;
+    const playerLeader = connectedUser?.deck?.leader;
+    const playerBase = connectedUser?.deck?.base;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
@@ -113,6 +113,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 card={playerLeader ? { ...playerLeader,implemented: !isCardNotImplemented(playerLeader?.id) } : playerLeader}
                                 disabled={true}
                                 cardStyle={LeaderBaseCardStyle.PlainLeader}
+                                isLeader={true}
                             />
                             <LeaderBaseCard card={playerBase ? { ...playerBase, implemented: !isCardNotImplemented(playerBase?.id) } : playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
@@ -133,6 +134,7 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                                 card={opponentLeader ? { ...opponentLeader,implemented: !isOpponentCardNotImplemented(opponentLeader?.id) } : opponentLeader}
                                 disabled={true}
                                 cardStyle={LeaderBaseCardStyle.PlainLeader}
+                                isLeader={true}
                             />
                             <LeaderBaseCard card={opponentBase ? { ...opponentBase,implemented: !isOpponentCardNotImplemented(opponentBase?.id) } : opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>

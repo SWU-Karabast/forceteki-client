@@ -13,8 +13,8 @@ const FoundGame: React.FC = () => {
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     // set connectedPlayer
-    const playerLeader = connectedUser.deck?.leader || null;
-    const playerBase = connectedUser.deck?.base || null;
+    const playerLeader = connectedUser?.deck?.leader;
+    const playerBase = connectedUser?.deck?.base;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
@@ -114,7 +114,7 @@ const FoundGame: React.FC = () => {
                         <LeaderBaseCard card={playerBase}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <LeaderBaseCard card={playerLeader} cardStyle={LeaderBaseCardStyle.PlainLeader}/>
+                        <LeaderBaseCard card={playerLeader} cardStyle={LeaderBaseCardStyle.PlainLeader} isLeader={true}/>
                     </Box>
                     <Typography sx={{ ...styles.playerText, marginTop:'24px' }}>
                         {connectedUser.username}
@@ -128,7 +128,7 @@ const FoundGame: React.FC = () => {
                         <LeaderBaseCard card={opponentBase}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <LeaderBaseCard card={opponentLeader} cardStyle={LeaderBaseCardStyle.PlainLeader}/>
+                        <LeaderBaseCard card={opponentLeader} cardStyle={LeaderBaseCardStyle.PlainLeader} isLeader={true}/>
                     </Box>
                     <Typography sx={{ ...styles.playerText, marginTop:'24px' }}>
                         {titleOpponent}

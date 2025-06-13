@@ -1,17 +1,39 @@
-import React from 'react';
-import { Card, CardContent, Box, Typography } from '@mui/material';
+import React, { useRef } from 'react';
+import { Card, CardContent, Box, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import Image from 'next/image';
 import { s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { debugBorder } from '@/app/_utils/debug';
 import { IResourcesProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import { AspectRatio } from '@mui/icons-material';
+
+/**
+ * Determines if resources should use column style based on screen size and orientation
+ */
+const useResourceLayout = () => {
+    const theme = useTheme();
+    const { isPortrait } = useScreenOrientation();
+    
+    // use desktopHD (1600px) as breakpoint for going 'narrow'
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('desktopHD'));
+    // Never use column style in portrait mode, regardless of screen size
+    // In landscape, use column style only on smaller screens
+    const shouldUseColumnStyle = !isPortrait && isSmallScreen;
+    
+    return { shouldUseColumnStyle, isPortrait };
+};
 
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
 }) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
+    const containerRef = useRef<HTMLDivElement>(null);
+    const { shouldUseColumnStyle, isPortrait } = useResourceLayout();
 
     const availableResources = gameState.players[trayPlayer].availableResources;
     const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
@@ -41,7 +63,7 @@ const Resources: React.FC<IResourcesProps> = ({
     // ------------------------STYLES------------------------//
     const styles = {
         cardStyle: {
-            width: 'auto',
+            width: isPortrait ? 'auto' : '30%',
             maxHeight: '100%',
             background: selectableResource ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
             display: 'flex',
@@ -54,6 +76,7 @@ const Resources: React.FC<IResourcesProps> = ({
             overflow: 'visible',
             cursor: 'pointer',
             border: selectableResource ? '2px solid var(--selection-green)' : 'none',
+            ...(!selectableResource && debugBorder('purple')),
             '&:hover': {
                 background:
                     trayPlayer === connectedPlayer
@@ -63,26 +86,32 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         
         imageStyle: {
-            width: '1.4em',
+            width: shouldUseColumnStyle ? 'clamp(0.8em, 0.4rem + 0.7vw, 1.2em)' :
+                'clamp(1.0em, 0.55rem + 0.6vw, 1.4em)',
             height: 'auto',
-            marginRight: '10px',
+            aspectRatio: '1 / 1.4',
+            margin: isPortrait || !shouldUseColumnStyle ? '0 0.5rem 0 0' : '0',
+            alignSelf: isPortrait ? 'auto' : 'center',
         },
         boxStyle: {
+            ...debugBorder('green'),
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            flexDirection: 'row',
+            flexDirection: isPortrait ? 'row' : shouldUseColumnStyle ? 'column' : 'row',
             position: 'relative', 
             zIndex: 1, 
         },
         availableResourcesText: {
             fontWeight: '600',
-            fontSize: '1.8rem',
+            fontSize: isPortrait ? 'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)' :
+                'clamp(1.1rem, 0.50rem + 1.0vw, 1.8rem)',
             color: 'white',
         },
         totalResourcesText: {
             fontWeight: '600',
-            fontSize: '1.8rem',
+            fontSize: isPortrait ? 'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)' :
+                'clamp(1.1rem, 0.50rem + 1.0vw, 1.8rem)',
             color: 'white',
         },
         resourceBorderLeft: {
@@ -113,6 +142,7 @@ const Resources: React.FC<IResourcesProps> = ({
 
     return (
         <Card
+            ref={containerRef}
             sx={styles.cardStyle}
             onClick={handleResourceToggle}
         >

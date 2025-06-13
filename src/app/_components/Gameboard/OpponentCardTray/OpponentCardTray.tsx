@@ -11,10 +11,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { useRouter } from 'next/navigation';
+import { debugBorder } from '@/app/_utils/debug';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
     const { openPopup } = usePopup();
+    const { isPortrait } = useScreenOrientation();
     const router = useRouter();
     const handleExitButton = () => {
         if (isSpectator){
@@ -65,13 +68,18 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     // ---------------Styles------------------- //
     const styles = {
         leftColumn: {
+            ...debugBorder('red'),
+            flexDirection: isPortrait ? 'column' : 'row',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: '1rem 0 1rem 2rem',
+            padding: isPortrait ? '0.5rem' : '1.0rem',
             gap: '1rem',
+            height: '100%',
+            boxSizing: 'border-box',
         },
         centerColumn: {
+            ...debugBorder('green'),
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
@@ -84,6 +92,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             zIndex: '1',
         },
         rightColumn: {
+            ...debugBorder('red'),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
@@ -91,6 +100,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             gap: '2rem',
         },
         lastPlayed: {
+            ...debugBorder('yellow'),
             width: '4.6rem',
             height: '6.5rem',
             borderRadius: '5px',
@@ -99,6 +109,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
         },
         menuStyles: {
+            ...debugBorder('yellow'),
             display: 'flex',
             flexDirection: 'column',
             gap: '1rem',
@@ -132,7 +143,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 height: '100%',
                 display: 'flex',
                 flexWrap: 'nowrap',
-                columnGap: '2rem', // 2rem gap between columns
+                columnGap: '1rem', // 2rem gap between columns
                 position: 'relative'
             }}
         >

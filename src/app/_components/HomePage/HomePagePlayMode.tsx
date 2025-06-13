@@ -5,19 +5,26 @@ import CreateGameForm from '../_sharedcomponents/CreateGameForm/CreateGameForm';
 import { useUser } from '@/app/_contexts/User.context';
 import QuickGameForm from '@/app/_components/_sharedcomponents/QuickGameForm/QuickGameForm';
 import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/WelcomePopup';
+import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
     const [value, setValue] = React.useState(0);
     const [testGameList, setTestGameList] = React.useState([]);
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+    const [showUpdatePopup, setShowUpdatePopup] = useState(false);
     const { user, updateWelcomeMessage } = useUser();
 
 
     const closeWelcomePopup = () => {
         setShowWelcomePopup(false);
-        updateWelcomeMessage();
+        setShowUpdatePopup(true);
     };
+
+    const closeUpdatePopup = () => {
+        setShowUpdatePopup(false);
+        updateWelcomeMessage();
+    }
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
@@ -53,7 +60,7 @@ const HomePagePlayMode: React.FC = () => {
     }
 
     useEffect(() => {
-        if(user && user.welcomeMessageSeen){
+        if(user && user.showWelcomeMessage && !showUpdatePopup){
             setShowWelcomePopup(true);
         }
         if (process.env.NODE_ENV !== 'development') return;
@@ -110,7 +117,7 @@ const HomePagePlayMode: React.FC = () => {
                                 {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
                             </Tabs>
                         </Box>
-                    {showQuickMatch && 
+                        {showQuickMatch && 
                         <TabPanel index={0} value={value}>
                             <QuickGameForm/>
                         </TabPanel>}
@@ -138,6 +145,7 @@ const HomePagePlayMode: React.FC = () => {
                 }
             </Card>
             <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
+            <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
         </>
     );
 };
