@@ -31,6 +31,7 @@ import {
     saveDeckToServer
 } from '@/app/_utils/DeckStorageUtils';
 import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
+import { useSession } from 'next-auth/react';
 
 const CreateGameForm = () => {
     const pathname = usePathname();
@@ -45,7 +46,7 @@ const CreateGameForm = () => {
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
-
+    const { data: session } = useSession(); // Get session from next-auth
     const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
@@ -72,7 +73,7 @@ const CreateGameForm = () => {
     // Load saved decks from localStorage
     const fetchDecks = async() => {
         try {
-            await retrieveDecksForUser(user, { setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
+            await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
         }catch (err){
             console.log(err);
             alert('Server error when fetching decks');

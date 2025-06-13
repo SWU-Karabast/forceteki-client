@@ -26,7 +26,7 @@ const UserContext = createContext<IUserContextType>({
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const { data: session } = useSession(); // Get session from next-auth
+    const { data: session, status, update } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
@@ -49,23 +49,26 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             // If user is logged in with session but needs to sync with server
             let needsLogout = false;
             if (session?.user) {
-                try {
-                    const serverUser = await getUserFromServer();
-                    setUser({
-                        id: serverUser.id,
-                        username: serverUser.username,
-                        email: session.user.email || null,
-                        provider: session.user.provider || null,
-                        providerId: session.user.id || null,
-                        showWelcomeMessage: serverUser.showWelcomeMessage,
-                        authenticated: true,
-                        preferences: serverUser.preferences
-                    });
-                } catch (error) {
-                    // Just flag the error, handle anonymous user setting separately
-                    console.error('Error syncing user with server:', error);
-                    // we need to logout the user when an error with getting the user happens
-                    needsLogout = true;
+                if(status === 'authenticated' && !session.user.userId) {
+                    try {
+                        const serverUser = await getUserFromServer();
+                        setUser({
+                            id: serverUser.id,
+                            username: serverUser.username,
+                            email: session.user.email || null,
+                            provider: session.user.provider || null,
+                            providerId: session.user.id || null,
+                            showWelcomeMessage: serverUser.showWelcomeMessage,
+                            authenticated: true,
+                            preferences: serverUser.preferences
+                        });
+                        update({ userId: serverUser.id });
+                    } catch (error) {
+                        // Just flag the error, handle anonymous user setting separately
+                        console.error('Error syncing user with server:', error);
+                        // we need to logout the user when an error with getting the user happens
+                        needsLogout = true;
+                    }
                 }
             }
             if(needsLogout){
