@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { DeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { NextResponse } from 'next/server';
 
