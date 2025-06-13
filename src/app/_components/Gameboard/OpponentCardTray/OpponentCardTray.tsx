@@ -169,6 +169,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             animation: warning ? `${pulseYellowTimer} 3s infinite ease-in-out` : danger ? `${pulseRedTimer} 3s infinite ease-in-out` : 'transparent',
         },
         timer: {
+            display: 'block',
             fontSize: '4rem',
             color: warning ? 'rgba(220, 185, 0, 1)' : danger ? 'rgba(255, 0, 0, 1)' : 'transparent',
         }
