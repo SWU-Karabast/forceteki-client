@@ -49,26 +49,24 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             // If user is logged in with session but needs to sync with server
             let needsLogout = false;
             if (session?.user) {
-                if(status === 'authenticated' && !session.user.userId) {
-                    try {
-                        const serverUser = await getUserFromServer();
-                        setUser({
-                            id: serverUser.id,
-                            username: serverUser.username,
-                            email: session.user.email || null,
-                            provider: session.user.provider || null,
-                            providerId: session.user.id || null,
-                            showWelcomeMessage: serverUser.showWelcomeMessage,
-                            authenticated: true,
-                            preferences: serverUser.preferences
-                        });
-                        update({ userId: serverUser.id });
-                    } catch (error) {
-                        // Just flag the error, handle anonymous user setting separately
-                        console.error('Error syncing user with server:', error);
-                        // we need to logout the user when an error with getting the user happens
-                        needsLogout = true;
-                    }
+                try {
+                    const serverUser = await getUserFromServer();
+                    setUser({
+                        id: serverUser.id,
+                        username: serverUser.username,
+                        email: session.user.email || null,
+                        provider: session.user.provider || null,
+                        providerId: session.user.id || null,
+                        showWelcomeMessage: serverUser.showWelcomeMessage,
+                        authenticated: true,
+                        preferences: serverUser.preferences
+                    });
+                    update({ userId: serverUser.id });
+                } catch (error) {
+                    // Just flag the error, handle anonymous user setting separately
+                    console.error('Error syncing user with server:', error);
+                    // we need to logout the user when an error with getting the user happens
+                    needsLogout = true;
                 }
             }
             if(needsLogout){
