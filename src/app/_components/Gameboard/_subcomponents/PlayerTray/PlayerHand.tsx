@@ -74,7 +74,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     // We always want to maintain the ratio of the cards width/height = 1/1.4
     const CARD_ASPECT_RATIO = 1 / 1.4;
     const CARD_HOVER_TRANSLATE_PERCENT = 0.075;
-    const SCROLLBAR_HEIGHT_PX = 16;
+    const SCROLLBAR_HEIGHT_PX = 8; 
     const PORTRAIT_CARD_HEIGHT_PERCENT = 0.55;
     const CARD_GAP_PX = 6;
     
@@ -151,24 +151,30 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                     overflowY: 'clip',
                     // Scrollbar styling
                     ...(scrollBarEnabled && {
-                        // Firefox scrollbar styling
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: 'rgba(255, 255, 255, 0.5) #000000',
-                        
                         // Webkit scrollbar styling (Chrome, Safari, newer Edge)
                         '&::-webkit-scrollbar': {
                             height: SCROLLBAR_HEIGHT_PX,
-                            backgroundColor: '#000000', // Ensure base is black
+                            backgroundColor: '#1a1a1a', // Very dark grey track for a softer look
+                            borderRadius: '4px', // Keep rounded edges
+                        },
+                        '&::-webkit-scrollbar-thumb:hover': {
+                            backgroundColor: '#a0a0a0', // A slightly lighter grey
+                        },
+                        '&::-webkit-scrollbar-thumb:active': {
+                            backgroundColor: '#b8b8b8', // Even lighter when active
                         },
                         '&::-webkit-scrollbar-thumb': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.5)', // Brighter thumb
-                            borderRadius: '4px',
-                            border: '1px solid #000000', // Add border to ensure contrast
+                            backgroundColor: '#888888', // Sleek solid grey thumb
+                            border: '1px solid rgb(182, 180, 71)', // Very dark border, almost black
+                            borderRadius: '4px', // Keep rounded edges
                         },
                         '&::-webkit-scrollbar-track': {
-                            backgroundColor: '#000000', // Pure black background
-                            borderRadius: '4px',
-                        }
+                            backgroundColor: '#1a1a1a', // Match scrollbar background
+                            borderRadius: '4px', // rounded edges for track
+                        },
+                        '&::-webkit-scrollbar-button': {
+                            display: 'none',
+                        },
                     })
                 }}
                 onWheel={(e) => {
