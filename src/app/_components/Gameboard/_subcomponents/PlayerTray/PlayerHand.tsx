@@ -6,7 +6,7 @@ import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { debugBorder, isDebugHandScalingEnabled } from '@/app/_utils/debug';
 
-const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, showScrollbar = true }) => {
+const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, scrollBarEnabled = true }) => {
     const { connectedPlayer } = useGame();
     const { isPortrait } = useScreenOrientation();
     const showDebugInfo = isDebugHandScalingEnabled();
@@ -142,10 +142,10 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                     ...containerStyle,
                     ...debugBorder('red'),
                     // Allow horizontal scrolling with visible overflow on top
-                    overflowX: showScrollbar ? 'auto' : 'hidden',       // horizontal scroll
+                    overflowX: scrollBarEnabled ? 'auto' : 'hidden',       // horizontal scroll
                     overflowY: 'clip',
                     // Scrollbar styling
-                    ...(showScrollbar && {
+                    ...(scrollBarEnabled && {
                         // Firefox scrollbar styling
                         scrollbarWidth: 'thin',
                         scrollbarColor: 'rgba(255, 255, 255, 0.5) #000000',

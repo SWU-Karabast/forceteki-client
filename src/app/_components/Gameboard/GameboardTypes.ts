@@ -49,5 +49,5 @@ export interface IPlayerHandProps {
     clickDisabled?: boolean;
     allowHover?: boolean;
     maxCardOverlapPercent?: number; 
-    showScrollbar?: boolean;
+    scrollBarEnabled?: boolean;
 }
