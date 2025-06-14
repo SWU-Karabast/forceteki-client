@@ -4,10 +4,12 @@ import { useGame } from '@/app/_contexts/Game.context';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
+import { debugBorder, isDebugHandScalingEnabled } from '@/app/_utils/debug';
 
-const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false }) => {
+const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, showScrollbar = true }) => {
     const { connectedPlayer } = useGame();
     const { isPortrait } = useScreenOrientation();
+    const showDebugInfo = isDebugHandScalingEnabled();
 
     // 1. Track the container dimensions via ResizeObserver and manual measurements
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -71,7 +73,6 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
 
     // We always want to maintain the ratio of the cards width/height = 1/1.4
     const CARD_ASPECT_RATIO = 1 / 1.4;
-    const MAX_OVERLAP_RATIO = 0.50;
     const CARD_HOVER_TRANSLATE_PERCENT = 0.10;
     const SCROLLBAR_HEIGHT_PX = 16;
     const CARD_GAP_PX = 6;
@@ -98,7 +99,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     } 
 
     // Cap it by the max ratio 
-    overlapWidthPx = Math.min(overlapWidthPx, cardWidthPx * MAX_OVERLAP_RATIO);
+    overlapWidthPx = Math.min(overlapWidthPx, cardWidthPx * maxCardOverlapPercent);
 
     const containerStyle = {
         // Relative so absolutely-positioned cards can be placed inside.
@@ -110,7 +111,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     return (
         <>
             {/* Debug Display */}
-            <Box
+            {showDebugInfo && <Box
                 sx={{
                     position: 'absolute',
                     left: '10px',
@@ -133,35 +134,37 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                 <div style={{ lineHeight: '1', marginBottom: '2px' }}>Overlap: {overlapWidthPx.toFixed(2)}px ({((overlapWidthPx / cardWidthPx) * 100).toFixed(1)}%)</div>
                 <div style={{ lineHeight: '1', marginBottom: '2px' }}>Needs Overlap: {needsOverlap ? 'Yes' : 'No'}</div>
                 <div style={{ lineHeight: '1' }}>Portrait Mode: {isPortrait ? 'Yes' : 'No'}</div>
-            </Box>
+            </Box>}
 
             <Box
                 ref={containerRef}
                 sx={{
                     ...containerStyle,
-                    //border: '1px solid red',
+                    ...debugBorder('red'),
                     // Allow horizontal scrolling with visible overflow on top
-                    overflowX: 'auto',       // horizontal scroll
+                    overflowX: showScrollbar ? 'auto' : 'hidden',       // horizontal scroll
                     overflowY: 'clip',
                     // Scrollbar styling
-                    // Firefox scrollbar styling
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: 'rgba(255, 255, 255, 0.5) #000000',
-                    
-                    // Webkit scrollbar styling (Chrome, Safari, newer Edge)
-                    '&::-webkit-scrollbar': {
-                        height: SCROLLBAR_HEIGHT_PX,
-                        backgroundColor: '#000000', // Ensure base is black
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.5)', // Brighter thumb
-                        borderRadius: '4px',
-                        border: '1px solid #000000', // Add border to ensure contrast
-                    },
-                    '&::-webkit-scrollbar-track': {
-                        backgroundColor: '#000000', // Pure black background
-                        borderRadius: '4px',
-                    }
+                    ...(showScrollbar && {
+                        // Firefox scrollbar styling
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: 'rgba(255, 255, 255, 0.5) #000000',
+                        
+                        // Webkit scrollbar styling (Chrome, Safari, newer Edge)
+                        '&::-webkit-scrollbar': {
+                            height: SCROLLBAR_HEIGHT_PX,
+                            backgroundColor: '#000000', // Ensure base is black
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.5)', // Brighter thumb
+                            borderRadius: '4px',
+                            border: '1px solid #000000', // Add border to ensure contrast
+                        },
+                        '&::-webkit-scrollbar-track': {
+                            backgroundColor: '#000000', // Pure black background
+                            borderRadius: '4px',
+                        }
+                    })
                 }}
                 onWheel={(e) => {
                     e.preventDefault(); // Prevents vertical scrolling
@@ -197,7 +200,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                     },
                                 }}
                             >
-                                <GameCard card={card} disabled={clickDisabled} />
+                                <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap} />
                             </Box>
                         ))}
                     </Box>
@@ -231,7 +234,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                     },
                                 }}
                             >
-                                <GameCard card={card} disabled={clickDisabled} />
+                                <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap}/>
                             </Box>
                         ))}
                     </Box>

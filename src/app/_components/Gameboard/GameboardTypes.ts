@@ -48,4 +48,6 @@ export interface IPlayerHandProps {
     cards: ICardData[];
     clickDisabled?: boolean;
     allowHover?: boolean;
+    maxCardOverlapPercent?: number; 
+    showScrollbar?: boolean;
 }
