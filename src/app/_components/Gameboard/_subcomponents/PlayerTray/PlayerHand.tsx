@@ -73,31 +73,34 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
 
     // We always want to maintain the ratio of the cards width/height = 1/1.4
     const CARD_ASPECT_RATIO = 1 / 1.4;
-    const CARD_HOVER_TRANSLATE_PERCENT = 0.10;
+    const CARD_HOVER_TRANSLATE_PERCENT = 0.075;
     const SCROLLBAR_HEIGHT_PX = 16;
+    const PORTRAIT_CARD_HEIGHT_PERCENT = 0.55;
     const CARD_GAP_PX = 6;
     
     const cardTranslationPx = containerHeight * CARD_HOVER_TRANSLATE_PERCENT;
 
     // Calculate card height - use 55% of container height in portrait mode
-    const cardHeightPx = isPortrait ? containerHeight * 0.55 : (containerHeight - cardTranslationPx);
+    const cardHeightPx = isPortrait ? containerHeight * PORTRAIT_CARD_HEIGHT_PERCENT : (containerHeight - cardTranslationPx);
     
     // Manually scale the card width with aspect ratio for the calculations
     const cardWidthPx = cardHeightPx * CARD_ASPECT_RATIO;
-   
 
+    // Downsize the container width slightly to not trigger the scrollbar on an exact fit
+    const adjustedContainerWidth = containerWidth - 2;
+   
     // Total width if laid out side-by-side with  gaps included
     const totalNeededWidth =
         cards.length * cardWidthPx + (cards.length - 1) * CARD_GAP_PX;
 
     // Decide whether to overlap should be triggered
-    const needsOverlap = totalNeededWidth > containerWidth && cards.length > 1;
+    const needsOverlap = totalNeededWidth > adjustedContainerWidth && cards.length > 1;
 
     // Overlap in pixel space is determined by total width of cards compared to container width
     let overlapWidthPx = 0;
     if (needsOverlap && cards.length > 1) {
         // Calculate overlap needed to fit all cards in the container width
-        overlapWidthPx = ((cards.length * cardWidthPx) - containerWidth) / (cards.length - 1);
+        overlapWidthPx = ((cards.length * cardWidthPx) - adjustedContainerWidth) / (cards.length - 1);
     } 
 
     // Cap it by the max ratio 
@@ -178,13 +181,14 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                     // No overlap needed - display cards with even spacing
                     <Box
                         sx={{
+                            ...debugBorder('blue'),
                             display: 'flex',
                             gap: `${CARD_GAP_PX}px`,
                             width: 'fit-content',
                             margin: '0 auto',
                             height: '100%',
                             justifyContent: 'center',
-                            alignItems: 'center',
+                            alignItems: isPortrait ? 'center' : 'flex-end',
                         }}
                     >
                         {cards.map((card, i) => (
@@ -192,9 +196,10 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                 key={`${connectedPlayer}-hand-${i}`}
                                 sx={{
                                     width: 'auto',
-                                    height: '100%',
+                                    height: cardHeightPx,
                                     zIndex: 1,
                                     aspectRatio: '1 / 1.4',
+                                    top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : cardTranslationPx,
                                     transition: 'transform 0.2s',
                                     transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
                                     '&:hover': {
