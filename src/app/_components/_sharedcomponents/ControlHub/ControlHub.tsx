@@ -93,6 +93,9 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/Preferences" sx={styles.profileLink}>
                         Preferences
                     </NextLinkMui>
+                    <NextLinkMui href="/test" sx={styles.profileLink}>
+                        Tests
+                    </NextLinkMui>
                     {(user) ? (
                         <>
                             <Divider

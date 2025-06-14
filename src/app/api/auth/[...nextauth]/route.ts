@@ -17,7 +17,8 @@ const handler = NextAuth({
         }),
     ],
     session: {
-        strategy: 'jwt'
+        strategy: 'jwt',
+        maxAge: 30
     },
     cookies: {
         sessionToken: {
