@@ -77,8 +77,10 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     const SCROLLBAR_HEIGHT_PX = 16;
     const CARD_GAP_PX = 6;
     
+    const cardTranslationPx = containerHeight * CARD_HOVER_TRANSLATE_PERCENT;
+
     // Calculate card height - use 55% of container height in portrait mode
-    const cardHeightPx = isPortrait ? containerHeight * 0.55 : containerHeight;
+    const cardHeightPx = isPortrait ? containerHeight * 0.55 : (containerHeight - cardTranslationPx);
     
     // Manually scale the card width with aspect ratio for the calculations
     const cardWidthPx = cardHeightPx * CARD_ASPECT_RATIO;
@@ -194,9 +196,9 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                     zIndex: 1,
                                     aspectRatio: '1 / 1.4',
                                     transition: 'transform 0.2s',
-                                    transform: card.selected && card.zone === 'hand' ? `translateY(-${cardHeightPx * CARD_HOVER_TRANSLATE_PERCENT}px)` : 'none',
+                                    transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
                                     '&:hover': {
-                                        transform: allowHover ? `translateY(-${cardHeightPx * CARD_HOVER_TRANSLATE_PERCENT}px)` : 'none',
+                                        transform: allowHover ? `translateY(-${cardTranslationPx}px)` : 'none',
                                     },
                                 }}
                             >
@@ -225,12 +227,12 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                     aspectRatio: '1 / 1.4',
                                     left: i === 0 ? 0: i * (cardWidthPx - overlapWidthPx),
                                     // Center vertically in portrait mode
-                                    top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : 0,
+                                    top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : cardTranslationPx,
                                     zIndex: i+1,
                                     transition: 'transform 0.2s',
-                                    transform: card.selected && card.zone === 'hand' ? `translateY(-${cardHeightPx * CARD_HOVER_TRANSLATE_PERCENT}px)` : 'none',
+                                    transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
                                     '&:hover': {
-                                        transform: allowHover ? `translateY(-${cardHeightPx * CARD_HOVER_TRANSLATE_PERCENT}px)` : 'none',
+                                        transform: allowHover ? `translateY(-${cardTranslationPx}px)` : 'none',
                                     },
                                 }}
                             >
