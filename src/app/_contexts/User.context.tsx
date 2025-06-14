@@ -26,7 +26,7 @@ const UserContext = createContext<IUserContextType>({
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const { data: session } = useSession(); // Get session from next-auth
+    const { data: session, status, update } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
@@ -61,6 +61,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         authenticated: true,
                         preferences: serverUser.preferences
                     });
+                    update({ userId: serverUser.id });
                 } catch (error) {
                     // Just flag the error, handle anonymous user setting separately
                     console.error('Error syncing user with server:', error);
