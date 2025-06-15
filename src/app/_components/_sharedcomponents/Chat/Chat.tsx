@@ -55,6 +55,9 @@ const Chat: React.FC<IChatProps> = ({
                     case 'danger':
                         textStyle = styles.alertText;
                         break;
+                    case 'readyStatus':
+                        textStyle = styles.readyStatusText;
+                        break;
                     default:
                         textStyle = styles.messageText;
                 }
@@ -128,6 +131,12 @@ const Chat: React.FC<IChatProps> = ({
         alertText: {
             fontSize: { xs: '0.85em', md: '1em' },
             color: 'red',
+            lineHeight: { xs: '0.85rem', md: '1em' },
+        },
+        readyStatusText: {
+            fontSize: { xs: '0.85em', md: '1em' },
+            color: 'green',
+            fontWeight: 'bold',
             lineHeight: { xs: '0.85rem', md: '1em' },
         },
         inputContainer: {
