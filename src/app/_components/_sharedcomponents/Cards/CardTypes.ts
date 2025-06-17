@@ -35,13 +35,12 @@ export interface ICardData {
     printedType?: string;
     sentinel?: boolean;
     types?: string[];
-    owner: ICardPlayer;
-    controller: ICardPlayer;
+    ownerId: string;
+    controllerId: string;
     selectionState?: 'viewOnly' | 'selectable' | 'unselectable' | 'selected' | 'invalid';
     zone?: string;
     epicActionSpent?: boolean;
     onStartingSide?: boolean;
-    controlled: boolean;
     epicDeployActionSpent?: boolean;
     hidden?: boolean;
     isAttacker?: boolean;

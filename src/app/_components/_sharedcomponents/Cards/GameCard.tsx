@@ -26,9 +26,9 @@ const GameCard: React.FC<IGameCardProps> = ({
     const phase = gameState?.phase;
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
-    const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
-    const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
-    
+    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
+    const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
+
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const [isCtrl, setIsCtrl] = React.useState<boolean>(false);
@@ -37,11 +37,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     const open = Boolean(anchorElement);
 
     const isStolen = React.useMemo(() => {
-        if (!(card.controller && card.owner)) {
+        if (!(card.controllerId && card.ownerId)) {
             return false
         }
-        return card.controller.id !== card.owner.id
-    }, [card.controller, card.owner])
+        return card.controllerId !== card.ownerId
+    }, [card.controllerId, card.ownerId])
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;

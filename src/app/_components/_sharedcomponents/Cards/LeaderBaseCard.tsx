@@ -34,7 +34,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         return null
     }
 
-    const controller = gameState?.players[card.controller?.id];
+    const controller = gameState?.players[card.controllerId];
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
