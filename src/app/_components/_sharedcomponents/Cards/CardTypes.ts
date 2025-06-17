@@ -64,7 +64,6 @@ export type ISetCode = {
 }
 
 export interface IOpponentHiddenCardData {
-    facedown: boolean;
     controller: ICardPlayer
     owner: ICardPlayer
     zone: string;
