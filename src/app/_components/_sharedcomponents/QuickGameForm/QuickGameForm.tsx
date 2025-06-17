@@ -29,6 +29,7 @@ import {
     saveDeckToServer
 } from '@/app/_utils/DeckStorageUtils';
 import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
+import { useSession } from 'next-auth/react';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -49,6 +50,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const formatOptions = Object.values(SwuGameFormat);    
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
+    const { data: session } = useSession(); // Get session from next-auth
 
     // error states
     const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -71,7 +73,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     // Load saved decks from localStorage
     const fetchDecks = async () => {
         try {
-            await retrieveDecksForUser(user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
+            await retrieveDecksForUser(session?.user, user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
         }catch (err) {
             console.log(err);
             alert('Server error when fetching decks');
@@ -340,12 +342,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         ))}
                     </StyledTextField>
                 </FormControl>
-
-                <Box>
-                    <Typography variant="body1" color="yellow">
-                        Next Set Preview format is now available for Quick Match!
-                    </Typography>
-                </Box>
 
                 {/* Save Deck To Favourites Checkbox */}
                 <FormControlLabel
