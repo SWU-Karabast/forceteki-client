@@ -86,6 +86,16 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: 'User accounts are here!',
+        content: `
+        <p>You can now log in and create a new account! Use the "Log In" button above to get started. Creating an account requires existing Discord or Google account.</p>
+        <p>Once logged in, your decks and preferences will be saved and shared across all devices. Please reach out on our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> if you encounter any issues.</p>
+	  `,
+        date: '6/18/25',
+        image: 'login_buttons.png',
+        imageAlt: 'News Announcement',
+    },
+    {
         title: 'Legends of the Force Complete!',
         content: `
         <p>We are excited to announce that Set 5: Legends of the Force is fully implemented and playable!</p>
