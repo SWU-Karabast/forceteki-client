@@ -117,7 +117,7 @@ const FoundGame: React.FC = () => {
                         <LeaderBaseCard card={playerLeader} cardStyle={LeaderBaseCardStyle.PlainLeader} isLeader={true}/>
                     </Box>
                     <Typography sx={{ ...styles.playerText, marginTop:'24px' }}>
-                        {connectedUser.username}
+                        {connectedUser?.username}
                     </Typography>
                 </Box>
                 <Typography sx={{ ...styles.connectingText, display:'flex',alignItems:'center' }}>
