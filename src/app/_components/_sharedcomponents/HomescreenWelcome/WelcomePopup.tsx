@@ -221,19 +221,18 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
                 <Box component="ul" sx={styles.infoList}>
                     <li>
                         <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            You can change your username <strong>freely for 1 week</strong>. After that, changes are allowed every
-                            <strong> month</strong>.
+                            You can change your username <strong>freely for 1 week</strong>. After that, changes are allowed once per 
+                            <strong>month</strong>.
                         </Typography>
                     </li>
                     <li>
                         <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            Usernames must be respectful, non-offensive, and free of impersonation, hate speech, slurs, or inappropriate
-                            content.
+                            Usernames must be respectful and non-offensive.
                         </Typography>
                     </li>
                     <li>
                         <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            You can also change your username later in the <strong>Preference</strong> tab.
+                            You can also change your username later in the <strong>Preferences</strong> tab.
                         </Typography>
                     </li>
                 </Box>
