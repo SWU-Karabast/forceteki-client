@@ -63,10 +63,10 @@ const HomePagePlayMode: React.FC = () => {
     }
 
     useEffect(() => {
-        if(user && user.showWelcomeMessage && !showUpdatePopup){
-            setShowWelcomePopup(true);
-        }
-        if(user){
+        if(user) {
+            if (user.showWelcomeMessage && !showUpdatePopup) {
+                setShowWelcomePopup(true);
+            }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
         }
 
