@@ -7,7 +7,7 @@ import {
     Dialog,
     DialogContent,
     DialogActions,
-    TextField,
+    TextField, Link,
 } from '@mui/material';
 
 import { useUser } from '@/app/_contexts/User.context';
@@ -141,8 +141,18 @@ const UsernameChangeRequiredPopup: React.FC<UsernameChangeRequiredPopupProps> = 
                 </Typography>
 
                 <Typography variant="body1" sx={styles.message}>
-                    We’ve received a report that your username violates our guidelines. You must
+                    We’ve received a report that your username &#34;<strong>{user?.username}</strong>&#34; violates our guidelines. You must
                     choose a new username before you can continue using the client.
+                </Typography>
+                <Typography>
+                    If you have any questions feel free to reach out on our <Link
+                        href="https://discord.com/channels/1220057752961814568/1220057753448616038"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ color: 'inherit', textDecoration: 'underline' }}
+                    >
+                        discord channel
+                    </Link>
                 </Typography>
 
                 <Box sx={styles.textFieldContainer}>
