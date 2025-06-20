@@ -49,6 +49,7 @@ export type IArticle = {
     date: string;
     image: string;
     imageAlt: string;
+    link?: string;
 };
 
 export interface INewsItemProps {
