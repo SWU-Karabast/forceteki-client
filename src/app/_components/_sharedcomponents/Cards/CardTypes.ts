@@ -14,7 +14,7 @@ export interface ICardData {
     parentCardId?: string,
     id?: string;
     name?: string;
-    implemented?: boolean;
+    unimplemented?: boolean;
     selected?: boolean;
     selectable: boolean;
     disabled?: boolean;
@@ -35,13 +35,12 @@ export interface ICardData {
     printedType?: string;
     sentinel?: boolean;
     types?: string[];
-    owner: ICardPlayer;
-    controller: ICardPlayer;
+    ownerId: string;
+    controllerId: string;
     selectionState?: 'viewOnly' | 'selectable' | 'unselectable' | 'selected' | 'invalid';
     zone?: string;
     epicActionSpent?: boolean;
     onStartingSide?: boolean;
-    controlled: boolean;
     epicDeployActionSpent?: boolean;
     hidden?: boolean;
     isAttacker?: boolean;
@@ -64,7 +63,6 @@ export type ISetCode = {
 }
 
 export interface IOpponentHiddenCardData {
-    facedown: boolean;
     controller: ICardPlayer
     owner: ICardPlayer
     zone: string;

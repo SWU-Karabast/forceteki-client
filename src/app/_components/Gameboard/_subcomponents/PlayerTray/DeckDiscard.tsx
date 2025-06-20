@@ -222,7 +222,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         }
     }
 
-    const deckComponent = <Typography sx={styles.deck.deckContentStyle}>{gameState?.players[trayPlayer.trayPlayer]?.cardPiles['deck'].length}</Typography>
+    const deckComponent = <Typography sx={styles.deck.deckContentStyle}>{gameState?.players[trayPlayer.trayPlayer].numCardsInDeck}</Typography>
 
     return (
         <Box sx={styles.containerStyle}>

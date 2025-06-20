@@ -193,7 +193,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
             setGameState(gameState);
             if (process.env.NODE_ENV === 'development') {
-                console.log('Game state received:', gameState);
+                const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
+                console.log(`Game state received (${byteSize} bytes):`, gameState);
             }
             handleGameStatePopups(gameState);
         });

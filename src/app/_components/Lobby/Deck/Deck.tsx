@@ -130,7 +130,7 @@ const Deck: React.FC = () => {
                         <Box key={card.id} sx={styles.cardWrapper}>
                             <GameCard
                                 key={card.id}
-                                card={{ ...card, implemented: !isCardNotImplemented(card.id) }}
+                                card={{ ...card, unimplemented: isCardNotImplemented(card.id) }}
                                 cardStyle={CardStyle.Lobby}
                                 disabled={connectedUser.ready}
                                 onClick={() => sendLobbyMessage(['updateDeck','Deck', card.id])}
@@ -165,7 +165,7 @@ const Deck: React.FC = () => {
                                 <Box key={card.id} sx={styles.cardWrapper}>
                                     <GameCard
                                         key={card.id}
-                                        card={{ ...card, implemented: !isCardNotImplemented(card.id) }}
+                                        card={{ ...card, unimplemented: isCardNotImplemented(card.id) }}
                                         cardStyle={CardStyle.Lobby}
                                         disabled={connectedUser.ready}
                                         onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.id])}

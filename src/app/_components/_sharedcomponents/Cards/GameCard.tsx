@@ -26,9 +26,9 @@ const GameCard: React.FC<IGameCardProps> = ({
     const phase = gameState?.phase;
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
-    const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
-    const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
-    
+    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
+    const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
+
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -48,11 +48,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     });
 
     const isStolen = React.useMemo(() => {
-        if (!(card.controller && card.owner)) {
+        if (!(card.controllerId && card.ownerId)) {
             return false
         }
-        return card.controller.id !== card.owner.id
-    }, [card.controller, card.owner])
+        return card.controllerId !== card.ownerId
+    }, [card.controllerId, card.ownerId])
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -123,7 +123,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         return null;
     }
 
-    const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
+    const notImplemented = (card: ICardData) => card?.hasOwnProperty('unimplemented') && card.unimplemented;
 
     const getBackgroundColor = (card: ICardData) => {
         if (
