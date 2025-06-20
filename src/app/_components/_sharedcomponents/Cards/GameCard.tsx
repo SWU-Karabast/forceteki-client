@@ -124,7 +124,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         return null;
     }
 
-    const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
+    const notImplemented = (card: ICardData) => card?.hasOwnProperty('unimplemented') && card.unimplemented;
 
     const getBackgroundColor = (card: ICardData) => {
         if (

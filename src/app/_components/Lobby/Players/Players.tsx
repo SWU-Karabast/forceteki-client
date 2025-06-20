@@ -110,12 +110,12 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                             </Typography>
                             <LeaderBaseCard
                                 title={connectedUser ? connectedUser.username : connectedPlayer}
-                                card={playerLeader ? { ...playerLeader,implemented: !isCardNotImplemented(playerLeader?.id) } : playerLeader}
+                                card={playerLeader ? { ...playerLeader, unimplemented: isCardNotImplemented(playerLeader?.id) } : playerLeader}
                                 disabled={true}
                                 cardStyle={LeaderBaseCardStyle.PlainLeader}
                                 isLeader={true}
                             />
-                            <LeaderBaseCard card={playerBase ? { ...playerBase, implemented: !isCardNotImplemented(playerBase?.id) } : playerBase} disabled={true}></LeaderBaseCard>
+                            <LeaderBaseCard card={playerBase ? { ...playerBase, unimplemented: isCardNotImplemented(playerBase?.id) } : playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                     <Grid sx={rowStyle}>
@@ -131,12 +131,12 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                             </Typography>
                             <LeaderBaseCard
                                 title={titleOpponent}
-                                card={opponentLeader ? { ...opponentLeader,implemented: !isOpponentCardNotImplemented(opponentLeader?.id) } : opponentLeader}
+                                card={opponentLeader ? { ...opponentLeader, unimplemented: isOpponentCardNotImplemented(opponentLeader?.id) } : opponentLeader}
                                 disabled={true}
                                 cardStyle={LeaderBaseCardStyle.PlainLeader}
                                 isLeader={true}
                             />
-                            <LeaderBaseCard card={opponentBase ? { ...opponentBase,implemented: !isOpponentCardNotImplemented(opponentBase?.id) } : opponentBase} disabled={true}></LeaderBaseCard>
+                            <LeaderBaseCard card={opponentBase ? { ...opponentBase, unimplemented: isOpponentCardNotImplemented(opponentBase?.id) } : opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
                 </Grid>

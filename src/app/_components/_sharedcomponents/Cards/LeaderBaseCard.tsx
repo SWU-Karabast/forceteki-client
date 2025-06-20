@@ -67,7 +67,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         defaultClickFunction();
     }
 
-    const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
+    const notImplemented = (card: ICardData) => card?.hasOwnProperty('unimplemented') && card.unimplemented;
     
     const getBackgroundColor = (card: ICardData) => {
         if (
