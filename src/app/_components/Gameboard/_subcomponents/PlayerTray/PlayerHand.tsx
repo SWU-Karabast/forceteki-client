@@ -139,7 +139,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                 height: cardHeightPx,
                                 zIndex: 1,
                                 aspectRatio: '1 / 1.4',
-                                top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : cardTranslationPx,
+                                top: cardTranslationPx,
                                 transition: 'transform 0.2s',
                                 transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
                                 '&:hover': {
@@ -170,7 +170,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                 height: cardHeightPx,
                                 aspectRatio: '1 / 1.4',
                                 left: i === 0 ? 0: i * (cardWidthPx - overlapWidthPx),
-                                top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : cardTranslationPx,
+                                top: cardTranslationPx,
                                 zIndex: i + 1,
                                 transition: 'transform 0.2s',
                                 transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
