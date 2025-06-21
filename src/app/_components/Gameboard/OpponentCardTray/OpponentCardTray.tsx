@@ -205,7 +205,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 }}
             >
                 <Box sx={styles.opponentHandWrapper}>
-                    <PlayerHand clickDisabled={true} maxCardOverlapPercent={0.95} scrollBarEnabled={false} cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
+                    <PlayerHand clickDisabled={true} maxCardOverlapPercent={0.95} scrollbarEnabled={false} cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
                 </Box>
                 <Box sx={ styles.opponentTurnAura} />
             </Grid>

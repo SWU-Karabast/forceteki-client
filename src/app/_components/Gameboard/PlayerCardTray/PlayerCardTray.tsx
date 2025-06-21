@@ -109,7 +109,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                 <Box sx={styles.playerHandWrapper}>
                     <PlayerHand
                         allowHover={true}
-                        scrollBarEnabled={true}
+                        scrollbarEnabled={true}
                         cards={gameState?.players[connectedPlayer].cardPiles['hand'] || []}
                     />
                 </Box>
