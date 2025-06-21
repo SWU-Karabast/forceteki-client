@@ -75,7 +75,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     const CARD_ASPECT_RATIO = 1 / 1.4;
     const CARD_HOVER_TRANSLATE_PERCENT = 0.075;
     const SCROLLBAR_HEIGHT_PX = 8; 
-    const PORTRAIT_CARD_HEIGHT_PERCENT = 0.55;
+    const PORTRAIT_CARD_HEIGHT_PERCENT = 0.75;
     const CARD_GAP_PX = 6;
     
     const cardTranslationPx = containerHeight * CARD_HOVER_TRANSLATE_PERCENT;
