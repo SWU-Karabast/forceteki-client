@@ -94,6 +94,7 @@ export const articles: IArticle[] = [
         date: '6/18/25',
         image: 'login_buttons.png',
         imageAlt: 'News Announcement',
+        link: '/auth'
     },
     {
         title: 'Legends of the Force Complete!',
