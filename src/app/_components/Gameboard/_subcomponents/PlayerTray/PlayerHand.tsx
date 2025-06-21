@@ -5,11 +5,57 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { debugBorder, isDebugHandScalingEnabled } from '@/app/_utils/debug';
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 
 const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, scrollBarEnabled = true }) => {
     const { connectedPlayer } = useGame();
     const { isPortrait } = useScreenOrientation();
     const showDebugInfo = isDebugHandScalingEnabled();
+    
+    // Define custom scrollbar styles inside the component
+    const customScrollbarStyles = `
+        /* Set proper track height first */
+        .simplebar-track.simplebar-horizontal {
+            height: 1rem !important;
+            margin: 0 !important;
+            bottom: 0 !important;
+        }
+        
+        /* Then style the scrollbar thumb */
+        .custom-scrollbar::before {
+            /* Solid color with light blue border */
+            background-color: rgb(82, 183, 230) !important;
+            height: 1rem !important;
+            border-radius: 4px !important; /* Rounded ends */
+            /* Light blue border around the scrollbar */
+            border: 2px outset rgb(200, 202, 230) !important;
+            /* Set opacity as a separate property */
+            opacity: 0.85 !important;
+            /* Center the thumb vertically */
+            top: 0 !important;
+            bottom: 0 !important;
+        }
+        
+        /* Adjust the scrollbar container */
+        .simplebar-scrollbar {
+            margin-right: 0 !important;
+            right: 0 !important;
+        }
+    `;
+    
+    // Inject custom scrollbar styles
+    React.useEffect(() => {
+        // Create a style element and append it to the head
+        const styleEl = document.createElement('style');
+        styleEl.innerHTML = customScrollbarStyles;
+        document.head.appendChild(styleEl);
+        
+        // Clean up on unmount
+        return () => {
+            document.head.removeChild(styleEl);
+        };
+    }, [customScrollbarStyles]);
 
     // 1. Track the container dimensions via ResizeObserver and manual measurements
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -74,14 +120,13 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     // We always want to maintain the ratio of the cards width/height = 1/1.4
     const CARD_ASPECT_RATIO = 1 / 1.4;
     const CARD_HOVER_TRANSLATE_PERCENT = 0.075;
-    const SCROLLBAR_HEIGHT_PX = 8; 
     const PORTRAIT_CARD_HEIGHT_PERCENT = 0.75;
     const CARD_GAP_PX = 6;
     
     const cardTranslationPx = containerHeight * CARD_HOVER_TRANSLATE_PERCENT;
 
     // Calculate card height - use 55% of container height in portrait mode
-    const cardHeightPx = isPortrait ? containerHeight * PORTRAIT_CARD_HEIGHT_PERCENT : (containerHeight - cardTranslationPx);
+    const cardHeightPx = containerHeight - cardTranslationPx;
     
     // Manually scale the card width with aspect ratio for the calculations
     const cardWidthPx = cardHeightPx * CARD_ASPECT_RATIO;
@@ -110,11 +155,15 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         // Relative so absolutely-positioned cards can be placed inside.
         position: 'relative' as const,
         width: '100%',
-        height: '100%',
+        height: isPortrait ? `${PORTRAIT_CARD_HEIGHT_PERCENT * 100}%` : '100%',
+        margin: isPortrait ? 'auto 0' : '0',
+        // Adjust vertical alignment based on whose hand it is
+        alignItems: 'center', // Center vertically
+        alignSelf: 'flex-start',
     };
 
     return (
-        <>
+        <React.Fragment>
             {/* Debug Display */}
             {showDebugInfo && <Box
                 sx={{
@@ -145,115 +194,109 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                 ref={containerRef}
                 sx={{
                     ...containerStyle,
-                    ...debugBorder('red'),
-                    // Allow horizontal scrolling with visible overflow on top
-                    overflowX: scrollBarEnabled ? 'auto' : 'hidden',       // horizontal scroll
-                    overflowY: 'clip',
-                    // Scrollbar styling
-                    ...(scrollBarEnabled && {
-                        // Webkit scrollbar styling (Chrome, Safari, newer Edge)
-                        '&::-webkit-scrollbar': {
-                            height: SCROLLBAR_HEIGHT_PX,
-                            backgroundColor: '#1a1a1a', // Very dark grey track for a softer look
-                            borderRadius: '4px', // Keep rounded edges
-                        },
-                        '&::-webkit-scrollbar-thumb:hover': {
-                            backgroundColor: '#a0a0a0', // A slightly lighter grey
-                        },
-                        '&::-webkit-scrollbar-thumb:active': {
-                            backgroundColor: '#b8b8b8', // Even lighter when active
-                        },
-                        '&::-webkit-scrollbar-thumb': {
-                            backgroundColor: '#888888', // Sleek solid grey thumb
-                            border: '1px solid rgb(182, 180, 71)', // Very dark border, almost black
-                            borderRadius: '4px', // Keep rounded edges
-                        },
-                        '&::-webkit-scrollbar-track': {
-                            backgroundColor: '#1a1a1a', // Match scrollbar background
-                            borderRadius: '4px', // rounded edges for track
-                        },
-                        '&::-webkit-scrollbar-button': {
-                            display: 'none',
-                        },
-                    })
-                }}
-                onWheel={(e) => {
-                    e.preventDefault(); // Prevents vertical scrolling
-                    e.currentTarget.scrollLeft += e.deltaY; // Converts vertical scroll to horizontal
+                    ...debugBorder('red')
                 }}
             >
-                {/* NO OVERLAP SCENARIO */}
-                {!needsOverlap ? (
-                    // No overlap needed - display cards with even spacing
-                    <Box
-                        sx={{
-                            ...debugBorder('blue'),
-                            display: 'flex',
-                            gap: `${CARD_GAP_PX}px`,
-                            width: 'fit-content',
-                            margin: '0 auto',
-                            height: '100%',
-                            justifyContent: 'center',
-                            alignItems: isPortrait ? 'center' : 'flex-end',
-                        }}
-                    >
-                        {cards.map((card, i) => (
-                            <Box
-                                key={`${connectedPlayer}-hand-${i}`}
-                                sx={{
-                                    width: 'auto',
-                                    height: cardHeightPx,
-                                    zIndex: 1,
-                                    aspectRatio: '1 / 1.4',
-                                    top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : cardTranslationPx,
-                                    transition: 'transform 0.2s',
-                                    transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
-                                    '&:hover': {
-                                        transform: allowHover ? `translateY(-${cardTranslationPx}px)` : 'none',
-                                    },
-                                }}
-                            >
-                                <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap} />
-                            </Box>
-                        ))}
-                    </Box>
-                ) : (
-                    // Overlap needed - use absolute positioning
-                    <Box
-                        sx={{
-                            position: 'relative',
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        {cards.map((card, i) => (
-                            <Box
-                                key={`${connectedPlayer}-hand-${i}`}
-                                sx={{
-                                    position: 'absolute',
-                                    width: 'auto',
-                                    height: cardHeightPx,
-                                    aspectRatio: '1 / 1.4',
-                                    left: i === 0 ? 0: i * (cardWidthPx - overlapWidthPx),
-                                    // Center vertically in portrait mode
-                                    top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : cardTranslationPx,
-                                    zIndex: i+1,
-                                    transition: 'transform 0.2s',
-                                    transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
-                                    '&:hover': {
-                                        transform: allowHover ? `translateY(-${cardTranslationPx}px)` : 'none',
-                                    },
-                                }}
-                            >
-                                <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap}/>
-                            </Box>
-                        ))}
-                    </Box>
-                )}
+                <SimpleBar
+                    style={{
+                        // Relative so absolutely-positioned cards can be placed inside.
+                        position: 'relative' as const,
+                        width: '100%',
+                        height: '100%',
+                        overflowY: 'hidden' // Disable vertical scrolling
+                    }}
+                    autoHide={false}
+                    forceVisible={scrollBarEnabled ? 'x' : false} // Only show x-axis scrollbar when enabled
+                    scrollbarMinSize={30} // Minimum size of scrollbar in pixels
+                    scrollbarProps={{
+                        style: {
+                            // Hide scrollbar when disabled by setting opacity to 0
+                            opacity: scrollBarEnabled ? 1 : 0
+                        }
+                    }}
+                    classNames={{
+                        scrollbar: 'simplebar-scrollbar custom-scrollbar'
+                    }}
+                    onWheel={(e: React.WheelEvent<HTMLElement>) => {
+                        e.preventDefault(); // Prevents vertical scrolling
+                        const target = e.currentTarget.querySelector('.simplebar-content-wrapper') as HTMLElement;
+                        if (target) {
+                            target.scrollLeft += e.deltaY; // Converts vertical scroll to horizontal
+                        }
+                    }}
+                >
+                    {!needsOverlap ? (
+                        // No overlap needed - display cards with even spacing
+                        <Box
+                            sx={{
+                                ...debugBorder('blue'),
+                                display: 'flex',
+                                gap: `${CARD_GAP_PX}px`,
+                                width: 'fit-content',
+                                margin: '0 auto',
+                                height: '100%',
+                                justifyContent: 'center',
+                                alignItems: isPortrait ? 'center' : 'flex-end',
+                            }}
+                        >
+                            {cards.map((card, i) => (
+                                <Box
+                                    key={`${connectedPlayer}-hand-${i}`}
+                                    sx={{
+                                        width: 'auto',
+                                        height: cardHeightPx,
+                                        zIndex: 1,
+                                        aspectRatio: '1 / 1.4',
+                                        top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : cardTranslationPx,
+                                        transition: 'transform 0.2s',
+                                        transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
+                                        '&:hover': {
+                                            transform: allowHover ? `translateY(-${cardTranslationPx}px)` : 'none',
+                                        },
+                                    }}
+                                >
+                                    <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap} />
+                                </Box>
+                            ))}
+                        </Box>
+                    ) : (
+                        // Overlap needed - use absolute positioning
+                        <Box
+                            sx={{
+                                position: 'relative',
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            {cards.map((card, i) => (
+                                <Box
+                                    key={`${connectedPlayer}-hand-${i}`}
+                                    sx={{
+                                        position: 'absolute',
+                                        width: 'auto',
+                                        height: cardHeightPx,
+                                        aspectRatio: '1 / 1.4',
+                                        left: i === 0 ? 0: i * (cardWidthPx - overlapWidthPx),
+                                        // Center vertically in portrait mode
+                                        top: isPortrait ? `calc(50% - ${cardHeightPx / 2}px)` : cardTranslationPx,
+                                        zIndex: i+1,
+                                        transition: 'transform 0.2s',
+                                        transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
+                                        '&:hover': {
+                                            transform: allowHover ? `translateY(-${cardTranslationPx}px)` : 'none',
+                                        },
+                                    }}
+                                >
+                                    <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap}/>
+                                </Box>
+                            ))}
+                        </Box>
+                    )}
+                </SimpleBar>
             </Box>
-        </>
+        </React.Fragment>
     );
 };
 
