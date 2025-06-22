@@ -5,6 +5,10 @@ interface IGameStatePlayer {
     leader?: IGameCard;
     base?: IGameCard;
     cardPiles?: Record<string, IGameCard[]>;
+    user?: {
+        username: string;
+        id: string;
+    };
 }
 
 interface IGameCard {
@@ -131,4 +135,74 @@ export const messageContainsCards = (message: unknown): boolean => {
     return message.some((item: unknown) => 
         typeof item === 'object' && item !== null && 'uuid' in item && 'name' in item
     );
+};
+
+/**
+ * Styles player names in chat messages with appropriate colors
+ * @param message - The message array to process
+ * @param currentPlayerId - The ID of the current player
+ * @param playerNames - Map of player IDs to their names
+ * @param isSpectator - Whether the current user is a spectator
+ * @returns Processed message with styled player names
+ */
+export const stylePlayerNamesInMessage = (
+    message: unknown[],
+    currentPlayerId: string | null,
+    playerNames: Record<string, string> = {},
+    isSpectator: boolean = false
+): unknown[] => {
+    if (!Array.isArray(message) || !currentPlayerId) {
+        return message;
+    }
+
+    return message.map((item) => {
+        if (typeof item === 'string') {
+            // Look for player names in the string and replace them with styled versions
+            let styledString = item;
+            
+            Object.entries(playerNames).forEach(([playerId, playerName]) => {
+                if (playerName && styledString.includes(playerName)) {
+                    const isCurrentPlayer = playerId === currentPlayerId;
+                    const color = isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
+                    const displayName = isSpectator 
+                        ? (isCurrentPlayer ? 'Player 1' : 'Player 2')
+                        : playerName;
+                    
+                    // Create a styled span for the player name
+                    const styledName = `<span style="color: ${color}; font-weight: bold;">${displayName}</span>`;
+                    
+                    // Replace all occurrences of the player name with the styled version
+                    const regex = new RegExp(`\\b${playerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+                    styledString = styledString.replace(regex, styledName);
+                }
+            });
+            
+            return styledString;
+        }
+        
+        return item;
+    });
+};
+
+/**
+ * Extracts player names from game state
+ * @param gameState - Current game state
+ * @returns Map of player IDs to their usernames
+ */
+export const extractPlayerNames = (gameState: IGameState | null): Record<string, string> => {
+    if (!gameState || !gameState.players) {
+        return {};
+    }
+
+    const playerNames: Record<string, string> = {};
+    
+    Object.entries(gameState.players).forEach(([playerId, player]) => {
+        // Extract the actual username from the user object
+        const username = player.user?.username;
+        if (username) {
+            playerNames[playerId] = username;
+        }
+    });
+
+    return playerNames;
 };

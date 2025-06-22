@@ -47,6 +47,76 @@ const Chat: React.FC<IChatProps> = ({
         }
     }, [chatHistory, gameState]);
 
+    // Function to get player names that actually appear in chat logs
+    const getPlayerUsernames = (): { currentPlayerName: string; opponentName: string } => {
+        if (!gameState?.players) {
+            console.log('No gameState or players available');
+            return { currentPlayerName: '', opponentName: '' };
+        }
+
+        const opponentId = getOpponent(connectedPlayer);
+        
+        // Extract the actual usernames that appear in chat messages
+        const currentPlayerName = (gameState.players[connectedPlayer] as { user?: { username: string } })?.user?.username || '';
+        const opponentName = (gameState.players[opponentId] as { user?: { username: string } })?.user?.username || '';
+
+        console.log('Player names for chat matching:', {
+            connectedPlayer,
+            opponentId,
+            currentPlayerName,
+            opponentName,
+            gameStatePlayers: Object.keys(gameState.players),
+            currentPlayerData: gameState.players[connectedPlayer],
+            opponentPlayerData: gameState.players[opponentId]
+        });
+
+        return { currentPlayerName, opponentName };
+    };
+
+    // Function to style player names in text
+    const stylePlayerNamesInText = (text: string): React.ReactNode => {
+        if (typeof text !== 'string' || !gameState?.players) {
+            return text;
+        }
+
+        const { currentPlayerName, opponentName } = getPlayerUsernames();
+        
+        if (!currentPlayerName && !opponentName) {
+            return text;
+        }
+
+        // Create a regex that matches either player name
+        const playerNames = [currentPlayerName, opponentName].filter(name => name);
+        if (playerNames.length === 0) {
+            return text;
+        }
+
+        const escapedNames = playerNames.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        const regex = new RegExp(`\\b(${escapedNames.join('|')})\\b`, 'g');
+        
+        const parts = text.split(regex);
+        
+        return parts.map((part, index) => {
+            if (playerNames.includes(part)) {
+                const isCurrentPlayer = part === currentPlayerName;
+                const color = isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
+                const displayName = isSpectator 
+                    ? (isCurrentPlayer ? 'Player 1' : 'Player 2')
+                    : part;
+                
+                return (
+                    <span 
+                        key={index} 
+                        style={{ color, fontWeight: 'bold' }}
+                    >
+                        {displayName}
+                    </span>
+                );
+            }
+            return part;
+        });
+    };
+
     // Function to format message items, handling spectator view and card styling
     const formatMessageItem = (item: IChatObject | string | number) => {
         if (typeof item === 'object') {
@@ -66,8 +136,28 @@ const Chat: React.FC<IChatProps> = ({
             
             return displayName;
         }
-        // If not an object, just return the string
-        if (typeof item === 'string' || typeof item === 'number') {
+        // If not an object, apply player name styling to strings
+        if (typeof item === 'string') {
+            const { currentPlayerName, opponentName } = getPlayerUsernames();
+            let styledString = item;
+            
+            // Style current player name
+            if (currentPlayerName && styledString.includes(currentPlayerName)) {
+                const displayName = isSpectator ? 'Player 1' : currentPlayerName;
+                const regex = new RegExp(`\\b${currentPlayerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+                styledString = styledString.replace(regex, `<span style="color: var(--initiative-blue); font-weight: bold;">${displayName}</span>`);
+            }
+            
+            // Style opponent name
+            if (opponentName && styledString.includes(opponentName)) {
+                const displayName = isSpectator ? 'Player 2' : opponentName;
+                const regex = new RegExp(`\\b${opponentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+                styledString = styledString.replace(regex, `<span style="color: var(--initiative-red); font-weight: bold;">${displayName}</span>`);
+            }
+            
+            return styledString;
+        }
+        if (typeof item === 'number') {
             return item;
         }
         return '';
@@ -112,17 +202,27 @@ const Chat: React.FC<IChatProps> = ({
                 messageText = message;
                 textStyle = styles.messageText;
             }
-            const formattedItems = messageText.map((item: IChatObject | string, itemIndex: number) => {
-                if (typeof item === 'object' && item.controller) {
+            
+            console.log('Processing message with items:', messageText);
+            console.log('Full message structure:', JSON.stringify(messageText, null, 2));
+            
+            const formattedItems = messageText.map((item: unknown, itemIndex: number) => {
+                console.log(`Item ${itemIndex}:`, { type: typeof item, value: item });
+                if (typeof item === 'object' && item !== null) {
+                    console.log(`Object details for item ${itemIndex}:`, JSON.stringify(item, null, 2));
+                }
+                
+                if (typeof item === 'object' && item !== null && 'controller' in item) {
                     // Handle card objects with controller styling
-                    let displayName = item.name;
+                    const cardItem = item as IChatObject;
+                    let displayName = cardItem.name;
                     
                     // If user is a spectator, show Player 1/Player 2 instead of names
-                    if (isSpectator && item.id) {
-                        displayName = item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
+                    if (isSpectator && cardItem.id) {
+                        displayName = cardItem.id === connectedPlayer ? 'Player 1' : cardItem.id === getOpponent(connectedPlayer) ? 'Player 2' : cardItem.name;
                     }
                     
-                    const isPlayerControlled = item.controller === connectedPlayer;
+                    const isPlayerControlled = cardItem.controller === connectedPlayer;
                     const color = isPlayerControlled ? 'var(--initiative-blue)' : 'var(--initiative-red)';
                     
                     return (
@@ -130,9 +230,79 @@ const Chat: React.FC<IChatProps> = ({
                             {displayName}
                         </span>
                     );
+                } else if (typeof item === 'object' && item !== null && 'name' in item && !('controller' in item)) {
+                    // Handle player objects (objects with name but no controller)
+                    const playerItem = item as { id?: string; name: string; label?: string };
+                    const { currentPlayerName, opponentName } = getPlayerUsernames();
+                    
+                    // Check if this object represents a player by matching the name
+                    if (playerItem.name === currentPlayerName || playerItem.name === opponentName) {
+                        console.log(`Found player object for "${playerItem.name}"`);
+                        const isCurrentPlayer = playerItem.name === currentPlayerName;
+                        const color = isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
+                        const displayName = isSpectator 
+                            ? (isCurrentPlayer ? 'Player 1' : 'Player 2')
+                            : playerItem.name;
+                        
+                        return (
+                            <span key={itemIndex} style={{ color, fontWeight: 'bold' }}>
+                                {displayName}
+                            </span>
+                        );
+                    } else {
+                        // Not a player object, render normally
+                        return playerItem.name;
+                    }
+                } else if (typeof item === 'string') {
+                    // Handle string items - apply player name styling and render HTML
+                    const { currentPlayerName, opponentName } = getPlayerUsernames();
+                    let styledString = item;
+                    
+                    console.log('Processing string item:', {
+                        originalString: item,
+                        currentPlayerName,
+                        opponentName,
+                        includesCurrentPlayer: currentPlayerName ? styledString.includes(currentPlayerName) : false,
+                        includesOpponent: opponentName ? styledString.includes(opponentName) : false
+                    });
+                    
+                    // Style current player name
+                    if (currentPlayerName && styledString.includes(currentPlayerName)) {
+                        console.log(`Found current player name "${currentPlayerName}" in string "${styledString}"`);
+                        const displayName = isSpectator ? 'Player 1' : currentPlayerName;
+                        const regex = new RegExp(`\\b${currentPlayerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+                        const beforeReplace = styledString;
+                        styledString = styledString.replace(regex, `<span style="color: var(--initiative-blue); font-weight: bold;">${displayName}</span>`);
+                        console.log(`Replaced current player: "${beforeReplace}" -> "${styledString}"`);
+                    }
+                    
+                    // Style opponent name
+                    if (opponentName && styledString.includes(opponentName)) {
+                        console.log(`Found opponent name "${opponentName}" in string "${styledString}"`);
+                        const displayName = isSpectator ? 'Player 2' : opponentName;
+                        const regex = new RegExp(`\\b${opponentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+                        const beforeReplace = styledString;
+                        styledString = styledString.replace(regex, `<span style="color: var(--initiative-red); font-weight: bold;">${displayName}</span>`);
+                        console.log(`Replaced opponent: "${beforeReplace}" -> "${styledString}"`);
+                    }
+                    
+                    // If the string contains HTML styling, render it with dangerouslySetInnerHTML
+                    if (styledString.includes('<span')) {
+                        console.log('Rendering styled string with dangerouslySetInnerHTML:', styledString);
+                        return (
+                            <span 
+                                key={itemIndex} 
+                                dangerouslySetInnerHTML={{ __html: styledString }}
+                            />
+                        );
+                    } else {
+                        console.log('Returning plain string:', styledString);
+                        return styledString;
+                    }
                 } else {
                     // Handle regular text items
-                    return formatMessageItem(item);
+                    const textItem = item as IChatObject | string | number;
+                    return formatMessageItem(textItem);
                 }
             });
             
