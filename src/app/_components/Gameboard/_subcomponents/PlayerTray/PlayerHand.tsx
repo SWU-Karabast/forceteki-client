@@ -112,8 +112,6 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         width: '100%',
         height: isPortrait ? `${PORTRAIT_CARD_HEIGHT_PERCENT * 100}%` : '100%',
         margin: isPortrait ? 'auto 0' : '0',
-        alignItems: 'center',
-        alignSelf: 'flex-start',
     };
 
     const HandContent = (

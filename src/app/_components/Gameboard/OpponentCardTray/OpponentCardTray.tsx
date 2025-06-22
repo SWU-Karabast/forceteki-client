@@ -119,6 +119,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             width: '100%',
             height: '100%',
             zIndex: '1',
+            display: 'flex',
+            alignItems: 'center'
         },
         rightColumn: {
             ...debugBorder('red'),
