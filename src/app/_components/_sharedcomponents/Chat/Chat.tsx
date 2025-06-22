@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Box,
     TextField,
@@ -10,6 +10,7 @@ import {
 import { Send } from '@mui/icons-material';
 import { IChatProps, IChatEntry, IChatObject } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { enrichChatWithCardControllers } from '@/app/_utils/chatUtils';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -17,18 +18,53 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { connectedPlayer, isSpectator, getOpponent } = useGame();
+    const { connectedPlayer, isSpectator, getOpponent, gameState } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
+    const [enrichedChatHistory, setEnrichedChatHistory] = useState<IChatEntry[]>([]);
+    const lastChatLengthRef = useRef<number>(0);
 
-    // Function to format message items, handling spectator view
+    // Enrich chat history with card controller information only for new messages
+    useEffect(() => {
+        if (!gameState || !chatHistory) {
+            setEnrichedChatHistory(chatHistory || []);
+            return;
+        }
+
+        // Check if we have new messages
+        if (chatHistory.length > lastChatLengthRef.current) {
+            // Get only the new messages that need enrichment
+            const newMessages = chatHistory.slice(lastChatLengthRef.current);
+            const enrichedNewMessages = enrichChatWithCardControllers(newMessages, gameState);
+            
+            // Combine existing enriched messages with newly enriched messages
+            setEnrichedChatHistory(prev => [...prev, ...enrichedNewMessages]);
+            lastChatLengthRef.current = chatHistory.length;
+        } else if (chatHistory.length < lastChatLengthRef.current) {
+            // Chat history was reset (e.g., new game), re-enrich all messages
+            const fullyEnrichedHistory = enrichChatWithCardControllers(chatHistory, gameState);
+            setEnrichedChatHistory(fullyEnrichedHistory);
+            lastChatLengthRef.current = chatHistory.length;
+        }
+    }, [chatHistory, gameState]);
+
+    // Function to format message items, handling spectator view and card styling
     const formatMessageItem = (item: IChatObject | string | number) => {
         if (typeof item === 'object') {
+            let displayName = item.name;
+            
             // If user is a spectator, show Player 1/Player 2 instead of names
             if (isSpectator && item.id) {
-                return item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
+                displayName = item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
             }
-            // Otherwise show the actual name
-            return item.name;
+            
+            // Apply card controller styling if controller information is available
+            if (item.controller) {
+                const isPlayerControlled = item.controller === connectedPlayer;
+                const color = isPlayerControlled ? 'var(--initiative-blue)' : 'var(--initiative-red)';
+                return `<span style="color: ${color}; font-weight: bold;">${displayName}</span>`;
+            }
+            
+            return displayName;
         }
         // If not an object, just return the string
         if (typeof item === 'string' || typeof item === 'number') {
@@ -76,10 +112,33 @@ const Chat: React.FC<IChatProps> = ({
                 messageText = message;
                 textStyle = styles.messageText;
             }
-            const stringMessage = messageText.map((item: IChatObject | string) => formatMessageItem(item)).join('');
+            const formattedItems = messageText.map((item: IChatObject | string, itemIndex: number) => {
+                if (typeof item === 'object' && item.controller) {
+                    // Handle card objects with controller styling
+                    let displayName = item.name;
+                    
+                    // If user is a spectator, show Player 1/Player 2 instead of names
+                    if (isSpectator && item.id) {
+                        displayName = item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
+                    }
+                    
+                    const isPlayerControlled = item.controller === connectedPlayer;
+                    const color = isPlayerControlled ? 'var(--initiative-blue)' : 'var(--initiative-red)';
+                    
+                    return (
+                        <span key={itemIndex} style={{ color, fontWeight: 'bold' }}>
+                            {displayName}
+                        </span>
+                    );
+                } else {
+                    // Handle regular text items
+                    return formatMessageItem(item);
+                }
+            });
+            
             return (
                 <Typography key={index} sx={textStyle}>
-                    {stringMessage}
+                    {formattedItems}
                 </Typography>
             )
         } catch (error) {
@@ -92,7 +151,7 @@ const Chat: React.FC<IChatProps> = ({
         if(chatEndRef.current) {
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [chatHistory]);
+    }, [enrichedChatHistory]);
     // ------------------------STYLES------------------------//
 
     const styles = {
@@ -181,7 +240,7 @@ const Chat: React.FC<IChatProps> = ({
         <>
             <Divider sx={styles.divider} />
             <Box sx={styles.chatBox}>
-                {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
+                {enrichedChatHistory && enrichedChatHistory.map((chatEntry: IChatEntry, index: number) => {
                     return formatMessage(chatEntry.message, index);
                 })}
                 <Box ref={chatEndRef} />

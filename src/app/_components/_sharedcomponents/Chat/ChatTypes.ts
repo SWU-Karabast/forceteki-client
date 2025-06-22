@@ -3,6 +3,7 @@ export interface IChatObject {
     name: string;
     label: string;
     uuid: string;
+    controller?: string; // Track who controlled this card when the message was logged
 }
 
 export interface IChatMessage {
