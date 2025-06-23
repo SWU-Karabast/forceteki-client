@@ -1,134 +1,245 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
+import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
+import { debugBorder, isDebugHandScalingEnabled } from '@/app/_utils/debug';
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 
-const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false }) => {
+const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, scrollbarEnabled = true }) => {
     const { connectedPlayer } = useGame();
+    const { isPortrait } = useScreenOrientation();
+    const showDebugInfo = isDebugHandScalingEnabled();
+    
+    const customScrollbarStyles = `
+        .simplebar-track.simplebar-horizontal {
+            height: 1rem !important;
+            margin: 0 !important;
+            bottom: 0 !important;
+        }
+        .custom-scrollbar::before {
+            background-color: rgb(82, 183, 230) !important;
+            height: 1rem !important;
+            border-radius: 4px !important;
+            border: 2px outset rgb(200, 202, 230) !important;
+            opacity: 0.85 !important;
+            top: 0 !important;
+            bottom: 0 !important;
+        }
+        .simplebar-scrollbar {
+            margin-right: 0 !important;
+            right: 0 !important;
+        }
+    `;
+    
+    React.useEffect(() => {
+        if (scrollbarEnabled) {
+            const styleEl = document.createElement('style');
+            styleEl.innerHTML = customScrollbarStyles;
+            document.head.appendChild(styleEl);
 
-    // 1. Track the container width via ResizeObserver
+            return () => {
+                if (document.head.contains(styleEl)) {
+                    document.head.removeChild(styleEl);
+                }
+            };
+        }
+    }, [scrollbarEnabled, customScrollbarStyles]);
+
     const containerRef = React.useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = React.useState<number>(0);
+    const [containerHeight, setContainerHeight] = React.useState<number>(0);
+
+    const measureContainerDimensions = React.useCallback(() => {
+        if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            if (rect.width > 0) setContainerWidth(rect.width);
+            if (rect.height > 0) setContainerHeight(rect.height);
+        }
+    }, []);
 
     React.useEffect(() => {
         if (!containerRef.current) return;
-        const ro = new ResizeObserver((entries) => {
-            if (entries[0].contentRect.width) {
-                setContainerWidth(entries[0].contentRect.width);
-            }
-        });
+        measureContainerDimensions();
+        const ro = new ResizeObserver(measureContainerDimensions);
         ro.observe(containerRef.current);
         return () => ro.disconnect();
-    }, []);
+    }, [measureContainerDimensions]);
+    
+    React.useEffect(() => {
+        const timer = setTimeout(measureContainerDimensions, 100);
+        return () => clearTimeout(timer);
+    }, [measureContainerDimensions, cards.length]);
 
-    // 2. For layout math, assume each card is ~128px wide
-    //    (since 8rem typically ≈ 128px if your root font-size is 16px).
-    const CARD_WIDTH_PX = 128;
+    // We always want to maintain the ratio of the cards width/height = 1/1.4
+    const CARD_ASPECT_RATIO = 1 / 1.4;
+    const CARD_HOVER_TRANSLATE_PERCENT = 0.075;
+    const PORTRAIT_CARD_HEIGHT_PERCENT = 0.75;
+    const CARD_GAP_PX = 6;
+    
+    const cardTranslationPx = containerHeight * CARD_HOVER_TRANSLATE_PERCENT;
 
-    // 3. Gap between cards if no overlap needed
-    const GAP_PX = 6;
+    // Calculate card height by offsetting from the translation amount
+    const cardHeightPx = containerHeight - cardTranslationPx;
+    
+    // Manually scale the card width with aspect ratio for the calculations
+    const cardWidthPx = cardHeightPx * CARD_ASPECT_RATIO;
 
-    // 4. Total width if laid out side-by-side with a 10px gap
-    //    e.g. for 3 cards: totalWidth = 3 * 128 + (3 - 1) * 10
+    // Downsize the container width slightly to not trigger the scrollbar on an exact fit
+    const adjustedContainerWidth = containerWidth - 2;
+   
+    // Total width if laid out side-by-side with  gaps included
     const totalNeededWidth =
-        cards.length * CARD_WIDTH_PX + (cards.length - 1) * GAP_PX;
+        cards.length * cardWidthPx + (cards.length - 1) * CARD_GAP_PX;
 
-    // 5. Decide whether to overlap
-    const needsOverlap = totalNeededWidth > containerWidth && cards.length > 1;
+    // Decide whether to overlap should be triggered
+    const needsOverlap = totalNeededWidth > adjustedContainerWidth && cards.length > 1;
 
-    // 6. If overlap is needed, calculate how to overlap & center
-    //    Overlapped row width = cardWidth + (cards.length - 1) * overlapOffset
-    //    We want that to fit exactly in containerWidth, so:
-    //    overlapOffset = (containerWidth - cardWidth) / (cards.length - 1)
-    let overlapOffset = 0;
-    if (needsOverlap) {
-        overlapOffset = (containerWidth - CARD_WIDTH_PX) / (cards.length - 1);
-    }
+    // Overlap in pixel space is determined by total width of cards compared to container width
+    let overlapWidthPx = 0;
+    if (needsOverlap && cards.length > 1) {
+        // Calculate overlap needed to fit all cards in the container width
+        overlapWidthPx = ((cards.length * cardWidthPx) - adjustedContainerWidth) / (cards.length - 1);
+    } 
 
-    // For centering the overlapped "fan":
-    // overlappedWidth = CARD_WIDTH_PX + (cards.length - 1)*overlapOffset
-    // leftStart = (containerWidth - overlappedWidth) / 2
-    const overlappedWidth =
-        CARD_WIDTH_PX + (cards.length - 1) * overlapOffset;
-    const overlappedLeftStart = (containerWidth - overlappedWidth) / 2;
+    // Cap it by the max ratio 
+    overlapWidthPx = Math.min(overlapWidthPx, cardWidthPx * maxCardOverlapPercent);
 
     const containerStyle = {
-        // Relative so absolutely-positioned cards can be placed inside.
         position: 'relative' as const,
         width: '100%',
-        height: '100%',
-        // We'll center the no-overlap layout with flex, but conditionally:
-        overflow: 'visible hidden'
-
+        height: isPortrait ? `${PORTRAIT_CARD_HEIGHT_PERCENT * 100}%` : '100%',
+        margin: isPortrait ? 'auto 0' : '0',
     };
 
+    const HandContent = (
+        <React.Fragment>
+            {!needsOverlap ? (
+                <Box
+                    sx={{
+                        ...debugBorder('blue'),
+                        display: 'flex',
+                        gap: `${CARD_GAP_PX}px`,
+                        width: 'fit-content',
+                        margin: '0 auto',
+                        height: '100%',
+                        justifyContent: 'center',
+                        alignItems: isPortrait ? 'center' : 'flex-end',
+                    }}
+                >
+                    {cards.map((card, i) => (
+                        <Box
+                            key={`${connectedPlayer}-hand-${i}`}
+                            sx={{
+                                width: 'auto',
+                                height: cardHeightPx,
+                                zIndex: 1,
+                                aspectRatio: '1 / 1.4',
+                                top: cardTranslationPx,
+                                transition: 'transform 0.2s',
+                                transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
+                                '&:hover': {
+                                    transform: allowHover ? `translateY(-${cardTranslationPx}px)` : 'none',
+                                },
+                            }}
+                        >
+                            <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap} />
+                        </Box>
+                    ))}
+                </Box>
+            ) : (
+                <Box
+                    sx={{
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                    }}
+                >
+                    {cards.map((card, i) => (
+                        <Box
+                            key={`${connectedPlayer}-hand-${i}`}
+                            sx={{
+                                position: 'absolute',
+                                width: 'auto',
+                                height: cardHeightPx,
+                                aspectRatio: '1 / 1.4',
+                                left: i === 0 ? 0: i * (cardWidthPx - overlapWidthPx),
+                                top: cardTranslationPx,
+                                zIndex: i + 1,
+                                transition: 'transform 0.2s',
+                                transform: card.selected && card.zone === 'hand' ? `translateY(-${cardTranslationPx}px)` : 'none',
+                                '&:hover': {
+                                    transform: allowHover ? `translateY(-${cardTranslationPx}px)` : 'none',
+                                },
+                            }}
+                        >
+                            <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap}/>
+                        </Box>
+                    ))}
+                </Box>
+            )}
+        </React.Fragment>
+    );
+
     return (
-        <Box ref={containerRef} sx={containerStyle}
-            onWheel={(e) => {
-                e.preventDefault(); // Prevents vertical scrolling
-                e.currentTarget.scrollLeft += e.deltaY; // Converts vertical scroll to horizontal
-            }}>
-            {/* NO OVERLAP SCENARIO */}
-  
-            <Box
+        <React.Fragment>
+            {showDebugInfo && <Box
                 sx={{
-                    // A flex row that centers its contents
-                    display: 'flex',
-                    gap: '6px',
-                    width: 'fit-content',
-                    margin: '0 auto',
-                    // Full height so they're vertically centered
-                    height: '100%',
+                    position: 'absolute',
+                    left: '10px',
+                    top: '5px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    color: 'white',
+                    padding: '5px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    zIndex: 1000,
+                    fontFamily: 'monospace',
+                    pointerEvents: 'none',
                 }}
             >
-                {cards.map((card, i) => (
-                    <Box
-                        key={`${connectedPlayer}-hand-${i}`}
-                        sx={{
-                            pt: allowHover ? '15px' : 0,
-                            width: 'auto',
-                            height: '100%',
-                            aspectRatio: '1 / 1.4',
-                            transition: 'transform 0.2s',
-                            transform: card.selected && card.zone === 'hand' ? 'translateY(-11px)' : 'none',
-                            '&:hover': {
-                                transform: allowHover ? 'translateY(-11px)' : 'none',
-                            },
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Card Count: {cards.length}</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Container Width: {containerWidth.toFixed(2)}px</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Container Height: {containerHeight.toFixed(2)}px</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Card Height: {cardHeightPx.toFixed(2)}px</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Card Width: {cardWidthPx.toFixed(2)}px</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Overlap: {overlapWidthPx.toFixed(2)}px ({((overlapWidthPx / cardWidthPx) * 100).toFixed(1)}%)</div>
+                <div style={{ lineHeight: '1', marginBottom: '2px' }}>Needs Overlap: {needsOverlap ? 'Yes' : 'No'}</div>
+                <div style={{ lineHeight: '1' }}>Portrait Mode: {isPortrait ? 'Yes' : 'No'}</div>
+            </Box>}
+
+            <Box
+                ref={containerRef}
+                sx={{
+                    ...containerStyle,
+                    ...debugBorder('red')
+                }}
+            >
+                {scrollbarEnabled ? (
+                    <SimpleBar
+                        style={{ width: '100%', height: '100%' }}
+                        classNames={{ scrollbar: 'simplebar-scrollbar custom-scrollbar' }}
+                        onWheel={(e: React.WheelEvent<HTMLElement>) => {
+                            e.preventDefault();
+                            const target = e.currentTarget.querySelector('.simplebar-content-wrapper') as HTMLElement;
+                            if (target) {
+                                target.scrollLeft += e.deltaY;
+                            }
                         }}
                     >
-                        <GameCard card={card} disabled={clickDisabled} />
+                        {HandContent}
+                    </SimpleBar>
+                ) : (
+                    <Box sx={{ width: '100%', height: '100%', overflowX: 'hidden' }}>
+                        {HandContent}
                     </Box>
-                ))}
+                )}
             </Box>
-
-
-            {/* OVERLAP SCENARIO */}
-            {/* {needsOverlap &&
-                cards.map((card, i) => (
-                    <Box
-                        key={`${connectedPlayer}-hand-${i}`}
-                        sx={{
-                            // Absolutely position each card
-                            position: 'absolute',
-                            // Visually 8rem wide
-                            width: '8rem',
-                            // Center vertically
-                            top: '50%',
-                            // Center horizontally using computed left
-                            left: overlappedLeftStart + i * overlapOffset,
-                            transition: 'transform 0.2s',
-                            transform: card.selected && card.zone === 'hand' ? 'translateY(-50%) translateY(-11px)' : 'translateY(-50%)',
-                            '&:hover': {
-                                // Slight lift
-                                transform: 'translateY(-50%) translateY(-10px)',
-                            },
-                        }}
-                    >
-                        <GameCard card={card} disabled={clickDisabled}/>
-                    </Box>
-                ))} */}
-        </Box>
+        </React.Fragment>
     );
 };
 

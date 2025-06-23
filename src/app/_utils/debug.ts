@@ -11,6 +11,15 @@ export const isDebugBordersEnabled = (): boolean => {
 };
 
 /**
+ * Check if debug info for hand scaling should be displayed
+ * @returns boolean indicating if hand scaling debug info is enabled
+ */
+export const isDebugHandScalingEnabled = (): boolean => {
+    return process.env.NEXT_PUBLIC_DEBUG_HAND_SCALING === 'true';
+};
+
+
+/**
  * Check if breakpoint overlay should be displayed
  * @returns boolean indicating if breakpoint overlay is enabled
  */
