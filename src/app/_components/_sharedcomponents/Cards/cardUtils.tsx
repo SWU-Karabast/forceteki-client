@@ -26,7 +26,7 @@ export const parseSetId = (fullCardId: string) => {
 };
 
 
-export const getBorderColor = (card: ICardData, player: string, promptType: string = '', style: CardStyle = CardStyle.Plain) => {
+export const getBorderColor = (card: ICardData, player: string, promptType: string = '', style: CardStyle = CardStyle.Plain, isOpponentEffect = false) => {
     if (!card) return '';
 
     if (style === CardStyle.Prompt) {
@@ -37,8 +37,18 @@ export const getBorderColor = (card: ICardData, player: string, promptType: stri
         }
     }
 
-    if (promptType === 'resource' && card.selectable && !card.selected) {
-        return 'var(--selection-yellow)';
+    if (card.zone === 'hand' && isOpponentEffect && card.selectable && !card.selected) {
+        return 'var(--selection-purple)';
+    }
+
+    if (promptType === 'resource') {
+        if (card.selectable && !card.selected) {
+            return 'var(--selection-yellow)';
+        }
+
+        if (card.selected) {
+            return 'var(--selection-orange)';
+        }
     }
 
     if (card.selected) {
