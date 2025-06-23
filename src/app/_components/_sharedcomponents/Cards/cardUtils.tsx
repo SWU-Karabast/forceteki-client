@@ -46,7 +46,7 @@ export const getBorderColor = (card: ICardData, player: string, promptType: stri
     }
         
     if (card.selectable) {
-        return card.controller.id === player ? 'var(--selection-green)' : 'var(--selection-red)';
+        return card.controllerId === player ? 'var(--selection-green)' : 'var(--selection-red)';
     };
 
     return '';
