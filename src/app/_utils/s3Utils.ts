@@ -25,7 +25,7 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
     const setId = isGameOrSetCard ? card.setId : parseSetId(card.id);
     // check if the card has a type
-    const cardType = 'type' in card ? card.type || (Array.isArray(card.types) ? card.types.join() : card.types) : undefined;
+    const cardType = 'type' in card ? card.type || (Array.isArray(card.types) ? card.types.join() : card.types) : 'types' in card ? card.types : undefined;
     const tokenIds = ['3941784506', '3463348370', '7268926664', '9415311381', '8752877738', '2007868442']
     if (cardType?.includes('token') || (card.id && tokenIds.includes(card.id))) {
         return s3ImageURL(`cards/_tokens/${card.id}.webp`);

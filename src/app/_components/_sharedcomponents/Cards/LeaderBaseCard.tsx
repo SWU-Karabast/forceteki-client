@@ -16,19 +16,26 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     isLeader = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
-    const [leaderBackgroundImage, setLeaderBackgroundImage] = React.useState<string | null>(null);
-    const [isCtrl, setIsCtrl] = React.useState<boolean>(false);
+    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    useLeaderCardFlipPreview(
+    const {
+        aspectRatio,
+        width,
+    } = useLeaderCardFlipPreview({
         anchorElement,
-        card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
-        setLeaderBackgroundImage,
-        CardStyle.PlainLeader,
-        CardStyle.Plain,
-        setIsCtrl
-    )
+        cardId: card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
+        setPreviewImage,
+        frontCardStyle: CardStyle.PlainLeader,
+        backCardStyle: CardStyle.Plain,
+        isDeployed: false,
+        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
+        card: card ? {
+            onStartingSide: card.onStartingSide,
+            id: card.id
+        } : undefined,
+    });
 
     if (!card) {
         return null
@@ -38,16 +45,18 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
+        const imageUrl = target.getAttribute('data-card-url');
+        if (!imageUrl) return;
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
         }, 200);
     };
         
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
-        setLeaderBackgroundImage(null);
-        setIsCtrl(false);
+        setPreviewImage(null);
     };
 
     const defaultClickFunction = () => {
@@ -218,11 +227,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         cardPreview: {
             borderRadius: '.38em',
-            backgroundImage: isLeader ? leaderBackgroundImage : `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: (isLeader && (isDeployed || isCtrl)) ? '1 / 1.4' : '1.4 / 1',
-            width: (isLeader && (isDeployed || isCtrl)) ? '15rem' : '24rem',
+            aspectRatio,
+            width,
         },
         defendIcon: {
             position: 'absolute',
@@ -259,6 +267,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             onClick={handleClick}
             aria-owns={open ? 'mouse-over-popover' : undefined}
             aria-haspopup="true"
+            data-card-url={s3CardImageURL(card)}
             data-card-type={isLeader ? 'leader' : 'base'}
             onMouseEnter={handlePreviewOpen}
             onMouseLeave={handlePreviewClose}
@@ -304,7 +313,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}
             >
                 <Box sx={{
-                    ...styles.cardPreview,
+                    ...styles.cardPreview,backgroundImage: previewImage
                 }} >
                 </Box>
                 {isLeader && (
