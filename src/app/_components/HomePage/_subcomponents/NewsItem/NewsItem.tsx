@@ -27,6 +27,7 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
         newsImage: {
             borderRadius: '.5rem',
             maxHeight: '15rem',
+            cursor: article.link ? 'pointer' : 'default',
         },
     };
 
@@ -38,6 +39,7 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
                 image={article.image}
                 alt={article.imageAlt}
                 sx={styles.newsImage}
+                onClick={article.link ? () => window.open(article.link, '_blank') : undefined}
             />
             <CardContent>
                 <Box sx={styles.box}>

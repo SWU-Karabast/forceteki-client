@@ -514,13 +514,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
-            <Divider sx={{ mt: 1, borderColor: '#666', display: lobbyFormat !== 'premier' ? 'block': 'none' }} />
-            <Box sx={{ display: lobbyFormat !== 'premier' ? 'block': 'none' }}>
-                <Typography sx={{ fontSize: '.9em', mt: 1 }}>
-                    Official Force bases are now available on SWUDB!
-                </Typography>
-
-            </Box>
         </Card>
     )
 };
