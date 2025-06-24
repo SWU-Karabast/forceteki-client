@@ -23,6 +23,9 @@ const Chat: React.FC<IChatProps> = ({
     // Function to format message items, handling spectator view
     const formatMessageItem = (item: IChatObject | string | number) => {
         if (typeof item === 'object') {
+            // Console log the full card object when it appears in chat
+            console.log('Card mentioned in chat:', item);
+            
             // If user is a spectator, show Player 1/Player 2 instead of names
             if (isSpectator && item.id) {
                 return item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
