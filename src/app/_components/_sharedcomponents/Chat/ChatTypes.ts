@@ -3,6 +3,11 @@ export interface IChatObject {
     name: string;
     label: string;
     uuid: string;
+    setId?: {
+        set: string;
+        number: number;
+    };
+    controllerId?: string;
 }
 
 export interface IChatMessage {

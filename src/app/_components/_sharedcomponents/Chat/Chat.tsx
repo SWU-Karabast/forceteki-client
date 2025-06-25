@@ -10,6 +10,7 @@ import {
 import { Send } from '@mui/icons-material';
 import { IChatProps, IChatEntry, IChatObject } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import ChatCard from './ChatCard';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -21,7 +22,7 @@ const Chat: React.FC<IChatProps> = ({
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
     // Function to format message items, handling spectator view
-    const formatMessageItem = (item: IChatObject | string | number) => {
+    const formatMessageItem = (item: IChatObject | string | number, itemIndex: number) => {
         if (typeof item === 'object') {
             // Console log the full card object when it appears in chat
             console.log('Card mentioned in chat:', item);
@@ -41,12 +42,27 @@ const Chat: React.FC<IChatProps> = ({
             if (cardItem.controllerId) {
                 const isPlayerCard = cardItem.controllerId === connectedPlayer;
                 const cardColor = isPlayerCard ? 'var(--initiative-blue)' : 'var(--initiative-red)';
-                return `<span style="color: ${cardColor}; font-weight: bold;">${cardName}</span>`;
+                
+                return (
+                    <ChatCard 
+                        key={`card-${itemIndex}`}
+                        chatObject={item} 
+                        isPlayerCard={isPlayerCard}
+                    >
+                        <span style={{ color: cardColor, fontWeight: 'bold' }}>
+                            {cardName}
+                        </span>
+                    </ChatCard>
+                );
             } else {
                 // This is likely a player object, style based on player id
                 const isCurrentPlayer = item.id === connectedPlayer;
                 const playerColor = isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
-                return `<span style="color: ${playerColor}; font-weight: bold;">${cardName}</span>`;
+                return (
+                    <span key={`player-${itemIndex}`} style={{ color: playerColor, fontWeight: 'bold' }}>
+                        {cardName}
+                    </span>
+                );
             }
         }
         // If not an object, just return the string
@@ -98,9 +114,16 @@ const Chat: React.FC<IChatProps> = ({
                 messageText = message;
                 textStyle = styles.messageText;
             }
-            const stringMessage = messageText.map((item: IChatObject | string) => formatMessageItem(item)).join('');
+            
+            // Convert message items to React components
+            const messageComponents = messageText.map((item: IChatObject | string | number, itemIndex: number) => 
+                formatMessageItem(item, itemIndex)
+            );
+            
             return (
-                <Typography key={index} sx={textStyle} dangerouslySetInnerHTML={{ __html: stringMessage }} />
+                <Typography key={index} sx={textStyle} component="div">
+                    {messageComponents}
+                </Typography>
             )
         } catch (error) {
             console.error('Error formatting message:', error);
