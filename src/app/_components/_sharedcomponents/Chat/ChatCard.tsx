@@ -17,10 +17,8 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
-    // Only show hover if we have setId
     const hasSetId = chatObject.setId && chatObject.setId.set && chatObject.setId.number;
 
-    // Use the same sizing logic as GameCard
     const {
         aspectRatio,
         width,
@@ -30,7 +28,7 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
         setPreviewImage,
         frontCardStyle: CardStyle.Plain,
         backCardStyle: CardStyle.PlainLeader,
-        isLeader: false, // Chat cards are typically not leaders
+        isLeader: false,
         isDeployed: true,
     });
 
@@ -44,7 +42,7 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
             // Create a mock card object for s3CardImageURL that matches ISetCode interface
             const mockCard = {
                 setId: chatObject.setId!,
-                type: 'unit', // Default type, could be enhanced later
+                type: 'unit',
                 id: chatObject.id
             };
             const imageUrl = s3CardImageURL(mockCard, CardStyle.Plain);
@@ -59,7 +57,6 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
     };
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
-        // Position popover to the left of the hovered text
         return { 
             anchorOrigin: {
                 vertical: 'center',

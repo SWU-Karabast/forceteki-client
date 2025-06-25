@@ -21,13 +21,8 @@ const Chat: React.FC<IChatProps> = ({
     const { connectedPlayer, isSpectator, getOpponent } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-    // Function to format message items, handling spectator view
     const formatMessageItem = (item: IChatObject | string | number, itemIndex: number) => {
         if (typeof item === 'object') {
-            // Console log the full card object when it appears in chat
-            console.log('Card mentioned in chat:', item);
-            
-            // Determine the card name to display
             let cardName;
             if (isSpectator && item.id) {
                 cardName = item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
@@ -35,10 +30,8 @@ const Chat: React.FC<IChatProps> = ({
                 cardName = item.name;
             }
             
-            // Style based on whether this is a card or player object
             const cardItem = item as IChatObject & { controllerId?: string };
             
-            // Check if this is a card object (has controllerId)
             if (cardItem.controllerId) {
                 const isPlayerCard = cardItem.controllerId === connectedPlayer;
                 const cardColor = isPlayerCard ? 'var(--initiative-blue)' : 'var(--initiative-red)';
@@ -55,7 +48,6 @@ const Chat: React.FC<IChatProps> = ({
                     </ChatCard>
                 );
             } else {
-                // This is likely a player object, style based on player id
                 const isCurrentPlayer = item.id === connectedPlayer;
                 const playerColor = isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
                 return (
@@ -65,7 +57,6 @@ const Chat: React.FC<IChatProps> = ({
                 );
             }
         }
-        // If not an object, just return the string
         if (typeof item === 'string' || typeof item === 'number') {
             return item;
         }
@@ -115,7 +106,6 @@ const Chat: React.FC<IChatProps> = ({
                 textStyle = styles.messageText;
             }
             
-            // Convert message items to React components
             const messageComponents = messageText.map((item: IChatObject | string | number, itemIndex: number) => 
                 formatMessageItem(item, itemIndex)
             );

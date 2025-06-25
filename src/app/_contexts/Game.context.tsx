@@ -192,20 +192,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 lastGameIdRef.current = gameState.id;
             }
             
-            // Log card objects from new messages when they arrive
-            if (gameState.messages && gameState.messages.length > 0) {
-                const lastMessage = gameState.messages[gameState.messages.length - 1];
-                if (lastMessage && lastMessage.message) {
-                    // Check if message contains card objects and log them
-                    const messageArray = Array.isArray(lastMessage.message) ? lastMessage.message : [lastMessage.message];
-                    messageArray.forEach((item: any) => {
-                        if (typeof item === 'object' && item.uuid && item.name) {
-                            console.log('Card object in new game action:', item);
-                        }
-                    });
-                }
-            }
-            
             setGameState(gameState);
             if (process.env.NODE_ENV === 'development') {
                 const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
