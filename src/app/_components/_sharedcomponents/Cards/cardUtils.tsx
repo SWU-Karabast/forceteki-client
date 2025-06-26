@@ -47,7 +47,8 @@ export const getBorderColor = (card: ICardData, player: string, promptType: stri
         }
 
         if (card.selected) {
-            return 'var(--selection-orange)';
+            // TODO: look at other colors for this
+            return 'var(--selection-blue)';
         }
     }
 
