@@ -83,7 +83,9 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
             {hasSetId && (
                 <Popover
                     id="chat-card-popover"
-                    sx={{ pointerEvents: 'none' }}
+                    sx={{ pointerEvents: 'none',
+                        '& .MuiPopover-paper': { transform: 'translateX(-12px) !important' }
+                    }}
                     open={open}
                     anchorEl={anchorElement}
                     onClose={handlePreviewClose}
