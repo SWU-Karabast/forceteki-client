@@ -8,7 +8,14 @@ import {
     Typography,
 } from '@mui/material';
 import { Send } from '@mui/icons-material';
-import { IChatProps, IChatEntry, IChatObject } from './ChatTypes';
+import { 
+    IChatProps, 
+    IChatEntry, 
+    IChatObject, 
+    IChatMessageContent, 
+    IAlertMessage, 
+    IPlayerChatMessage 
+} from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import ChatCard from './ChatCard';
 
@@ -21,20 +28,28 @@ const Chat: React.FC<IChatProps> = ({
     const { connectedPlayer, isSpectator, getOpponent } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
+    const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
+        return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
+    };
+
+    const getSpectatorDisplayName = (
+        playerId: string,
+        connectedPlayer: string,
+        getOpponent: (player: string) => string
+    ): string => {
+        if (playerId === connectedPlayer) return 'Player 1';
+        if (playerId === getOpponent(connectedPlayer)) return 'Player 2';
+        return 'Unknown Player';
+    };
+
     const formatMessageItem = (item: IChatObject | string | number, itemIndex: number) => {
         if (typeof item === 'object') {
-            let cardName;
-            if (isSpectator && item.id) {
-                cardName = item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
-            } else {
-                cardName = item.name;
-            }
+            const cardName = isSpectator && item.id 
+                ? getSpectatorDisplayName(item.id, connectedPlayer, getOpponent)
+                : item.name;
             
-            const cardItem = item as IChatObject & { controllerId?: string };
-            
-            if (cardItem.controllerId) {
-                const isPlayerCard = cardItem.controllerId === connectedPlayer;
-                const cardColor = isPlayerCard ? 'var(--initiative-blue)' : 'var(--initiative-red)';
+            if (item.controllerId) {
+                const isPlayerCard = item.controllerId === connectedPlayer;
                 
                 return (
                     <ChatCard 
@@ -42,84 +57,97 @@ const Chat: React.FC<IChatProps> = ({
                         chatObject={item} 
                         isPlayerCard={isPlayerCard}
                     >
-                        <span style={{ color: cardColor, fontWeight: 'bold' }}>
+                        <span style={{ 
+                            color: getPlayerColor(item.controllerId, connectedPlayer), 
+                            fontWeight: 'bold' 
+                        }}>
                             {cardName}
                         </span>
                     </ChatCard>
                 );
             } else {
-                const isCurrentPlayer = item.id === connectedPlayer;
-                const playerColor = isCurrentPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
                 return (
-                    <span key={`player-${itemIndex}`} style={{ color: playerColor, fontWeight: 'bold' }}>
+                    <span key={`player-${itemIndex}`} style={{ 
+                        color: getPlayerColor(item.id, connectedPlayer), 
+                        fontWeight: 'bold' 
+                    }}>
                         {cardName}
                     </span>
                 );
             }
         }
-        if (typeof item === 'string' || typeof item === 'number') {
-            return item;
-        }
-        return '';
+        return item;
     };
 
-    // TODO: Standardize these chat types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formatMessage = (message: any, index: number) => {
-        try {
-            let textStyle;
-            let messageText;
-
-            if (message.hasOwnProperty('alert')) {                
-                switch (message.alert.type) {
-                    case 'notification':
-                        textStyle = styles.notificationText;
-                        break;
-                    case 'warning':
-                        textStyle = styles.warningText;
-                        break;
-                    case 'danger':
-                        textStyle = styles.alertText;
-                        break;
-                    case 'readyStatus':
-                        textStyle = styles.readyStatusText;
-                        break;
-                    default:
-                        textStyle = styles.messageText;
-                }
-
-                messageText = message.alert.message;
-            } else if (message[0].type === 'playerChat') {
-                return (
-                    <Typography key={index} sx={styles.messageText}>
-                        <span style={{ 
-                            color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)',
-                            fontWeight: 'bold'
-                        }}>
-                            {isSpectator ? connectedPlayer === message[0].id ? 'Player 1' : 'Player 2' : message[0].name}
-                        </span>
-                        : {message.slice(1).join('')}
-                    </Typography>
-                )
-            } else {
-                messageText = message;
-                textStyle = styles.messageText;
+    const formatAlertMessage = (message: IAlertMessage, index: number) => {
+        const getAlertStyle = (type: string) => {
+            switch (type) {
+                case 'notification': return styles.notificationText;
+                case 'warning': return styles.warningText;
+                case 'danger': return styles.alertText;
+                case 'readyStatus': return styles.readyStatusText;
+                default: return styles.messageText;
             }
-            
-            const messageComponents = messageText.map((item: IChatObject | string | number, itemIndex: number) => 
-                formatMessageItem(item, itemIndex)
-            );
-            
-            return (
-                <Typography key={index} sx={textStyle} component="div">
-                    {messageComponents}
-                </Typography>
-            )
-        } catch (error) {
-            console.error('Error formatting message:', error);
-            return null;
+        };
+
+        const messageComponents = message.alert.message.map((item, itemIndex) => 
+            formatMessageItem(item, itemIndex)
+        );
+        
+        return (
+            <Typography key={index} sx={getAlertStyle(message.alert.type)} component="div">
+                {messageComponents}
+            </Typography>
+        );
+    };
+
+    const formatPlayerChatMessage = (message: (IPlayerChatMessage | string | number)[], index: number) => {
+        const playerMessage = message[0] as IPlayerChatMessage;
+        const displayName = isSpectator 
+            ? getSpectatorDisplayName(playerMessage.id, connectedPlayer, getOpponent)
+            : playerMessage.name;
+
+        return (
+            <Typography key={index} sx={styles.messageText}>
+                <span style={{ 
+                    color: getPlayerColor(playerMessage.id, connectedPlayer),
+                    fontWeight: 'bold'
+                }}>
+                    {displayName}
+                </span>
+                : {message.slice(1).join('')}
+            </Typography>
+        );
+    };
+
+    const formatRegularMessage = (message: (IChatObject | string | number)[], index: number) => {
+        const messageComponents = message.map((item, itemIndex) => 
+            formatMessageItem(item, itemIndex)
+        );
+        
+        return (
+            <Typography key={index} sx={styles.messageText} component="div">
+                {messageComponents}
+            </Typography>
+        );
+    };
+
+    const formatMessage = (message: IChatMessageContent, index: number) => {
+        if ('alert' in message) {
+            return formatAlertMessage(message, index);
         }
-    }
+        
+        if (Array.isArray(message) && message.length > 0 && 
+            typeof message[0] === 'object' && 'type' in message[0] && message[0].type === 'playerChat') {
+            return formatPlayerChatMessage(message as (IPlayerChatMessage | string | number)[], index);
+        }
+        
+        if (Array.isArray(message)) {
+            return formatRegularMessage(message as (IChatObject | string | number)[], index);
+        }
+
+        return null;
+    };
 
     useEffect(() => {
         if(chatEndRef.current) {
@@ -144,10 +172,6 @@ const Chat: React.FC<IChatProps> = ({
         messageText: {
             fontSize: { xs: '0.75em', md: '1em' },
             color: '#fff',
-            lineHeight: { xs: '0.75rem', md: '1rem' },
-        },
-        playerName: {
-            fontSize: { xs: '0.75em', md: '1em' },
             lineHeight: { xs: '0.75rem', md: '1rem' },
         },
         notificationText: {
@@ -194,19 +218,17 @@ const Chat: React.FC<IChatProps> = ({
             height: { xs: '1.8rem', md: '2.2rem' },
             input: { color: '#fff', padding: '0.3em 0.5em' },
             '& .MuiOutlinedInput-root': {
-                // base border style
                 '& fieldset': {
                     borderColor: '#fff',
                 },
             },
             '& .MuiOutlinedInput-root.Mui-focused': {
-                // when container is focused
                 '& fieldset': {
                     borderColor: '#fff',
                 },
             },
         }
-    }
+    };
 
     
 

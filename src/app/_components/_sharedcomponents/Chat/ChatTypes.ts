@@ -10,26 +10,33 @@ export interface IChatObject {
     controllerId?: string;
 }
 
-export interface IChatMessage {
-    name: string;
-    email: string;
-    message: string;
-    type?: string | null;
+export interface IAlertMessage {
+    alert: {
+        type: 'notification' | 'warning' | 'danger' | 'readyStatus';
+        message: (IChatObject | string | number)[];
+    };
 }
+
+export interface IPlayerChatMessage {
+    type: 'playerChat';
+    id: string;
+    name: string;
+}
+
+export type IChatMessageContent = IAlertMessage | (IPlayerChatMessage | string | number)[] | (IChatObject | string | number)[];
 
 export interface IChatEntry {
     date: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    message: any;
+    message: IChatMessageContent;
 }
+
 export interface IGameChat {
     messages: IChatEntry[];
 }
+
 export interface IChatProps {
     chatHistory: IChatEntry[];
     chatMessage: string;
-    playerRoll?: number;
-    opponentRoll?: number;
     setChatMessage: (message: string) => void;
     handleChatSubmit: () => void;
 }

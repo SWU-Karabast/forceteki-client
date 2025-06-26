@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Popover, PopoverOrigin } from '@mui/material';
+import { Box, Popover } from '@mui/material';
 import { IChatObject } from './ChatTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle } from '../Cards/CardTypes';
@@ -39,13 +39,11 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
         
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
-            // Create a mock card object for s3CardImageURL that matches ISetCode interface
-            const mockCard = {
+            const imageUrl = s3CardImageURL({
                 setId: chatObject.setId!,
                 type: 'unit',
                 id: chatObject.id
-            };
-            const imageUrl = s3CardImageURL(mockCard, CardStyle.Plain);
+            }, CardStyle.Plain);
             setPreviewImage(`url(${imageUrl})`);
         }, 200);
     };
@@ -54,19 +52,6 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
         setPreviewImage(null);
-    };
-
-    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
-        return { 
-            anchorOrigin: {
-                vertical: 'center',
-                horizontal: 'left',
-            },
-            transformOrigin: {
-                vertical: 'center',
-                horizontal: 'right',
-            } 
-        };
     };
 
     const styles = {
@@ -104,7 +89,14 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
                     onClose={handlePreviewClose}
                     disableRestoreFocus
                     slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' }, tabIndex: -1 } }}
-                    {...popoverConfig()}
+                    anchorOrigin={{
+                        vertical: 'center',
+                        horizontal: 'left',
+                    }}
+                    transformOrigin={{
+                        vertical: 'center',
+                        horizontal: 'right',
+                    }}
                 >
                     <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
                 </Popover>
