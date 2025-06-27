@@ -90,12 +90,13 @@ const GameBoard = () => {
         promptStyle: {
             textAlign: 'center',
             fontSize: '1.3em',
+            textShadow: '1px 1px 6px black',
             padding: '0.5rem',
             position: 'relative',
             borderRadius: '20px',
             background: !menuTitle ? 'transparent' : promptTitle 
-                ? 'radial-gradient(ellipse 90% 50% at center 55%, rgba(0, 123, 255, 0.8) 0%, rgba(0, 123, 255, 0.4) 60%, transparent 100%)' 
-                : 'radial-gradient(ellipse 90% 50% at center 55%, rgba(220, 53, 69, 0.6) 0%, rgba(220, 53, 69, 0.3) 60%, transparent 100%)',
+                ? 'radial-gradient(ellipse 90% 50% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)' 
+                : 'radial-gradient(ellipse 90% 50% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
         },
         promptShadow: {
             position: 'absolute',
@@ -104,7 +105,7 @@ const GameBoard = () => {
             width: '100%',
             height: '60%',
             zIndex: -1,
-            background: 'rgba(0, 0, 0, .8)',
+            background: 'rgba(0, 0, 0, .9)',
             filter: 'blur(10px)',
             WebkitFilter: 'blur(10px)'
         }
