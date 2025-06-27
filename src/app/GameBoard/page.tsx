@@ -95,8 +95,8 @@ const GameBoard = () => {
             position: 'relative',
             borderRadius: '20px',
             background: !menuTitle ? 'transparent' : promptTitle 
-                ? 'radial-gradient(ellipse 90% 50% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)' 
-                : 'radial-gradient(ellipse 90% 50% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
+                ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)' 
+                : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
         },
         promptShadow: {
             position: 'absolute',
