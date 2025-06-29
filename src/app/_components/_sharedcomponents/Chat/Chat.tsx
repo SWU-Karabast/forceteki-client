@@ -14,7 +14,6 @@ import {
     IChatObject, 
     IChatMessageContent, 
     IAlertMessage, 
-    IPlayerChatMessage,
     IPlayerChatMessageArray,
     ChatObjectType
 } from './ChatTypes';
