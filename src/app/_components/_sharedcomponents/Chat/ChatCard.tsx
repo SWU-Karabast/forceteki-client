@@ -14,7 +14,6 @@ interface IChatCardProps {
 const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard }) => {
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
     const hasSetId = chatObject.setId && chatObject.setId.set && chatObject.setId.number;
@@ -37,19 +36,16 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
 
         const target = event.currentTarget;
         
-        hoverTimeout.current = window.setTimeout(() => {
-            setAnchorElement(target);
-            const imageUrl = s3CardImageURL({
-                setId: chatObject.setId!,
-                type: 'unit',
-                id: chatObject.id
-            }, CardStyle.Plain);
-            setPreviewImage(`url(${imageUrl})`);
-        }, 0);
+        setAnchorElement(target);
+        const imageUrl = s3CardImageURL({
+            setId: chatObject.setId!,
+            type: 'unit',
+            id: chatObject.id
+        }, CardStyle.Plain);
+        setPreviewImage(`url(${imageUrl})`);
     };
     
     const handlePreviewClose = () => {
-        clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
         setPreviewImage(null);
     };
