@@ -58,7 +58,8 @@ const Chat: React.FC<IChatProps> = ({
                         isPlayerCard={isPlayerCard}
                     >
                         <span style={{ 
-                            color: getPlayerColor(item.controllerId, connectedPlayer)
+                            color: getPlayerColor(item.controllerId, connectedPlayer),
+                            textDecoration: 'underline'
                         }}>
                             {cardName}
                         </span>
