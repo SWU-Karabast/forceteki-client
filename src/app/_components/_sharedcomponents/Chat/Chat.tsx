@@ -167,12 +167,11 @@ const Chat: React.FC<IChatProps> = ({
             return formatAlertMessage(message, index);
         }
         
-        if (Array.isArray(message) && message.length > 0 && 
-            typeof message[0] === 'object' && 'type' in message[0] && message[0].type === 'playerChat') {
-            return formatPlayerChatMessage(message as IPlayerChatMessageArray, index);
-        }
-        
         if (Array.isArray(message)) {
+            if (message.length > 0 && 
+                typeof message[0] === 'object' && 'type' in message[0] && message[0].type === 'playerChat') {
+                return formatPlayerChatMessage(message as IPlayerChatMessageArray, index);
+            }
             return formatRegularMessage(message as (IChatObject | string | number)[], index);
         }
 
