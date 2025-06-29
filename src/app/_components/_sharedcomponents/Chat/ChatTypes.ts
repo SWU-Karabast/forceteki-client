@@ -23,7 +23,10 @@ export interface IPlayerChatMessage {
     name: string;
 }
 
-export type IChatMessageContent = IAlertMessage | (IPlayerChatMessage | string | number)[] | (IChatObject | string | number)[];
+// Player chat message array: first element is player info, rest is message content
+export type IPlayerChatMessageArray = [IPlayerChatMessage, ...(string | number)[]];
+
+export type IChatMessageContent = IAlertMessage | IPlayerChatMessageArray | (IChatObject | string | number)[];
 
 export interface IChatEntry {
     date: string;

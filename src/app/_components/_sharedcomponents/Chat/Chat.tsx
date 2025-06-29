@@ -14,7 +14,8 @@ import {
     IChatObject, 
     IChatMessageContent, 
     IAlertMessage, 
-    IPlayerChatMessage 
+    IPlayerChatMessage,
+    IPlayerChatMessageArray
 } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import ChatCard from './ChatCard';
@@ -105,8 +106,8 @@ const Chat: React.FC<IChatProps> = ({
         );
     };
 
-    const formatPlayerChatMessage = (message: (IPlayerChatMessage | string | number)[], index: number) => {
-        const playerMessage = message[0] as IPlayerChatMessage;
+    const formatPlayerChatMessage = (message: IPlayerChatMessageArray, index: number) => {
+        const [playerMessage, ...messageContent] = message;
         const displayName = isSpectator 
             ? getSpectatorDisplayName(playerMessage.id, connectedPlayer, getOpponent)
             : playerMessage.name;
@@ -120,7 +121,7 @@ const Chat: React.FC<IChatProps> = ({
                     }}>
                         {displayName}
                     </span>
-                    : {message.slice(1).join('')}
+                    : {messageContent.join('')}
                 </Typography>
                 {index < (chatHistory?.length || 0) - 1 && (
                     <Divider sx={styles.chatEntryDivider} />
@@ -153,7 +154,7 @@ const Chat: React.FC<IChatProps> = ({
         
         if (Array.isArray(message) && message.length > 0 && 
             typeof message[0] === 'object' && 'type' in message[0] && message[0].type === 'playerChat') {
-            return formatPlayerChatMessage(message as (IPlayerChatMessage | string | number)[], index);
+            return formatPlayerChatMessage(message as IPlayerChatMessageArray, index);
         }
         
         if (Array.isArray(message)) {
