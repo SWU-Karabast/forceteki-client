@@ -14,6 +14,7 @@ export interface IChatObject {
         number: number;
     };
     controllerId?: string;
+    isBase?: boolean;
 }
 
 export interface IAlertMessage {

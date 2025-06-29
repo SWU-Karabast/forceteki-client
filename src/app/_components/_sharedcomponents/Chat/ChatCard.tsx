@@ -17,6 +17,7 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
     const open = Boolean(anchorElement);
 
     const hasSetId = chatObject.setId?.set && chatObject.setId.number;
+    const isBaseCard = chatObject.isBase || false;
 
     const {
         aspectRatio,
@@ -39,7 +40,7 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
         setAnchorElement(target);
         const imageUrl = s3CardImageURL({
             setId: chatObject.setId!,
-            type: 'unit',
+            type: isBaseCard ? 'base' : 'unit',
             id: chatObject.id
         }, CardStyle.Plain);
         setPreviewImage(`url(${imageUrl})`);
@@ -71,7 +72,7 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
                 onMouseEnter={hasSetId ? handlePreviewOpen : undefined}
                 onMouseLeave={hasSetId ? handlePreviewClose : undefined}
                 data-card-id={hasSetId ? `${chatObject.setId!.set}_${chatObject.setId!.number}` : undefined}
-                data-card-type="unit"
+                data-card-type={isBaseCard ? 'base' : 'unit'}
             >
                 {children}
             </span>
