@@ -44,6 +44,9 @@ const Chat: React.FC<IChatProps> = ({
     };
 
     const formatMessageItem = (item: IChatObject | string | number, itemIndex: number) => {
+        if (item === null) {
+            return '[null]';
+        }
         if (typeof item === 'object') {
             const cardName = isSpectator && item.id 
                 ? getSpectatorDisplayName(item.id, connectedPlayer, getOpponent)
