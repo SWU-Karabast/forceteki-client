@@ -1,8 +1,14 @@
+export enum ChatObjectType {
+    Player = 'player',
+    Card = 'card',
+}
+
 export interface IChatObject {
     id: string;
     name: string;
     label: string;
     uuid: string;
+    type: ChatObjectType;
     setId?: {
         set: string;
         number: number;

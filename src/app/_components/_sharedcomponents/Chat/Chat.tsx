@@ -15,7 +15,8 @@ import {
     IChatMessageContent, 
     IAlertMessage, 
     IPlayerChatMessage,
-    IPlayerChatMessageArray
+    IPlayerChatMessageArray,
+    ChatObjectType
 } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import ChatCard from './ChatCard';
@@ -48,11 +49,11 @@ const Chat: React.FC<IChatProps> = ({
             return '[null]';
         }
         if (typeof item === 'object') {
-            const cardName = isSpectator && item.id 
+            const displayName = isSpectator && item.id 
                 ? getSpectatorDisplayName(item.id, connectedPlayer, getOpponent)
                 : item.name;
             
-            if (item.controllerId) {
+            if (item.type === ChatObjectType.Card) {
                 const isPlayerCard = item.controllerId === connectedPlayer;
                 
                 return (
@@ -62,19 +63,29 @@ const Chat: React.FC<IChatProps> = ({
                         isPlayerCard={isPlayerCard}
                     >
                         <span style={{ 
-                            color: getPlayerColor(item.controllerId, connectedPlayer),
+                            color: getPlayerColor(item.controllerId!, connectedPlayer),
                             textDecoration: 'underline'
                         }}>
-                            {cardName}
+                            {displayName}
                         </span>
                     </ChatCard>
                 );
             }
+            
+            if (item.type === ChatObjectType.Player) {
+                return (
+                    <span key={`player-${itemIndex}`} style={{ 
+                        color: getPlayerColor(item.id, connectedPlayer)
+                    }}>
+                        {displayName}
+                    </span>
+                );
+            }
+            
+            // Fallback for unknown object types
             return (
-                <span key={`player-${itemIndex}`} style={{ 
-                    color: getPlayerColor(item.id, connectedPlayer)
-                }}>
-                    {cardName}
+                <span key={`unknown-${itemIndex}`} style={{ color: '#fff' }}>
+                    {displayName}
                 </span>
             );
         }
