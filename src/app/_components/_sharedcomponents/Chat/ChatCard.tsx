@@ -16,7 +16,7 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const open = Boolean(anchorElement);
 
-    const hasSetId = chatObject.setId && chatObject.setId.set && chatObject.setId.number;
+    const hasSetId = chatObject.setId?.set && chatObject.setId.number;
 
     const {
         aspectRatio,
