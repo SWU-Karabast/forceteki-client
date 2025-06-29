@@ -66,15 +66,14 @@ const Chat: React.FC<IChatProps> = ({
                         </span>
                     </ChatCard>
                 );
-            } else {
-                return (
-                    <span key={`player-${itemIndex}`} style={{ 
-                        color: getPlayerColor(item.id, connectedPlayer)
-                    }}>
-                        {cardName}
-                    </span>
-                );
             }
+            return (
+                <span key={`player-${itemIndex}`} style={{ 
+                    color: getPlayerColor(item.id, connectedPlayer)
+                }}>
+                    {cardName}
+                </span>
+            );
         }
         return item;
     };
