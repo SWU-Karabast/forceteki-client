@@ -45,7 +45,7 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
                 id: chatObject.id
             }, CardStyle.Plain);
             setPreviewImage(`url(${imageUrl})`);
-        }, 200);
+        }, 0);
     };
     
     const handlePreviewClose = () => {

@@ -58,8 +58,7 @@ const Chat: React.FC<IChatProps> = ({
                         isPlayerCard={isPlayerCard}
                     >
                         <span style={{ 
-                            color: getPlayerColor(item.controllerId, connectedPlayer), 
-                            fontWeight: 'bold' 
+                            color: getPlayerColor(item.controllerId, connectedPlayer)
                         }}>
                             {cardName}
                         </span>
@@ -68,8 +67,7 @@ const Chat: React.FC<IChatProps> = ({
             } else {
                 return (
                     <span key={`player-${itemIndex}`} style={{ 
-                        color: getPlayerColor(item.id, connectedPlayer), 
-                        fontWeight: 'bold' 
+                        color: getPlayerColor(item.id, connectedPlayer)
                     }}>
                         {cardName}
                     </span>
@@ -95,9 +93,14 @@ const Chat: React.FC<IChatProps> = ({
         );
         
         return (
-            <Typography key={index} sx={getAlertStyle(message.alert.type)} component="div">
-                {messageComponents}
-            </Typography>
+            <Box key={index} sx={styles.chatEntryBox}>
+                <Typography sx={getAlertStyle(message.alert.type)} component="div">
+                    {messageComponents}
+                </Typography>
+                {index < (chatHistory?.length || 0) - 1 && (
+                    <Divider sx={styles.chatEntryDivider} />
+                )}
+            </Box>
         );
     };
 
@@ -108,15 +111,20 @@ const Chat: React.FC<IChatProps> = ({
             : playerMessage.name;
 
         return (
-            <Typography key={index} sx={styles.messageText}>
-                <span style={{ 
-                    color: getPlayerColor(playerMessage.id, connectedPlayer),
-                    fontWeight: 'bold'
-                }}>
-                    {displayName}
-                </span>
-                : {message.slice(1).join('')}
-            </Typography>
+            <Box key={index} sx={styles.chatEntryBox}>
+                <Typography sx={styles.messageText}>
+                    <span style={{ 
+                        color: getPlayerColor(playerMessage.id, connectedPlayer),
+                        fontWeight: 'bold'
+                    }}>
+                        {displayName}
+                    </span>
+                    : {message.slice(1).join('')}
+                </Typography>
+                {index < (chatHistory?.length || 0) - 1 && (
+                    <Divider sx={styles.chatEntryDivider} />
+                )}
+            </Box>
         );
     };
 
@@ -126,9 +134,14 @@ const Chat: React.FC<IChatProps> = ({
         );
         
         return (
-            <Typography key={index} sx={styles.messageText} component="div">
-                {messageComponents}
-            </Typography>
+            <Box key={index} sx={styles.chatEntryBox}>
+                <Typography sx={styles.messageText} component="div">
+                    {messageComponents}
+                </Typography>
+                {index < (chatHistory?.length || 0) - 1 && (
+                    <Divider sx={styles.chatEntryDivider} />
+                )}
+            </Box>
         );
     };
 
@@ -177,7 +190,6 @@ const Chat: React.FC<IChatProps> = ({
         notificationText: {
             fontSize: { xs: '0.85em', md: '1em' },
             color: '#d500f9',
-            fontWeight: 'bold',
             lineHeight: { xs: '0.85rem', md: '1em' },
         },
         warningText: {
@@ -193,8 +205,15 @@ const Chat: React.FC<IChatProps> = ({
         readyStatusText: {
             fontSize: { xs: '0.85em', md: '1em' },
             color: 'green',
-            fontWeight: 'bold',
             lineHeight: { xs: '0.85rem', md: '1em' },
+        },
+        chatEntryBox: {
+            py: '0.25rem',
+        },
+        chatEntryDivider: {
+            borderColor: '#FFFE50',
+            opacity: 0.3,
+            my: '0.25rem',
         },
         inputContainer: {
             display: 'flex',
