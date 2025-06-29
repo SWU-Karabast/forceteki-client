@@ -94,7 +94,12 @@ const Chat: React.FC<IChatProps> = ({
         return '[invalid]';
     };
 
-    const formatAlertMessage = (message: IAlertMessage, index: number) => {
+    const formatSystemMessage = (
+        messageContent: (IChatObject | string | number)[], 
+        index: number, 
+        isAlert: boolean = false, 
+        alertType?: string
+    ) => {
         const getAlertStyle = (type: string) => {
             switch (type) {
                 case 'notification': return styles.notificationText;
@@ -105,13 +110,15 @@ const Chat: React.FC<IChatProps> = ({
             }
         };
 
-        const messageComponents = message.alert.message.map((item, itemIndex) => 
+        const messageComponents = messageContent.map((item, itemIndex) => 
             formatMessageItem(item, itemIndex)
         );
         
+        const textStyle = isAlert && alertType ? getAlertStyle(alertType) : styles.messageText;
+        
         return (
             <Box key={index} sx={styles.chatEntryBox}>
-                <Typography sx={getAlertStyle(message.alert.type)} component="div">
+                <Typography sx={textStyle} component="div">
                     {messageComponents}
                 </Typography>
                 {index < (chatHistory?.length || 0) - 1 && (
@@ -145,26 +152,10 @@ const Chat: React.FC<IChatProps> = ({
         );
     };
 
-    const formatRegularMessage = (message: (IChatObject | string | number)[], index: number) => {
-        const messageComponents = message.map((item, itemIndex) => 
-            formatMessageItem(item, itemIndex)
-        );
-        
-        return (
-            <Box key={index} sx={styles.chatEntryBox}>
-                <Typography sx={styles.messageText} component="div">
-                    {messageComponents}
-                </Typography>
-                {index < (chatHistory?.length || 0) - 1 && (
-                    <Divider sx={styles.chatEntryDivider} />
-                )}
-            </Box>
-        );
-    };
 
     const formatMessage = (message: IChatMessageContent, index: number) => {
         if ('alert' in message) {
-            return formatAlertMessage(message, index);
+            return formatSystemMessage(message.alert.message, index, true, message.alert.type);
         }
         
         if (Array.isArray(message)) {
@@ -172,7 +163,7 @@ const Chat: React.FC<IChatProps> = ({
                 typeof message[0] === 'object' && 'type' in message[0] && message[0].type === 'playerChat') {
                 return formatPlayerChatMessage(message as IPlayerChatMessageArray, index);
             }
-            return formatRegularMessage(message as (IChatObject | string | number)[], index);
+            return formatSystemMessage(message as (IChatObject | string | number)[], index);
         }
 
         return null;
