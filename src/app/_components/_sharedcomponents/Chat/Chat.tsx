@@ -88,7 +88,10 @@ const Chat: React.FC<IChatProps> = ({
                 </span>
             );
         }
-        return item;
+        if (typeof item === 'string' || typeof item === 'number') {
+            return item;
+        }
+        return '[invalid]';
     };
 
     const formatAlertMessage = (message: IAlertMessage, index: number) => {
