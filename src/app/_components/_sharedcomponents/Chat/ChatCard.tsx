@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Popover } from '@mui/material';
 import { IChatObject } from './ChatTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import { CardStyle } from '../Cards/CardTypes';
+import { CardStyle, CardType } from '../Cards/CardTypes';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 
 interface IChatCardProps {
@@ -17,7 +17,7 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
     const open = Boolean(anchorElement);
 
     const hasSetId = chatObject.setId?.set && chatObject.setId.number;
-    const isBaseCard = chatObject.isBase || false;
+    const isBaseCard = chatObject.printedType === CardType.Base;
 
     const {
         aspectRatio,
