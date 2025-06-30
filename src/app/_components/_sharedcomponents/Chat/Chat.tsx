@@ -13,7 +13,6 @@ import {
     IChatEntry, 
     IChatObject, 
     IChatMessageContent, 
-    IAlertMessage, 
     IPlayerChatMessageArray,
     ChatObjectType
 } from './ChatTypes';
@@ -44,7 +43,7 @@ const Chat: React.FC<IChatProps> = ({
     };
 
     const formatMessageItem = (item: IChatObject | string | number, itemIndex: number) => {
-        if (item === null) {
+        if (item == null) {
             return '[null]';
         }
         if (typeof item === 'object') {
