@@ -47,11 +47,8 @@ const Chat: React.FC<IChatProps> = ({
             return '[null]';
         }
         if (typeof item === 'object') {
-            const displayName = isSpectator && item.id 
-                ? getSpectatorDisplayName(item.id, connectedPlayer, getOpponent)
-                : item.name;
-            
             if (item.type === ChatObjectType.Card) {
+                const displayName = item.name;
                 const isPlayerCard = item.controllerId === connectedPlayer;
                 
                 return (
@@ -72,6 +69,11 @@ const Chat: React.FC<IChatProps> = ({
             }
             
             if (item.type === ChatObjectType.Player) {
+                // Only players should use spectator display names
+                const displayName = isSpectator && item.id 
+                    ? getSpectatorDisplayName(item.id, connectedPlayer, getOpponent)
+                    : item.name;
+                    
                 return (
                     <span key={`player-${itemIndex}`} style={{ 
                         color: getPlayerColor(item.id, connectedPlayer)
@@ -82,6 +84,9 @@ const Chat: React.FC<IChatProps> = ({
             }
             
             // Fallback for unknown object types
+            const displayName = isSpectator && item.id 
+                ? getSpectatorDisplayName(item.id, connectedPlayer, getOpponent)
+                : item.name;
             return (
                 <span key={`unknown-${itemIndex}`} style={{ color: '#fff' }}>
                     {displayName}
