@@ -62,7 +62,8 @@ const Chat: React.FC<IChatProps> = ({
                     >
                         <span style={{ 
                             color: getPlayerColor(item.controllerId!, connectedPlayer),
-                            textDecoration: 'underline'
+                            textDecoration: 'underline',
+                            textDecorationStyle: 'dotted'
                         }}>
                             {displayName}
                         </span>
