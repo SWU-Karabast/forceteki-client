@@ -6,6 +6,8 @@ import { useUser } from '@/app/_contexts/User.context';
 import QuickGameForm from '@/app/_components/_sharedcomponents/QuickGameForm/QuickGameForm';
 import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/WelcomePopup';
 import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
+import UsernameChangeRequiredPopup
+    from '@/app/_components/_sharedcomponents/HomescreenWelcome/UsernameChangeRequiredPopup';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -13,6 +15,7 @@ const HomePagePlayMode: React.FC = () => {
     const [testGameList, setTestGameList] = React.useState([]);
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+    const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
     const { user, updateWelcomeMessage } = useUser();
 
 
@@ -60,9 +63,14 @@ const HomePagePlayMode: React.FC = () => {
     }
 
     useEffect(() => {
-        if(user && user.showWelcomeMessage && !showUpdatePopup){
-            setShowWelcomePopup(true);
+        if(user) {
+            if (user.showWelcomeMessage && !showUpdatePopup) {
+                setShowWelcomePopup(true);
+            }
+            setUsernameMustChangePopup(!!user.needsUsernameChange);
         }
+
+
         if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {
             try {
@@ -146,6 +154,7 @@ const HomePagePlayMode: React.FC = () => {
             </Card>
             <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
             <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
+            <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
         </>
     );
 };
