@@ -26,9 +26,9 @@ const GameCard: React.FC<IGameCardProps> = ({
     const phase = gameState?.phase;
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
-    const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
-    const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
-    
+    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
+    const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
+
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -48,11 +48,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     });
 
     const isStolen = React.useMemo(() => {
-        if (!(card.controller && card.owner)) {
+        if (!(card.controllerId && card.ownerId)) {
             return false
         }
-        return card.controller.id !== card.owner.id
-    }, [card.controller, card.owner])
+        return card.controllerId !== card.ownerId
+    }, [card.controllerId, card.ownerId])
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -123,7 +123,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         return null;
     }
 
-    const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
+    const notImplemented = (card: ICardData) => card?.hasOwnProperty('unimplemented') && card.unimplemented;
 
     const getBackgroundColor = (card: ICardData) => {
         if (
@@ -193,7 +193,8 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
-    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
+    const promptType = getConnectedPlayerPrompt()?.promptType;
+    const borderColor = getBorderColor(card, connectedPlayer, promptType, cardStyle, isOpponentEffect);
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
@@ -222,7 +223,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
-            border: borderColor && card.selected && card.zone !== 'hand' ? `4px solid ${borderColor}` : isOpponentEffect && card.selectable ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            border: borderColor ? card.selected && card.zone !== 'hand' ? `4px solid ${borderColor}` : `2px solid ${borderColor}` : '2px solid transparent',
             boxShadow: borderColor && card.selected && card.zone !== 'hand' ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },
@@ -447,7 +448,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         resourceIcon: {
             position: 'absolute', 
-            backgroundImage: card.selected && card.zone === 'hand' && (phase === 'setup' || phase === 'regroup') ? 'url(resource-icon.png)' : '',
+            backgroundImage: card.selected && card.zone === 'hand' && promptType === 'resource' ? 'url(resource-icon.png)' : '',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             top: '20%',
