@@ -8,8 +8,16 @@ import {
     Typography,
 } from '@mui/material';
 import { Send } from '@mui/icons-material';
-import { IChatProps, IChatEntry, IChatObject } from './ChatTypes';
+import { 
+    IChatProps, 
+    IChatEntry, 
+    IChatObject, 
+    IChatMessageContent, 
+    IPlayerChatMessageArray,
+    ChatObjectType
+} from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import ChatCard from './ChatCard';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -20,73 +28,146 @@ const Chat: React.FC<IChatProps> = ({
     const { connectedPlayer, isSpectator, getOpponent } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-    // Function to format message items, handling spectator view
-    const formatMessageItem = (item: IChatObject | string | number) => {
-        if (typeof item === 'object') {
-            // If user is a spectator, show Player 1/Player 2 instead of names
-            if (isSpectator && item.id) {
-                return item.id === connectedPlayer ? 'Player 1' : item.id === getOpponent(connectedPlayer) ? 'Player 2' : item.name;
-            }
-            // Otherwise show the actual name
-            return item.name;
+    const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
+        return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
+    };
+
+    const getSpectatorDisplayName = (
+        playerId: string,
+        connectedPlayer: string,
+        getOpponent: (player: string) => string
+    ): string => {
+        if (playerId === connectedPlayer) return 'Player 1';
+        if (playerId === getOpponent(connectedPlayer)) return 'Player 2';
+        return 'Unknown Player';
+    };
+
+    const formatMessageItem = (item: IChatObject | string | number, itemIndex: number) => {
+        if (item == null) {
+            return '[null]';
         }
-        // If not an object, just return the string
+        if (typeof item === 'object') {
+            const displayName = isSpectator && item.id 
+                ? getSpectatorDisplayName(item.id, connectedPlayer, getOpponent)
+                : item.name;
+            
+            if (item.type === ChatObjectType.Card) {
+                const isPlayerCard = item.controllerId === connectedPlayer;
+                
+                return (
+                    <ChatCard 
+                        key={`card-${itemIndex}`}
+                        chatObject={item} 
+                        isPlayerCard={isPlayerCard}
+                    >
+                        <span style={{ 
+                            color: getPlayerColor(item.controllerId!, connectedPlayer),
+                            textDecoration: 'underline',
+                            textDecorationStyle: 'dotted'
+                        }}>
+                            {displayName}
+                        </span>
+                    </ChatCard>
+                );
+            }
+            
+            if (item.type === ChatObjectType.Player) {
+                return (
+                    <span key={`player-${itemIndex}`} style={{ 
+                        color: getPlayerColor(item.id, connectedPlayer)
+                    }}>
+                        {displayName}
+                    </span>
+                );
+            }
+            
+            // Fallback for unknown object types
+            return (
+                <span key={`unknown-${itemIndex}`} style={{ color: '#fff' }}>
+                    {displayName}
+                </span>
+            );
+        }
         if (typeof item === 'string' || typeof item === 'number') {
             return item;
         }
-        return '';
+        return '[invalid]';
     };
 
-    // TODO: Standardize these chat types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formatMessage = (message: any, index: number) => {
-        try {
-            let textStyle;
-            let messageText;
-
-            if (message.hasOwnProperty('alert')) {                
-                switch (message.alert.type) {
-                    case 'notification':
-                        textStyle = styles.notificationText;
-                        break;
-                    case 'warning':
-                        textStyle = styles.warningText;
-                        break;
-                    case 'danger':
-                        textStyle = styles.alertText;
-                        break;
-                    case 'readyStatus':
-                        textStyle = styles.readyStatusText;
-                        break;
-                    default:
-                        textStyle = styles.messageText;
-                }
-
-                messageText = message.alert.message;
-            } else if (message[0].type === 'playerChat') {
-                return (
-                    <Typography key={index} sx={styles.messageText}>
-                        <span style={{ color: connectedPlayer === message[0].id ? 'var(--initiative-blue)' : 'var(--initiative-red)' }}>
-                            {isSpectator ? connectedPlayer === message[0].id ? 'Player 1' : 'Player 2' : message[0].name}
-                        </span>
-                        : {message.slice(1).join('')}
-                    </Typography>
-                )
-            } else {
-                messageText = message;
-                textStyle = styles.messageText;
+    const formatSystemMessage = (
+        messageContent: (IChatObject | string | number)[], 
+        index: number, 
+        isAlert: boolean = false, 
+        alertType?: string
+    ) => {
+        const getAlertStyle = (type: string) => {
+            switch (type) {
+                case 'notification': return styles.notificationText;
+                case 'warning': return styles.warningText;
+                case 'danger': return styles.alertText;
+                case 'readyStatus': return styles.readyStatusText;
+                default: return styles.messageText;
             }
-            const stringMessage = messageText.map((item: IChatObject | string) => formatMessageItem(item)).join('');
-            return (
-                <Typography key={index} sx={textStyle}>
-                    {stringMessage}
+        };
+
+        const messageComponents = messageContent.map((item, itemIndex) => 
+            formatMessageItem(item, itemIndex)
+        );
+        
+        const textStyle = isAlert && alertType ? getAlertStyle(alertType) : styles.messageText;
+        
+        return (
+            <Box key={index} sx={styles.chatEntryBox}>
+                <Typography sx={textStyle} component="div">
+                    {messageComponents}
                 </Typography>
-            )
-        } catch (error) {
-            console.error('Error formatting message:', error);
-            return null;
+                {index < (chatHistory?.length || 0) - 1 && (
+                    <Divider sx={styles.chatEntryDivider} />
+                )}
+            </Box>
+        );
+    };
+
+    const formatPlayerChatMessage = (message: IPlayerChatMessageArray, index: number) => {
+        const [playerMessage, ...messageContent] = message;
+        const displayName = isSpectator 
+            ? getSpectatorDisplayName(playerMessage.id, connectedPlayer, getOpponent)
+            : playerMessage.name;
+
+        return (
+            <Box key={index} sx={styles.chatEntryBox}>
+                <Typography sx={styles.messageText}>
+                    <span style={{ 
+                        color: getPlayerColor(playerMessage.id, connectedPlayer),
+                        fontWeight: 'bold'
+                    }}>
+                        {displayName}
+                    </span>
+                    : {messageContent.join('')}
+                </Typography>
+                {index < (chatHistory?.length || 0) - 1 && (
+                    <Divider sx={styles.chatEntryDivider} />
+                )}
+            </Box>
+        );
+    };
+
+
+    const formatMessage = (message: IChatMessageContent, index: number) => {
+        if ('alert' in message) {
+            return formatSystemMessage(message.alert.message, index, true, message.alert.type);
         }
-    }
+        
+        if (Array.isArray(message)) {
+            if (message.length > 0 && 
+                typeof message[0] === 'object' && 'type' in message[0] && message[0].type === 'playerChat') {
+                return formatPlayerChatMessage(message as IPlayerChatMessageArray, index);
+            }
+            return formatSystemMessage(message as (IChatObject | string | number)[], index);
+        }
+
+        return null;
+    };
 
     useEffect(() => {
         if(chatEndRef.current) {
@@ -113,14 +194,9 @@ const Chat: React.FC<IChatProps> = ({
             color: '#fff',
             lineHeight: { xs: '0.75rem', md: '1rem' },
         },
-        playerName: {
-            fontSize: { xs: '0.75em', md: '1em' },
-            lineHeight: { xs: '0.75rem', md: '1rem' },
-        },
         notificationText: {
             fontSize: { xs: '0.85em', md: '1em' },
             color: '#d500f9',
-            fontWeight: 'bold',
             lineHeight: { xs: '0.85rem', md: '1em' },
         },
         warningText: {
@@ -136,8 +212,15 @@ const Chat: React.FC<IChatProps> = ({
         readyStatusText: {
             fontSize: { xs: '0.85em', md: '1em' },
             color: 'green',
-            fontWeight: 'bold',
             lineHeight: { xs: '0.85rem', md: '1em' },
+        },
+        chatEntryBox: {
+            py: '0.25rem',
+        },
+        chatEntryDivider: {
+            borderColor: '#FFFE50',
+            opacity: 0.3,
+            my: '0.25rem',
         },
         inputContainer: {
             display: 'flex',
@@ -161,19 +244,17 @@ const Chat: React.FC<IChatProps> = ({
             height: { xs: '1.8rem', md: '2.2rem' },
             input: { color: '#fff', padding: '0.3em 0.5em' },
             '& .MuiOutlinedInput-root': {
-                // base border style
                 '& fieldset': {
                     borderColor: '#fff',
                 },
             },
             '& .MuiOutlinedInput-root.Mui-focused': {
-                // when container is focused
                 '& fieldset': {
                     borderColor: '#fff',
                 },
             },
         }
-    }
+    };
 
     
 

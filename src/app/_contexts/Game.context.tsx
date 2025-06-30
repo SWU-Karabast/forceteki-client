@@ -222,6 +222,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 clearPopups();
                 lastGameIdRef.current = gameState.id;
             }
+            
             setGameState(gameState);
             if (process.env.NODE_ENV === 'development') {
                 const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
@@ -322,4 +323,4 @@ export const useGame = () => {
         throw new Error('useGame must be used within a GameProvider');
     }
     return context;
-};  
+};
