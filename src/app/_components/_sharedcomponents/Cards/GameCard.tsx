@@ -225,8 +225,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
             border: overlapEnabled && cardInOpponentsHand ? '1px solid rgb(32, 30, 30)' // subtle edges for overlapping cards
-                : borderColor && card.selected && card.zone !== 'hand' ? `4px solid ${borderColor}` 
-                    : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+                : borderColor ? card.selected && card.zone !== 'hand' ? `4px solid ${borderColor}` : `2px solid ${borderColor}` : '2px solid transparent',
             boxShadow: borderColor && card.selected && card.zone !== 'hand' ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },
