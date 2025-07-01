@@ -133,6 +133,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                         <Box
                             key={`${connectedPlayer}-hand-${i}`}
                             sx={{
+                                position: 'relative',
                                 width: 'auto',
                                 height: cardHeightPx,
                                 zIndex: 1,
@@ -152,6 +153,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
             ) : (
                 <Box
                     sx={{
+                        ...debugBorder('blue'),
                         position: 'relative',
                         width: '100%',
                         height: '100%',
