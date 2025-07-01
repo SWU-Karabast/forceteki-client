@@ -194,7 +194,8 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
-    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
+    const promptType = getConnectedPlayerPrompt()?.promptType;
+    const borderColor = getBorderColor(card, connectedPlayer, promptType, cardStyle, isOpponentEffect);
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
@@ -225,8 +226,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '100%',
             border: overlapEnabled && cardInOpponentsHand ? '1px solid rgb(32, 30, 30)' // subtle edges for overlapping cards
                 : borderColor && card.selected && card.zone !== 'hand' ? `4px solid ${borderColor}` 
-                    : isOpponentEffect && card.selectable ? '2px solid rgba(198, 4, 198, 1)' 
-                        : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+                    : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxShadow: borderColor && card.selected && card.zone !== 'hand' ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },
@@ -451,7 +451,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         resourceIcon: {
             position: 'absolute', 
-            backgroundImage: card.selected && card.zone === 'hand' && (phase === 'setup' || phase === 'regroup') ? 'url(resource-icon.png)' : '',
+            backgroundImage: card.selected && card.zone === 'hand' && promptType === 'resource' ? 'url(resource-icon.png)' : '',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             top: '20%',

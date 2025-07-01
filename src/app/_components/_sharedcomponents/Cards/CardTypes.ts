@@ -1,4 +1,22 @@
 
+export enum CardType {
+    Base = 'base',
+
+    /** non-leader, non-token unit */
+    BasicUnit = 'basicUnit',
+
+    /** non-token upgrade */
+    BasicUpgrade = 'basicUpgrade',
+    Event = 'event',
+    Leader = 'leader',
+    LeaderUnit = 'leaderUnit',
+    LeaderUpgrade = 'leaderUpgrade',
+    TokenUnit = 'tokenUnit',
+    TokenUpgrade = 'tokenUpgrade',
+    TokenCard = 'tokenCard',
+    NonLeaderUnitUpgrade = 'nonLeaderUnitUpgrade',
+}
+
 export type GameCardData = ICardData | IServerCardData | IOpponentHiddenCardData | IPromptDisplayCardData;
 
 export interface IPreviewCard {
