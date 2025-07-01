@@ -12,7 +12,6 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     const { connectedPlayer } = useGame();
     const { isPortrait } = useScreenOrientation();
     const showDebugInfo = isDebugHandScalingEnabled();
-    
     const customScrollbarStyles = `
         .simplebar-track.simplebar-horizontal {
             height: 1rem !important;
@@ -31,6 +30,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         .simplebar-scrollbar {
             margin-right: 0 !important;
             right: 0 !important;
+            pointer-events: auto !important; /* Ensure scrollbar receives mouse events */
         }
     `;
     
