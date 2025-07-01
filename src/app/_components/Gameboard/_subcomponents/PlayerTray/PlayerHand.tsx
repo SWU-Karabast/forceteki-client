@@ -112,6 +112,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         width: '100%',
         height: isPortrait ? `${PORTRAIT_CARD_HEIGHT_PERCENT * 100}%` : '100%',
         margin: isPortrait ? 'auto 0' : '0',
+        overflow: 'hidden',
     };
 
     const HandContent = (
@@ -122,11 +123,9 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                         ...debugBorder('blue'),
                         display: 'flex',
                         gap: `${CARD_GAP_PX}px`,
-                        width: 'fit-content',
-                        margin: '0 auto',
+                        width: '100%',
                         height: '100%',
                         justifyContent: 'center',
-                        alignItems: isPortrait ? 'center' : 'flex-end',
                     }}
                 >
                     {cards.map((card, i) => (
@@ -236,7 +235,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                         {HandContent}
                     </SimpleBar>
                 ) : (
-                    <Box sx={{ width: '100%', height: '100%', overflowX: 'hidden' }}>
+                    <Box sx={{ width: '100%', height: '100%', overflow: 'hidden' }}>
                         {HandContent}
                     </Box>
                 )}
