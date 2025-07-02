@@ -42,6 +42,7 @@ declare module 'next-auth' {
             provider: string;
             userId?: string | null;
         };
+        expiresAt: string;
     }
 }
 
@@ -54,5 +55,6 @@ declare module 'next-auth/jwt'{
         provider?: string;
         providerId?: string;
         userId?: string;
+        exp: number;
     }
 }
