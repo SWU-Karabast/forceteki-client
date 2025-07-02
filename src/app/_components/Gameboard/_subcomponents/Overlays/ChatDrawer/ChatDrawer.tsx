@@ -50,7 +50,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             <Box sx={styles.headerBoxStyle}>
                 <ChevronRightIcon onClick={toggleSidebar} />
                 <Typography sx={{
-                    fontWeight: 'bold',
                     color: '#fff',
                     fontSize: '1.5em',
                     position: 'absolute',

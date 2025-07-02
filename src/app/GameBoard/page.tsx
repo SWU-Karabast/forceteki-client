@@ -90,20 +90,22 @@ const GameBoard = () => {
         promptStyle: {
             textAlign: 'center',
             fontSize: '1.3em',
+            textShadow: '1px 1px 6px black',
             padding: '0.5rem',
             position: 'relative',
-            border: !menuTitle ? 'none' : promptTitle ? '1px solid var(--initiative-blue)' : '1px solid var(--initiative-red)',
             borderRadius: '20px',
-            boxShadow: !menuTitle ? 'none' : promptTitle ? '2px 2px 15px var(--initiative-blue), -2px -2px 15px var(--initiative-blue)' : '2px 2px 15px var(--initiative-red), -2px -2px 15px var(--initiative-red)',
+            background: !menuTitle ? 'transparent' : promptTitle 
+                ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)' 
+                : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
         },
         promptShadow: {
             position: 'absolute',
-            top: '22%',
+            top: '27%',
             left: 0,
             width: '100%',
             height: '60%',
             zIndex: -1,
-            background: 'rgba(0, 0, 0, 1)',
+            background: 'rgba(0, 0, 0, .9)',
             filter: 'blur(10px)',
             WebkitFilter: 'blur(10px)'
         }
@@ -137,7 +139,7 @@ const GameBoard = () => {
 
             <Box sx={styles.centralPromptContainer}>
                 <Box sx={styles.promptStyle}>
-                    {gameState.players[connectedPlayer]?.promptState.menuTitle}
+                    {menuTitle}
                     <Box sx={styles.promptShadow}/>
                 </Box>
             </Box>

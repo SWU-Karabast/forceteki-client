@@ -107,8 +107,7 @@ const ControlHub: React.FC<IControlHubProps> = ({
                                 Log Out
                             </NextLinkMui>
                         </>
-                    ) : (!hideLogin && isDev) ? (
-                        // Disable login on Prod for now
+                    ) : (!hideLogin) ? (
                         <NextLinkMui href="/auth" sx={styles.profileLink}>
                             Log In
                         </NextLinkMui>

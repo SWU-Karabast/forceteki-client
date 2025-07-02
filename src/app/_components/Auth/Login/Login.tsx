@@ -49,21 +49,21 @@ const Login: React.FC = () => {
                     <Typography variant="h3" sx={loginStyles.heading}>
                         Login
                     </Typography>
-                    {/* Login with Google */}
+                    {/* Log in with Google */}
                     <Button
                         variant="contained"
                         sx={{ ...loginStyles.button, backgroundColor: '#db4437' }}
                         onClick={() => login('google')}
                     >
-                        Login with Google
+                        Log in with Google
                     </Button>
-                    {/* Login with Discord */}
+                    {/* Log in with Discord */}
                     <Button
                         variant="contained"
                         sx={{ ...loginStyles.button, backgroundColor: '#7289da' }}
                         onClick={() => login('discord')}
                     >
-                        Login with Discord
+                        Log in with Discord
                     </Button>
                     <Button
                         variant="contained"
