@@ -457,6 +457,27 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '24%',
             height: '24%',
         },
+        cloneBanner: {
+            position: 'absolute',
+            top: '-8%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '100%',
+            height: '20%',
+            backgroundColor: '#4CAF50',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '4px 4px 0 0',
+            zIndex: 2,
+        },
+        cloneBannerText: {
+            fontSize: 'clamp(6px, 1vw, 14px)',
+            fontWeight: '800',
+            color: 'white',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+            letterSpacing: '0.5px',
+        },
         ctrlText: {
             bottom: '0px',
             display: 'flex',
@@ -540,6 +561,15 @@ const GameCard: React.FC<IGameCardProps> = ({
                     </>
                 )}
             </Box>
+
+            {/* Clone Banner - positioned above the card */}
+            {card.clonedCardId && (
+                <Box sx={styles.cloneBanner}>
+                    <Typography sx={styles.cloneBannerText}>
+                        CLONE
+                    </Typography>
+                </Box>
+            )}
 
             {card.isAttacker && <Box sx={styles.attackIcon}/>}
             {card.isDefender && <Box sx={styles.defendIcon}/>}

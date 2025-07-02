@@ -45,6 +45,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             .map((card) => ({
                 ...card,
                 subcards: card.uuid ? upgradesByParentId[card.uuid] ?? [] : [], // attach any upgrades belonging to this card
+                clonedCardId: '123', // Temporary: set all cards as clones for testing
             }));
         return mainCards;
     }
