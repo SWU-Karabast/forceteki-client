@@ -44,6 +44,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         const syncUserWithServer = async () => {
             // If user is already logged in with the current session, do nothing
             if (session?.user && user?.providerId === session.user.id) {
+                // But still refresh the token to extend expiration
                 return;
             }
             // If user is logged in with session but needs to sync with server
