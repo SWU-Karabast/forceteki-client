@@ -17,6 +17,7 @@ import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.typ
 import { ZoneName } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/useDistributionPrompt';
 
 interface IGameContextType {
     gameState: any;
@@ -35,14 +36,6 @@ interface IGameContextType {
     lastQueueHeartbeat: number;
 }
 
-interface IDistributionPromptData {
-    type: string;
-    valueDistribution: {
-        uuid: string;
-        amount: number;
-    }[];
-}
-
 const GameContext = createContext<IGameContextType | undefined>(undefined);
 const clickSound = typeof Audio !== 'undefined' ? new Audio('/click1.mp3') : null;
 
@@ -59,8 +52,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
     const searchParams = useSearchParams();
     const router = useRouter();
-    const [distributionPromptData, setDistributionPromptData] = useState<IDistributionPromptData | null>(null);
+    const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
+
     useEffect(() => {
         // Only proceed when session is loaded (either authenticated or unauthenticated)
         if (status === 'loading') {
@@ -86,14 +80,25 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         const cardSelectableZones = (gamestate: any) => {
+            // TODO: Clean this up to make sure cards that target opponent resources and discard bring up the correct popups
             const playerState = gamestate.players[connectedPlayerId];
+            const opponentId = Object.keys(gamestate.players).find(id => id !== connectedPlayerId) || '';
+            const opponent = gamestate.players[opponentId];
             const zones = [];
             if (playerState?.leader.selectable || playerState?.base.selectable) {
-                zones.push(ZoneName.Base);
+                zones.push(`player-${ZoneName.Base}`);
             }
             for (const zoneName in playerState?.cardPiles) {
                 if (playerState.cardPiles[zoneName].some((card: any) => card.selectable)) {
-                    zones.push(zoneName);
+                    zones.push(`player-${zoneName}`);
+                }
+            }
+            if (opponent?.leader.selectable || opponent?.base.selectable) {
+                zones.push(`opponent-${ZoneName.Base}`);
+            }
+            for (const zoneName in opponent?.cardPiles) {
+                if (opponent.cardPiles[zoneName].some((card: any) => card.selectable)) {
+                    zones.push(`opponent-${zoneName}`);
                 }
             }
             return zones
@@ -102,13 +107,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const handleGameStatePopups = (gameState: any) => {
             if (!connectedPlayerId || isSpectatorMode) return;
             if (gameState.players?.[connectedPlayerId]?.promptState) {
-                setDistributionPromptData(null);
                 const promptState = gameState.players?.[connectedPlayerId].promptState;
                 const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
                 prunePromptStatePopups(promptUuid);
                 if (promptType === 'actionWindow') return;
                 else if (promptType === 'distributeAmongTargets') {
-                    setDistributionPromptData({ type: promptState.distributeAmongTargets.type, valueDistribution: [] });
+                    initDistributionPrompt(promptState.distributeAmongTargets)
                     return;
                 }
                 else if (promptType === 'displayCards') {
@@ -129,7 +133,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     });
                 }
                 else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
-                    // make an exception for
                     return openPopup('default', {
                         uuid: promptUuid,
                         title: menuTitle,
@@ -149,9 +152,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
             const cardSelectionZones = cardSelectableZones(gameState);
             if (cardSelectionZones.length === 1) {
-                const { buttons, menuTitle } = gameState.players[connectedPlayerId].promptState;
+                const opponentId = Object.keys(gameState.players).find(id => id !== connectedPlayerId) || '';
+                const { menuTitle, buttons } = gameState.players[connectedPlayerId].promptState;
                 switch (cardSelectionZones[0]) {
-                    case 'resources':
+                    case 'player-resources':
                         openPopup('pile', {
                             uuid: `${connectedPlayerId}-resources`,
                             title: 'Your Resources',
@@ -161,12 +165,32 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                             buttons: buttons,
                         });
                         break;
-                    case 'discard':
+                    case 'player-discard':
                         openPopup('pile', {
                             uuid: `${connectedPlayerId}-discard`,
                             title: 'Your Discard',
                             subtitle: menuTitle,
                             cards: gameState?.players[connectedPlayerId]?.cardPiles['discard'],
+                            source: PopupSource.PromptState,
+                            buttons: buttons,
+                        });
+                        break;
+                    case 'opponent-resources':
+                        openPopup('pile', {
+                            uuid: `${opponentId}-resources`,
+                            title: 'Opponent Resources',
+                            subtitle: menuTitle,
+                            cards: gameState?.players[opponentId]?.cardPiles['resources'],
+                            source: PopupSource.PromptState,
+                            buttons: buttons,
+                        });
+                        break;
+                    case 'opponent-discard':
+                        openPopup('pile', {
+                            uuid: `${opponentId}-discard`,
+                            title: 'Opponent Discard',
+                            subtitle: menuTitle,
+                            cards: gameState?.players[opponentId]?.cardPiles['discard'],
                             source: PopupSource.PromptState,
                             buttons: buttons,
                         });
@@ -199,9 +223,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 clearPopups();
                 lastGameIdRef.current = gameState.id;
             }
+            
             setGameState(gameState);
             if (process.env.NODE_ENV === 'development') {
-                console.log('Game state received:', gameState);
+                const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
+                console.log(`Game state received (${byteSize} bytes):`, gameState);
             }
             handleGameStatePopups(gameState);
         });
@@ -238,7 +264,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const sendGameMessage = (args: any[]) => {
         if (args[0] === 'statefulPromptResults') {
             args = [args[0], distributionPromptData, args[2]]
-            setDistributionPromptData({ type: distributionPromptData?.type || '', valueDistribution: distributionPromptData?.valueDistribution || [] });
+            clearDistributionPrompt();
         }
         let isPlayersTurn = false
         if(gameState.players[connectedPlayer]) {
@@ -275,25 +301,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const updateDistributionPrompt = (uuid: string, amount: number) => {
-        const totalAmount = gameState.players[connectedPlayer].promptState.distributeAmongTargets?.amount;
-
-        setDistributionPromptData((prevData) => {
-            if (!prevData) return null;
-            const targets = prevData.valueDistribution;
-            const currentTotal = targets.reduce((sum, item) => sum + item.amount, 0);
-            if (currentTotal + amount > totalAmount) return prevData;
-    
-
-            const newTargetData = targets.map(item =>
-                item.uuid === uuid ? { ...item, amount: item.amount + amount } : item
-            ).filter(item => item.amount > 0);
-    
-            if (!targets.some(item => item.uuid === uuid) && amount > 0) {
-                newTargetData.push({ uuid, amount });
-            }
-    
-            return { ...prevData, valueDistribution: newTargetData };
-        });
+        const promptData = gameState.players[connectedPlayer]?.promptState?.distributeAmongTargets;
+        setDistributionPrompt(uuid, amount, promptData);
     };
 
     return (
@@ -326,4 +335,4 @@ export const useGame = () => {
         throw new Error('useGame must be used within a GameProvider');
     }
     return context;
-};  
+};

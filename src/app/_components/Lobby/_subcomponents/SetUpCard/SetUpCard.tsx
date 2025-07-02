@@ -24,7 +24,7 @@ import {
     saveDeckToServer
 } from '@/app/_utils/DeckStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { SwuGameFormat } from '@/app/_constants/constants';
+import { useSession } from 'next-auth/react';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -43,6 +43,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
+    const { data: session } = useSession(); // Get session from next-auth
 
     // For deck error display
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
@@ -63,7 +64,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     // Load saved decks from localStorage
     const fetchDecks = async () => {
         try {
-            await retrieveDecksForUser(user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
+            await retrieveDecksForUser(session?.user,user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
         } catch (err){
             console.log(err);
             alert('Server error when fetching decks');
@@ -513,13 +514,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
-            <Divider sx={{ mt: 1, borderColor: '#666', display: lobbyFormat !== 'premier' ? 'block': 'none' }} />
-            <Box sx={{ display: lobbyFormat !== 'premier' ? 'block': 'none' }}>
-                <Typography sx={{ fontSize: '.9em', mt: 1 }}>
-                    Official Force bases are now available on SWUDB!
-                </Typography>
-
-            </Box>
         </Card>
     )
 };

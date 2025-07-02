@@ -114,10 +114,10 @@ const FoundGame: React.FC = () => {
                         <LeaderBaseCard card={playerBase}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <LeaderBaseCard card={playerLeader} cardStyle={LeaderBaseCardStyle.PlainLeader}/>
+                        <LeaderBaseCard card={playerLeader} cardStyle={LeaderBaseCardStyle.PlainLeader} isLeader={true}/>
                     </Box>
                     <Typography sx={{ ...styles.playerText, marginTop:'24px' }}>
-                        {connectedUser.username}
+                        {connectedUser?.username}
                     </Typography>
                 </Box>
                 <Typography sx={{ ...styles.connectingText, display:'flex',alignItems:'center' }}>
@@ -128,7 +128,7 @@ const FoundGame: React.FC = () => {
                         <LeaderBaseCard card={opponentBase}/>
                     </Box>
                     <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
-                        <LeaderBaseCard card={opponentLeader} cardStyle={LeaderBaseCardStyle.PlainLeader}/>
+                        <LeaderBaseCard card={opponentLeader} cardStyle={LeaderBaseCardStyle.PlainLeader} isLeader={true}/>
                     </Box>
                     <Typography sx={{ ...styles.playerText, marginTop:'24px' }}>
                         {titleOpponent}

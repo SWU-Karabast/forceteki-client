@@ -223,6 +223,7 @@ const Board: React.FC<IBoardProps> = ({
                                 card={opponentLeader}
                                 cardStyle={LeaderBaseCardStyle.Leader}
                                 title={isSpectator ? 'Player2' : titleOpponent}
+                                isLeader={true}
                             />
                         </Box>
                         <Box sx={styles.leaderBaseWrapper}>
@@ -245,6 +246,7 @@ const Board: React.FC<IBoardProps> = ({
                                 card={playerLeader}
                                 cardStyle={LeaderBaseCardStyle.Leader}
                                 title={isSpectator ? 'Player1' : titleCurrentPlayer}
+                                isLeader={true}
                             />
                         </Box>
                     </Box>

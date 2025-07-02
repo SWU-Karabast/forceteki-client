@@ -59,6 +59,7 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                     gameId: match.id,
                     user: getUserPayload(user),
                 }),
+                credentials:'include'
             });
 
             const data = await response.json();

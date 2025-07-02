@@ -86,13 +86,25 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'Legends of the Force Previews (Update)',
+        title: 'User accounts are here!',
         content: `
-        <p>We are excited to announce that Set 5: Legends of the Force is available for playtesting in Next Set Preview format! Force bases are now available on SWUDB, so we are supporting both quick match and custom lobbies for Next Set Preview format.</p>
-        <p>You can also follow our progress implementing the preview cards in the <a target="_blank" href="https://karabast.net/Unimplemented" style="color:lightblue;">"Unimplemented" page</a>.</p>		<p style="margin-bottom:0;"><a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Join our Discord to see the full announcement and for the latest progress updates and timelines</a>. If you have coding experience, we are always open to new contributors. Info on how to help out can also be found on <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>.</p>
+        <p>You can now log in and create a new account! Use the "Log In" button above to get started. Creating an account requires existing Discord or Google account.</p>
+        <p>Once logged in, your decks and preferences will be saved and shared across all devices. Please reach out on our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> if you encounter any issues.</p>
 	  `,
-        date: '5/15/25',
+        date: '6/18/25',
+        image: 'login_buttons.png',
+        imageAlt: 'News Announcement',
+        link: '/auth'
+    },
+    {
+        title: 'Legends of the Force Complete!',
+        content: `
+        <p>We are excited to announce that Set 5: Legends of the Force is fully implemented and playable!</p>
+        <p>Our next big ticket item is to finish our testing on user accounts so everyone can log in and set their username. We anticipate this being available very soon and will announce when it is ready.</p>
+        <p style="margin-bottom:0;"><a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Join our Discord to see the full announcement and for the latest progress updates and timelines</a>. If you have coding experience, we are always open to new contributors. Info on how to help out can also be found on <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>.</p>
+	  `,
+        date: '6/11/25',
         image: s3ImageURL('ui/quigonmaul-banner.webp'),
-        imageAlt: 'Beta Announcement',
+        imageAlt: 'News Announcement',
     },
 ];

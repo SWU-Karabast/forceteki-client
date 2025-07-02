@@ -1,44 +1,62 @@
 import React from 'react';
-import {
-    Typography,
-    Box,
-    Popover
-} from '@mui/material';
-import { ILeaderBaseCardProps, LeaderBaseCardStyle, CardStyle, ICardData } from './CardTypes';
+import { Box, Popover, Typography } from '@mui/material';
+import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
-
+import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
     title,
     cardStyle = LeaderBaseCardStyle.Plain,
     disabled = false,
+    isLeader = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
-    
+    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    
+    const {
+        aspectRatio,
+        width,
+    } = useLeaderCardFlipPreview({
+        anchorElement,
+        cardId: card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
+        setPreviewImage,
+        frontCardStyle: CardStyle.PlainLeader,
+        backCardStyle: CardStyle.Plain,
+        isDeployed: false,
+        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
+        card: card ? {
+            onStartingSide: card.onStartingSide,
+            id: card.id
+        } : undefined,
+    });
+
     if (!card) {
         return null
     }
 
-    const controller = gameState?.players[card.controller?.id];
+    const controller = gameState?.players[card.controllerId];
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
+        const imageUrl = target.getAttribute('data-card-url');
+        if (!imageUrl) return;
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
         }, 200);
     };
         
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
+        setPreviewImage(null);
     };
 
     const defaultClickFunction = () => {
@@ -58,7 +76,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         defaultClickFunction();
     }
 
-    const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
+    const notImplemented = (card: ICardData) => card?.hasOwnProperty('unimplemented') && card.unimplemented;
     
     const getBackgroundColor = (card: ICardData) => {
         if (
@@ -79,7 +97,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         }
     
         const maxTargets = prompt.distributeAmongTargets.maxTargets;
-        const isInDistributionData = distributionPromptData.valueDistribution.some(item => item.uuid === card.uuid);
+        const isInDistributionData = distributionPromptData.valueDistribution.some((item: DistributionEntry) => item.uuid === card.uuid);
     
         // If maxTargets is defined and already reached, allow only if the card is part of the selection
         if (maxTargets && distributionPromptData.valueDistribution.length >= maxTargets && !isInDistributionData) {
@@ -88,12 +106,31 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     
         return true;
     };
-        
+
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
     const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
-    const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
+    const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getForceTokenIconStyle = (player: any) => {
+        const imageAspect = player.aspects.includes('villainy') ? 'Villainy' : 'Heroism';
+        const opponentStr = player.id !== connectedPlayer ? 'Opponent' : '';
+        const backgroundImage = `url(/ForceToken${imageAspect}${opponentStr}.png)`;
+
+        return {
+            position: 'absolute',
+            width: '3rem',
+            aspectRatio: '1 / 1',
+            top:'32%',
+            right: '-20px',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage,
+            filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+        };
+    }
 
     const styles = {
         card: {
@@ -190,11 +227,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         cardPreview: {
             borderRadius: '.38em',
-            backgroundImage: `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: (card.type === 'leader' && isDeployed) ? '1 / 1.4' : '1.4 / 1',
-            width: (card.type === 'leader' && isDeployed) ? '15rem' : '24rem',
+            aspectRatio,
+            width,
         },
         defendIcon: {
             position: 'absolute',
@@ -208,32 +244,31 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             left: '50%',
             transform: !activePlayer ? 'translate(-50%, 0) rotate(180deg)' : 'translate(-50%, 0)',
         },
+        ctrlText: {
+            bottom: '0px',
+            display: 'flex',
+            justifySelf: 'center',
+            width: 'fit-content',
+            height: '2rem',
+            color: 'white',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            textShadow: `
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000
+            `
+        },
     }
-
-    const getForceTokenIconStyle = (player: any) => { 
-        const imageAspect = player.aspects.includes('villainy') ? 'Villainy' : 'Heroism';
-        const opponentStr = player.id !== connectedPlayer ? 'Opponent' : '';
-        const backgroundImage = `url(/ForceToken${imageAspect}${opponentStr}.png)`;
-
-        return {
-            position: 'absolute',
-            width: '3rem',
-            aspectRatio: '1 / 1',
-            top:'32%',
-            right: '-20px',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage,
-            filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
-        };
-    }
-
     return (
         <Box
             sx={isDeployed ? styles.deployedPlaceholder : styles.card}
             onClick={handleClick}
             aria-owns={open ? 'mouse-over-popover' : undefined}
             aria-haspopup="true"
+            data-card-url={s3CardImageURL(card)}
+            data-card-type={isLeader ? 'leader' : 'base'}
             onMouseEnter={handlePreviewOpen}
             onMouseLeave={handlePreviewClose}
         >
@@ -275,12 +310,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 }}
                 onClose={handlePreviewClose}
                 disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}
             >
                 <Box sx={{
-                    ...styles.cardPreview,
-                    backgroundImage: `url(${s3CardImageURL(card, isDeployed || cardStyle === LeaderBaseCardStyle.PlainLeader ? CardStyle.PlainLeader : CardStyle.Plain)})`,
-                }} />
+                    ...styles.cardPreview,backgroundImage: previewImage
+                }} >
+                </Box>
+                {isLeader && (
+                    <Typography variant={'body1'} sx={styles.ctrlText}
+                    >CTRL: View Flipside</Typography>
+                )}
             </Popover>
 
             {cardStyle === LeaderBaseCardStyle.Leader && title && (

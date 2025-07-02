@@ -7,6 +7,7 @@ export interface IUser {
     showWelcomeMessage?: boolean,
     authenticated: boolean,
     preferences: Preferences,
+    needsUsernameChange?: boolean,
 }
 
 export interface Preferences {
@@ -19,8 +20,9 @@ export interface IUserContextType {
     login: (provider: 'google' | 'discord') => void;
     devLogin: (user: 'Order66' | 'ThisIsTheWay') => void;
     logout: () => void;
-    updateUsername: (username: string) => void
-    updateWelcomeMessage: () => void
+    updateUsername: (username: string) => void;
+    updateWelcomeMessage: () => void;
+    updateNeedsUsernameChange: () => void;
 }
 
 // Extend Next-auth types
@@ -38,6 +40,19 @@ declare module 'next-auth' {
             email?: string | null;
             image?: string | null;
             provider: string;
+            userId?: string | null;
         };
+    }
+}
+
+declare module 'next-auth/jwt'{
+    interface JWT {
+        id?: string;
+        name?: string;
+        email?: string;
+        picture?: string;
+        provider?: string;
+        providerId?: string;
+        userId?: string;
     }
 }

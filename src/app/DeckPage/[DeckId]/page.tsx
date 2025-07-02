@@ -1,12 +1,9 @@
 'use client';
-import React, { ChangeEvent, useState, useEffect, useMemo } from 'react';
-import {
-    Box, MenuItem, Popover, Typography, useMediaQuery,
-} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Popover, Typography, useMediaQuery } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
-import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/PercentageCircle';
@@ -21,16 +18,20 @@ import {
 import {
     convertStoredToDeckDetailedData,
     deleteDecks,
-    getDeckFromServer, removeDeckFromLocalStorage,
+    getDeckFromServer,
+    removeDeckFromLocalStorage,
 } from '@/app/_utils/DeckStorageUtils';
 import {
+    CardStyle,
     IDeckDetailedData,
     IDeckPageStats,
     IDeckStats,
-    IMatchupStatEntity, IMatchTableStats, StoredDeck
+    IMatchTableStats,
+    IMatchupStatEntity,
+    StoredDeck
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useUser } from '@/app/_contexts/User.context';
+import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 
 const DeckDetails: React.FC = () => {
     const router = useRouter();
@@ -55,7 +56,7 @@ const DeckDetails: React.FC = () => {
     const [displayDeck, setDisplayDeck ] = useState<IDeckDetailedData | null>(null);
 
     // State for delete confirmation dialog
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false)
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -68,6 +69,7 @@ const DeckDetails: React.FC = () => {
 
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
+        setPreviewImage(null);
         setAnchorElement(null);
     };
 
@@ -117,6 +119,23 @@ const DeckDetails: React.FC = () => {
     useEffect(() => {
         fetchDeckFromServer(deckId)
     }, [deckId]);
+
+    const {
+        aspectRatio,
+        width,
+    } = useLeaderCardFlipPreview({
+        anchorElement,
+        cardId: deckData?.leader.id,
+        setPreviewImage,
+        frontCardStyle: CardStyle.PlainLeader,
+        backCardStyle: CardStyle.Plain,
+        isDeployed: false,
+        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
+        card: deckData?.leader ? {
+            onStartingSide: undefined,
+            id: deckData.leader.id
+        } : undefined,
+    });
 
     const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
         if (rawDeckId) {
@@ -208,6 +227,7 @@ const DeckDetails: React.FC = () => {
     }
 
     const isSmallScreen = useMediaQuery('(max-width: 1280px)');
+
 
     const styles = {
         bodyRow:{
@@ -334,13 +354,30 @@ const DeckDetails: React.FC = () => {
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: '1.4 / 1',
-            width: '21rem',
+            aspectRatio,
+            width,
+            position: 'relative',
         },
         viewDeck:{
             width: !displayDeck || displayDeck.deck.source === 'SWUDB' ? '394px' : '429px',
             ml:'40px'
-        }
+        },
+        ctrlText: {
+            bottom: '0px',
+            display: 'flex',
+            justifySelf: 'center',
+            width: 'fit-content',
+            height: '2rem',
+            color: 'white',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            textShadow: `
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000
+            `
+        },
     }
 
     return (
@@ -359,6 +396,7 @@ const DeckDetails: React.FC = () => {
                             aria-haspopup="true"
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
+                            data-card-type="leader"
                             data-card-url={deckData ? s3CardImageURL(deckData.leader, CardStyle.PlainLeader) : ''}
                         />
                         <Box sx={styles.boxGeneralStylingBase}
@@ -366,6 +404,7 @@ const DeckDetails: React.FC = () => {
                             aria-haspopup="true"
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
+                            data-card-type="base"
                             data-card-url={deckData ? s3CardImageURL(deckData.base) : ''}
                         />
                     </Box>
@@ -386,7 +425,12 @@ const DeckDetails: React.FC = () => {
                         disableRestoreFocus
                         slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
                     >
-                        <Box sx={{ ...styles.cardPreview, backgroundImage:`${previewImage}` }} />
+                        <Box sx={{ ...styles.cardPreview, backgroundImage:`${previewImage}` }} >
+                        </Box>
+                        {anchorElement?.getAttribute('data-card-type') === 'leader' && (
+                            <Typography variant={'body1'} sx={styles.ctrlText}
+                            >CTRL: View Flipside</Typography>
+                        )}
                     </Popover>
                     <Box sx={styles.titleTextContainer}>
                         <Typography variant="h3" sx={styles.titleText}>

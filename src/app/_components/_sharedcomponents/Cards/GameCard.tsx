@@ -1,17 +1,14 @@
 import React from 'react';
-import {
-    Typography,
-    Box,
-    Popover,
-    PopoverOrigin,
-} from '@mui/material';
+import { Box, Popover, PopoverOrigin, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { IGameCardProps, ICardData, CardStyle } from './CardTypes';
+import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
+import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -29,25 +26,37 @@ const GameCard: React.FC<IGameCardProps> = ({
     const phase = gameState?.phase;
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
-    const cardInPlayersHand = card.controller?.id === connectedPlayer && card.zone === 'hand';
-    const cardInOpponentsHand = card.controller?.id !== connectedPlayer && card.zone === 'hand';
-    
+    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
+    const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
+
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
+    const {
+        aspectRatio,
+        width,
+    } = useLeaderCardFlipPreview({
+        anchorElement,
+        cardId: anchorElement?.getAttribute('data-card-id') || undefined,
+        setPreviewImage,
+        frontCardStyle: CardStyle.Plain,
+        backCardStyle: CardStyle.PlainLeader,
+        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
+        isDeployed: true,
+    });
+
     const isStolen = React.useMemo(() => {
-        if (!(card.controller && card.owner)) {
+        if (!(card.controllerId && card.ownerId)) {
             return false
         }
-        return card.controller.id !== card.owner.id
-    }, [card.controller, card.owner])
+        return card.controllerId !== card.ownerId
+    }, [card.controllerId, card.ownerId])
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
-        
         if (!imageUrl) return;
 
         if (cardInOpponentsHand) {
@@ -65,6 +74,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         setAnchorElement(null);
         setPreviewImage(null);
     };
+
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
         if (cardInPlayersHand) {
@@ -99,7 +109,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         }
     
         const maxTargets = prompt.distributeAmongTargets.maxTargets;
-        const isInDistributionData = distributionPromptData.valueDistribution.some(item => item.uuid === card.uuid);
+        const isInDistributionData = distributionPromptData.valueDistribution.some((item: DistributionEntry) => item.uuid === card.uuid);
     
         // If maxTargets is defined and already reached, allow only if the card is part of the selection
         if (maxTargets && distributionPromptData.valueDistribution.length >= maxTargets && !isInDistributionData) {
@@ -113,7 +123,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         return null;
     }
 
-    const notImplemented = (card: ICardData) => card?.hasOwnProperty('implemented') && !card.implemented;
+    const notImplemented = (card: ICardData) => card?.hasOwnProperty('unimplemented') && card.unimplemented;
 
     const getBackgroundColor = (card: ICardData) => {
         if (
@@ -183,11 +193,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
-    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType, cardStyle);
+    const promptType = getConnectedPlayerPrompt()?.promptType;
+    const borderColor = getBorderColor(card, connectedPlayer, promptType, cardStyle, isOpponentEffect);
     const cardCounter = card.count || 0;
-    const distributionAmount = distributionPromptData?.valueDistribution.find((item) => item.uuid === card.uuid)?.amount || 0;
+    const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
-
     // Styles
     const styles = {
         cardContainer: {
@@ -213,7 +223,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
-            border: borderColor && card.selected && card.zone !== 'hand' ? `4px solid ${borderColor}` : isOpponentEffect && card.selectable ? '2px solid rgba(198, 4, 198, 1)' : borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            border: borderColor ? card.selected && card.zone !== 'hand' ? `4px solid ${borderColor}` : `2px solid ${borderColor}` : '2px solid transparent',
             boxShadow: borderColor && card.selected && card.zone !== 'hand' ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },
@@ -407,8 +417,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio: '1 / 1.4',
-            width: '16rem',
+            aspectRatio,
+            width,
         },
         attackIcon: {
             position: 'absolute',
@@ -438,7 +448,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         resourceIcon: {
             position: 'absolute', 
-            backgroundImage: card.selected && card.zone === 'hand' && (phase === 'setup' || phase === 'regroup') ? 'url(resource-icon.png)' : '',
+            backgroundImage: card.selected && card.zone === 'hand' && promptType === 'resource' ? 'url(resource-icon.png)' : '',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             top: '20%',
@@ -447,8 +457,23 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '24%',
             height: '24%',
         },
+        ctrlText: {
+            bottom: '0px',
+            display: 'flex',
+            justifySelf: 'center',
+            width: 'fit-content',
+            height: '2rem',
+            color: 'white',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            textShadow: `
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000
+            `
+        },
     }
-
     return (
         <Box sx={styles.cardContainer}>
             <Box 
@@ -457,6 +482,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
                 data-card-url={s3CardImageURL(card)}
+                data-card-type={card.printedType}
+                data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
@@ -524,10 +551,14 @@ const GameCard: React.FC<IGameCardProps> = ({
                 anchorEl={anchorElement}
                 onClose={handlePreviewClose}
                 disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent' }, tabIndex: -1 } }}
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' }, tabIndex: -1 } }}
                 {...popoverConfig()}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
+                {(card.printedType === 'leader') && (
+                    <Typography variant={'body1'} sx={styles.ctrlText}
+                    >CTRL: View Flipside</Typography>
+                )}
             </Popover>
 
             {otherUpgradeCards.map((subcard) => (
@@ -542,6 +573,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     data-card-url={s3CardImageURL(subcard)}
+                    data-card-type={subcard.printedType}
+                    data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
                 >
                     <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
                 </Box>
@@ -565,6 +598,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-url={s3CardImageURL(capturedCard)}
+                            data-card-type={capturedCard.printedType}
+                            data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
                         >
                             <Typography sx={styles.upgradeName}>
                                 {capturedCard.name}

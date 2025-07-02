@@ -62,7 +62,10 @@ const handler = NextAuth({
         },
     },
     callbacks: {
-        async jwt({ token, account, user }) {
+        async jwt({ token, account, user, trigger, session }) {
+            if (trigger === 'update' && session?.userId) {
+                token.userId = session.userId;
+            }
             if (account) {
                 token.id = `${account.provider}_${user?.id}`;  // Add the properly formatted ID
                 token.provider = account.provider;
@@ -83,6 +86,7 @@ const handler = NextAuth({
                 email: token.email || session.user?.email || null,
                 image: token.picture || session.user?.image || null,
                 provider: token.provider as string || 'unknown',
+                userId: token.userId ?? null
             };
             return session;
         },

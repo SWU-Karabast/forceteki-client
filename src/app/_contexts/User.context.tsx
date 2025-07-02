@@ -21,12 +21,13 @@ const UserContext = createContext<IUserContextType>({
     logout: () => {},
     updateUsername: () => {},
     updateWelcomeMessage: () => {},
+    updateNeedsUsernameChange: () => {}
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const { data: session } = useSession(); // Get session from next-auth
+    const { data: session, status, update } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
@@ -59,8 +60,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         providerId: session.user.id || null,
                         showWelcomeMessage: serverUser.showWelcomeMessage,
                         authenticated: true,
-                        preferences: serverUser.preferences
+                        preferences: serverUser.preferences,
+                        needsUsernameChange: serverUser.needsUsernameChange
                     });
+                    update({ userId: serverUser.id });
                 } catch (error) {
                     // Just flag the error, handle anonymous user setting separately
                     console.error('Error syncing user with server:', error);
@@ -147,6 +150,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             }
         })
     }
+    const updateNeedsUsernameChange = () => {
+        setUser((prevUser) => {
+            if(!prevUser) return null;
+            return {
+                ...prevUser,
+                needsUsernameChange: false
+            }
+        })
+    }
 
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
@@ -168,7 +180,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange }}>
             {children}
         </UserContext.Provider>
     );
