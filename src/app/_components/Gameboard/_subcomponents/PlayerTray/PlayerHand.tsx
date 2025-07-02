@@ -17,20 +17,53 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
             height: 1rem !important;
             margin: 0 !important;
             bottom: 0 !important;
+            border: 2px solid rgba(255, 255, 255, 0.85) !important;
+            background-color: rgba(0, 0, 0, 0.70) !important;
+            z-index: 101; !important;
         }
         .custom-scrollbar::before {
-            background-color: rgb(82, 183, 230) !important;
-            height: 1rem !important;
-            border-radius: 4px !important;
-            border: 2px outset rgb(200, 202, 230) !important;
-            opacity: 0.85 !important;
-            top: 0 !important;
-            bottom: 0 !important;
+            background-color: rgba(255, 255, 255, 0.85) !important;
+            
+            border-radius: 0 !important;
+            opacity: 0.95 !important;
+            z-index: 101 !important;
         }
         .simplebar-scrollbar {
-            margin-right: 0 !important;
+            margin: 0 !important;
             right: 0 !important;
             pointer-events: auto !important; /* Ensure scrollbar receives mouse events */
+            padding: 0 !important;
+        }
+        .simplebar-scrollbar:before {
+            margin: 0 !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+        }
+        .left-gradient {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2rem;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0, 0, 0, 1), transparent);
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .right-gradient {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 2rem;
+            height: 100%;
+            background: linear-gradient(to left, rgba(0, 0, 0, 1), transparent);
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
     `;
     
@@ -47,6 +80,11 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
             };
         }
     }, [scrollbarEnabled, customScrollbarStyles]);
+
+    // Refs for gradient elements and scroll container
+    const leftGradientRef = React.useRef<HTMLDivElement>(null);
+    const rightGradientRef = React.useRef<HTMLDivElement>(null);
+    const scrollContainerRef = React.useRef<HTMLDivElement | null>(null);
 
     const containerRef = React.useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = React.useState<number>(0);
@@ -86,6 +124,27 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     
     // Manually scale the card width with aspect ratio for the calculations
     const cardWidthPx = cardHeightPx * CARD_ASPECT_RATIO;
+    
+    // Initialize the gradient visibility on component mount and update their height
+    React.useEffect(() => {
+        if (!scrollbarEnabled) return;
+        
+        // Set a small delay to ensure SimpleBar is properly initialized
+        const timer = setTimeout(() => {
+            if (scrollContainerRef.current && leftGradientRef.current && rightGradientRef.current) {
+                const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+                
+                // Initial left gradient state
+                leftGradientRef.current.style.opacity = scrollLeft > 0 ? '1' : '0';
+                
+                // Initial right gradient state
+                const isScrolledToEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth;
+                rightGradientRef.current.style.opacity = isScrolledToEnd ? '0' : '1';
+            }
+        }, 100);
+        
+        return () => clearTimeout(timer);
+    }, [scrollbarEnabled, cards.length, cardHeightPx]);
 
     // Downsize the container width slightly to not trigger the scrollbar on an exact fit
     const adjustedContainerWidth = containerWidth - 2;
@@ -221,19 +280,53 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                 }}
             >
                 {scrollbarEnabled ? (
-                    <SimpleBar
-                        style={{ width: '100%', height: '100%' }}
-                        classNames={{ scrollbar: 'simplebar-scrollbar custom-scrollbar' }}
-                        onWheel={(e: React.WheelEvent<HTMLElement>) => {
-                            e.preventDefault();
-                            const target = e.currentTarget.querySelector('.simplebar-content-wrapper') as HTMLElement;
-                            if (target) {
-                                target.scrollLeft += e.deltaY;
-                            }
-                        }}
-                    >
-                        {HandContent}
-                    </SimpleBar>
+                    <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
+                        <div 
+                            ref={leftGradientRef} 
+                            className="left-gradient" 
+                            style={{ height: `${cardHeightPx}px`, top: cardTranslationPx }}
+                        ></div>
+                        <div 
+                            ref={rightGradientRef} 
+                            className="right-gradient" 
+                            style={{ height: `${cardHeightPx}px`, top: cardTranslationPx }}
+                        ></div>
+                        <SimpleBar
+                            style={{ width: '100%', height: '100%' }}
+                            classNames={{ scrollbar: 'simplebar-scrollbar custom-scrollbar' }}
+                            forceVisible="x"
+                            onWheel={(e: React.WheelEvent<HTMLElement>) => {
+                                e.preventDefault();
+                                const target = e.currentTarget.querySelector('.simplebar-content-wrapper') as HTMLElement;
+                                if (target) {
+                                    target.scrollLeft += e.deltaY;
+                                }
+                            }}
+                            scrollableNodeProps={{
+                                ref: (node: HTMLDivElement | null) => {
+                                    scrollContainerRef.current = node;
+                                },
+                                onScroll: (e: React.UIEvent<HTMLDivElement>) => {
+                                    // Get scroll information
+                                    const scrollElement = e.currentTarget;
+                                    const { scrollLeft, scrollWidth, clientWidth } = scrollElement;
+                                    
+                                    // Show/hide left gradient based on scroll position
+                                    if (leftGradientRef.current) {
+                                        leftGradientRef.current.style.opacity = scrollLeft > 0 ? '1' : '0';
+                                    }
+                                    
+                                    // Show/hide right gradient based on scroll position
+                                    if (rightGradientRef.current) {
+                                        const isScrolledToEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth;
+                                        rightGradientRef.current.style.opacity = isScrolledToEnd ? '0' : '1';
+                                    }
+                                }
+                            }}
+                        >
+                            {HandContent}
+                        </SimpleBar>
+                    </Box>
                 ) : (
                     <Box sx={{ width: '100%', height: '100%', overflow: 'hidden' }}>
                         {HandContent}
