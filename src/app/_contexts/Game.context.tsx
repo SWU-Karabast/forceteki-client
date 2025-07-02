@@ -271,7 +271,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             isPlayersTurn = gameState.players[connectedPlayer].isActionPhaseActivePlayer
         }
         const typeOfMessage = args[0];
-        if (clickSound && (isPlayersTurn || (typeOfMessage === 'chat' || typeOfMessage === 'statefulPromptResults'))) {
+        const interactionTypes = ['statefulPromptResults', 'cardClicked', 'menuButton', 'perCardMenuButton'];
+        if (typeOfMessage !== 'chat' && clickSound && (isPlayersTurn || interactionTypes.includes(typeOfMessage))) {
             clickSound.currentTime = 0; // reset in case it's still playing
             clickSound.play().catch((e) => {
                 console.warn('Click sound failed to play:', e);

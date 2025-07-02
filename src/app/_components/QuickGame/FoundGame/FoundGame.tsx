@@ -15,13 +15,15 @@ const FoundGame: React.FC = () => {
     // set connectedPlayer
     const playerLeader = connectedUser?.deck?.leader;
     const playerBase = connectedUser?.deck?.base;
-
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
     const opponentLeader = opponentUser ? opponentUser.deck.leader : null;
     const opponentBase = opponentUser ? opponentUser.deck.base : null;
     const router = useRouter();
     const [countdownText, setCountdownText] = useState('Connecting...');
+
+    const hasPlayedSoundRef = useRef(false);
+    const foundOpponentSound = typeof Audio !== 'undefined' ? new Audio('/HelloThere.mp3') : null;
 
     useEffect(() => {
         if (gameState) {
@@ -31,6 +33,17 @@ const FoundGame: React.FC = () => {
             router.push('/quickGame');
         }
     }, [router, gameState, lobbyState]);
+
+    useEffect(() => {
+        if (foundOpponentSound && !hasPlayedSoundRef.current) {
+            foundOpponentSound.currentTime = 0;
+            foundOpponentSound.play().catch((e) => {
+                console.warn('foundOpponentSound sound failed to play:', e);
+            });
+            hasPlayedSoundRef.current = true;
+        }
+    }, []);
+
 
     // ------------------------STYLES------------------------//
 
