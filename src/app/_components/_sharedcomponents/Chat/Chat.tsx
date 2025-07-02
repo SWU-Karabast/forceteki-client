@@ -17,6 +17,7 @@ import {
     ChatObjectType
 } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
 import ChatCard from './ChatCard';
 
 const Chat: React.FC<IChatProps> = ({
@@ -27,7 +28,7 @@ const Chat: React.FC<IChatProps> = ({
 }) => {
     const { connectedPlayer, isSpectator, getOpponent } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
-
+    const { user } = useUser();
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
@@ -106,14 +107,16 @@ const Chat: React.FC<IChatProps> = ({
         alertType?: string
     ) => {
         const getAlertStyle = (type: string) => {
-            switch (type) {
-                case 'notification': return styles.notificationText;
-                case 'warning': return styles.warningText;
-                case 'danger': return styles.alertText;
-                case 'readyStatus': return styles.readyStatusText;
-                default: return styles.messageText;
-            }
+        const alertColors = {
+            notification: '#d500f9',
+            warning: 'yellow',
+            danger: 'red',
+            readyStatus: 'green'
         };
+        
+        const color = alertColors[type as keyof typeof alertColors];
+        return color ? { ...styles.alertBase, color } : styles.messageText;
+    };
 
         const messageComponents = messageContent.map((item, itemIndex) => 
             formatMessageItem(item, itemIndex)
@@ -199,24 +202,9 @@ const Chat: React.FC<IChatProps> = ({
             color: '#fff',
             lineHeight: { xs: '0.75rem', md: '1rem' },
         },
-        notificationText: {
+        // Base style for alert messages
+        alertBase: {
             fontSize: { xs: '0.85em', md: '1em' },
-            color: '#d500f9',
-            lineHeight: { xs: '0.85rem', md: '1em' },
-        },
-        warningText: {
-            fontSize: { xs: '0.85em', md: '1em' },
-            color: 'yellow',
-            lineHeight: { xs: '0.85rem', md: '1em' },
-        },
-        alertText: {
-            fontSize: { xs: '0.85em', md: '1em' },
-            color: 'red',
-            lineHeight: { xs: '0.85rem', md: '1em' },
-        },
-        readyStatusText: {
-            fontSize: { xs: '0.85em', md: '1em' },
-            color: 'green',
             lineHeight: { xs: '0.85rem', md: '1em' },
         },
         chatEntryBox: {
@@ -258,6 +246,20 @@ const Chat: React.FC<IChatProps> = ({
                     borderColor: '#fff',
                 },
             },
+        },
+        chatLoginNotification: {
+            textAlign: 'center',
+            border: '1px solid red',
+            backgroundColor: '#282828ff',
+            borderRadius: '4px',
+            p: '0.4em',
+            mt: '0.5em',
+            width: '100%',
+            display: 'block',
+            fontSize: { xs: '0.75em', md: '1em' },
+            color: '#fff',
+            lineHeight: { xs: '0.75rem', md: '1rem' },
+            userSelect: 'none',
         }
     };
 
@@ -275,7 +277,8 @@ const Chat: React.FC<IChatProps> = ({
 
 
             <Box sx={styles.inputContainer}>
-                {!isSpectator &&(
+                {/* Only show chat input if user is not spectator and user is logged in */}
+                {!isSpectator && user &&(
                     <TextField
                         variant="outlined"
                         placeholder="Chat"
@@ -303,6 +306,11 @@ const Chat: React.FC<IChatProps> = ({
                             },
                         }}
                     />
+                )}
+                {!user && !isSpectator && (
+                    <Typography sx={styles.chatLoginNotification}>
+                        Please login to chat
+                    </Typography>
                 )}
             </Box>
         </>
