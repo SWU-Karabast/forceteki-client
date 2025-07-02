@@ -8,7 +8,7 @@ import CurrentGameTab
 import KeyboardShortcutsTab
     from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/KeyboardShortcutsTab';
 import CardSleevesTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CardSleevesTab';
-import GameOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
+import SoundOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/SoundOptionsTab';
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
@@ -42,8 +42,8 @@ function VerticalTabs({
                 return <KeyboardShortcutsTab/>;
             case 'cardSleeves':
                 return <CardSleevesTab/>;
-            case 'gameOptions':
-                return <GameOptionsTab/>;
+            case 'soundOptions':
+                return <SoundOptionsTab/>;
             case 'endGame':
                 return <EndGameTab/>;
             case 'blockList':
@@ -62,8 +62,8 @@ function VerticalTabs({
                 return 'Keyboard Shortcuts';
             case 'cardSleeves':
                 return 'Card Sleeves';
-            case 'gameOptions':
-                return 'Game Options';
+            case 'soundOptions':
+                return 'Sound Options';
             case 'endGame':
                 return 'Current Game';
             case 'blockList':
