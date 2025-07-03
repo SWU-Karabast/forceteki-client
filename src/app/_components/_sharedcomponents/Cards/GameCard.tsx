@@ -358,6 +358,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             boxSizing: 'content-box',
+            borderRadius: '0.5rem', // Add rounded corners to match the card container
         },
         cloneName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
