@@ -6,10 +6,13 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 import { useRouter } from 'next/navigation'
 import { LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
+import { useUser } from '@/app/_contexts/User.context';
+import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 
 
 const FoundGame: React.FC = () => {
     const { lobbyState, connectedPlayer, gameState } = useGame();
+    const { user } = useUser();
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     // set connectedPlayer
@@ -23,7 +26,11 @@ const FoundGame: React.FC = () => {
     const [countdownText, setCountdownText] = useState('Connecting...');
 
     const hasPlayedSoundRef = useRef(false);
-    const foundOpponentSound = typeof Audio !== 'undefined' ? new Audio('/HelloThere.mp3') : null;
+    // Initialize sound handler with user preferences
+    const { playFoundOpponentSound } = useSoundHandler({
+        enabled: true,
+        user:user
+    });
 
     useEffect(() => {
         if (gameState) {
@@ -35,14 +42,11 @@ const FoundGame: React.FC = () => {
     }, [router, gameState, lobbyState]);
 
     useEffect(() => {
-        if (foundOpponentSound && !hasPlayedSoundRef.current) {
-            foundOpponentSound.currentTime = 0;
-            foundOpponentSound.play().catch((e) => {
-                console.warn('foundOpponentSound sound failed to play:', e);
-            });
+        if (!hasPlayedSoundRef.current) {
+            playFoundOpponentSound();
             hasPlayedSoundRef.current = true;
         }
-    }, []);
+    }, [playFoundOpponentSound]);
 
 
     // ------------------------STYLES------------------------//

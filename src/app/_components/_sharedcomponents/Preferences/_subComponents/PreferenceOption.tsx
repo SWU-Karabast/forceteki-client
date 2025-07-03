@@ -8,13 +8,17 @@ import StyledMuteButton from '@/app/_components/_sharedcomponents/Preferences/_s
 interface PreferenceOptionWithIconProps extends IPreferenceOptions {
     iconType?: 'checkbox' | 'mute';
     onChange?: (value: boolean) => void;
+    defaultChecked?: boolean;
+    disabled?: boolean;
 }
 
 function PreferenceOptionWithIcon({
     option,
     optionDescription,
     iconType = 'checkbox',
-    onChange
+    onChange,
+    defaultChecked = false,
+    disabled = false
 }: PreferenceOptionWithIconProps) {
     const styles = {
         typographyContainer: {
@@ -29,10 +33,11 @@ function PreferenceOptionWithIcon({
             width: '11rem',
             textUnderlinePosition: 'from-font',
             textDecorationSkipInk: 'none',
+            opacity: disabled ? 0.5 : 1,  // Visual indication when disabled
         },
         typeographyStyle: {
             ml: '2rem',
-            color: '#878787',
+            color: disabled ? '#c0c0c0' : '#878787',  // Lighter color when disabled
             fontSize: '1rem',
             fontWeight: '500',
             lineHeight: '15.6px',
@@ -50,10 +55,22 @@ function PreferenceOptionWithIcon({
     const renderIcon = () => {
         switch (iconType) {
             case 'mute':
-                return <StyledMuteButton onChange={onChange} />;
+                return (
+                    <StyledMuteButton
+                        onChange={onChange}
+                        defaultChecked={defaultChecked}
+                        disabled={disabled}
+                    />
+                );
             case 'checkbox':
             default:
-                return <PreferenceCheckbox />;
+                return (
+                    <PreferenceCheckbox
+                        onChange={onChange}
+                        defaultChecked={defaultChecked}
+                        disabled={disabled}
+                    />
+                );
         }
     };
 

@@ -38,9 +38,10 @@ interface VolumeSliderProps {
     description: string;
     defaultValue?: number;
     onChange?: (value: number) => void;
+    disabled?: boolean;
 }
 
-function VolumeSlider({ label, description, defaultValue = 50, onChange }: VolumeSliderProps) {
+function VolumeSlider({ label, description, defaultValue = 50, onChange, disabled = false }: VolumeSliderProps) {
     const [volume, setVolume] = useState(defaultValue);
 
     const handleVolumeChange = (event: Event, newValue: number | number[]) => {
@@ -106,6 +107,7 @@ function VolumeSlider({ label, description, defaultValue = 50, onChange }: Volum
                 <StarWarsSlider
                     value={volume}
                     onChange={handleVolumeChange}
+                    disabled={disabled}
                     min={0}
                     max={100}
                     step={1}

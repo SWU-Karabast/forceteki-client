@@ -18,6 +18,8 @@ import {
 } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import ChatCard from './ChatCard';
+import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
+import { useUser } from '@/app/_contexts/User.context';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -28,11 +30,17 @@ const Chat: React.FC<IChatProps> = ({
     const { connectedPlayer, isSpectator, getOpponent } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
+    const { user } = useUser();
+
+    // Initialize sound handler with user preferences
+    const { playIncomingMessageSound } = useSoundHandler({
+        enabled: !isSpectator, // Don't play sounds for spectators
+        user:user,
+    });
 
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
-    const messageSound = typeof Audio !== 'undefined' ? new Audio('/click1.mp3') : null;
     const getSpectatorDisplayName = (
         playerId: string,
         connectedPlayer: string,
@@ -53,15 +61,6 @@ const Chat: React.FC<IChatProps> = ({
             }
         }
         return false;
-    };
-
-    const playMessageSound = () => {
-        if (messageSound && !isSpectator) {
-            messageSound.currentTime = 0; // Reset to start
-            messageSound.play().catch((e) => {
-                console.warn('Message sound failed to play:', e);
-            });
-        }
     };
 
     const formatMessageItem = (item: IChatObject | string | number, itemIndex: number) => {
@@ -208,7 +207,7 @@ const Chat: React.FC<IChatProps> = ({
                 return isOpponentMessage(messageEntry.message, connectedPlayer);
             });
             if (hasOpponentMessage) {
-                playMessageSound();
+                playIncomingMessageSound();
             }
         }
 

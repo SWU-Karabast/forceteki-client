@@ -18,6 +18,7 @@ import { ZoneName } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/useDistributionPrompt';
+import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 
 interface IGameContextType {
     gameState: any;
@@ -37,7 +38,6 @@ interface IGameContextType {
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
-const clickSound = typeof Audio !== 'undefined' ? new Audio('/click1.mp3') : null;
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
@@ -54,6 +54,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
     const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
+
+    // Initialize sound handler with user preferences
+    const { playSound } = useSoundHandler({
+        enabled: true,
+        user:user
+    });
 
     useEffect(() => {
         // Only proceed when session is loaded (either authenticated or unauthenticated)
@@ -266,17 +272,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             args = [args[0], distributionPromptData, args[2]]
             clearDistributionPrompt();
         }
-        let isPlayersTurn = false
-        if(gameState.players[connectedPlayer]) {
-            isPlayersTurn = gameState.players[connectedPlayer].isActionPhaseActivePlayer
-        }
         const typeOfMessage = args[0];
-        const interactionTypes = ['statefulPromptResults', 'cardClicked', 'menuButton', 'perCardMenuButton'];
-        if (typeOfMessage !== 'chat' && clickSound && (isPlayersTurn || interactionTypes.includes(typeOfMessage))) {
-            clickSound.currentTime = 0; // reset in case it's still playing
-            clickSound.play().catch((e) => {
-                console.warn('Click sound failed to play:', e);
-            });
+
+        // We let the sound handler decide if this is a valid sound action
+        try {
+            playSound(typeOfMessage);
+        } catch (error) {
+            console.warn('Error playing sound:', error);
         }
         socket?.emit('game', ...args);
     };
