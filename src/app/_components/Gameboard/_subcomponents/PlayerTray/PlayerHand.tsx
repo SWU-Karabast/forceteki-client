@@ -17,12 +17,12 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
             height: 1rem !important;
             margin: 0 !important;
             bottom: 0 !important;
-            border: 2px solid rgba(255, 255, 255, 0.85) !important;
+            border: 2px solid rgba(91, 104, 110, 0.85) !important;
             background-color: rgba(0, 0, 0, 0.70) !important;
             z-index: 101; !important;
         }
         .custom-scrollbar::before {
-            background-color: rgba(255, 255, 255, 0.85) !important;
+            background-color: rgba(91, 104, 110, 0.85) !important;
             
             border-radius: 0 !important;
             opacity: 0.95 !important;
