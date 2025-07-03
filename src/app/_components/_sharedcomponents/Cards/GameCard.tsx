@@ -354,12 +354,10 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(upgrade-green.png)', // Use the same green upgrade background as the TEST upgrade
             alignItems: 'center',
             justifyContent: 'center',
             boxSizing: 'content-box',
-            backgroundColor: '#4CAF50', // Green background
-            borderRadius: '4px',
-            marginBottom: '4px',
         },
         cloneName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
@@ -367,7 +365,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             fontWeight: '800',
             whiteSpace: 'nowrap',
             overflow: 'hidden',           
-            color: 'white',
+            color: 'black', // Change to black to match upgrade text
             textAlign: 'center', 
             userSelect: 'none'
         },
