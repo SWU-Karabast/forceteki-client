@@ -294,7 +294,6 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                         <SimpleBar
                             style={{ width: '100%', height: '100%' }}
                             classNames={{ scrollbar: 'simplebar-scrollbar custom-scrollbar' }}
-                            forceVisible="x"
                             onWheel={(e: React.WheelEvent<HTMLElement>) => {
                                 e.preventDefault();
                                 const target = e.currentTarget.querySelector('.simplebar-content-wrapper') as HTMLElement;
