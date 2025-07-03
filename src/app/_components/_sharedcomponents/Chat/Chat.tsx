@@ -26,12 +26,13 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { connectedPlayer, isSpectator, getOpponent } = useGame();
+    const { connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const { user } = useUser();
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
+    const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
 
     const getSpectatorDisplayName = (
         playerId: string,
@@ -177,6 +178,7 @@ const Chat: React.FC<IChatProps> = ({
         return null;
     };
 
+
     useEffect(() => {
         if(chatEndRef.current) {
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -247,9 +249,23 @@ const Chat: React.FC<IChatProps> = ({
                 },
             },
         },
-        chatLoginNotification: {
+        chatDisabledLogin: {
             textAlign: 'center',
             border: '1px solid red',
+            backgroundColor: '#282828ff',
+            borderRadius: '4px',
+            p: '0.4em',
+            mt: '0.5em',
+            width: '100%',
+            display: 'block',
+            fontSize: { xs: '0.75em', md: '1em' },
+            color: '#fff',
+            lineHeight: { xs: '0.75rem', md: '1rem' },
+            userSelect: 'none',
+        },
+        chatDisabledAnonOpponent: {
+            textAlign: 'center',
+            border: '1px solid yellow',
             backgroundColor: '#282828ff',
             borderRadius: '4px',
             p: '0.4em',
@@ -278,7 +294,7 @@ const Chat: React.FC<IChatProps> = ({
 
             <Box sx={styles.inputContainer}>
                 {/* Only show chat input if user is not spectator and user is logged in */}
-                {!isSpectator && user &&(
+                {!isSpectator && user && !isAnonymousOpponent && (
                     <TextField
                         variant="outlined"
                         placeholder="Chat"
@@ -308,8 +324,13 @@ const Chat: React.FC<IChatProps> = ({
                     />
                 )}
                 {!user && !isSpectator && (
-                    <Typography sx={styles.chatLoginNotification}>
+                    <Typography sx={styles.chatDisabledLogin}>
                         Please login to chat
+                    </Typography>
+                )}
+                {user && !isSpectator && isAnonymousOpponent && (
+                    <Typography sx={styles.chatDisabledAnonOpponent}>
+                        Chat disabled when playing against an anonymous opponent
                     </Typography>
                 )}
             </Box>
