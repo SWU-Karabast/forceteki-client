@@ -292,7 +292,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                             style={{ height: `${cardHeightPx}px`, top: cardTranslationPx }}
                         ></div>
                         <SimpleBar
-                            style={{ width: '100%', height: '100%' }}
+                            style={{ width: '100%', height: '100%', overflowY: 'hidden'}}
                             classNames={{ scrollbar: 'simplebar-scrollbar custom-scrollbar' }}
                             onWheel={(e: React.WheelEvent<HTMLElement>) => {
                                 e.preventDefault();
