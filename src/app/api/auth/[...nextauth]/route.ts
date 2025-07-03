@@ -4,6 +4,8 @@ import DiscordProvider from 'next-auth/providers/discord';
 import type { JWT } from 'next-auth/jwt';
 import jwt from 'jsonwebtoken';
 
+const TwoMonthsInSeconds = 60 * 24 * 60 * 60; // 60 days
+
 const handler = NextAuth({
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
@@ -17,7 +19,8 @@ const handler = NextAuth({
         }),
     ],
     session: {
-        strategy: 'jwt'
+        strategy: 'jwt',
+        maxAge: TwoMonthsInSeconds
     },
     cookies: {
         sessionToken: {
@@ -55,10 +58,24 @@ const handler = NextAuth({
         // Provide your own encode/decode so NextAuth doesn't encrypt
         async encode({ secret, token }) {
             // token will be the object returned from `jwt` callback
-            return jwt.sign(token as object, secret, { algorithm: 'HS256' });
+            const tokenWithExpiry = {
+                ...token,
+                exp: Math.floor(Date.now() / 1000) + TwoMonthsInSeconds,
+                iat: Math.floor(Date.now() / 1000),
+            };
+            return jwt.sign(tokenWithExpiry as object, secret, { algorithm: 'HS256' });
         },
         async decode({ secret, token }) {
-            return jwt.verify(token!, secret) as JWT;
+            try {
+                const decoded = jwt.verify(token!, secret, {
+                    clockTolerance: 60 // Allow 60 seconds clock skew
+                }) as JWT;
+                return decoded;
+            } catch (error) {
+                // Token expired or invalid
+                console.error('JWT decode error:', error);
+                return null;
+            }
         },
     },
     callbacks: {
@@ -75,6 +92,8 @@ const handler = NextAuth({
                 token.email = user?.email || token.email;
                 token.picture = user?.image || token.picture;
             }
+            // On every JWT callback (including updates) extend expiration
+            token.exp = Math.floor(Date.now() / 1000) + TwoMonthsInSeconds;
             return token;
         },
         async session({ session, token }) {

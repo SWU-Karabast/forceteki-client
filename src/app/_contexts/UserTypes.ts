@@ -54,5 +54,6 @@ declare module 'next-auth/jwt'{
         provider?: string;
         providerId?: string;
         userId?: string;
+        exp: number;
     }
 }
