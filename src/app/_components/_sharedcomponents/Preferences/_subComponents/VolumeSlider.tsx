@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Typography, Slider } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -38,11 +38,16 @@ interface VolumeSliderProps {
     description: string;
     defaultValue?: number;
     onChange?: (value: number) => void;
+    onChangeCommitted?: (value: number) => void;
     disabled?: boolean;
 }
 
-function VolumeSlider({ label, description, defaultValue = 50, onChange, disabled = false }: VolumeSliderProps) {
+function VolumeSlider({ label, description, defaultValue = 75, onChange, onChangeCommitted, disabled = false }: VolumeSliderProps) {
     const [volume, setVolume] = useState(defaultValue);
+
+    useEffect(() => {
+        setVolume(defaultValue);
+    },[defaultValue]);
 
     const handleVolumeChange = (event: Event, newValue: number | number[]) => {
         const value = Array.isArray(newValue) ? newValue[0] : newValue;
@@ -108,6 +113,7 @@ function VolumeSlider({ label, description, defaultValue = 50, onChange, disable
                     value={volume}
                     onChange={handleVolumeChange}
                     disabled={disabled}
+                    onChangeCommitted={(_, value) => onChangeCommitted?.(value as number)}
                     min={0}
                     max={100}
                     step={1}

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useMemo } from 'react';
 import { IUser } from '@/app/_contexts/UserTypes';
+import { loadPreferencesFromLocalStorage } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 export type SoundAction =
     | 'foundOpponent'
@@ -35,9 +36,8 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
     };
 
 
-    const preferences = getPreferences();
-    const volume = preferences.volume !== undefined ? preferences.volume : 0.75;
-
+    const preferences = getPreferences().sound;
+    const volume = preferences?.volume !== undefined ? preferences.volume : 0.75;
 
     // Sound configuration mapping - just to the source files
     const soundConfigs = useMemo<Record<SoundAction, string>>(() => ({
@@ -68,17 +68,17 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
 
     // Main function to play sounds
     const playSound = useCallback((action: SoundAction) => {
-        if (!enabled || preferences.muteAllSound) {
+        if (!enabled || preferences?.muteAllSound) {
             return;
         }
         // Check specific action mutes
         const actionMutes = {
-            cardClicked: preferences.muteCardClickSound,
-            menuButton: preferences.muteMenuButtonsSound,
-            perCardMenuButton: preferences.muteMenuButtonsSound,
-            statefulPromptResults: preferences.muteMenuButtonsSound,
-            incomingMessage: preferences.muteChatSound,
-            foundOpponent: preferences.muteOpponentFoundSound,
+            cardClicked: preferences?.muteCardClickSound,
+            menuButton: preferences?.muteMenuButtonsSound,
+            perCardMenuButton: preferences?.muteMenuButtonsSound,
+            statefulPromptResults: preferences?.muteMenuButtonsSound,
+            incomingMessage: preferences?.muteChatSound,
+            foundOpponent: preferences?.muteOpponentFoundSound,
         };
 
         if (actionMutes[action]) {
