@@ -348,6 +348,29 @@ const GameCard: React.FC<IGameCardProps> = ({
             textAlign: 'center', 
             userSelect: 'none'
         },
+        cloneIcon:{
+            width: '100%',
+            aspectRatio: '4.85',
+            display: 'flex',
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxSizing: 'content-box',
+            backgroundColor: '#4CAF50', // Green background
+            borderRadius: '4px',
+            marginBottom: '4px',
+        },
+        cloneName: {
+            fontSize: 'clamp(4px, .65vw, 12px)',
+            marginTop: '2px',
+            fontWeight: '800',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',           
+            color: 'white',
+            textAlign: 'center', 
+            userSelect: 'none'
+        },
         sentinelIcon:{
             position: 'absolute',
             width: '28%',
@@ -476,6 +499,13 @@ const GameCard: React.FC<IGameCardProps> = ({
     }
     return (
         <Box sx={styles.cardContainer}>
+            {/* Clone component - appears above cards when clonedCardId exists */}
+            {cardStyle === CardStyle.InPlay && card.clonedCardId && (
+                <Box sx={styles.cloneIcon}>
+                    <Typography sx={styles.cloneName}>CLONE</Typography>
+                </Box>
+            )}
+            
             <Box 
                 sx={styles.card} 
                 onClick={handleClick}

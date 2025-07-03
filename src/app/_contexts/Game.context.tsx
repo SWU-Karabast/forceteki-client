@@ -38,6 +38,64 @@ interface IGameContextType {
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
 
+// Helper function to add clonedCardId to all cards
+const addClonedCardIds = (gameState: any): any => {
+    if (!gameState || !gameState.players) return gameState;
+    
+    // Deep clone the game state to avoid mutations
+    const processedGameState = JSON.parse(JSON.stringify(gameState));
+    
+    // Process each player's cards
+    Object.keys(processedGameState.players).forEach(playerId => {
+        const player = processedGameState.players[playerId];
+        
+        // Process leader and base cards
+        if (player.leader) {
+            player.leader.clonedCardId = '123';
+        }
+        if (player.base) {
+            player.base.clonedCardId = '123';
+        }
+        
+        // Process all card piles
+        if (player.cardPiles) {
+            Object.keys(player.cardPiles).forEach(pileName => {
+                if (Array.isArray(player.cardPiles[pileName])) {
+                    // First, collect all main cards that need fake upgrades
+                    const mainCards = player.cardPiles[pileName].filter((card: any) => !card.parentCardId);
+                    
+                    // Add clonedCardId to all cards
+                    player.cardPiles[pileName].forEach((card: any) => {
+                        card.clonedCardId = '123';
+                    });
+                    
+                    // Add fake TEST upgrades for cards in play (groundArena and spaceArena)
+                    if (pileName === 'groundArena' || pileName === 'spaceArena') {
+                        mainCards.forEach((card: any) => {
+                            // Create a fake upgrade card
+                            const fakeUpgrade = {
+                                uuid: `${card.uuid}-fake-upgrade`,
+                                name: 'TEST',
+                                parentCardId: card.uuid,
+                                aspects: ['command'], // Green upgrade
+                                selectable: false,
+                                setId: { set: 'TEST', number: 1 },
+                                type: 'upgrade',
+                                clonedCardId: '123'
+                            };
+                            
+                            // Add the fake upgrade to the same pile so it gets processed as a subcard
+                            player.cardPiles[pileName].push(fakeUpgrade);
+                        });
+                    }
+                }
+            });
+        }
+    });
+    
+    return processedGameState;
+};
+
 export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
     const lastGameIdRef = useRef<string | null>(null);
@@ -223,12 +281,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 lastGameIdRef.current = gameState.id;
             }
             
-            setGameState(gameState);
+            // Add clonedCardId to all cards
+            const processedGameState = addClonedCardIds(gameState);
+            
+            setGameState(processedGameState);
             if (process.env.NODE_ENV === 'development') {
-                const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
-                console.log(`Game state received (${byteSize} bytes):`, gameState);
+                const byteSize = new TextEncoder().encode(JSON.stringify(processedGameState)).length;
+                console.log(`Game state received (${byteSize} bytes):`, processedGameState);
             }
-            handleGameStatePopups(gameState);
+            handleGameStatePopups(processedGameState);
         });
 
         newSocket.on('lobbystate', (lobbyState: any) => {
