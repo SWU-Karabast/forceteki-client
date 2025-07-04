@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import Image from 'next/image';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { setWelcomeUpdateMessage } from '@/app/_utils/DeckStorageUtils';
+import { setWelcomeUpdateMessage } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 
 interface WhatsNewPopupProps {

@@ -9,9 +9,9 @@ import React, {
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { IUserContextType } from './UserTypes';
+import { IUserContextType, Preferences } from './UserTypes';
 import { v4 as uuid } from 'uuid';
-import { getUserFromServer } from '@/app/_utils/DeckStorageUtils';
+import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
@@ -21,13 +21,14 @@ const UserContext = createContext<IUserContextType>({
     logout: () => {},
     updateUsername: () => {},
     updateWelcomeMessage: () => {},
-    updateNeedsUsernameChange: () => {}
+    updateNeedsUsernameChange: () => {},
+    updateUserPreferences: () => {}
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const { data: session, status, update } = useSession(); // Get session from next-auth
+    const { data: session, update } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
@@ -160,6 +161,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         })
     }
 
+    const updateUserPreferences = (newPreferences: Preferences) => {
+        setUser((prevUser) => {
+            if (!prevUser) return null;
+            return {
+                ...prevUser,
+                preferences: newPreferences
+            };
+        });
+    };
+
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
         clearAnonUser();
@@ -180,7 +191,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences }}>
             {children}
         </UserContext.Provider>
     );

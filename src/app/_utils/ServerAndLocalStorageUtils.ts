@@ -88,8 +88,10 @@ export const getUserPayload = (user: IUser | null): object => {
 export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: Preferences, needsUsernameChange: boolean }> =>{
     try {
         const decks = loadSavedDecks(false);
+        const preferences = loadPreferencesFromLocalStorage();
         const payload = {
-            decks: decks
+            decks: decks,
+            preferences: preferences
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-user`,
             {
@@ -108,6 +110,7 @@ export const getUserFromServer = async(): Promise<{ id: string, username: string
             throw new Error(errors);
         }
         loadSavedDecks(true);
+        savePreferencesToLocalStorage(result.user.preferences);
         return result.user;
     } catch (error) {
         console.log(error);
@@ -511,6 +514,96 @@ export const getDeckFromServer = async (deckId: string, user:IUser): Promise<IDe
         console.error('Error getting deck:', error);
         throw error;
     }
+};
+
+/**
+ * Saves sound preferences to the server
+ * @param user The current user
+ * @param soundPreferences The sound preferences to save
+ * @returns Promise that resolves to boolean indicating success
+ */
+export const saveSoundPreferencesToServer = async(
+    user: IUser | null,
+    soundPreferences: Preferences['sound']
+): Promise<boolean> => {
+    try {
+        const payload = {
+            user,
+            soundPreferences
+        };
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/save-sound-preferences`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to save sound preferences');
+        }
+
+        return result.success;
+    } catch (error) {
+        console.error('Error saving sound preferences:', error);
+        throw error;
+    }
+};
+
+/**
+ * Saves preferences to localStorage for anonymous users
+ * @param preferences The preferences to save
+ */
+export const savePreferencesToLocalStorage = (preferences: Preferences): void => {
+    try {
+        localStorage.setItem('swu_preferences', JSON.stringify(preferences));
+    } catch (error) {
+        console.error('Error saving preferences to localStorage:', error);
+    }
+};
+
+/**
+ * Loads preferences from localStorage for anonymous users
+ * @returns The preferences object or default preferences
+ */
+export const loadPreferencesFromLocalStorage = (): Preferences => {
+    try {
+        const preferencesJSON = localStorage.getItem('swu_preferences');
+        if (preferencesJSON) {
+            const preferences = JSON.parse(preferencesJSON) as Preferences;
+            // Ensure sound preferences have defaults if missing
+            return {
+                cardback: preferences.cardback || undefined,
+                sound: {
+                    muteAllSound: preferences.sound?.muteAllSound ?? false,
+                    volume: preferences.sound?.volume ?? 0.75,
+                    muteCardClickSound: preferences.sound?.muteCardClickSound ?? false,
+                    muteMenuButtonsSound: preferences.sound?.muteMenuButtonsSound ?? false,
+                    muteChatSound: preferences.sound?.muteChatSound ?? false,
+                    muteOpponentFoundSound: preferences.sound?.muteOpponentFoundSound ?? false,
+                }
+            };
+        }
+    } catch (error) {
+        console.error('Error loading preferences from localStorage:', error);
+    }
+
+    // Return default preferences if nothing found or error occurred
+    return {
+        cardback: undefined,
+        sound: {
+            muteAllSound: false,
+            volume: 0.75,
+            muteCardClickSound: false,
+            muteMenuButtonsSound: false,
+            muteChatSound: false,
+            muteOpponentFoundSound: false,
+        }
+    };
 };
 
 

@@ -12,6 +12,14 @@ export interface IUser {
 
 export interface Preferences {
     cardback?: string;
+    sound?: {
+        muteAllSound?: boolean;
+        volume?: number;
+        muteCardClickSound?: boolean;
+        muteMenuButtonsSound?: boolean;
+        muteChatSound?: boolean;
+        muteOpponentFoundSound?: boolean;
+    };
 }
 
 export interface IUserContextType {
@@ -23,6 +31,7 @@ export interface IUserContextType {
     updateUsername: (username: string) => void;
     updateWelcomeMessage: () => void;
     updateNeedsUsernameChange: () => void;
+    updateUserPreferences: (preferences: Preferences) => void;
 }
 
 // Extend Next-auth types

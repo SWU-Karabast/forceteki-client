@@ -3,17 +3,19 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import { useEffect, useState } from 'react';
 import CurrentGameTab
     from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CurrentGameTab';
 import KeyboardShortcutsTab
     from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/KeyboardShortcutsTab';
 import CardSleevesTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CardSleevesTab';
-import GameOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
+import SoundOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/SoundOptionsTab';
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
 import { useUser } from '@/app/_contexts/User.context';
 import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
+import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
 
 function tabProps(index: number) {
     return {
@@ -27,11 +29,46 @@ function VerticalTabs({
     tabs,
     variant = 'gameBoard'
 }:IVerticalTabsProps) {
-    const [value, setValue] = React.useState(0);
+    const [value, setValue] = useState(0);
+    const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+    const [pendingTabIndex, setPendingTabIndex] = useState<number | null>(null);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const { logout } = useUser();
 
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (tabs[value] === 'soundOptions' && hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved sound preferences. Are you sure you want to leave?';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [tabs, value, hasUnsavedChanges]);
+
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-        setValue(newValue);
+        // Check if leaving sound options with unsaved changes
+        if (tabs[value] === 'soundOptions' && hasUnsavedChanges && newValue !== value) {
+            setPendingTabIndex(newValue);
+            setShowUnsavedDialog(true);
+        } else {
+            setValue(newValue);
+        }
+    };
+
+    const handleDialogDiscard = () => {
+        setShowUnsavedDialog(false);
+        // Tell SoundOptionsTab to reset (you'll need to expose this)
+        if (pendingTabIndex !== null) {
+            setValue(pendingTabIndex);
+        }
+        setPendingTabIndex(null);
+    };
+
+    const handleDialogCancel = () => {
+        setShowUnsavedDialog(false);
+        setPendingTabIndex(null);
     };
 
     const renderPreferencesContent = (type: string) => {
@@ -42,8 +79,8 @@ function VerticalTabs({
                 return <KeyboardShortcutsTab/>;
             case 'cardSleeves':
                 return <CardSleevesTab/>;
-            case 'gameOptions':
-                return <GameOptionsTab/>;
+            case 'soundOptions':
+                return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
             case 'endGame':
                 return <EndGameTab/>;
             case 'blockList':
@@ -62,8 +99,8 @@ function VerticalTabs({
                 return 'Keyboard Shortcuts';
             case 'cardSleeves':
                 return 'Card Sleeves';
-            case 'gameOptions':
-                return 'Game Options';
+            case 'soundOptions':
+                return 'Sound Options';
             case 'endGame':
                 return 'Current Game';
             case 'blockList':
@@ -178,6 +215,11 @@ function VerticalTabs({
                     );
                 })}
             </Box>
+            <UnsavedChangesDialog
+                open={showUnsavedDialog}
+                onDiscard={handleDialogDiscard}
+                onCancel={handleDialogCancel}
+            />
         </Box>
     );
 }
