@@ -12,7 +12,7 @@ export type SoundAction =
 
 interface SoundHandlerOptions {
     enabled?: boolean;
-    user?: IUser;
+    user?: IUser | null;
 }
 
 export const useSoundHandler = (options: SoundHandlerOptions = {}) => {

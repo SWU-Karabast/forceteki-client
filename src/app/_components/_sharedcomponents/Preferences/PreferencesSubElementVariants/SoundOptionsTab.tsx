@@ -73,7 +73,6 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
     // Load user preferences on component mount
     useEffect(() => {
         let preferences: Preferences['sound'];
-
         if (user && user?.preferences?.sound) {
             preferences = {
                 muteAllSound: user.preferences.sound.muteAllSound ?? false,
@@ -127,6 +126,14 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                     setOriginalPreferences(soundPreferences);
                     setSaveStatus('success');
                     setSaveMessage('Sound preferences saved successfully.');
+
+                    // in this case we also save to localstorage
+                    const currentPreferences = loadPreferencesFromLocalStorage();
+                    const updatedPreferences = {
+                        ...currentPreferences,
+                        sound: soundPreferences
+                    };
+                    savePreferencesToLocalStorage(updatedPreferences);
 
                     setTimeout(() => setSaveStatus('idle'), 3000);
                     return true;
