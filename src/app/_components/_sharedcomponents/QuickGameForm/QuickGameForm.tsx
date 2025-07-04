@@ -256,7 +256,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             <form onSubmit={handleJoinGameQueue}>
                 {/* Favourite Decks Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
-                    <Typography variant="body1" sx={styles.labelTextStyle}>Favorite decks</Typography>
+                    <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
                     <StyledTextField
                         select
                         value={favouriteDeck}
