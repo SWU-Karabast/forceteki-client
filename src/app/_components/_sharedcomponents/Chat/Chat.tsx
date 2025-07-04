@@ -325,7 +325,7 @@ const Chat: React.FC<IChatProps> = ({
                 )}
                 {!user && !isSpectator && (
                     <Typography sx={styles.chatDisabledLogin}>
-                        Please login to chat
+                        Log in to enable chat
                     </Typography>
                 )}
                 {user && !isSpectator && isAnonymousOpponent && (
