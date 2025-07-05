@@ -108,16 +108,16 @@ const Chat: React.FC<IChatProps> = ({
         alertType?: string
     ) => {
         const getAlertStyle = (type: string) => {
-        const alertColors = {
-            notification: '#d500f9',
-            warning: 'yellow',
-            danger: 'red',
-            readyStatus: 'green'
+            const alertColors = {
+                notification: '#d500f9',
+                warning: 'yellow',
+                danger: 'red',
+                readyStatus: 'green'
+            };
+            
+            const color = alertColors[type as keyof typeof alertColors];
+            return color ? { ...styles.alertBase, color } : styles.messageText;
         };
-        
-        const color = alertColors[type as keyof typeof alertColors];
-        return color ? { ...styles.alertBase, color } : styles.messageText;
-    };
 
         const messageComponents = messageContent.map((item, itemIndex) => 
             formatMessageItem(item, itemIndex)
