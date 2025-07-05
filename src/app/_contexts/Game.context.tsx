@@ -34,6 +34,7 @@ interface IGameContextType {
     distributionPromptData: IDistributionPromptData | null;
     isSpectator: boolean;
     lastQueueHeartbeat: number;
+    isAnonymousPlayer: (player: string) => boolean;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -273,9 +274,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const getOpponent = (player: string) => {
-        if (!gameState) return '';
-        const playerNames = Object.keys(gameState.players);
-        return playerNames.find((name) => name !== player) || '';
+        if (gameState) {
+            const playerNames = Object.keys(gameState.players);
+            return playerNames.find((name) => name !== player) || '';
+        }
+        if (lobbyState) {
+            return lobbyState.users.find((p: any) => p.id !== player)?.id || '';
+        }
+        return '';
+    };
+
+    const isAnonymousPlayer = (player: string): boolean => {
+        if (lobbyState) {
+            return lobbyState.users.find((p: any) => p.id === player)?.authenticated === false;
+        }
+        return true; // Default to true if we can't determine
     };
 
     const resetStates = () => {
@@ -309,7 +322,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 updateDistributionPrompt,
                 distributionPromptData,
                 isSpectator,
-                lastQueueHeartbeat
+                lastQueueHeartbeat,
+                isAnonymousPlayer
             }}
         >
             {children}
