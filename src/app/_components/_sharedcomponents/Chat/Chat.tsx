@@ -26,13 +26,23 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer } = useGame();
+    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const { user } = useUser();
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
+    const isPrivateLobby = lobbyState?.gameType === 'Private';
     const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
+    
+    // Helper function to determine if chat input should be shown
+    const shouldShowChatInput = () => {
+        if (isSpectator) return false;
+        if (isPrivateLobby) return true;
+        if (!user) return false;
+        if (isAnonymousOpponent) return false;
+        return true;
+    };
 
     const getSpectatorDisplayName = (
         playerId: string,
@@ -293,8 +303,8 @@ const Chat: React.FC<IChatProps> = ({
 
 
             <Box sx={styles.inputContainer}>
-                {/* Only show chat input if user is not spectator and user is logged in */}
-                {!isSpectator && user && !isAnonymousOpponent && (
+                {/* Show chat input based on game state and user permissions */}
+                {shouldShowChatInput() && (
                     <TextField
                         variant="outlined"
                         placeholder="Chat"
@@ -323,12 +333,12 @@ const Chat: React.FC<IChatProps> = ({
                         }}
                     />
                 )}
-                {!user && !isSpectator && (
+                {!user && !isSpectator && !isPrivateLobby && (
                     <Typography sx={styles.chatDisabledLogin}>
                         Log in to enable chat
                     </Typography>
                 )}
-                {user && !isSpectator && isAnonymousOpponent && (
+                {user && !isSpectator && isAnonymousOpponent && !isPrivateLobby && (
                     <Typography sx={styles.chatDisabledAnonOpponent}>
                         Chat disabled when playing against an anonymous opponent
                     </Typography>
