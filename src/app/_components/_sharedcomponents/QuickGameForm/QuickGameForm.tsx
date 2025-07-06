@@ -47,8 +47,13 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [queueState, setQueueState] = useState<boolean>(false)
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
+    let savedFormat = localStorage.getItem('format');
+    if (savedFormat !== SwuGameFormat.Premier && savedFormat !== SwuGameFormat.Open) {
+        localStorage.setItem('format', SwuGameFormat.Premier);
+        savedFormat = SwuGameFormat.Premier;
+    }
+
     const formatOptions = Object.values(SwuGameFormat);    
-    const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
     const { data: session } = useSession(); // Get session from next-auth
 
