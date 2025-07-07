@@ -71,11 +71,11 @@ const PublicGames: React.FC = () => {
                 { lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
-                <Typography variant="h3">Next Set Preview</Typography>
+                {/* <Typography variant="h3">Next Set Preview</Typography>
                 <Divider sx={styles.divider} />
                 { lobbies.filter((lobby) => lobby.format === SwuGameFormat.NextSetPreview).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
-                ))}
+                ))} */}
                 <Typography variant="h3">Open</Typography>
                 <Divider sx={styles.divider} />
                 { lobbies.filter((lobby) => lobby.format === SwuGameFormat.Open).map((lobby) => (
