@@ -350,6 +350,28 @@ const GameCard: React.FC<IGameCardProps> = ({
             textAlign: 'center', 
             userSelect: 'none'
         },
+        cloneIcon:{
+            width: '100%',
+            aspectRatio: '4.85',
+            display: 'flex',
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(upgrade-green.png)', // Use the same green upgrade background as the TEST upgrade
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxSizing: 'content-box',
+            borderRadius: '0.5rem', // Add rounded corners to match the card container
+        },
+        cloneName: {
+            fontSize: 'clamp(4px, .65vw, 12px)',
+            marginTop: '2px',
+            fontWeight: '800',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',           
+            color: 'black', // Change to black to match upgrade text
+            textAlign: 'center', 
+            userSelect: 'none'
+        },
         sentinelIcon:{
             position: 'absolute',
             width: '28%',
@@ -478,6 +500,13 @@ const GameCard: React.FC<IGameCardProps> = ({
     }
     return (
         <Box sx={styles.cardContainer}>
+            {/* Clone component - appears above cards when clonedCardId exists */}
+            {cardStyle === CardStyle.InPlay && card.clonedCardId && (
+                <Box sx={styles.cloneIcon}>
+                    <Typography sx={styles.cloneName}>CLONE</Typography>
+                </Box>
+            )}
+            
             <Box 
                 sx={styles.card} 
                 onClick={handleClick}

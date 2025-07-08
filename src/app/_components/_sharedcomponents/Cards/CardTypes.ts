@@ -64,6 +64,7 @@ export interface ICardData {
     isAttacker?: boolean;
     isDefender?: boolean;
     displayText?: string;
+    clonedCardId?: string;
 }
 
 export interface IServerCardData {
