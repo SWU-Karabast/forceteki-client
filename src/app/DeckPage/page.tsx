@@ -475,11 +475,11 @@ const DeckPage: React.FC = () => {
                                         <Typography
                                             sx={{
                                                 ...styles.sourceTag,
-                                                ...(deck.source === 'SWUSTATS' ? styles.swuStatsTag : styles.swudbTag)
+                                                ...(deck.source.toUpperCase() === 'SWUSTATS' ? styles.swuStatsTag : styles.swudbTag)
                                             }}
                                             onClick={(e) => handleRedirect(deck.deckLink, e)}
                                         >
-                                            {deck.source}
+                                            {deck.source.toUpperCase()}
                                         </Typography>
                                     )}
                                     <Box sx={styles.viewDeckButton} onClick={(e) => e.stopPropagation()}>
