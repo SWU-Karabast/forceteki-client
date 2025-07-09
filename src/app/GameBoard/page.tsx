@@ -51,8 +51,8 @@ const GameBoard = () => {
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame']
-        :['currentGame']
+        ? ['endGame','soundOptions']
+        :['currentGame','soundOptions']
 
     if (!gameState || !connectedPlayer || (!(connectedPlayer in gameState?.players) && !(connectedPlayer in gameState?.spectators))) {
         return null;
