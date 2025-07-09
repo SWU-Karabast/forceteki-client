@@ -20,7 +20,7 @@ interface SoundOptionsTabProps {
 }
 
 enum SaveStatus {
-    IDLE = 'idle',
+    NOCHANGE = 'noChange',
     SUCCESS = 'success',
     ERROR = 'error'
 }
@@ -51,7 +51,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
         muteOpponentFoundSound: false,
     });
     const [isSaving, setIsSaving] = useState(false);
-    const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.IDLE);
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NOCHANGE);
     const tempAudio = new Audio('/HelloThere.mp3');
     const [saveMessage, setSaveMessage] = useState<string | undefined>();
     const [hasChanges, setHasChanges] = useState(false);
@@ -142,12 +142,12 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
             ...prev,
             [key]: key === 'volume' ? value as number / 100 : value
         }));
-        setSaveStatus(SaveStatus.IDLE);
+        setSaveStatus(SaveStatus.NOCHANGE);
     };
 
     const handleSavePreferences = async (): Promise<boolean> => {
         setIsSaving(true);
-        setSaveStatus(SaveStatus.IDLE);
+        setSaveStatus(SaveStatus.NOCHANGE);
 
         try {
             if (user) {
@@ -170,7 +170,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                     };
                     savePreferencesToLocalStorage(updatedPreferences);
 
-                    setTimeout(() => setSaveStatus(SaveStatus.IDLE), 3000);
+                    setTimeout(() => setSaveStatus(SaveStatus.NOCHANGE), 3000);
                     return true;
                 } else {
                     setSaveStatus(SaveStatus.ERROR);
@@ -188,7 +188,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                 setOriginalPreferences(soundPreferences);
                 setSaveStatus(SaveStatus.SUCCESS);
                 setSaveMessage('Sound preferences saved successfully.');
-                setTimeout(() => setSaveStatus(SaveStatus.IDLE), 3000);
+                setTimeout(() => setSaveStatus(SaveStatus.NOCHANGE), 3000);
                 return true;
             }
         } catch (error) {
