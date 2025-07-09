@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { IUserContextType, Preferences } from './UserTypes';
+import { IUserContextType, IPreferences } from './UserTypes';
 import { v4 as uuid } from 'uuid';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 
@@ -161,7 +161,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         })
     }
 
-    const updateUserPreferences = (newPreferences: Preferences) => {
+    const updateUserPreferences = (newPreferences: IPreferences) => {
         setUser((prevUser) => {
             if (!prevUser) return null;
             return {

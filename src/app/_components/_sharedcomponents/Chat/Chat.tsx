@@ -35,7 +35,7 @@ const Chat: React.FC<IChatProps> = ({
     // Initialize sound handler with user preferences
     const { playIncomingMessageSound } = useSoundHandler({
         enabled: !isSpectator, // Don't play sounds for spectators
-        user:user,
+        user,
     });
 
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {

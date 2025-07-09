@@ -25,6 +25,17 @@ function tabProps(index: number) {
 }
 
 
+enum TabType {
+    CURRENT_GAME = 'currentGame',
+    KEYBOARD_SHORTCUTS = 'keyboardShortcuts',
+    CARD_SLEEVES = 'cardSleeves',
+    SOUND_OPTIONS = 'soundOptions',
+    END_GAME = 'endGame',
+    BLOCK_LIST = 'blockList',
+    GENERAL = 'general',
+    LOGOUT = 'logout'
+}
+
 function VerticalTabs({ 
     tabs,
     variant = 'gameBoard'
@@ -43,8 +54,8 @@ function VerticalTabs({
             }
         };
 
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.addEventListener('beforeUnload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeUnload', handleBeforeUnload);
     }, [tabs, value, hasUnsavedChanges]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -73,19 +84,19 @@ function VerticalTabs({
 
     const renderPreferencesContent = (type: string) => {
         switch (type) {
-            case 'currentGame':
+            case TabType.CURRENT_GAME:
                 return <CurrentGameTab/>;
-            case 'keyboardShortcuts':
+            case TabType.KEYBOARD_SHORTCUTS:
                 return <KeyboardShortcutsTab/>;
-            case 'cardSleeves':
+            case TabType.CARD_SLEEVES:
                 return <CardSleevesTab/>;
-            case 'soundOptions':
+            case TabType.SOUND_OPTIONS:
                 return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
-            case 'endGame':
+            case TabType.END_GAME:
                 return <EndGameTab/>;
-            case 'blockList':
+            case TabType.BLOCK_LIST:
                 return <BlockListTab/>;
-            case 'general':
+            case TabType.GENERAL:
                 return <GeneralTab/>;
             default:
                 return <Typography>Not Implemented</Typography>;
@@ -93,21 +104,21 @@ function VerticalTabs({
     };
     const renderLabels = (type: string) => {
         switch (type) {
-            case 'currentGame':
+            case TabType.CURRENT_GAME:
                 return 'Current Game';
-            case 'keyboardShortcuts':
+            case TabType.KEYBOARD_SHORTCUTS:
                 return 'Keyboard Shortcuts';
-            case 'cardSleeves':
+            case TabType.CARD_SLEEVES:
                 return 'Card Sleeves';
-            case 'soundOptions':
+            case TabType.SOUND_OPTIONS:
                 return 'Sound Options';
-            case 'endGame':
+            case TabType.END_GAME:
                 return 'Current Game';
-            case 'blockList':
+            case TabType.BLOCK_LIST:
                 return 'Block List';
-            case 'logout':
+            case TabType.LOGOUT:
                 return 'Log Out'
-            case 'general':
+            case TabType.GENERAL:
                 return 'General';
             default:
                 return null;

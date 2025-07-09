@@ -6,7 +6,7 @@ import {
 import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
-import { IUser, Preferences } from '@/app/_contexts/UserTypes';
+import { IUser, IPreferences } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 
 /* Secondary functions */
@@ -85,7 +85,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: Preferences, needsUsernameChange: boolean }> =>{
+export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean }> =>{
     try {
         const decks = loadSavedDecks(false);
         const preferences = loadPreferencesFromLocalStorage();
@@ -524,7 +524,7 @@ export const getDeckFromServer = async (deckId: string, user:IUser): Promise<IDe
  */
 export const saveSoundPreferencesToServer = async(
     user: IUser | null,
-    soundPreferences: Preferences['sound']
+    soundPreferences: IPreferences['sound']
 ): Promise<boolean> => {
     try {
         const payload = {
@@ -558,7 +558,7 @@ export const saveSoundPreferencesToServer = async(
  * Saves preferences to localStorage for anonymous users
  * @param preferences The preferences to save
  */
-export const savePreferencesToLocalStorage = (preferences: Preferences): void => {
+export const savePreferencesToLocalStorage = (preferences: IPreferences): void => {
     try {
         localStorage.setItem('swu_preferences', JSON.stringify(preferences));
     } catch (error) {
@@ -570,19 +570,19 @@ export const savePreferencesToLocalStorage = (preferences: Preferences): void =>
  * Loads preferences from localStorage for anonymous users
  * @returns The preferences object or default preferences
  */
-export const loadPreferencesFromLocalStorage = (): Preferences => {
+export const loadPreferencesFromLocalStorage = (): IPreferences => {
     try {
         const preferencesJSON = localStorage.getItem('swu_preferences');
         if (preferencesJSON) {
-            const preferences = JSON.parse(preferencesJSON) as Preferences;
+            const preferences = JSON.parse(preferencesJSON) as IPreferences;
             // Ensure sound preferences have defaults if missing
             return {
                 cardback: preferences.cardback || undefined,
                 sound: {
                     muteAllSound: preferences.sound?.muteAllSound ?? false,
                     volume: preferences.sound?.volume ?? 0.75,
-                    muteCardClickSound: preferences.sound?.muteCardClickSound ?? false,
-                    muteMenuButtonsSound: preferences.sound?.muteMenuButtonsSound ?? false,
+                    muteCardAndButtonClickSound: preferences.sound?.muteCardAndButtonClickSound ?? false,
+                    muteYourTurn: preferences.sound?.muteYourTurn ?? false,
                     muteChatSound: preferences.sound?.muteChatSound ?? false,
                     muteOpponentFoundSound: preferences.sound?.muteOpponentFoundSound ?? false,
                 }
@@ -598,8 +598,8 @@ export const loadPreferencesFromLocalStorage = (): Preferences => {
         sound: {
             muteAllSound: false,
             volume: 0.75,
-            muteCardClickSound: false,
-            muteMenuButtonsSound: false,
+            muteCardAndButtonClickSound: false,
+            muteYourTurn: false,
             muteChatSound: false,
             muteOpponentFoundSound: false,
         }

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect, useImperativeHandle, forwardRef, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Divider, Alert } from '@mui/material';
@@ -11,27 +11,51 @@ import {
     savePreferencesToLocalStorage,
     saveSoundPreferencesToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
-import { Preferences } from '@/app/_contexts/UserTypes';
+import { IPreferences, ISoundPreferences } from '@/app/_contexts/UserTypes';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { keyframes } from '@mui/system';
 
 interface SoundOptionsTabProps {
     setHasNewChanges?: Dispatch<SetStateAction<boolean>>;
 }
+
+enum SaveStatus {
+    IDLE = 'idle',
+    SUCCESS = 'success',
+    ERROR = 'error'
+}
+
+const pulseBorder = keyframes`
+  0% {
+    border-color: rgba(0, 140, 255, 0.4);
+    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
+  }
+  50% {
+    border-color: rgba(0, 180, 255, 0.6);
+    box-shadow: 0 0 8px rgba(0, 180, 255, 0.6);
+  }
+  100% {
+    border-color: rgba(0, 140, 255, 0.4);
+    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
+  }
+`;
+
 function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
     const { user, updateUserPreferences } = useUser();
-    const [soundPreferences, setSoundPreferences] = useState<Preferences['sound']>({
+    const [soundPreferences, setSoundPreferences] = useState<IPreferences['sound']>({
         muteAllSound: false,
         volume: 0.75,
-        muteCardClickSound: false,
-        muteMenuButtonsSound: false,
+        muteCardAndButtonClickSound: false,
+        muteYourTurn: false,
         muteChatSound: false,
         muteOpponentFoundSound: false,
     });
     const [isSaving, setIsSaving] = useState(false);
-    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.IDLE);
+    const tempAudio = new Audio('/HelloThere.mp3');
     const [saveMessage, setSaveMessage] = useState<string | undefined>();
     const [hasChanges, setHasChanges] = useState(false);
-    const [originalPreferences, setOriginalPreferences] = useState<Preferences['sound']>(undefined);
+    const [originalPreferences, setOriginalPreferences] = useState<IPreferences['sound']>(undefined);
 
     const styles = {
         typographyContainer: {
@@ -53,13 +77,24 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
         },
         saveButton: {
             minWidth: '120px',
+            ml:'5px',
+            '&:not(:disabled)': {
+                background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
+                '&:hover': {
+                    background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
+                },
+                animation: `${pulseBorder} 4s infinite ease-in-out`,
+                boxShadow: '0 0 6px rgba(0, 140, 255, 0.5)',
+                border: '2px solid rgba(0, 140, 255, 0.5)',
+            },
         },
     };
 
     const handleVolumeChangeCommitted = (value: number) => {
         const volumeLevel = value / 100;
         try {
-            const tempAudio = new Audio('/HelloThere.mp3');
             tempAudio.volume = volumeLevel;
             tempAudio.currentTime = 0;
             tempAudio.play().catch((error) => {
@@ -72,13 +107,13 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
 
     // Load user preferences on component mount
     useEffect(() => {
-        let preferences: Preferences['sound'];
+        let preferences: IPreferences['sound'];
         if (user && user?.preferences?.sound) {
             preferences = {
                 muteAllSound: user.preferences.sound.muteAllSound ?? false,
                 volume: user.preferences.sound.volume ?? 0.75,
-                muteCardClickSound: user.preferences.sound.muteCardClickSound ?? false,
-                muteMenuButtonsSound: user.preferences.sound.muteMenuButtonsSound ?? false,
+                muteCardAndButtonClickSound: user.preferences.sound.muteCardAndButtonClickSound ?? false,
+                muteYourTurn: user.preferences.sound.muteYourTurn ?? false,
                 muteChatSound: user.preferences.sound.muteChatSound ?? false,
                 muteOpponentFoundSound: user.preferences.sound.muteOpponentFoundSound ?? false,
             };
@@ -102,17 +137,17 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
         }
     }, [soundPreferences, originalPreferences]);
 
-    const handlePreferenceChange = (key: string, value: boolean | number) => {
+    const handlePreferenceChange = <T extends keyof ISoundPreferences>(key: T, value: ISoundPreferences[T]) => {
         setSoundPreferences(prev => ({
             ...prev,
             [key]: key === 'volume' ? value as number / 100 : value
         }));
-        setSaveStatus('idle');
+        setSaveStatus(SaveStatus.IDLE);
     };
 
     const handleSavePreferences = async (): Promise<boolean> => {
         setIsSaving(true);
-        setSaveStatus('idle');
+        setSaveStatus(SaveStatus.IDLE);
 
         try {
             if (user) {
@@ -124,7 +159,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                         sound: soundPreferences
                     });
                     setOriginalPreferences(soundPreferences);
-                    setSaveStatus('success');
+                    setSaveStatus(SaveStatus.SUCCESS);
                     setSaveMessage('Sound preferences saved successfully.');
 
                     // in this case we also save to localstorage
@@ -135,10 +170,10 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                     };
                     savePreferencesToLocalStorage(updatedPreferences);
 
-                    setTimeout(() => setSaveStatus('idle'), 3000);
+                    setTimeout(() => setSaveStatus(SaveStatus.IDLE), 3000);
                     return true;
                 } else {
-                    setSaveStatus('error');
+                    setSaveStatus(SaveStatus.ERROR);
                     setSaveMessage('Failed to save preferences to server.');
                     return false;
                 }
@@ -151,9 +186,9 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
 
                 savePreferencesToLocalStorage(updatedPreferences);
                 setOriginalPreferences(soundPreferences);
-                setSaveStatus('success');
+                setSaveStatus(SaveStatus.SUCCESS);
                 setSaveMessage('Sound preferences saved successfully.');
-                setTimeout(() => setSaveStatus('idle'), 3000);
+                setTimeout(() => setSaveStatus(SaveStatus.IDLE), 3000);
                 return true;
             }
         } catch (error) {
@@ -163,7 +198,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
             } else {
                 setSaveMessage('Unknown Server Error');
             }
-            setSaveStatus('error');
+            setSaveStatus(SaveStatus.ERROR);
             return false;
         } finally {
             setIsSaving(false);
@@ -200,22 +235,22 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
 
                 <Box sx={styles.optionContainer}>
                     <PreferenceOption
-                        option={'Card Clicks'}
-                        optionDescription={'Sound when clicking on cards.'}
+                        option={'Card & Button Clicks'}
+                        optionDescription={'Sound when clicking on cards, buttons and prompts.'}
                         iconType="mute"
-                        onChange={(muted) => handlePreferenceChange('muteCardClickSound', muted)}
-                        defaultChecked={soundPreferences?.muteCardClickSound}
+                        onChange={(muted) => handlePreferenceChange('muteCardAndButtonClickSound', muted)}
+                        defaultChecked={soundPreferences?.muteCardAndButtonClickSound}
                         disabled={soundPreferences?.muteAllSound}
                     />
                 </Box>
 
                 <Box sx={styles.optionContainer}>
                     <PreferenceOption
-                        option={'Menu Buttons'}
-                        optionDescription={'Sound for menu and prompt button interactions.'}
+                        option={'Your turn indicator'}
+                        optionDescription={'Sound when it is your turn to perform an action.'}
                         iconType="mute"
-                        onChange={(muted) => handlePreferenceChange('muteMenuButtonsSound', muted)}
-                        defaultChecked={soundPreferences?.muteMenuButtonsSound}
+                        onChange={(muted) => handlePreferenceChange('muteYourTurn', muted)}
+                        defaultChecked={soundPreferences?.muteYourTurn}
                         disabled={soundPreferences?.muteAllSound}
                     />
                 </Box>

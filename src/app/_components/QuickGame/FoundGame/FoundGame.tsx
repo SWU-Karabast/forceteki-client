@@ -29,7 +29,7 @@ const FoundGame: React.FC = () => {
     // Initialize sound handler with user preferences
     const { playFoundOpponentSound } = useSoundHandler({
         enabled: true,
-        user:user
+        user
     });
 
     useEffect(() => {

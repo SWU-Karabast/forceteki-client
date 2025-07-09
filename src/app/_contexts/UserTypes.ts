@@ -6,20 +6,22 @@ export interface IUser {
     providerId: string | null;
     showWelcomeMessage?: boolean,
     authenticated: boolean,
-    preferences: Preferences,
+    preferences: IPreferences,
     needsUsernameChange?: boolean,
 }
 
-export interface Preferences {
+export interface ISoundPreferences {
+    muteAllSound?: boolean;
+    volume?: number;
+    muteCardAndButtonClickSound?: boolean;
+    muteYourTurn?: boolean;
+    muteChatSound?: boolean;
+    muteOpponentFoundSound?: boolean;
+}
+
+export interface IPreferences {
     cardback?: string;
-    sound?: {
-        muteAllSound?: boolean;
-        volume?: number;
-        muteCardClickSound?: boolean;
-        muteMenuButtonsSound?: boolean;
-        muteChatSound?: boolean;
-        muteOpponentFoundSound?: boolean;
-    };
+    sound?: ISoundPreferences
 }
 
 export interface IUserContextType {
@@ -31,7 +33,7 @@ export interface IUserContextType {
     updateUsername: (username: string) => void;
     updateWelcomeMessage: () => void;
     updateNeedsUsernameChange: () => void;
-    updateUserPreferences: (preferences: Preferences) => void;
+    updateUserPreferences: (preferences: IPreferences) => void;
 }
 
 // Extend Next-auth types

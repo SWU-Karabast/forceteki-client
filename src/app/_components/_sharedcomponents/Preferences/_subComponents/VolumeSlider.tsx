@@ -46,8 +46,8 @@ function VolumeSlider({ label, description, defaultValue = 75, onChange, onChang
     const [volume, setVolume] = useState(defaultValue);
 
     useEffect(() => {
-        setVolume(defaultValue);
-    },[defaultValue]);
+        setVolume(disabled ? 0 : defaultValue);
+    },[defaultValue, disabled]);
 
     const handleVolumeChange = (event: Event, newValue: number | number[]) => {
         const value = Array.isArray(newValue) ? newValue[0] : newValue;
@@ -110,7 +110,7 @@ function VolumeSlider({ label, description, defaultValue = 75, onChange, onChang
             </Box>
             <Box sx={styles.sliderContainer}>
                 <StarWarsSlider
-                    value={volume}
+                    value={disabled ? 0 : volume}
                     onChange={handleVolumeChange}
                     disabled={disabled}
                     onChangeCommitted={(_, value) => onChangeCommitted?.(value as number)}

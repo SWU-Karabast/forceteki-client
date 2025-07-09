@@ -124,12 +124,12 @@ function MuteIcon({ defaultChecked = false, disabled = false, onChange }: MuteIc
 
     return (
         <StyledMuteButton
-            className={isMuted ? 'muted' : ''}
+            className={disabled ? 'muted' : isMuted ? 'muted' : ''}
             onClick={handleToggle}
             disabled={disabled}
             aria-label={isMuted ? 'Unmute' : 'Mute'}
         >
-            {isMuted ? <MutedIcon /> : <UnmutedIcon />}
+            {disabled ? <MutedIcon /> : isMuted ? <MutedIcon /> : <UnmutedIcon />}
         </StyledMuteButton>
     );
 }
