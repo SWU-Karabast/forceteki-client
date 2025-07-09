@@ -6,7 +6,7 @@ import { useUser } from '@/app/_contexts/User.context';
 
 const SearchingForGame: React.FC = () => {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const { lastQueueHeartbeat } = useGame();
+    const { lastQueueHeartbeat, createNewSocket } = useGame();
     const router = useRouter();
     const lastQueueHeartbeatState = useRef<number>(0);
     const { user, anonymousUserId } = useUser();
@@ -18,9 +18,15 @@ const SearchingForGame: React.FC = () => {
             if (secondsSinceLastHeartbeat > 3) {
                 alert(`Connection lost. Please try again.\nUser ID: ${user?.id || anonymousUserId}`);
                 router.push('/');
-            } else {
-                checkTimeout();
+                return;
             }
+            
+            if (secondsSinceLastHeartbeat >= 1) {
+                // if it's been more than one second, try reconnecting the socket
+                createNewSocket();
+            }
+            
+            checkTimeout();
         }, 1000);
     }
 

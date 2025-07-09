@@ -35,6 +35,7 @@ interface IGameContextType {
     isSpectator: boolean;
     lastQueueHeartbeat: number;
     isAnonymousPlayer: (player: string) => boolean;
+    createNewSocket: () => Socket | undefined;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -55,7 +56,127 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
 
-    useEffect(() => {
+    const cardSelectableZones = (gamestate: any, connectedPlayerId: string) => {
+        // TODO: Clean this up to make sure cards that target opponent resources and discard bring up the correct popups
+        const playerState = gamestate.players[connectedPlayerId];
+        const opponentId = Object.keys(gamestate.players).find(id => id !== connectedPlayerId) || '';
+        const opponent = gamestate.players[opponentId];
+        const zones = [];
+        if (playerState?.leader.selectable || playerState?.base.selectable) {
+            zones.push(`player-${ZoneName.Base}`);
+        }
+        for (const zoneName in playerState?.cardPiles) {
+            if (playerState.cardPiles[zoneName].some((card: any) => card.selectable)) {
+                zones.push(`player-${zoneName}`);
+            }
+        }
+        if (opponent?.leader.selectable || opponent?.base.selectable) {
+            zones.push(`opponent-${ZoneName.Base}`);
+        }
+        for (const zoneName in opponent?.cardPiles) {
+            if (opponent.cardPiles[zoneName].some((card: any) => card.selectable)) {
+                zones.push(`opponent-${zoneName}`);
+            }
+        }
+        return zones
+    }
+
+    const handleGameStatePopups = (gameState: any, connectedPlayerId: string, isSpectatorMode: boolean) => {
+        if (!connectedPlayerId || isSpectatorMode) return;
+        if (gameState.players?.[connectedPlayerId]?.promptState) {
+            const promptState = gameState.players?.[connectedPlayerId].promptState;
+            const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
+            prunePromptStatePopups(promptUuid);
+            if (promptType === 'actionWindow') return;
+            else if (promptType === 'distributeAmongTargets') {
+                initDistributionPrompt(promptState.distributeAmongTargets)
+                return;
+            }
+            else if (promptType === 'displayCards') {
+                const cards = displayCards.map((card: any) => {
+                    return {
+                        ...card,
+                        uuid: card.cardUuid,
+                    };
+                });
+                return openPopup('select', {
+                    uuid: promptUuid,
+                    title: promptTitle,
+                    description: menuTitle,
+                    cards: cards,
+                    perCardButtons: perCardButtons,
+                    buttons: buttons,
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('default', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (dropdownListOptions.length > 0 && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('dropdown', {
+                    uuid: promptUuid,
+                    title: promptTitle,
+                    description: menuTitle,
+                    options: dropdownListOptions,
+                    source: PopupSource.PromptState
+                });
+            }
+        }
+        const cardSelectionZones = cardSelectableZones(gameState, connectedPlayerId);
+        if (cardSelectionZones.length === 1) {
+            const opponentId = Object.keys(gameState.players).find(id => id !== connectedPlayerId) || '';
+            const { menuTitle, buttons } = gameState.players[connectedPlayerId].promptState;
+            switch (cardSelectionZones[0]) {
+                case 'player-resources':
+                    openPopup('pile', {
+                        uuid: `${connectedPlayerId}-resources`,
+                        title: 'Your Resources',
+                        subtitle: menuTitle,
+                        cards: gameState?.players[connectedPlayerId]?.cardPiles['resources'],
+                        source: PopupSource.PromptState,
+                        buttons: buttons,
+                    });
+                    break;
+                case 'player-discard':
+                    openPopup('pile', {
+                        uuid: `${connectedPlayerId}-discard`,
+                        title: 'Your Discard',
+                        subtitle: menuTitle,
+                        cards: gameState?.players[connectedPlayerId]?.cardPiles['discard'],
+                        source: PopupSource.PromptState,
+                        buttons: buttons,
+                    });
+                    break;
+                case 'opponent-resources':
+                    openPopup('pile', {
+                        uuid: `${opponentId}-resources`,
+                        title: 'Opponent Resources',
+                        subtitle: menuTitle,
+                        cards: gameState?.players[opponentId]?.cardPiles['resources'],
+                        source: PopupSource.PromptState,
+                        buttons: buttons,
+                    });
+                    break;
+                case 'opponent-discard':
+                    openPopup('pile', {
+                        uuid: `${opponentId}-discard`,
+                        title: 'Opponent Discard',
+                        subtitle: menuTitle,
+                        cards: gameState?.players[opponentId]?.cardPiles['discard'],
+                        source: PopupSource.PromptState,
+                        buttons: buttons,
+                    });
+                    break;
+            }
+        }
+    };
+
+    const createNewSocket = () => {
         // Only proceed when session is loaded (either authenticated or unauthenticated)
         if (status === 'loading') {
             return;
@@ -78,126 +199,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             },
             auth: token ? { token } : undefined,
         });
-
-        const cardSelectableZones = (gamestate: any) => {
-            // TODO: Clean this up to make sure cards that target opponent resources and discard bring up the correct popups
-            const playerState = gamestate.players[connectedPlayerId];
-            const opponentId = Object.keys(gamestate.players).find(id => id !== connectedPlayerId) || '';
-            const opponent = gamestate.players[opponentId];
-            const zones = [];
-            if (playerState?.leader.selectable || playerState?.base.selectable) {
-                zones.push(`player-${ZoneName.Base}`);
-            }
-            for (const zoneName in playerState?.cardPiles) {
-                if (playerState.cardPiles[zoneName].some((card: any) => card.selectable)) {
-                    zones.push(`player-${zoneName}`);
-                }
-            }
-            if (opponent?.leader.selectable || opponent?.base.selectable) {
-                zones.push(`opponent-${ZoneName.Base}`);
-            }
-            for (const zoneName in opponent?.cardPiles) {
-                if (opponent.cardPiles[zoneName].some((card: any) => card.selectable)) {
-                    zones.push(`opponent-${zoneName}`);
-                }
-            }
-            return zones
-        }
-
-        const handleGameStatePopups = (gameState: any) => {
-            if (!connectedPlayerId || isSpectatorMode) return;
-            if (gameState.players?.[connectedPlayerId]?.promptState) {
-                const promptState = gameState.players?.[connectedPlayerId].promptState;
-                const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
-                prunePromptStatePopups(promptUuid);
-                if (promptType === 'actionWindow') return;
-                else if (promptType === 'distributeAmongTargets') {
-                    initDistributionPrompt(promptState.distributeAmongTargets)
-                    return;
-                }
-                else if (promptType === 'displayCards') {
-                    const cards = displayCards.map((card: any) => {
-                        return {
-                            ...card,
-                            uuid: card.cardUuid,
-                        };
-                    });
-                    return openPopup('select', {
-                        uuid: promptUuid,
-                        title: promptTitle,
-                        description: menuTitle,
-                        cards: cards,
-                        perCardButtons: perCardButtons,
-                        buttons: buttons,
-                        source: PopupSource.PromptState
-                    });
-                }
-                else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
-                    return openPopup('default', {
-                        uuid: promptUuid,
-                        title: menuTitle,
-                        buttons,
-                        source: PopupSource.PromptState
-                    });
-                }
-                else if (dropdownListOptions.length > 0 && menuTitle && promptUuid && !selectCardMode) {
-                    return openPopup('dropdown', {
-                        uuid: promptUuid,
-                        title: promptTitle,
-                        description: menuTitle,
-                        options: dropdownListOptions,
-                        source: PopupSource.PromptState
-                    });
-                }
-            }
-            const cardSelectionZones = cardSelectableZones(gameState);
-            if (cardSelectionZones.length === 1) {
-                const opponentId = Object.keys(gameState.players).find(id => id !== connectedPlayerId) || '';
-                const { menuTitle, buttons } = gameState.players[connectedPlayerId].promptState;
-                switch (cardSelectionZones[0]) {
-                    case 'player-resources':
-                        openPopup('pile', {
-                            uuid: `${connectedPlayerId}-resources`,
-                            title: 'Your Resources',
-                            subtitle: menuTitle,
-                            cards: gameState?.players[connectedPlayerId]?.cardPiles['resources'],
-                            source: PopupSource.PromptState,
-                            buttons: buttons,
-                        });
-                        break;
-                    case 'player-discard':
-                        openPopup('pile', {
-                            uuid: `${connectedPlayerId}-discard`,
-                            title: 'Your Discard',
-                            subtitle: menuTitle,
-                            cards: gameState?.players[connectedPlayerId]?.cardPiles['discard'],
-                            source: PopupSource.PromptState,
-                            buttons: buttons,
-                        });
-                        break;
-                    case 'opponent-resources':
-                        openPopup('pile', {
-                            uuid: `${opponentId}-resources`,
-                            title: 'Opponent Resources',
-                            subtitle: menuTitle,
-                            cards: gameState?.players[opponentId]?.cardPiles['resources'],
-                            source: PopupSource.PromptState,
-                            buttons: buttons,
-                        });
-                        break;
-                    case 'opponent-discard':
-                        openPopup('pile', {
-                            uuid: `${opponentId}-discard`,
-                            title: 'Opponent Discard',
-                            subtitle: menuTitle,
-                            cards: gameState?.players[opponentId]?.cardPiles['discard'],
-                            source: PopupSource.PromptState,
-                            buttons: buttons,
-                        });
-                        break;
-                }
-            }
-        };
 
         newSocket.on('connection_error', (error: any) => {
             console.error('Error joining lobby:', error);
@@ -229,7 +230,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
                 console.log(`Game state received (${byteSize} bytes):`, gameState);
             }
-            handleGameStatePopups(gameState);
+            handleGameStatePopups(gameState, connectedPlayerId, isSpectatorMode);
         });
 
         newSocket.on('lobbystate', (lobbyState: any) => {
@@ -245,17 +246,24 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
         newSocket.on('bugReportResult', (result: any) => {
             setBugReportState(result);
-        })
+        });
 
         if (socket) {
             socket.disconnect();
         }
+
         setSocket(newSocket);
+
+        return newSocket;
+    };
+
+    useEffect(() => {
+        const newSocket = createNewSocket();
 
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups,status]);
+    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups, status]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         socket?.emit(message, ...args);
@@ -323,7 +331,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 distributionPromptData,
                 isSpectator,
                 lastQueueHeartbeat,
-                isAnonymousPlayer
+                isAnonymousPlayer,
+                createNewSocket
             }}
         >
             {children}
