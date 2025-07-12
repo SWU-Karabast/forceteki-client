@@ -580,7 +580,6 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
                 cardback: preferences.cardback || undefined,
                 sound: {
                     muteAllSound: preferences.sound?.muteAllSound ?? false,
-                    volume: preferences.sound?.volume ?? 0.75,
                     muteCardAndButtonClickSound: preferences.sound?.muteCardAndButtonClickSound ?? false,
                     muteYourTurn: preferences.sound?.muteYourTurn ?? false,
                     muteChatSound: preferences.sound?.muteChatSound ?? false,
@@ -597,7 +596,6 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
         cardback: undefined,
         sound: {
             muteAllSound: false,
-            volume: 0.75,
             muteCardAndButtonClickSound: false,
             muteYourTurn: false,
             muteChatSound: false,

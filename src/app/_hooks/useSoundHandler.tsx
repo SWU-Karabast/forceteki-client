@@ -1,6 +1,8 @@
 import { useCallback, useRef, useMemo } from 'react';
 import { IUser } from '@/app/_contexts/UserTypes';
-import { loadPreferencesFromLocalStorage } from '@/app/_utils/ServerAndLocalStorageUtils';
+import {
+    loadPreferencesFromLocalStorage,
+} from '@/app/_utils/ServerAndLocalStorageUtils';
 
 export type SoundAction =
     | 'foundOpponent'
@@ -53,6 +55,45 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
         }
     };
 
+    /**
+     * Gets the volume from localStorage (device-specific setting)
+     * @returns Volume level between 0 and 1, defaults to 0.75
+     */
+    const getVolumeFromLocalStorage = (): number => {
+        try {
+            const storedVolume = localStorage.getItem('karabast_volume');
+            if (storedVolume !== null) {
+                const volume = parseFloat(storedVolume);
+                // Ensure it's a valid number between 0 and 1
+                if (!isNaN(volume) && volume >= 0 && volume <= 1) {
+                    return volume;
+                }else{
+                    return 0.75
+                }
+            }else{
+                return 0.75
+            }
+        } catch (error) {
+            console.warn('Error reading volume from localStorage:', error);
+        }
+        return 0.75;
+    };
+
+    /**
+     * Saves the volume to localStorage (device-specific setting)
+     * @param volume Volume level between 0 and 1
+     */
+    const saveVolumeToLocalStorage = (volume: number): void => {
+        try {
+            // Clamp volume between 0 and 1
+            const clampedVolume = Math.max(0, Math.min(1, volume));
+            localStorage.setItem('karabast_volume', clampedVolume.toString());
+        } catch (error) {
+            console.warn('Error saving volume to localStorage:', error);
+        }
+    };
+
+
     // Sound configuration mapping - just to the source files
     const soundConfigs = useMemo<Record<SoundAction, string>>(() => ({
         foundOpponent: '/HelloThere.mp3',
@@ -73,8 +114,7 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
 
     const getAudioObject = (src: string): HTMLAudioElement | null => {
         const existingAudio = audioRefs.current.get(src);
-        const preferences = getPreferences().sound;
-        const volume = preferences?.volume !== undefined ? preferences.volume : 0.75;
+        const volume = getVolumeFromLocalStorage();
         if (existingAudio) {
             return existingAudio;
         }
@@ -159,6 +199,8 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
         playIncomingMessageSound,
         playInteractionSound,
         getPreferences,
-        isEnabled: enabled
+        isEnabled: enabled,
+        getVolumeFromLocalStorage,
+        saveVolumeToLocalStorage,
     };
 };
