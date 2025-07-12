@@ -44,16 +44,13 @@ const pulseBorder = keyframes`
 
 function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
     const { user, updateUserPreferences } = useUser();
-    const [soundPreferences, setSoundPreferences] = useState<IPreferences['sound']>({
-        muteAllSound: false,
-        muteCardAndButtonClickSound: false,
-        muteYourTurn: false,
-        muteChatSound: false,
-        muteOpponentFoundSound: false,
-    });
     // Initialize sound handler with user preferences
-    const { saveVolumeToLocalStorage, getVolumeFromLocalStorage } = useSoundHandler({
+    const { saveVolumeToLocalStorage, getVolumeFromLocalStorage, getPreferences } = useSoundHandler({
         user,
+    });
+
+    const [soundPreferences, setSoundPreferences] = useState<IPreferences['sound']>(() => {
+        return getPreferences().sound
     });
 
     const [isSaving, setIsSaving] = useState(false);
