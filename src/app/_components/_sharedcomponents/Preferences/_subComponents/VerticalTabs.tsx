@@ -26,14 +26,14 @@ function tabProps(index: number) {
 
 
 enum TabType {
-    CURRENT_GAME = 'currentGame',
-    KEYBOARD_SHORTCUTS = 'keyboardShortcuts',
-    CARD_SLEEVES = 'cardSleeves',
-    SOUND_OPTIONS = 'soundOptions',
-    END_GAME = 'endGame',
-    BLOCK_LIST = 'blockList',
-    GENERAL = 'general',
-    LOGOUT = 'logout'
+    CurrentGame = 'currentGame',
+    KeyboardShortcuts = 'keyboardShortcuts',
+    CardSleeves = 'cardSleeves',
+    SoundOptions = 'soundOptions',
+    EndGame = 'endGame',
+    BlockList = 'blockList',
+    General = 'general',
+    Logout = 'logout'
 }
 
 function VerticalTabs({ 
@@ -84,19 +84,19 @@ function VerticalTabs({
 
     const renderPreferencesContent = (type: string) => {
         switch (type) {
-            case TabType.CURRENT_GAME:
+            case TabType.CurrentGame:
                 return <CurrentGameTab/>;
-            case TabType.KEYBOARD_SHORTCUTS:
+            case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
-            case TabType.CARD_SLEEVES:
+            case TabType.CardSleeves:
                 return <CardSleevesTab/>;
-            case TabType.SOUND_OPTIONS:
+            case TabType.SoundOptions:
                 return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
-            case TabType.END_GAME:
+            case TabType.EndGame:
                 return <EndGameTab/>;
-            case TabType.BLOCK_LIST:
+            case TabType.BlockList:
                 return <BlockListTab/>;
-            case TabType.GENERAL:
+            case TabType.General:
                 return <GeneralTab/>;
             default:
                 return <Typography>Not Implemented</Typography>;
@@ -104,21 +104,21 @@ function VerticalTabs({
     };
     const renderLabels = (type: string) => {
         switch (type) {
-            case TabType.CURRENT_GAME:
+            case TabType.CurrentGame:
                 return 'Current Game';
-            case TabType.KEYBOARD_SHORTCUTS:
+            case TabType.KeyboardShortcuts:
                 return 'Keyboard Shortcuts';
-            case TabType.CARD_SLEEVES:
+            case TabType.CardSleeves:
                 return 'Card Sleeves';
-            case TabType.SOUND_OPTIONS:
+            case TabType.SoundOptions:
                 return 'Sound Options';
-            case TabType.END_GAME:
+            case TabType.EndGame:
                 return 'Current Game';
-            case TabType.BLOCK_LIST:
+            case TabType.BlockList:
                 return 'Block List';
-            case TabType.LOGOUT:
+            case TabType.Logout:
                 return 'Log Out'
-            case TabType.GENERAL:
+            case TabType.General:
                 return 'General';
             default:
                 return null;

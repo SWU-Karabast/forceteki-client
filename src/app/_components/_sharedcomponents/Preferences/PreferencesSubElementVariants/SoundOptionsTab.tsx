@@ -22,9 +22,9 @@ interface SoundOptionsTabProps {
 }
 
 enum SaveStatus {
-    NOCHANGE = 'noChange',
-    SUCCESS = 'success',
-    ERROR = 'error'
+    NoChange = 'NoChange',
+    Success = 'Success',
+    Error = 'Error'
 }
 
 const pulseBorder = keyframes`
@@ -54,12 +54,14 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
     });
 
     const [isSaving, setIsSaving] = useState(false);
-    const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NOCHANGE);
-    const tempAudio = new Audio('/HelloThere.mp3');
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NoChange);
+
     const [saveMessage, setSaveMessage] = useState<string | undefined>();
     const [hasChanges, setHasChanges] = useState(false);
     const [volume, setVolume] = useState<number>(Math.round(getVolumeFromLocalStorage() * 100));
     const [originalPreferences, setOriginalPreferences] = useState<IPreferences['sound']>(undefined);
+
+    const tempAudio = new Audio('/HelloThere.mp3');
 
     const styles = {
         typographyContainer: {
@@ -146,12 +148,12 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
             ...prev,
             [key]: value
         }));
-        setSaveStatus(SaveStatus.NOCHANGE);
+        setSaveStatus(SaveStatus.NoChange);
     };
 
     const handleSavePreferences = async () => {
         setIsSaving(true);
-        setSaveStatus(SaveStatus.NOCHANGE);
+        setSaveStatus(SaveStatus.NoChange);
         saveVolumeToLocalStorage(volume/100)
         try {
             const result = await savePreferencesGeneric(
@@ -161,15 +163,15 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
             );
             if (result.success) {
                 setOriginalPreferences(soundPreferences);
-                setSaveStatus(SaveStatus.SUCCESS);
+                setSaveStatus(SaveStatus.Success);
                 setSaveMessage('Sound preferences saved successfully.');
-                setTimeout(() => setSaveStatus(SaveStatus.NOCHANGE), 3000);
+                setTimeout(() => setSaveStatus(SaveStatus.NoChange), 3000);
                 setHasChanges(false);
                 if (setHasNewChanges) {
                     setHasNewChanges(false)
                 }
             } else {
-                setSaveStatus(SaveStatus.ERROR);
+                setSaveStatus(SaveStatus.Error);
                 setSaveMessage('Failed to save preferences to server.');
             }
         } catch (error) {
@@ -179,7 +181,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
             } else {
                 setSaveMessage('Unknown Server Error');
             }
-            setSaveStatus(SaveStatus.ERROR);
+            setSaveStatus(SaveStatus.Error);
         } finally {
             setIsSaving(false);
         }
@@ -267,12 +269,12 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                     text={'Save Changes'}
                     sx={styles.saveButton}
                 />
-                {saveStatus === 'success' && (
+                {saveStatus === 'Success' && (
                     <Alert severity="success" sx={{ flexGrow: 1, background: 'none', color: 'green' }}>
                         {saveMessage}
                     </Alert>
                 )}
-                {saveStatus === 'error' && (
+                {saveStatus === 'Error' && (
                     <Alert severity="error" sx={{ flexGrow: 1, background: 'none', color: 'red' }}>
                         {saveMessage}
                     </Alert>
