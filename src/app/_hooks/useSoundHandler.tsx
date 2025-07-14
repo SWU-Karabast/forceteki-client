@@ -102,7 +102,7 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
         cardClicked: '/click1.mp3',
         menuButton: '/click1.mp3',
         perCardMenuButton: '/click1.mp3',
-        yourTurn: '/HelloThere.mp3',
+        yourTurn: '/click2.mp3',
     }), []);
 
     const getNextR2Sound = useCallback((): string => {
