@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import VerticalTabs from '@/app/_components/_sharedcomponents/Preferences/_subComponents/VerticalTabs';
@@ -15,6 +15,8 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     variant = 'gameBoard',
     subtitle = undefined,
 }) => {
+    const [attemptingClose, setAttemptingClose] = useState(false);
+
     const router = useRouter();
     const handleBackButton = () => {
         router.push('/');
@@ -77,6 +79,20 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
             minHeight:'3rem',
         },
     }
+
+    const attemptClose = () => {
+        setAttemptingClose(true);
+    }
+
+    const closePreferences = () => {
+        setAttemptingClose(false);
+        preferenceToggle?.();
+    };
+
+    const cancelClosePreferences = () => {
+        setAttemptingClose(false);
+    }
+
     return (
         <>
             <Box sx={styles.containerStyle}>
@@ -93,10 +109,10 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
                         </Box>
                     )}
                     {variant === 'gameBoard' && (
-                        <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
+                        <CloseOutlined onClick={attemptClose} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
                     )}
                     <Box sx={styles.tabContainer}>
-                        <VerticalTabs tabs={tabs} variant={variant}/>
+                        <VerticalTabs tabs={tabs} variant={variant} attemptingClose={attemptingClose} closeHandler={closePreferences} cancelCloseHandler={cancelClosePreferences} />
                     </Box>
                 </Box>
             </Box>

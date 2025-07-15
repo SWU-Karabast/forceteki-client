@@ -38,7 +38,10 @@ enum TabType {
 
 function VerticalTabs({ 
     tabs,
-    variant = 'gameBoard'
+    variant = 'gameBoard',
+    attemptingClose = false,
+    closeHandler = () => undefined,
+    cancelCloseHandler = () => undefined,
 }:IVerticalTabsProps) {
     const [value, setValue] = useState(0);
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
@@ -58,6 +61,16 @@ function VerticalTabs({
         return () => window.removeEventListener('beforeUnload', handleBeforeUnload);
     }, [tabs, value, hasUnsavedChanges]);
 
+    useEffect(() => {
+        if (attemptingClose) {
+            if (hasUnsavedChanges) {
+                setShowUnsavedDialog(true);
+            } else {
+                closeHandler();
+            }
+        }
+    }, [attemptingClose, hasUnsavedChanges, closeHandler]);
+
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         // Check if leaving sound options with unsaved changes
         if (tabs[value] === 'soundOptions' && hasUnsavedChanges && newValue !== value) {
@@ -75,11 +88,19 @@ function VerticalTabs({
             setValue(pendingTabIndex);
         }
         setPendingTabIndex(null);
+
+        if (attemptingClose) {
+            closeHandler();
+        }
     };
 
     const handleDialogCancel = () => {
         setShowUnsavedDialog(false);
         setPendingTabIndex(null);
+
+        if (attemptingClose) {
+            cancelCloseHandler();
+        }
     };
 
     const renderPreferencesContent = (type: string) => {

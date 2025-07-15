@@ -145,14 +145,14 @@ const GameBoard = () => {
             </Box>
 
             <PopupShell sidebarOpen={sidebarOpen}/>
-            <PreferencesComponent
+            {isPreferenceOpen && <PreferencesComponent
                 sidebarOpen={sidebarOpen}
                 isPreferenceOpen={isPreferenceOpen}
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}
                 title={winners ? 'Game ended' : 'PREFERENCES'}
                 subtitle={winners ? winners.length > 1 ? 'Game ended in a draw' : `Winner is ${winners[0]}` : undefined}
-            />
+            />}
         </Grid>
     );
 };
