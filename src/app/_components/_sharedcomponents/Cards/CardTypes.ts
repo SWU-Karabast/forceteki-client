@@ -110,6 +110,7 @@ export interface IGameCardProps {
     subcards?: ICardData[];
     cardStyle?: CardStyle;
     capturedCards?: ICardData[];
+    overlapEnabled?: boolean;
 }
 
 export interface ILeaderBaseCardProps {

@@ -17,6 +17,7 @@ import {
     ChatObjectType
 } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
 import ChatCard from './ChatCard';
 
 const Chat: React.FC<IChatProps> = ({
@@ -25,11 +26,22 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { connectedPlayer, isSpectator, getOpponent } = useGame();
+    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
-
+    const { user } = useUser();
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
+    };
+    const isPrivateLobby = lobbyState?.gameType === 'Private';
+    const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
+    
+    // Helper function to determine if chat input should be shown
+    const shouldShowChatInput = () => {
+        if (isSpectator) return false;
+        if (isPrivateLobby) return true;
+        if (!user) return false;
+        if (isAnonymousOpponent) return false;
+        return true;
     };
 
     const getSpectatorDisplayName = (
@@ -106,13 +118,15 @@ const Chat: React.FC<IChatProps> = ({
         alertType?: string
     ) => {
         const getAlertStyle = (type: string) => {
-            switch (type) {
-                case 'notification': return styles.notificationText;
-                case 'warning': return styles.warningText;
-                case 'danger': return styles.alertText;
-                case 'readyStatus': return styles.readyStatusText;
-                default: return styles.messageText;
-            }
+            const alertColors = {
+                notification: '#d500f9',
+                warning: 'yellow',
+                danger: 'red',
+                readyStatus: 'green'
+            };
+            
+            const color = alertColors[type as keyof typeof alertColors];
+            return color ? { ...styles.alertBase, color } : styles.messageText;
         };
 
         const messageComponents = messageContent.map((item, itemIndex) => 
@@ -174,6 +188,7 @@ const Chat: React.FC<IChatProps> = ({
         return null;
     };
 
+
     useEffect(() => {
         if(chatEndRef.current) {
             chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -199,24 +214,9 @@ const Chat: React.FC<IChatProps> = ({
             color: '#fff',
             lineHeight: { xs: '0.75rem', md: '1rem' },
         },
-        notificationText: {
+        // Base style for alert messages
+        alertBase: {
             fontSize: { xs: '0.85em', md: '1em' },
-            color: '#d500f9',
-            lineHeight: { xs: '0.85rem', md: '1em' },
-        },
-        warningText: {
-            fontSize: { xs: '0.85em', md: '1em' },
-            color: 'yellow',
-            lineHeight: { xs: '0.85rem', md: '1em' },
-        },
-        alertText: {
-            fontSize: { xs: '0.85em', md: '1em' },
-            color: 'red',
-            lineHeight: { xs: '0.85rem', md: '1em' },
-        },
-        readyStatusText: {
-            fontSize: { xs: '0.85em', md: '1em' },
-            color: 'green',
             lineHeight: { xs: '0.85rem', md: '1em' },
         },
         chatEntryBox: {
@@ -258,6 +258,34 @@ const Chat: React.FC<IChatProps> = ({
                     borderColor: '#fff',
                 },
             },
+        },
+        chatDisabledLogin: {
+            textAlign: 'center',
+            border: '1px solid red',
+            backgroundColor: '#282828ff',
+            borderRadius: '4px',
+            p: '0.4em',
+            mt: '0.5em',
+            width: '100%',
+            display: 'block',
+            fontSize: { xs: '0.75em', md: '1em' },
+            color: '#fff',
+            lineHeight: { xs: '0.75rem', md: '1rem' },
+            userSelect: 'none',
+        },
+        chatDisabledAnonOpponent: {
+            textAlign: 'center',
+            border: '1px solid yellow',
+            backgroundColor: '#282828ff',
+            borderRadius: '4px',
+            p: '0.4em',
+            mt: '0.5em',
+            width: '100%',
+            display: 'block',
+            fontSize: { xs: '0.75em', md: '1em' },
+            color: '#fff',
+            lineHeight: { xs: '0.75rem', md: '1rem' },
+            userSelect: 'none',
         }
     };
 
@@ -275,7 +303,8 @@ const Chat: React.FC<IChatProps> = ({
 
 
             <Box sx={styles.inputContainer}>
-                {!isSpectator &&(
+                {/* Show chat input based on game state and user permissions */}
+                {shouldShowChatInput() && (
                     <TextField
                         variant="outlined"
                         placeholder="Chat"
@@ -303,6 +332,16 @@ const Chat: React.FC<IChatProps> = ({
                             },
                         }}
                     />
+                )}
+                {!user && !isSpectator && !isPrivateLobby && (
+                    <Typography sx={styles.chatDisabledLogin}>
+                        Log in to enable chat
+                    </Typography>
+                )}
+                {user && !isSpectator && isAnonymousOpponent && !isPrivateLobby && (
+                    <Typography sx={styles.chatDisabledAnonOpponent}>
+                        Chat disabled when playing against an anonymous opponent
+                    </Typography>
                 )}
             </Box>
         </>
