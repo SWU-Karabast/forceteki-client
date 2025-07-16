@@ -74,7 +74,7 @@ function EndGameOptionsQuickMatch() {
     return (
         <>
             <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Home</Typography>
+                <Typography sx={styles.typographyContainer} variant={'h3'}>Actions</Typography>
                 <Divider sx={{ mb: '20px' }}/>
                 <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
                     <PreferenceButton variant={'concede'} text={'Return Home'} buttonFnc={handleReturnHome} />
@@ -82,34 +82,32 @@ function EndGameOptionsQuickMatch() {
                         Return to main page.
                     </Typography>
                 </Box>
+                {!isSpectator && (
+                    <Box sx={styles.functionContainer}>
+                        <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                            <PreferenceButton variant={'standard'} text={'Requeue'} buttonFnc={handleRequeue}/>
+                            <Typography sx={styles.typeographyStyle}>
+                                Reenter the queue for a new opponent.
+                            </Typography>
+                        </Box>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={rematchButtonText}
+                                buttonFnc={handleRematchClick}
+                                disabled={rematchButtonDisabled}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                {rematchRequest
+                                    ? isRequestInitiator
+                                        ? 'Waiting for your opponent to confirm rematch.'
+                                        : 'Confirm you wish to rematch with your opponent.'
+                                    : 'Return to lobby to start a new game with the same opponent.'}
+                            </Typography>
+                        </Box>
+                    </Box>
+                )}
             </Box>
-            {!isSpectator && (
-                <Box sx={styles.functionContainer}>
-                    <Typography sx={styles.typographyContainer} variant={'h3'}>Rematch</Typography>
-                    <Divider sx={{ mb: '20px' }}/>
-                    <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                        <PreferenceButton variant={'standard'} text={'New Quick Match'} buttonFnc={handleRequeue}/>
-                        <Typography sx={styles.typeographyStyle}>
-                            Reenter the queue for a new opponent.
-                        </Typography>
-                    </Box>
-                    <Box sx={styles.contentContainer}>
-                        <PreferenceButton
-                            variant={'standard'}
-                            text={rematchButtonText}
-                            buttonFnc={handleRematchClick}
-                            disabled={rematchButtonDisabled}
-                        />
-                        <Typography sx={styles.typeographyStyle}>
-                            {rematchRequest
-                                ? isRequestInitiator
-                                    ? 'Waiting for your opponent to confirm rematch.'
-                                    : 'Confirm you wish to rematch with your opponent.'
-                                : 'Return to lobby to start a new game with the same opponent.'}
-                        </Typography>
-                    </Box>
-                </Box>
-            )}
             <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Thanks for playing</Typography>
                 <Divider sx={{ mb: '20px' }}/>
