@@ -151,6 +151,7 @@ const GameBoard = () => {
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}
                 title={winners ? 'Game ended' : 'PREFERENCES'}
+                // TODO THIS PR: BE change to send winner as a chat object instead of just a string name
                 subtitle={winners ? winners.length > 1 ? 'Game ended in a draw' : `Winner is ${winners[0]}` : undefined}
             />
         </Grid>

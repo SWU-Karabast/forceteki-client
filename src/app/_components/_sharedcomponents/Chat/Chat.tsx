@@ -19,6 +19,7 @@ import {
 import { useGame } from '@/app/_contexts/Game.context';
 import { useUser } from '@/app/_contexts/User.context';
 import ChatCard from './ChatCard';
+import { getDisplayName } from '@/app/_utils/playerName';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -42,16 +43,6 @@ const Chat: React.FC<IChatProps> = ({
         if (!user) return false;
         if (isAnonymousOpponent) return false;
         return true;
-    };
-
-    const getSpectatorDisplayName = (
-        playerId: string,
-        connectedPlayer: string,
-        getOpponent: (player: string) => string
-    ): string => {
-        if (playerId === connectedPlayer) return 'Player 1';
-        if (playerId === getOpponent(connectedPlayer)) return 'Player 2';
-        return 'Unknown Player';
     };
 
     const formatMessageItem = (item: IChatObject | string | number, itemIndex: number) => {
@@ -81,11 +72,9 @@ const Chat: React.FC<IChatProps> = ({
             }
             
             if (item.type === ChatObjectType.Player) {
-                // Only players should use spectator display names
-                const displayName = isSpectator && item.id 
-                    ? getSpectatorDisplayName(item.id, connectedPlayer, getOpponent)
-                    : item.name;
-                    
+                // Only players should use spectator display names                    
+                const displayName = getDisplayName(item, connectedPlayer, getOpponent, isSpectator);
+
                 return (
                     <span key={`player-${itemIndex}`} style={{ 
                         color: getPlayerColor(item.id, connectedPlayer)
@@ -96,9 +85,7 @@ const Chat: React.FC<IChatProps> = ({
             }
             
             // Fallback for unknown object types
-            const displayName = isSpectator && item.id 
-                ? getSpectatorDisplayName(item.id, connectedPlayer, getOpponent)
-                : item.name;
+            const displayName = getDisplayName(item, connectedPlayer, getOpponent, isSpectator);
             return (
                 <span key={`unknown-${itemIndex}`} style={{ color: '#fff' }}>
                     {displayName}
@@ -149,9 +136,8 @@ const Chat: React.FC<IChatProps> = ({
 
     const formatPlayerChatMessage = (message: IPlayerChatMessageArray, index: number) => {
         const [playerMessage, ...messageContent] = message;
-        const displayName = isSpectator 
-            ? getSpectatorDisplayName(playerMessage.id, connectedPlayer, getOpponent)
-            : playerMessage.name;
+
+        const displayName = getDisplayName(playerMessage, connectedPlayer, getOpponent, isSpectator);
 
         return (
             <Box key={index} sx={styles.chatEntryBox}>
