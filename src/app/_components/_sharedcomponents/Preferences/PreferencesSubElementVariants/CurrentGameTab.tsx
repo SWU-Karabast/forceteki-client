@@ -15,7 +15,7 @@ function CurrentGameTab() {
     const { sendGameMessage, connectedPlayer, gameState, isSpectator } = useGame();
 
     const router = useRouter();
-    const currentPlayerName = gameState.players[connectedPlayer]?.name
+    const currentPlayerName = gameState.players[connectedPlayer]?.name;
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
@@ -41,6 +41,10 @@ function CurrentGameTab() {
     // Handler for opening the bug report dialog
     const handleOpenBugReport = () => {
         setBugReportOpen(true);
+
+        // extend the action timer by 60 seconds when opening the bug report dialog to give people breathing room to type
+        // TODO: reset to 60s
+        sendGameMessage(['resetActionTimer']);
     };
 
     // Handler for closing the bug report dialog
