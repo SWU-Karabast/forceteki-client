@@ -6,38 +6,34 @@ import { useUser } from '@/app/_contexts/User.context';
 
 const SearchingForGame: React.FC = () => {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const reconnectingRef = useRef(false);
     const { lastQueueHeartbeat, createNewSocket } = useGame();
     const router = useRouter();
     const lastQueueHeartbeatState = useRef<number>(0);
     const { user, anonymousUserId } = useUser();
 
-    const checkTimeout = () => {
-        timerRef.current = setTimeout(() => {
+    useEffect(() => {
+        timerRef.current = setInterval(() => {
             const secondsSinceLastHeartbeat = Math.floor((Date.now() - lastQueueHeartbeatState.current) / 1000);
-
+    
             if (secondsSinceLastHeartbeat > 3) {
                 alert(`Connection lost. Please try again.\nUser ID: ${user?.id || anonymousUserId}`);
                 router.push('/');
                 return;
             }
-            
-            if (secondsSinceLastHeartbeat >= 1) {
-                // if it's been more than one second, try reconnecting the socket
+    
+            if (secondsSinceLastHeartbeat >= 1 && !reconnectingRef.current) {
+                reconnectingRef.current = true;
                 createNewSocket();
+
+                setTimeout(() => {
+                    reconnectingRef.current = false;
+                }, 2000); 
             }
-            
-            checkTimeout();
         }, 1000);
-    }
-
-    useEffect(() => {
-        checkTimeout();
-
-        // Cleanup the timer when the component unmounts
+    
         return () => {
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-            }
+            if (timerRef.current) clearInterval(timerRef.current);
         };
     }, []);
 
