@@ -42,8 +42,7 @@ function CurrentGameTab() {
     const handleOpenBugReport = () => {
         setBugReportOpen(true);
 
-        // extend the action timer by 60 seconds when opening the bug report dialog to give people breathing room to type
-        // TODO: reset to 60s
+        // reset the action timer when opening the bug report dialog to give people breathing room to type
         sendGameMessage(['resetActionTimer']);
     };
 
