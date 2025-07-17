@@ -356,11 +356,20 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(upgrade-green.png)', // Use the same green upgrade background as the TEST upgrade
+            backgroundColor: '#1a4d2a', // Darker background to make bright glow pop more
             alignItems: 'center',
             justifyContent: 'center',
-            boxSizing: 'content-box',
-            borderRadius: '0.5rem', // Add rounded corners to match the card container
+            boxSizing: 'border-box', // Include border within the width
+            borderRadius: '0.5rem',
+            border: '3px solid black', // Thicker border to match other components
+            boxShadow: `
+                inset 0 0 3px rgba(0, 255, 0, 1),
+                inset 0 0 6px rgba(50, 255, 50, 0.9),
+                inset 0 0 12px rgba(100, 255, 100, 0.8),
+                inset 0 0 18px rgba(150, 255, 150, 0.6),
+                inset 0 0 24px rgba(200, 255, 200, 0.4),
+                inset 0 0 30px rgba(220, 255, 220, 0.2)
+            `, // Enhanced bright green force glow effect
         },
         cloneName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
@@ -368,9 +377,10 @@ const GameCard: React.FC<IGameCardProps> = ({
             fontWeight: '800',
             whiteSpace: 'nowrap',
             overflow: 'hidden',           
-            color: 'black', // Change to black to match upgrade text
+            color: '#e8ffe8', // Brighter light green text
             textAlign: 'center', 
-            userSelect: 'none'
+            userSelect: 'none',
+            textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)' // Simple shadow for legibility
         },
         sentinelIcon:{
             position: 'absolute',

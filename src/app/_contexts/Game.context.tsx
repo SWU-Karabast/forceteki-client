@@ -40,6 +40,13 @@ interface IGameContextType {
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
 
+/* TODO
+1) Decide on visual appearance
+2) make sure card and on hover use clone set id if available
+3) remove mocks and console logs
+*/
+
+
 // Helper function to add clonedCardId to all cards
 const addClonedCardIds = (gameState: any): any => {
     if (!gameState || !gameState.players) return gameState;
