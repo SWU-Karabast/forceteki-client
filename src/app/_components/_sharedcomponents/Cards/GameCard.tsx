@@ -356,18 +356,18 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
-            backgroundColor: '#234a2a', // Balanced green background - between bright and muted
+            backgroundColor: '#234a2a',
             alignItems: 'center',
             justifyContent: 'center',
             boxSizing: 'border-box',
             borderRadius: '0.5rem',
-            border: '2px solid #333', // Medium contrast border
+            border: '2px solid #333',
             boxShadow: `
                 inset 0 0 4px rgba(0, 200, 0, 0.6),
                 inset 0 0 8px rgba(50, 220, 50, 0.5),
                 inset 0 0 12px rgba(100, 240, 100, 0.4),
                 inset 0 0 16px rgba(150, 255, 150, 0.3)
-            `, // Balanced green glow effect - more visible than muted, less intense than neon
+            `,
         },
         cloneName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
@@ -375,7 +375,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             fontWeight: '800',
             whiteSpace: 'nowrap',
             overflow: 'visible',          
-            color: '#d0f0d0', // Balanced light green text - brighter than muted, softer than neon
+            color: '#d0f0d0',
             textAlign: 'center', 
             userSelect: 'none',
             textShadow: `
@@ -387,7 +387,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 -1px  1px 0 #000,
                  0px  1px 0 #000,
                  1px  1px 0 #000
-            ` // Complete black trace around letters
+            `
         },
         sentinelIcon:{
             position: 'absolute',
@@ -517,7 +517,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     }
     return (
         <Box sx={styles.cardContainer}>
-            {/* Clone component - appears above cards when clonedCardId exists */}
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
                 <Box sx={styles.cloneIcon}>
                     <Typography sx={styles.cloneName}>Clone</Typography>
