@@ -646,7 +646,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                     data-card-type={subcard.printedType}
                     data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
                 >
-                    <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
+                    <Typography key={subcard.uuid} sx={styles.upgradeName}>
+                        {subcard.clonedCardName ?? subcard.name}
+                    </Typography>
                 </Box>
             ))}
 
@@ -672,7 +674,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                             data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
                         >
                             <Typography sx={styles.upgradeName}>
-                                {capturedCard.name}
+                                {capturedCard.clonedCardId ? `${capturedCard.name} (Clone)` : capturedCard.name}
                             </Typography>
                         </Box>
                     ))}
