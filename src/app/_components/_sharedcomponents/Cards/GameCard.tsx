@@ -631,53 +631,67 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
             </Popover>
 
-            {otherUpgradeCards.map((subcard) => (
-                <Box
-                    key={subcard.uuid}
-                    sx={{ ...styles.upgradeIcon,
-                        backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
-                        border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none',
-                        cursor: subcard.selectable ? 'pointer' : 'normal'
-                    }}
-                    onClick={() => subcardClick(subcard)}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    data-card-url={s3CardImageURL(subcard)}
-                    data-card-type={subcard.printedType}
-                    data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
-                >
-                    <Typography key={subcard.uuid} sx={styles.upgradeName}>
-                        {subcard.clonedCardName ?? subcard.name}
-                    </Typography>
-                </Box>
-            ))}
+            {otherUpgradeCards.map((subcard) => {
+                // Apply the same clonedCardId logic for upgrade cards
+                const subcardImageSetId = subcard.clonedCardId 
+                    ? (typeof subcard.clonedCardId === 'string' ? parseSetId(subcard.clonedCardId) : subcard.clonedCardId)
+                    : subcard.setId;
+                
+                return (
+                    <Box
+                        key={subcard.uuid}
+                        sx={{ ...styles.upgradeIcon,
+                            backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
+                            border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none',
+                            cursor: subcard.selectable ? 'pointer' : 'normal'
+                        }}
+                        onClick={() => subcardClick(subcard)}
+                        onMouseEnter={handlePreviewOpen}
+                        onMouseLeave={handlePreviewClose}
+                        data-card-url={s3CardImageURL({ ...subcard, setId: subcardImageSetId })}
+                        data-card-type={subcard.printedType}
+                        data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
+                    >
+                        <Typography key={subcard.uuid} sx={styles.upgradeName}>
+                            {subcard.clonedCardName ?? subcard.name}
+                        </Typography>
+                    </Box>
+                );
+            })}
 
             {capturedCards.length > 0 && (
                 <>
                     <Typography sx={styles.capturedCardsDivider}>
                         Captured
                     </Typography>
-                    {capturedCards.map((capturedCard: ICardData) => (
-                        <Box
-                            key={`captured-${capturedCard.uuid}`}
-                            sx={{
-                                ...styles.upgradeIcon,
-                                backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
-                                border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none',
-                                cursor: capturedCard.selectable ? 'pointer' : 'normal'
-                            }}
-                            onClick={() => subcardClick(capturedCard)}
-                            onMouseEnter={handlePreviewOpen}
-                            onMouseLeave={handlePreviewClose}
-                            data-card-url={s3CardImageURL(capturedCard)}
-                            data-card-type={capturedCard.printedType}
-                            data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
-                        >
-                            <Typography sx={styles.upgradeName}>
-                                {capturedCard.clonedCardId ? `${capturedCard.name} (Clone)` : capturedCard.name}
-                            </Typography>
-                        </Box>
-                    ))}
+                    {capturedCards.map((capturedCard: ICardData) => {
+                        // Apply the same clonedCardId logic for captured cards
+                        const capturedCardImageSetId = capturedCard.clonedCardId 
+                            ? (typeof capturedCard.clonedCardId === 'string' ? parseSetId(capturedCard.clonedCardId) : capturedCard.clonedCardId)
+                            : capturedCard.setId;
+                        
+                        return (
+                            <Box
+                                key={`captured-${capturedCard.uuid}`}
+                                sx={{
+                                    ...styles.upgradeIcon,
+                                    backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
+                                    border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none',
+                                    cursor: capturedCard.selectable ? 'pointer' : 'normal'
+                                }}
+                                onClick={() => subcardClick(capturedCard)}
+                                onMouseEnter={handlePreviewOpen}
+                                onMouseLeave={handlePreviewClose}
+                                data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCardImageSetId })}
+                                data-card-type={capturedCard.printedType}
+                                data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
+                            >
+                                <Typography sx={styles.upgradeName}>
+                                    {capturedCard.clonedCardId ? `${capturedCard.name} (Clone)` : capturedCard.name}
+                                </Typography>
+                            </Box>
+                        );
+                    })}
                 </>
             )}
         </Box>
