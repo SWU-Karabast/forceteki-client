@@ -47,16 +47,73 @@ const addClonedCardIds = (gameState: any): any => {
     // Deep clone the game state to avoid mutations
     const processedGameState = JSON.parse(JSON.stringify(gameState));
     
+    // Available aspects for test upgrades
+    const availableAspects = ['aggression', 'command', 'cunning', 'heroism', 'vigilance', 'villainy'];
+    
+    // Helper function to generate random number of upgrades (1-3)
+    const getRandomUpgradeCount = () => Math.floor(Math.random() * 3) + 1;
+    
+    // Helper function to get random aspects
+    const getRandomAspects = (count: number) => {
+        const shuffled = [...availableAspects].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    };
+    
     // Process each player's cards
     Object.keys(processedGameState.players).forEach(playerId => {
         const player = processedGameState.players[playerId];
         
-        // Process leader and base cards
+        // Process leader and base cards - add upgrades to them too
         if (player.leader) {
             player.leader.clonedCardId = '123';
+            
+            // Add 1-3 test upgrades to leader
+            const upgradeCount = getRandomUpgradeCount();
+            for (let i = 0; i < upgradeCount; i++) {
+                const randomAspect = availableAspects[Math.floor(Math.random() * availableAspects.length)];
+                const fakeUpgrade = {
+                    uuid: `${player.leader.uuid}-fake-upgrade-${i}`,
+                    name: `TEST ${randomAspect.toUpperCase()}`,
+                    parentCardId: player.leader.uuid,
+                    aspects: [randomAspect],
+                    selectable: false,
+                    setId: { set: 'TEST', number: i + 1 },
+                    type: 'upgrade',
+                    clonedCardId: '123'
+                };
+                
+                // Add to leader's subcards if it exists, otherwise create it
+                if (!player.leader.subcards) {
+                    player.leader.subcards = [];
+                }
+                player.leader.subcards.push(fakeUpgrade);
+            }
         }
+        
         if (player.base) {
             player.base.clonedCardId = '123';
+            
+            // Add 1-3 test upgrades to base
+            const upgradeCount = getRandomUpgradeCount();
+            for (let i = 0; i < upgradeCount; i++) {
+                const randomAspect = availableAspects[Math.floor(Math.random() * availableAspects.length)];
+                const fakeUpgrade = {
+                    uuid: `${player.base.uuid}-fake-upgrade-${i}`,
+                    name: `TEST ${randomAspect.toUpperCase()}`,
+                    parentCardId: player.base.uuid,
+                    aspects: [randomAspect],
+                    selectable: false,
+                    setId: { set: 'TEST', number: i + 1 },
+                    type: 'upgrade',
+                    clonedCardId: '123'
+                };
+                
+                // Add to base's subcards if it exists, otherwise create it
+                if (!player.base.subcards) {
+                    player.base.subcards = [];
+                }
+                player.base.subcards.push(fakeUpgrade);
+            }
         }
         
         // Process all card piles
@@ -71,25 +128,27 @@ const addClonedCardIds = (gameState: any): any => {
                         card.clonedCardId = '123';
                     });
                     
-                    // Add fake TEST upgrades for cards in play (groundArena and spaceArena)
-                    if (pileName === 'groundArena' || pileName === 'spaceArena') {
-                        mainCards.forEach((card: any) => {
-                            // Create a fake upgrade card
+                    // Add fake TEST upgrades to ALL cards in ALL piles
+                    mainCards.forEach((card: any) => {
+                        const upgradeCount = getRandomUpgradeCount();
+                        
+                        for (let i = 0; i < upgradeCount; i++) {
+                            const randomAspect = availableAspects[Math.floor(Math.random() * availableAspects.length)];
                             const fakeUpgrade = {
-                                uuid: `${card.uuid}-fake-upgrade`,
-                                name: 'TEST',
+                                uuid: `${card.uuid}-fake-upgrade-${i}`,
+                                name: `TEST ${randomAspect.toUpperCase()}`,
                                 parentCardId: card.uuid,
-                                aspects: ['command'], // Green upgrade
+                                aspects: [randomAspect],
                                 selectable: false,
-                                setId: { set: 'TEST', number: 1 },
+                                setId: { set: 'TEST', number: i + 1 },
                                 type: 'upgrade',
                                 clonedCardId: '123'
                             };
                             
                             // Add the fake upgrade to the same pile so it gets processed as a subcard
                             player.cardPiles[pileName].push(fakeUpgrade);
-                        });
-                    }
+                        }
+                    });
                 }
             });
         }
