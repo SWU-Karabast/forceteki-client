@@ -200,27 +200,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
     
-    // Use clonedCardId if present, otherwise use the card's own setId
-    console.log('set ID:', card.setId);
-    console.log('clone id:', card.clonedCardId);
-    console.log('typeof clonedCardId:', typeof card.clonedCardId);
-    
     // If clonedCardId is already an object (setId format), use it directly
     // If it's a string, parse it with parseSetId
     const cardImageSetId = card.clonedCardId 
         ? (typeof card.clonedCardId === 'string' ? parseSetId(card.clonedCardId) : card.clonedCardId)
         : card.setId;
-    
-    // Debug logging
-    // if (card.clonedCardId) {
-    //     console.log('Clone card detected:', {
-    //         cardName: card.name,
-    //         originalSetId: card.setId,
-    //         clonedCardId: card.clonedCardId,
-    //         parsedClonedSetId: parseSetId(card.clonedCardId),
-    //         finalCardImageSetId: cardImageSetId
-    //     });
-    // }
     
     // Styles
     const styles = {
