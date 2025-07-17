@@ -43,7 +43,8 @@ const GameContext = createContext<IGameContextType | undefined>(undefined);
 /* TODO
 1) Decide on visual appearance
 2) make sure card and on hover use clone set id if available
-3) remove mocks and console logs
+3) test pilot edge case
+4) remove mocks and console logs
 */
 
 

@@ -376,11 +376,20 @@ const GameCard: React.FC<IGameCardProps> = ({
             marginTop: '2px',
             fontWeight: '800',
             whiteSpace: 'nowrap',
-            overflow: 'hidden',           
+            overflow: 'visible', // Allow text shadow to extend beyond bounds          
             color: '#e8ffe8', // Brighter light green text
             textAlign: 'center', 
             userSelect: 'none',
-            textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)' // Simple shadow for legibility
+            textShadow: `
+                -1px -1px 0 #000,  
+                 0px -1px 0 #000,
+                 1px -1px 0 #000,
+                -1px  0px 0 #000,
+                 1px  0px 0 #000,
+                -1px  1px 0 #000,
+                 0px  1px 0 #000,
+                 1px  1px 0 #000
+            ` // Complete black trace around letters
         },
         sentinelIcon:{
             position: 'absolute',
@@ -513,7 +522,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             {/* Clone component - appears above cards when clonedCardId exists */}
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
                 <Box sx={styles.cloneIcon}>
-                    <Typography sx={styles.cloneName}>CLONE</Typography>
+                    <Typography sx={styles.cloneName}>Clone</Typography>
                 </Box>
             )}
             
