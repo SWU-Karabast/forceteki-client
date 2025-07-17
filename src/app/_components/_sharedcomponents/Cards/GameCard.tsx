@@ -6,7 +6,7 @@ import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
-import { getBorderColor } from './cardUtils';
+import { getBorderColor, parseSetId } from './cardUtils';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 
@@ -199,6 +199,29 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
+    
+    // Use clonedCardId if present, otherwise use the card's own setId
+    console.log('set ID:', card.setId);
+    console.log('clone id:', card.clonedCardId);
+    console.log('typeof clonedCardId:', typeof card.clonedCardId);
+    
+    // If clonedCardId is already an object (setId format), use it directly
+    // If it's a string, parse it with parseSetId
+    const cardImageSetId = card.clonedCardId 
+        ? (typeof card.clonedCardId === 'string' ? parseSetId(card.clonedCardId) : card.clonedCardId)
+        : card.setId;
+    
+    // Debug logging
+    // if (card.clonedCardId) {
+    //     console.log('Clone card detected:', {
+    //         cardName: card.name,
+    //         originalSetId: card.setId,
+    //         clonedCardId: card.clonedCardId,
+    //         parsedClonedSetId: parseSetId(card.clonedCardId),
+    //         finalCardImageSetId: cardImageSetId
+    //     });
+    // }
+    
     // Styles
     const styles = {
         cardContainer: {
@@ -219,7 +242,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '0.5rem',
             position: 'relative',
-            backgroundImage: card.selected && (phase === 'setup' || phase === 'regroup') ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL(card, cardStyle)})` : `url(${s3CardImageURL(card, cardStyle)})`,
+            backgroundImage: card.selected && (phase === 'setup' || phase === 'regroup') ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL({ ...card, setId: cardImageSetId }, cardStyle)})` : `url(${s3CardImageURL({ ...card, setId: cardImageSetId }, cardStyle)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
@@ -528,7 +551,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 onClick={handleClick}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
-                data-card-url={s3CardImageURL(card)}
+                data-card-url={s3CardImageURL({ ...card, setId: cardImageSetId })}
                 data-card-type={card.printedType}
                 data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >
