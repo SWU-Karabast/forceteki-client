@@ -356,28 +356,26 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
-            backgroundColor: '#1a4d2a', // Darker background to make bright glow pop more
+            backgroundColor: '#234a2a', // Balanced green background - between bright and muted
             alignItems: 'center',
             justifyContent: 'center',
-            boxSizing: 'border-box', // Include border within the width
+            boxSizing: 'border-box',
             borderRadius: '0.5rem',
-            border: '3px solid black', // Thicker border to match other components
+            border: '2px solid #333', // Medium contrast border
             boxShadow: `
-                inset 0 0 3px rgba(0, 255, 0, 1),
-                inset 0 0 6px rgba(50, 255, 50, 0.9),
-                inset 0 0 12px rgba(100, 255, 100, 0.8),
-                inset 0 0 18px rgba(150, 255, 150, 0.6),
-                inset 0 0 24px rgba(200, 255, 200, 0.4),
-                inset 0 0 30px rgba(220, 255, 220, 0.2)
-            `, // Enhanced bright green force glow effect
+                inset 0 0 4px rgba(0, 200, 0, 0.6),
+                inset 0 0 8px rgba(50, 220, 50, 0.5),
+                inset 0 0 12px rgba(100, 240, 100, 0.4),
+                inset 0 0 16px rgba(150, 255, 150, 0.3)
+            `, // Balanced green glow effect - more visible than muted, less intense than neon
         },
         cloneName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
             marginTop: '2px',
             fontWeight: '800',
             whiteSpace: 'nowrap',
-            overflow: 'visible', // Allow text shadow to extend beyond bounds          
-            color: '#e8ffe8', // Brighter light green text
+            overflow: 'visible',          
+            color: '#d0f0d0', // Balanced light green text - brighter than muted, softer than neon
             textAlign: 'center', 
             userSelect: 'none',
             textShadow: `
