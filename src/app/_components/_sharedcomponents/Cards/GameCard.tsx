@@ -6,7 +6,7 @@ import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
-import { getBorderColor, parseSetId } from './cardUtils';
+import { getBorderColor } from './cardUtils';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 
@@ -164,8 +164,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             sendGameMessage(['cardClicked', subCard.uuid]);
         }
     }
-
-
     
     // helper function to get the correct aspects for the upgrade cards
     const cardUpgradebackground = (card: ICardData) => {
@@ -199,11 +197,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
-    
-    // use clonedCardId for image retrieval if present
-    // const cardImageSetId = card.clonedCardId 
-    //     ? (typeof card.clonedCardId === 'string' ? parseSetId(card.clonedCardId) : card.clonedCardId)
-    //     : card.setId;
     
     // Styles
     const styles = {
@@ -614,33 +607,26 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
             </Popover>
 
-            {otherUpgradeCards.map((subcard) => {
-                // Apply the same clonedCardId logic for upgrade cards
-                const subcardImageSetId = subcard.clonedCardId 
-                    ? (typeof subcard.clonedCardId === 'string' ? parseSetId(subcard.clonedCardId) : subcard.clonedCardId)
-                    : subcard.setId;
-                
-                return (
-                    <Box
-                        key={subcard.uuid}
-                        sx={{ ...styles.upgradeIcon,
-                            backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
-                            border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none',
-                            cursor: subcard.selectable ? 'pointer' : 'normal'
-                        }}
-                        onClick={() => subcardClick(subcard)}
-                        onMouseEnter={handlePreviewOpen}
-                        onMouseLeave={handlePreviewClose}
-                        data-card-url={s3CardImageURL({ ...subcard, setId: subcardImageSetId })}
-                        data-card-type={subcard.printedType}
-                        data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
-                    >
-                        <Typography key={subcard.uuid} sx={styles.upgradeName}>
-                            {subcard.clonedCardName ?? subcard.name}
-                        </Typography>
-                    </Box>
-                );
-            })}
+            {otherUpgradeCards.map((subcard) => (
+                <Box
+                    key={subcard.uuid}
+                    sx={{ ...styles.upgradeIcon,
+                        backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
+                        border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none',
+                        cursor: subcard.selectable ? 'pointer' : 'normal'
+                    }}
+                    onClick={() => subcardClick(subcard)}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    data-card-url={s3CardImageURL({ ...subcard, setId: subcard.clonedCardId ?? subcard.setId })}
+                    data-card-type={subcard.printedType}
+                    data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
+                >
+                    <Typography key={subcard.uuid} sx={styles.upgradeName}>
+                        {subcard.clonedCardName ?? subcard.name}
+                    </Typography>
+                </Box>
+            ))}
 
             {capturedCards.length > 0 && (
                 <>
@@ -648,11 +634,6 @@ const GameCard: React.FC<IGameCardProps> = ({
                         Captured
                     </Typography>
                     {capturedCards.map((capturedCard: ICardData) => {
-                        // Apply the same clonedCardId logic for captured cards
-                        const capturedCardImageSetId = capturedCard.clonedCardId 
-                            ? (typeof capturedCard.clonedCardId === 'string' ? parseSetId(capturedCard.clonedCardId) : capturedCard.clonedCardId)
-                            : capturedCard.setId;
-                        
                         return (
                             <Box
                                 key={`captured-${capturedCard.uuid}`}
@@ -665,12 +646,12 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 onClick={() => subcardClick(capturedCard)}
                                 onMouseEnter={handlePreviewOpen}
                                 onMouseLeave={handlePreviewClose}
-                                data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCardImageSetId })}
+                                data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId })}
                                 data-card-type={capturedCard.printedType}
                                 data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
                             >
                                 <Typography sx={styles.upgradeName}>
-                                    {capturedCard.clonedCardId ? `${capturedCard.name} (Clone)` : capturedCard.name}
+                                    {capturedCard.clonedCardName ?? capturedCard.name}
                                 </Typography>
                             </Box>
                         );
