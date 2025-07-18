@@ -197,6 +197,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
+    const updatedCardId = card.clonedCardId ?? card.setId;
     
     // Styles
     const styles = {
@@ -218,7 +219,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '0.5rem',
             position: 'relative',
-            backgroundImage: card.selected && (phase === 'setup' || phase === 'regroup') ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL({ ...card, setId: card.clonedCardId ?? card.setId }, cardStyle)})` : `url(${s3CardImageURL({ ...card, setId: card.clonedCardId ?? card.setId }, cardStyle)})`,
+            backgroundImage: card.selected && (phase === 'setup' || phase === 'regroup') ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle)})` : `url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
@@ -527,7 +528,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 onClick={handleClick}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
-                data-card-url={s3CardImageURL({ ...card, setId: card.clonedCardId ?? card.setId })}
+                data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
                 data-card-type={card.printedType}
                 data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >
