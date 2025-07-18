@@ -518,7 +518,14 @@ const GameCard: React.FC<IGameCardProps> = ({
     return (
         <Box sx={styles.cardContainer}>
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
-                <Box sx={styles.cloneIcon}>
+                <Box 
+                    sx={styles.cloneIcon}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    data-card-url={s3CardImageURL({ ...card, setId: card.setId })}
+                    data-card-type="clone"
+                    data-card-id={card.setId.set + '_' + card.setId.number}
+                >
                     <Typography sx={styles.cloneName}>Clone</Typography>
                 </Box>
             )}
