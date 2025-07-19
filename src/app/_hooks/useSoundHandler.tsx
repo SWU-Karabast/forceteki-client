@@ -27,24 +27,6 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
     // Store audio objects and last play time for incomingMessage only
     const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
     const lastIncomingMessageTime = useRef<number>(0);
-    const currentR2SoundIndex = useRef<number>(0);
-    const r2BeepSounds = useMemo(() => [
-        '/r2beep01.mp3',
-        '/r2beep02.mp3',
-        '/r2beep03.mp3',
-        '/r2beep04.mp3',
-        '/r2beep05.mp3',
-        '/r2beep06.mp3',
-        '/r2beep07.mp3',
-        '/r2beep08.mp3',
-        '/r2beep09.mp3',
-        '/r2beep10.mp3',
-        '/r2beep11.mp3',
-        '/r2beep12.mp3',
-        '/r2beep13.mp3',
-        '/r2beep14.mp3',
-        '/r2beep15.mp3'
-    ], []);
     // Get preferences based on user type
     const getPreferences = () => {
         if (user?.authenticated) {
@@ -105,13 +87,6 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
         perCardMenuButton: '/click1.mp3',
         yourTurn: '/click2.mp3',
     }), []);
-
-    const getNextR2Sound = useCallback((): string => {
-        const currentSound = r2BeepSounds[currentR2SoundIndex.current];
-        // Move to next sound, wrapping around to 0 if we reach the end
-        currentR2SoundIndex.current = (currentR2SoundIndex.current + 1) % r2BeepSounds.length;
-        return currentSound;
-    }, [r2BeepSounds]);
 
     const getAudioObject = (src: string): HTMLAudioElement | null => {
         const existingAudio = audioRefs.current.get(src);
