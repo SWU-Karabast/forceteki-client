@@ -11,7 +11,7 @@ import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponen
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { v4 as uuid } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
-import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/DeckStorageUtils';
+import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 interface AddDeckDialogProps {
     open: boolean;
