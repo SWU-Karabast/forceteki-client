@@ -97,7 +97,8 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
     // Sound configuration mapping - just to the source files
     const soundConfigs = useMemo<Record<SoundAction, string>>(() => ({
         foundOpponent: '/HelloThere.mp3',
-        incomingMessage: '/r2beep01.mp3',
+        incomingMessage: '/chatbeep.mp3',
+        chat: null,
         statefulPromptResults: '/click1.mp3',
         cardClicked: '/click1.mp3',
         menuButton: '/click1.mp3',
@@ -131,6 +132,18 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
 
     // Main function to play sounds
     const playSound = useCallback((action: SoundAction) => {
+
+        const src: string | null | undefined = soundConfigs[action];
+
+        if (src === null) {
+            return;
+        }
+    
+        if (src === undefined) {
+            console.warn(`No sound configuration found for action: ${action}`);
+            return;
+        }
+       
         const preferences = getPreferences().sound;
         if (!enabled || preferences?.muteAllSound) {
             return;
@@ -152,23 +165,15 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
 
         // Special handling for incomingMessage cooldown
         if (action === 'incomingMessage') {
+            // Only play a chat notification if it's been more than 5 seconds since the last one
+            const previousMessageTime = lastIncomingMessageTime.current;
             const now = Date.now();
-            if (now - lastIncomingMessageTime.current < 100) {
-                return; // 100ms cooldown
-            }
             lastIncomingMessageTime.current = now;
+            if (now - previousMessageTime < 5000) {
+                return; 
+            }
         }
 
-        let src: string;
-        if (action === 'incomingMessage') {
-            src = getNextR2Sound();
-        } else {
-            src = soundConfigs[action];
-        }
-        if (!src) {
-            console.warn(`No sound configuration found for action: ${action}`);
-            return;
-        }
 
         const audio = getAudioObject(src);
         if (!audio) {
