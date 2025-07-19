@@ -95,7 +95,7 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
 
 
     // Sound configuration mapping - just to the source files
-    const soundConfigs = useMemo<Record<SoundAction, string>>(() => ({
+    const soundConfigs = useMemo<Record<SoundAction, string | null>>(() => ({
         foundOpponent: '/HelloThere.mp3',
         incomingMessage: '/chatbeep.mp3',
         chat: null,
@@ -103,7 +103,8 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
         cardClicked: '/click1.mp3',
         menuButton: '/click1.mp3',
         perCardMenuButton: '/click1.mp3',
-        yourTurn: '/click2.mp3',
+        yourTurn: null
+        // yourTurn: '/click2.mp3',
     }), []);
 
     const getNextR2Sound = useCallback((): string => {
