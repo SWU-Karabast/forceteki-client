@@ -410,7 +410,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/StolenIcon.png)',
         },
-        isHidden:{
+        cannotBeAttacked:{
             position: 'absolute',
             width: '28%',
             aspectRatio: '1 / 1',
@@ -556,8 +556,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                 {isStolen && (
                     <Box sx={styles.stolenIcon}/>
                 )}
-                {card.hidden && (
-                    <Box sx={styles.isHidden}/>
+                {card.cannotBeAttacked && (
+                    <Box sx={styles.cannotBeAttacked}/>
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
