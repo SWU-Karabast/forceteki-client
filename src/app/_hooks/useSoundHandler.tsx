@@ -103,8 +103,7 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
         cardClicked: '/click1.mp3',
         menuButton: '/click1.mp3',
         perCardMenuButton: '/click1.mp3',
-        yourTurn: null
-        // yourTurn: '/click2.mp3',
+        yourTurn: '/click2.mp3',
     }), []);
 
     const getNextR2Sound = useCallback((): string => {
@@ -133,7 +132,6 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
 
     // Main function to play sounds
     const playSound = useCallback((action: SoundAction) => {
-
         const src: string | null | undefined = soundConfigs[action];
 
         if (src === null) {
