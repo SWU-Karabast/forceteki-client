@@ -92,6 +92,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         if (!connectedPlayerId || isSpectatorMode) return;
         if (gameState.players?.[connectedPlayerId]?.promptState) {
             const promptState = gameState.players?.[connectedPlayerId].promptState;
+
+            // we play sound when its the players turn
+            if(promptState.playerIsNewlyActive){
+                playSound('yourTurn');
+            }
+
             const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
             prunePromptStatePopups(promptUuid);
             if (promptType === 'actionWindow') return;
