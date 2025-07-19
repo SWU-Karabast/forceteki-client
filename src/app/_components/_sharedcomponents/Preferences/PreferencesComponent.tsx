@@ -16,10 +16,12 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     subtitle = undefined,
 }) => {
     const [attemptingClose, setAttemptingClose] = useState(false);
+    const [closePreferencesHandler, setClosePreferencesHandler] = useState<() => void>(() => () => undefined);
 
     const router = useRouter();
-    const handleBackButton = () => {
-        router.push('/');
+    const attemptBackButton = () => {
+        setClosePreferencesHandler(() => () => router.push('/'));
+        setAttemptingClose(true);
     };
 
     // ------------------------STYLES------------------------//
@@ -80,7 +82,8 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
         },
     }
 
-    const attemptClose = () => {
+    const attemptCloseFromBoard = () => {
+        setClosePreferencesHandler(() => () => closePreferences());
         setAttemptingClose(true);
     }
 
@@ -99,7 +102,7 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
                 <Box sx={styles.overlayStyle}>
                     {variant === 'homePage' && (
                         <Box sx={styles.titleContainer}>
-                            <PreferenceButton variant={'standard'} buttonFnc={handleBackButton}/>
+                            <PreferenceButton variant={'standard'} buttonFnc={attemptBackButton}/>
                         </Box>
                     )}
                     {title && (
@@ -109,10 +112,10 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
                         </Box>
                     )}
                     {variant === 'gameBoard' && (
-                        <CloseOutlined onClick={attemptClose} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
+                        <CloseOutlined onClick={attemptCloseFromBoard} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
                     )}
                     <Box sx={styles.tabContainer}>
-                        <VerticalTabs tabs={tabs} variant={variant} attemptingClose={attemptingClose} closeHandler={closePreferences} cancelCloseHandler={cancelClosePreferences} />
+                        <VerticalTabs tabs={tabs} variant={variant} attemptingClose={attemptingClose} closeHandler={closePreferencesHandler} cancelCloseHandler={cancelClosePreferences} />
                     </Box>
                 </Box>
             </Box>
