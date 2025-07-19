@@ -60,10 +60,12 @@ export interface ICardData {
     epicActionSpent?: boolean;
     onStartingSide?: boolean;
     epicDeployActionSpent?: boolean;
-    hidden?: boolean;
+    cannotBeAttacked?: boolean;
     isAttacker?: boolean;
     isDefender?: boolean;
     displayText?: string;
+    clonedCardId?: ICardSetId;
+    clonedCardName?: string;
 }
 
 export interface IServerCardData {

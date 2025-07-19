@@ -164,8 +164,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             sendGameMessage(['cardClicked', subCard.uuid]);
         }
     }
-
-
     
     // helper function to get the correct aspects for the upgrade cards
     const cardUpgradebackground = (card: ICardData) => {
@@ -199,6 +197,8 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
+    const updatedCardId = card.clonedCardId ?? card.setId;
+    
     // Styles
     const styles = {
         cardContainer: {
@@ -219,7 +219,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '0.5rem',
             position: 'relative',
-            backgroundImage: card.selected && (phase === 'setup' || phase === 'regroup') ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL(card, cardStyle)})` : `url(${s3CardImageURL(card, cardStyle)})`,
+            backgroundImage: card.selected && (phase === 'setup' || phase === 'regroup') ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle)})` : `url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle)})`,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
@@ -350,6 +350,45 @@ const GameCard: React.FC<IGameCardProps> = ({
             textAlign: 'center', 
             userSelect: 'none'
         },
+        cloneIcon:{
+            width: '100%',
+            aspectRatio: '4.85',
+            display: 'flex',
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: '#234a2a',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxSizing: 'border-box',
+            borderRadius: '0.5rem',
+            border: '2px solid #333',
+            boxShadow: `
+                inset 0 0 4px rgba(0, 200, 0, 0.6),
+                inset 0 0 8px rgba(50, 220, 50, 0.5),
+                inset 0 0 12px rgba(100, 240, 100, 0.4),
+                inset 0 0 16px rgba(150, 255, 150, 0.3)
+            `,
+        },
+        cloneName: {
+            fontSize: 'clamp(4px, .65vw, 12px)',
+            marginTop: '2px',
+            fontWeight: '800',
+            whiteSpace: 'nowrap',
+            overflow: 'visible',          
+            color: '#d0f0d0',
+            textAlign: 'center', 
+            userSelect: 'none',
+            textShadow: `
+                -1px -1px 0 #000,  
+                 0px -1px 0 #000,
+                 1px -1px 0 #000,
+                -1px  0px 0 #000,
+                 1px  0px 0 #000,
+                -1px  1px 0 #000,
+                 0px  1px 0 #000,
+                 1px  1px 0 #000
+            `
+        },
         sentinelIcon:{
             position: 'absolute',
             width: '28%',
@@ -371,7 +410,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/StolenIcon.png)',
         },
-        isHidden:{
+        cannotBeAttacked:{
             position: 'absolute',
             width: '28%',
             aspectRatio: '1 / 1',
@@ -478,12 +517,25 @@ const GameCard: React.FC<IGameCardProps> = ({
     }
     return (
         <Box sx={styles.cardContainer}>
+            {cardStyle === CardStyle.InPlay && card.clonedCardId && (
+                <Box 
+                    sx={styles.cloneIcon}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    data-card-url={s3CardImageURL({ ...card, setId: card.setId })}
+                    data-card-type="clone"
+                    data-card-id={card.setId.set + '_' + card.setId.number}
+                >
+                    <Typography sx={styles.cloneName}>Clone</Typography>
+                </Box>
+            )}
+            
             <Box 
                 sx={styles.card} 
                 onClick={handleClick}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
-                data-card-url={s3CardImageURL(card)}
+                data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
                 data-card-type={card.printedType}
                 data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >
@@ -504,8 +556,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                 {isStolen && (
                     <Box sx={styles.stolenIcon}/>
                 )}
-                {card.hidden && (
-                    <Box sx={styles.isHidden}/>
+                {card.cannotBeAttacked && (
+                    <Box sx={styles.cannotBeAttacked}/>
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
@@ -574,11 +626,13 @@ const GameCard: React.FC<IGameCardProps> = ({
                     onClick={() => subcardClick(subcard)}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
-                    data-card-url={s3CardImageURL(subcard)}
+                    data-card-url={s3CardImageURL({ ...subcard, setId: subcard.clonedCardId ?? subcard.setId })}
                     data-card-type={subcard.printedType}
                     data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
                 >
-                    <Typography key={subcard.uuid} sx={styles.upgradeName}>{subcard.name}</Typography>
+                    <Typography key={subcard.uuid} sx={styles.upgradeName}>
+                        {subcard.clonedCardName ?? subcard.name}
+                    </Typography>
                 </Box>
             ))}
 
@@ -587,27 +641,29 @@ const GameCard: React.FC<IGameCardProps> = ({
                     <Typography sx={styles.capturedCardsDivider}>
                         Captured
                     </Typography>
-                    {capturedCards.map((capturedCard: ICardData) => (
-                        <Box
-                            key={`captured-${capturedCard.uuid}`}
-                            sx={{
-                                ...styles.upgradeIcon,
-                                backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
-                                border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none',
-                                cursor: capturedCard.selectable ? 'pointer' : 'normal'
-                            }}
-                            onClick={() => subcardClick(capturedCard)}
-                            onMouseEnter={handlePreviewOpen}
-                            onMouseLeave={handlePreviewClose}
-                            data-card-url={s3CardImageURL(capturedCard)}
-                            data-card-type={capturedCard.printedType}
-                            data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
-                        >
-                            <Typography sx={styles.upgradeName}>
-                                {capturedCard.name}
-                            </Typography>
-                        </Box>
-                    ))}
+                    {capturedCards.map((capturedCard: ICardData) => {
+                        return (
+                            <Box
+                                key={`captured-${capturedCard.uuid}`}
+                                sx={{
+                                    ...styles.upgradeIcon,
+                                    backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
+                                    border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none',
+                                    cursor: capturedCard.selectable ? 'pointer' : 'normal'
+                                }}
+                                onClick={() => subcardClick(capturedCard)}
+                                onMouseEnter={handlePreviewOpen}
+                                onMouseLeave={handlePreviewClose}
+                                data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId })}
+                                data-card-type={capturedCard.printedType}
+                                data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
+                            >
+                                <Typography sx={styles.upgradeName}>
+                                    {capturedCard.clonedCardName ?? capturedCard.name}
+                                </Typography>
+                            </Box>
+                        );
+                    })}
                 </>
             )}
         </Box>
