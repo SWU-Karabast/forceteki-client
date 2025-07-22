@@ -22,10 +22,7 @@ export type IPreferenceOptions = {
 
 export interface IVerticalTabsProps {
     tabs: string[]
-    variant?: 'gameBoard' | 'homePage',
-    attemptingClose?: boolean,
-    closeHandler?: () => void,
-    cancelCloseHandler?: () => void,
+    variant?: 'gameBoard' | 'homePage'
 }
 
 export type IBlockedUser = {

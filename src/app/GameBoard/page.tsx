@@ -51,8 +51,8 @@ const GameBoard = () => {
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','soundOptions']
-        :['currentGame','soundOptions']
+        ? ['endGame']
+        :['currentGame']
 
     if (!gameState || !connectedPlayer || (!(connectedPlayer in gameState?.players) && !(connectedPlayer in gameState?.spectators))) {
         return null;
@@ -145,14 +145,14 @@ const GameBoard = () => {
             </Box>
 
             <PopupShell sidebarOpen={sidebarOpen}/>
-            {isPreferenceOpen && <PreferencesComponent
+            <PreferencesComponent
                 sidebarOpen={sidebarOpen}
                 isPreferenceOpen={isPreferenceOpen}
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}
                 title={winners ? 'Game ended' : 'PREFERENCES'}
                 subtitle={winners ? winners.length > 1 ? 'Game ended in a draw' : `Winner is ${winners[0]}` : undefined}
-            />}
+            />
         </Grid>
     );
 };
