@@ -88,10 +88,10 @@ export const getUserPayload = (user: IUser | null): object => {
 export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean }> =>{
     try {
         const decks = loadSavedDecks(false);
-        const preferences = loadPreferencesFromLocalStorage();
+        // const preferences = loadPreferencesFromLocalStorage();
         const payload = {
             decks: decks,
-            preferences: preferences
+            // preferences: preferences
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-user`,
             {
