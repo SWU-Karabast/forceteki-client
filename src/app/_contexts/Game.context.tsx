@@ -18,7 +18,6 @@ import { ZoneName } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/useDistributionPrompt';
-import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 
 interface IGameContextType {
     gameState: any;
@@ -57,12 +56,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
 
-    // Initialize sound handler with user preferences
-    const { playSound } = useSoundHandler({
-        enabled: true,
-        user:user
-    });
-
     const cardSelectableZones = (gamestate: any, connectedPlayerId: string) => {
         // TODO: Clean this up to make sure cards that target opponent resources and discard bring up the correct popups
         const playerState = gamestate.players[connectedPlayerId];
@@ -92,12 +85,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         if (!connectedPlayerId || isSpectatorMode) return;
         if (gameState.players?.[connectedPlayerId]?.promptState) {
             const promptState = gameState.players?.[connectedPlayerId].promptState;
-
-            // we play sound when its the players turn
-            if(promptState.playerIsNewlyActive){
-                playSound('yourTurn');
-            }
-
             const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
             prunePromptStatePopups(promptUuid);
             if (promptType === 'actionWindow') return;
@@ -287,15 +274,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             args = [args[0], distributionPromptData, args[2]]
             clearDistributionPrompt();
         }
-
-        const typeOfMessage = args[0];
-        // We let the sound handler decide if this is a valid sound action
-        try {
-            playSound(typeOfMessage);
-        } catch (error) {
-            console.warn('Error playing sound:', error);
-        }
-        
         socket?.emit('game', ...args);
     };
 

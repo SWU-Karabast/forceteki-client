@@ -11,6 +11,7 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 const QuickGame: React.FC = () => {
     const router = useRouter();
     const { lobbyState, gameState, sendMessage } = useGame();
+    
     const handleExit = () => {
         sendMessage('manualDisconnect');
         router.push('/');

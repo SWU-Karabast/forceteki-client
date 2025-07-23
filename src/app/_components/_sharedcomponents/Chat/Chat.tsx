@@ -17,9 +17,8 @@ import {
     ChatObjectType
 } from './ChatTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import ChatCard from './ChatCard';
-import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { useUser } from '@/app/_contexts/User.context';
+import ChatCard from './ChatCard';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -29,21 +28,13 @@ const Chat: React.FC<IChatProps> = ({
 }) => {
     const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
-    const previousMessagesRef = useRef<IChatEntry[]>([]);
     const { user } = useUser();
-
-    // Initialize sound handler with user preferences
-    const { playIncomingMessageSound } = useSoundHandler({
-        enabled: !isSpectator, // Don't play sounds for spectators
-        user,
-    });
-
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
     const isPrivateLobby = lobbyState?.gameType === 'Private';
     const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
-
+    
     // Helper function to determine if chat input should be shown
     const shouldShowChatInput = () => {
         if (isSpectator) return false;
@@ -61,18 +52,6 @@ const Chat: React.FC<IChatProps> = ({
         if (playerId === connectedPlayer) return 'Player 1';
         if (playerId === getOpponent(connectedPlayer)) return 'Player 2';
         return 'Unknown Player';
-    };
-
-    const isOpponentMessage = (message: IChatMessageContent, connectedPlayerId: string): boolean => {
-        // Check if it's a player chat message
-        if (Array.isArray(message) && message.length > 0) {
-            const firstItem = message[0];
-            // Player chat messages start with a player object that has type: 'playerChat'
-            if (firstItem && typeof firstItem === 'object' && firstItem.type === 'playerChat') {
-                return firstItem.id !== connectedPlayerId;
-            }
-        }
-        return false;
     };
 
     const formatMessageItem = (item: IChatObject | string | number, itemIndex: number) => {
@@ -145,7 +124,7 @@ const Chat: React.FC<IChatProps> = ({
                 danger: 'red',
                 readyStatus: 'green'
             };
-
+            
             const color = alertColors[type as keyof typeof alertColors];
             return color ? { ...styles.alertBase, color } : styles.messageText;
         };
@@ -209,25 +188,6 @@ const Chat: React.FC<IChatProps> = ({
         return null;
     };
 
-    // Monitor chat history for new opponent messages
-    useEffect(() => {
-        if (!chatHistory || !connectedPlayer || isSpectator) return;
-        const previousMessages = previousMessagesRef.current || [];
-        // If we have more messages than before, check the new ones
-        if (chatHistory.length > previousMessages.length) {
-            const newMessages = chatHistory.slice(previousMessages.length);
-            // Check if any new message is from opponent
-            const hasOpponentMessage = newMessages.some(messageEntry => {
-                return isOpponentMessage(messageEntry.message, connectedPlayer);
-            });
-            if (hasOpponentMessage) {
-                playIncomingMessageSound();
-            }
-        }
-
-        // Update the previous messages reference
-        previousMessagesRef.current = [...chatHistory];
-    }, [chatHistory, connectedPlayer, isSpectator]);
 
     useEffect(() => {
         if(chatEndRef.current) {

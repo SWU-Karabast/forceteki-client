@@ -12,7 +12,7 @@ import {
 
 import { useUser } from '@/app/_contexts/User.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { setUsernameOnServer } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { setUsernameOnServer } from '@/app/_utils/DeckStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 
 interface UsernameChangeRequiredPopupProps {
