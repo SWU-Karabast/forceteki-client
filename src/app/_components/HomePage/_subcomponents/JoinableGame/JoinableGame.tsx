@@ -6,7 +6,7 @@ import { IJoinableGameProps } from '../../HomePageTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { ILobbyCardData } from '../../HomePageTypes';
-import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { getUserPayload } from '@/app/_utils/DeckStorageUtils';
 
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();

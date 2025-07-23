@@ -20,7 +20,7 @@ import {
     deleteDecks,
     getDeckFromServer,
     removeDeckFromLocalStorage,
-} from '@/app/_utils/ServerAndLocalStorageUtils';
+} from '@/app/_utils/DeckStorageUtils';
 import {
     CardStyle,
     IDeckDetailedData,

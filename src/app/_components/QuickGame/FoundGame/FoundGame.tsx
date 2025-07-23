@@ -6,31 +6,22 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 import { useRouter } from 'next/navigation'
 import { LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
-import { useUser } from '@/app/_contexts/User.context';
-import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 
 
 const FoundGame: React.FC = () => {
     const { lobbyState, connectedPlayer, gameState } = useGame();
-    const { user } = useUser();
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     // set connectedPlayer
     const playerLeader = connectedUser?.deck?.leader;
     const playerBase = connectedUser?.deck?.base;
+
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
     const opponentLeader = opponentUser ? opponentUser.deck.leader : null;
     const opponentBase = opponentUser ? opponentUser.deck.base : null;
     const router = useRouter();
     const [countdownText, setCountdownText] = useState('Connecting...');
-
-    const hasPlayedSoundRef = useRef(false);
-    // Initialize sound handler with user preferences
-    const { playFoundOpponentSound } = useSoundHandler({
-        enabled: true,
-        user
-    });
 
     useEffect(() => {
         if (gameState) {
@@ -40,14 +31,6 @@ const FoundGame: React.FC = () => {
             router.push('/quickGame');
         }
     }, [router, gameState, lobbyState]);
-
-    useEffect(() => {
-        if (!hasPlayedSoundRef.current) {
-            playFoundOpponentSound();
-            hasPlayedSoundRef.current = true;
-        }
-    }, [playFoundOpponentSound]);
-
 
     // ------------------------STYLES------------------------//
 

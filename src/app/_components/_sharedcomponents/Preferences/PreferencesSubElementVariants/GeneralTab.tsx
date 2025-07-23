@@ -5,7 +5,7 @@ import { Button, Divider, Link, TextField, Tooltip } from '@mui/material';
 import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_utils/DeckStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 
 function GeneralTab() {
