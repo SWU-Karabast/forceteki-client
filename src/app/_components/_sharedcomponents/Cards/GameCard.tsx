@@ -410,6 +410,16 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/StolenIcon.png)',
         },
+        blankIcon:{
+            position: 'absolute',
+            width: '28%',
+            aspectRatio: '1 / 1',
+            top:'32%',
+            right: '-4%',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(/BlankIcon.png)',
+        },
         cannotBeAttacked:{
             position: 'absolute',
             width: '28%',
@@ -577,6 +587,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                         </Grid>
                         {card.sentinel && (
                             <Box sx={styles.sentinelIcon}/>
+                        )}
+                        {card.isBlanked && (
+                            <Box sx={styles.blankIcon}/>
                         )}
                         <Box sx={styles.powerIcon}>
                             <Typography sx={styles.numberFont}>{card.power}</Typography>
