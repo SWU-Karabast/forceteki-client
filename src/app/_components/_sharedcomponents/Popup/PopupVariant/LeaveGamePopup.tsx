@@ -19,7 +19,7 @@ export const LeaveGamePopupModule = ({ uuid }: LeaveGamePopupProps) => {
     const { sendMessage, gameState } = useGame();
     const { closePopup } = usePopup();
     const router = useRouter();
-    const hasWinner = !!gameState?.winner;
+    const hasWinner = !!gameState?.winners.length;
     const handleConfirm = () => {
         sendMessage('manualDisconnect');
         closePopup(uuid);
