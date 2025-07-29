@@ -29,12 +29,12 @@ const GameBoard = () => {
     }, [lobbyState, router]);
 
     useEffect(() => {
-        if (gameState?.winner) {
+        if (!!gameState?.winners.length) {
             setPreferenceOpen(true);
         }else{
             setPreferenceOpen(false);
         }
-    }, [gameState?.winner]);
+    }, [gameState?.winners]);
 
     const toggleSidebar = () => {
         localStorage.setItem('sidebarState', !sidebarOpen ? 'true' : 'false');
@@ -46,7 +46,7 @@ const GameBoard = () => {
     }
 
     // check if game ended already.
-    const winners = gameState?.winner ? gameState.winner : undefined;
+    const winners = !!gameState?.winners.length ? gameState.winners : undefined;
     // const winners = ['order66']
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']

@@ -295,7 +295,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.warn('Error playing sound:', error);
         }
-        
+
         socket?.emit('game', ...args);
     };
 
