@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import VerticalTabs from '@/app/_components/_sharedcomponents/Preferences/_subComponents/VerticalTabs';
@@ -15,9 +15,13 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     variant = 'gameBoard',
     subtitle = undefined,
 }) => {
+    const [attemptingClose, setAttemptingClose] = useState(false);
+    const [closePreferencesHandler, setClosePreferencesHandler] = useState<() => void>(() => () => undefined);
+
     const router = useRouter();
-    const handleBackButton = () => {
-        router.push('/');
+    const attemptBackButton = () => {
+        setClosePreferencesHandler(() => () => router.push('/'));
+        setAttemptingClose(true);
     };
 
     // ------------------------STYLES------------------------//
@@ -77,13 +81,28 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
             minHeight:'3rem',
         },
     }
+
+    const attemptCloseFromBoard = () => {
+        setClosePreferencesHandler(() => () => closePreferences());
+        setAttemptingClose(true);
+    }
+
+    const closePreferences = () => {
+        setAttemptingClose(false);
+        preferenceToggle?.();
+    };
+
+    const cancelClosePreferences = () => {
+        setAttemptingClose(false);
+    }
+
     return (
         <>
             <Box sx={styles.containerStyle}>
                 <Box sx={styles.overlayStyle}>
                     {variant === 'homePage' && (
                         <Box sx={styles.titleContainer}>
-                            <PreferenceButton variant={'standard'} buttonFnc={handleBackButton}/>
+                            <PreferenceButton variant={'standard'} buttonFnc={attemptBackButton}/>
                         </Box>
                     )}
                     {title && (
@@ -93,10 +112,10 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
                         </Box>
                     )}
                     {variant === 'gameBoard' && (
-                        <CloseOutlined onClick={preferenceToggle} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
+                        <CloseOutlined onClick={attemptCloseFromBoard} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
                     )}
                     <Box sx={styles.tabContainer}>
-                        <VerticalTabs tabs={tabs} variant={variant}/>
+                        <VerticalTabs tabs={tabs} variant={variant} attemptingClose={attemptingClose} closeHandler={closePreferencesHandler} cancelCloseHandler={cancelClosePreferences} />
                     </Box>
                 </Box>
             </Box>

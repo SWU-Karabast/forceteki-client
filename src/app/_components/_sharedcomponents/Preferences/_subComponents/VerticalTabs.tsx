@@ -3,17 +3,19 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import { useEffect, useState } from 'react';
 import CurrentGameTab
     from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CurrentGameTab';
 import KeyboardShortcutsTab
     from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/KeyboardShortcutsTab';
 import CardSleevesTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CardSleevesTab';
-import GameOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
+import SoundOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/SoundOptionsTab';
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
 import { useUser } from '@/app/_contexts/User.context';
 import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
+import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
 
 function tabProps(index: number) {
     return {
@@ -23,32 +25,99 @@ function tabProps(index: number) {
 }
 
 
+enum TabType {
+    CurrentGame = 'currentGame',
+    KeyboardShortcuts = 'keyboardShortcuts',
+    CardSleeves = 'cardSleeves',
+    SoundOptions = 'soundOptions',
+    EndGame = 'endGame',
+    BlockList = 'blockList',
+    General = 'general',
+    Logout = 'logout'
+}
+
 function VerticalTabs({ 
     tabs,
-    variant = 'gameBoard'
+    variant = 'gameBoard',
+    attemptingClose = false,
+    closeHandler = () => undefined,
+    cancelCloseHandler = () => undefined,
 }:IVerticalTabsProps) {
-    const [value, setValue] = React.useState(0);
+    const [value, setValue] = useState(0);
+    const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+    const [pendingTabIndex, setPendingTabIndex] = useState<number | null>(null);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const { logout } = useUser();
 
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (tabs[value] === 'soundOptions' && hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved sound preferences. Are you sure you want to leave?';
+            }
+        };
+
+        window.addEventListener('beforeUnload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeUnload', handleBeforeUnload);
+    }, [tabs, value, hasUnsavedChanges]);
+
+    useEffect(() => {
+        if (attemptingClose) {
+            if (hasUnsavedChanges) {
+                setShowUnsavedDialog(true);
+            } else {
+                closeHandler();
+            }
+        }
+    }, [attemptingClose, hasUnsavedChanges, closeHandler]);
+
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-        setValue(newValue);
+        // Check if leaving sound options with unsaved changes
+        if (tabs[value] === 'soundOptions' && hasUnsavedChanges && newValue !== value) {
+            setPendingTabIndex(newValue);
+            setShowUnsavedDialog(true);
+        } else {
+            setValue(newValue);
+        }
+    };
+
+    const handleDialogDiscard = () => {
+        setShowUnsavedDialog(false);
+        // Tell SoundOptionsTab to reset (you'll need to expose this)
+        if (pendingTabIndex !== null) {
+            setValue(pendingTabIndex);
+        }
+        setPendingTabIndex(null);
+
+        if (attemptingClose) {
+            closeHandler();
+        }
+    };
+
+    const handleDialogCancel = () => {
+        setShowUnsavedDialog(false);
+        setPendingTabIndex(null);
+
+        if (attemptingClose) {
+            cancelCloseHandler();
+        }
     };
 
     const renderPreferencesContent = (type: string) => {
         switch (type) {
-            case 'currentGame':
+            case TabType.CurrentGame:
                 return <CurrentGameTab/>;
-            case 'keyboardShortcuts':
+            case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
-            case 'cardSleeves':
+            case TabType.CardSleeves:
                 return <CardSleevesTab/>;
-            case 'gameOptions':
-                return <GameOptionsTab/>;
-            case 'endGame':
+            case TabType.SoundOptions:
+                return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
+            case TabType.EndGame:
                 return <EndGameTab/>;
-            case 'blockList':
+            case TabType.BlockList:
                 return <BlockListTab/>;
-            case 'general':
+            case TabType.General:
                 return <GeneralTab/>;
             default:
                 return <Typography>Not Implemented</Typography>;
@@ -56,21 +125,21 @@ function VerticalTabs({
     };
     const renderLabels = (type: string) => {
         switch (type) {
-            case 'currentGame':
+            case TabType.CurrentGame:
                 return 'Current Game';
-            case 'keyboardShortcuts':
+            case TabType.KeyboardShortcuts:
                 return 'Keyboard Shortcuts';
-            case 'cardSleeves':
+            case TabType.CardSleeves:
                 return 'Card Sleeves';
-            case 'gameOptions':
-                return 'Game Options';
-            case 'endGame':
+            case TabType.SoundOptions:
+                return 'Sound Options';
+            case TabType.EndGame:
                 return 'Current Game';
-            case 'blockList':
+            case TabType.BlockList:
                 return 'Block List';
-            case 'logout':
+            case TabType.Logout:
                 return 'Log Out'
-            case 'general':
+            case TabType.General:
                 return 'General';
             default:
                 return null;
@@ -178,6 +247,11 @@ function VerticalTabs({
                     );
                 })}
             </Box>
+            <UnsavedChangesDialog
+                open={showUnsavedDialog}
+                onDiscard={handleDialogDiscard}
+                onCancel={handleDialogCancel}
+            />
         </Box>
     );
 }

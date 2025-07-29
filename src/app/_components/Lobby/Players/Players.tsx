@@ -1,17 +1,32 @@
 // Players.tsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, Box, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { ILobbyUserProps, IPlayersProps } from '../LobbyTypes';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ICardData, LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
+import { useUser } from '@/app/_contexts/User.context';
 
 const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     // ------------------------STYLES------------------------//
     const { connectedPlayer, lobbyState } = useGame();
+    const { user } = useUser();
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
+    const previousOpponentRef = useRef<ILobbyUserProps | null>(null);
+    const { playFoundOpponentSound } = useSoundHandler({ user });
+    useEffect(() => {
+        // Check if opponent just joined (was null/undefined, now exists)
+        const hadOpponent = opponentUser?.id === previousOpponentRef.current;
+        if (!hadOpponent && opponentUser && connectedUser?.id === lobbyState.lobbyOwnerId) {
+            playFoundOpponentSound();
+        }
+
+        // Update the ref for next render
+        previousOpponentRef.current = opponentUser?.id;
+    }, [opponentUser, playFoundOpponentSound]);
 
     // set connectedPlayer
     const playerLeader = connectedUser?.deck?.leader;
