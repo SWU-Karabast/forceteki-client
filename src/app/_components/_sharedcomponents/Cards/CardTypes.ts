@@ -61,6 +61,7 @@ export interface ICardData {
     onStartingSide?: boolean;
     epicDeployActionSpent?: boolean;
     cannotBeAttacked?: boolean;
+    isBlanked?: boolean;
     isAttacker?: boolean;
     isDefender?: boolean;
     displayText?: string;
