@@ -91,7 +91,7 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
     const getAudioObject = (src: string): HTMLAudioElement | null => {
         const existingAudio = audioRefs.current.get(src);
         const volume = getVolumeFromLocalStorage();
-        if (existingAudio) {
+        if (existingAudio && existingAudio.volume === volume) {
             return existingAudio;
         }
         try {
