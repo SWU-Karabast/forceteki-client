@@ -12,7 +12,6 @@ export interface IUser {
 
 export interface ISoundPreferences {
     muteAllSound?: boolean;
-    volume?: number;
     muteCardAndButtonClickSound?: boolean;
     muteYourTurn?: boolean;
     muteChatSound?: boolean;

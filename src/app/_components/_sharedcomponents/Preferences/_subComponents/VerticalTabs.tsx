@@ -26,19 +26,22 @@ function tabProps(index: number) {
 
 
 enum TabType {
-    CURRENT_GAME = 'currentGame',
-    KEYBOARD_SHORTCUTS = 'keyboardShortcuts',
-    CARD_SLEEVES = 'cardSleeves',
-    SOUND_OPTIONS = 'soundOptions',
-    END_GAME = 'endGame',
-    BLOCK_LIST = 'blockList',
-    GENERAL = 'general',
-    LOGOUT = 'logout'
+    CurrentGame = 'currentGame',
+    KeyboardShortcuts = 'keyboardShortcuts',
+    CardSleeves = 'cardSleeves',
+    SoundOptions = 'soundOptions',
+    EndGame = 'endGame',
+    BlockList = 'blockList',
+    General = 'general',
+    Logout = 'logout'
 }
 
 function VerticalTabs({ 
     tabs,
-    variant = 'gameBoard'
+    variant = 'gameBoard',
+    attemptingClose = false,
+    closeHandler = () => undefined,
+    cancelCloseHandler = () => undefined,
 }:IVerticalTabsProps) {
     const [value, setValue] = useState(0);
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
@@ -58,6 +61,16 @@ function VerticalTabs({
         return () => window.removeEventListener('beforeUnload', handleBeforeUnload);
     }, [tabs, value, hasUnsavedChanges]);
 
+    useEffect(() => {
+        if (attemptingClose) {
+            if (hasUnsavedChanges) {
+                setShowUnsavedDialog(true);
+            } else {
+                closeHandler();
+            }
+        }
+    }, [attemptingClose, hasUnsavedChanges, closeHandler]);
+
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         // Check if leaving sound options with unsaved changes
         if (tabs[value] === 'soundOptions' && hasUnsavedChanges && newValue !== value) {
@@ -75,28 +88,36 @@ function VerticalTabs({
             setValue(pendingTabIndex);
         }
         setPendingTabIndex(null);
+
+        if (attemptingClose) {
+            closeHandler();
+        }
     };
 
     const handleDialogCancel = () => {
         setShowUnsavedDialog(false);
         setPendingTabIndex(null);
+
+        if (attemptingClose) {
+            cancelCloseHandler();
+        }
     };
 
     const renderPreferencesContent = (type: string) => {
         switch (type) {
-            case TabType.CURRENT_GAME:
+            case TabType.CurrentGame:
                 return <CurrentGameTab/>;
-            case TabType.KEYBOARD_SHORTCUTS:
+            case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
-            case TabType.CARD_SLEEVES:
+            case TabType.CardSleeves:
                 return <CardSleevesTab/>;
-            case TabType.SOUND_OPTIONS:
+            case TabType.SoundOptions:
                 return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
-            case TabType.END_GAME:
+            case TabType.EndGame:
                 return <EndGameTab/>;
-            case TabType.BLOCK_LIST:
+            case TabType.BlockList:
                 return <BlockListTab/>;
-            case TabType.GENERAL:
+            case TabType.General:
                 return <GeneralTab/>;
             default:
                 return <Typography>Not Implemented</Typography>;
@@ -104,21 +125,21 @@ function VerticalTabs({
     };
     const renderLabels = (type: string) => {
         switch (type) {
-            case TabType.CURRENT_GAME:
+            case TabType.CurrentGame:
                 return 'Current Game';
-            case TabType.KEYBOARD_SHORTCUTS:
+            case TabType.KeyboardShortcuts:
                 return 'Keyboard Shortcuts';
-            case TabType.CARD_SLEEVES:
+            case TabType.CardSleeves:
                 return 'Card Sleeves';
-            case TabType.SOUND_OPTIONS:
+            case TabType.SoundOptions:
                 return 'Sound Options';
-            case TabType.END_GAME:
+            case TabType.EndGame:
                 return 'Current Game';
-            case TabType.BLOCK_LIST:
+            case TabType.BlockList:
                 return 'Block List';
-            case TabType.LOGOUT:
+            case TabType.Logout:
                 return 'Log Out'
-            case TabType.GENERAL:
+            case TabType.General:
                 return 'General';
             default:
                 return null;

@@ -14,15 +14,17 @@ import {
 import { IPreferences, ISoundPreferences } from '@/app/_contexts/UserTypes';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { keyframes } from '@mui/system';
+import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
+import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 
 interface SoundOptionsTabProps {
     setHasNewChanges?: Dispatch<SetStateAction<boolean>>;
 }
 
 enum SaveStatus {
-    NOCHANGE = 'noChange',
-    SUCCESS = 'success',
-    ERROR = 'error'
+    NoChange = 'NoChange',
+    Success = 'Success',
+    Error = 'Error'
 }
 
 const pulseBorder = keyframes`
@@ -42,20 +44,24 @@ const pulseBorder = keyframes`
 
 function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
     const { user, updateUserPreferences } = useUser();
-    const [soundPreferences, setSoundPreferences] = useState<IPreferences['sound']>({
-        muteAllSound: false,
-        volume: 0.75,
-        muteCardAndButtonClickSound: false,
-        muteYourTurn: false,
-        muteChatSound: false,
-        muteOpponentFoundSound: false,
+    // Initialize sound handler with user preferences
+    const { saveVolumeToLocalStorage, getVolumeFromLocalStorage, getPreferences } = useSoundHandler({
+        user,
     });
+
+    const [soundPreferences, setSoundPreferences] = useState<IPreferences['sound']>(() => {
+        return getPreferences().sound
+    });
+
     const [isSaving, setIsSaving] = useState(false);
-    const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NOCHANGE);
-    const tempAudio = new Audio('/HelloThere.mp3');
+    const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NoChange);
+
     const [saveMessage, setSaveMessage] = useState<string | undefined>();
     const [hasChanges, setHasChanges] = useState(false);
+    const [volume, setVolume] = useState<number>(Math.round(getVolumeFromLocalStorage() * 100));
     const [originalPreferences, setOriginalPreferences] = useState<IPreferences['sound']>(undefined);
+
+    const tempAudio = new Audio('/HelloThere.mp3');
 
     const styles = {
         typographyContainer: {
@@ -111,7 +117,6 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
         if (user && user?.preferences?.sound) {
             preferences = {
                 muteAllSound: user.preferences.sound.muteAllSound ?? false,
-                volume: user.preferences.sound.volume ?? 0.75,
                 muteCardAndButtonClickSound: user.preferences.sound.muteCardAndButtonClickSound ?? false,
                 muteYourTurn: user.preferences.sound.muteYourTurn ?? false,
                 muteChatSound: user.preferences.sound.muteChatSound ?? false,
@@ -129,67 +134,45 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
     // Check if there are unsaved changes
     useEffect(() => {
         if (!originalPreferences) return;
-
-        const hasUnsavedChanges = JSON.stringify(soundPreferences) !== JSON.stringify(originalPreferences);
+        const hasUnsavedChanges =
+            JSON.stringify(soundPreferences) !== JSON.stringify(originalPreferences) ||
+            volume !== (Math.round(getVolumeFromLocalStorage() * 100));
         setHasChanges(hasUnsavedChanges);
         if (setHasNewChanges) {
             setHasNewChanges(hasUnsavedChanges)
         }
-    }, [soundPreferences, originalPreferences]);
+    }, [soundPreferences, originalPreferences, volume]);
 
     const handlePreferenceChange = <T extends keyof ISoundPreferences>(key: T, value: ISoundPreferences[T]) => {
         setSoundPreferences(prev => ({
             ...prev,
-            [key]: key === 'volume' ? value as number / 100 : value
+            [key]: value
         }));
-        setSaveStatus(SaveStatus.NOCHANGE);
+        setSaveStatus(SaveStatus.NoChange);
     };
 
-    const handleSavePreferences = async (): Promise<boolean> => {
+    const handleSavePreferences = async () => {
         setIsSaving(true);
-        setSaveStatus(SaveStatus.NOCHANGE);
-
+        setSaveStatus(SaveStatus.NoChange);
+        saveVolumeToLocalStorage(volume/100)
         try {
-            if (user) {
-                const success = await saveSoundPreferencesToServer(user, soundPreferences);
-
-                if (success) {
-                    updateUserPreferences({
-                        ...user.preferences,
-                        sound: soundPreferences
-                    });
-                    setOriginalPreferences(soundPreferences);
-                    setSaveStatus(SaveStatus.SUCCESS);
-                    setSaveMessage('Sound preferences saved successfully.');
-
-                    // in this case we also save to localstorage
-                    const currentPreferences = loadPreferencesFromLocalStorage();
-                    const updatedPreferences = {
-                        ...currentPreferences,
-                        sound: soundPreferences
-                    };
-                    savePreferencesToLocalStorage(updatedPreferences);
-
-                    setTimeout(() => setSaveStatus(SaveStatus.NOCHANGE), 3000);
-                    return true;
-                } else {
-                    setSaveStatus(SaveStatus.ERROR);
-                    setSaveMessage('Failed to save preferences to server.');
-                    return false;
+            const result = await savePreferencesGeneric(
+                user,
+                { sound: soundPreferences },
+                updateUserPreferences
+            );
+            if (result.success) {
+                setOriginalPreferences(soundPreferences);
+                setSaveStatus(SaveStatus.Success);
+                setSaveMessage('Sound preferences saved successfully.');
+                setTimeout(() => setSaveStatus(SaveStatus.NoChange), 3000);
+                setHasChanges(false);
+                if (setHasNewChanges) {
+                    setHasNewChanges(false)
                 }
             } else {
-                const currentPreferences = loadPreferencesFromLocalStorage();
-                const updatedPreferences = {
-                    ...currentPreferences,
-                    sound: soundPreferences
-                };
-
-                savePreferencesToLocalStorage(updatedPreferences);
-                setOriginalPreferences(soundPreferences);
-                setSaveStatus(SaveStatus.SUCCESS);
-                setSaveMessage('Sound preferences saved successfully.');
-                setTimeout(() => setSaveStatus(SaveStatus.NOCHANGE), 3000);
-                return true;
+                setSaveStatus(SaveStatus.Error);
+                setSaveMessage('Failed to save preferences to server.');
             }
         } catch (error) {
             console.error('Failed to save sound preferences:', error);
@@ -198,8 +181,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
             } else {
                 setSaveMessage('Unknown Server Error');
             }
-            setSaveStatus(SaveStatus.ERROR);
-            return false;
+            setSaveStatus(SaveStatus.Error);
         } finally {
             setIsSaving(false);
         }
@@ -222,8 +204,8 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                 <VolumeSlider
                     label="Game Volume"
                     description="Adjust the volume of all game sounds."
-                    defaultValue={Math.round((soundPreferences?.volume ?? 0.75) * 100)}
-                    onChange={(value) => handlePreferenceChange('volume', value)}
+                    defaultValue={volume}
+                    onChange={setVolume}
                     onChangeCommitted={handleVolumeChangeCommitted}
                     disabled={soundPreferences?.muteAllSound || false}
                 />
@@ -287,12 +269,12 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                     text={'Save Changes'}
                     sx={styles.saveButton}
                 />
-                {saveStatus === 'success' && (
+                {saveStatus === 'Success' && (
                     <Alert severity="success" sx={{ flexGrow: 1, background: 'none', color: 'green' }}>
                         {saveMessage}
                     </Alert>
                 )}
-                {saveStatus === 'error' && (
+                {saveStatus === 'Error' && (
                     <Alert severity="error" sx={{ flexGrow: 1, background: 'none', color: 'red' }}>
                         {saveMessage}
                     </Alert>
