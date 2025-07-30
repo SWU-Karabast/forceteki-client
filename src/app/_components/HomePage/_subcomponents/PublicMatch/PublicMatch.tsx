@@ -6,7 +6,7 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { getUserPayload } from '@/app/_utils/DeckStorageUtils';
+import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     const router = useRouter();
