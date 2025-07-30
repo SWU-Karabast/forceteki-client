@@ -49,11 +49,7 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
                 // Ensure it's a valid number between 0 and 1
                 if (!isNaN(volume) && volume >= 0 && volume <= 1) {
                     return volume;
-                }else{
-                    return 0.75
                 }
-            }else{
-                return 0.75
             }
         } catch (error) {
             console.warn('Error reading volume from localStorage:', error);
