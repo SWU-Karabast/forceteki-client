@@ -382,10 +382,19 @@ const DeckPage: React.FC = () => {
             boxShadow: '0 0 5px #FFD700',
         },
         swudbTag: {
-            borderColor: '#4CB5FF', // Purple for SWUDB
+            borderColor: '#4CB5FF',
             color: '#4CB5FF',
             '&:hover': {
                 backgroundColor: '#4CB5FF',
+                color: '#000000',
+            },
+            boxShadow: '0 0 5px #4CB5FF',
+        },
+        swuUnlimited: {
+            borderColor: '#4CFF85',
+            color: '#4CFF85',
+            '&:hover': {
+                backgroundColor: '#4CFF85',
                 color: '#000000',
             },
             boxShadow: '0 0 5px #4CB5FF',
@@ -475,7 +484,7 @@ const DeckPage: React.FC = () => {
                                         <Typography
                                             sx={{
                                                 ...styles.sourceTag,
-                                                ...(deck.source.toUpperCase() === 'SWUSTATS' ? styles.swuStatsTag : styles.swudbTag)
+                                                ...(deck.source.toUpperCase() === 'SWUSTATS' ? styles.swuStatsTag : deck.source.toUpperCase() === 'SWUDB' ? styles.swudbTag : styles.swuUnlimited)
                                             }}
                                             onClick={(e) => handleRedirect(deck.deckLink, e)}
                                         >
