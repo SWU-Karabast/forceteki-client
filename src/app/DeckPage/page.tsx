@@ -231,7 +231,7 @@ const DeckPage: React.FC = () => {
             case 'SWUNLIMITEDDB':
                 return styles.swuUnlimitedTag;
             default:
-                console.log(`Unknown deck source: ${deckSource}`)
+                throw new Error(`Unknown deck source: ${deckSource}`);
         }
     };
 
