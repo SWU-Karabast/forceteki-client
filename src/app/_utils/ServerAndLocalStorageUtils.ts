@@ -9,6 +9,8 @@ import { v4 as uuid } from 'uuid';
 import { IUser, IPreferences } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 
+const FEATURE_SEEN_PREFIX = 'has-seen-';
+
 /* Secondary functions */
 /**
  * Fetches decks based on authentication status
@@ -622,5 +624,71 @@ export const updateDeckFavoriteInLocalStorage = (deckID: string) => {
         }
     } catch (error) {
         console.error('Error updating favorite status:', error);
+    }
+};
+
+/**
+ * Clean up all old feature announcements and optionally add a new one
+ * Call this when deploying a new feature announcement
+ * @param newFeatureName - Optional new feature to mark as unseen
+ */
+export const cleanupOldFeaturesAndSetNew = (newFeatureName?: string): void => {
+    try {
+        // Get all localStorage keys
+        const keysToRemove: string[] = [];
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('has-seen-')) {
+                keysToRemove.push(key);
+            }
+        }
+
+        // Remove all old feature keys
+        keysToRemove.forEach(key => {
+            if(key !== `has-seen-${newFeatureName}`) {
+                localStorage.removeItem(key);
+            }
+        });
+
+        console.log(`Cleaned up ${keysToRemove.length} old feature announcement keys`);
+
+        // If there's a new feature, we don't mark it as seen - we want to show it
+        if (newFeatureName) {
+            console.log(`New feature '${newFeatureName}' ready to be shown`);
+        }
+    } catch (error) {
+        console.error('Error cleaning up old features:', error);
+        throw error;
+    }
+};
+
+/**
+ * Mark a feature as seen by the user
+ * @param featureName - The name of the feature
+ */
+export const markFeatureAsSeen = (featureName: string): void => {
+    try {
+        cleanupOldFeaturesAndSetNew(featureName);
+        const key = `has-seen-${featureName}`;
+        localStorage.setItem(key, 'seen');
+    } catch (error) {
+        console.error('Error marking feature as seen:', error);
+    }
+};
+
+/**
+ * Check if user has seen a specific feature announcement
+ * @param featureName - The name of the feature (e.g., 'deck-management-v2')
+ * @returns boolean - true if seen and not expired, false otherwise
+ */
+export const hasSeenFeature = (featureName: string): boolean => {
+    try {
+        const key = `has-seen-${featureName}`;
+        const storedData = localStorage.getItem(key);
+        return !!storedData
+    } catch (error) {
+        console.error('Error checking feature seen status:', error);
+        return false;
     }
 };
