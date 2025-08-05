@@ -106,8 +106,8 @@ const CreateGameForm = () => {
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favouriteDeck && deckData && !deckLink) {
-                    deckData.deckID = favouriteDeck
-                    deckData.deckLink = userDeck
+                    deckData.deckID = favouriteDeck;
+                    deckData.deckLink = userDeck;
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
