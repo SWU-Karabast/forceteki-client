@@ -231,6 +231,7 @@ const DeckPage: React.FC = () => {
             case 'SWUNLIMITEDDB':
                 return styles.swuUnlimitedTag;
             default:
+                console.log(`Unknown deck source: ${deckSource}`);
                 return styles.unknownTag
         }
     };
@@ -413,7 +414,6 @@ const DeckPage: React.FC = () => {
             boxShadow: '0 0 5px #4CB5FF',
         },
         unknownTag: {
-
             color: 'white',
             '&:hover': {
                 backgroundColor: 'white',
