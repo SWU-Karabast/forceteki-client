@@ -1,4 +1,4 @@
-import { IArticle } from '@/app/_components/HomePage/HomePageTypes';
+import { IAnnouncement, IArticle } from '@/app/_components/HomePage/HomePageTypes';
 import { s3ImageURL } from '../_utils/s3Utils';
 
 export const playerMatches = [
@@ -108,3 +108,13 @@ export const articles: IArticle[] = [
         imageAlt: 'News Announcement',
     },
 ];
+
+export const announcement: IAnnouncement = {
+    key:'swuStats',
+    title: 'New Feature - SWUStats',
+    content:`
+    Track your wins, losses, and match‑up win‑rates on <strong>SWUSTATS</strong>! By adding a deck on swustats and importing it into Karabast
+    you are able to retrieve in-depth information on your deck&#39;s performance!`,
+    endDate: '2025-09-15',
+    image:'/swuStats.png'
+}

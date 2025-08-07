@@ -55,3 +55,13 @@ export type IArticle = {
 export interface INewsItemProps {
     article: IArticle;
 }
+
+export interface IAnnouncement {
+    key: string;
+    endDate: string;
+    title?: string;
+    content?: string;
+    image?: string;
+}
+
+

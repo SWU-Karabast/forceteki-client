@@ -8,8 +8,9 @@ import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/
 import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/UsernameChangeRequiredPopup';
-import { hasSeenFeature, markFeatureAsSeen } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { markAnnouncementAsSeen, shouldShowAnnouncement } from '@/app/_utils/ServerAndLocalStorageUtils';
 import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
+import { announcement } from '@/app/_constants/mockData';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -30,14 +31,14 @@ const HomePagePlayMode: React.FC = () => {
     const closeUpdatePopup = () => {
         setShowUpdatePopup(false);
         updateWelcomeMessage();
-        if(!hasSeenFeature('swuStats')){
+        if(shouldShowAnnouncement(announcement)){
             setShowNewFeaturePopup(true);
         }
     }
 
     const closeNewFeaturePopup = () => {
         setShowNewFeaturePopup(false);
-        markFeatureAsSeen('swuStats')
+        markAnnouncementAsSeen(announcement)
     }
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
@@ -78,11 +79,11 @@ const HomePagePlayMode: React.FC = () => {
             if (user.showWelcomeMessage && !showUpdatePopup) {
                 setShowNewFeaturePopup(false);
                 setShowWelcomePopup(true);
-            }else if (!hasSeenFeature('swuStats')){
+            }else if (shouldShowAnnouncement(announcement)){
                 setShowNewFeaturePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
-        }else if(!hasSeenFeature('swuStats')){
+        }else if(shouldShowAnnouncement(announcement)){
             setShowNewFeaturePopup(true);
         }
 

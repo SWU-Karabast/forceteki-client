@@ -9,6 +9,8 @@ import {
 } from '@mui/material';
 import Image from 'next/image';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { announcement } from '@/app/_constants/mockData';
+import parse from 'html-react-parser';
 
 interface WhatsNewPopupProps {
     open: boolean;
@@ -82,27 +84,26 @@ const WhatsNewPopup: React.FC<WhatsNewPopupProps> = ({ open, onClose }) => {
         >
             <DialogContent>
                 <Typography variant="h4" sx={styles.title} id="whats-new-dialog-title">
-                    ✨ New Feature - SWUStats
+                    ✨ {parse(announcement.title ?? '')}
                 </Typography>
 
                 <Box component="ul" sx={styles.whatsNewList}>
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                            Track your wins, losses, and match‑up win‑rates on <strong>SWUSTATS</strong>! By adding a deck on swustats and importing it into Karabast
-                            you are able to retrieve in-depth information on your decks performance!
-                        </Typography>
-                    </li>
+                    <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
+                        {parse(announcement.content ?? '')}
+                    </Typography>
                 </Box>
+                {announcement.image && (
+                    <Box sx={styles.screenshotWrapper}>
+                        <Image
+                            src={announcement.image}
+                            alt="Highlighted Stats Panel"
+                            width={400}
+                            height={240}
+                            style={{ borderRadius: '8px', width: '33em', height: '14em' }}
+                        />
 
-                <Box sx={styles.screenshotWrapper}>
-                    <Image
-                        src="/swuStats.png"
-                        alt="Highlighted Stats Panel"
-                        width={400}
-                        height={240}
-                        style={{ borderRadius: '8px', width: '33em', height: '14em' }}
-                    />
-                </Box>
+                    </Box>
+                )}
             </DialogContent>
             <DialogActions sx={styles.actions}>
                 <PreferenceButton buttonFnc={onClose} text="Got it" variant="standard" />
