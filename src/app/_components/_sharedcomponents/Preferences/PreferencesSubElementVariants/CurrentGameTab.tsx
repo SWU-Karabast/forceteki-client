@@ -19,6 +19,7 @@ function CurrentGameTab() {
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
+
     useEffect(() => {
         if(confirmConcede){
             const timer = setTimeout(() => setConfirmConcede(false), 5000);
@@ -51,7 +52,7 @@ function CurrentGameTab() {
     const handleUndoPhase = () => {
         sendGameMessage(['rollbackToSnapshot',{
             type: 'phase',
-            phaseName: 'regroup',
+            phaseName: gameState.phase,
             actionOffset: 0
         }])
     }
@@ -125,15 +126,15 @@ function CurrentGameTab() {
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Undo</Typography>
                     <Divider sx={{ mb: '20px' }}/>
                     <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                        <PreferenceButton variant={'standard'} text={'Simple Undo'} buttonFnc={handleUndo}/>
+                        <PreferenceButton variant={'standard'} text={'Action Undo'} buttonFnc={handleUndo}/>
                         <Typography sx={styles.typeographyStyle}>
                             Revert to your previous game state.
                         </Typography>
                     </Box>
                     <Box sx={styles.contentContainer}>
-                        <PreferenceButton variant={'standard'} text={'This Phase'} buttonFnc={handleUndoPhase}/>
+                        <PreferenceButton variant={'standard'} text={'Phase Undo'} buttonFnc={handleUndoPhase}/>
                         <Typography sx={styles.typeographyStyle}>
-                            Revert to the start of the previous phase.
+                            Revert to the start of this phase.
                         </Typography>
                     </Box>
                 </Box>
