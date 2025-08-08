@@ -59,9 +59,7 @@ export interface INewsItemProps {
 export interface IAnnouncement {
     key: string;
     endDate: string;
-    title?: string;
-    content?: string;
-    image?: string;
+    title: string;
+    content: string;
+    image: string;
 }
-
-

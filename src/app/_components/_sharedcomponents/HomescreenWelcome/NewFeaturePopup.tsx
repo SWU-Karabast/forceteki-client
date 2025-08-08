@@ -12,12 +12,12 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { announcement } from '@/app/_constants/mockData';
 import parse from 'html-react-parser';
 
-interface WhatsNewPopupProps {
+interface IWhatsNewPopupProps {
     open: boolean;
     onClose: () => void;
 }
 
-const WhatsNewPopup: React.FC<WhatsNewPopupProps> = ({ open, onClose }) => {
+const WhatsNewPopup: React.FC<IWhatsNewPopupProps> = ({ open, onClose }) => {
     const styles = {
         dialog: {
             '& .MuiDialog-paper': {

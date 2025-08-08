@@ -31,9 +31,6 @@ const HomePagePlayMode: React.FC = () => {
     const closeUpdatePopup = () => {
         setShowUpdatePopup(false);
         updateWelcomeMessage();
-        if(shouldShowAnnouncement(announcement)){
-            setShowNewFeaturePopup(true);
-        }
     }
 
     const closeNewFeaturePopup = () => {
@@ -79,11 +76,10 @@ const HomePagePlayMode: React.FC = () => {
             if (user.showWelcomeMessage && !showUpdatePopup) {
                 setShowNewFeaturePopup(false);
                 setShowWelcomePopup(true);
-            }else if (shouldShowAnnouncement(announcement)){
-                setShowNewFeaturePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
-        }else if(shouldShowAnnouncement(announcement)){
+        }
+        if (shouldShowAnnouncement(announcement) && (!user || !user.showWelcomeMessage)) {
             setShowNewFeaturePopup(true);
         }
 
