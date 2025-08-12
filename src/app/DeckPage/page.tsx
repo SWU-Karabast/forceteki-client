@@ -232,7 +232,7 @@ const DeckPage: React.FC = () => {
                 return styles.swuUnlimitedTag;
             default:
                 console.log(`Unknown deck source: ${deckSource}`);
-                return styles.unknownTag
+                return styles.unknownTag;
         }
     };
 
