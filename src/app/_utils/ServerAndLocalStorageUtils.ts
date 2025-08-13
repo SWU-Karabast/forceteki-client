@@ -266,7 +266,7 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
                     favourite: false,
                     deckLink: deckLink,
                     deckLinkID: deckData.deckID, // Use existing ID or generate new one
-                    source: deckData.deckSource || (deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB')
+                    source: deckData.deckSource || (deckLink.includes('swustats.net') ? 'SWUSTATS' : deckLink.includes('swustats.net') ? 'SWUDB' : 'SWUnlimitedDB')
                 }
             }
         };
