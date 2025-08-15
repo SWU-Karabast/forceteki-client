@@ -7,6 +7,8 @@ export type IButtonType = {
     buttonFnc?: () => void,
     disabled?: boolean,
     sx?: SxProps<Theme>,
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 }
 
 export type ISleeve = {
