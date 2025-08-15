@@ -48,7 +48,12 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             height: '2.5em',
         },
         actionUndo:{
-            height:'30px'
+            height:'50px',
+            mr:'30px'
+        },
+        actionUndoBox:{
+            display: 'flex',
+            justifyContent:'center',
         }
     }
 
@@ -72,7 +77,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     width: 'max-content',
                 }}>Chat</Typography>
             </Box>
-            {isDev && (<Box>
+            {isDev && (<Box sx={styles.actionUndoBox}>
                 <Image
                     src="/porg1.png"
                     alt="Highlighted Stats Panel"
@@ -80,8 +85,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     height={50}
                     style={{
                         position:'relative',
-                        left:'34px',
-                        bottom:'-3px',
+                        left:'35px',
+                        bottom:'28px',
                         visibility: isUndoHovered ? 'visible' : 'hidden',
                     }}
                 />
