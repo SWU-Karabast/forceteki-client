@@ -12,7 +12,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
     const [chatMessage, setChatMessage] = useState('')
     const [isUndoHovered, setIsUndoHovered] = useState(false);
     const isDev = process.env.NODE_ENV === 'development';
-
+    const correctPlayer = gameState.players[connectedPlayer];
     const handleGameChat = () => {
         const trimmed = chatMessage.trim();
         if (!trimmed) return; // don't send empty messages
@@ -21,7 +21,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
     }
     const handleUndo = () => {
         sendGameMessage(['rollbackToSnapshot',{
-            type: 'action',
+            type: 'quick',
             playerId: connectedPlayer,
             actionOffset: 0
         }])
@@ -93,6 +93,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 <PreferenceButton sx={styles.actionUndo} buttonFnc={handleUndo} variant={'standard'} text={'Action Undo'}
                     onMouseEnter={() => setIsUndoHovered(true)}
                     onMouseLeave={() => setIsUndoHovered(false)}
+                    disabled={!correctPlayer['availableSnapshots']?.hasQuickSnapshot}
                 />
             </Box>)}
 
