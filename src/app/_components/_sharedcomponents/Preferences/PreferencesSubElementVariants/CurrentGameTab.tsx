@@ -13,11 +13,12 @@ import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_su
 
 function CurrentGameTab() {
     const { sendGameMessage, connectedPlayer, gameState, isSpectator } = useGame();
-
+    const isDev = process.env.NODE_ENV === 'development';
     const router = useRouter();
     const currentPlayerName = gameState.players[connectedPlayer]?.name;
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
+
 
     useEffect(() => {
         if(confirmConcede){
@@ -37,6 +38,24 @@ function CurrentGameTab() {
             setConfirmConcede(false);
         }
     };
+
+    // Click handler for the undo button
+    const handleUndo = () => {
+        sendGameMessage(['rollbackToSnapshot',{
+            type: 'action',
+            playerId: connectedPlayer,
+            actionOffset: 0
+        }])
+    }
+
+    // Click handler for the undo button
+    const handleUndoPhase = () => {
+        sendGameMessage(['rollbackToSnapshot',{
+            type: 'phase',
+            phaseName: gameState.phase,
+            actionOffset: 0
+        }])
+    }
 
     // Handler for opening the bug report dialog
     const handleOpenBugReport = () => {
@@ -102,22 +121,24 @@ function CurrentGameTab() {
                     </Box>
                 </Box>
             )}
-            {/* <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Undo</Typography>
-                <Divider sx={{ mb: '20px' }}/>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                    <PreferenceButton variant={'standard'} text={'Simple Undo'} />
-                    <Typography sx={styles.typeographyStyle}>
-                        Revert to your previous game state.
-                    </Typography>
+            {isDev && (
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Undo</Typography>
+                    <Divider sx={{ mb: '20px' }}/>
+                    <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                        <PreferenceButton variant={'standard'} text={'Action Undo'} buttonFnc={handleUndo}/>
+                        <Typography sx={styles.typeographyStyle}>
+                            Revert to your previous game state.
+                        </Typography>
+                    </Box>
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton variant={'standard'} text={'Phase Undo'} buttonFnc={handleUndoPhase}/>
+                        <Typography sx={styles.typeographyStyle}>
+                            Revert to the start of this phase.
+                        </Typography>
+                    </Box>
                 </Box>
-                <Box sx={styles.contentContainer}>
-                    <PreferenceButton variant={'standard'} text={'This Turn'} />
-                    <Typography sx={styles.typeographyStyle}>
-                        Revert to the start of the previous turn.
-                    </Typography>
-                </Box>
-            </Box> */}
+            )}
             <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Thanks for playing</Typography>
                 <Divider sx={{ mb: '20px' }}/>
