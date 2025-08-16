@@ -47,11 +47,12 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             position: 'relative',
             height: '2.5em',
         },
-        actionUndo:{
+        quickUndo:{
             height:'50px',
-            mr:'30px'
+            mr:'30px',
+            width: 'min(50%, 280px)',
         },
-        actionUndoBox:{
+        quickUndoBox:{
             display: 'flex',
             justifyContent:'center',
         }
@@ -77,7 +78,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     width: 'max-content',
                 }}>Chat</Typography>
             </Box>
-            {isDev && (<Box sx={styles.actionUndoBox}>
+            {isDev && (<Box sx={styles.quickUndoBox}>
                 <Image
                     src="/porg1.png"
                     alt="Highlighted Stats Panel"
@@ -90,7 +91,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                         visibility: isUndoHovered ? 'visible' : 'hidden',
                     }}
                 />
-                <PreferenceButton sx={styles.actionUndo} buttonFnc={handleUndo} variant={'standard'} text={'Action Undo'}
+                <PreferenceButton sx={styles.quickUndo} buttonFnc={handleUndo} variant={'standard'} text={'Quick Undo'}
                     onMouseEnter={() => setIsUndoHovered(true)}
                     onMouseLeave={() => setIsUndoHovered(false)}
                     disabled={!correctPlayer['availableSnapshots']?.hasQuickSnapshot}
