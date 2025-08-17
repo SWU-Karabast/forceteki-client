@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Box, Popover, Typography, useMediaQuery } from '@mui/material';
+import { Box, IconButton, Popover, Tooltip, Typography, useMediaQuery } from '@mui/material';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
@@ -228,6 +229,43 @@ const DeckDetails: React.FC = () => {
 
     const isSmallScreen = useMediaQuery('(max-width: 1280px)');
 
+    // add near your other handlers
+    const exportOpponentStatsCSV = () => {
+        if (!opponentStats || opponentStats.length === 0) return;
+
+        const header = [
+            'OpponentLeaderId',
+            'OpponentBaseId',
+            'Wins',
+            'Losses',
+            'WinPercentage',
+        ];
+
+        const rows = opponentStats.map(s => [
+            s.leaderId,
+            s.baseId,
+            s.wins,
+            s.losses,
+            `${s.winPercentage}%`,
+        ]);
+
+        // build CSV
+        const escape = (v: unknown) => {
+            const s = String(v ?? '');
+            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+        };
+        const csv = [header, ...rows].map(r => r.map(escape).join(',')).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const safeName = (deckData?.metadata.name || 'deck').replace(/[\\/:*?"<>|]/g, '_');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeName}_opponent-stats.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     const styles = {
         bodyRow:{
@@ -378,6 +416,9 @@ const DeckDetails: React.FC = () => {
                  1px  1px 0 #000
             `
         },
+        iconButton:{
+            width:'30px',
+        }
     }
 
     return (
@@ -436,6 +477,13 @@ const DeckDetails: React.FC = () => {
                         <Typography variant="h3" sx={styles.titleText}>
                             {deckData?.metadata.name}
                         </Typography>
+                        <Box>
+                            <Tooltip title="Download CSV">
+                                <IconButton sx={styles.iconButton} color="primary" onClick={exportOpponentStatsCSV}>
+                                    <FileDownloadIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
                         {/* <Box sx={styles.editBox} />*/}
                     </Box>
 

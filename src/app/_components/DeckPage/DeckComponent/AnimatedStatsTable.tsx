@@ -160,6 +160,7 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             } };
     }
 
+
     // ----------------------Styles-----------------------------//
     const styles = {
         tableContainer: {
@@ -201,6 +202,20 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             cursor: 'pointer',
             position: 'relative' as const,
         },
+        boxBasicBaseStyling: {
+            backgroundColor: 'transparent',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            width: '3rem',
+            height: '3rem',
+            backgroundImage: 'url(/leaders/boba.webp)',
+            backgroundRepeat: 'no-repeat',
+            textAlign: 'center' as const,
+            color: 'white',
+            display: 'flex',
+            cursor: 'pointer',
+            position: 'relative' as const,
+        },
         parentBoxStyling: {
             position:'absolute',
         },
@@ -230,18 +245,25 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                             <TableCell sx={{ borderBottom:'none' }}>
                                 <Box sx={styles.leaderBaseHolder}>
                                     <Box sx={styles.CardSetContainerStyle}>
-                                        <Box>
+                                        {/* <Box>
                                             <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: row.baseId, count:0 })})` }}
                                                 onMouseEnter={handlePreviewOpen}
                                                 onMouseLeave={handlePreviewClose}
                                                 data-card-url={s3CardImageURL({ id: row.baseId, count:0 })}
                                             />
-                                        </Box>
+                                        </Box>*/}
                                         <Box sx={{ ...styles.parentBoxStyling, left: '-8px', top: '14px' }}>
                                             <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: row.leaderId, count:0 },CardStyle.PlainLeader)})` }}
                                                 onMouseEnter={handlePreviewOpen}
                                                 onMouseLeave={handlePreviewClose}
                                                 data-card-url={s3CardImageURL({ id: row.leaderId, count:0 }, CardStyle.PlainLeader)}
+                                            />
+                                        </Box>
+                                        <Box sx={{ ...styles.parentBoxStyling, left: '70px', top: '25px' }}>
+                                            <Box sx={{ ...styles.boxBasicBaseStyling, backgroundImage:'url(/Base-Blue-Force.png)' }}
+                                                onMouseEnter={handlePreviewOpen}
+                                                onMouseLeave={handlePreviewClose}
+                                                data-card-url={'url(/Base-Blue-Force.png)'}
                                             />
                                         </Box>
                                     </Box>
