@@ -477,13 +477,15 @@ const DeckDetails: React.FC = () => {
                         <Typography variant="h3" sx={styles.titleText}>
                             {deckData?.metadata.name}
                         </Typography>
-                        <Box>
-                            <Tooltip title="Download CSV">
-                                <IconButton sx={styles.iconButton} color="primary" onClick={exportOpponentStatsCSV}>
-                                    <FileDownloadIcon />
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
+                        { opponentStats && (
+                            <Box>
+                                <Tooltip title="Download CSV">
+                                    <IconButton sx={styles.iconButton} color="primary" onClick={exportOpponentStatsCSV}>
+                                        <FileDownloadIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        )}
                         {/* <Box sx={styles.editBox} />*/}
                     </Box>
 
