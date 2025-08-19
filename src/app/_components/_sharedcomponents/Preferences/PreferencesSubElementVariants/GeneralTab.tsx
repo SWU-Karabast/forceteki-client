@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
+import LinkSwuStatsButton from '@/app/_components/_sharedcomponents/SwuStats/LinkSwuStatsButton';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
@@ -171,6 +172,9 @@ function GeneralTab() {
             color: 'var(--initiative-red)',
             textDecorationColor: 'var(--initiative-red)',
             ml: '4px'
+        },
+        swuStatsContainer:{
+            mb:'40px'
         }
     };
 
@@ -181,52 +185,57 @@ function GeneralTab() {
                 <Divider sx={{ mb: '20px' }} />
                 <Box sx={styles.contentContainer}>
                     {user && (
-                        <Box sx={{ mb: '30px' }}>
-                            <Typography variant={'h3'}>Username</Typography>
-                            <Box sx={styles.boxStyle}>
-                                <TextField
-                                    placeholder={user?.username || 'Enter new username'}
-                                    value={username}
-                                    onChange={handleUsernameInputChange}
-                                    sx={styles.textFieldStyle}
-                                    error={!!userErrorSummary && !successfulUsernameChange} // Show error state on field
-                                />
-                                <Button
-                                    variant="contained"
-                                    disabled={isSubmitDisabled}
-                                    onClick={handleChangeUsername}
-                                    sx={styles.buttonStyle}
-                                >
-                                    Change Username
-                                </Button>
-                            </Box>
-                            <Box sx={styles.messageContainer}>
-                                {userErrorSummary && !successfulUsernameChange ? (
-                                    <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                                        {userErrorSummary}
-                                        {deckErrorDetails && (
-                                            <Link
-                                                sx={styles.errorMessageLink}
-                                                onClick={() => setErrorModalOpen(true)}
-                                            >Details
-                                            </Link>
-                                        )}
-                                    </Typography>
-                                ) : successfulUsernameChange ? (
-                                    <Typography variant={'body2'} sx={styles.successMessageStyle}>
-                                        Username successfully changed!
-                                    </Typography>
-                                ) : userUsernameInfo ? (
-                                    <Typography variant={'body2'} sx={styles.userUsernameInfoStyle}>
-                                        {userUsernameInfo}
-                                    </Typography>
-                                ) : null}
-                            </Box>
+                        <Box>
+                            <Box sx={{ mb: '30px' }}>
+                                <Typography variant={'h3'}>Username</Typography>
+                                <Box sx={styles.boxStyle}>
+                                    <TextField
+                                        placeholder={user?.username || 'Enter new username'}
+                                        value={username}
+                                        onChange={handleUsernameInputChange}
+                                        sx={styles.textFieldStyle}
+                                        error={!!userErrorSummary && !successfulUsernameChange} // Show error state on field
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        disabled={isSubmitDisabled}
+                                        onClick={handleChangeUsername}
+                                        sx={styles.buttonStyle}
+                                    >
+                                        Change Username
+                                    </Button>
+                                </Box>
+                                <Box sx={styles.messageContainer}>
+                                    {userErrorSummary && !successfulUsernameChange ? (
+                                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                            {userErrorSummary}
+                                            {deckErrorDetails && (
+                                                <Link
+                                                    sx={styles.errorMessageLink}
+                                                    onClick={() => setErrorModalOpen(true)}
+                                                >Details
+                                                </Link>
+                                            )}
+                                        </Typography>
+                                    ) : successfulUsernameChange ? (
+                                        <Typography variant={'body2'} sx={styles.successMessageStyle}>
+                                            Username successfully changed!
+                                        </Typography>
+                                    ) : userUsernameInfo ? (
+                                        <Typography variant={'body2'} sx={styles.userUsernameInfoStyle}>
+                                            {userUsernameInfo}
+                                        </Typography>
+                                    ) : null}
+                                </Box>
 
-                            <Typography variant="body2" sx={{ mt: 2, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
-                                You can change your username as many times as you want during the <strong>first week after account creation</strong>.
-                                After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
-                            </Typography>
+                                <Typography variant="body2" sx={{ mt: 2, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                    You can change your username as many times as you want during the <strong>first week after account creation</strong>.
+                                    After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
+                                </Typography>
+                            </Box>
+                            <Box sx={styles.swuStatsContainer}>
+                                <LinkSwuStatsButton linked={false}/>
+                            </Box>
                         </Box>
                     )}
                     <Typography variant={'h3'} sx={{ mt: user ? 0 : '1rem' }}>Player ID</Typography>
