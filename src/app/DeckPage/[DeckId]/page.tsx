@@ -246,7 +246,7 @@ const DeckDetails: React.FC = () => {
             s.baseId,
             s.wins,
             s.losses,
-            `${s.winPercentage}%`,
+            `${s.winPercentage}`,
         ]);
 
         // build CSV

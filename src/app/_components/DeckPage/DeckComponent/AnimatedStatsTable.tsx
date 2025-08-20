@@ -6,7 +6,8 @@ import {
     TableRow,
     TableCell,
     Typography,
-    Box, Popover, PopoverOrigin
+    Box, Popover, PopoverOrigin,
+    Tooltip
 } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, IMatchTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -243,11 +244,13 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                             <TableCell sx={{ borderBottom: 'none' }}>
                                 <Box sx={styles.leaderBaseHolder}>
                                     <Box sx={styles.CardSetContainerStyle}>
-                                        {row.baseId?.startsWith('Base') ? (
+                                        {row.baseId?.startsWith('30') || row.baseId?.startsWith('28') ? (
                                             <Box sx={{ ...styles.parentBoxStyling, left: '70px', top: '25px', zIndex:'1' }}>
-                                                <Box
-                                                    sx={{ ...styles.boxBasicBaseStyling, backgroundImage: `url(/${row.baseId}.png)` }}
-                                                />
+                                                <Tooltip title={row.baseId?.startsWith('30') ? 'A basic 30hp base' : 'A basic 28hp force base'}>
+                                                    <Box
+                                                        sx={{ ...styles.boxBasicBaseStyling, backgroundImage: `url(/${row.baseId}.png)` }}
+                                                    />
+                                                </Tooltip>
                                             </Box>
                                         ) : (
                                             <Box sx={{ ...styles.parentBoxStyling, left: '0px', top: '0px',zIndex:'0' }}>
