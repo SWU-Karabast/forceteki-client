@@ -242,8 +242,8 @@ const DeckDetails: React.FC = () => {
             'WinPercentage',
         ];
         const rows = opponentStats.map(s => [
-            s.leaderMelee,
-            s.baseMelee,
+            `"${s.leaderMelee}"`,
+            `"${s.baseMelee}"`,
             s.wins,
             s.losses,
             `${s.winPercentage}`,
