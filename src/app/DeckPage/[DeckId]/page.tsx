@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Box, IconButton, Popover, Tooltip, Typography, useMediaQuery } from '@mui/material';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { Box, Button, Popover, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
@@ -106,7 +105,9 @@ const DeckDetails: React.FC = () => {
 
             return {
                 leaderId: stat.leaderId,
+                leaderMelee: stat.leaderMelee,
                 baseId: stat.baseId,
+                baseMelee: stat.baseMelee,
                 wins,
                 losses,
                 draws,
@@ -234,27 +235,21 @@ const DeckDetails: React.FC = () => {
         if (!opponentStats || opponentStats.length === 0) return;
 
         const header = [
-            'OpponentLeaderId',
-            'OpponentBaseId',
+            'OpponentLeader',
+            'OpponentBase',
             'Wins',
             'Losses',
             'WinPercentage',
         ];
-
         const rows = opponentStats.map(s => [
-            s.leaderId,
-            s.baseId,
+            s.leaderMelee,
+            s.baseMelee,
             s.wins,
             s.losses,
             `${s.winPercentage}`,
         ]);
 
-        // build CSV
-        const escape = (v: unknown) => {
-            const s = String(v ?? '');
-            return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-        };
-        const csv = [header, ...rows].map(r => r.map(escape).join(',')).join('\n');
+        const csv = [header, ...rows].map(r => r.join(',')).join('\n');
 
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -417,7 +412,21 @@ const DeckDetails: React.FC = () => {
             `
         },
         iconButton:{
-            width:'30px',
+            width:'fit-content',
+            height:'30px',
+            ml:'5px',
+            color:'white',
+            background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
+            '&:hover': {
+                background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
+            },
+            '&:not(:disabled)': {
+                borderColor: 'rgba(0, 140, 255, 0.4)',
+                boxShadow: '0 0 6px rgba(0, 140, 255, 0.5)',
+                border: '1px solid rgba(0, 140, 255, 0.5)',
+            },
         }
     }
 
@@ -479,10 +488,10 @@ const DeckDetails: React.FC = () => {
                         </Typography>
                         { opponentStats && (
                             <Box>
-                                <Tooltip title="Download CSV">
-                                    <IconButton sx={styles.iconButton} color="primary" onClick={exportOpponentStatsCSV}>
-                                        <FileDownloadIcon />
-                                    </IconButton>
+                                <Tooltip title="Download as CSV">
+                                    <Button sx={styles.iconButton} onClick={exportOpponentStatsCSV}>
+                                        Download as csv
+                                    </Button>
                                 </Tooltip>
                             </Box>
                         )}
