@@ -6,7 +6,8 @@ import {
     TableRow,
     TableCell,
     Typography,
-    Box, Popover, PopoverOrigin
+    Box, Popover, PopoverOrigin,
+    Tooltip
 } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, IMatchTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -109,7 +110,6 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                             animationComplete: progress >= 1
                         };
                     }
-
                     return newData;
                 });
 
@@ -160,11 +160,11 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             } };
     }
 
+
     // ----------------------Styles-----------------------------//
     const styles = {
         tableContainer: {
-            height: '100%',
-            maxHeight: '25vh',
+            maxHeight: '80%',
             width: '100%',
             overflow: 'auto',
             display: 'flex',
@@ -201,6 +201,20 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             cursor: 'pointer',
             position: 'relative' as const,
         },
+        boxBasicBaseStyling: {
+            backgroundColor: 'transparent',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            width: '3rem',
+            height: '3rem',
+            backgroundImage: 'url(/leaders/boba.webp)',
+            backgroundRepeat: 'no-repeat',
+            textAlign: 'center' as const,
+            color: 'white',
+            display: 'flex',
+            cursor: 'pointer',
+            position: 'relative' as const,
+        },
         parentBoxStyling: {
             position:'absolute',
         },
@@ -227,23 +241,56 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                 <TableBody>
                     {animatedData.map((row, index) => (
                         <TableRow key={index}>
-                            <TableCell sx={{ borderBottom:'none' }}>
+                            <TableCell sx={{ borderBottom: 'none' }}>
                                 <Box sx={styles.leaderBaseHolder}>
                                     <Box sx={styles.CardSetContainerStyle}>
-                                        <Box>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: row.baseId, count:0 })})` }}
-                                                onMouseEnter={handlePreviewOpen}
-                                                onMouseLeave={handlePreviewClose}
-                                                data-card-url={s3CardImageURL({ id: row.baseId, count:0 })}
-                                            />
-                                        </Box>
-                                        <Box sx={{ ...styles.parentBoxStyling, left: '-8px', top: '14px' }}>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: row.leaderId, count:0 },CardStyle.PlainLeader)})` }}
-                                                onMouseEnter={handlePreviewOpen}
-                                                onMouseLeave={handlePreviewClose}
-                                                data-card-url={s3CardImageURL({ id: row.leaderId, count:0 }, CardStyle.PlainLeader)}
-                                            />
-                                        </Box>
+                                        {row.baseId?.startsWith('30hp') || row.baseId?.startsWith('28hp') ? (
+                                            <Box>
+                                                <Box sx={{ ...styles.parentBoxStyling, left: '55px', top: '10px', zIndex:'1' }}>
+                                                    <Tooltip title={row.baseId?.startsWith('30') ? 'Basic 30hp base' : 'Basic 28hp force base'}>
+                                                        <Box
+                                                            sx={{ ...styles.boxBasicBaseStyling, backgroundImage: `url(/${row.baseId}.png)` }}
+                                                        />
+                                                    </Tooltip>
+                                                </Box>
+                                                <Box sx={{ ...styles.parentBoxStyling, left: '-30px', top: '0px',zIndex:'0' }}>
+                                                    <Box
+                                                        sx={{
+                                                            ...styles.boxGeneralStyling,
+                                                            backgroundImage: `url(${s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)})`,
+                                                        }}
+                                                        onMouseEnter={handlePreviewOpen}
+                                                        onMouseLeave={handlePreviewClose}
+                                                        data-card-url={s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)}
+                                                    />
+                                                </Box>
+                                            </Box>
+                                        ) : (
+                                            <Box>
+                                                <Box sx={{ ...styles.parentBoxStyling, left: '20px', top: '0px',zIndex:'0' }}>
+                                                    <Box
+                                                        sx={{
+                                                            ...styles.boxGeneralStyling,
+                                                            backgroundImage: `url(${s3CardImageURL({ id: row.baseId, count: 0 })})`,
+                                                        }}
+                                                        onMouseEnter={handlePreviewOpen}
+                                                        onMouseLeave={handlePreviewClose}
+                                                        data-card-url={s3CardImageURL({ id: row.baseId, count: 0 })}
+                                                    />
+                                                </Box>
+                                                <Box sx={{ ...styles.parentBoxStyling, left: '-30px', top: '14px',zIndex:'0' }}>
+                                                    <Box
+                                                        sx={{
+                                                            ...styles.boxGeneralStyling,
+                                                            backgroundImage: `url(${s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)})`,
+                                                        }}
+                                                        onMouseEnter={handlePreviewOpen}
+                                                        onMouseLeave={handlePreviewClose}
+                                                        data-card-url={s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)}
+                                                    />
+                                                </Box>
+                                            </Box>
+                                        )}
                                     </Box>
                                 </Box>
                             </TableCell>
