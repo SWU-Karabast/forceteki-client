@@ -164,7 +164,7 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     // ----------------------Styles-----------------------------//
     const styles = {
         tableContainer: {
-            maxHeight: '80%',
+            maxHeight: '45vh',
             width: '100%',
             overflow: 'auto',
             display: 'flex',
