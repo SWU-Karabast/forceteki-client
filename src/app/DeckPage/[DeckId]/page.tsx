@@ -491,7 +491,7 @@ const DeckDetails: React.FC = () => {
                             <Box>
                                 <Tooltip title="Download as CSV">
                                     <Button sx={styles.iconButton} onClick={exportOpponentStatsCSV}>
-                                        Download as CSV
+                                        Download Statistics CSV
                                     </Button>
                                 </Tooltip>
                             </Box>
