@@ -245,38 +245,52 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                                 <Box sx={styles.leaderBaseHolder}>
                                     <Box sx={styles.CardSetContainerStyle}>
                                         {row.baseId?.startsWith('30hp') || row.baseId?.startsWith('28hp') ? (
-                                            <Box sx={{ ...styles.parentBoxStyling, left: '70px', top: '25px', zIndex:'1' }}>
-                                                <Tooltip title={row.baseId?.startsWith('30') ? 'A basic 30hp base' : 'A basic 28hp force base'}>
+                                            <Box>
+                                                <Box sx={{ ...styles.parentBoxStyling, left: '55px', top: '10px', zIndex:'1' }}>
+                                                    <Tooltip title={row.baseId?.startsWith('30') ? 'Basic 30hp base' : 'Basic 28hp force base'}>
+                                                        <Box
+                                                            sx={{ ...styles.boxBasicBaseStyling, backgroundImage: `url(/${row.baseId}.png)` }}
+                                                        />
+                                                    </Tooltip>
+                                                </Box>
+                                                <Box sx={{ ...styles.parentBoxStyling, left: '-30px', top: '0px',zIndex:'0' }}>
                                                     <Box
-                                                        sx={{ ...styles.boxBasicBaseStyling, backgroundImage: `url(/${row.baseId}.png)` }}
+                                                        sx={{
+                                                            ...styles.boxGeneralStyling,
+                                                            backgroundImage: `url(${s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)})`,
+                                                        }}
+                                                        onMouseEnter={handlePreviewOpen}
+                                                        onMouseLeave={handlePreviewClose}
+                                                        data-card-url={s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)}
                                                     />
-                                                </Tooltip>
+                                                </Box>
                                             </Box>
                                         ) : (
-                                            <Box sx={{ ...styles.parentBoxStyling, left: '0px', top: '0px',zIndex:'0' }}>
-                                                <Box
-                                                    sx={{
-                                                        ...styles.boxGeneralStyling,
-                                                        backgroundImage: `url(${s3CardImageURL({ id: row.baseId, count: 0 })})`,
-                                                    }}
-                                                    onMouseEnter={handlePreviewOpen}
-                                                    onMouseLeave={handlePreviewClose}
-                                                    data-card-url={s3CardImageURL({ id: row.baseId, count: 0 })}
-                                                />
+                                            <Box>
+                                                <Box sx={{ ...styles.parentBoxStyling, left: '20px', top: '0px',zIndex:'0' }}>
+                                                    <Box
+                                                        sx={{
+                                                            ...styles.boxGeneralStyling,
+                                                            backgroundImage: `url(${s3CardImageURL({ id: row.baseId, count: 0 })})`,
+                                                        }}
+                                                        onMouseEnter={handlePreviewOpen}
+                                                        onMouseLeave={handlePreviewClose}
+                                                        data-card-url={s3CardImageURL({ id: row.baseId, count: 0 })}
+                                                    />
+                                                </Box>
+                                                <Box sx={{ ...styles.parentBoxStyling, left: '-30px', top: '14px',zIndex:'0' }}>
+                                                    <Box
+                                                        sx={{
+                                                            ...styles.boxGeneralStyling,
+                                                            backgroundImage: `url(${s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)})`,
+                                                        }}
+                                                        onMouseEnter={handlePreviewOpen}
+                                                        onMouseLeave={handlePreviewClose}
+                                                        data-card-url={s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)}
+                                                    />
+                                                </Box>
                                             </Box>
                                         )}
-                                        <Box sx={{ ...styles.parentBoxStyling, left: '-8px', top: '14px',zIndex:'0' }}>
-                                            <Box
-                                                sx={{
-                                                    ...styles.boxGeneralStyling,
-                                                    backgroundImage: `url(${s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)})`,
-                                                }}
-                                                onMouseEnter={handlePreviewOpen}
-                                                onMouseLeave={handlePreviewClose}
-                                                data-card-url={s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)}
-                                            />
-                                        </Box>
-
                                     </Box>
                                 </Box>
                             </TableCell>

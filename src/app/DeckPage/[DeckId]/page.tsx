@@ -380,8 +380,8 @@ const DeckDetails: React.FC = () => {
         titleTextContainer:{
             ml:'10px',
             display:'flex',
-            flexDirection: 'row',
-            alignItems:'center',
+            flexDirection: 'column',
+            alignItems:'start',
         },
         cardPreview: {
             borderRadius: '.38em',
@@ -414,7 +414,8 @@ const DeckDetails: React.FC = () => {
         iconButton:{
             width:'fit-content',
             height:'30px',
-            ml:'5px',
+            mt:'10px',
+            ml:'-1px',
             color:'white',
             background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
                     linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
@@ -490,7 +491,7 @@ const DeckDetails: React.FC = () => {
                             <Box>
                                 <Tooltip title="Download as CSV">
                                     <Button sx={styles.iconButton} onClick={exportOpponentStatsCSV}>
-                                        Download as csv
+                                        Download as CSV
                                     </Button>
                                 </Tooltip>
                             </Box>
