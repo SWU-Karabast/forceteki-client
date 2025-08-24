@@ -26,6 +26,7 @@ export interface IDeckData {
     sideboard: IDeckCard[];
     deckSource: DeckSource;
     deckID: string;
+    deckLink: string;
 }
 
 export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) => {
