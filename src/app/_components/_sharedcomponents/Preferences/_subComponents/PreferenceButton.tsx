@@ -49,6 +49,8 @@ function PreferenceButton(buttonType: IButtonType) {
             sx={styles.buttonStyle}
             disabled={buttonType.disabled ? buttonType.disabled : !buttonType.buttonFnc}
             onClick={buttonType.buttonFnc}
+            onMouseEnter={buttonType.onMouseEnter}
+            onMouseLeave={buttonType.onMouseLeave}
         >
             {buttonType.text ? buttonType.text : <ArrowBackIosNewIcon fontSize="small" />}
         </Button>

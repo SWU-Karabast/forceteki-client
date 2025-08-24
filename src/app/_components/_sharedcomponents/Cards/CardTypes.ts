@@ -154,7 +154,9 @@ interface ICardPlayer {
 
 export interface IMatchTableStats {
     leaderId: string,
+    leaderMelee?: string,
     baseId: string,
+    baseMelee?: string,
     wins: number,
     losses: number,
     winPercentage: number,
@@ -164,7 +166,9 @@ export interface IMatchTableStats {
 // Interface for opponent stats
 export interface IMatchupStatEntity {
     leaderId: string;
+    leaderMelee?: string,
     baseId: string;
+    baseMelee?: string,
     wins: number;
     losses: number;
     draws: number;
