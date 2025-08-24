@@ -85,7 +85,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean }> =>{
+export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean, hasSwuStatsRefreshToken: boolean }> =>{
     try {
         const decks = loadSavedDecks(false);
         // const preferences = loadPreferencesFromLocalStorage();
@@ -622,5 +622,34 @@ export const updateDeckFavoriteInLocalStorage = (deckID: string) => {
         }
     } catch (error) {
         console.error('Error updating favorite status:', error);
+    }
+};
+
+
+export const unlinkSwuStatsAsync = async(
+    user: IUser | null,
+): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        };
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/unlink-swustats`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to unlink swustats');
+        }
+        return result.success;
+    } catch (error) {
+        console.error('Error unlinking swustats:', error);
+        throw error;
     }
 };

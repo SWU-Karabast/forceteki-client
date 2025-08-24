@@ -22,7 +22,8 @@ const UserContext = createContext<IUserContextType>({
     updateUsername: () => {},
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
-    updateUserPreferences: () => {}
+    updateUserPreferences: () => {},
+    updateSwuStatsRefreshToken: () => {}
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
@@ -62,7 +63,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         showWelcomeMessage: serverUser.showWelcomeMessage,
                         authenticated: true,
                         preferences: serverUser.preferences,
-                        needsUsernameChange: serverUser.needsUsernameChange
+                        needsUsernameChange: serverUser.needsUsernameChange,
+                        hasSwuStatsRefreshToken: serverUser.hasSwuStatsRefreshToken || false,
                     });
                     update({ userId: serverUser.id });
                 } catch (error) {
@@ -117,6 +119,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
+                hasSwuStatsRefreshToken: false,
                 preferences: { cardback: undefined }
             });
         } else if (user === 'ThisIsTheWay') {
@@ -127,7 +130,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
+                hasSwuStatsRefreshToken: false,
                 preferences: { cardback: undefined }
+
             });
         }
     }
@@ -171,6 +176,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
     };
 
+    const updateHasSwuStatsRefreshToken = (hasSwuStatsRefreshToken: boolean) => {
+        setUser((prevUser) => {
+            if (!prevUser) return null;
+            return {
+                ...prevUser,
+                hasSwuStatsRefreshToken
+            };
+        });
+    };
+
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
         clearAnonUser();
@@ -191,7 +206,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences, updateSwuStatsRefreshToken: updateHasSwuStatsRefreshToken }}>
             {children}
         </UserContext.Provider>
     );

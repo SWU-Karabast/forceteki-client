@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth';
+import NextAuth, { type AuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import DiscordProvider from 'next-auth/providers/discord';
 import type { JWT } from 'next-auth/jwt';
@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 
 const TwoMonthsInSeconds = 60 * 24 * 60 * 60; // 60 days
 
-const handler = NextAuth({
+export const authOptions: AuthOptions = {
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
         GoogleProvider({
@@ -113,6 +113,6 @@ const handler = NextAuth({
     pages: {
         signIn: '/auth',
     },
-});
-
+};
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

@@ -3,11 +3,12 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Button, Divider, Link, TextField, Tooltip } from '@mui/material';
 import { useUser } from '@/app/_contexts/User.context';
-import { useEffect, useState } from 'react';
+import {useEffect, useRef, useState} from 'react';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 import LinkSwuStatsButton from '@/app/_components/_sharedcomponents/SwuStats/LinkSwuStatsButton';
+import MuiLink from "@mui/material/Link";
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
@@ -24,8 +25,10 @@ function GeneralTab() {
     const [deckErrorDetails, setDeckErrorDetails] = useState<string | undefined>(undefined);
     const [showTooltip, setShowTooltip] = useState(false);
 
-    const usersId = user?.id ? user.id : anonymousUserId ? anonymousUserId : '';
+    const [swuStatsError, setSwuStatsError] = useState<boolean>(false);
+    const swuStatsErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+    const usersId = user?.id ? user.id : anonymousUserId ? anonymousUserId : '';
     const handleCopyLink = (userId: string) => {
         navigator.clipboard.writeText(userId)
             .then(() => {
@@ -94,6 +97,20 @@ function GeneralTab() {
             }
         }
     };
+
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const swustatsStatus = urlParams.get('swustats');
+        if (swustatsStatus === 'error') {
+            setSwuStatsError(true);
+
+            swuStatsErrorTimeoutRef.current = setTimeout(() => {
+                setSwuStatsError(false);
+            }, 5000);
+        } else {
+            setSwuStatsError(false);
+        }
+    }, []);
 
     useEffect(() => {
         const currentUsername = user?.username || '';
@@ -234,7 +251,20 @@ function GeneralTab() {
                                 </Typography>
                             </Box>
                             <Box sx={styles.swuStatsContainer}>
-                                <LinkSwuStatsButton linked={false}/>
+                                <LinkSwuStatsButton linked={user.hasSwuStatsRefreshToken}/>
+                                {swuStatsError && (
+                                    <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                        Failed to link to SWUStats account. If this keeps happening, please report the problem to the
+                                        <MuiLink
+                                            href="https://discord.com/channels/1220057752961814568/1345468050568380568"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
+                                        >
+                                            Discord
+                                        </MuiLink>.
+                                    </Typography>
+                                )}
                             </Box>
                         </Box>
                     )}

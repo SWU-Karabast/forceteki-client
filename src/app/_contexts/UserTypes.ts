@@ -8,6 +8,7 @@ export interface IUser {
     authenticated: boolean,
     preferences: IPreferences,
     needsUsernameChange?: boolean,
+    hasSwuStatsRefreshToken: boolean
 }
 
 export interface ISoundPreferences {
@@ -33,6 +34,7 @@ export interface IUserContextType {
     updateWelcomeMessage: () => void;
     updateNeedsUsernameChange: () => void;
     updateUserPreferences: (preferences: IPreferences) => void;
+    updateSwuStatsRefreshToken: (hasSwuStatsRefreshToken: boolean) => void;
 }
 
 // Extend Next-auth types
