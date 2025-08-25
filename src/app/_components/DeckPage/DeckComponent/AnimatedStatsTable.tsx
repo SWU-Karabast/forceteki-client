@@ -247,7 +247,7 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                                         {row.baseId?.startsWith('30hp') || row.baseId?.startsWith('28hp') ? (
                                             <Box>
                                                 <Box sx={{ ...styles.parentBoxStyling, left: '55px', top: '10px', zIndex:'1' }}>
-                                                    <Tooltip title={row.baseId?.startsWith('30') ? 'Basic 30hp base' : 'Basic 28hp force base'}>
+                                                    <Tooltip title={row.baseId?.startsWith('30') ? 'Basic 30HP Base' : 'Basic 28HP Force Base'}>
                                                         <Box
                                                             sx={{ ...styles.boxBasicBaseStyling, backgroundImage: `url(/${row.baseId}.png)` }}
                                                         />
