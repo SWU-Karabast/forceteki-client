@@ -85,7 +85,7 @@ async function linkUserToSwuStats(userId: string, token: SwuStatsToken) {
     const response = await fetch(`${CONFIG.gameServerUrl}/api/link-swustats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, swuStatsToken: token, internalApiKey: process.env.NEXTAUTH_SECRET }),
+        body: JSON.stringify({ userId, swuStatsToken: token, internalApiKey: process.env.INTERSERVER_SECRET }),
     });
 
     if (!response.ok) {
