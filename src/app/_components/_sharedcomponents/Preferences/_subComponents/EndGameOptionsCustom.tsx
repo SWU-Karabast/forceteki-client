@@ -9,7 +9,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 
 function EndGameOptionsCustom() {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator } = useGame();
+    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, statsSubmitError } = useGame();
 
     // ------------------------ Additional button functions ------------------------//
 
@@ -170,6 +170,16 @@ function EndGameOptionsCustom() {
                     </MuiLink>. Thanks!
                 </Typography>
             </Box>
+
+            {statsSubmitError && (
+                <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Stats Error</Typography>
+                    <Divider sx={{ mb: '20px' }}/>
+                    <Typography sx={{ ...styles.typeographyStyle, color: '#d32f2f' }}>
+                        {statsSubmitError}
+                    </Typography>
+                </Box>
+            )}
         </>
     );
 }
