@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { Box, Divider, FormControl, Typography , MenuItem } from '@mui/material';
+import { Box, Divider, FormControl, Typography, MenuItem } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -100,7 +100,7 @@ const GamesInProgress: React.FC = () => {
                 <Typography variant="h3">Games in Progress</Typography>
                 <Typography variant="h3" sx={styles.activeGamesNumber}>{gamesData?.numberOfOngoingGames || 0}</Typography>
             </Box>
-            <Box sx={{ ... styles.sortFilterRow, marginTop: '1vh' }}>
+            <Box sx={{ ...styles.sortFilterRow, marginTop: '1vh' }}>
                 <Typography variant="body1">Sort By:</Typography>
                 <form>
                     <FormControl fullWidth>
@@ -129,7 +129,7 @@ const GamesInProgress: React.FC = () => {
                             input
                             value={sortByLeader}
                             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setSortByLeader(e.target.value)
+                                setSortByLeader(e.target.value.toLowerCase())
                             }
                         >
                         </StyledTextField>
@@ -138,8 +138,8 @@ const GamesInProgress: React.FC = () => {
             </Box>
             <Divider sx={styles.divider} />
             <Box>
-                {gamesData?.ongoingGames.filter((match) => match.player1Leader.name?.includes(sortByLeader) || match.player2Leader
-                    .name?.includes(sortByLeader)).map((match, index) => (
+                {gamesData?.ongoingGames.filter((match) => match.player1Leader.name?.toLowerCase().includes(sortByLeader) || match.player2Leader
+                    .name?.toLowerCase().includes(sortByLeader)).map((match, index) => (
                     <PublicMatch key={index} match={match} />
                 ))}
             </Box>
