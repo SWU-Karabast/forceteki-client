@@ -12,7 +12,7 @@ const fetchLobbies = async (setLobbies: (lobbies: ILobby[]) => void) => {
             throw new Error(`Error fetching lobbies: ${response.statusText}`);
         }
         const data: ILobby[] = await response.json();
-        setLobbies(data);
+        setLobbies(data.reverse());
     } catch (error) {
         console.error('Error fetching lobbies:', error);
     }
