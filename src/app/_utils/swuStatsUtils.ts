@@ -5,7 +5,7 @@ export const buildSwuStatsAuthUrl = (): string => {
 
     const params = new URLSearchParams({
         response_type: 'code',
-        client_id: process.env.NEXT_PUBLIC_SWU_STATS_CLIENT_ID!,
+        client_id: process.env.SWUSTATS_CLIENT_ID!,
         redirect_uri: `${baseUrl}/api/swustats`,
         scope: 'decks email profile'
     });

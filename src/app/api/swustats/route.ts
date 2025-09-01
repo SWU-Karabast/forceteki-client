@@ -4,11 +4,11 @@ import { authOptions } from '@/app/_utils/auth';
 
 export const dynamic = 'force-dynamic';
 
-interface SwuStatsToken {
+interface ISwuStatsToken {
     accessToken: string;
     refreshToken: string;
     creationDateTime: Date;
-    timeToLive: number;
+    timeToLiveSeconds: number;
 }
 
 const CONFIG = {
@@ -17,8 +17,8 @@ const CONFIG = {
         redirectUri: process.env.NODE_ENV === 'development'
             ? 'http://localhost:3000/api/swustats'
             : 'https://karabast.net/api/swustats',
-        clientId: process.env.NEXT_PUBLIC_SWU_STATS_CLIENT_ID!,
-        clientSecret: process.env.NEXT_PUBLIC_SWU_STATS_CLIENT_SECRET!,
+        clientId: process.env.SWUSTATS_CLIENT_ID!,
+        clientSecret: process.env.SWUSTATS_CLIENT_SECRET!,
     },
     redirects: {
         success: '/Preferences?swustats=success',
@@ -50,7 +50,7 @@ export async function GET(req: Request) {
     }
 }
 
-async function fetchSwuStatsTokens(code: string): Promise<SwuStatsToken> {
+async function fetchSwuStatsTokens(code: string): Promise<ISwuStatsToken> {
     const response = await fetch(CONFIG.swuStats.tokenUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -75,13 +75,13 @@ async function fetchSwuStatsTokens(code: string): Promise<SwuStatsToken> {
 
     return {
         creationDateTime: new Date(),
-        timeToLive: data.expires_in,
+        timeToLiveSeconds: data.expires_in,
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
     };
 }
 
-async function linkUserToSwuStats(userId: string, token: SwuStatsToken) {
+async function linkUserToSwuStats(userId: string, token: ISwuStatsToken) {
     const response = await fetch(`${CONFIG.gameServerUrl}/api/link-swustats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
