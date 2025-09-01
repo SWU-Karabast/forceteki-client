@@ -8,6 +8,9 @@ import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/
 import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/UsernameChangeRequiredPopup';
+import { markAnnouncementAsSeen, shouldShowAnnouncement } from '@/app/_utils/ServerAndLocalStorageUtils';
+import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
+import { announcement } from '@/app/_constants/mockData';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -15,6 +18,7 @@ const HomePagePlayMode: React.FC = () => {
     const [testGameList, setTestGameList] = React.useState([]);
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+    const [showNewFeaturePopup, setShowNewFeaturePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
     const { user, updateWelcomeMessage } = useUser();
 
@@ -27,6 +31,11 @@ const HomePagePlayMode: React.FC = () => {
     const closeUpdatePopup = () => {
         setShowUpdatePopup(false);
         updateWelcomeMessage();
+    }
+
+    const closeNewFeaturePopup = () => {
+        setShowNewFeaturePopup(false);
+        markAnnouncementAsSeen(announcement)
     }
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
@@ -65,9 +74,13 @@ const HomePagePlayMode: React.FC = () => {
     useEffect(() => {
         if(user) {
             if (user.showWelcomeMessage && !showUpdatePopup) {
+                setShowNewFeaturePopup(false);
                 setShowWelcomePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
+        }
+        if (shouldShowAnnouncement(announcement) && (!user || !user.showWelcomeMessage)) {
+            setShowNewFeaturePopup(true);
         }
 
 
@@ -154,6 +167,7 @@ const HomePagePlayMode: React.FC = () => {
             </Card>
             <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
             <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
+            <NewFeaturePopup open={showNewFeaturePopup} onClose={closeNewFeaturePopup} />
             <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
         </>
     );
