@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Divider, Typography } from '@mui/material';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { Box, Divider, FormControl, Typography , MenuItem } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 
 interface GameCardData {
     id: string;
@@ -85,6 +86,12 @@ const GamesInProgress: React.FC = () => {
         activeGamesNumber: {
             fontWeight: 400,
         },
+        sortFilterRow: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingTop: '2px',
+        },
     };
 
     return (
@@ -93,26 +100,42 @@ const GamesInProgress: React.FC = () => {
                 <Typography variant="h3">Games in Progress</Typography>
                 <Typography variant="h3" sx={styles.activeGamesNumber}>{gamesData?.numberOfOngoingGames || 0}</Typography>
             </Box>
-            <div style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '5px'
-            }}>
-                <Typography variant="body2">Sort By:</Typography>
-                <select
-                    value={sortByRecent}
-                    onChange={e => setSortByRecent(e.target.value as 'asc' | 'desc')}
-                >
-                    <option value="asc">Oldest First</option>
-                    <option value="desc">Newest First</option>
-                </select>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="body2">Filter by Leader:</Typography>
-                <input
-                    value={sortByLeader}
-                    onChange={e => setSortByLeader(e.target.value)}
-                    style={{ maxWidth: '40%' }}
-                ></input>
-            </div>
+            <Box sx={{ ... styles.sortFilterRow, marginTop: '1vh' }}>
+                <Typography variant="body1">Sort By:</Typography>
+                <form>
+                    <FormControl fullWidth>
+                        <StyledTextField
+                            select
+                            value={sortByRecent}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setSortByRecent(e.target.value as 'asc' | 'desc')
+                            }
+                        >
+                            <MenuItem key="asc" value="asc">
+                                Oldest First
+                            </MenuItem>
+                            <MenuItem key="desc" value="desc">
+                                Newest First
+                            </MenuItem>
+                        </StyledTextField>
+                    </FormControl>
+                </form>
+            </Box>
+            <Box sx={styles.sortFilterRow}>
+                <Typography variant="body1">Filter By Leader:</Typography>
+                <form>
+                    <FormControl fullWidth>
+                        <StyledTextField
+                            input
+                            value={sortByLeader}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                setSortByLeader(e.target.value)
+                            }
+                        >
+                        </StyledTextField>
+                    </FormControl>
+                </form>
+            </Box>
             <Divider sx={styles.divider} />
             <Box>
                 {gamesData?.ongoingGames.filter((match) => match.player1Leader.name?.includes(sortByLeader) || match.player2Leader
