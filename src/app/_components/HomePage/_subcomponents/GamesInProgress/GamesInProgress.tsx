@@ -91,6 +91,9 @@ const GamesInProgress: React.FC = () => {
             alignItems: 'center',
             paddingTop: '2px',
         },
+        spectateInput: {
+            width: 'fit-content',
+        }
     };
 
     return (
@@ -101,39 +104,33 @@ const GamesInProgress: React.FC = () => {
             </Box>
             <Box sx={{ ...styles.sortFilterRow, marginTop: '1vh' }}>
                 <Typography variant="body1">Sort By:</Typography>
-                <form>
-                    <FormControl fullWidth>
-                        <StyledTextField
-                            select
-                            value={sortByRecent}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setSortByRecent(e.target.value as 'asc' | 'desc')
-                            }
-                        >
-                            <MenuItem key="asc" value="asc">
-                                Oldest First
-                            </MenuItem>
-                            <MenuItem key="desc" value="desc">
-                                Newest First
-                            </MenuItem>
-                        </StyledTextField>
-                    </FormControl>
-                </form>
+                <StyledTextField
+                    select
+                    value={sortByRecent}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setSortByRecent(e.target.value as 'asc' | 'desc')
+                    }
+                    sx={styles.spectateInput}
+                >
+                    <MenuItem key="asc" value="asc">
+                        Oldest First
+                    </MenuItem>
+                    <MenuItem key="desc" value="desc">
+                        Newest First
+                    </MenuItem>
+                </StyledTextField>
             </Box>
             <Box sx={styles.sortFilterRow}>
                 <Typography variant="body1">Filter By Leader:</Typography>
-                <form>
-                    <FormControl fullWidth>
-                        <StyledTextField
-                            input
-                            value={sortByLeader}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setSortByLeader(e.target.value.toLowerCase())
-                            }
-                        >
-                        </StyledTextField>
-                    </FormControl>
-                </form>
+                <StyledTextField
+                    input
+                    value={sortByLeader}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setSortByLeader(e.target.value.toLowerCase())
+                    }
+                    sx={styles.spectateInput}
+                >
+                </StyledTextField>
             </Box>
             <Divider sx={styles.divider} />
             <Box>
