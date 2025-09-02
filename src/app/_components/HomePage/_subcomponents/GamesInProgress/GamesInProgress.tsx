@@ -124,7 +124,6 @@ const GamesInProgress: React.FC = () => {
                 <Typography variant="body1">Filter By Leader:</Typography>
                 <StyledTextField
                     input
-                    value={sortByLeader}
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setSortByLeader(e.target.value.toLowerCase())
                     }
