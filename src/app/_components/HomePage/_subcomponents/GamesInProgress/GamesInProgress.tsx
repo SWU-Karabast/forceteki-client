@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { Box, Divider, FormControl, Typography, MenuItem } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -18,8 +18,7 @@ interface OngoingGamesData {
     ongoingGames: GameCardData[];
 }
 
-const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void,
-    sortByRecent: 'asc' | 'desc') => {
+const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/ongoing-games`);
 
@@ -28,9 +27,6 @@ const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) 
         }
 
         const fetchedData: OngoingGamesData = await response.json();
-        if (sortByRecent === 'desc') {
-            fetchedData.ongoingGames.reverse();
-        }
         setGamesData(fetchedData);
     } catch (err) {
         console.error('Error fetching ongoing games:', err);
@@ -41,7 +37,6 @@ const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) 
 
 const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
-    const [sortByRecent, setSortByRecent] = useState<'asc' | 'desc'>('asc');
     const [sortByLeader, setSortByLeader] = useState<string>('');
 
     useEffect(() => {
@@ -49,13 +44,13 @@ const GamesInProgress: React.FC = () => {
         let intervalId: NodeJS.Timeout;
 
         const fetchData = () => {
-            fetchOngoingGames(setGamesData, sortByRecent);
+            fetchOngoingGames(setGamesData);
             count++;
 
             if (count === 6) {
                 clearInterval(intervalId);
                 intervalId = setInterval(() => {
-                    fetchOngoingGames(setGamesData, sortByRecent);
+                    fetchOngoingGames(setGamesData);
                     count++;
                     if (count === 15) {
                         clearInterval(intervalId);
@@ -68,7 +63,7 @@ const GamesInProgress: React.FC = () => {
         intervalId = setInterval(fetchData, 10000); // Fetch every 10 seconds
 
         return () => clearInterval(intervalId);
-    }, [sortByRecent]);
+    }, []);
 
     const styles = {
         headerBox: {
@@ -90,6 +85,7 @@ const GamesInProgress: React.FC = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             paddingTop: '2px',
+            marginTop: '1vh'
         },
         spectateInput: {
             width: 'fit-content',
@@ -101,24 +97,6 @@ const GamesInProgress: React.FC = () => {
             <Box sx={styles.headerBox}>
                 <Typography variant="h3">Games in Progress</Typography>
                 <Typography variant="h3" sx={styles.activeGamesNumber}>{gamesData?.numberOfOngoingGames || 0}</Typography>
-            </Box>
-            <Box sx={{ ...styles.sortFilterRow, marginTop: '1vh' }}>
-                <Typography variant="body1">Sort By:</Typography>
-                <StyledTextField
-                    select
-                    value={sortByRecent}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setSortByRecent(e.target.value as 'asc' | 'desc')
-                    }
-                    sx={styles.spectateInput}
-                >
-                    <MenuItem key="asc" value="asc">
-                        Oldest First
-                    </MenuItem>
-                    <MenuItem key="desc" value="desc">
-                        Newest First
-                    </MenuItem>
-                </StyledTextField>
             </Box>
             <Box sx={styles.sortFilterRow}>
                 <Typography variant="body1">Filter By Leader:</Typography>
