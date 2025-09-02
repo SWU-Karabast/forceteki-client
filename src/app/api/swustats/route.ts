@@ -68,7 +68,6 @@ async function fetchSwuStatsTokens(code: string): Promise<ISwuStatsToken> {
     }
 
     const data = await response.json();
-    console.log(data);
     if (!data?.refresh_token || !data?.access_token || !data?.expires_in) {
         throw new Error('Invalid token response from SWU Stats');
     }

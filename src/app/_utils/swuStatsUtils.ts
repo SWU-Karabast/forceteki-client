@@ -1,4 +1,6 @@
-export const buildSwuStatsAuthUrl = (): string => {
+'use server'
+
+export async function getSwuStatsAuthUrl(): Promise<string> {
     const baseUrl = process.env.NODE_ENV === 'development'
         ? 'http://localhost:3000'
         : 'https://karabast.net';
@@ -11,4 +13,4 @@ export const buildSwuStatsAuthUrl = (): string => {
     });
 
     return `https://swustats.net/TCGEngine/APIs/OAuth/authorize.php?${params.toString()}`;
-};
+}

@@ -10,7 +10,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { unlinkSwuStatsAsync } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { buildSwuStatsAuthUrl } from '@/app/_utils/swuStatsUtils';
+import { getSwuStatsAuthUrl } from '@/app/_utils/swuStatsUtils';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 
 type Props = {
@@ -26,7 +26,7 @@ export default function LinkSwuStatsButton({ linked }: Props) {
         if (linked) {
             setShowConfirmDialog(true);
         } else {
-            window.location.href = buildSwuStatsAuthUrl();
+            window.location.href = await getSwuStatsAuthUrl();
         }
     };
 
