@@ -28,7 +28,6 @@ const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) 
         }
 
         const fetchedData: OngoingGamesData = await response.json();
-        fetchedData.ongoingGames.sort((a, b) => Number(a.isPrivate) - Number(b.isPrivate));
         if (sortByRecent === 'desc') {
             fetchedData.ongoingGames.reverse();
         }
