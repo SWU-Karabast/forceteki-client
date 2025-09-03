@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { Box, Divider, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
-import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { ICardData, ILeaderBaseCardProps } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 
 interface GameCardData {
@@ -16,6 +16,11 @@ interface GameCardData {
 interface OngoingGamesData {
     numberOfOngoingGames: number;
     ongoingGames: GameCardData[];
+}
+
+interface LeaderName {
+    name: string;
+    id: string;
 }
 
 const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void) => {
@@ -34,10 +39,27 @@ const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) 
     }
 };
 
+const fetchLeaderData = async (setLeaderData: (leaders: LeaderName[] | null) => void) => {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-leaders`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch leader data: ${response.status} ${response.statusText}`);
+        }
+
+        const fetchedData: LeaderName[] = await response.json();
+        setLeaderData(fetchedData);
+    } catch (err) {
+        console.error('Error fetching ongoing games:', err);
+        setLeaderData(null); // Handle error case
+    }
+}
+
 
 const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
     const [sortByLeader, setSortByLeader] = useState<string>('');
+    const [leaderData, setLeaderData] = useState<LeaderName[] | null>(null);
 
     useEffect(() => {
         let count = 0;
@@ -59,6 +81,7 @@ const GamesInProgress: React.FC = () => {
             }
         };
 
+        fetchLeaderData(setLeaderData);
         fetchData();
         intervalId = setInterval(fetchData, 10000); // Fetch every 10 seconds
 
@@ -111,10 +134,21 @@ const GamesInProgress: React.FC = () => {
             </Box>
             <Divider sx={styles.divider} />
             <Box>
-                {gamesData?.ongoingGames.filter((match) => match.player1Leader.name?.toLowerCase().includes(sortByLeader) || match.player2Leader
-                    .name?.toLowerCase().includes(sortByLeader)).map((match, index) => (
-                    <PublicMatch key={index} match={match} />
-                ))}
+                {gamesData?.ongoingGames
+                    .filter((match) => {
+                        if (!leaderData) return true; // If leader data isn't loaded yet, show all matches
+
+                        if (sortByLeader === '') return true; // No filter applied, show all matches
+
+                        const leader1Name = leaderData.find(leader => leader.id === match.player1Leader.id)?.name.toLowerCase();
+                        const leader2Name = leaderData.find(leader => leader.id === match.player2Leader.id)?.name.toLowerCase();
+                        if (leader1Name?.includes(sortByLeader) || leader2Name?.includes(sortByLeader)) return true;
+
+                        return false;
+                    })
+                    .map((match, index) => (
+                        <PublicMatch key={index} match={match} />
+                    ))}
             </Box>
         </>
     );
