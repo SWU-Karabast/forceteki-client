@@ -24,9 +24,12 @@ interface LeaderNameData {
     id: string;
 }
 
-function includesLeaderName(leaderData: LeaderNameData, searchTerm: string): boolean {
-    return leaderData.name.toLowerCase().includes(searchTerm) || leaderData.subtitle?.toLowerCase().includes(searchTerm);
-}
+const includesLeaderName = (leaderData: LeaderNameData, searchTerm: string): boolean => {
+    const nameIncludes = leaderData.subtitle
+        ? `${leaderData.name} ${leaderData.subtitle}`
+        : leaderData.name;
+    return nameIncludes.toLowerCase().includes(searchTerm);
+};
 
 const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void) => {
     try {
@@ -93,6 +96,19 @@ const GamesInProgress: React.FC = () => {
         return () => clearInterval(intervalId);
     }, []);
 
+    const filterByLeader = (match: GameCardData): boolean => {
+        if (!leaderData) return true; // If leader data isn't loaded yet, show all matches
+
+        if (sortByLeader === '') return true; // No filter applied, show all matches
+
+        const leader1 = leaderData.find(leader => leader.id === match.player1Leader.id);
+        const leader2 = leaderData.find(leader => leader.id === match.player2Leader.id);
+
+        if (!leader1 || !leader2) return false; // leader not found in data, exclude match
+
+        return includesLeaderName(leader1, sortByLeader) || includesLeaderName(leader2, sortByLeader);
+    };
+
     const styles = {
         headerBox: {
             display: 'flex',
@@ -140,22 +156,7 @@ const GamesInProgress: React.FC = () => {
             <Divider sx={styles.divider} />
             <Box>
                 {gamesData?.ongoingGames
-                    .filter((match) => {
-                        if (!leaderData) return true; // If leader data isn't loaded yet, show all matches
-
-                        if (sortByLeader === '') return true; // No filter applied, show all matches
-
-                        const leader1 = leaderData.find(leader => leader.id === match.player1Leader.id);
-                        const leader2 = leaderData.find(leader => leader.id === match.player2Leader.id);
-
-                        if (leader1 && leader2) {
-                            if (includesLeaderName(leader1, sortByLeader) || includesLeaderName(leader2, sortByLeader)) {
-                                return true;
-                            }
-                        }
-
-                        return false;
-                    })
+                    .filter((match) => filterByLeader(match))
                     .map((match, index) => (
                         <PublicMatch key={index} match={match} />
                     ))}
