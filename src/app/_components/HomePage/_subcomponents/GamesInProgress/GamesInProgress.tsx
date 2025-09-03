@@ -48,7 +48,7 @@ const fetchLeaderData = async (setLeaderData: (leaders: LeaderNameData[] | null)
         }
 
         const fetchedData: LeaderNameData[] = await response.json();
-        setLeaderData(fetchedData);
+        setLeaderData(fetchedData.sort());
     } catch (err) {
         console.error('Error fetching ongoing games:', err);
         setLeaderData(null); // Handle error case
@@ -139,7 +139,7 @@ const GamesInProgress: React.FC = () => {
                     onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     renderInput={(params) => (
-                        <TextField {...params} label="Filter by Leader:" variant="outlined" />
+                        <TextField {...params} label="Filter by Leader" variant="outlined" />
                     )}
                 />
             </Box>
