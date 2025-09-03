@@ -48,7 +48,7 @@ const fetchLeaderData = async (setLeaderData: (leaders: LeaderNameData[] | null)
         }
 
         const fetchedData: LeaderNameData[] = await response.json();
-        setLeaderData(fetchedData.sort());
+        setLeaderData(fetchedData.sort((a, b) => a.name.localeCompare(b.name)));
     } catch (err) {
         console.error('Error fetching ongoing games:', err);
         setLeaderData(null); // Handle error case
@@ -116,10 +116,40 @@ const GamesInProgress: React.FC = () => {
         sortFilterRow: {
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center',
             paddingTop: '2px',
-            marginTop: '1vh'
+            marginTop: '1vh',
         },
+        filterByLeaderAutoComplete: { 
+            '& .MuiInputBase-input': {
+                textAlign: 'left'
+            },
+        },
+        filterByLeaderSlotProps: {
+            inputLabel: {
+                sx: {
+                    color: '#fff',
+                    '&.Mui-focused': {
+                        color: '#fff',
+                    },
+                    '&.MuiInputLabel-shrink': {
+                        color: '#fff',
+                    },
+
+                }
+            }
+        },
+        autocompleteSlotProps: {
+            clearIndicator: {
+                sx: {
+                    color: '#fff'
+                }
+            },
+            popupIndicator: {
+                sx: {
+                    color: '#fff'
+                }
+            },
+        }
     };
 
     return (
@@ -138,9 +168,17 @@ const GamesInProgress: React.FC = () => {
                     value={leaderData?.find(l => l.id === sortByLeader) || null}
                     onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
+                    sx={styles.filterByLeaderAutoComplete}
+                    noOptionsText="No Leaders Found"
                     renderInput={(params) => (
-                        <TextField {...params} label="Filter by Leader" variant="outlined" />
+                        <TextField
+                            {...params}
+                            label="Filter by Leader"
+                            variant="outlined"
+                            slotProps={styles.filterByLeaderSlotProps}
+                        />
                     )}
+                    slotProps={styles.autocompleteSlotProps}
                 />
             </Box>
             <Divider sx={styles.divider} />
