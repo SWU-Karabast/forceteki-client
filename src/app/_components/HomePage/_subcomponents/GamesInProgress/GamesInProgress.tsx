@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { Box, Divider, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
-import { ICardData, ILeaderBaseCardProps } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 
 interface GameCardData {
@@ -18,9 +18,14 @@ interface OngoingGamesData {
     ongoingGames: GameCardData[];
 }
 
-interface LeaderName {
+interface LeaderNameData {
     name: string;
+    subtitle?: string;
     id: string;
+}
+
+function includesLeaderName(leaderData: LeaderNameData, searchTerm: string): boolean {
+    return leaderData.name.toLowerCase().includes(searchTerm) || leaderData.subtitle?.toLowerCase().includes(searchTerm);
 }
 
 const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void) => {
@@ -39,7 +44,7 @@ const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) 
     }
 };
 
-const fetchLeaderData = async (setLeaderData: (leaders: LeaderName[] | null) => void) => {
+const fetchLeaderData = async (setLeaderData: (leaders: LeaderNameData[] | null) => void) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-leaders`);
 
@@ -47,7 +52,7 @@ const fetchLeaderData = async (setLeaderData: (leaders: LeaderName[] | null) => 
             throw new Error(`Failed to fetch leader data: ${response.status} ${response.statusText}`);
         }
 
-        const fetchedData: LeaderName[] = await response.json();
+        const fetchedData: LeaderNameData[] = await response.json();
         setLeaderData(fetchedData);
     } catch (err) {
         console.error('Error fetching ongoing games:', err);
@@ -59,7 +64,7 @@ const fetchLeaderData = async (setLeaderData: (leaders: LeaderName[] | null) => 
 const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
     const [sortByLeader, setSortByLeader] = useState<string>('');
-    const [leaderData, setLeaderData] = useState<LeaderName[] | null>(null);
+    const [leaderData, setLeaderData] = useState<LeaderNameData[] | null>(null);
 
     useEffect(() => {
         let count = 0;
@@ -140,9 +145,14 @@ const GamesInProgress: React.FC = () => {
 
                         if (sortByLeader === '') return true; // No filter applied, show all matches
 
-                        const leader1Name = leaderData.find(leader => leader.id === match.player1Leader.id)?.name.toLowerCase();
-                        const leader2Name = leaderData.find(leader => leader.id === match.player2Leader.id)?.name.toLowerCase();
-                        if (leader1Name?.includes(sortByLeader) || leader2Name?.includes(sortByLeader)) return true;
+                        const leader1 = leaderData.find(leader => leader.id === match.player1Leader.id);
+                        const leader2 = leaderData.find(leader => leader.id === match.player2Leader.id);
+
+                        if (leader1 && leader2) {
+                            if (includesLeaderName(leader1, sortByLeader) || includesLeaderName(leader2, sortByLeader)) {
+                                return true;
+                            }
+                        }
 
                         return false;
                     })
