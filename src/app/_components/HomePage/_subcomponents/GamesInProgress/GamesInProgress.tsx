@@ -1,8 +1,7 @@
-import React, { ChangeEvent, useEffect, useState } from 'react';
-import { Box, Divider, Typography } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Autocomplete, Box, Divider, TextField, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 
 interface GameCardData {
     id: string;
@@ -23,13 +22,6 @@ interface LeaderNameData {
     subtitle?: string;
     id: string;
 }
-
-const includesLeaderName = (leaderData: LeaderNameData, searchTerm: string): boolean => {
-    const nameIncludes = leaderData.subtitle
-        ? `${leaderData.name} ${leaderData.subtitle}`
-        : leaderData.name;
-    return nameIncludes.toLowerCase().includes(searchTerm);
-};
 
 const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void) => {
     try {
@@ -63,10 +55,9 @@ const fetchLeaderData = async (setLeaderData: (leaders: LeaderNameData[] | null)
     }
 }
 
-
 const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
-    const [sortByLeader, setSortByLeader] = useState<string>('');
+    const [sortByLeader, setSortByLeader] = useState<string | null>(null);
     const [leaderData, setLeaderData] = useState<LeaderNameData[] | null>(null);
 
     useEffect(() => {
@@ -98,15 +89,13 @@ const GamesInProgress: React.FC = () => {
 
     const filterByLeader = (match: GameCardData): boolean => {
         if (!leaderData) return true; // If leader data isn't loaded yet, show all matches
-
-        if (sortByLeader === '') return true; // No filter applied, show all matches
+        if (!sortByLeader) return true; // No filter applied, show all matches
 
         const leader1 = leaderData.find(leader => leader.id === match.player1Leader.id);
         const leader2 = leaderData.find(leader => leader.id === match.player2Leader.id);
-
         if (!leader1 || !leader2) return false; // leader not found in data, exclude match
 
-        return includesLeaderName(leader1, sortByLeader) || includesLeaderName(leader2, sortByLeader);
+        return leader1.id === sortByLeader || leader2.id === sortByLeader;
     };
 
     const styles = {
@@ -131,9 +120,6 @@ const GamesInProgress: React.FC = () => {
             paddingTop: '2px',
             marginTop: '1vh'
         },
-        spectateInput: {
-            width: 'fit-content',
-        }
     };
 
     return (
@@ -143,15 +129,19 @@ const GamesInProgress: React.FC = () => {
                 <Typography variant="h3" sx={styles.activeGamesNumber}>{gamesData?.numberOfOngoingGames || 0}</Typography>
             </Box>
             <Box sx={styles.sortFilterRow}>
-                <Typography variant="body1">Filter By Leader:</Typography>
-                <StyledTextField
-                    input
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setSortByLeader(e.target.value.toLowerCase())
+                <Autocomplete
+                    fullWidth
+                    options={leaderData || []}
+                    getOptionLabel={(option) =>
+                        option.subtitle ? `${option.name} - ${option.subtitle}` : option.name
                     }
-                    sx={styles.spectateInput}
-                >
-                </StyledTextField>
+                    value={leaderData?.find(l => l.id === sortByLeader) || null}
+                    onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Filter by Leader:" variant="outlined" />
+                    )}
+                />
             </Box>
             <Divider sx={styles.divider} />
             <Box>
