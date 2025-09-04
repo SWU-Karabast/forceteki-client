@@ -120,6 +120,7 @@ const GamesInProgress: React.FC = () => {
             marginTop: '1vh',
         },
         filterByLeaderAutoComplete: { 
+            my: '.5vh',
             '& .MuiInputBase-input': {
                 textAlign: 'left'
             },
@@ -149,6 +150,14 @@ const GamesInProgress: React.FC = () => {
                     color: '#fff'
                 }
             },
+            popper: {
+                sx: {
+                    '& .MuiAutocomplete-noOptions': {
+                        color: '#fff',
+                        backgroundColor: '#394452',
+                    }
+                }
+            } 
         }
     };
 
@@ -169,7 +178,7 @@ const GamesInProgress: React.FC = () => {
                     onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     sx={styles.filterByLeaderAutoComplete}
-                    noOptionsText="No Leaders Found"
+                    noOptionsText='No Leaders Found...'
                     renderInput={(params) => (
                         <TextField
                             {...params}
