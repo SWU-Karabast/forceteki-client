@@ -114,7 +114,7 @@ const GamesInProgress: React.FC = () => {
             fontWeight: 400,
         },
         sortFilterRow: {
-            display: 'flex',
+            display: { xs: 'none', sm: 'flex' },
             justifyContent: 'space-between',
             paddingTop: '2px',
             marginTop: '1vh',
