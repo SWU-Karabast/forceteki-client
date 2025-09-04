@@ -43,3 +43,17 @@ export interface IPreferenceProps {
     title?: string,
     subtitle?: string,
 }
+
+export interface IStatsNotification {
+    id: string;
+    success: boolean;
+    type: MessageTypes;
+    source: string;
+    message: string;
+}
+
+export enum MessageTypes {
+    Warning = 'Warning',
+    Error = 'Error',
+    Success = 'Success'
+}

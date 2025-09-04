@@ -6,14 +6,38 @@ import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
+import { useEffect, useState } from 'react';
 
 function EndGameOptionsQuickMatch() {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitError } = useGame();
+    const { user } = useUser();
+    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification } = useGame();
+    const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
+    const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
 
+    
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest;
     const isRequestInitiator = rematchRequest && rematchRequest.initiator === connectedPlayer;
+
+    useEffect(() => {
+        if (statsSubmitNotification) {
+            const notification = statsSubmitNotification;
+
+            if (notification.source === 'Karabast') {
+                setKarabastStatsMessage({
+                    type: notification.type,
+                    message: notification.message
+                });
+            } else if (notification.source === 'SWUStats') {
+                setSwuStatsMessage({
+                    type: notification.type,
+                    message: notification.message
+                });
+            }
+        }
+    }, [statsSubmitNotification]);
 
 
     // ------------------------Additional button functions------------------------//
@@ -37,6 +61,18 @@ function EndGameOptionsQuickMatch() {
         }
     };
 
+    // Function to get color based on notification type
+    const getNotificationColor = (type: string) => {
+        switch (type) {
+            case 'Error':
+                return '#d32f2f';
+            case 'Warning':
+                return '#ff9800';
+            default:
+                return '#4caf50';
+        }
+    };
+
     // Determine button text and behavior based on rematch status
     let rematchButtonText = 'Request Rematch';
     let rematchButtonDisabled = false;
@@ -48,6 +84,9 @@ function EndGameOptionsQuickMatch() {
             rematchButtonText = 'Confirm Rematch';
         }
     }
+
+    // Check if we have any stats messages to show
+    const hasStatsMessages = (karabastStatsMessage || swuStatsMessage) && user;
 
     // ------------------------ Styles ------------------------//
     const styles = {
@@ -124,13 +163,29 @@ function EndGameOptionsQuickMatch() {
                 </Typography>
             </Box>
 
-            {statsSubmitError && (
+            {hasStatsMessages && (
                 <Box sx={{ ...styles.functionContainer, mt:'35px', mb:'0px' }}>
-                    <Typography sx={styles.typographyContainer} variant={'h3'}>Stats Error</Typography>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Stats Update Messages</Typography>
                     <Divider sx={{ mb: '20px' }}/>
-                    <Typography sx={{ ...styles.typeographyStyle, color: '#d32f2f' }}>
-                        {statsSubmitError}
-                    </Typography>
+
+                    {karabastStatsMessage && (
+                        <Typography sx={{
+                            ...styles.typeographyStyle,
+                            color: getNotificationColor(karabastStatsMessage.type),
+                            mb: swuStatsMessage ? '10px' : '0px'
+                        }}>
+                            <strong>Karabast:</strong> {karabastStatsMessage.message}
+                        </Typography>
+                    )}
+
+                    {swuStatsMessage && (
+                        <Typography sx={{
+                            ...styles.typeographyStyle,
+                            color: getNotificationColor(swuStatsMessage.type)
+                        }}>
+                            <strong>SWUStats:</strong> {swuStatsMessage.message}
+                        </Typography>
+                    )}
                 </Box>
             )}
         </>

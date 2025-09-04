@@ -6,10 +6,15 @@ import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useEffect, useState } from 'react';
+import { useUser } from '@/app/_contexts/User.context';
 
 function EndGameOptionsCustom() {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, statsSubmitError } = useGame();
+    const { user } = useUser();
+    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification } = useGame();
+    const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
+    const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
 
     // ------------------------ Additional button functions ------------------------//
 
@@ -34,6 +39,27 @@ function EndGameOptionsCustom() {
         }
     };
 
+    useEffect(() => {
+        if (statsSubmitNotification) {
+            const notification = statsSubmitNotification;
+
+            if (notification.source === 'Karabast') {
+                setKarabastStatsMessage({
+                    type: notification.type,
+                    message: notification.message
+                });
+            } else if (notification.source === 'SWUStats') {
+                setSwuStatsMessage({
+                    type: notification.type,
+                    message: notification.message
+                });
+            }
+        }
+    }, [statsSubmitNotification]);
+
+    // Check if we have any stats messages to show
+    const hasStatsMessages = (karabastStatsMessage || swuStatsMessage) && user;
+
     // For the Regular Rematch:
     // - If no request active, send a request with mode "regular".
     // - If a regular rematch request is active and the user is not the initiator,
@@ -43,6 +69,18 @@ function EndGameOptionsCustom() {
             sendLobbyMessage(['requestRematch', 'regular']);
         } else if (rematchRequest.mode === 'regular' && !isInitiator) {
             sendLobbyMessage(['rematch']);
+        }
+    };
+
+    // Function to get color based on notification type
+    const getNotificationColor = (type: string) => {
+        switch (type) {
+            case 'Error':
+                return '#d32f2f';
+            case 'Warning':
+                return '#ff9800';
+            default:
+                return '#4caf50';
         }
     };
 
@@ -171,13 +209,29 @@ function EndGameOptionsCustom() {
                 </Typography>
             </Box>
 
-            {statsSubmitError && (
-                <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
-                    <Typography sx={styles.typographyContainer} variant={'h3'}>Stats Error</Typography>
+            {hasStatsMessages && (
+                <Box sx={{ ...styles.functionContainer, mt:'35px', mb:'0px' }}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Stats Update Messages</Typography>
                     <Divider sx={{ mb: '20px' }}/>
-                    <Typography sx={{ ...styles.typeographyStyle, color: '#d32f2f' }}>
-                        {statsSubmitError}
-                    </Typography>
+
+                    {karabastStatsMessage && (
+                        <Typography sx={{
+                            ...styles.typeographyStyle,
+                            color: getNotificationColor(karabastStatsMessage.type),
+                            mb: swuStatsMessage ? '10px' : '0px'
+                        }}>
+                            <strong>Karabast:</strong> {karabastStatsMessage.message}
+                        </Typography>
+                    )}
+
+                    {swuStatsMessage && (
+                        <Typography sx={{
+                            ...styles.typeographyStyle,
+                            color: getNotificationColor(swuStatsMessage.type)
+                        }}>
+                            <strong>SWUStats:</strong> {swuStatsMessage.message}
+                        </Typography>
+                    )}
                 </Box>
             )}
         </>
