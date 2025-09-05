@@ -85,7 +85,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean, hasSwuStatsRefreshToken: boolean }> =>{
+export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean, swuStatsRefreshToken: string | null }> =>{
     try {
         const decks = loadSavedDecks(false);
         // const preferences = loadPreferencesFromLocalStorage();

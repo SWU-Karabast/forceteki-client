@@ -164,7 +164,7 @@ function EndGameOptionsQuickMatch() {
             </Box>
 
             {hasStatsMessages && (
-                <Box sx={{ ...styles.functionContainer, mt:'35px', mb:'0px' }}>
+                <Box sx={{ ...styles.functionContainer, mt:'35px', mb:'0px', height: '7rem' }}>
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Stats Update Messages</Typography>
                     <Divider sx={{ mb: '20px' }}/>
 
@@ -181,7 +181,8 @@ function EndGameOptionsQuickMatch() {
                     {swuStatsMessage && (
                         <Typography sx={{
                             ...styles.typeographyStyle,
-                            color: getNotificationColor(swuStatsMessage.type)
+                            color: getNotificationColor(swuStatsMessage.type),
+                            mb: '10px'
                         }}>
                             <strong>SWUStats:</strong> {swuStatsMessage.message}
                         </Typography>

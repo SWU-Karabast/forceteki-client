@@ -251,7 +251,7 @@ function GeneralTab() {
                                 </Typography>
                             </Box>
                             <Box sx={styles.swuStatsContainer}>
-                                <LinkSwuStatsButton linked={user.hasSwuStatsRefreshToken}/>
+                                <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
                                 {swuStatsError && (
                                     <Typography variant={'body2'} sx={styles.errorMessageStyle}>
                                         Failed to link to SWUStats account. If this keeps happening, please report the problem to the

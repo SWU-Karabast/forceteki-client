@@ -64,7 +64,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         authenticated: true,
                         preferences: serverUser.preferences,
                         needsUsernameChange: serverUser.needsUsernameChange,
-                        hasSwuStatsRefreshToken: serverUser.hasSwuStatsRefreshToken || false,
+                        swuStatsRefreshToken: serverUser.swuStatsRefreshToken || null,
                     });
                     update({ userId: serverUser.id });
                 } catch (error) {
@@ -119,7 +119,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                hasSwuStatsRefreshToken: false,
+                swuStatsRefreshToken: null,
                 preferences: { cardback: undefined }
             });
         } else if (user === 'ThisIsTheWay') {
@@ -130,7 +130,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                hasSwuStatsRefreshToken: false,
+                swuStatsRefreshToken: null,
                 preferences: { cardback: undefined }
 
             });
@@ -176,12 +176,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
     };
 
-    const updateHasSwuStatsRefreshToken = (hasSwuStatsRefreshToken: boolean) => {
+    const updateswuStatsRefreshToken = (swuStatsRefreshToken: string | null) => {
         setUser((prevUser) => {
             if (!prevUser) return null;
             return {
                 ...prevUser,
-                hasSwuStatsRefreshToken
+                swuStatsRefreshToken
             };
         });
     };
@@ -206,7 +206,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences, updateSwuStatsRefreshToken: updateHasSwuStatsRefreshToken }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences, updateSwuStatsRefreshToken: updateswuStatsRefreshToken }}>
             {children}
         </UserContext.Provider>
     );
