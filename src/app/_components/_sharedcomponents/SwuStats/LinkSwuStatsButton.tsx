@@ -34,7 +34,7 @@ export default function LinkSwuStatsButton({ linked }: Props) {
         try {
             const result = await unlinkSwuStatsAsync(user);
             if (result) {
-                updateSwuStatsRefreshToken(false);
+                updateSwuStatsRefreshToken(null);
             }
         } catch (error) {
             if (error instanceof Error) {
