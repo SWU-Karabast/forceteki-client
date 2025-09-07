@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
@@ -50,6 +50,7 @@ const CreateGameForm = () => {
     const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
+    const searchParams = useSearchParams();
 
 
     // For a short, user-friendly error message
@@ -147,6 +148,7 @@ const CreateGameForm = () => {
                 isPrivate: privacy === 'Private',
                 format: format,
                 lobbyName: lobbyName,
+                enableUndo: searchParams.get('undoTest') === 'true' || false,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {

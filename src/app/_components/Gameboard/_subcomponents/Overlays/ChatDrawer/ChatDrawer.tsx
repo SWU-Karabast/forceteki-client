@@ -78,7 +78,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     width: 'max-content',
                 }}>Chat</Typography>
             </Box>
-            {isDev && (<Box sx={styles.quickUndoBox}>
+            {(isDev || gameState.undoEnabled) && (<Box sx={styles.quickUndoBox}>
                 <Image
                     src="/porg1.png"
                     alt="Highlighted Stats Panel"
