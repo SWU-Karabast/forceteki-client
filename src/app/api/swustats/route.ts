@@ -17,8 +17,8 @@ const CONFIG = {
         redirectUri: process.env.NODE_ENV === 'development'
             ? 'http://localhost:3000/api/swustats'
             : 'https://karabast.net/api/swustats',
-        clientId: process.env.SWUSTATS_CLIENT_ID!,
-        clientSecret: process.env.SWUSTATS_CLIENT_SECRET!,
+        clientId: process.env.SWUSTATS_CLIENT_ID,
+        clientSecret: process.env.SWUSTATS_CLIENT_SECRET,
     },
     redirects: {
         success: '/Preferences?swustats=success',
@@ -51,6 +51,9 @@ export async function GET(req: Request) {
 }
 
 async function fetchSwuStatsTokens(code: string): Promise<ISwuStatsToken> {
+    if (!CONFIG.swuStats.clientId || !CONFIG.swuStats.clientSecret) {
+        throw new Error('SWU Stats client credentials are not configured');
+    }
     const response = await fetch(CONFIG.swuStats.tokenUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

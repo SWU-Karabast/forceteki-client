@@ -28,6 +28,7 @@ export interface DeckJSON {
     }[];
     deckID?: string;
     deckSource?: string;
+    isPresentInDB?: boolean;
 }
 
 const ALLOWED_ROOT_KEYS = ['metadata', 'leader', 'base', 'deck', 'sideboard', 'deckID', 'deckSource'];

@@ -176,7 +176,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
     };
 
-    const updateswuStatsRefreshToken = (swuStatsRefreshToken: string | null) => {
+    const updateSwuStatsRefreshToken = (swuStatsRefreshToken: string | null) => {
         setUser((prevUser) => {
             if (!prevUser) return null;
             return {
@@ -206,7 +206,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences, updateSwuStatsRefreshToken: updateswuStatsRefreshToken }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences, updateSwuStatsRefreshToken }}>
             {children}
         </UserContext.Provider>
     );

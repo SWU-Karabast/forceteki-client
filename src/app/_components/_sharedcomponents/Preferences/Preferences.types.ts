@@ -47,12 +47,12 @@ export interface IPreferenceProps {
 export interface IStatsNotification {
     id: string;
     success: boolean;
-    type: MessageTypes;
+    type: SwuStatsSubmitStatus;
     source: string;
     message: string;
 }
 
-export enum MessageTypes {
+export enum SwuStatsSubmitStatus {
     Warning = 'Warning',
     Error = 'Error',
     Success = 'Success'
