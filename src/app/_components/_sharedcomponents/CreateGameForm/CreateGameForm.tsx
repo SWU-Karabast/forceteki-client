@@ -142,13 +142,15 @@ const CreateGameForm = () => {
             return;
         }
         try {
+            const isPrivate = privacy === 'Private';
+
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
-                isPrivate: privacy === 'Private',
+                isPrivate: isPrivate,
                 format: format,
                 lobbyName: lobbyName,
-                enableUndo: searchParams.get('undoTest') === 'true' || false,
+                enableUndo: isPrivate && searchParams.get('undoTest') === 'true',
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
