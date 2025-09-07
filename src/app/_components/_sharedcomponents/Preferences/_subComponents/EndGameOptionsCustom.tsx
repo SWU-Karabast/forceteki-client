@@ -43,12 +43,12 @@ function EndGameOptionsCustom() {
         if (statsSubmitNotification) {
             const notification = statsSubmitNotification;
 
-            if (notification.source === 'Karabast') {
+            if (notification.source === 'karabast') {
                 setKarabastStatsMessage({
                     type: notification.type,
                     message: notification.message
                 });
-            } else if (notification.source === 'SWUStats') {
+            } else if (notification.source === 'swustats') {
                 setSwuStatsMessage({
                     type: notification.type,
                     message: notification.message
