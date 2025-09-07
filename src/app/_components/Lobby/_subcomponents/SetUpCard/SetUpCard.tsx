@@ -98,6 +98,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 if(favouriteDeck && deckData && !deckLink) {
                     deckData.deckID = favouriteDeck;
                     deckData.deckLink = userDeck;
+                }else if(deckData) {
+                    deckData.deckLink = userDeck
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
