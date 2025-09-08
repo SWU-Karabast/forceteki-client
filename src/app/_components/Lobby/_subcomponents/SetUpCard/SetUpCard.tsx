@@ -25,6 +25,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -40,6 +41,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const lobbyFormat = lobbyState ? lobbyState.gameFormat : null;
+
+    const searchParams = useSearchParams();
+    const undoEnabled = searchParams.get('undoTest') === 'true';
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
@@ -514,6 +518,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
+            <Divider sx={{ mt: 1, borderColor: '#666', display: undoEnabled ? 'none' : 'block' }} />
+            <Box sx={{ display: undoEnabled ? 'none' : 'block' }}>
+                <Typography sx={{ fontSize: '1.4em', mt: 1, textAlign: 'center', color: 'red' }}>
+                    Undo test mode is enabled
+                </Typography>
+            </Box>
         </Card>
     )
 };
