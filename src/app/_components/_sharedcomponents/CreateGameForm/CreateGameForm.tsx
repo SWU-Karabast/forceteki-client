@@ -192,7 +192,7 @@ const CreateGameForm = () => {
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
-            router.push(`/lobby${undoEnabled ? '?undoTest=true' : ''}`);
+            router.push('/lobby');
         } catch (error) {
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
