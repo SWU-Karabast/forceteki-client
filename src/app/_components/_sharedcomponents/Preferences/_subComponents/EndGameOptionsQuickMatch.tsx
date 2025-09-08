@@ -9,7 +9,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 
 function EndGameOptionsQuickMatch() {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator } = useGame();
+    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, gameState } = useGame();
 
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest;
@@ -19,7 +19,7 @@ function EndGameOptionsQuickMatch() {
     // ------------------------Additional button functions------------------------//
     const handleReturnHome = () => {
         sendMessage('manualDisconnect');
-        router.push('/');
+        router.push(`/${gameState?.undoEnabled ? '?undoTest=true' : ''}`);
     }
 
     const handleRequeue = async () => {

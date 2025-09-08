@@ -56,6 +56,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
 
+    const lobbyLinkWithUndo = `${lobbyState?.connectionLink}${undoEnabled ? '&undoTest=true' : ''}`;
+
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
         sendLobbyMessage(['onStartGameAsync']);
@@ -204,7 +206,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     }, [connectedUser]);
 
     const handleCopyLink = () => {
-        navigator.clipboard.writeText(lobbyState.connectionLink)
+        navigator.clipboard.writeText(lobbyLinkWithUndo)
             .then(() => {
                 setShowTooltip(true);
                 // Hide the tooltip after 1 second
@@ -329,7 +331,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         <TextField
                             fullWidth
                             sx={styles.textFieldStyle}
-                            value={lobbyState ? lobbyState.connectionLink : ''}
+                            value={lobbyState ? lobbyLinkWithUndo : ''}
                         />
                         <Tooltip
                             open={showTooltip}
