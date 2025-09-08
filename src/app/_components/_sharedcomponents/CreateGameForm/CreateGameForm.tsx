@@ -62,6 +62,7 @@ const CreateGameForm = () => {
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
     const [privacy, setPrivacy] = useState<string>('Public');
+    const undoEnabled = searchParams.get('undoTest') === 'true';
 
     useEffect(() => {
         fetchDecks();
@@ -147,10 +148,10 @@ const CreateGameForm = () => {
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
-                isPrivate: isPrivate,
+                isPrivate,
                 format: format,
                 lobbyName: lobbyName,
-                enableUndo: isPrivate && searchParams.get('undoTest') === 'true',
+                enableUndo: isPrivate && undoEnabled,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -191,7 +192,7 @@ const CreateGameForm = () => {
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
-            router.push('/lobby');
+            router.push(`/lobby${undoEnabled ? '?undoTest=true' : ''}`);
         } catch (error) {
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
