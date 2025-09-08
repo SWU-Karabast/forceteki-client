@@ -9,13 +9,13 @@ import { useGame } from '@/app/_contexts/Game.context';
 
 function EndGameOptionsCustom() {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator } = useGame();
+    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, gameState } = useGame();
 
     // ------------------------ Additional button functions ------------------------//
 
     const handleReturnHome = () => {
         sendMessage('manualDisconnect');
-        router.push('/');
+        router.push(`/${gameState?.undoEnabled ? '?undoTest=true' : ''}`);
     }
     const rematchRequest = lobbyState?.rematchRequest || null;
     const isInitiator = rematchRequest && rematchRequest.initiator === connectedPlayer;
