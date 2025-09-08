@@ -7,13 +7,14 @@ import {
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import SetUpCard from '@/app/_components/Lobby/_subcomponents/SetUpCard/SetUpCard';
 import { useGame } from '@/app/_contexts/Game.context';
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 
 const SetUp: React.FC = ({
 }) => {
     const router = useRouter();
     const { lobbyState, sendLobbyMessage, connectedPlayer, sendMessage } = useGame();
+    const searchParams = useSearchParams();
 
     // find the user
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
@@ -29,7 +30,7 @@ const SetUp: React.FC = ({
 
     const handleExit = () => {
         sendMessage('manualDisconnect');
-        router.push('/');
+        router.push(`/${searchParams.get('undoTest') === 'true' ? '?undoTest=true' : ''}`);
     }
 
     // ------------------------STYLES------------------------//
