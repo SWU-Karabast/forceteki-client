@@ -21,6 +21,7 @@ interface LeaderNameData {
     name: string;
     subtitle?: string;
     id: string;
+    ongoingGamesCount?: number;
 }
 
 const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void) => {
@@ -55,6 +56,27 @@ const fetchLeaderData = async (setLeaderData: (leaders: LeaderNameData[] | null)
     }
 }
 
+const updateLeaderData = (
+    games: OngoingGamesData | null,
+    leaderData: LeaderNameData[] | null,
+    setLeaderData: (leaders: LeaderNameData[] | null) => void
+) => {
+    if (!leaderData) return;
+    const newLeaderData = leaderData.map(leader => ({
+        ...leader,
+        ongoingGamesCount: games?.ongoingGames.filter(
+            game => game.player1Leader.id === leader.id || game.player2Leader.id === leader.id
+        ).length ?? 0
+    }));
+    setLeaderData(newLeaderData);
+}
+
+const getOptionLabel = (option: LeaderNameData): string => {
+    const count = option.ongoingGamesCount ?? 0;
+    const subtitle = option.subtitle ? ` - ${option.subtitle}` : '';
+    return `${option.name}${subtitle} (${count})`;
+}
+
 const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
     const [sortByLeader, setSortByLeader] = useState<string | null>(null);
@@ -87,15 +109,14 @@ const GamesInProgress: React.FC = () => {
         return () => clearInterval(intervalId);
     }, []);
 
+    useEffect(() => {
+        updateLeaderData(gamesData, leaderData, setLeaderData);
+    }, [gamesData]);
+
     const filterByLeader = (match: GameCardData): boolean => {
-        if (!leaderData) return true; // If leader data isn't loaded yet, show all matches
-        if (!sortByLeader) return true; // No filter applied, show all matches
-
-        const leader1 = leaderData.find(leader => leader.id === match.player1Leader.id);
-        const leader2 = leaderData.find(leader => leader.id === match.player2Leader.id);
-        if (!leader1 || !leader2) return false; // leader not found in data, exclude match
-
-        return leader1.id === sortByLeader || leader2.id === sortByLeader;
+        if (!leaderData || !sortByLeader) return true;
+        const leaderIds = [match.player1Leader.id, match.player2Leader.id];
+        return leaderIds.some(id => leaderData.some(leader => leader.id === id && leader.id === sortByLeader));
     };
 
     const styles = {
@@ -171,9 +192,7 @@ const GamesInProgress: React.FC = () => {
                 <Autocomplete
                     fullWidth
                     options={leaderData || []}
-                    getOptionLabel={(option) =>
-                        option.subtitle ? `${option.name} - ${option.subtitle}` : option.name
-                    }
+                    getOptionLabel={(option) => getOptionLabel(option)}
                     value={leaderData?.find(l => l.id === sortByLeader) || null}
                     onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
