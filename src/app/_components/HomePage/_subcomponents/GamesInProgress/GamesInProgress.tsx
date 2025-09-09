@@ -61,13 +61,36 @@ const updateLeaderData = (
     leaderData: LeaderNameData[] | null,
     setLeaderData: (leaders: LeaderNameData[] | null) => void
 ) => {
+    const leaderCount = new Map<string, number>();
+    const addLeaderCount = (leaderId: string) => {
+        const currentCount = leaderCount.get(leaderId);
+        if (currentCount) {
+            leaderCount.set(leaderId, currentCount + 1);
+        } else {
+            leaderCount.set(leaderId, 1);
+        }
+    }
+
     if (!leaderData) return;
-    const newLeaderData = leaderData.map(leader => ({
-        ...leader,
-        ongoingGamesCount: games?.ongoingGames.filter(
-            game => game.player1Leader.id === leader.id || game.player2Leader.id === leader.id
-        ).length ?? 0
-    }));
+
+    if (games) {
+        for (const game of games.ongoingGames) {
+            if (game.player1Leader.id) {
+                addLeaderCount(game.player1Leader.id);
+            }
+
+            if (game.player2Leader.id && game.player2Leader.id !== game.player1Leader.id) {
+                addLeaderCount(game.player2Leader.id);
+            }
+        }
+    }
+
+    const newLeaderData: LeaderNameData[] = []
+    for (const leader of leaderData) {
+        const leaderGameCount = leaderCount.get(leader.id) || 0;
+        leader.ongoingGamesCount = leaderGameCount;
+        newLeaderData.push(leader);
+    }
     setLeaderData(newLeaderData);
 }
 
