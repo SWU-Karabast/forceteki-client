@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Divider, Typography } from '@mui/material';
+import { Autocomplete, Box, Divider, TextField, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface GameCardData {
     id: string;
-    isPrivate:boolean;
+    isPrivate: boolean;
     player1Leader: ICardData;
     player1Base: ICardData;
     player2Leader: ICardData;
@@ -17,6 +17,12 @@ interface OngoingGamesData {
     ongoingGames: GameCardData[];
 }
 
+interface LeaderNameData {
+    name: string;
+    subtitle?: string;
+    id: string;
+}
+
 const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/ongoing-games`);
@@ -25,8 +31,7 @@ const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) 
             throw new Error(`Failed to fetch ongoing games: ${response.status} ${response.statusText}`);
         }
 
-        const fetchedData: OngoingGamesData = await response.json(); 
-        fetchedData.ongoingGames.sort((a, b) => Number(a.isPrivate) - Number(b.isPrivate));
+        const fetchedData: OngoingGamesData = await response.json();
         setGamesData(fetchedData);
     } catch (err) {
         console.error('Error fetching ongoing games:', err);
@@ -34,9 +39,26 @@ const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) 
     }
 };
 
+const fetchLeaderData = async (setLeaderData: (leaders: LeaderNameData[] | null) => void) => {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-leaders`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch leader data: ${response.status} ${response.statusText}`);
+        }
+
+        const fetchedData: LeaderNameData[] = await response.json();
+        setLeaderData(fetchedData.sort((a, b) => a.name.localeCompare(b.name)));
+    } catch (err) {
+        console.error('Error fetching ongoing games:', err);
+        setLeaderData(null); // Handle error case
+    }
+}
 
 const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
+    const [sortByLeader, setSortByLeader] = useState<string | null>(null);
+    const [leaderData, setLeaderData] = useState<LeaderNameData[] | null>(null);
 
     useEffect(() => {
         let count = 0;
@@ -58,11 +80,23 @@ const GamesInProgress: React.FC = () => {
             }
         };
 
+        fetchLeaderData(setLeaderData);
         fetchData();
         intervalId = setInterval(fetchData, 10000); // Fetch every 10 seconds
 
         return () => clearInterval(intervalId);
     }, []);
+
+    const filterByLeader = (match: GameCardData): boolean => {
+        if (!leaderData) return true; // If leader data isn't loaded yet, show all matches
+        if (!sortByLeader) return true; // No filter applied, show all matches
+
+        const leader1 = leaderData.find(leader => leader.id === match.player1Leader.id);
+        const leader2 = leaderData.find(leader => leader.id === match.player2Leader.id);
+        if (!leader1 || !leader2) return false; // leader not found in data, exclude match
+
+        return leader1.id === sortByLeader || leader2.id === sortByLeader;
+    };
 
     const styles = {
         headerBox: {
@@ -79,6 +113,52 @@ const GamesInProgress: React.FC = () => {
         activeGamesNumber: {
             fontWeight: 400,
         },
+        sortFilterRow: {
+            display: { xs: 'none', sm: 'flex' },
+            justifyContent: 'space-between',
+            paddingTop: '2px',
+            marginTop: '1vh',
+        },
+        filterByLeaderAutoComplete: { 
+            my: '.5vh',
+            '& .MuiInputBase-input': {
+                textAlign: 'left'
+            },
+        },
+        filterByLeaderSlotProps: {
+            inputLabel: {
+                sx: {
+                    color: '#fff',
+                    '&.Mui-focused': {
+                        color: '#fff',
+                    },
+                    '&.MuiInputLabel-shrink': {
+                        color: '#fff',
+                    },
+
+                }
+            }
+        },
+        autocompleteSlotProps: {
+            clearIndicator: {
+                sx: {
+                    color: '#fff'
+                }
+            },
+            popupIndicator: {
+                sx: {
+                    color: '#fff'
+                }
+            },
+            popper: {
+                sx: {
+                    '& .MuiAutocomplete-noOptions': {
+                        color: '#fff',
+                        backgroundColor: '#394452',
+                    }
+                }
+            } 
+        }
     };
 
     return (
@@ -87,11 +167,36 @@ const GamesInProgress: React.FC = () => {
                 <Typography variant="h3">Games in Progress</Typography>
                 <Typography variant="h3" sx={styles.activeGamesNumber}>{gamesData?.numberOfOngoingGames || 0}</Typography>
             </Box>
+            <Box sx={styles.sortFilterRow}>
+                <Autocomplete
+                    fullWidth
+                    options={leaderData || []}
+                    getOptionLabel={(option) =>
+                        option.subtitle ? `${option.name} - ${option.subtitle}` : option.name
+                    }
+                    value={leaderData?.find(l => l.id === sortByLeader) || null}
+                    onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    sx={styles.filterByLeaderAutoComplete}
+                    noOptionsText='No Leaders Found...'
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Filter by Leader"
+                            variant="outlined"
+                            slotProps={styles.filterByLeaderSlotProps}
+                        />
+                    )}
+                    slotProps={styles.autocompleteSlotProps}
+                />
+            </Box>
             <Divider sx={styles.divider} />
             <Box>
-                {gamesData?.ongoingGames.map((match, index) => (
-                    <PublicMatch key={index} match={match} />
-                ))}
+                {gamesData?.ongoingGames
+                    .filter((match) => filterByLeader(match))
+                    .map((match, index) => (
+                        <PublicMatch key={index} match={match} />
+                    ))}
             </Box>
         </>
     );

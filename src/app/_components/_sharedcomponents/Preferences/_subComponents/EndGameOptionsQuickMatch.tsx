@@ -11,11 +11,11 @@ import { statsSource } from '@/app/_components/_sharedcomponents/Preferences/Pre
 
 function EndGameOptionsQuickMatch() {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification } = useGame();
+    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, gameState, statsSubmitNotification } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
 
-    
+
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest;
     const isRequestInitiator = rematchRequest && rematchRequest.initiator === connectedPlayer;
@@ -42,7 +42,7 @@ function EndGameOptionsQuickMatch() {
     // ------------------------Additional button functions------------------------//
     const handleReturnHome = () => {
         sendMessage('manualDisconnect');
-        router.push('/');
+        router.push(`/${gameState?.undoEnabled ? '?undoTest=true' : ''}`);
     }
 
     const handleRequeue = async () => {

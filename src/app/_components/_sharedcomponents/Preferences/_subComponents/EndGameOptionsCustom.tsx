@@ -11,7 +11,7 @@ import { statsSource } from '@/app/_components/_sharedcomponents/Preferences/Pre
 
 function EndGameOptionsCustom() {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification } = useGame();
+    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, gameState, statsSubmitNotification } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
 
@@ -19,7 +19,7 @@ function EndGameOptionsCustom() {
 
     const handleReturnHome = () => {
         sendMessage('manualDisconnect');
-        router.push('/');
+        router.push(`/${gameState?.undoEnabled ? '?undoTest=true' : ''}`);
     }
     const rematchRequest = lobbyState?.rematchRequest || null;
     const isInitiator = rematchRequest && rematchRequest.initiator === connectedPlayer;

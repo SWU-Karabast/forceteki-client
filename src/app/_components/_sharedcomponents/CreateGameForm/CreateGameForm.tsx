@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
@@ -50,6 +50,7 @@ const CreateGameForm = () => {
     const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
+    const searchParams = useSearchParams();
 
 
     // For a short, user-friendly error message
@@ -61,6 +62,7 @@ const CreateGameForm = () => {
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
     const [privacy, setPrivacy] = useState<string>('Public');
+    const undoEnabled = searchParams.get('undoTest') === 'true';
 
     useEffect(() => {
         fetchDecks();
@@ -146,6 +148,8 @@ const CreateGameForm = () => {
             return;
         }
         try {
+            const isPrivate = privacy === 'Private';
+
             // save deck to storage first!
             if (saveDeck && deckData && deckLink){
                 if(user) {
@@ -158,9 +162,10 @@ const CreateGameForm = () => {
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
-                isPrivate: privacy === 'Private',
+                isPrivate,
                 format: format,
                 lobbyName: lobbyName,
+                enableUndo: isPrivate && undoEnabled,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -192,7 +197,7 @@ const CreateGameForm = () => {
             setDeckErrorSummary(null);
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
-            router.push('/lobby');
+            router.push(`/lobby${undoEnabled ? '?undoTest=true' : ''}`);
         } catch (error) {
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
