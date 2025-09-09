@@ -25,7 +25,6 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -42,9 +41,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const lobbyFormat = lobbyState ? lobbyState.gameFormat : null;
 
-    const searchParams = useSearchParams();
-    const undoEnabled = searchParams.get('undoTest') === 'true';
-
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const { data: session } = useSession(); // Get session from next-auth
@@ -56,7 +52,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
 
-    const lobbyLinkWithUndo = `${lobbyState?.connectionLink}${undoEnabled ? '&undoTest=true' : ''}`;
+    const undoEnabled = lobbyState?.undoEnabled;
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
@@ -206,7 +202,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     }, [connectedUser]);
 
     const handleCopyLink = () => {
-        navigator.clipboard.writeText(lobbyLinkWithUndo)
+        navigator.clipboard.writeText(lobbyState?.connectionLink)
             .then(() => {
                 setShowTooltip(true);
                 // Hide the tooltip after 1 second
@@ -331,7 +327,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         <TextField
                             fullWidth
                             sx={styles.textFieldStyle}
-                            value={lobbyState ? lobbyLinkWithUndo : ''}
+                            value={lobbyState ? lobbyState.connectionLink : ''}
                         />
                         <Tooltip
                             open={showTooltip}
