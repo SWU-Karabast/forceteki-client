@@ -202,6 +202,16 @@ const GamesInProgress: React.FC = () => {
                     }
                 }
             } 
+        },
+        leaderName: {
+            flexGrow: 1,
+            '& span': {
+                color: '#bbbbbb',
+            },
+        },
+        leaderActiveGamesCount: {
+            color: '#fff',
+            fontWeight: 600,
         }
     };
 
@@ -216,6 +226,21 @@ const GamesInProgress: React.FC = () => {
                     fullWidth
                     options={leaderData || []}
                     getOptionLabel={(option) => getOptionLabel(option)}
+                    renderOption={(props, option) => {
+                        const { key, ...optionProps } = props;
+                        return (
+                            <li key={key} {...optionProps}>
+                                <Box sx={styles.leaderName}>
+                                    {option.name}
+                                    <br />
+                                    <span>{option.subtitle}</span>
+                                </Box>
+                                <Box sx={styles.leaderActiveGamesCount}>
+                                    {option.ongoingGamesCount}
+                                </Box>
+                            </li>
+                        );
+                    }}
                     value={leaderData?.find(l => l.id === sortByLeader) || null}
                     onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
