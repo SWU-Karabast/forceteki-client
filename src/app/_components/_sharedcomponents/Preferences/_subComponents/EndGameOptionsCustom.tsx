@@ -7,12 +7,10 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
-import { useUser } from '@/app/_contexts/User.context';
 import { statsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 function EndGameOptionsCustom() {
     const router = useRouter();
-    const { user } = useUser();
     const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
@@ -59,7 +57,7 @@ function EndGameOptionsCustom() {
     }, [statsSubmitNotification]);
 
     // Check if we have any stats messages to show
-    const hasStatsMessages = (karabastStatsMessage || swuStatsMessage) && user;
+    const hasStatsMessages = karabastStatsMessage || swuStatsMessage;
 
     // For the Regular Rematch:
     // - If no request active, send a request with mode "regular".

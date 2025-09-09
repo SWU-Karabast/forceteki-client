@@ -6,13 +6,11 @@ import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
-import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { statsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 function EndGameOptionsQuickMatch() {
     const router = useRouter();
-    const { user } = useUser();
     const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
