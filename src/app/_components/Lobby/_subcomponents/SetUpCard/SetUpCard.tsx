@@ -98,10 +98,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 if(favouriteDeck && deckData && !deckLink) {
                     deckData.deckID = favouriteDeck;
                     deckData.deckLink = userDeck;
-                    deckData.isPresentInDB = !!user;
+                    deckData.isPresentInDb = !!user;
                 }else if(deckData) {
                     deckData.deckLink = userDeck;
-                    deckData.isPresentInDB = false;
+                    deckData.isPresentInDb = false;
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
@@ -118,7 +118,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         if(!await saveDeckToServer(deckData, deckLink, user)){
                             throw new Error('Error saving the deck to server');
                         }
-                        deckData.isPresentInDB = true;
+                        deckData.isPresentInDb = true;
                     }else{
                         saveDeckToLocalStorage(deckData, deckLink);
                     }

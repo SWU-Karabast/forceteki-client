@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
 import { useUser } from '@/app/_contexts/User.context';
+import { statsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 function EndGameOptionsCustom() {
     const router = useRouter();
@@ -43,12 +44,12 @@ function EndGameOptionsCustom() {
         if (statsSubmitNotification) {
             const notification = statsSubmitNotification;
 
-            if (notification.source === 'karabast') {
+            if (notification.source === statsSource.Karabast) {
                 setKarabastStatsMessage({
                     type: notification.type,
                     message: notification.message
                 });
-            } else if (notification.source === 'swustats') {
+            } else if (notification.source === statsSource.SwuStats) {
                 setSwuStatsMessage({
                     type: notification.type,
                     message: notification.message
@@ -211,7 +212,7 @@ function EndGameOptionsCustom() {
 
             {hasStatsMessages && (
                 <Box sx={{ ...styles.functionContainer, mt:'35px', mb:'0px' }}>
-                    <Typography sx={styles.typographyContainer} variant={'h3'}>Stats Update Messages</Typography>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Deck Stats</Typography>
                     <Divider sx={{ mb: '20px' }}/>
 
                     {karabastStatsMessage && (

@@ -114,10 +114,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 if(favouriteDeck && deckData && !deckLink) {
                     deckData.deckID = favouriteDeck;
                     deckData.deckLink = userDeck;
-                    deckData.isPresentInDB = !!user;
+                    deckData.isPresentInDb = !!user;
                 }else if(deckData) {
                     deckData.deckLink = userDeck
-                    deckData.isPresentInDB = false;
+                    deckData.isPresentInDb = false;
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
@@ -152,7 +152,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             if (saveDeck && deckData && userDeck) {
                 if(user) {
                     await saveDeckToServer(deckData, deckLink, user);
-                    deckData.isPresentInDB = true;
+                    deckData.isPresentInDb = true;
                 }else{
                     saveDeckToLocalStorage(deckData, deckLink);
                 }

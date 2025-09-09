@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
+import { statsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 function EndGameOptionsQuickMatch() {
     const router = useRouter();
@@ -25,12 +26,12 @@ function EndGameOptionsQuickMatch() {
         if (statsSubmitNotification) {
             const notification = statsSubmitNotification;
 
-            if (notification.source === 'karabast') {
+            if (notification.source === statsSource.Karabast) {
                 setKarabastStatsMessage({
                     type: notification.type,
                     message: notification.message
                 });
-            } else if (notification.source === 'swustats') {
+            } else if (notification.source === statsSource.SwuStats) {
                 setSwuStatsMessage({
                     type: notification.type,
                     message: notification.message
@@ -86,7 +87,7 @@ function EndGameOptionsQuickMatch() {
     }
 
     // Check if we have any stats messages to show
-    const hasStatsMessages = (karabastStatsMessage || swuStatsMessage) && user;
+    const hasStatsMessages = karabastStatsMessage || swuStatsMessage;
 
     // ------------------------ Styles ------------------------//
     const styles = {
@@ -165,7 +166,7 @@ function EndGameOptionsQuickMatch() {
 
             {hasStatsMessages && (
                 <Box sx={{ ...styles.functionContainer, mt:'35px', mb:'0px', height: '7rem' }}>
-                    <Typography sx={styles.typographyContainer} variant={'h3'}>Stats Update Messages</Typography>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Deck Stats</Typography>
                     <Divider sx={{ mb: '20px' }}/>
 
                     {karabastStatsMessage && (
