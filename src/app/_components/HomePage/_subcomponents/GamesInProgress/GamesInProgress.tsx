@@ -95,9 +95,8 @@ const updateLeaderData = (
 }
 
 const getOptionLabel = (option: LeaderNameData): string => {
-    const count = option.ongoingGamesCount ?? 0;
     const subtitle = option.subtitle ? ` - ${option.subtitle}` : '';
-    return `${option.name}${subtitle} (${count})`;
+    return `${option.name}${subtitle}`;
 }
 
 const GamesInProgress: React.FC = () => {
