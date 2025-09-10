@@ -29,7 +29,7 @@ const SetUp: React.FC = ({
 
     const handleExit = () => {
         sendMessage('manualDisconnect');
-        router.push('/');
+        router.push(`/${lobbyState?.undoEnabled ? '?undoTest=true' : ''}`);
     }
 
     // ------------------------STYLES------------------------//
