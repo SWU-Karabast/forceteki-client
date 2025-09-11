@@ -7,7 +7,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
-import { statsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 function EndGameOptionsCustom() {
     const router = useRouter();
@@ -42,12 +42,12 @@ function EndGameOptionsCustom() {
         if (statsSubmitNotification) {
             const notification = statsSubmitNotification;
 
-            if (notification.source === statsSource.Karabast) {
+            if (notification.source === StatsSource.Karabast) {
                 setKarabastStatsMessage({
                     type: notification.type,
                     message: notification.message
                 });
-            } else if (notification.source === statsSource.SwuStats) {
+            } else if (notification.source === StatsSource.SwuStats) {
                 setSwuStatsMessage({
                     type: notification.type,
                     message: notification.message
