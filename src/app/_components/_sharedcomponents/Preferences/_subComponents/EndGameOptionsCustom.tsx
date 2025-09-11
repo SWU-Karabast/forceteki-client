@@ -8,9 +8,11 @@ import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { useUser } from '@/app/_contexts/User.context';
 
 function EndGameOptionsCustom() {
     const router = useRouter();
+    const user = useUser();
     const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, gameState, statsSubmitNotification } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
@@ -229,6 +231,22 @@ function EndGameOptionsCustom() {
                             color: getNotificationColor(swuStatsMessage.type)
                         }}>
                             <strong>SWUStats:</strong> {swuStatsMessage.message}
+                        </Typography>
+                    )}
+
+                    {swuStatsMessage?.type === 'Success' && user.user?.swuStatsRefreshToken == null && (
+                        <Typography sx={{
+                            ...styles.typeographyStyle,
+                            color: getNotificationColor('Warning')
+                        }}>
+                            <strong>SWUStats:</strong> SWUStats account is not linked, deck stats will be updated under &quot;Community&quot;.
+                            
+                            Link your account in the <MuiLink
+                                href="/Preferences"
+                                sx={{ color: '#ff9800', textDecoration: 'underline' }}
+                            >
+                                Preferences
+                            </MuiLink> page.
                         </Typography>
                     )}
                 </Box>
