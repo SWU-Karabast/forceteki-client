@@ -168,10 +168,16 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     setDeckErrorDetails('You left the previous game/lobby abruptly or are still in one. You can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buttons in the UI and avoid using the back button or closing the browser to leave games.')
                     setErrorModalOpen(true);
                 }else if(response.status === 400) {
+                    if (result.message.includes('Invalid game format')) {
+                        setErrorTitle('Join Queue Error');
+                        setDeckErrorDetails(result.message);
+                        setDeckErrorSummary(null);
+                    } else {
+                        setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                        setDeckErrorDetails(errors);
+                        setErrorTitle('Deck Validation Error');
+                    }
                     setQueueState(false);
-                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-                    setDeckErrorDetails(errors);
-                    setErrorTitle('Deck Validation Error');
                     setErrorModalOpen(true);
                 } else {
                     setQueueState(false);

@@ -166,12 +166,19 @@ const CreateGameForm = () => {
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
+                console.log(response);
+                console.log(result);
                 if(response.status === 403){
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
                     setErrorTitle('Creation not allowed')
                     setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buts in the UI and avoid using the back button or closing the browser to leave games.');
                     setErrorModalOpen(true);
-                }else {
+                } else if(response.status === 400) {
+                    setErrorTitle('Create Game Error');
+                    setDeckErrorDetails(result.message);
+                    setErrorModalOpen(true);
+                    setDeckErrorSummary(null);
+                } else {
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorTitle('Deck Validation Error');
                     setDeckErrorDetails(errors);
