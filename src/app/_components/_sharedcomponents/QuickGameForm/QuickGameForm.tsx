@@ -112,7 +112,12 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favouriteDeck && deckData && !deckLink) {
-                    deckData.deckID = favouriteDeck
+                    deckData.deckID = favouriteDeck;
+                    deckData.deckLink = userDeck;
+                    deckData.isPresentInDb = !!user;
+                }else if(deckData) {
+                    deckData.deckLink = userDeck
+                    deckData.isPresentInDb = false;
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
@@ -143,6 +148,16 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             return;
         }
         try {
+            // Save the deck if needed first!
+            if (saveDeck && deckData && userDeck) {
+                if(user) {
+                    await saveDeckToServer(deckData, deckLink, user);
+                    deckData.isPresentInDb = true;
+                }else{
+                    saveDeckToLocalStorage(deckData, deckLink);
+                }
+            }
+
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
@@ -161,7 +176,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
-                if(response.status === 403) {
+                if (response.status === 403) {
                     setQueueState(false)
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
                     setErrorTitle('Matchmaking not allowed')
@@ -187,14 +202,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     setErrorModalOpen(true);
                 }
                 return
-            }
-            // Save the deck if needed
-            if (saveDeck && deckData && userDeck) {
-                if(user) {
-                    await saveDeckToServer(deckData, deckLink, user);
-                }else{
-                    saveDeckToLocalStorage(deckData, deckLink);
-                }
             }
 
             setDeckErrorSummary(null);

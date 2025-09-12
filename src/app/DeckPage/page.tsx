@@ -222,6 +222,20 @@ const DeckPage: React.FC = () => {
         sortDecks(e.target.value);
     };
 
+    const getDeckSourceStyle = (deckSource: string) => {
+        switch (deckSource.toUpperCase()) {
+            case 'SWUSTATS':
+                return styles.swuStatsTag;
+            case 'SWUDB':
+                return styles.swudbTag;
+            case 'SWUNLIMITEDDB':
+                return styles.swuUnlimitedTag;
+            default:
+                console.log(`Unknown deck source: ${deckSource}`);
+                return styles.unknownTag;
+        }
+    };
+
     // ----------------------Styles-----------------------------//
     const styles = {
         header:{
@@ -382,10 +396,27 @@ const DeckPage: React.FC = () => {
             boxShadow: '0 0 5px #FFD700',
         },
         swudbTag: {
-            borderColor: '#4CB5FF', // Purple for SWUDB
+            borderColor: '#4CB5FF',
             color: '#4CB5FF',
             '&:hover': {
                 backgroundColor: '#4CB5FF',
+                color: '#000000',
+            },
+            boxShadow: '0 0 5px #4CB5FF',
+        },
+        swuUnlimitedTag: {
+            borderColor: '#4CFF85',
+            color: '#4CFF85',
+            '&:hover': {
+                backgroundColor: '#4CFF85',
+                color: '#000000',
+            },
+            boxShadow: '0 0 5px #4CB5FF',
+        },
+        unknownTag: {
+            color: 'white',
+            '&:hover': {
+                backgroundColor: 'white',
                 color: '#000000',
             },
             boxShadow: '0 0 5px #4CB5FF',
@@ -475,7 +506,7 @@ const DeckPage: React.FC = () => {
                                         <Typography
                                             sx={{
                                                 ...styles.sourceTag,
-                                                ...(deck.source.toUpperCase() === 'SWUSTATS' ? styles.swuStatsTag : styles.swudbTag)
+                                                ...getDeckSourceStyle(deck.source)
                                             }}
                                             onClick={(e) => handleRedirect(deck.deckLink, e)}
                                         >
