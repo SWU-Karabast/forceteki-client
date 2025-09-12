@@ -86,6 +86,17 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: 'Secrets of Power Previews!',
+        content: `
+        <p>Previews are available for Set 6: <b>Secrets of Power</b>! You can test out new cards in Next Set Preview mode.</p>
+        <p>We will be adding cards from the set as they're announced. You can track our progress in the <a target="_blank" href="/Unimplemented" style="color:lightblue;">Unimplemented Cards page</a>.</p>
+        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always open to new contributors.</p><p></p>
+	  `,
+        date: '9/12/25',
+        image: s3ImageURL('ui/palpatinepadme-banner.webp'),
+        imageAlt: 'News Announcement',
+    },
+    {
         title: 'User accounts are here!',
         content: `
         <p>You can now log in and create a new account! Use the "Log In" button above to get started. Creating an account requires existing Discord or Google account.</p>
@@ -95,16 +106,5 @@ export const articles: IArticle[] = [
         image: 'login_buttons.png',
         imageAlt: 'News Announcement',
         link: '/auth'
-    },
-    {
-        title: 'Legends of the Force Complete!',
-        content: `
-        <p>We are excited to announce that Set 5: Legends of the Force is fully implemented and playable!</p>
-        <p>Our next big ticket item is to finish our testing on user accounts so everyone can log in and set their username. We anticipate this being available very soon and will announce when it is ready.</p>
-        <p style="margin-bottom:0;"><a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Join our Discord to see the full announcement and for the latest progress updates and timelines</a>. If you have coding experience, we are always open to new contributors. Info on how to help out can also be found on <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>.</p>
-	  `,
-        date: '6/11/25',
-        image: s3ImageURL('ui/quigonmaul-banner.webp'),
-        imageAlt: 'News Announcement',
     },
 ];
