@@ -250,22 +250,23 @@ function GeneralTab() {
                                     After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
                                 </Typography>
                             </Box>
-                            <Box sx={styles.swuStatsContainer}>
-                                <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
-                                {swuStatsError && (
-                                    <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                                        Failed to link to SWUStats account. If this keeps happening, please report the problem to the
-                                        <MuiLink
-                                            href="https://discord.com/channels/1220057752961814568/1345468050568380568"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
-                                        >
-                                            Discord
-                                        </MuiLink>.
-                                    </Typography>
-                                )}
-                            </Box>
+                            {process.env.NODE_ENV === 'development' && (
+                                <Box sx={styles.swuStatsContainer}>
+                                    <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
+                                    {swuStatsError && (
+                                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                            Failed to link to SWUStats account. If this keeps happening, please report the problem to the
+                                            <MuiLink
+                                                href="https://discord.com/channels/1220057752961814568/1345468050568380568"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
+                                            >
+                                                Discord
+                                            </MuiLink>.
+                                        </Typography>
+                                    )}
+                                </Box>)}
                         </Box>
                     )}
                     <Typography variant={'h3'} sx={{ mt: user ? 0 : '1rem' }}>Player ID</Typography>
