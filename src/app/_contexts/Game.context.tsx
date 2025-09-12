@@ -100,9 +100,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
             const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
             prunePromptStatePopups(promptUuid);
-            if (promptType === 'actionWindow') return;
+            if (promptType === 'actionWindow') {
+                clearDistributionPrompt();
+                return;
+            } 
             else if (promptType === 'distributeAmongTargets') {
-                initDistributionPrompt(promptState.distributeAmongTargets)
+                initDistributionPrompt(promptState.distributeAmongTargets);
                 return;
             }
             else if (promptType === 'displayCards') {
