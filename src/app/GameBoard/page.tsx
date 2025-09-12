@@ -21,6 +21,7 @@ const GameBoard = () => {
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
+    const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -29,12 +30,11 @@ const GameBoard = () => {
     }, [lobbyState, router]);
 
     useEffect(() => {
-        if (!!gameState?.winners.length) {
+        // open preferences automatically if game ended and user hasn't closed it themselves yet.
+        if (!!gameState?.winners.length && !userClosedWinScreen) {
             setPreferenceOpen(true);
-        }else{
-            setPreferenceOpen(false);
         }
-    }, [gameState?.winners]);
+    }, [gameState?.winners, userClosedWinScreen]);
 
     const toggleSidebar = () => {
         localStorage.setItem('sidebarState', !sidebarOpen ? 'true' : 'false');
@@ -42,8 +42,11 @@ const GameBoard = () => {
     }
 
     const handlePreferenceToggle = () => {
+        if(!!gameState?.winners.length) {
+            setUserClosedWinScreen(true);
+        }
         setPreferenceOpen(!isPreferenceOpen);
-    }
+    };
 
     // check if game ended already.
     const winners = !!gameState?.winners.length ? gameState.winners : undefined;
