@@ -248,7 +248,7 @@ const GamesInProgress: React.FC = () => {
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label="Filter by Leader"
+                            label="Filter by Leader (Type for Autocomplete)"
                             variant="outlined"
                             slotProps={styles.filterByLeaderSlotProps}
                         />
