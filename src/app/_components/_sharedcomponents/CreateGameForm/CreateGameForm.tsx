@@ -108,7 +108,12 @@ const CreateGameForm = () => {
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favouriteDeck && deckData && !deckLink) {
-                    deckData.deckID = favouriteDeck
+                    deckData.deckID = favouriteDeck;
+                    deckData.deckLink = userDeck;
+                    deckData.isPresentInDb = !!user;
+                }else if(deckData) {
+                    deckData.deckLink = userDeck
+                    deckData.isPresentInDb = false;
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
@@ -145,6 +150,15 @@ const CreateGameForm = () => {
         try {
             const isPrivate = privacy === 'Private';
 
+            // save deck to storage first!
+            if (saveDeck && deckData && deckLink){
+                if(user) {
+                    await saveDeckToServer(deckData, deckLink, user);
+                    deckData.isPresentInDb = true;
+                }else{
+                    saveDeckToLocalStorage(deckData, deckLink);
+                }
+            }
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
@@ -178,15 +192,6 @@ const CreateGameForm = () => {
                     setErrorModalOpen(true);
                 }
                 return;
-            }
-
-            // save deck to local storage
-            if (saveDeck && deckData && deckLink){
-                if(user) {
-                    await saveDeckToServer(deckData, deckLink, user);
-                }else{
-                    saveDeckToLocalStorage(deckData, deckLink);
-                }
             }
 
             setDeckErrorSummary(null);
