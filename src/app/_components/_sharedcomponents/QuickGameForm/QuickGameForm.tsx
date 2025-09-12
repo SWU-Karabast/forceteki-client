@@ -47,14 +47,14 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [queueState, setQueueState] = useState<boolean>(false)
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
-    let savedFormat = localStorage.getItem('format');
-    if (savedFormat !== SwuGameFormat.Premier && savedFormat !== SwuGameFormat.Open) {
-        localStorage.setItem('format', SwuGameFormat.Premier);
-        savedFormat = SwuGameFormat.Premier;
-    }
+    // let savedFormat = localStorage.getItem('format');
+    // if (savedFormat !== SwuGameFormat.Premier && savedFormat !== SwuGameFormat.Open) {
+    //     localStorage.setItem('format', SwuGameFormat.Premier);
+    //     savedFormat = SwuGameFormat.Premier;
+    // }
 
     const formatOptions = Object.values(SwuGameFormat);    
-    const [format, setFormat] = useState<string>(savedFormat);
+    const [format, setFormat] = useState<string>(localStorage.getItem('format') || SwuGameFormat.Premier);
     const { data: session } = useSession(); // Get session from next-auth
 
     // error states
@@ -112,7 +112,12 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favouriteDeck && deckData && !deckLink) {
-                    deckData.deckID = favouriteDeck
+                    deckData.deckID = favouriteDeck;
+                    deckData.deckLink = userDeck;
+                    deckData.isPresentInDb = !!user;
+                }else if(deckData) {
+                    deckData.deckLink = userDeck
+                    deckData.isPresentInDb = false;
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
@@ -143,6 +148,16 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             return;
         }
         try {
+            // Save the deck if needed first!
+            if (saveDeck && deckData && userDeck) {
+                if(user) {
+                    await saveDeckToServer(deckData, deckLink, user);
+                    deckData.isPresentInDb = true;
+                }else{
+                    saveDeckToLocalStorage(deckData, deckLink);
+                }
+            }
+
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
@@ -161,17 +176,23 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
-                if(response.status === 403) {
+                if (response.status === 403) {
                     setQueueState(false)
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
                     setErrorTitle('Matchmaking not allowed')
                     setDeckErrorDetails('You left the previous game/lobby abruptly or are still in one. You can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buttons in the UI and avoid using the back button or closing the browser to leave games.')
                     setErrorModalOpen(true);
                 }else if(response.status === 400) {
+                    if (result.message.includes('Invalid game format')) {
+                        setErrorTitle('Join Queue Error');
+                        setDeckErrorDetails(result.message);
+                        setDeckErrorSummary(null);
+                    } else {
+                        setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                        setDeckErrorDetails(errors);
+                        setErrorTitle('Deck Validation Error');
+                    }
                     setQueueState(false);
-                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-                    setDeckErrorDetails(errors);
-                    setErrorTitle('Deck Validation Error');
                     setErrorModalOpen(true);
                 } else {
                     setQueueState(false);
@@ -181,14 +202,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     setErrorModalOpen(true);
                 }
                 return
-            }
-            // Save the deck if needed
-            if (saveDeck && deckData && userDeck) {
-                if(user) {
-                    await saveDeckToServer(deckData, deckLink, user);
-                }else{
-                    saveDeckToLocalStorage(deckData, deckLink);
-                }
             }
 
             setDeckErrorSummary(null);

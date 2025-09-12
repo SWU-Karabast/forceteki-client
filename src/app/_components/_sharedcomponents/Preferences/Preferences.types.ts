@@ -43,3 +43,22 @@ export interface IPreferenceProps {
     title?: string,
     subtitle?: string,
 }
+
+export interface IStatsNotification {
+    id: string;
+    success: boolean;
+    type: StatsSaveStatus;
+    source: StatsSource;
+    message: string;
+}
+
+export enum StatsSaveStatus {
+    Warning = 'Warning',
+    Error = 'Error',
+    Success = 'Success'
+}
+
+export enum StatsSource {
+    Karabast = 'Karabast',
+    SwuStats = 'SWUStats'
+}

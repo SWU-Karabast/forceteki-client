@@ -19,11 +19,13 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/useDistributionPrompt';
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
+import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 interface IGameContextType {
     gameState: any;
     lobbyState: any;
     bugReportState: any;
+    statsSubmitNotification: IStatsNotification | null;
     sendMessage: (message: string, args?: any[]) => void;
     sendGameMessage: (args: any[]) => void;
     getOpponent: (player: string) => string;
@@ -46,6 +48,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const lastGameIdRef = useRef<string | null>(null);
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [bugReportState, setBugReportState] = useState<any>(null);
+    const [statsSubmitNotification, setStatsSubmitNotification] = useState<IStatsNotification | null>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
@@ -264,6 +267,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setBugReportState(result);
         });
 
+        newSocket.on('statsSubmitNotification', (notification: IStatsNotification) => {
+            setStatsSubmitNotification(notification);
+        });
+
         if (socket) {
             socket.disconnect();
         }
@@ -345,6 +352,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 gameState,
                 lobbyState,
                 bugReportState,
+                statsSubmitNotification,
                 sendGameMessage,
                 sendMessage,
                 connectedPlayer,

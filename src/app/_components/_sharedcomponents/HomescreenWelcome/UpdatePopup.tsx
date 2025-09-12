@@ -108,6 +108,11 @@ const WhatsNewPopup: React.FC<WhatsNewPopupProps> = ({ open, onClose }) => {
                             deck screen and updates automatically after every game.
                         </Typography>
                     </li>
+                    <li>
+                        <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
+                            <strong>SWUSTATS</strong> – Track your wins, losses, card statistics on SWUStats! By linking your Karabast account to your SWUStats account in the Preferences page.
+                        </Typography>
+                    </li>
                 </Box>
 
                 <Box sx={styles.screenshotWrapper}>
@@ -116,19 +121,15 @@ const WhatsNewPopup: React.FC<WhatsNewPopupProps> = ({ open, onClose }) => {
                         alt="Highlighted Stats Panel"
                         width={200}
                         height={240}
-                        style={{ borderRadius: '8px', width: '12em', height: '14em' }}
+                        style={{ borderRadius: '8px', width: '12em', height: '14em', marginRight:'100px' }}
                     />
-                </Box>
-
-                <Typography variant="h5" sx={styles.subtitle}>
-                    🔨 In progress
-                </Typography>
-                <Box component="ul" sx={styles.whatsNewList}>
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                            <strong>SWUSTATS integration</strong> – We are actively working on bringing you SwuStats compatibility.
-                        </Typography>
-                    </li>
+                    <Image
+                        src="/Karabast.png"
+                        alt="Highlighted Stats Panel"
+                        width={250}
+                        height={240}
+                        style={{ borderRadius: '8px', width: '13em', height: '14em' }}
+                    />
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>

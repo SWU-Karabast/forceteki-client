@@ -79,7 +79,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     const handleOnChangeDeck = async () => {
         if ((!favouriteDeck && !deckLink) || readyStatus) return;
-        let userDeck;
+        let userDeck: string;
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         setDeckImportErrorsSeen(false);
         if(favouriteDeck) {
@@ -98,7 +98,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favouriteDeck && deckData && !deckLink) {
-                    deckData.deckID = favouriteDeck
+                    deckData.deckID = favouriteDeck;
+                    deckData.deckLink = userDeck;
+                    deckData.isPresentInDb = !!user;
+                }else if(deckData) {
+                    deckData.deckLink = userDeck;
+                    deckData.isPresentInDb = false;
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
@@ -115,6 +120,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         if(!await saveDeckToServer(deckData, deckLink, user)){
                             throw new Error('Error saving the deck to server');
                         }
+                        deckData.isPresentInDb = true;
                     }else{
                         saveDeckToLocalStorage(deckData, deckLink);
                     }
