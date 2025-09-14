@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Link, Typography, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
@@ -138,7 +138,18 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                     <Typography sx={styles.titleStyle}>Add New Deck</Typography>
 
                     <Typography sx={{ color: 'white', marginBottom: '0.75rem' }}>
-                        SWUDB Deck link (use the url or &#39;Deck Link&#39; button)
+                        <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
+                            SWU Stats
+                        </Link>{' '}
+                        /{' '}
+                        <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
+                            SWUDB
+                        </Link>{' '}
+                        /{' '}
+                        <Link href="https://sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
+                            SW-Unlimited-DB
+                        </Link>{' '}
+                        Deck Link{' '} OR paste deck JSON directly.
                     </Typography>
 
                     <Box sx={styles.inputContainerStyle}>
@@ -149,7 +160,7 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                                     setDeckLink(e.target.value);
                                     setDeckErrorSummary(null);
                                 }}
-                                placeholder="https://swudb.com/deck/xxxxxx"
+                                placeholder=""
                                 fullWidth
                             />
 
