@@ -160,7 +160,7 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                                     setDeckLink(e.target.value);
                                     setDeckErrorSummary(null);
                                 }}
-                                placeholder=""
+                                placeholder="https://swudb.com/deck/xxxxxx"
                                 fullWidth
                             />
 
