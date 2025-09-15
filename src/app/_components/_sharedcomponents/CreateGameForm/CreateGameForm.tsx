@@ -180,8 +180,6 @@ const CreateGameForm = () => {
             const result = await response.json();
             if (!response.ok) {
                 const errors = result.errors || {};
-                console.log(response);
-                console.log(result);
                 if(response.status === 403){
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
                     setErrorTitle('Creation not allowed')
