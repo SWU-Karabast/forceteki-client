@@ -11,11 +11,18 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 
+enum PhaseName {
+    Action = 'action',
+    Regroup = 'regroup',
+    Setup = 'setup',
+}
+
 function CurrentGameTab() {
     const { sendGameMessage, connectedPlayer, gameState, isSpectator } = useGame();
     const isDev = process.env.NODE_ENV === 'development';
     const router = useRouter();
-    const currentPlayerName = gameState.players[connectedPlayer]?.name;
+    const currentPlayer = gameState.players[connectedPlayer];
+    const currentPlayerName = currentPlayer?.name;
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
@@ -40,21 +47,19 @@ function CurrentGameTab() {
     };
 
     // Click handler for the undo button
-    const handleUndo = () => {
-        sendGameMessage(['rollbackToSnapshot',{
-            type: 'action',
-            playerId: connectedPlayer,
-            actionOffset: 0
+    const handleUndoPhase = (phaseName: PhaseName.Action | PhaseName.Regroup) => {
+        sendGameMessage(['rollbackToSnapshot', {
+            type: 'phase',
+            phaseName
         }])
     }
 
-    // Click handler for the undo button
-    const handleUndoPhase = () => {
-        sendGameMessage(['rollbackToSnapshot',{
-            type: 'phase',
-            phaseName: gameState.phase,
-            actionOffset: 0
-        }])
+    const handleUndoRegroup = () => {
+        handleUndoPhase(PhaseName.Regroup);
+    }
+
+    const handleUndoAction = () => {
+        handleUndoPhase(PhaseName.Action);
     }
 
     // Handler for opening the bug report dialog
@@ -123,12 +128,28 @@ function CurrentGameTab() {
             )}
             {(isDev || gameState.undoEnabled) && (
                 <Box sx={styles.functionContainer}>
-                    <Typography sx={styles.typographyContainer} variant={'h3'}>Undo</Typography>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Advanced Undo</Typography>
                     <Divider sx={{ mb: '20px' }}/>
-                    <Box sx={styles.contentContainer}>
-                        <PreferenceButton variant={'standard'} text={'Phase Undo'} buttonFnc={handleUndoPhase}/>
+                    <Box sx={{ ...styles.contentContainer, mb: '20px' }}>
+                        <PreferenceButton
+                            variant={'standard'}
+                            text={'Action Phase'}
+                            buttonFnc={handleUndoAction}
+                            disabled={currentPlayer['availableSnapshots']?.actionPhaseSnapshots === 0}
+                        />
                         <Typography sx={styles.typeographyStyle}>
-                            Revert to the start of this phase.
+                            Revert to the start of the most recent action phase.
+                        </Typography>
+                    </Box>
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton 
+                            variant={'standard'} 
+                            text={'Regroup Phase'} 
+                            buttonFnc={handleUndoRegroup}
+                            disabled={currentPlayer['availableSnapshots']?.regroupPhaseSnapshots === 0}
+                        />
+                        <Typography sx={styles.typeographyStyle}>
+                            Revert to the start of the most recent regroup phase.
                         </Typography>
                     </Box>
                 </Box>
