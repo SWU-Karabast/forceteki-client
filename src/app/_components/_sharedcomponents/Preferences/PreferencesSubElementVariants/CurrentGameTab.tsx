@@ -121,16 +121,10 @@ function CurrentGameTab() {
                     </Box>
                 </Box>
             )}
-            {isDev && (
+            {(isDev || gameState.undoEnabled) && (
                 <Box sx={styles.functionContainer}>
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Undo</Typography>
                     <Divider sx={{ mb: '20px' }}/>
-                    <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                        <PreferenceButton variant={'standard'} text={'Action Undo'} buttonFnc={handleUndo}/>
-                        <Typography sx={styles.typeographyStyle}>
-                            Revert to your previous game state.
-                        </Typography>
-                    </Box>
                     <Box sx={styles.contentContainer}>
                         <PreferenceButton variant={'standard'} text={'Phase Undo'} buttonFnc={handleUndoPhase}/>
                         <Typography sx={styles.typeographyStyle}>
