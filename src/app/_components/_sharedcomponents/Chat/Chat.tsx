@@ -20,6 +20,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import ChatCard from './ChatCard';
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { useUser } from '@/app/_contexts/User.context';
+import { getMuteDisplayText } from '@/app/_utils/moderationUtils';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -378,9 +379,14 @@ const Chat: React.FC<IChatProps> = ({
                         Log in to enable chat
                     </Typography>
                 )}
-                {user && !isSpectator && isAnonymousOpponent && !isPrivateLobby && (
+                {user && !user.isMuted && !isSpectator && isAnonymousOpponent && !isPrivateLobby && (
                     <Typography sx={styles.chatDisabledAnonOpponent}>
                         Chat disabled when playing against an anonymous opponent
+                    </Typography>
+                )}
+                {user && user.isMuted && !isPrivateLobby && !isSpectator && (
+                    <Typography sx={styles.chatDisabledAnonOpponent}>
+                        You are muted for {getMuteDisplayText(user.mutedUntil)}
                     </Typography>
                 )}
             </Box>

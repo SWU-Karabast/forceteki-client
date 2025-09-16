@@ -8,7 +8,20 @@ export interface IUser {
     authenticated: boolean,
     preferences: IPreferences,
     needsUsernameChange?: boolean,
-    swuStatsRefreshToken: string | null
+    swuStatsRefreshToken: string | null,
+    isMuted: boolean,
+    mutedUntil?: Date,
+}
+
+export interface IGetUser {
+    id: string;
+    username: string;
+    showWelcomeMessage: boolean;
+    preferences: IPreferences,
+    needsUsernameChange: boolean;
+    swuStatsRefreshToken?: string;
+    isMuted: boolean;
+    mutedUntil?: Date;
 }
 
 export interface ISoundPreferences {

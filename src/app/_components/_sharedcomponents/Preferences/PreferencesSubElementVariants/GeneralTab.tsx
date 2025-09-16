@@ -9,6 +9,7 @@ import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_uti
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 import LinkSwuStatsButton from '@/app/_components/_sharedcomponents/SwuStats/LinkSwuStatsButton';
 import MuiLink from '@mui/material/Link';
+import { getMuteDisplayText } from '@/app/_utils/moderationUtils';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
@@ -24,6 +25,7 @@ function GeneralTab() {
     const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
     const [deckErrorDetails, setDeckErrorDetails] = useState<string | undefined>(undefined);
     const [showTooltip, setShowTooltip] = useState(false);
+    const [muteTimeText, setMuteTimeText] = useState<string>('');
 
     const [swuStatsError, setSwuStatsError] = useState<boolean>(false);
     const swuStatsErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -119,7 +121,18 @@ function GeneralTab() {
         const validationError = validateDiscordUsername(currentUsername);
         setUserErrorSummary(validationError); // Show initial validation state if any
         setCanSubmitClientSide(validationError === null && currentUsername.trim() !== '');
-    }, [user]); // Rerun when user object changes
+        if (user && user.isMuted) {
+            setMuteTimeText(getMuteDisplayText(user.mutedUntil));
+
+            const interval = setInterval(() => {
+                setMuteTimeText(getMuteDisplayText(user.mutedUntil));
+            }, 60000);
+
+            return () => clearInterval(interval);
+        } else {
+            setMuteTimeText('');
+        }
+    }, [user]);
 
     const isSubmitDisabled = !usernameChangeable || !canSubmitClientSide || username.trim() === (user?.username || '').trim();
 
@@ -192,7 +205,32 @@ function GeneralTab() {
         },
         swuStatsContainer:{
             mb:'40px'
-        }
+        },
+        muteNoticeContainer: {
+            mt: '2rem',
+            p: '1rem',
+            backgroundColor: '#2D1B42',
+            border: '1px solid #8B5CF6',
+            borderRadius: '8px',
+            maxWidth: 'calc(20rem + 130px)',
+        },
+        muteNoticeTitle: {
+            color: '#DC3545',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            mb: '0.5rem',
+        },
+        muteNoticeText: {
+            color: '#E5E7EB',
+            fontSize: '0.875rem',
+            mb: '0.5rem',
+        },
+        muteTimeText: {
+            color: '#C4B5FD',
+            fontSize: '0.875rem',
+            fontWeight: 'bold',
+            mb: '0.5rem',
+        },
     };
 
     return (
@@ -285,6 +323,33 @@ function GeneralTab() {
                             </Button>
                         </Tooltip>
                     </Box>
+                    {/* Mute Notice - Only show if user is muted */}
+                    {user?.isMuted && (
+                        <Box sx={styles.muteNoticeContainer}>
+                            <Typography sx={styles.muteNoticeTitle}>
+                                Account Temporarily Muted
+                            </Typography>
+                            <Typography sx={styles.muteNoticeText}>
+                                Your account is temporarily muted due to a community guidelines violation.
+                            </Typography>
+                            {muteTimeText && (
+                                <Typography sx={styles.muteTimeText}>
+                                    Time remaining: {muteTimeText}
+                                </Typography>
+                            )}
+                            <Typography sx={styles.muteNoticeText}>
+                                If you believe this restriction was applied in error, you can appeal by contacting our moderation team on{' '}
+                                <MuiLink
+                                    href="https://discord.com/channels/1220057752961814568/1220057753448616038"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{ color: '#8B5CF6', textDecoration: 'underline' }}
+                                >
+                                    Discord
+                                </MuiLink>.
+                            </Typography>
+                        </Box>
+                    )}
                 </Box>
             </Box>
             <ErrorModal

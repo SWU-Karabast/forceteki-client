@@ -65,6 +65,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         preferences: serverUser.preferences,
                         needsUsernameChange: serverUser.needsUsernameChange,
                         swuStatsRefreshToken: serverUser.swuStatsRefreshToken || null,
+                        isMuted: serverUser.isMuted,
+                        mutedUntil: serverUser.mutedUntil,
                     });
                     update({ userId: serverUser.id });
                 } catch (error) {
@@ -120,7 +122,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 providerId: null,
                 authenticated: true,
                 swuStatsRefreshToken: null,
-                preferences: { cardback: undefined }
+                preferences: { cardback: undefined },
+                isMuted: false,
             });
         } else if (user === 'ThisIsTheWay') {
             setUser({
@@ -131,8 +134,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 providerId: null,
                 authenticated: true,
                 swuStatsRefreshToken: null,
-                preferences: { cardback: undefined }
-
+                preferences: { cardback: undefined },
+                isMuted: false,
             });
         }
     }

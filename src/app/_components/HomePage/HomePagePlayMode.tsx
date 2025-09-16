@@ -7,7 +7,9 @@ import QuickGameForm from '@/app/_components/_sharedcomponents/QuickGameForm/Qui
 import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/WelcomePopup';
 import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
 import UsernameChangeRequiredPopup
-    from '@/app/_components/_sharedcomponents/HomescreenWelcome/UsernameChangeRequiredPopup';
+    from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
+import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
+import { clearMutePopupSeen, hasSeenMutedPopup } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -16,6 +18,7 @@ const HomePagePlayMode: React.FC = () => {
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
+    const [showMutedPopup, setshowMutedPopup] = useState<boolean>(false);
     const { user, updateWelcomeMessage } = useUser();
 
 
@@ -35,6 +38,10 @@ const HomePagePlayMode: React.FC = () => {
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
     }
+
+    const handleCloseMutedPopup = () => {
+        setshowMutedPopup(false);
+    };
 
     const handleStartTestGame = async (filename: string) => {
         try {
@@ -65,12 +72,19 @@ const HomePagePlayMode: React.FC = () => {
     useEffect(() => {
         if(user) {
             if (user.showWelcomeMessage && !showUpdatePopup) {
+                setshowMutedPopup(false);
                 setShowWelcomePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
+            if(user.isMuted){
+                if(!hasSeenMutedPopup(user.id) && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
+                    setshowMutedPopup(true);
+                }
+            } else {
+                clearMutePopupSeen(user.id);
+                setshowMutedPopup(false);
+            }
         }
-
-
         if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {
             try {
@@ -155,6 +169,7 @@ const HomePagePlayMode: React.FC = () => {
             <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
             <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
             <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
+            <UserMutedPopup open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
         </>
     );
 };

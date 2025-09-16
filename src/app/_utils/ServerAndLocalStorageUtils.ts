@@ -6,7 +6,7 @@ import {
 import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
-import { IUser, IPreferences } from '@/app/_contexts/UserTypes';
+import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 
 /* Secondary functions */
@@ -85,7 +85,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean, swuStatsRefreshToken: string | null }> =>{
+export const getUserFromServer = async(): Promise<IGetUser> =>{
     try {
         const decks = loadSavedDecks(false);
         // const preferences = loadPreferencesFromLocalStorage();
@@ -651,5 +651,24 @@ export const unlinkSwuStatsAsync = async(
     } catch (error) {
         console.error('Error unlinking swustats:', error);
         throw error;
+    }
+};
+
+export const hasSeenMutedPopup = (userId: string | undefined): boolean => {
+    if(!userId) return false;
+    try {
+        return localStorage.getItem(`mute_popup_seen_${userId}`) === 'true';
+    } catch (error) {
+        console.error('Error checking mute popup seen status:', error);
+        return false;
+    }
+};
+
+export const clearMutePopupSeen = (userId: string | undefined): void => {
+    if(!userId) return;
+    try {
+        localStorage.removeItem(`mute_popup_seen_${userId}`);
+    } catch (error) {
+        console.error('Error clearing mute popup seen status:', error);
     }
 };
