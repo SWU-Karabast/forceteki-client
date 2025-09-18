@@ -10,12 +10,13 @@ import {
     Radio,
     RadioGroup,
     Link, IconButton,
+    Tooltip,
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { DeckSource, fetchDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
     DeckValidationFailureReason,
@@ -63,6 +64,11 @@ const CreateGameForm = () => {
     const [lobbyName, setLobbyName] = useState<string>('');
     const [privacy, setPrivacy] = useState<string>('Public');
     const undoEnabled = searchParams.get('undoTest') === 'true';
+
+    const deckbuilders = Object.values(DeckSource)
+        .filter(source => source !== DeckSource.NotSupported)
+        .map(source => source.toString())
+        .join('\n');
 
     useEffect(() => {
         fetchDecks();
@@ -300,18 +306,20 @@ const CreateGameForm = () => {
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
-                        <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SWU Stats
-                        </Link>{' '}
-                        /{' '}
-                        <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SWUDB
-                        </Link>{' '}
-                        /{' '}
-                        <Link href="https://sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SW-Unlimited-DB
-                        </Link>{' '}
-                        Deck Link{' '}
+                        Deck Link (
+                        <Tooltip
+                            arrow={true}
+                            title={
+                                <Box sx={{ whiteSpace: 'pre-line' }}>
+                                    {deckbuilders}
+                                </Box>
+                            }
+                        >
+                            <Link sx={{ color: 'lightblue' }}>
+                                supported deckbuilders
+                            </Link>
+                        </Tooltip>
+                        )
                         <br />
                         OR paste deck JSON directly
                     </Box>

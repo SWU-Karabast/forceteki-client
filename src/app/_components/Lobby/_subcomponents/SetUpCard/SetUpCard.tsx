@@ -10,7 +10,7 @@ import {
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { DeckSource, fetchDeckData } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures,
     DeckValidationFailureReason,
@@ -53,6 +53,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [blockError, setBlockError] = useState(false);
 
     const undoEnabled = lobbyState?.undoEnabled;
+
+    const deckbuilders = Object.values(DeckSource)
+        .filter(source => source !== DeckSource.NotSupported)
+        .map(source => source.toString())
+        .join('\n');
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
@@ -435,18 +440,20 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 </Box>
                             )}
                             <Box sx={styles.labelTextStyle}>
-                                <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
-                                    SWU Stats
-                                </Link>{' '}
-                                /{' '}
-                                <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                                    SWUDB
-                                </Link>{' '}
-                                /{' '}
-                                <Link href="https://sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                                    SW-Unlimited-DB
-                                </Link>{' '}
-                                Deck Link{' '}
+                                Deck Link (
+                                <Tooltip
+                                    arrow={true}
+                                    title={
+                                        <Box sx={{ whiteSpace: 'pre-line' }}>
+                                            {deckbuilders}
+                                        </Box>
+                                    }
+                                >
+                                    <Link sx={{ color: 'lightblue' }}>
+                                        supported deckbuilders
+                                    </Link>
+                                </Tooltip>
+                                )
                                 <br />
                                 OR paste deck JSON directly
                             </Box>
