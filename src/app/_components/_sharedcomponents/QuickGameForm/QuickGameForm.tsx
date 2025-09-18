@@ -133,7 +133,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             setDeckErrorDetails(undefined);
             if(error instanceof Error){
                 if(error.message.includes('403')) {
-                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
+                    setDeckErrorSummary('Couldn\'t import. The deck is set to private.');
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
