@@ -1,9 +1,13 @@
 // Add this helper method to your User classes or create a utility function
-export const getMuteDisplayText = (mutedUntil?: Date): string => {
-    if (!mutedUntil) return '';
+import { IModeration } from '@/app/_contexts/UserTypes';
 
-    const now = new Date();
-    const timeDiff = new Date(mutedUntil).getTime() - now.getTime();
+export const getMuteDisplayText = (moderation?: IModeration): string => {
+    if (!moderation?.startDays || !moderation?.days) return '';
+
+    const timeDiff = (() => {
+        const end = new Date(moderation.startDays);
+        return end.setTime(end.getTime() + moderation.days * 24 * 60 * 60 * 1000) - Date.now();
+    })();
 
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

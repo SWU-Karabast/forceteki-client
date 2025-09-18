@@ -19,9 +19,6 @@ const UserMutedPopup: React.FC<UserMutedPopupProps> = ({ open, onClose }) => {
     const { user } = useUser();
 
     const handleUnderstand = () => {
-        if (user?.id) {
-            localStorage.setItem(`mute_popup_seen_${user.id}`, 'true');
-        }
         onClose();
     };
 

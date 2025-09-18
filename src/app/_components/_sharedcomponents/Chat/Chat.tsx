@@ -379,14 +379,14 @@ const Chat: React.FC<IChatProps> = ({
                         Log in to enable chat
                     </Typography>
                 )}
-                {user && !user.isMuted && !isSpectator && isAnonymousOpponent && !isPrivateLobby && (
+                {user && !user.moderation && !isSpectator && isAnonymousOpponent && !isPrivateLobby && (
                     <Typography sx={styles.chatDisabledAnonOpponent}>
                         Chat disabled when playing against an anonymous opponent
                     </Typography>
                 )}
-                {user && user.isMuted && !isPrivateLobby && !isSpectator && (
+                {user && user.moderation && !isPrivateLobby && !isSpectator && (
                     <Typography sx={styles.chatDisabledAnonOpponent}>
-                        You are muted for {getMuteDisplayText(user.mutedUntil)}
+                        You are muted for {getMuteDisplayText(user.moderation)}
                     </Typography>
                 )}
             </Box>

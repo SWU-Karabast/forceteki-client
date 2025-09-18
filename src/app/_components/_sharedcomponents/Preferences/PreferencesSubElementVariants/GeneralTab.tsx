@@ -121,14 +121,8 @@ function GeneralTab() {
         const validationError = validateDiscordUsername(currentUsername);
         setUserErrorSummary(validationError); // Show initial validation state if any
         setCanSubmitClientSide(validationError === null && currentUsername.trim() !== '');
-        if (user && user.isMuted) {
-            setMuteTimeText(getMuteDisplayText(user.mutedUntil));
-
-            const interval = setInterval(() => {
-                setMuteTimeText(getMuteDisplayText(user.mutedUntil));
-            }, 60000);
-
-            return () => clearInterval(interval);
+        if (user && user.moderation) {
+            setMuteTimeText(getMuteDisplayText(user.moderation));
         } else {
             setMuteTimeText('');
         }
@@ -324,7 +318,7 @@ function GeneralTab() {
                         </Tooltip>
                     </Box>
                     {/* Mute Notice - Only show if user is muted */}
-                    {user?.isMuted && (
+                    {user?.moderation && (
                         <Box sx={styles.muteNoticeContainer}>
                             <Typography sx={styles.muteNoticeTitle}>
                                 Account Temporarily Muted

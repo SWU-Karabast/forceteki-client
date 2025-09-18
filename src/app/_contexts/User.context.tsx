@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { IUserContextType, IPreferences } from './UserTypes';
+import { IUserContextType, IPreferences, IModeration } from './UserTypes';
 import { v4 as uuid } from 'uuid';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 
@@ -23,7 +23,8 @@ const UserContext = createContext<IUserContextType>({
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
     updateUserPreferences: () => {},
-    updateSwuStatsRefreshToken: () => {}
+    updateSwuStatsRefreshToken: () => {},
+    updateModerationSeenStatus: () => {}
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
@@ -65,8 +66,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         preferences: serverUser.preferences,
                         needsUsernameChange: serverUser.needsUsernameChange,
                         swuStatsRefreshToken: serverUser.swuStatsRefreshToken || null,
-                        isMuted: serverUser.isMuted,
-                        mutedUntil: serverUser.mutedUntil,
+                        moderation: serverUser.moderation
                     });
                     update({ userId: serverUser.id });
                 } catch (error) {
@@ -123,7 +123,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 authenticated: true,
                 swuStatsRefreshToken: null,
                 preferences: { cardback: undefined },
-                isMuted: false,
+                moderation: undefined,
             });
         } else if (user === 'ThisIsTheWay') {
             setUser({
@@ -135,7 +135,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 authenticated: true,
                 swuStatsRefreshToken: null,
                 preferences: { cardback: undefined },
-                isMuted: false,
+                moderation: undefined,
             });
         }
     }
@@ -168,6 +168,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             }
         })
     }
+
+    const updateModerationSeenStatus = (moderation: IModeration) => {
+        setUser((prevUser) => {
+            if (!prevUser) return null;
+            return {
+                ...prevUser,
+                moderation
+            };
+        });
+    };
+
 
     const updateUserPreferences = (newPreferences: IPreferences) => {
         setUser((prevUser) => {
@@ -209,7 +220,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences, updateSwuStatsRefreshToken }}>
+        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences, updateSwuStatsRefreshToken, updateModerationSeenStatus }}>
             {children}
         </UserContext.Provider>
     );

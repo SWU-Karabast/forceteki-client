@@ -9,7 +9,7 @@ import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/U
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
-import { clearMutePopupSeen, hasSeenMutedPopup } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { setModerationSeenAsync } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -18,8 +18,8 @@ const HomePagePlayMode: React.FC = () => {
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
-    const [showMutedPopup, setshowMutedPopup] = useState<boolean>(false);
-    const { user, updateWelcomeMessage } = useUser();
+    const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
+    const { user, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
 
 
     const closeWelcomePopup = () => {
@@ -39,8 +39,15 @@ const HomePagePlayMode: React.FC = () => {
         setValue(newValue);
     }
 
-    const handleCloseMutedPopup = () => {
-        setshowMutedPopup(false);
+    const handleCloseMutedPopup = async() => {
+        setShowMutedPopup(false);
+        const updatedModeration = { ...user?.moderation, hasSeen: true };
+        updateModerationSeenStatus(updatedModeration)
+        try {
+            await setModerationSeenAsync(user);
+        }catch(error){
+            console.log(error)
+        }
     };
 
     const handleStartTestGame = async (filename: string) => {
@@ -72,17 +79,16 @@ const HomePagePlayMode: React.FC = () => {
     useEffect(() => {
         if(user) {
             if (user.showWelcomeMessage && !showUpdatePopup) {
-                setshowMutedPopup(false);
+                setShowMutedPopup(false);
                 setShowWelcomePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
-            if(user.isMuted){
-                if(!hasSeenMutedPopup(user.id) && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
-                    setshowMutedPopup(true);
+            if(user.moderation){
+                if(!user.moderation.hasSeen && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
+                    setShowMutedPopup(true);
                 }
             } else {
-                clearMutePopupSeen(user.id);
-                setshowMutedPopup(false);
+                setShowMutedPopup(false);
             }
         }
         if (process.env.NODE_ENV !== 'development') return;

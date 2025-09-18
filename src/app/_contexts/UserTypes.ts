@@ -9,8 +9,12 @@ export interface IUser {
     preferences: IPreferences,
     needsUsernameChange?: boolean,
     swuStatsRefreshToken: string | null,
-    isMuted: boolean,
-    mutedUntil?: Date,
+    moderation?: IModeration,
+}
+export interface IModeration {
+    days?: number;
+    startDays?: Date | undefined;
+    hasSeen?: boolean;
 }
 
 export interface IGetUser {
@@ -20,8 +24,7 @@ export interface IGetUser {
     preferences: IPreferences,
     needsUsernameChange: boolean;
     swuStatsRefreshToken?: string;
-    isMuted: boolean;
-    mutedUntil?: Date;
+    moderation?: IModeration
 }
 
 export interface ISoundPreferences {
@@ -48,6 +51,7 @@ export interface IUserContextType {
     updateNeedsUsernameChange: () => void;
     updateUserPreferences: (preferences: IPreferences) => void;
     updateSwuStatsRefreshToken: (swuStatsRefreshToken: string | null) => void;
+    updateModerationSeenStatus: (moderation: IModeration) => void;
 }
 
 // Extend Next-auth types

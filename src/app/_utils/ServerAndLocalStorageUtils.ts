@@ -220,6 +220,32 @@ export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolea
     }
 }
 
+export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-moderation-seen`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean, user: IUser): Promise<void> => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/deck/${deckId}/favorite`, {
@@ -654,21 +680,3 @@ export const unlinkSwuStatsAsync = async(
     }
 };
 
-export const hasSeenMutedPopup = (userId: string | undefined): boolean => {
-    if(!userId) return false;
-    try {
-        return localStorage.getItem(`mute_popup_seen_${userId}`) === 'true';
-    } catch (error) {
-        console.error('Error checking mute popup seen status:', error);
-        return false;
-    }
-};
-
-export const clearMutePopupSeen = (userId: string | undefined): void => {
-    if(!userId) return;
-    try {
-        localStorage.removeItem(`mute_popup_seen_${userId}`);
-    } catch (error) {
-        console.error('Error clearing mute popup seen status:', error);
-    }
-};
