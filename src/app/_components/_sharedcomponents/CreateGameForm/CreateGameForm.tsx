@@ -10,6 +10,7 @@ import {
     Radio,
     RadioGroup,
     Link, IconButton,
+    Divider,
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
@@ -44,13 +45,14 @@ const CreateGameForm = () => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
+    const [undoTestMode, setUndoTestMode] = useState<boolean>(false);
+    const [privateGame, setPrivateGame] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     const { data: session } = useSession(); // Get session from next-auth
     const formatOptions = Object.values(SwuGameFormat);
     const savedFormat = localStorage.getItem('format') || SwuGameFormat.Premier;
     const [format, setFormat] = useState<string>(savedFormat);
-    const searchParams = useSearchParams();
 
 
     // For a short, user-friendly error message
@@ -61,8 +63,6 @@ const CreateGameForm = () => {
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
-    const [privacy, setPrivacy] = useState<string>('Public');
-    const undoEnabled = searchParams.get('undoTest') === 'true';
 
     useEffect(() => {
         fetchDecks();
@@ -148,8 +148,6 @@ const CreateGameForm = () => {
             return;
         }
         try {
-            const isPrivate = privacy === 'Private';
-
             // save deck to storage first!
             if (saveDeck && deckData && deckLink){
                 if(user) {
@@ -162,10 +160,10 @@ const CreateGameForm = () => {
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
-                isPrivate,
+                isPrivate: privateGame,
                 format: format,
                 lobbyName: lobbyName,
-                enableUndo: isPrivate && undoEnabled,
+                enableUndo: privateGame && undoTestMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -359,21 +357,6 @@ const CreateGameForm = () => {
                 {/* Additional Fields for Non-Creategame Path */}
                 {!isCreateGamePath && (
                     <>
-                        Game Name Input
-                        <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>
-                                Game Name
-                            </Typography>
-                            <StyledTextField
-                                type="text"
-                                value={lobbyName}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setLobbyName(e.target.value)
-                                }
-                                placeholder="Game #"
-                            />
-                        </FormControl>
-
                         {/* Format Selection */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
                             <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
@@ -399,11 +382,11 @@ const CreateGameForm = () => {
                         <FormControl component="fieldset" sx={styles.formControlStyle}>
                             <RadioGroup
                                 row
-                                value={privacy}
+                                value={privateGame ? 'Private' : 'Public'}
                                 onChange={(
                                     e: ChangeEvent<HTMLInputElement>,
                                     value: string
-                                ) => setPrivacy(value)}
+                                ) => setPrivateGame(value === 'Private')}
                             >
                                 <FormControlLabel
                                     value="Public"
@@ -425,6 +408,50 @@ const CreateGameForm = () => {
                                 />
                             </RadioGroup>
                         </FormControl>
+
+                        {privateGame && (
+                            <>
+                                <br/>
+                                <Typography variant="h3" sx={styles.labelTextStyle}>
+                                    Lobby Settings
+                                </Typography>
+                                <Divider sx={{ mb: '5px' }}/>
+                                <FormControlLabel
+                                    sx={{ mb: '1rem' }}
+                                    control={
+                                        <Checkbox
+                                            sx={styles.checkboxStyle}
+                                            checked={undoTestMode}
+                                            onChange={(
+                                                e: ChangeEvent<HTMLInputElement>,
+                                                checked: boolean
+                                            ) => setUndoTestMode(checked)}
+                                        />
+                                    }
+                                    label={
+                                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                            Undo Button (Beta)
+                                        </Typography>
+                                    }
+                                />
+                            </>
+                        ) || (
+                            <>
+                                <FormControl fullWidth sx={styles.formControlStyle}>
+                                    <Typography variant="body1" sx={styles.labelTextStyle}>
+                                        Game Name
+                                    </Typography>
+                                    <StyledTextField
+                                        type="text"
+                                        value={lobbyName}
+                                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                            setLobbyName(e.target.value)
+                                        }
+                                        placeholder="Game #"
+                                    />
+                                </FormControl>
+                            </>
+                        )}
                     </>
                 )}
 

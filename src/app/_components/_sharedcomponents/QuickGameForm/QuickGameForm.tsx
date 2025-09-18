@@ -343,24 +343,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                     )}
                 </FormControl>
 
-                <FormControl fullWidth sx={styles.formControlStyle}>
-                    <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
-                    <StyledTextField
-                        select
-                        value={format}
-                        required
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleChangeFormat(e.target.value as SwuGameFormat)
-                        }
-                    >
-                        {formatOptions.map((fmt) => (
-                            <MenuItem key={fmt} value={fmt}>
-                                {FormatLabels[fmt] || fmt}
-                            </MenuItem>
-                        ))}
-                    </StyledTextField>
-                </FormControl>
-
                 {/* Save Deck To Favourites Checkbox */}
                 <FormControlLabel
                     sx={{ mb: '1rem' }}
@@ -380,6 +362,24 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                         </Typography>
                     }
                 />
+
+                <FormControl fullWidth sx={styles.formControlStyle}>
+                    <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
+                    <StyledTextField
+                        select
+                        value={format}
+                        required
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleChangeFormat(e.target.value as SwuGameFormat)
+                        }
+                    >
+                        {formatOptions.map((fmt) => (
+                            <MenuItem key={fmt} value={fmt}>
+                                {FormatLabels[fmt] || fmt}
+                            </MenuItem>
+                        ))}
+                    </StyledTextField>
+                </FormControl>
 
                 {/* Submit Button */}
                 <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,
