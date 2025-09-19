@@ -37,7 +37,7 @@ export interface IGetUser {
     preferences: IPreferences,
     needsUsernameChange: boolean;
     swuStatsRefreshToken?: string | null,
-    moderation?: IModerationAction
+    moderation?: IModerationAction | null
 }
 
 export interface ISoundPreferences {

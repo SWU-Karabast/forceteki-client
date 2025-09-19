@@ -10,6 +10,7 @@ import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
 import { setModerationSeenAsync } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { checkIfModerationExpired } from '@/app/_utils/moderationUtils';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -87,6 +88,8 @@ const HomePagePlayMode: React.FC = () => {
                 if(!user.moderation.hasSeen && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
                     setShowMutedPopup(true);
                 }
+                // check if moderation object still exists
+                checkIfModerationExpired(user.moderation, updateModerationSeenStatus);
             } else {
                 setShowMutedPopup(false);
             }

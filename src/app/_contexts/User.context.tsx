@@ -173,7 +173,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         })
     }
 
-    const updateModerationSeenStatus = (moderation: IModerationAction) => {
+    const updateModerationSeenStatus = (moderation: IModerationAction | null) => {
         setUser((prevUser) => {
             if (!prevUser) return null;
             return {
