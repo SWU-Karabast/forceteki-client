@@ -15,7 +15,8 @@ export enum DeckSource {
     SWUStats = 'SWUStats',
     SWUDB = 'SWUDB',
     SWUnlimitedDB = 'SWUnlimitedDB',
-    SWUCardHub = 'SWUCardHub'
+    SWUCardHub = 'SWUCardHub',
+    SWUBase = 'SWUBase',
 }
 
 export interface IDeckData {
@@ -62,3 +63,20 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
         throw error // or throw error again
     }
 };
+
+export const determineDeckSource = (deckLink: string): DeckSource => {
+    if (deckLink.includes('swustats.net')) {
+        return DeckSource.SWUStats;
+    } else if (deckLink.includes('swudb.com')) {
+        return DeckSource.SWUDB;
+    } else if (deckLink.includes('swunlimiteddb.com')) {
+        return DeckSource.SWUnlimitedDB;
+    } else if (deckLink.includes('swubase.com')) {
+        return DeckSource.SWUBase;
+    } else if (deckLink.includes('swucardhub.fr')) {
+        return DeckSource.SWUCardHub;
+    }
+
+    // Default fallback
+    return DeckSource.NotSupported;
+}

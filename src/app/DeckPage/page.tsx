@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Grid from '@mui/material/Grid2';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { IDeckData } from '@/app/_utils/fetchDeckData';
+import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
@@ -104,14 +104,13 @@ const DeckPage: React.FC = () => {
 
     // Handle successful deck addition
     const handleAddDeckSuccess = (deckData: IDeckData, deckLink: string) => {
-        const source = deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB';
         const newDeck: DisplayDeck = {
             deckID: deckData.deckID,
             leader: { id: deckData.leader.id, types:['leader'] },
             base: { id: deckData.base.id, types:['base'] },
             metadata: { name: deckData.metadata?.name || 'Untitled Deck' },
             favourite: false,
-            source: source,
+            source: determineDeckSource(deckLink),
             deckLink: deckLink,
         };
 
@@ -230,6 +229,10 @@ const DeckPage: React.FC = () => {
                 return styles.swudbTag;
             case 'SWUNLIMITEDDB':
                 return styles.swuUnlimitedTag;
+            case 'SWUCARDHUB':
+                return styles.swuCardHubTag;
+            case 'SWUBASE':
+                return styles.swuBaseTag;
             default:
                 console.log(`Unknown deck source: ${deckSource}`);
                 return styles.unknownTag;
@@ -412,6 +415,24 @@ const DeckPage: React.FC = () => {
                 color: '#000000',
             },
             boxShadow: '0 0 5px #4CB5FF',
+        },
+        swuCardHubTag: {
+            borderColor: '#4F39F6',
+            color: '#4F39F6',
+            '&:hover': {
+                backgroundColor: '#4F39F6',
+                color: '#000000',
+            },
+            boxShadow: '0 0 5px #4F39F6',
+        },
+        swuBaseTag: {
+            borderColor: '#4CFF85',
+            color: '#4CFF85',
+            '&:hover': {
+                backgroundColor: '#4CFF85',
+                color: '#000000',
+            },
+            boxShadow: '0 0 5px #4CFF85',
         },
         unknownTag: {
             color: 'white',

@@ -1,3 +1,4 @@
+import { DeckSource } from '@/app/_utils/fetchDeckData';
 
 export enum CardType {
     Base = 'base',
@@ -216,7 +217,7 @@ export interface StoredDeck {
     deckLink: string;
     deckID:string;
     deckLinkID: string;
-    source: 'SWUSTATS' | 'SWUDB'
+    source: DeckSource;
 }
 
 export interface DisplayDeck {
@@ -226,5 +227,5 @@ export interface DisplayDeck {
     metadata: { name: string };
     favourite: boolean;
     deckLink: string;
-    source: 'SWUSTATS' | 'SWUDB';
+    source: DeckSource;
 }
