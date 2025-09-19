@@ -22,7 +22,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
+import { SwuGameFormat, FormatLabels, SupportedDeckSources } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -64,11 +64,6 @@ const CreateGameForm = () => {
     const [lobbyName, setLobbyName] = useState<string>('');
     const [privacy, setPrivacy] = useState<string>('Public');
     const undoEnabled = searchParams.get('undoTest') === 'true';
-
-    const deckbuilders = Object.values(DeckSource)
-        .filter(source => source !== DeckSource.NotSupported)
-        .map(source => source.toString())
-        .join('\n');
 
     useEffect(() => {
         fetchDecks();
@@ -306,16 +301,16 @@ const CreateGameForm = () => {
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
-                        Deck Link (
+                        Deck link (
                         <Tooltip
                             arrow={true}
                             title={
                                 <Box sx={{ whiteSpace: 'pre-line' }}>
-                                    {deckbuilders}
+                                    {SupportedDeckSources.join('\n')}
                                 </Box>
                             }
                         >
-                            <Link sx={{ color: 'lightblue' }}>
+                            <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
                                 supported deckbuilders
                             </Link>
                         </Tooltip>

@@ -25,6 +25,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
+import { SupportedDeckSources } from '@/app/_constants/constants';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -53,11 +54,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [blockError, setBlockError] = useState(false);
 
     const undoEnabled = lobbyState?.undoEnabled;
-
-    const deckbuilders = Object.values(DeckSource)
-        .filter(source => source !== DeckSource.NotSupported)
-        .map(source => source.toString())
-        .join('\n');
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
@@ -440,16 +436,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 </Box>
                             )}
                             <Box sx={styles.labelTextStyle}>
-                                Deck Link (
+                                Deck link (
                                 <Tooltip
                                     arrow={true}
                                     title={
                                         <Box sx={{ whiteSpace: 'pre-line' }}>
-                                            {deckbuilders}
+                                            {SupportedDeckSources.join('\n')}
                                         </Box>
                                     }
                                 >
-                                    <Link sx={{ color: 'lightblue' }}>
+                                    <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
                                         supported deckbuilders
                                     </Link>
                                 </Tooltip>

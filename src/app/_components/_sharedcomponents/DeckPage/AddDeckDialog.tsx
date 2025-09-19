@@ -12,6 +12,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { v4 as uuid } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
 import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { SupportedDeckSources } from '@/app/_constants/constants';
 
 interface AddDeckDialogProps {
     open: boolean;
@@ -29,11 +30,6 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
     const { user } = useUser();
-
-    const deckbuilders = Object.values(DeckSource)
-        .filter(source => source !== DeckSource.NotSupported)
-        .map(source => source.toString())
-        .join('\n');
 
     const handleSubmit = async () => {
         if (!deckLink) return;
@@ -143,16 +139,16 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                     <Typography sx={styles.titleStyle}>Add New Deck</Typography>
 
                     <Typography sx={{ color: 'white', marginBottom: '0.75rem' }}>
-                        Deck Link (
+                        Deck link (
                         <Tooltip
                             arrow={true}
                             title={
                                 <Box sx={{ whiteSpace: 'pre-line' }}>
-                                    {deckbuilders}
+                                    {SupportedDeckSources.join('\n')}
                                 </Box>
                             }
                         >
-                            <Link sx={{ color: 'lightblue' }}>
+                            <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
                                 supported deckbuilders
                             </Link>
                         </Tooltip>

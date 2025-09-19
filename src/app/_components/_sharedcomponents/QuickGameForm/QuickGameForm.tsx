@@ -20,7 +20,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { FormatLabels, SwuGameFormat } from '@/app/_constants/constants';
+import { FormatLabels, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -53,11 +53,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     //     localStorage.setItem('format', SwuGameFormat.Premier);
     //     savedFormat = SwuGameFormat.Premier;
     // }
-
-    const deckbuilders = Object.values(DeckSource)
-        .filter(source => source !== DeckSource.NotSupported)
-        .map(source => source.toString())
-        .join('\n');
 
     const formatOptions = Object.values(SwuGameFormat);    
     const [format, setFormat] = useState<string>(localStorage.getItem('format') || SwuGameFormat.Premier);
@@ -313,16 +308,16 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
-                        Deck Link (
+                        Deck link (
                         <Tooltip
                             arrow={true}
                             title={
                                 <Box sx={{ whiteSpace: 'pre-line' }}>
-                                    {deckbuilders}
+                                    {SupportedDeckSources.join('\n')}
                                 </Box>
                             }
                         >
-                            <Link sx={{ color: 'lightblue' }}>
+                            <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
                                 supported deckbuilders
                             </Link>
                         </Tooltip>
