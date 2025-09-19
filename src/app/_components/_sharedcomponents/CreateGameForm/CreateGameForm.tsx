@@ -127,14 +127,14 @@ const CreateGameForm = () => {
         }catch (error){
             setDeckErrorDetails(undefined);
             if(error instanceof Error){
-                if(error.message.includes('403')) {
+                if(error.message?.includes('403')) {
                     setDeckErrorSummary('Couldn\'t import. The deck is set to private.');
                     setErrorTitle('Deck Validation Error');
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
                     setErrorModalOpen(true);
-                } else if(error.message.includes('Deck not found')) {
+                } else if(error.message?.includes('Deck not found')) {
                     // Handle the specific 404 error messages from any deck source
                     setDeckErrorSummary(error.message);
                     setErrorTitle('Deck Not Found');
@@ -180,6 +180,8 @@ const CreateGameForm = () => {
             );
             const result = await response.json();
             if (!response.ok) {
+                console.log(response);
+                console.log(result);
                 const errors = result.errors || {};
                 if(response.status === 403){
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
@@ -187,10 +189,16 @@ const CreateGameForm = () => {
                     setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buts in the UI and avoid using the back button or closing the browser to leave games.');
                     setErrorModalOpen(true);
                 } else if(response.status === 400) {
-                    setErrorTitle('Create Game Error');
-                    setDeckErrorDetails(result.message);
+                    if (result.message?.includes('Invalid game format')) {
+                        setErrorTitle('Create Game Error');
+                        setDeckErrorDetails(result.message);
+                        setDeckErrorSummary(null);
+                    } else {
+                        setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                        setDeckErrorDetails(errors);
+                        setErrorTitle('Deck Validation Error');
+                    }
                     setErrorModalOpen(true);
-                    setDeckErrorSummary(null);
                 } else {
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorTitle('Deck Validation Error');
