@@ -6,11 +6,11 @@ export interface IUser extends IGetUser{
 }
 
 export enum ChatDisabledReason {
-    NONE = 'none',
-    NOT_LOGGED_IN = 'not_logged_in',
-    ANONYMOUS_OPPONENT = 'anonymous_opponent',
-    USER_MUTED = 'user_muted',
-    OPPONENT_DISABLED_CHAT = 'opponent_disabled_chat'
+    None = 'none',
+    NotLoggedIn = 'notLoggedIn',
+    AnonymousOpponent = 'anonymousOpponent',
+    UserMuted = 'userMuted',
+    OpponentDisabledChat = 'opponentDisabledChat'
 }
 
 export interface IChatDisabledInfo {
@@ -64,7 +64,7 @@ export interface IUserContextType {
     updateNeedsUsernameChange: () => void;
     updateUserPreferences: (preferences: IPreferences) => void;
     updateSwuStatsRefreshToken: (swuStatsRefreshToken: string | null) => void;
-    updateModerationSeenStatus: (moderation: IModerationAction) => void;
+    updateModerationSeenStatus: (moderation: IModerationAction | null) => void;
 }
 
 // Extend Next-auth types

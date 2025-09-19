@@ -25,7 +25,7 @@ function GeneralTab() {
     const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
     const [deckErrorDetails, setDeckErrorDetails] = useState<string | undefined>(undefined);
     const [showTooltip, setShowTooltip] = useState(false);
-    const [muteTimeText, setMuteTimeText] = useState<string>('');
+    const [muteTimeText, setMuteTimeText] = useState<string | null>('');
 
     const [swuStatsError, setSwuStatsError] = useState<boolean>(false);
     const swuStatsErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);

@@ -43,40 +43,40 @@ const Chat: React.FC<IChatProps> = ({
     const getChatDisabledInfo = (): IChatDisabledInfo => {
         // Always allow chat for private lobbies
         if (isPrivateLobby) {
-            return { reason: ChatDisabledReason.NONE, message: '', borderColor: '' };
+            return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
         }
 
         switch (true) {
             case !user:
                 return {
-                    reason: ChatDisabledReason.NOT_LOGGED_IN,
+                    reason: ChatDisabledReason.NotLoggedIn,
                     message: 'Log in to enable chat',
                     borderColor: 'red'
                 };
 
             case !!(user?.moderation):
                 return {
-                    reason: ChatDisabledReason.USER_MUTED,
+                    reason: ChatDisabledReason.UserMuted,
                     message: `You are muted for ${getMuteDisplayText(user.moderation)}`,
                     borderColor: 'yellow'
                 };
 
             case hasOpponentModerationAction:
                 return {
-                    reason: ChatDisabledReason.OPPONENT_DISABLED_CHAT,
+                    reason: ChatDisabledReason.OpponentDisabledChat,
                     message: 'The opponent has disabled chat',
                     borderColor: 'yellow'
                 };
 
             case isAnonymousOpponent:
                 return {
-                    reason: ChatDisabledReason.ANONYMOUS_OPPONENT,
+                    reason: ChatDisabledReason.AnonymousOpponent,
                     message: 'Chat disabled when playing against an anonymous opponent',
                     borderColor: 'yellow'
                 };
 
             default:
-                return { reason: ChatDisabledReason.NONE, message: '', borderColor: '' };
+                return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
         }
     };
 
