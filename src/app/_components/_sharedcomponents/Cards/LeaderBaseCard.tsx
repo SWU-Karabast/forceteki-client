@@ -66,7 +66,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     };
 
     const clickDisabled = () => {
-        return showValueAdjuster() || disabled || card.selectable === false;
+        return showValueAdjuster() ||
+            disabled ||
+            card.selectable === false ||
+            isDeployed;
     }
 
     const handleClick = () => {
