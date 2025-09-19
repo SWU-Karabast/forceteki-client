@@ -9,7 +9,7 @@ import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_uti
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 import LinkSwuStatsButton from '@/app/_components/_sharedcomponents/SwuStats/LinkSwuStatsButton';
 import MuiLink from '@mui/material/Link';
-import { getMuteDisplayText } from '@/app/_utils/moderationUtils';
+import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();

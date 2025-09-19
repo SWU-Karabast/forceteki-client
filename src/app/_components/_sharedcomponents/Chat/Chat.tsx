@@ -20,7 +20,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import ChatCard from './ChatCard';
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { useUser } from '@/app/_contexts/User.context';
-import { getMuteDisplayText } from '@/app/_utils/moderationUtils';
+import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
 
 const Chat: React.FC<IChatProps> = ({
