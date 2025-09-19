@@ -21,10 +21,3 @@ export const getMuteDisplayText = (moderation?: IModerationAction): string | nul
         return `${minutes} more minute${minutes !== 1 ? 's' : ''}`;
     }
 }
-
-export const checkModerationStatus = (moderationActionChangeFunction: (moderation: IModerationAction | null) => void, moderationAction?: IModerationAction) => {
-    if(!moderationAction?.endDate) return;
-
-    const timeDiff = new Date(moderationAction.endDate).getTime() - Date.now();
-    if(timeDiff <= 0) moderationActionChangeFunction(null);
-}
