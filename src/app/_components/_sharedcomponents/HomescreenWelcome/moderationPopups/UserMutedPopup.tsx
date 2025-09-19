@@ -86,7 +86,7 @@ const UserMutedPopup: React.FC<UserMutedPopupProps> = ({ open, onClose }) => {
                 <Typography>
                     For questions or appeals, reach out on our{' '}
                     <Link
-                        href="https://discord.com/channels/1220057752961814568/1220057753448616038"
+                        href="https://discord.com/channels/1220057752961814568/1417680409151410226/1418301240525193348"
                         target="_blank"
                         rel="noopener noreferrer"
                         sx={{ color: 'inherit', textDecoration: 'underline' }}

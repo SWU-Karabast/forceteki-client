@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { IUserContextType, IPreferences, IModeration } from './UserTypes';
+import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
 import { v4 as uuid } from 'uuid';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 
@@ -115,6 +115,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const handleDevSetUser = (user: 'Order66' | 'ThisIsTheWay') => {
         if (user === 'Order66') {
             setUser({
+                needsUsernameChange: false,
+                showWelcomeMessage: false,
                 id: 'exe66',
                 username: 'Order66',
                 email: null,
@@ -123,10 +125,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 authenticated: true,
                 swuStatsRefreshToken: null,
                 preferences: { cardback: undefined },
-                moderation: undefined,
+                moderation: undefined
             });
         } else if (user === 'ThisIsTheWay') {
             setUser({
+                needsUsernameChange: false,
+                showWelcomeMessage: false,
                 id: 'th3w4y',
                 username: 'ThisIsTheWay',
                 email: null,
@@ -135,7 +139,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 authenticated: true,
                 swuStatsRefreshToken: null,
                 preferences: { cardback: undefined },
-                moderation: undefined,
+                moderation: undefined
             });
         }
     }
@@ -169,7 +173,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         })
     }
 
-    const updateModerationSeenStatus = (moderation: IModeration) => {
+    const updateModerationSeenStatus = (moderation: IModerationAction) => {
         setUser((prevUser) => {
             if (!prevUser) return null;
             return {

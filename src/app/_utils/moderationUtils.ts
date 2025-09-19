@@ -1,13 +1,12 @@
-// Add this helper method to your User classes or create a utility function
-import { IModeration } from '@/app/_contexts/UserTypes';
+import { IModerationAction } from '@/app/_contexts/UserTypes';
 
-export const getMuteDisplayText = (moderation?: IModeration): string => {
-    if (!moderation?.startDays || !moderation?.days) return '';
+export const getMuteDisplayText = (moderation?: IModerationAction): string => {
+    if (!moderation?.endDate) return '';
 
-    const timeDiff = (() => {
-        const end = new Date(moderation.startDays);
-        return end.setTime(end.getTime() + moderation.days * 24 * 60 * 60 * 1000) - Date.now();
-    })();
+    const timeDiff = new Date(moderation.endDate).getTime() - Date.now();
+
+    // If expired, return empty string
+    if (timeDiff <= 0) return '';
 
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

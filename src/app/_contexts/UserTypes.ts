@@ -1,20 +1,33 @@
-export interface IUser {
-    id?: string;
-    username?: string;
+export interface IUser extends IGetUser{
     email: string | null;
     provider: string | null;
     providerId: string | null;
-    showWelcomeMessage?: boolean,
     authenticated: boolean,
-    preferences: IPreferences,
-    needsUsernameChange?: boolean,
-    swuStatsRefreshToken: string | null,
-    moderation?: IModeration,
 }
-export interface IModeration {
+
+export enum ChatDisabledReason {
+    NONE = 'none',
+    NOT_LOGGED_IN = 'not_logged_in',
+    ANONYMOUS_OPPONENT = 'anonymous_opponent',
+    USER_MUTED = 'user_muted',
+    OPPONENT_DISABLED_CHAT = 'opponent_disabled_chat'
+}
+
+export interface IChatDisabledInfo {
+    reason: ChatDisabledReason;
+    message: string;
+    borderColor: string;
+}
+
+export enum ModerationType {
+    Mute = 'Mute',
+    Ban = 'Ban',
+}
+export interface IModerationAction {
     days?: number;
-    startDays?: Date | undefined;
+    endDate?: Date | undefined;
     hasSeen?: boolean;
+    moderationType?: ModerationType
 }
 
 export interface IGetUser {
@@ -23,8 +36,8 @@ export interface IGetUser {
     showWelcomeMessage: boolean;
     preferences: IPreferences,
     needsUsernameChange: boolean;
-    swuStatsRefreshToken?: string;
-    moderation?: IModeration
+    swuStatsRefreshToken?: string | null,
+    moderation?: IModerationAction
 }
 
 export interface ISoundPreferences {
@@ -51,7 +64,7 @@ export interface IUserContextType {
     updateNeedsUsernameChange: () => void;
     updateUserPreferences: (preferences: IPreferences) => void;
     updateSwuStatsRefreshToken: (swuStatsRefreshToken: string | null) => void;
-    updateModerationSeenStatus: (moderation: IModeration) => void;
+    updateModerationSeenStatus: (moderation: IModerationAction) => void;
 }
 
 // Extend Next-auth types
