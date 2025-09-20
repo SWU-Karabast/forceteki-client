@@ -51,7 +51,16 @@ export async function GET(req: Request) {
 }
 
 async function fetchSwuStatsTokens(code: string): Promise<ISwuStatsToken> {
-    if (!CONFIG.swuStats.clientId || !CONFIG.swuStats.clientSecret) {
+    const clientId = process.env.SWUSTATS_CLIENT_ID;
+    const clientSecret = process.env.SWUSTATS_CLIENT_SECRET;
+    const redirectUri = process.env.NODE_ENV === 'development' ?
+        'http://localhost:3000/api/swustats' :
+        'https://karabast.net/api/swustats'
+    console.log('[DEBUG] CLIENT_ID exists:', !!process.env.SWUSTATS_CLIENT_ID);
+    console.log('[DEBUG] CLIENT_SECRET exists:', !!process.env.SWUSTATS_CLIENT_SECRET);
+    console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
+    
+    if (!clientId || !clientSecret) {
         throw new Error('SWU Stats client credentials are not configured');
     }
     const response = await fetch(CONFIG.swuStats.tokenUrl, {
@@ -60,9 +69,9 @@ async function fetchSwuStatsTokens(code: string): Promise<ISwuStatsToken> {
         body: new URLSearchParams({
             grant_type: 'authorization_code',
             code,
-            redirect_uri: CONFIG.swuStats.redirectUri,
-            client_id: CONFIG.swuStats.clientId,
-            client_secret: CONFIG.swuStats.clientSecret,
+            redirect_uri: redirectUri,
+            client_id: clientId,
+            client_secret: clientSecret,
         }),
     });
 
