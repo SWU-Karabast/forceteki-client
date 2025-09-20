@@ -1,8 +1,9 @@
 'use client';
 import React from 'react';
-import { Box, Typography, Button, Divider, List, ListItem, ListItemText } from '@mui/material';
+import { Box, Typography, Divider, List, ListItem, ListItemText } from '@mui/material';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation';
+import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 
 const tosBlocks = [
     { type: 'title', text: 'Karabast.net – Terms of Service' },
@@ -70,11 +71,20 @@ const TermsOfService: React.FC = () => {
             flexDirection: 'column' as const,
         },
         headerBar: {
+            width: '100%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '24px 32px',
+            justifyContent: 'center',
+            marginBottom: '1rem',
+            position: 'relative' as const,
+            padding: '0 32px 24px 32px',
             zIndex: 2,
+        },
+        backButton: {
+            position: 'absolute' as const,
+            left: '0',
+            top: '-60px',
+            zIndex: 3,
         },
         brand: {
             fontSize: '3.0em',
@@ -89,6 +99,10 @@ const TermsOfService: React.FC = () => {
             justifyContent: 'center',
             alignItems: 'flex-start',
             padding: '24px',
+        },
+        cardWrapper: {
+            position: 'relative' as const,
+            width: 'min(100%, 1000px)',
         },
         card: {
             width: 'min(100%, 1000px)',
@@ -118,62 +132,70 @@ const TermsOfService: React.FC = () => {
         <Box sx={styles.page}>
             <Box sx={styles.headerBar}>
                 <Typography sx={styles.brand} onClick={handleExit}>KARABAST</Typography>
-                <Button variant="contained" onClick={handleExit}>Back to Home</Button>
             </Box>
 
             <Box sx={styles.container}>
-                <Box sx={styles.card}>
-                    <Typography variant="h4" component="h1" gutterBottom>
-                        Terms of Service
-                    </Typography>
-                    <Divider sx={{ my: 2 }} />
-                    <Box sx={styles.scroll}>
-                        {tosBlocks.map((block, idx) => {
-                            if (block.type === 'title') {
-                                return <Typography key={idx} variant="h5" fontWeight={700} gutterBottom>{block.text}</Typography>;
-                            }
-                            if (block.type === 'heading') {
-                                return <Typography key={idx} variant="h6" sx={styles.sectionTitle}>{block.text}</Typography>;
-                            }
-                            if (block.type === 'p') {
-                                return <Typography key={idx} variant="body1" sx={styles.paragraph} paragraph>{block.text}</Typography>;
-                            }
-                            if (block.type === 'ol') {
-                                return (
-                                    <List key={idx} component="ol" sx={styles.list}>
-                                        {block.items.map((it, i) => {
-                                            // Check if the item starts with a short phrase followed by a colon
-                                            const colonIndex = it.indexOf(':');
-                                            if (colonIndex > 0 && colonIndex < 50) { // Reasonable limit for "short phrase"
-                                                const beforeColon = it.substring(0, colonIndex);
-                                                const afterColon = it.substring(colonIndex);
-                                                return (
-                                                    <ListItem key={i} component="li" sx={styles.li}>
-                                                        <ListItemText 
-                                                            primary={
-                                                                <>
-                                                                    <Typography component="span" sx={{ fontWeight: 'bold' }}>
-                                                                        {beforeColon}
-                                                                    </Typography>
-                                                                    {afterColon}
-                                                                </>
-                                                            } 
-                                                        />
-                                                    </ListItem>
-                                                );
-                                            } else {
-                                                return (
-                                                    <ListItem key={i} component="li" sx={styles.li}>
-                                                        <ListItemText primary={it} />
-                                                    </ListItem>
-                                                );
-                                            }
-                                        })}
-                                    </List>
-                                );
-                            }
-                            return null;
-                        })}
+                <Box sx={styles.cardWrapper}>
+                    <Box sx={styles.backButton}>
+                        <PreferenceButton
+                            variant={'standard'}
+                            text="Back"
+                            buttonFnc={handleExit}
+                        />
+                    </Box>
+                    <Box sx={styles.card}>
+                        <Typography variant="h4" component="h1" gutterBottom>
+                            Terms of Service
+                        </Typography>
+                        <Divider sx={{ my: 2 }} />
+                        <Box sx={styles.scroll}>
+                            {tosBlocks.map((block, idx) => {
+                                if (block.type === 'title') {
+                                    return <Typography key={idx} variant="h5" fontWeight={700} gutterBottom>{block.text}</Typography>;
+                                }
+                                if (block.type === 'heading') {
+                                    return <Typography key={idx} variant="h6" sx={styles.sectionTitle}>{block.text}</Typography>;
+                                }
+                                if (block.type === 'p') {
+                                    return <Typography key={idx} variant="body1" sx={styles.paragraph} paragraph>{block.text}</Typography>;
+                                }
+                                if (block.type === 'ol') {
+                                    return (
+                                        <List key={idx} component="ol" sx={styles.list}>
+                                            {block.items.map((it, i) => {
+                                                // Check if the item starts with a short phrase followed by a colon
+                                                const colonIndex = it.indexOf(':');
+                                                if (colonIndex > 0 && colonIndex < 50) { // Reasonable limit for "short phrase"
+                                                    const beforeColon = it.substring(0, colonIndex);
+                                                    const afterColon = it.substring(colonIndex);
+                                                    return (
+                                                        <ListItem key={i} component="li" sx={styles.li}>
+                                                            <ListItemText 
+                                                                primary={
+                                                                    <>
+                                                                        <Typography component="span" sx={{ fontWeight: 'bold' }}>
+                                                                            {beforeColon}
+                                                                        </Typography>
+                                                                        {afterColon}
+                                                                    </>
+                                                                } 
+                                                            />
+                                                        </ListItem>
+                                                    );
+                                                } else {
+                                                    return (
+                                                        <ListItem key={i} component="li" sx={styles.li}>
+                                                            <ListItemText primary={it} />
+                                                        </ListItem>
+                                                    );
+                                                }
+                                            })}
+                                        </List>
+                                    );
+                                }
+                                return null;
+                            })}
+                        </Box>
                     </Box>
                 </Box>
             </Box>
