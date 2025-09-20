@@ -405,9 +405,11 @@ const Chat: React.FC<IChatProps> = ({
                         }}
                     />
                 )}
-                <Typography sx={styles.chatDisabled(chatDisabledInfo.borderColor)}>
-                    {chatDisabledInfo.message}
-                </Typography>
+                {chatDisabledInfo && chatDisabledInfo.reason !== ChatDisabledReason.None &&(
+                    <Typography sx={styles.chatDisabled(chatDisabledInfo.borderColor)}>
+                        {chatDisabledInfo.message}
+                    </Typography>
+                )}
             </Box>
         </>
     );

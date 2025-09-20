@@ -11,11 +11,12 @@ import { useUser } from '@/app/_contexts/User.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 
 interface UserMutedPopupProps {
+    durationDays: number;
     open: boolean;
     onClose: () => void;
 }
 
-const UserMutedPopup: React.FC<UserMutedPopupProps> = ({ open, onClose }) => {
+const UserMutedPopup: React.FC<UserMutedPopupProps> = ({ durationDays, open, onClose }) => {
     const { user } = useUser();
 
     const handleUnderstand = () => {
@@ -74,24 +75,27 @@ const UserMutedPopup: React.FC<UserMutedPopupProps> = ({ open, onClose }) => {
 
                 <Typography variant="body1" sx={styles.message}>
                     Your account &#34;<strong>{user?.username}</strong>&#34; has been temporarily restricted
-                    due to a violation of our community guidelines. During this time, you won&#39;t be able to
+                    due to a violation of our{' '}
+                    <Link
+                        href="/Terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ color: 'inherit', textDecoration: 'underline' }}
+                    >
+                        code of conduct
+                    </Link>. For the next <strong>{durationDays} days</strong>, you won&#39;t be able to
                     send chat messages.
                 </Typography>
 
                 <Typography variant="body1" sx={styles.message}>
-                    You can still play games during this restriction. If you believe this restriction
-                    was applied in error, please contact our moderation team.
-                </Typography>
-
-                <Typography>
-                    For questions or appeals, reach out on our{' '}
+                    You can still play games during this restriction. If you think this restriction was applied in error or if you have any questions, reach out on our{' '}
                     <Link
                         href="https://discord.com/channels/1220057752961814568/1417680409151410226/1418301240525193348"
                         target="_blank"
                         rel="noopener noreferrer"
                         sx={{ color: 'inherit', textDecoration: 'underline' }}
                     >
-                        discord channel
+                        discord player ticketing channel.
                     </Link>
                 </Typography>
             </DialogContent>

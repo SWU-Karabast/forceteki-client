@@ -138,7 +138,7 @@ const FoundGame: React.FC = () => {
                     </Typography>
                 </Box>
                 <Typography sx={{ ...styles.connectingText, display:'flex',alignItems:'center' }}>
-                    Vs
+                    vs
                 </Typography>
                 <Box sx={styles.CardSetContainerStyle}>
                     <Box sx={styles.baseParent}>
