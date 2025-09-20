@@ -1,7 +1,7 @@
 import React, { useState, ChangeEvent } from 'react';
-import { Box, Link, Typography, IconButton } from '@mui/material';
+import { Box, Link, Typography, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
+import { DeckSource, fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
     DeckValidationFailureReason,
@@ -12,6 +12,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { v4 as uuid } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
 import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { SupportedDeckSources } from '@/app/_constants/constants';
 
 interface AddDeckDialogProps {
     open: boolean;
@@ -138,18 +139,22 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                     <Typography sx={styles.titleStyle}>Add New Deck</Typography>
 
                     <Typography sx={{ color: 'white', marginBottom: '0.75rem' }}>
-                        <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SWU Stats
-                        </Link>{' '}
-                        /{' '}
-                        <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SWUDB
-                        </Link>{' '}
-                        /{' '}
-                        <Link href="https://sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SW-Unlimited-DB
-                        </Link>{' '}
-                        Deck Link{' '} OR paste deck JSON directly.
+                        Deck link (
+                        <Tooltip
+                            arrow={true}
+                            title={
+                                <Box sx={{ whiteSpace: 'pre-line' }}>
+                                    {SupportedDeckSources.join('\n')}
+                                </Box>
+                            }
+                        >
+                            <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
+                                supported deckbuilders
+                            </Link>
+                        </Tooltip>
+                        )
+                        <br />
+                        OR paste deck JSON directly
                     </Typography>
 
                     <Box sx={styles.inputContainerStyle}>
