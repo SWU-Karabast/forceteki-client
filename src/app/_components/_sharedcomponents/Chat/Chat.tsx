@@ -84,10 +84,11 @@ const Chat: React.FC<IChatProps> = ({
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
-    const chatDisabledInfo = getChatDisabledInfo();
+
     const isPrivateLobby = lobbyState?.gameType === 'Private';
     const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
     const hasOpponentModerationAction = hasPlayerModerationAction(getOpponent(connectedPlayer));
+    const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
     const shouldShowChatInput = () => {
         if (isSpectator) return false;
