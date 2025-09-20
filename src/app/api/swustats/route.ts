@@ -29,7 +29,8 @@ const CONFIG = {
 
 export async function GET(req: Request) {
     const code = new URL(req.url).searchParams.get('code');
-
+    // we log the request to see
+    console.log('[DEBUG]: request from swustats:',req);
     if (!code) {
         console.error('[SWU Stats] Missing authorization code');
         return NextResponse.redirect(new URL(CONFIG.redirects.error, req.url));
