@@ -3,7 +3,7 @@ import {
     IDeckDetailedData,
     StoredDeck
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { IDeckData } from '@/app/_utils/fetchDeckData';
+import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
 import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
@@ -292,7 +292,7 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
                     favourite: false,
                     deckLink: deckLink,
                     deckLinkID: deckData.deckID, // Use existing ID or generate new one
-                    source: deckData.deckSource || (deckLink.includes('swustats.net') ? 'SWUSTATS' : deckLink.includes('swustats.net') ? 'SWUDB' : 'SWUnlimitedDB')
+                    source: deckData.deckSource || determineDeckSource(deckLink)
                 }
             }
         };
@@ -459,7 +459,7 @@ export const saveDeckToLocalStorage = (deckData:IDeckData | DeckJSON | undefined
     try {
         // Save to localStorage
         const deckKey = deckData.deckID;
-        const deckSource = deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB'
+        const deckSource = determineDeckSource(deckLink);
         const simplifiedDeckData = {
             leader: { id: deckData.leader.id },
             base: { id: deckData.base.id },

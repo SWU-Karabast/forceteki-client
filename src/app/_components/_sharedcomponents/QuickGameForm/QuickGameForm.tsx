@@ -8,18 +8,19 @@ import {
     IconButton,
     Link,
     MenuItem,
+    Tooltip,
     Typography
 } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { DeckSource, fetchDeckData } from '@/app/_utils/fetchDeckData';
 import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { FormatLabels, SwuGameFormat } from '@/app/_constants/constants';
+import { FormatLabels, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -133,7 +134,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             setDeckErrorDetails(undefined);
             if(error instanceof Error){
                 if(error.message.includes('403')) {
-                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
+                    setDeckErrorSummary('Couldn\'t import. The deck is set to private.');
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
@@ -307,18 +308,20 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
-                        <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SWU Stats
-                        </Link>{' '}
-                        /{' '}
-                        <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SWUDB
-                        </Link>{' '}
-                        /{' '}
-                        <Link href="https://sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SW-Unlimited-DB
-                        </Link>{' '}
-                        Deck Link{' '}
+                        Deck link (
+                        <Tooltip
+                            arrow={true}
+                            title={
+                                <Box sx={{ whiteSpace: 'pre-line' }}>
+                                    {SupportedDeckSources.join('\n')}
+                                </Box>
+                            }
+                        >
+                            <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
+                                supported deckbuilders
+                            </Link>
+                        </Tooltip>
+                        )
                         <br />
                         OR paste deck JSON directly
                     </Box>
