@@ -38,6 +38,7 @@ interface IGameContextType {
     isSpectator: boolean;
     lastQueueHeartbeat: number;
     isAnonymousPlayer: (player: string) => boolean;
+    hasPlayerModerationAction: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
 }
 
@@ -331,6 +332,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return true; // Default to true if we can't determine
     };
 
+    const hasPlayerModerationAction = (player: string): boolean => {
+        if (lobbyState) {
+            return !!lobbyState.users.find((p: any) => p.id === player)?.moderation;
+        }
+        return false; // Default to false if we can't determine
+    }
+
     const resetStates = () => {
         setLobbyState(null);
         setGameState(null);
@@ -365,6 +373,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 isSpectator,
                 lastQueueHeartbeat,
                 isAnonymousPlayer,
+                hasPlayerModerationAction,
                 createNewSocket
             }}
         >
