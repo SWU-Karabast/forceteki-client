@@ -6,7 +6,7 @@ import {
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
-import { IUser, IPreferences } from '@/app/_contexts/UserTypes';
+import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 
 /* Secondary functions */
@@ -85,7 +85,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean, swuStatsRefreshToken: string | null }> =>{
+export const getUserFromServer = async(): Promise<IGetUser> =>{
     try {
         const decks = loadSavedDecks(false);
         // const preferences = loadPreferencesFromLocalStorage();
@@ -200,6 +200,32 @@ export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolea
             user
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/toggle-welcome-message`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-moderation-seen`,
             {
                 method: 'POST',
                 headers: {
@@ -653,3 +679,4 @@ export const unlinkSwuStatsAsync = async(
         throw error;
     }
 };
+
