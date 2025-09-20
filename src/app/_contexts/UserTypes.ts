@@ -24,8 +24,8 @@ export enum ModerationType {
     Ban = 'Ban',
 }
 export interface IModerationAction {
-    days?: number;
-    endDate?: Date | undefined;
+    daysRemaining?: number;
+    endDate?: Date;
     hasSeen?: boolean;
     moderationType?: ModerationType
 }

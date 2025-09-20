@@ -326,7 +326,15 @@ function GeneralTab() {
                                 Account Temporarily Muted
                             </Typography>
                             <Typography sx={styles.muteNoticeText}>
-                                Your account is temporarily muted due to a community guidelines violation.
+                                Your account is temporarily muted due to a violation of our{' '}
+                                <Link
+                                    href="/Terms"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{ color: 'inherit', textDecoration: 'underline' }}
+                                >
+                                    code of conduct
+                                </Link>.
                             </Typography>
                             {muteTimeText && (
                                 <Typography sx={styles.muteTimeText}>
@@ -334,15 +342,15 @@ function GeneralTab() {
                                 </Typography>
                             )}
                             <Typography sx={styles.muteNoticeText}>
-                                If you believe this restriction was applied in error, you can appeal by contacting our moderation team on{' '}
-                                <MuiLink
-                                    href="https://discord.com/channels/1220057752961814568/1220057753448616038"
+                                If you think this restriction was applied in error or if you have any questions, reach out on our{' '}
+                                <Link
+                                    href="https://discord.com/channels/1220057752961814568/1417680409151410226/1418301240525193348"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    sx={{ color: '#8B5CF6', textDecoration: 'underline' }}
+                                    sx={{ color: 'inherit', textDecoration: 'underline' }}
                                 >
-                                    Discord
-                                </MuiLink>.
+                                    Discord player ticketing channel
+                                </Link>.
                             </Typography>
                         </Box>
                     )}

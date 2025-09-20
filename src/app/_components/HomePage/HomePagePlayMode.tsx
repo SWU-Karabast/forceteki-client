@@ -20,6 +20,7 @@ const HomePagePlayMode: React.FC = () => {
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
+    const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
     const { user, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
 
 
@@ -85,6 +86,7 @@ const HomePagePlayMode: React.FC = () => {
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
             if(user.moderation){
+                setModerationDays(user.moderation.daysRemaining);
                 if(!user.moderation.hasSeen && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
                     setShowMutedPopup(true);
                 }
@@ -178,7 +180,7 @@ const HomePagePlayMode: React.FC = () => {
             <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
             <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
             <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
-            <UserMutedPopup open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
+            <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
         </>
     );
 };
