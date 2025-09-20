@@ -111,7 +111,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     };
 
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
-    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
+    const borderColor = isDeployed ? '' : getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
@@ -152,14 +152,32 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             boxSizing: 'border-box',
         },
         deployedPlaceholder: {
-            backgroundColor: 'transparent',
+            backgroundColor: 'black',
             borderRadius: '0.5rem',
+            backgroundImage: `url(${s3CardImageURL(card, LeaderBaseCardStyle.PlainLeader)})`,
+            backgroundSize: 'cover',
             width: '100%',
-            maxHeight: '100%',
             aspectRatio: '1.39',
-            cursor: 'normal',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            cursor: clickDisabled() ? 'normal' : 'pointer',
             position: 'relative', 
-            border: '2px solid #FFFFFF55',
+            border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
+            boxSizing: 'border-box',
+            opacity: 0.2,
+        },
+        leaderBackground: {
+            backgroundColor: '#363636',
+            borderRadius: '0.5rem',
+            backgroundSize: 'cover',
+            width: '100%',
+            aspectRatio: '1.39',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative', 
+            boxSizing: 'border-box',
         },
         cardOverlay : {
             position: 'absolute',
@@ -277,7 +295,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     }
     return (
         <Box
-            sx={isDeployed ? styles.deployedPlaceholder : styles.card}
+            sx={styles.leaderBackground}
             onClick={handleClick}
             aria-owns={open ? 'mouse-over-popover' : undefined}
             aria-haspopup="true"
@@ -286,6 +304,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             onMouseEnter={handlePreviewOpen}
             onMouseLeave={handlePreviewClose}
         >
+            <Box sx={isDeployed ? styles.deployedPlaceholder : styles.card}/>
             <Box sx={styles.cardOverlay}>
                 <Box sx={styles.unimplementedAlert}></Box>
             </Box>
