@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useState, useCallback } from 'react';
 import {
     Box,
     Button,
@@ -32,6 +32,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 import { useSession } from 'next-auth/react';
+import { useDeckPreferences } from '@/app/_contexts/DeckPreferences.context';
 
 interface ICreateGameFormProps {
     format?: string | null;
@@ -41,23 +42,14 @@ interface ICreateGameFormProps {
 const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const router = useRouter();
     const { user } = useUser();
+    const { showSavedDecks, setShowSavedDecks, favoriteDeck, setFavoriteDeck, format, setFormat, deckLink, setDeckLink } = useDeckPreferences();
 
     // Common State
-    const [favoriteDeck, setFavoriteDeck] = useState<string>('');
-    const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [queueState, setQueueState] = useState<boolean>(false)
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
-    const [showSavedDecks, setShowSavedDecks] = useState<boolean>(localStorage.getItem('useSavedDecks') === 'true');
 
-    // let savedFormat = localStorage.getItem('format');
-    // if (savedFormat !== SwuGameFormat.Premier && savedFormat !== SwuGameFormat.Open) {
-    //     localStorage.setItem('format', SwuGameFormat.Premier);
-    //     savedFormat = SwuGameFormat.Premier;
-    // }
-
-    const formatOptions = Object.values(SwuGameFormat);    
-    const [format, setFormat] = useState<string>(localStorage.getItem('format') || SwuGameFormat.Premier);
+    const formatOptions = Object.values(SwuGameFormat);
     const { data: session } = useSession(); // Get session from next-auth
 
     // error states
@@ -69,105 +61,71 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     // Timer ref for clearing the inline text after 5s
 
-    // Load saved decks when component mounts
-    useEffect(() => {
-        fetchDecks();
-    }, [user]);
-
-    // Listen for localStorage changes from other components
-    useEffect(() => {
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'selectedDeck' && e.newValue !== null) {
-                setFavoriteDeck(e.newValue);
-            } else if (e.key === 'useSavedDecks' && e.newValue !== null) {
-                setShowSavedDecks(e.newValue === 'true');
-            } else if (e.key === 'format' && e.newValue !== null) {
-                setFormat(e.newValue);
-            }
-        };
-
-        // Listen for changes from other windows/tabs
-        window.addEventListener('storage', handleStorageChange);
-
-        // Listen for changes within the same window (custom event)
-        const handleCustomStorageChange = (e: CustomEvent) => {
-            if (e.detail.key === 'selectedDeck') {
-                setFavoriteDeck(e.detail.newValue);
-            } else if (e.detail.key === 'useSavedDecks') {
-                setShowSavedDecks(e.detail.newValue === 'true');
-            } else if (e.detail.key === 'format') {
-                setFormat(e.detail.newValue);
-            }
-        };
-
-        window.addEventListener('localStorageChange', handleCustomStorageChange as EventListener);
-
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-            window.removeEventListener('localStorageChange', handleCustomStorageChange as EventListener);
-        };
-    }, []);
-
-    const handleInitializeDeckSelection = (firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
-        const lastSelectedDeck = localStorage.getItem('selectedDeck');
-
-        let selectDeck = lastSelectedDeck;
-        if (lastSelectedDeck && !allDecks.some(deck => deck.deckID === lastSelectedDeck)) {
-            selectDeck = null;
+    const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
+        let selectDeck = favoriteDeck;
+        
+        if (favoriteDeck && !allDecks.some(deck => deck.deckID === favoriteDeck)) {
+            selectDeck = '';
         }
 
-        if (selectDeck == null) {
+        if (!selectDeck) {
             selectDeck = firstDeck || '';
         }
 
-        setFavoriteDeck(selectDeck);
-    }
-
-    const handleDeckManagement = () => {
-        router.push('/DeckPage');
-    }
+        if (selectDeck !== favoriteDeck) {
+            setFavoriteDeck(selectDeck);
+        }
+    }, [favoriteDeck, setFavoriteDeck]);
 
     // Load saved decks from localStorage
-    const fetchDecks = async () => {
+    const fetchDecks = useCallback(async () => {
         try {
             await retrieveDecksForUser(session?.user, user,{ setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
         }catch (err) {
             console.log(err);
             alert('Server error when fetching decks');
         }
-    };
+    }, [session?.user, user, handleInitializeDeckSelection]);
+
+    // Load saved decks when component mounts
+    useEffect(() => {
+        fetchDecks();
+    }, [fetchDecks]);
+
+    // Listen for tab change events to clear errors
+    useEffect(() => {
+        const handleClearErrors = () => {
+            setDeckErrorSummary(null);
+            setDeckErrorDetails(undefined);
+            setErrorTitle('Deck Validation Error');
+        };
+
+        window.addEventListener('clearDeckErrors', handleClearErrors);
+
+        return () => {
+            window.removeEventListener('clearDeckErrors', handleClearErrors);
+        };
+    }, []);
+
+    const handleDeckManagement = () => {
+        router.push('/DeckPage');
+    }
 
     const handleChangeFormat = (format: SwuGameFormat) => {
-        localStorage.setItem('format', format);
         setFormat(format);
-        
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('localStorageChange', {
-            detail: { key: 'format', newValue: format }
-        }));
     }
 
     const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
-        const newValue = useSavedDecks ? 'true' : 'false';
-        localStorage.setItem('useSavedDecks', newValue);
         setShowSavedDecks(useSavedDecks);
-
         setDeckErrorSummary(null);
-        
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('localStorageChange', {
-            detail: { key: 'useSavedDecks', newValue: newValue }
-        }));
+        // Clear deck link when switching to saved decks mode
+        if (useSavedDecks) {
+            setDeckLink('');
+        }
     }
 
     const handleSelectFavoriteDeck = (deckID: string) => {
-        localStorage.setItem('selectedDeck', deckID);
         setFavoriteDeck(deckID);
-        
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('localStorageChange', {
-            detail: { key: 'selectedDeck', newValue: deckID }
-        }));
     }
 
     // Handle Create Game Submission

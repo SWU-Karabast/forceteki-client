@@ -3,6 +3,7 @@ import { Typography, Box, Tab, Tabs, Card, CardContent, Button } from '@mui/mate
 import { useRouter } from 'next/navigation';
 import CreateGameForm from '../_sharedcomponents/CreateGameForm/CreateGameForm';
 import { useUser } from '@/app/_contexts/User.context';
+import { useDeckPreferences } from '@/app/_contexts/DeckPreferences.context';
 import QuickGameForm from '@/app/_components/_sharedcomponents/QuickGameForm/QuickGameForm';
 import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/WelcomePopup';
 import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
@@ -22,6 +23,7 @@ const HomePagePlayMode: React.FC = () => {
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
     const { user, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
+    const { clearErrors } = useDeckPreferences();
 
 
     const closeWelcomePopup = () => {
@@ -39,6 +41,8 @@ const HomePagePlayMode: React.FC = () => {
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
+        // Clear error messages when switching tabs
+        clearErrors();
     }
 
     const handleCloseMutedPopup = async() => {
