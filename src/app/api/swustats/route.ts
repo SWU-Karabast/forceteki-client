@@ -25,15 +25,17 @@ const CONFIG = {
         error: '/Preferences?swustats=error',
     },
     gameServerUrl: process.env.NEXT_PUBLIC_ROOT_URL!,
+    returnUrl: process.env.NEXTAUTH_URL,
 };
 
 export async function GET(req: Request) {
     const code = new URL(req.url).searchParams.get('code');
     // we log the request to see
     console.log('[DEBUG]: request from swustats:',req);
+    console.log('[DEBUG]: url environment:', process.env.NEXTAUTH_URL);
     if (!code) {
         console.error('[SWU Stats] Missing authorization code');
-        return NextResponse.redirect(new URL(CONFIG.redirects.error, req.url));
+        return NextResponse.redirect(new URL(CONFIG.redirects.error, CONFIG.returnUrl));
     }
 
     try {
@@ -44,10 +46,10 @@ export async function GET(req: Request) {
         }
         const token = await fetchSwuStatsTokens(code);
         await linkUserToSwuStats(session.user.userId, token);
-        return NextResponse.redirect(new URL(CONFIG.redirects.success, req.url));
+        return NextResponse.redirect(new URL(CONFIG.redirects.success, CONFIG.returnUrl));
     } catch (error) {
         console.error('[SWU Stats] Callback failed:', error instanceof Error ? error.message : error);
-        return NextResponse.redirect(new URL(CONFIG.redirects.error, req.url));
+        return NextResponse.redirect(new URL(CONFIG.redirects.error, CONFIG.returnUrl));
     }
 }
 
