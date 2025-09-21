@@ -151,6 +151,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         const newValue = useSavedDecks ? 'true' : 'false';
         localStorage.setItem('useSavedDecks', newValue);
         setShowSavedDecks(useSavedDecks);
+
+        setDeckErrorSummary(null);
         
         // Dispatch custom event to notify other components
         window.dispatchEvent(new CustomEvent('localStorageChange', {
@@ -208,16 +210,22 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             setQueueState(false);
             setDeckErrorDetails(undefined);
             if(error instanceof Error){
-                if(error.message.includes('403')) {
+                if(error.message?.includes('403')) {
                     setDeckErrorSummary('Couldn\'t import. The deck is set to private.');
+                    setErrorTitle('Deck Validation Error');
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
-                    setErrorTitle('Deck Validation Error');
                     setErrorModalOpen(true);
-                }else{
-                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                } else if(error.message?.includes('Deck not found')) {
+                    // Handle the specific 404 error messages from any deck source
+                    setDeckErrorSummary(error.message);
+                    setErrorTitle('Deck Not Found');
+                    setDeckErrorDetails(error.message);
+                    setErrorModalOpen(true);
+                } else {
                     setErrorTitle('Deck Validation Error');
+                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorModalOpen(true);
                 }
             }
@@ -227,10 +235,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             // Save the deck if needed first!
             if (saveDeck && deckData && userDeck) {
                 if(user) {
-                    await saveDeckToServer(deckData, deckLink, user);
+                    await saveDeckToServer(deckData, userDeck, user);
                     deckData.isPresentInDb = true;
                 }else{
-                    saveDeckToLocalStorage(deckData, deckLink);
+                    saveDeckToLocalStorage(deckData, userDeck);
                 }
             }
 
@@ -441,16 +449,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                                     setDeckErrorDetails(undefined);
                                 }}
                             />
-                            {deckErrorSummary && (
-                                <Typography variant={'body1'} sx={styles.errorMessageStyle}>
-                                    {deckErrorSummary}{' '}
-                                    <Link
-                                        sx={styles.errorMessageLink}
-                                        onClick={() => setErrorModalOpen(true)}
-                                    >Details
-                                    </Link>
-                                </Typography>
-                            )}
                         </FormControl>
 
                         {/* Save Deck To Favourites Checkbox */}
@@ -473,6 +471,17 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                             }
                         />
                     </>
+                )}
+
+                {deckErrorSummary && (
+                    <Typography variant={'body1'} sx={styles.errorMessageStyle}>
+                        {deckErrorSummary}{' '}
+                        <Link
+                            sx={styles.errorMessageLink}
+                            onClick={() => setErrorModalOpen(true)}
+                        >Details
+                        </Link>
+                    </Typography>
                 )}
 
                 <FormControl fullWidth sx={styles.formControlStyle}>

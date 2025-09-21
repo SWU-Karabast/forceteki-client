@@ -146,6 +146,8 @@ const CreateGameForm = () => {
         const newValue = useSavedDecks ? 'true' : 'false';
         localStorage.setItem('useSavedDecks', newValue);
         setShowSavedDecks(useSavedDecks);
+
+        setDeckErrorSummary(null);
         
         // Dispatch custom event to notify other components
         window.dispatchEvent(new CustomEvent('localStorageChange', {
@@ -378,38 +380,50 @@ const CreateGameForm = () => {
                     </RadioGroup>
                 </FormControl>
                 {showSavedDecks && (
-                    <FormControl fullWidth sx={styles.formControlStyle}>
+                    <>
                         {/* Favourite Decks Input */}
-                        <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
-                        <StyledTextField
-                            select
-                            value={favoriteDeck}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                handleSelectFavoriteDeck(e.target.value as string)
-                            }
-                            placeholder="Favorite Decks"
-                        >
-                            {savedDecks.length === 0 ? (
-                                <MenuItem value="" disabled>
-                                    No saved decks found
-                                </MenuItem>
-                            ) : (
-                                savedDecks.map((deck) => (
-                                    <MenuItem key={deck.deckID} value={deck.deckID}>
-                                        {deck.favourite ? '★ ' : ''}{deck.name}
-                                    </MenuItem>
-                                ))
-                            )}
-                        </StyledTextField>
-                        <Box sx={styles.manageDecksContainer}>
-                            <Button
-                                onClick={handleDeckManagement}
-                                sx={styles.manageDecks}
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
+                            <StyledTextField
+                                select
+                                value={favoriteDeck}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    handleSelectFavoriteDeck(e.target.value as string)
+                                }
+                                placeholder="Favorite Decks"
                             >
-                                Manage&nbsp;Decks
-                            </Button>
-                        </Box>
-                    </FormControl>
+                                {savedDecks.length === 0 ? (
+                                    <MenuItem value="" disabled>
+                                        No saved decks found
+                                    </MenuItem>
+                                ) : (
+                                    savedDecks.map((deck) => (
+                                        <MenuItem key={deck.deckID} value={deck.deckID}>
+                                            {deck.favourite ? '★ ' : ''}{deck.name}
+                                        </MenuItem>
+                                    ))
+                                )}
+                            </StyledTextField>
+                            <Box sx={styles.manageDecksContainer}>
+                                <Button
+                                    onClick={handleDeckManagement}
+                                    sx={styles.manageDecks}
+                                >
+                                    Manage&nbsp;Decks
+                                </Button>
+                            </Box>
+                        </FormControl>
+                        {deckErrorSummary && (
+                            <Typography variant={'body1'} sx={styles.errorMessageStyle}>
+                                {deckErrorSummary}{' '}
+                                <Link
+                                    sx={styles.errorMessageLink}
+                                    onClick={() => setErrorModalOpen(true)}
+                                >Details
+                                </Link>
+                            </Typography>
+                        )}
+                    </>
                 ) || (
                     <>
                         {/* Deck Link Input */}
@@ -441,17 +455,17 @@ const CreateGameForm = () => {
                                     setDeckErrorDetails(undefined);
                                 }}
                             />
-                            {deckErrorSummary && (
-                                <Typography variant={'body1'} sx={styles.errorMessageStyle}>
-                                    {deckErrorSummary}{' '}
-                                    <Link
-                                        sx={styles.errorMessageLink}
-                                        onClick={() => setErrorModalOpen(true)}
-                                    >Details
-                                    </Link>
-                                </Typography>
-                            )}
                         </FormControl>
+                        {deckErrorSummary && (
+                            <Typography variant={'body1'} sx={styles.errorMessageStyle}>
+                                {deckErrorSummary}{' '}
+                                <Link
+                                    sx={styles.errorMessageLink}
+                                    onClick={() => setErrorModalOpen(true)}
+                                >Details
+                                </Link>
+                            </Typography>
+                        )}
 
                         {/* Save Deck To Favourites Checkbox */}
                         <FormControlLabel
