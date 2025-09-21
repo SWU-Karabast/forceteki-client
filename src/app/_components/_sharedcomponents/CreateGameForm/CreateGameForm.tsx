@@ -71,6 +71,32 @@ const CreateGameForm = () => {
         fetchDecks();
     }, [user]);
 
+    // Listen for localStorage changes from other components
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'selectedDeck' && e.newValue !== null) {
+                setFavoriteDeck(e.newValue);
+            }
+        };
+
+        // Listen for changes from other windows/tabs
+        window.addEventListener('storage', handleStorageChange);
+
+        // Listen for changes within the same window (custom event)
+        const handleCustomStorageChange = (e: CustomEvent) => {
+            if (e.detail.key === 'selectedDeck') {
+                setFavoriteDeck(e.detail.newValue);
+            }
+        };
+
+        window.addEventListener('localStorageChange', handleCustomStorageChange as EventListener);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('localStorageChange', handleCustomStorageChange as EventListener);
+        };
+    }, []);
+
     const handleInitializeDeckSelection = (firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
         const lastSelectedDeck = localStorage.getItem('selectedDeck');
         console.log('lastSelectedDeck', lastSelectedDeck);
@@ -112,6 +138,11 @@ const CreateGameForm = () => {
     const handleSelectFavoriteDeck = (deckID: string) => {
         localStorage.setItem('selectedDeck', deckID);
         setFavoriteDeck(deckID);
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('localStorageChange', {
+            detail: { key: 'selectedDeck', newValue: deckID }
+        }));
     }
 
     console.log(savedDecks);
