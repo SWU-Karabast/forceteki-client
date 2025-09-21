@@ -103,8 +103,6 @@ const CreateGameForm = () => {
 
     const handleInitializeDeckSelection = (firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
         const lastSelectedDeck = localStorage.getItem('selectedDeck');
-        console.log('lastSelectedDeck', lastSelectedDeck);
-        console.log('allDecks', allDecks);
 
         let selectDeck = lastSelectedDeck;
         if (lastSelectedDeck && !allDecks.some(deck => deck.deckID === lastSelectedDeck)) {
@@ -155,34 +153,31 @@ const CreateGameForm = () => {
         }));
     }
 
-    console.log(savedDecks);
-
     // Handle Create Game Submission
     const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         let userDeck;
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
-        if(favoriteDeck) {
+        if(showSavedDecks) {
             const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
-            if (selectedDeck?.deckLink && !deckLink) {
+            userDeck = '';
+            if (selectedDeck?.deckLink) {
                 userDeck = selectedDeck?.deckLink
-            }else{
-                userDeck = deckLink;
             }
         }else{
             userDeck = deckLink;
         }
 
-        let deckData = null
+        let deckData = null;
         try {
             const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
-                if(favoriteDeck && deckData && !deckLink) {
+                if(favoriteDeck && deckData && showSavedDecks) {
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
                     deckData.isPresentInDb = !!user;
-                }else if(deckData) {
+                }else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck
                     deckData.isPresentInDb = false;
                 }
@@ -248,8 +243,6 @@ const CreateGameForm = () => {
             );
             const result = await response.json();
             if (!response.ok) {
-                console.log(response);
-                console.log(result);
                 const errors = result.errors || {};
                 if(response.status === 403){
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');

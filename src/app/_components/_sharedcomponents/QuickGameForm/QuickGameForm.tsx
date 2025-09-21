@@ -106,8 +106,6 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
 
     const handleInitializeDeckSelection = (firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
         const lastSelectedDeck = localStorage.getItem('selectedDeck');
-        console.log('lastSelectedDeck', lastSelectedDeck);
-        console.log('allDecks', allDecks);
 
         let selectDeck = lastSelectedDeck;
         if (lastSelectedDeck && !allDecks.some(deck => deck.deckID === lastSelectedDeck)) {
@@ -167,12 +165,10 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         setQueueState(true);
         // Get the deck link - either from selected favorite or direct input
         let userDeck = '';
-        if(favoriteDeck) {
+        if(showSavedDecks) {
             const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
-            if (selectedDeck?.deckLink && !deckLink) {
+            if (selectedDeck?.deckLink) {
                 userDeck = selectedDeck.deckLink;
-            } else {
-                userDeck = deckLink;
             }
         } else {
             userDeck = deckLink;
@@ -182,11 +178,11 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
-                if(favoriteDeck && deckData && !deckLink) {
+                if(favoriteDeck && deckData && showSavedDecks) {
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
                     deckData.isPresentInDb = !!user;
-                }else if(deckData) {
+                }else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck
                     deckData.isPresentInDb = false;
                 }
