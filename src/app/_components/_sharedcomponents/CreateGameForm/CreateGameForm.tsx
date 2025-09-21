@@ -45,7 +45,6 @@ const CreateGameForm = () => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
-    const [undoTestMode, setUndoTestMode] = useState<boolean>(false);
     const [privateGame, setPrivateGame] = useState<boolean>(false);
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(localStorage.getItem('useSavedDecks') === 'true');
     const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -66,6 +65,9 @@ const CreateGameForm = () => {
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
+
+    const searchParams = useSearchParams();
+    const undoEnabled = searchParams.get('undoTest') === 'true';
 
     useEffect(() => {
         fetchDecks();
@@ -240,7 +242,7 @@ const CreateGameForm = () => {
                 isPrivate: privateGame,
                 format: format,
                 lobbyName: lobbyName,
-                enableUndo: privateGame && undoTestMode,
+                enableUndo: privateGame && undoEnabled,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -545,29 +547,7 @@ const CreateGameForm = () => {
                             </RadioGroup>
                         </FormControl>
 
-                        {privateGame && (
-                            <>
-                                <br/>
-                                <FormControlLabel
-                                    sx={{ mb: '1rem' }}
-                                    control={
-                                        <Checkbox
-                                            sx={styles.checkboxStyle}
-                                            checked={undoTestMode}
-                                            onChange={(
-                                                e: ChangeEvent<HTMLInputElement>,
-                                                checked: boolean
-                                            ) => setUndoTestMode(checked)}
-                                        />
-                                    }
-                                    label={
-                                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                            Undo Button (Beta)
-                                        </Typography>
-                                    }
-                                />
-                            </>
-                        ) || (
+                        {!privateGame && (
                             <>
                                 <FormControl fullWidth sx={styles.formControlStyle}>
                                     <Typography variant="body1" sx={styles.labelTextStyle}>
