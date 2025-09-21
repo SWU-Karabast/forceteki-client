@@ -79,6 +79,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'selectedDeck' && e.newValue !== null) {
                 setFavoriteDeck(e.newValue);
+            } else if (e.key === 'useSavedDecks' && e.newValue !== null) {
+                setShowSavedDecks(e.newValue === 'true');
             }
         };
 
@@ -89,6 +91,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         const handleCustomStorageChange = (e: CustomEvent) => {
             if (e.detail.key === 'selectedDeck') {
                 setFavoriteDeck(e.detail.newValue);
+            } else if (e.detail.key === 'useSavedDecks') {
+                setShowSavedDecks(e.detail.newValue === 'true');
             }
         };
 
@@ -137,8 +141,14 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     }
 
     const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
-        localStorage.setItem('useSavedDecks', useSavedDecks ? 'true' : 'false');
+        const newValue = useSavedDecks ? 'true' : 'false';
+        localStorage.setItem('useSavedDecks', newValue);
         setShowSavedDecks(useSavedDecks);
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('localStorageChange', {
+            detail: { key: 'useSavedDecks', newValue: newValue }
+        }));
     }
 
     const handleSelectFavoriteDeck = (deckID: string) => {
