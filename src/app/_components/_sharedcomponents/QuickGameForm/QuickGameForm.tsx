@@ -1,20 +1,21 @@
-import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import {
     Box,
     Button,
     Checkbox,
     FormControl,
     FormControlLabel,
-    IconButton,
     Link,
     MenuItem,
+    Radio,
+    RadioGroup,
     Tooltip,
     Typography
 } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { DeckSource, fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 import {
     DeckValidationFailureReason,
     IDeckValidationFailures
@@ -22,14 +23,14 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { FormatLabels, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
-import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { DisplayDeck, StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
     getUserPayload,
     retrieveDecksForUser,
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
-import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
+
 import { useSession } from 'next-auth/react';
 
 interface ICreateGameFormProps {
@@ -42,11 +43,12 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const { user } = useUser();
 
     // Common State
-    const [favouriteDeck, setFavouriteDeck] = useState<string>('');
+    const [favoriteDeck, setFavoriteDeck] = useState<string>('');
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [queueState, setQueueState] = useState<boolean>(false)
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
+    const [showSavedDecks, setShowSavedDecks] = useState<boolean>(localStorage.getItem('useSavedDecks') === 'true');
 
     // let savedFormat = localStorage.getItem('format');
     // if (savedFormat !== SwuGameFormat.Premier && savedFormat !== SwuGameFormat.Open) {
@@ -72,6 +74,23 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         fetchDecks();
     }, [user]);
 
+    const handleInitializeDeckSelection = (firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
+        const lastSelectedDeck = localStorage.getItem('selectedDeck');
+        console.log('lastSelectedDeck', lastSelectedDeck);
+        console.log('allDecks', allDecks);
+
+        let selectDeck = lastSelectedDeck;
+        if (lastSelectedDeck && !allDecks.some(deck => deck.deckID === lastSelectedDeck)) {
+            selectDeck = null;
+        }
+
+        if (selectDeck == null) {
+            selectDeck = firstDeck || '';
+        }
+
+        setFavoriteDeck(selectDeck);
+    }
+
     const handleDeckManagement = () => {
         router.push('/DeckPage');
     }
@@ -79,7 +98,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     // Load saved decks from localStorage
     const fetchDecks = async () => {
         try {
-            await retrieveDecksForUser(session?.user, user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
+            await retrieveDecksForUser(session?.user, user,{ setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
         }catch (err) {
             console.log(err);
             alert('Server error when fetching decks');
@@ -91,14 +110,24 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
         setFormat(format);
     }
 
+    const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
+        localStorage.setItem('useSavedDecks', useSavedDecks ? 'true' : 'false');
+        setShowSavedDecks(useSavedDecks);
+    }
+
+    const handleSelectFavoriteDeck = (deckID: string) => {
+        localStorage.setItem('selectedDeck', deckID);
+        setFavoriteDeck(deckID);
+    }
+
     // Handle Create Game Submission
     const handleJoinGameQueue = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setQueueState(true);
         // Get the deck link - either from selected favorite or direct input
         let userDeck = '';
-        if(favouriteDeck) {
-            const selectedDeck = savedDecks.find(deck => deck.deckID === favouriteDeck);
+        if(favoriteDeck) {
+            const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
             if (selectedDeck?.deckLink && !deckLink) {
                 userDeck = selectedDeck.deckLink;
             } else {
@@ -112,8 +141,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
             const parsedInput = parseInputAsDeckData(userDeck);
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
-                if(favouriteDeck && deckData && !deckLink) {
-                    deckData.deckID = favouriteDeck;
+                if(favoriteDeck && deckData && !deckLink) {
+                    deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
                     deckData.isPresentInDb = !!user;
                 }else if(deckData) {
@@ -273,98 +302,132 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 Join Matchmaking Queue
             </Typography>
             <form onSubmit={handleJoinGameQueue}>
-                {/* Favourite Decks Input */}
-                <FormControl fullWidth sx={styles.formControlStyle}>
-                    <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
-                    <StyledTextField
-                        select
-                        value={favouriteDeck}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setFavouriteDeck(e.target.value)
-                        }
-                        placeholder="Favorite Decks"
+                <FormControl component="fieldset" sx={styles.formControlStyle}>
+                    <RadioGroup
+                        row
+                        value={showSavedDecks ? 'Saved Deck' : 'New Deck'}
+                        onChange={(
+                            e: ChangeEvent<HTMLInputElement>,
+                            value: string
+                        ) => handleChangeDeckSelectionType(value === 'Saved Deck')}
                     >
-                        {savedDecks.length === 0 ? (
-                            <MenuItem value="" disabled>
-                                No saved decks found
-                            </MenuItem>
-                        ) : (
-                            savedDecks.map((deck) => (
-                                <MenuItem key={deck.deckID} value={deck.deckID}>
-                                    {deck.favourite ? '★ ' : ''}{deck.name}
-                                </MenuItem>
-                            ))
-                        )}
-                    </StyledTextField>
-                    <Box sx={styles.manageDecksContainer}>
-                        <Button
-                            onClick={handleDeckManagement}
-                            sx={styles.manageDecks}
-                        >
-                            Manage&nbsp;Decks
-                        </Button>
-                    </Box>
-                </FormControl>
-                {/* Deck Link Input */}
-                <FormControl fullWidth sx={styles.formControlStyle}>
-                    <Box sx={styles.labelTextStyle}>
-                        Deck link (
-                        <Tooltip
-                            arrow={true}
-                            title={
-                                <Box sx={{ whiteSpace: 'pre-line' }}>
-                                    {SupportedDeckSources.join('\n')}
-                                </Box>
+                        <FormControlLabel
+                            value="Saved Deck"
+                            control={<Radio sx={styles.checkboxStyle} />}
+                            label={
+                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                    Saved Deck
+                                </Typography>
                             }
-                        >
-                            <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
-                                supported deckbuilders
-                            </Link>
-                        </Tooltip>
-                        )
-                        <br />
-                        OR paste deck JSON directly
-                    </Box>
-                    <StyledTextField
-                        type="text"
-                        value={deckLink}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                            setDeckLink(e.target.value);
-                            setDeckErrorSummary(null);
-                            setDeckErrorDetails(undefined);
-                        }}
-                    />
-                    {deckErrorSummary && (
-                        <Typography variant={'body1'} sx={styles.errorMessageStyle}>
-                            {deckErrorSummary}{' '}
-                            <Link
-                                sx={styles.errorMessageLink}
-                                onClick={() => setErrorModalOpen(true)}
-                            >Details
-                            </Link>
-                        </Typography>
-                    )}
-                </FormControl>
-
-                {/* Save Deck To Favourites Checkbox */}
-                <FormControlLabel
-                    sx={{ mb: '1rem' }}
-                    control={
-                        <Checkbox
-                            sx={styles.checkboxStyle}
-                            checked={saveDeck}
-                            onChange={(
-                                e: ChangeEvent<HTMLInputElement>,
-                                checked: boolean
-                            ) => setSaveDeck(checked)}
                         />
-                    }
-                    label={
-                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                            Save Deck List
-                        </Typography>
-                    }
-                />
+                        <FormControlLabel
+                            value="New Deck"
+                            control={<Radio sx={styles.checkboxStyle} />}
+                            label={
+                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                    New Deck
+                                </Typography>
+                            }
+                        />
+                    </RadioGroup>
+                </FormControl>
+                {showSavedDecks && (
+                    <FormControl fullWidth sx={styles.formControlStyle}>
+                        {/* Favourite Decks Input */}
+                        <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
+                        <StyledTextField
+                            select
+                            value={favoriteDeck}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                handleSelectFavoriteDeck(e.target.value as string)
+                            }
+                            placeholder="Favorite Decks"
+                        >
+                            {savedDecks.length === 0 ? (
+                                <MenuItem value="" disabled>
+                                    No saved decks found
+                                </MenuItem>
+                            ) : (
+                                savedDecks.map((deck) => (
+                                    <MenuItem key={deck.deckID} value={deck.deckID}>
+                                        {deck.favourite ? '★ ' : ''}{deck.name}
+                                    </MenuItem>
+                                ))
+                            )}
+                        </StyledTextField>
+                        <Box sx={styles.manageDecksContainer}>
+                            <Button
+                                onClick={handleDeckManagement}
+                                sx={styles.manageDecks}
+                            >
+                                Manage&nbsp;Decks
+                            </Button>
+                        </Box>
+                    </FormControl>
+                ) || (
+                    <>
+                        {/* Deck Link Input */}
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            <Box sx={styles.labelTextStyle}>
+                                Deck link (
+                                <Tooltip
+                                    arrow={true}
+                                    title={
+                                        <Box sx={{ whiteSpace: 'pre-line' }}>
+                                            {SupportedDeckSources.join('\n')}
+                                        </Box>
+                                    }
+                                >
+                                    <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
+                                        supported deckbuilders
+                                    </Link>
+                                </Tooltip>
+                                )
+                                <br />
+                                OR paste deck JSON directly
+                            </Box>
+                            <StyledTextField
+                                type="text"
+                                value={deckLink}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                    setDeckLink(e.target.value);
+                                    setDeckErrorSummary(null);
+                                    setDeckErrorDetails(undefined);
+                                }}
+                            />
+                            {deckErrorSummary && (
+                                <Typography variant={'body1'} sx={styles.errorMessageStyle}>
+                                    {deckErrorSummary}{' '}
+                                    <Link
+                                        sx={styles.errorMessageLink}
+                                        onClick={() => setErrorModalOpen(true)}
+                                    >Details
+                                    </Link>
+                                </Typography>
+                            )}
+                        </FormControl>
+
+                        {/* Save Deck To Favourites Checkbox */}
+                        <FormControlLabel
+                            sx={{ mb: '1rem' }}
+                            control={
+                                <Checkbox
+                                    sx={styles.checkboxStyle}
+                                    checked={saveDeck}
+                                    onChange={(
+                                        e: ChangeEvent<HTMLInputElement>,
+                                        checked: boolean
+                                    ) => setSaveDeck(checked)}
+                                />
+                            }
+                            label={
+                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                    Save Deck List
+                                </Typography>
+                            }
+                        />
+                    </>
+                )}
 
                 <FormControl fullWidth sx={styles.formControlStyle}>
                     <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
