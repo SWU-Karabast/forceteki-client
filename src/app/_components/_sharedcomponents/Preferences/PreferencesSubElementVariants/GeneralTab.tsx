@@ -10,6 +10,7 @@ import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/Us
 import LinkSwuStatsButton from '@/app/_components/_sharedcomponents/SwuStats/LinkSwuStatsButton';
 import MuiLink from '@mui/material/Link';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
+import { useSearchParams } from 'next/navigation';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
@@ -26,6 +27,8 @@ function GeneralTab() {
     const [deckErrorDetails, setDeckErrorDetails] = useState<string | undefined>(undefined);
     const [showTooltip, setShowTooltip] = useState(false);
     const [muteTimeText, setMuteTimeText] = useState<string | null>('');
+    const searchParams = useSearchParams();
+    const enableLinkButton = searchParams.get('swustats') === 'true';
 
     const [swuStatsError, setSwuStatsError] = useState<boolean>(false);
     const swuStatsErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -282,7 +285,7 @@ function GeneralTab() {
                                     After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
                                 </Typography>
                             </Box>
-                            {process.env.NODE_ENV === 'development' && (
+                            {(process.env.NODE_ENV === 'development' || enableLinkButton) && (
                                 <Box sx={styles.swuStatsContainer}>
                                     <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
                                     {swuStatsError && (
