@@ -4,13 +4,14 @@ import { Box, Modal, Typography } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { getReadableDeckErrors } from '@/app/_validators/DeckValidation/getReadableDeckErrors';
 import { IDeckValidationFailures } from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import { SwuGameFormat } from '@/app/_constants/constants';
 
 interface ErrorModalProps {
     open: boolean;
     onClose: () => void;
     title: string;
     errors?: IDeckValidationFailures | string;
-    format?: string;
+    format?: SwuGameFormat;
 }
 
 export const ErrorModal: React.FC<ErrorModalProps> = ({
@@ -18,7 +19,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
     onClose,
     title,
     errors,
-    format = 'Premier',
+    format = SwuGameFormat.Premier,
 }) => {
     // Inline styling for the modal content
     let messages: string[];

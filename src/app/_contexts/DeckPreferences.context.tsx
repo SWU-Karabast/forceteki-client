@@ -7,14 +7,15 @@ import React, {
     useState,
     useEffect,
 } from 'react';
+import { SwuGameFormat } from '@/app/_constants/constants';
 
 interface IDeckPreferencesContextType {
     showSavedDecks: boolean;
     setShowSavedDecks: (value: boolean) => void;
     favoriteDeck: string;
     setFavoriteDeck: (value: string) => void;
-    format: string;
-    setFormat: (value: string) => void;
+    format: SwuGameFormat;
+    setFormat: (value: SwuGameFormat) => void;
     deckLink: string;
     setDeckLink: (value: string) => void;
     clearErrors: () => void;
@@ -25,7 +26,7 @@ const DeckPreferencesContext = createContext<IDeckPreferencesContextType>({
     setShowSavedDecks: () => {},
     favoriteDeck: '',
     setFavoriteDeck: () => {},
-    format: 'Premier',
+    format: SwuGameFormat.Premier,
     setFormat: () => {},
     deckLink: '',
     setDeckLink: () => {},
@@ -50,11 +51,12 @@ export const DeckPreferencesProvider: React.FC<{ children: ReactNode }> = ({
         return '';
     });
 
-    const [format, setFormat] = useState<string>(() => {
+    const [format, setFormat] = useState<SwuGameFormat>(() => {
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('format') || 'Premier';
+            const stored = localStorage.getItem('format');
+            return (stored as SwuGameFormat) || SwuGameFormat.Premier;
         }
-        return 'Premier';
+        return SwuGameFormat.Premier;
     });
 
     const [deckLink, setDeckLink] = useState<string>('');

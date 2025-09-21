@@ -557,6 +557,7 @@ const CreateGameForm = () => {
                 onClose={() => setErrorModalOpen(false)}
                 title={errorTitle}
                 errors={deckErrorDetails}
+                format={format}
             />
         </Box>
     );

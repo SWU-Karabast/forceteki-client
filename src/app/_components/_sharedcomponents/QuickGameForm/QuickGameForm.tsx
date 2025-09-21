@@ -35,8 +35,8 @@ import { useSession } from 'next-auth/react';
 import { useDeckPreferences } from '@/app/_contexts/DeckPreferences.context';
 
 interface ICreateGameFormProps {
-    format?: string | null;
-    setFormat?: (format: string) => void;
+    format?: SwuGameFormat | null;
+    setFormat?: (format: SwuGameFormat) => void;
 }
 
 const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
@@ -490,6 +490,7 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 onClose={() => setErrorModalOpen(false)}
                 title={errorTitle}
                 errors={deckErrorDetails}
+                format={format}
             />
         </Box>
     );
