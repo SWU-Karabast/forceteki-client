@@ -27,10 +27,7 @@ function GeneralTab() {
     const [deckErrorDetails, setDeckErrorDetails] = useState<string | undefined>(undefined);
     const [showTooltip, setShowTooltip] = useState(false);
     const [muteTimeText, setMuteTimeText] = useState<string | null>('');
-    const searchParams = useSearchParams();
-    const enableLinkButton = 
-        searchParams.get('swustats') === 'true' ||
-        process.env.ENABLE_LINK_SWUSTATS === 'true';
+    const enableLinkButton = process.env.NEXT_PUBLIC_DISABLE_LINK_SWUSTATS !== 'false';
 
     const [swuStatsError, setSwuStatsError] = useState<boolean>(false);
     const swuStatsErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
