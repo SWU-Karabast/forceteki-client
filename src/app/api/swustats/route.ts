@@ -25,14 +25,17 @@ const CONFIG = {
         error: '/Preferences?swustats=error',
     },
     gameServerUrl: process.env.NEXT_PUBLIC_ROOT_URL!,
+    returnUrl: process.env.NEXTAUTH_URL,
 };
 
 export async function GET(req: Request) {
     const code = new URL(req.url).searchParams.get('code');
-
+    // we log the request to see
+    console.log('[DEBUG]: request from swustats:',req);
+    console.log('[DEBUG]: url environment:', process.env.NEXTAUTH_URL);
     if (!code) {
         console.error('[SWU Stats] Missing authorization code');
-        return NextResponse.redirect(new URL(CONFIG.redirects.error, req.url));
+        return NextResponse.redirect(new URL(CONFIG.redirects.error, CONFIG.returnUrl));
     }
 
     try {
@@ -43,15 +46,24 @@ export async function GET(req: Request) {
         }
         const token = await fetchSwuStatsTokens(code);
         await linkUserToSwuStats(session.user.userId, token);
-        return NextResponse.redirect(new URL(CONFIG.redirects.success, req.url));
+        return NextResponse.redirect(new URL(CONFIG.redirects.success, CONFIG.returnUrl));
     } catch (error) {
         console.error('[SWU Stats] Callback failed:', error instanceof Error ? error.message : error);
-        return NextResponse.redirect(new URL(CONFIG.redirects.error, req.url));
+        return NextResponse.redirect(new URL(CONFIG.redirects.error, CONFIG.returnUrl));
     }
 }
 
 async function fetchSwuStatsTokens(code: string): Promise<ISwuStatsToken> {
-    if (!CONFIG.swuStats.clientId || !CONFIG.swuStats.clientSecret) {
+    const clientId = process.env.SWUSTATS_CLIENT_ID;
+    const clientSecret = process.env.SWUSTATS_CLIENT_SECRET;
+    const redirectUri = process.env.NODE_ENV === 'development' ?
+        'http://localhost:3000/api/swustats' :
+        'https://karabast.net/api/swustats'
+    console.log('[DEBUG] CLIENT_ID exists:', !!process.env.SWUSTATS_CLIENT_ID);
+    console.log('[DEBUG] CLIENT_SECRET exists:', !!process.env.SWUSTATS_CLIENT_SECRET);
+    console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
+    
+    if (!clientId || !clientSecret) {
         throw new Error('SWU Stats client credentials are not configured');
     }
     const response = await fetch(CONFIG.swuStats.tokenUrl, {
@@ -60,9 +72,9 @@ async function fetchSwuStatsTokens(code: string): Promise<ISwuStatsToken> {
         body: new URLSearchParams({
             grant_type: 'authorization_code',
             code,
-            redirect_uri: CONFIG.swuStats.redirectUri,
-            client_id: CONFIG.swuStats.clientId,
-            client_secret: CONFIG.swuStats.clientSecret,
+            redirect_uri: redirectUri,
+            client_id: clientId,
+            client_secret: clientSecret,
         }),
     });
 

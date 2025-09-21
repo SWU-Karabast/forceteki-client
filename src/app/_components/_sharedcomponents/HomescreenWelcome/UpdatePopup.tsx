@@ -123,13 +123,6 @@ const WhatsNewPopup: React.FC<WhatsNewPopupProps> = ({ open, onClose }) => {
                         height={240}
                         style={{ borderRadius: '8px', width: '12em', height: '14em', marginRight:'100px' }}
                     />
-                    <Image
-                        src="/Karabast.png"
-                        alt="Highlighted Stats Panel"
-                        width={250}
-                        height={240}
-                        style={{ borderRadius: '8px', width: '13em', height: '14em' }}
-                    />
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>

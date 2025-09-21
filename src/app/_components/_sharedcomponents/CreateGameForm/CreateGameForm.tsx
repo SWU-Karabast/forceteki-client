@@ -11,18 +11,19 @@ import {
     RadioGroup,
     Link, IconButton,
     Divider,
+    Tooltip,
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { DeckSource, fetchDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, FormatLabels } from '@/app/_constants/constants';
+import { SwuGameFormat, FormatLabels, SupportedDeckSources } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -126,14 +127,14 @@ const CreateGameForm = () => {
         }catch (error){
             setDeckErrorDetails(undefined);
             if(error instanceof Error){
-                if(error.message.includes('403')) {
-                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
+                if(error.message?.includes('403')) {
+                    setDeckErrorSummary('Couldn\'t import. The deck is set to private.');
                     setErrorTitle('Deck Validation Error');
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
                     setErrorModalOpen(true);
-                } else if(error.message.includes('Deck not found')) {
+                } else if(error.message?.includes('Deck not found')) {
                     // Handle the specific 404 error messages from any deck source
                     setDeckErrorSummary(error.message);
                     setErrorTitle('Deck Not Found');
@@ -177,6 +178,8 @@ const CreateGameForm = () => {
             );
             const result = await response.json();
             if (!response.ok) {
+                console.log(response);
+                console.log(result);
                 const errors = result.errors || {};
                 if(response.status === 403){
                     setDeckErrorSummary('You must wait at least 20s before creating a new game.');
@@ -184,10 +187,16 @@ const CreateGameForm = () => {
                     setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buts in the UI and avoid using the back button or closing the browser to leave games.');
                     setErrorModalOpen(true);
                 } else if(response.status === 400) {
-                    setErrorTitle('Create Game Error');
-                    setDeckErrorDetails(result.message);
+                    if (result.message?.includes('Invalid game format')) {
+                        setErrorTitle('Create Game Error');
+                        setDeckErrorDetails(result.message);
+                        setDeckErrorSummary(null);
+                    } else {
+                        setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                        setDeckErrorDetails(errors);
+                        setErrorTitle('Deck Validation Error');
+                    }
                     setErrorModalOpen(true);
-                    setDeckErrorSummary(null);
                 } else {
                     setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
                     setErrorTitle('Deck Validation Error');
@@ -298,18 +307,20 @@ const CreateGameForm = () => {
                 {/* Deck Link Input */}
                 <FormControl fullWidth sx={styles.formControlStyle}>
                     <Box sx={styles.labelTextStyle}>
-                        <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SWU Stats
-                        </Link>{' '}
-                        /{' '}
-                        <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SWUDB
-                        </Link>{' '}
-                        /{' '}
-                        <Link href="https://sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                            SW-Unlimited-DB
-                        </Link>{' '}
-                        Deck Link{' '}
+                        Deck link (
+                        <Tooltip
+                            arrow={true}
+                            title={
+                                <Box sx={{ whiteSpace: 'pre-line' }}>
+                                    {SupportedDeckSources.join('\n')}
+                                </Box>
+                            }
+                        >
+                            <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
+                                supported deckbuilders
+                            </Link>
+                        </Tooltip>
+                        )
                         <br />
                         OR paste deck JSON directly
                     </Box>

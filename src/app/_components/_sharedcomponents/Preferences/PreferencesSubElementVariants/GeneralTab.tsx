@@ -9,6 +9,8 @@ import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_uti
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 import LinkSwuStatsButton from '@/app/_components/_sharedcomponents/SwuStats/LinkSwuStatsButton';
 import MuiLink from '@mui/material/Link';
+import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
+import { useSearchParams } from 'next/navigation';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
@@ -24,6 +26,11 @@ function GeneralTab() {
     const [successfulUsernameChange, setSuccesfulUsernameChange] = useState(false);
     const [deckErrorDetails, setDeckErrorDetails] = useState<string | undefined>(undefined);
     const [showTooltip, setShowTooltip] = useState(false);
+    const [muteTimeText, setMuteTimeText] = useState<string | null>('');
+    const searchParams = useSearchParams();
+    const enableLinkButton = 
+        searchParams.get('swustats') === 'true' ||
+        process.env.ENABLE_LINK_SWUSTATS === 'true';
 
     const [swuStatsError, setSwuStatsError] = useState<boolean>(false);
     const swuStatsErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -119,7 +126,12 @@ function GeneralTab() {
         const validationError = validateDiscordUsername(currentUsername);
         setUserErrorSummary(validationError); // Show initial validation state if any
         setCanSubmitClientSide(validationError === null && currentUsername.trim() !== '');
-    }, [user]); // Rerun when user object changes
+        if (user && user.moderation) {
+            setMuteTimeText(getMuteDisplayText(user.moderation));
+        } else {
+            setMuteTimeText('');
+        }
+    }, [user]);
 
     const isSubmitDisabled = !usernameChangeable || !canSubmitClientSide || username.trim() === (user?.username || '').trim();
 
@@ -192,7 +204,32 @@ function GeneralTab() {
         },
         swuStatsContainer:{
             mb:'40px'
-        }
+        },
+        muteNoticeContainer: {
+            mt: '2rem',
+            p: '1rem',
+            backgroundColor: '#2D1B42',
+            border: '1px solid #8B5CF6',
+            borderRadius: '8px',
+            maxWidth: 'calc(20rem + 130px)',
+        },
+        muteNoticeTitle: {
+            color: '#DC3545',
+            fontSize: '1rem',
+            fontWeight: 'bold',
+            mb: '0.5rem',
+        },
+        muteNoticeText: {
+            color: '#E5E7EB',
+            fontSize: '0.875rem',
+            mb: '0.5rem',
+        },
+        muteTimeText: {
+            color: '#C4B5FD',
+            fontSize: '0.875rem',
+            fontWeight: 'bold',
+            mb: '0.5rem',
+        },
     };
 
     return (
@@ -250,22 +287,24 @@ function GeneralTab() {
                                     After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
                                 </Typography>
                             </Box>
-                            <Box sx={styles.swuStatsContainer}>
-                                <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
-                                {swuStatsError && (
-                                    <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                                        Failed to link to SWUStats account. If this keeps happening, please report the problem to the
-                                        <MuiLink
-                                            href="https://discord.com/channels/1220057752961814568/1345468050568380568"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
-                                        >
-                                            Discord
-                                        </MuiLink>.
-                                    </Typography>
-                                )}
-                            </Box>
+                            {(process.env.NODE_ENV === 'development' || enableLinkButton) && (
+                                <Box sx={styles.swuStatsContainer}>
+                                    <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
+                                    {swuStatsError && (
+                                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                            Failed to link to SWUStats account. If this keeps happening, please report the problem to the
+                                            <MuiLink
+                                                href="https://discord.com/channels/1220057752961814568/1345468050568380568"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
+                                            >
+                                                Discord
+                                            </MuiLink>.
+                                        </Typography>
+                                    )}
+                                </Box>)
+                            }
                         </Box>
                     )}
                     <Typography variant={'h3'} sx={{ mt: user ? 0 : '1rem' }}>Player ID</Typography>
@@ -285,6 +324,41 @@ function GeneralTab() {
                             </Button>
                         </Tooltip>
                     </Box>
+                    {/* Mute Notice - Only show if user is muted */}
+                    {user?.moderation && (
+                        <Box sx={styles.muteNoticeContainer}>
+                            <Typography sx={styles.muteNoticeTitle}>
+                                Account Temporarily Muted
+                            </Typography>
+                            <Typography sx={styles.muteNoticeText}>
+                                Your account is temporarily muted due to a violation of our{' '}
+                                <Link
+                                    href="/Terms"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{ color: 'inherit', textDecoration: 'underline' }}
+                                >
+                                    code of conduct
+                                </Link>.
+                            </Typography>
+                            {muteTimeText && (
+                                <Typography sx={styles.muteTimeText}>
+                                    Time remaining: {muteTimeText}
+                                </Typography>
+                            )}
+                            <Typography sx={styles.muteNoticeText}>
+                                If you think this restriction was applied in error or if you have any questions, reach out on our{' '}
+                                <Link
+                                    href="https://discord.com/channels/1220057752961814568/1417680409151410226/1418301240525193348"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{ color: 'inherit', textDecoration: 'underline' }}
+                                >
+                                    Discord player ticketing channel
+                                </Link>.
+                            </Typography>
+                        </Box>
+                    )}
                 </Box>
             </Box>
             <ErrorModal

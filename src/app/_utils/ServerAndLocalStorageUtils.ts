@@ -3,10 +3,10 @@ import {
     IDeckDetailedData,
     StoredDeck
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { IDeckData } from '@/app/_utils/fetchDeckData';
+import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
-import { IUser, IPreferences } from '@/app/_contexts/UserTypes';
+import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 
 /* Secondary functions */
@@ -85,7 +85,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean, swuStatsRefreshToken: string | null }> =>{
+export const getUserFromServer = async(): Promise<IGetUser> =>{
     try {
         const decks = loadSavedDecks(false);
         // const preferences = loadPreferencesFromLocalStorage();
@@ -220,6 +220,32 @@ export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolea
     }
 }
 
+export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-moderation-seen`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean, user: IUser): Promise<void> => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/deck/${deckId}/favorite`, {
@@ -266,7 +292,7 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
                     favourite: false,
                     deckLink: deckLink,
                     deckLinkID: deckData.deckID, // Use existing ID or generate new one
-                    source: deckData.deckSource || (deckLink.includes('swustats.net') ? 'SWUSTATS' : deckLink.includes('swustats.net') ? 'SWUDB' : 'SWUnlimitedDB')
+                    source: deckData.deckSource || determineDeckSource(deckLink)
                 }
             }
         };
@@ -433,7 +459,7 @@ export const saveDeckToLocalStorage = (deckData:IDeckData | DeckJSON | undefined
     try {
         // Save to localStorage
         const deckKey = deckData.deckID;
-        const deckSource = deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB'
+        const deckSource = determineDeckSource(deckLink);
         const simplifiedDeckData = {
             leader: { id: deckData.leader.id },
             base: { id: deckData.base.id },
@@ -653,3 +679,4 @@ export const unlinkSwuStatsAsync = async(
         throw error;
     }
 };
+
