@@ -118,10 +118,6 @@ const CreateGameForm = () => {
     const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
         setShowSavedDecks(useSavedDecks);
         setDeckErrorSummary(null);
-        // Clear deck link when switching to saved decks mode
-        if (useSavedDecks) {
-            setDeckLink('');
-        }
     }
     const handleSelectFavoriteDeck = (deckID: string) => {
         setFavoriteDeck(deckID);
