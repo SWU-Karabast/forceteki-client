@@ -81,6 +81,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 setFavoriteDeck(e.newValue);
             } else if (e.key === 'useSavedDecks' && e.newValue !== null) {
                 setShowSavedDecks(e.newValue === 'true');
+            } else if (e.key === 'format' && e.newValue !== null) {
+                setFormat(e.newValue);
             }
         };
 
@@ -93,6 +95,8 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
                 setFavoriteDeck(e.detail.newValue);
             } else if (e.detail.key === 'useSavedDecks') {
                 setShowSavedDecks(e.detail.newValue === 'true');
+            } else if (e.detail.key === 'format') {
+                setFormat(e.detail.newValue);
             }
         };
 
@@ -136,6 +140,11 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const handleChangeFormat = (format: SwuGameFormat) => {
         localStorage.setItem('format', format);
         setFormat(format);
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('localStorageChange', {
+            detail: { key: 'format', newValue: format }
+        }));
     }
 
     const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
