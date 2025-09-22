@@ -44,6 +44,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
+    const [undoEnabledSetting, setUndoEnabledSetting] = useState<boolean>(false);
     const { data: session } = useSession(); // Get session from next-auth
 
     // For deck error display
@@ -52,8 +53,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [displayError, setDisplayerror] = useState(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
-
-    const undoEnabled = lobbyState?.undoEnabled;
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
@@ -318,10 +317,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     }
     return (
         <Card sx={styles.initiativeCardStyle}>
-            <Typography variant="h3" sx={styles.setUpTextStyle}>
-                Set Up
-            </Typography>
-
             {!opponentUser ? (
                 // If opponent is null, show "Waiting for an opponent" UI
                 <CardContent sx={styles.setUpCard}>
@@ -525,12 +520,26 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
-            <Divider sx={{ mt: 1, borderColor: '#666', display: undoEnabled ? 'block' : 'none' }} />
-            <Box sx={{ display: undoEnabled ? 'block' : 'none' }}>
-                <Typography sx={{ fontSize: '1.4em', mt: 1, textAlign: 'center', color: 'red' }}>
-                    Undo test mode is enabled
-                </Typography>
-            </Box>
+            <Divider sx={{ mt: 2, borderColor: '#666' }} />
+            <Typography variant="h5" sx={{ fontSize: '1.2em', fontWeight: '600', color: 'white', mt: 2, mb: 1 }}>
+                Game Settings
+            </Typography>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        sx={styles.checkboxStyle}
+                        checked={undoEnabledSetting}
+                        onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
+                            setUndoEnabledSetting(checked)
+                        }
+                    />
+                }
+                label={
+                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                        Enable Undo (Beta)
+                    </Typography>
+                }
+            />
         </Card>
     )
 };
