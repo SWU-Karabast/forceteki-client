@@ -29,7 +29,7 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasPlayerModerationAction } = useGame();
+    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
     const { user } = useUser();
@@ -61,7 +61,7 @@ const Chat: React.FC<IChatProps> = ({
                     borderColor: 'yellow'
                 };
 
-            case hasOpponentModerationAction:
+            case opponentChatDisabled:
                 return {
                     reason: ChatDisabledReason.OpponentDisabledChat,
                     message: 'The opponent has disabled chat',
@@ -87,7 +87,7 @@ const Chat: React.FC<IChatProps> = ({
 
     const isPrivateLobby = lobbyState?.gameType === 'Private';
     const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
-    const hasOpponentModerationAction = hasPlayerModerationAction(getOpponent(connectedPlayer));
+    const opponentChatDisabled = hasChatDisabled(getOpponent(connectedPlayer));
     const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
     const shouldShowChatInput = () => {
