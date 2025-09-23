@@ -32,17 +32,39 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 import { useSession } from 'next-auth/react';
-import { useDeckPreferences } from '@/app/_contexts/DeckPreferences.context';
 
-interface ICreateGameFormProps {
-    format?: SwuGameFormat | null;
-    setFormat?: (format: SwuGameFormat) => void;
+interface IDeckPreferences {
+    showSavedDecks: boolean;
+    favoriteDeck: string;
+    format: SwuGameFormat;
+    saveDeck: boolean;
 }
 
-const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
+interface IDeckPreferencesHandlers {
+    setShowSavedDecks: (value: boolean) => void;
+    setFavoriteDeck: (value: string) => void;
+    setFormat: (value: SwuGameFormat) => void;
+    setSaveDeck: (value: boolean) => void;
+}
+
+interface IQuickGameFormProps {
+    deckPreferences: IDeckPreferences;
+    deckPreferencesHandlers: IDeckPreferencesHandlers;
+    deckLink: string;
+    setDeckLink: (value: string) => void;
+}
+
+const QuickGameForm: React.FC<IQuickGameFormProps> = ({
+    deckPreferences,
+    deckPreferencesHandlers,
+    deckLink,
+    setDeckLink
+}) => {
     const router = useRouter();
     const { user } = useUser();
-    const { showSavedDecks, setShowSavedDecks, favoriteDeck, setFavoriteDeck, format, setFormat, deckLink, setDeckLink, saveDeck, setSaveDeck } = useDeckPreferences();
+    
+    const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
+    const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
@@ -491,4 +513,4 @@ const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     );
 };
 
-export default QuickGameForm;
+export default React.memo(QuickGameForm);

@@ -34,14 +34,41 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
 import { useSession } from 'next-auth/react';
-import { useDeckPreferences } from '@/app/_contexts/DeckPreferences.context';
 
-const CreateGameForm = () => {
+interface IDeckPreferences {
+    showSavedDecks: boolean;
+    favoriteDeck: string;
+    format: SwuGameFormat;
+    saveDeck: boolean;
+}
+
+interface IDeckPreferencesHandlers {
+    setShowSavedDecks: (value: boolean) => void;
+    setFavoriteDeck: (value: string) => void;
+    setFormat: (value: SwuGameFormat) => void;
+    setSaveDeck: (value: boolean) => void;
+}
+
+interface ICreateGameFormProps {
+    deckPreferences: IDeckPreferences;
+    deckPreferencesHandlers: IDeckPreferencesHandlers;
+    deckLink: string;
+    setDeckLink: (value: string) => void;
+}
+
+const CreateGameForm: React.FC<ICreateGameFormProps> = ({
+    deckPreferences,
+    deckPreferencesHandlers,
+    deckLink,
+    setDeckLink
+}) => {
     const pathname = usePathname();
     const router = useRouter();
     const isCreateGamePath = pathname === '/creategame';
     const { user } = useUser();
-    const { showSavedDecks, setShowSavedDecks, favoriteDeck, setFavoriteDeck, format, setFormat, deckLink, setDeckLink, saveDeck, setSaveDeck } = useDeckPreferences();
+    
+    const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
+    const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
@@ -558,4 +585,4 @@ const CreateGameForm = () => {
     );
 };
 
-export default CreateGameForm;
+export default React.memo(CreateGameForm);
