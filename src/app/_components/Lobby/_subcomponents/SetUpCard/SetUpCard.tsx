@@ -44,7 +44,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
-    const [undoEnabledSetting, setUndoEnabledSetting] = useState<boolean>(false);
     const { data: session } = useSession(); // Get session from next-auth
 
     // For deck error display
@@ -57,6 +56,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
         sendLobbyMessage(['onStartGameAsync']);
+    };
+
+    const handleChangeUndoSetting = async (checked: boolean) => {
+        sendLobbyMessage(['updateSetting', 'undoEnabled', checked]);
     };
 
     useEffect(() => {
@@ -528,9 +531,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 control={
                     <Checkbox
                         sx={styles.checkboxStyle}
-                        checked={undoEnabledSetting}
+                        checked={lobbyState.settings.undoEnabled}
                         onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
-                            setUndoEnabledSetting(checked)
+                            handleChangeUndoSetting(checked)
                         }
                     />
                 }
