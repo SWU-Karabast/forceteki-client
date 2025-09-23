@@ -26,6 +26,7 @@ import {
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
 import { SupportedDeckSources } from '@/app/_constants/constants';
+import PreferenceOptionWithIcon from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceOption';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -52,6 +53,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [displayError, setDisplayerror] = useState(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
+
+    const disableSettings = !owner || readyStatus || opponentUser.ready;
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
@@ -312,9 +315,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             '&.Mui-checked': {
                 color: '#fff',
             },
+            opacity: disableSettings ? 0.5 : 1,
         },
         checkboxAndRadioGroupTextStyle: {
-            color: '#fff',
+            color: disableSettings ? '#c0c0c0' : '#fff',  // Lighter color when disabled
             fontSize: '1em',
         },
     }
@@ -532,6 +536,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     <Checkbox
                         sx={styles.checkboxStyle}
                         checked={lobbyState.settings.undoEnabled}
+                        disabled={!owner || readyStatus || opponentUser.ready}
                         onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
                             handleChangeUndoSetting(checked)
                         }
