@@ -62,9 +62,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     deckLink,
     setDeckLink
 }) => {
-    const pathname = usePathname();
     const router = useRouter();
-    const isCreateGamePath = pathname === '/creategame';
     const { user } = useUser();
     
     const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
@@ -328,7 +326,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     return (
         <Box >
             <Typography variant="h2">
-                {isCreateGamePath ? 'Choose Your Deck' : 'Create New Lobby'}
+                Create New Lobby
             </Typography>
             {/* <Typography variant="h3" sx={styles.labelTextStyle}>
                 Deck Selection
@@ -479,101 +477,80 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </Typography>
                 <Divider sx={{ mb: '5px' }}/>
                 {/* Additional Fields for Non-Creategame Path */}
-                {!isCreateGamePath && (
-                    <>
-                        {/* Format Selection */}
-                        <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
-                            <StyledTextField
-                                select
-                                value={format}
-                                required
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    handleChangeFormat(e.target.value as SwuGameFormat)
-                                }
-                            >
-                                {formatOptions.map((fmt) => (
-                                    <MenuItem key={fmt} value={fmt}>
-                                        {FormatLabels[fmt] || fmt}
-                                    </MenuItem>
-                                ))}
-                            </StyledTextField>
-                        </FormControl>
-                        {/* Privacy Selection */}
-                        <FormControl component="fieldset" sx={styles.formControlStyle}>
-                            <RadioGroup
-                                row
-                                value={privateGame ? 'Private' : 'Public'}
-                                onChange={(
-                                    e: ChangeEvent<HTMLInputElement>,
-                                    value: string
-                                ) => setPrivateGame(value === 'Private')}
-                            >
-                                <FormControlLabel
-                                    value="Public"
-                                    control={<Radio sx={styles.checkboxStyle} />}
-                                    label={
-                                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                            Public
-                                        </Typography>
-                                    }
-                                />
-                                <FormControlLabel
-                                    value="Private"
-                                    control={<Radio sx={styles.checkboxStyle} />}
-                                    label={
-                                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                            Private
-                                        </Typography>
-                                    }
-                                />
-                            </RadioGroup>
-                        </FormControl>
 
-                        {!privateGame && (
-                            <>
-                                <FormControl fullWidth sx={styles.formControlStyle}>
-                                    <Typography variant="body1" sx={styles.labelTextStyle}>
-                                        Game Name
-                                    </Typography>
-                                    <StyledTextField
-                                        type="text"
-                                        value={lobbyName}
-                                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                            setLobbyName(e.target.value)
-                                        }
-                                        placeholder="Game #"
-                                    />
-                                </FormControl>
-                            </>
-                        )}
+                {/* Format Selection */}
+                <FormControl fullWidth sx={styles.formControlStyle}>
+                    <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
+                    <StyledTextField
+                        select
+                        value={format}
+                        required
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            handleChangeFormat(e.target.value as SwuGameFormat)
+                        }
+                    >
+                        {formatOptions.map((fmt) => (
+                            <MenuItem key={fmt} value={fmt}>
+                                {FormatLabels[fmt] || fmt}
+                            </MenuItem>
+                        ))}
+                    </StyledTextField>
+                </FormControl>
+                {/* Privacy Selection */}
+                <FormControl component="fieldset" sx={styles.formControlStyle}>
+                    <RadioGroup
+                        row
+                        value={privateGame ? 'Private' : 'Public'}
+                        onChange={(
+                            e: ChangeEvent<HTMLInputElement>,
+                            value: string
+                        ) => setPrivateGame(value === 'Private')}
+                    >
+                        <FormControlLabel
+                            value="Public"
+                            control={<Radio sx={styles.checkboxStyle} />}
+                            label={
+                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                    Public
+                                </Typography>
+                            }
+                        />
+                        <FormControlLabel
+                            value="Private"
+                            control={<Radio sx={styles.checkboxStyle} />}
+                            label={
+                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                    Private
+                                </Typography>
+                            }
+                        />
+                    </RadioGroup>
+                </FormControl>
+
+                {!privateGame && (
+                    <>
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            <Typography variant="body1" sx={styles.labelTextStyle}>
+                                Game Name
+                            </Typography>
+                            <StyledTextField
+                                type="text"
+                                value={lobbyName}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setLobbyName(e.target.value)
+                                }
+                                placeholder="Game #"
+                            />
+                        </FormControl>
                     </>
                 )}
+
 
                 {/* Submit Button */}
                 <Button type="submit" variant="contained" sx={styles.submitButtonStyle}>
                     Create Game
                 </Button>
             </form>
-            {/* Secondary Card - Instructions (Only for /creategame path) */}
-            {isCreateGamePath && (
-                <Box>
-                    <Typography variant="h3">
-                        Instructions
-                    </Typography>
-                    <Typography variant="body1">
-                        Choose a deck, then click &apos;Create&apos; to be taken to the
-                        game lobby.
-                        <br />
-                        <br />
-                        Once in the lobby, the player who wins the dice roll chooses who
-                        goes first. Then the host can start the game.
-                        <br />
-                        <br />
-                        Have Fun!
-                    </Typography>
-                </Box>
-            )}
             <ErrorModal
                 open={errorModalOpen}
                 onClose={() => setErrorModalOpen(false)}

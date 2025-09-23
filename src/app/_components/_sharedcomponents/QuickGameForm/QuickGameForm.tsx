@@ -488,20 +488,6 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     {queueState ? 'Queueing...' : 'Join Queue'}
                 </Button>
             </form>
-            {/* Secondary Card - Instructions (Only for /creategame path) */}
-            {(
-                <Box>
-                    <Typography variant="h3">
-                        Instructions
-                    </Typography>
-                    <Typography variant="body1">
-                        Choose a deck, then click &apos;Join Queue&apos; to join the matchmaking queue.
-                        <br />
-                        <br />
-                        Have Fun!
-                    </Typography>
-                </Box>
-            )}
             <ErrorModal
                 open={errorModalOpen}
                 onClose={() => setErrorModalOpen(false)}
