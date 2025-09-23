@@ -55,7 +55,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
 
-    const disableSettings = !owner || readyStatus || opponentUser.ready;
+    const opponentReady = opponentUser?.ready;
+    const disableSettings = !owner || readyStatus || opponentReady;
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
@@ -357,7 +358,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             ) : (
                 // If opponent is not null
                 <>
-                    {readyStatus && opponentUser.ready && owner ? (
+                    {readyStatus && opponentReady && owner ? (
                         // Both are ready
                         <>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -540,7 +541,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     <Checkbox
                         sx={styles.checkboxStyle}
                         checked={lobbyState.settings.undoEnabled}
-                        disabled={!owner || readyStatus || opponentUser.ready}
+                        disabled={!owner || readyStatus || opponentReady}
                         onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
                             handleChangeUndoSetting(checked)
                         }
@@ -551,7 +552,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         <span style={{ ...styles.checkboxAndRadioGroupTextStyle }}>
                             Enable Undo (Beta)
                         </span>
-                        <Tooltip title="Placeholder hover text for undo feature information">
+                        <Tooltip title="Enable the Undo button. This feature is in beta and can potentially cause game issues. Please use the bug report button if you encounter any problems.">
                             <InfoOutlined 
                                 sx={{ 
                                     fontSize: '14px', 
