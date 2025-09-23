@@ -311,11 +311,14 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             textDecorationColor: 'var(--initiative-red);',
         },
         checkboxStyle: {
-            color: '#fff',
+            color: disableSettings ? '#b0b0b0' : '#fff', // Lighter color when disabled and unchecked
             '&.Mui-checked': {
                 color: '#fff',
             },
-            opacity: disableSettings ? 0.5 : 1,
+            '&.Mui-disabled': {
+                color: '#fff',
+            },
+            opacity: disableSettings ? 0.5 : 1, // Slightly less opacity when disabled and checked
         },
         checkboxAndRadioGroupTextStyle: {
             color: disableSettings ? '#c0c0c0' : '#fff',  // Lighter color when disabled
