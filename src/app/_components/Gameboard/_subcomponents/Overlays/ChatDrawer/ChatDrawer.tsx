@@ -91,7 +91,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                         visibility: isUndoHovered ? 'visible' : 'hidden',
                     }}
                 />
-                <PreferenceButton sx={styles.quickUndo} buttonFnc={handleUndo} variant={'standard'} text={'Quick Undo'}
+                <PreferenceButton sx={styles.quickUndo} buttonFnc={handleUndo} variant={'standard'} text={'Undo'}
                     onMouseEnter={() => setIsUndoHovered(true)}
                     onMouseLeave={() => setIsUndoHovered(false)}
                     disabled={!correctPlayer['availableSnapshots']?.hasQuickSnapshot}
