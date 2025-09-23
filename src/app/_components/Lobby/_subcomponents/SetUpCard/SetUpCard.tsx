@@ -7,6 +7,7 @@ import {
     Button,
     Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider
 } from '@mui/material';
+import { Info, InfoOutlined, InfoRounded, InfoSharp, InfoTwoTone } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -546,9 +547,20 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     />
                 }
                 label={
-                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                        Enable Undo (Beta)
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 1 }}>
+                        <span style={{ ...styles.checkboxAndRadioGroupTextStyle }}>
+                            Enable Undo (Beta)
+                        </span>
+                        <Tooltip title="Placeholder hover text for undo feature information">
+                            <InfoOutlined 
+                                sx={{ 
+                                    fontSize: '14px', 
+                                    color: disableSettings ? '#c0c0c0' : '#fff',
+                                    cursor: 'help'
+                                }} 
+                            />
+                        </Tooltip>
+                    </Box>
                 }
             />
         </Card>
