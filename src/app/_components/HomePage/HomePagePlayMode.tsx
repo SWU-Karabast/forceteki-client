@@ -26,66 +26,44 @@ const HomePagePlayMode: React.FC = () => {
 
     // Deck Preferences State (moved from context)
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('useSavedDecks') === 'true';
-        }
-        return false;
+        return localStorage.getItem('useSavedDecks') === 'true';
     });
 
     const [favoriteDeck, setFavoriteDeck] = useState<string>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('selectedDeck') || '';
-        }
-        return '';
+        return localStorage.getItem('selectedDeck') || '';
     });
 
     const [format, setFormat] = useState<SwuGameFormat>(() => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('format');
-            return (stored as SwuGameFormat) || SwuGameFormat.Premier;
-        }
-        return SwuGameFormat.Premier;
+        const stored = localStorage.getItem('format');
+        return (stored as SwuGameFormat) || SwuGameFormat.Premier;
     });
 
     const [deckLink, setDeckLink] = useState<string>('');
 
     const [saveDeck, setSaveDeck] = useState<boolean>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('saveDeck') === 'true';
-        }
-        return false;
+        return localStorage.getItem('saveDeck') === 'true';
     });
 
     // Sync deck preferences to localStorage
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('useSavedDecks', showSavedDecks.toString());
-        }
+        localStorage.setItem('useSavedDecks', showSavedDecks.toString());
     }, [showSavedDecks]);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('selectedDeck', favoriteDeck);
-        }
+        localStorage.setItem('selectedDeck', favoriteDeck);
     }, [favoriteDeck]);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('format', format);
-        }
+        localStorage.setItem('format', format);
     }, [format]);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('saveDeck', saveDeck.toString());
-        }
+        localStorage.setItem('saveDeck', saveDeck.toString());
     }, [saveDeck]);
 
     // Clear form errors function
     const clearErrors = useCallback(() => {
-        if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('clearDeckErrors'));
-        }
+        window.dispatchEvent(new CustomEvent('clearDeckErrors'));
     }, []);
 
     const closeWelcomePopup = () => {
