@@ -17,6 +17,7 @@ export enum DeckSource {
     SWUnlimitedDB = 'SWUnlimitedDB',
     SWUCardHub = 'SWUCardHub',
     SWUBase = 'SWUBase',
+    SWUMetaStats = 'SWUMetaStats'
 }
 
 export interface IDeckData {
