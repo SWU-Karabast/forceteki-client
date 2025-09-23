@@ -90,14 +90,7 @@ const Chat: React.FC<IChatProps> = ({
     const opponentChatDisabled = hasChatDisabled(getOpponent(connectedPlayer));
     const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
-    const shouldShowChatInput = () => {
-        if (isSpectator) return false;
-        if (isPrivateLobby) return true;
-        if (!user) return false;
-        if (isAnonymousOpponent) return false;
-        if (user && user.moderation) return false;
-        return true;
-    };
+    const shouldShowChatInput = !chatDisabledInfo || chatDisabledInfo.reason === ChatDisabledReason.None;
 
     const getSpectatorDisplayName = (
         playerId: string,
@@ -376,7 +369,7 @@ const Chat: React.FC<IChatProps> = ({
 
             <Box sx={styles.inputContainer}>
                 {/* Show chat input based on game state and user permissions */}
-                {shouldShowChatInput() && (
+                {shouldShowChatInput && (
                     <TextField
                         variant="outlined"
                         placeholder="Chat"
@@ -405,7 +398,7 @@ const Chat: React.FC<IChatProps> = ({
                         }}
                     />
                 )}
-                {chatDisabledInfo && chatDisabledInfo.reason !== ChatDisabledReason.None &&(
+                {!shouldShowChatInput && !isSpectator &&(
                     <Typography sx={styles.chatDisabled(chatDisabledInfo.borderColor)}>
                         {chatDisabledInfo.message}
                     </Typography>
