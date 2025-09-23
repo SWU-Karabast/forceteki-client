@@ -7,7 +7,7 @@ import {
     Button,
     Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider
 } from '@mui/material';
-import { Info, InfoOutlined, InfoRounded, InfoSharp, InfoTwoTone } from '@mui/icons-material';
+import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -553,11 +553,14 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                             Enable Undo (Beta)
                         </span>
                         <Tooltip title="Enable the Undo button. This feature is in beta and can potentially cause game issues. Please use the bug report button if you encounter any problems.">
-                            <InfoOutlined 
+                            <Info 
                                 sx={{ 
-                                    fontSize: '14px', 
-                                    color: disableSettings ? '#c0c0c0' : '#fff',
-                                    cursor: 'help'
+                                    fontSize: '14px',
+                                    color: '#1976d2',
+                                    backgroundColor: '#fff',
+                                    borderRadius: '50%',
+                                    cursor: 'help',
+                                    opacity: disableSettings ? 0.5 : 1
                                 }} 
                             />
                         </Tooltip>
