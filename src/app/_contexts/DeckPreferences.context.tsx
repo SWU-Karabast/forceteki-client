@@ -6,6 +6,8 @@ import React, {
     ReactNode,
     useState,
     useEffect,
+    useMemo,
+    useCallback,
 } from 'react';
 import { SwuGameFormat } from '@/app/_constants/constants';
 
@@ -97,14 +99,14 @@ export const DeckPreferencesProvider: React.FC<{ children: ReactNode }> = ({
         }
     }, [saveDeck]);
 
-    const clearErrors = () => {
+    const clearErrors = useCallback(() => {
         // Dispatch a custom event to notify forms to clear their error states
         if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('clearDeckErrors'));
         }
-    };
+    }, []);
 
-    const value = {
+    const value = useMemo(() => ({
         showSavedDecks,
         setShowSavedDecks,
         favoriteDeck,
@@ -116,7 +118,7 @@ export const DeckPreferencesProvider: React.FC<{ children: ReactNode }> = ({
         saveDeck,
         setSaveDeck,
         clearErrors,
-    };
+    }), [showSavedDecks, setShowSavedDecks, favoriteDeck, setFavoriteDeck, format, setFormat, deckLink, setDeckLink, saveDeck, setSaveDeck, clearErrors]);
 
     return (
         <DeckPreferencesContext.Provider value={value}>
