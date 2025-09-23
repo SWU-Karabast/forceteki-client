@@ -42,10 +42,9 @@ interface ICreateGameFormProps {
 const QuickGameForm: React.FC<ICreateGameFormProps> = () => {
     const router = useRouter();
     const { user } = useUser();
-    const { showSavedDecks, setShowSavedDecks, favoriteDeck, setFavoriteDeck, format, setFormat, deckLink, setDeckLink } = useDeckPreferences();
+    const { showSavedDecks, setShowSavedDecks, favoriteDeck, setFavoriteDeck, format, setFormat, deckLink, setDeckLink, saveDeck, setSaveDeck } = useDeckPreferences();
 
     // Common State
-    const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [queueState, setQueueState] = useState<boolean>(false)
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 

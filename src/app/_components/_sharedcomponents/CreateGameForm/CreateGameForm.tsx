@@ -41,10 +41,9 @@ const CreateGameForm = () => {
     const router = useRouter();
     const isCreateGamePath = pathname === '/creategame';
     const { user } = useUser();
-    const { showSavedDecks, setShowSavedDecks, favoriteDeck, setFavoriteDeck, format, setFormat, deckLink, setDeckLink } = useDeckPreferences();
+    const { showSavedDecks, setShowSavedDecks, favoriteDeck, setFavoriteDeck, format, setFormat, deckLink, setDeckLink, saveDeck, setSaveDeck } = useDeckPreferences();
 
     // Common State
-    const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [privateGame, setPrivateGame] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);

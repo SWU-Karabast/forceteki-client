@@ -18,6 +18,8 @@ interface IDeckPreferencesContextType {
     setFormat: (value: SwuGameFormat) => void;
     deckLink: string;
     setDeckLink: (value: string) => void;
+    saveDeck: boolean;
+    setSaveDeck: (value: boolean) => void;
     clearErrors: () => void;
 }
 
@@ -30,6 +32,8 @@ const DeckPreferencesContext = createContext<IDeckPreferencesContextType>({
     setFormat: () => {},
     deckLink: '',
     setDeckLink: () => {},
+    saveDeck: false,
+    setSaveDeck: () => {},
     clearErrors: () => {},
 });
 
@@ -61,6 +65,13 @@ export const DeckPreferencesProvider: React.FC<{ children: ReactNode }> = ({
 
     const [deckLink, setDeckLink] = useState<string>('');
 
+    const [saveDeck, setSaveDeck] = useState<boolean>(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('saveDeck') === 'true';
+        }
+        return false;
+    });
+
     // Sync changes back to localStorage
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -80,6 +91,12 @@ export const DeckPreferencesProvider: React.FC<{ children: ReactNode }> = ({
         }
     }, [format]);
 
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('saveDeck', saveDeck.toString());
+        }
+    }, [saveDeck]);
+
     const clearErrors = () => {
         // Dispatch a custom event to notify forms to clear their error states
         if (typeof window !== 'undefined') {
@@ -96,6 +113,8 @@ export const DeckPreferencesProvider: React.FC<{ children: ReactNode }> = ({
         setFormat,
         deckLink,
         setDeckLink,
+        saveDeck,
+        setSaveDeck,
         clearErrors,
     };
 
