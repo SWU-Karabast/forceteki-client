@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Drawer, Box, Typography } from '@mui/material';
+import { Drawer, Box } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -57,7 +57,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             display: 'flex',
             alignItems: 'center',
             position: 'relative',
-            height: '2.5em',
+            height: '1.5em',
         },
         quickUndo:{
             height:'45px',
@@ -69,7 +69,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent:'center',
+            justifyContent: 'flex-start',
+            paddingTop: '0.5em',
         }
     }
 
@@ -84,15 +85,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         >
             <Box sx={styles.headerBoxStyle}>
                 <ChevronRightIcon onClick={toggleSidebar} />
-                <Typography sx={{
-                    color: '#fff',
-                    fontSize: '1.5em',
-                    position: 'absolute',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: 'max-content',
-                }}>Chat</Typography>
             </Box>
+
             {(isDev || gameState.undoEnabled) && (<Box sx={styles.quickUndoBox}>
                 <Image
                     src="/porg1.png"
