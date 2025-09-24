@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, ChangeEvent, useEffect, useCallback } from 'react';
+import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -9,15 +9,14 @@ import {
     Typography,
     Radio,
     RadioGroup,
-    Link, IconButton,
+    Link,
     Divider,
     Tooltip,
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { DeckSource, fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
     DeckValidationFailureReason,
@@ -25,15 +24,12 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { SwuGameFormat, FormatLabels, SupportedDeckSources } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
-import { DisplayDeck, StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
     getUserPayload,
-    retrieveDecksForUser,
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
-import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
-import { useSession } from 'next-auth/react';
 
 interface IDeckPreferences {
     showSavedDecks: boolean;
@@ -54,13 +50,17 @@ interface ICreateGameFormProps {
     deckPreferencesHandlers: IDeckPreferencesHandlers;
     deckLink: string;
     setDeckLink: (value: string) => void;
+    savedDecks: StoredDeck[];
+    handleDeckManagement: () => void;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     deckPreferences,
     deckPreferencesHandlers,
     deckLink,
-    setDeckLink
+    setDeckLink,
+    savedDecks,
+    handleDeckManagement
 }) => {
     const router = useRouter();
     const { user } = useUser();
@@ -69,11 +69,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
-    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [privateGame, setPrivateGame] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
-    const { data: session } = useSession(); // Get session from next-auth
     const formatOptions = Object.values(SwuGameFormat);
 
     // For a short, user-friendly error message
@@ -87,40 +85,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     const searchParams = useSearchParams();
     const undoEnabled = searchParams.get('undoTest') === 'true';
-
-    const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
-        let selectDeck = favoriteDeck;
-        
-        if (favoriteDeck && !allDecks.some(deck => deck.deckID === favoriteDeck)) {
-            selectDeck = '';
-        }
-
-        if (!selectDeck) {
-            selectDeck = firstDeck || '';
-        }
-
-        if (selectDeck !== favoriteDeck) {
-            setFavoriteDeck(selectDeck);
-        }
-    }, [favoriteDeck, setFavoriteDeck]);
-
-    const handleDeckManagement = () => {
-        router.push('/DeckPage');
-    }
-
-    // Load saved decks from localStorage
-    const fetchDecks = useCallback(async() => {
-        try {
-            await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
-        }catch (err){
-            console.log(err);
-            alert('Server error when fetching decks');
-        }
-    }, [session?.user, user, handleInitializeDeckSelection]);
-
-    useEffect(() => {
-        fetchDecks();
-    }, [fetchDecks]);
 
     // Listen for tab change events to clear errors
     useEffect(() => {
@@ -267,7 +231,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
             router.push('/lobby');
-        } catch (error) {
+        } catch {
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
             setErrorTitle('Server error');

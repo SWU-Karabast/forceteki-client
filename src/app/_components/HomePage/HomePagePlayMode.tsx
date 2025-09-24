@@ -9,9 +9,11 @@ import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/U
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
-import { setModerationSeenAsync } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { setModerationSeenAsync, retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
 import { SwuGameFormat } from '@/app/_constants/constants';
+import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { useSession } from 'next-auth/react';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -23,6 +25,7 @@ const HomePagePlayMode: React.FC = () => {
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
     const { user, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
+    const { data: session } = useSession();
 
     // Deck Preferences State (moved from context)
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
@@ -44,6 +47,9 @@ const HomePagePlayMode: React.FC = () => {
         return localStorage.getItem('saveDeck') === 'true';
     });
 
+    // Shared deck state (moved from both forms)
+    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
+
     // Sync deck preferences to localStorage
     useEffect(() => {
         localStorage.setItem('useSavedDecks', showSavedDecks.toString());
@@ -60,6 +66,42 @@ const HomePagePlayMode: React.FC = () => {
     useEffect(() => {
         localStorage.setItem('saveDeck', saveDeck.toString());
     }, [saveDeck]);
+
+    // Shared deck initialization logic (moved from both forms)
+    const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
+        let selectDeck = favoriteDeck;
+        
+        if (favoriteDeck && !allDecks.some(deck => deck.deckID === favoriteDeck)) {
+            selectDeck = '';
+        }
+
+        if (!selectDeck) {
+            selectDeck = firstDeck || '';
+        }
+
+        if (selectDeck !== favoriteDeck) {
+            setFavoriteDeck(selectDeck);
+        }
+    }, [favoriteDeck, setFavoriteDeck]);
+
+    // Shared deck fetching logic (moved from both forms)
+    const fetchDecks = useCallback(async() => {
+        try {
+            await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
+        }catch (err){
+            console.log(err);
+            alert('Server error when fetching decks');
+        }
+    }, [session?.user, user, handleInitializeDeckSelection]);
+
+    useEffect(() => {
+        fetchDecks();
+    }, [fetchDecks]);
+
+    // Shared deck management handler (moved from both forms)
+    const handleDeckManagement = useCallback(() => {
+        router.push('/DeckPage');
+    }, [router]);
 
     // Clear form errors function
     const clearErrors = useCallback(() => {
@@ -180,7 +222,7 @@ const HomePagePlayMode: React.FC = () => {
             }
         };
         fetchGameList();
-    }, [user]);
+    }, [user, showUpdatePopup, updateModerationSeenStatus]);
 
     const styles = {
         wrapper: {
@@ -218,6 +260,8 @@ const HomePagePlayMode: React.FC = () => {
                                 deckPreferencesHandlers={deckPreferencesHandlers}
                                 deckLink={deckLink}
                                 setDeckLink={handleSetDeckLink}
+                                savedDecks={savedDecks}
+                                handleDeckManagement={handleDeckManagement}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -226,6 +270,8 @@ const HomePagePlayMode: React.FC = () => {
                                 deckPreferencesHandlers={deckPreferencesHandlers}
                                 deckLink={deckLink}
                                 setDeckLink={handleSetDeckLink}
+                                savedDecks={savedDecks}
+                                handleDeckManagement={handleDeckManagement}
                             />
                         </TabPanel>
                         {showTestGames &&
