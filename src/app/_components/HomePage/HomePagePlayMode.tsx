@@ -72,6 +72,10 @@ const HomePagePlayMode: React.FC = () => {
         if (selectDeck !== favoriteDeck) {
             setFavoriteDeck(selectDeck);
         }
+
+        if (localStorage.getItem('useSavedDecks') == null) {
+            setShowSavedDecks(true);
+        }
     }, [favoriteDeck]);
 
     const fetchDecks = useCallback(async() => {
