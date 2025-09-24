@@ -31,8 +31,6 @@ const CONFIG = {
 export async function GET(req: Request) {
     const code = new URL(req.url).searchParams.get('code');
     // we log the request to see
-    console.log('[DEBUG]: request from swustats:',req);
-    console.log('[DEBUG]: url environment:', process.env.NEXTAUTH_URL);
     if (!code) {
         console.error('[SWU Stats] Missing authorization code');
         return NextResponse.redirect(new URL(CONFIG.redirects.error, CONFIG.returnUrl));
@@ -59,9 +57,6 @@ async function fetchSwuStatsTokens(code: string): Promise<ISwuStatsToken> {
     const redirectUri = process.env.NODE_ENV === 'development' ?
         'http://localhost:3000/api/swustats' :
         'https://karabast.net/api/swustats'
-    console.log('[DEBUG] CLIENT_ID exists:', !!process.env.SWUSTATS_CLIENT_ID);
-    console.log('[DEBUG] CLIENT_SECRET exists:', !!process.env.SWUSTATS_CLIENT_SECRET);
-    console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
     
     if (!clientId || !clientSecret) {
         throw new Error('SWU Stats client credentials are not configured');

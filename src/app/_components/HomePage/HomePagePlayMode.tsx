@@ -24,8 +24,8 @@ const HomePagePlayMode: React.FC = () => {
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
-    const { user, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
-    const { data: session } = useSession();
+    const { user, isLoading: userLoading, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
+    const { data: session, status } = useSession();
 
     // Deck Preferences State (moved from context)
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
@@ -47,17 +47,12 @@ const HomePagePlayMode: React.FC = () => {
         return localStorage.getItem('saveDeck') === 'true';
     });
 
-    // Shared deck state (moved from both forms)
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
     // Sync deck preferences to localStorage
     useEffect(() => {
         localStorage.setItem('useSavedDecks', showSavedDecks.toString());
     }, [showSavedDecks]);
-
-    useEffect(() => {
-        localStorage.setItem('selectedDeck', favoriteDeck);
-    }, [favoriteDeck]);
 
     useEffect(() => {
         localStorage.setItem('format', format);
@@ -67,11 +62,10 @@ const HomePagePlayMode: React.FC = () => {
         localStorage.setItem('saveDeck', saveDeck.toString());
     }, [saveDeck]);
 
-    // Shared deck initialization logic (moved from both forms)
     const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
-        let selectDeck = favoriteDeck;
+        let selectDeck = localStorage.getItem('selectedDeck');
         
-        if (favoriteDeck && !allDecks.some(deck => deck.deckID === favoriteDeck)) {
+        if (selectDeck && !allDecks.some(deck => deck.deckID === selectDeck)) {
             selectDeck = '';
         }
 
@@ -82,23 +76,29 @@ const HomePagePlayMode: React.FC = () => {
         if (selectDeck !== favoriteDeck) {
             setFavoriteDeck(selectDeck);
         }
-    }, [favoriteDeck, setFavoriteDeck]);
+    }, [favoriteDeck]);
 
-    // Shared deck fetching logic (moved from both forms)
     const fetchDecks = useCallback(async() => {
+        if (userLoading) {
+            return;
+        }
+
         try {
             await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
         }catch (err){
-            console.log(err);
             alert('Server error when fetching decks');
         }
-    }, [session?.user, user, handleInitializeDeckSelection]);
+    }, [session?.user, user, userLoading, handleInitializeDeckSelection]);
 
     useEffect(() => {
         fetchDecks();
     }, [fetchDecks]);
 
-    // Shared deck management handler (moved from both forms)
+    const handleChangeSelectedDeck = useCallback((deckId: string) => {
+        setFavoriteDeck(deckId);
+        localStorage.setItem('selectedDeck', deckId);
+    }, []);
+
     const handleDeckManagement = useCallback(() => {
         router.push('/DeckPage');
     }, [router]);
@@ -262,6 +262,7 @@ const HomePagePlayMode: React.FC = () => {
                                 setDeckLink={handleSetDeckLink}
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
+                                handleChangeSelectedDeck={handleChangeSelectedDeck}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -272,6 +273,7 @@ const HomePagePlayMode: React.FC = () => {
                                 setDeckLink={handleSetDeckLink}
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
+                                handleChangeSelectedDeck={handleChangeSelectedDeck}
                             />
                         </TabPanel>
                         {showTestGames &&

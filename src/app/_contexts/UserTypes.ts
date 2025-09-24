@@ -56,6 +56,7 @@ export interface IPreferences {
 export interface IUserContextType {
     user: IUser | null;
     anonymousUserId: string | null;
+    isLoading: boolean;
     login: (provider: 'google' | 'discord') => void;
     devLogin: (user: 'Order66' | 'ThisIsTheWay') => void;
     logout: () => void;
