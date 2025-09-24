@@ -4,13 +4,17 @@ import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import UndoIcon from '@mui/icons-material/Undo';
+import MenuIcon from '@mui/icons-material/Menu';
+import ChatButtonComponent from '@/app/_components/Gameboard/_subcomponents/Overlays/ChatDrawer/_subComponents/ChatButtonComponent';
+import PhaseUndoDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PhaseUndoDialog';
 import Image from 'next/image';
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
     const { gameState, sendGameMessage, connectedPlayer } = useGame();
     const [chatMessage, setChatMessage] = useState('')
     const [isUndoHovered, setIsUndoHovered] = useState(false);
+    const [phaseUndoOpen, setPhaseUndoOpen] = useState(false);
     const isDev = process.env.NODE_ENV === 'development';
     const correctPlayer = gameState.players[connectedPlayer];
     const handleGameChat = () => {
@@ -19,12 +23,20 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         sendGameMessage(['chat', trimmed]);
         setChatMessage('');
     }
-    const handleUndo = () => {
+    const handleUndoButton = () => {
         sendGameMessage(['rollbackToSnapshot',{
             type: 'quick',
             playerId: connectedPlayer,
             actionOffset: 0
         }])
+    }
+
+    const handleOpenPhaseUndoModal = () => {
+        setPhaseUndoOpen(true);
+    }
+
+    const handleClosePhaseUndoModal = () => {
+        setPhaseUndoOpen(false);
     }
 
     // ------------------------STYLES------------------------//
@@ -48,12 +60,15 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             height: '2.5em',
         },
         quickUndo:{
-            height:'50px',
-            mr:'30px',
-            width: 'min(50%, 280px)',
+            height:'45px',
+            mb:'10px',
+            width: 'min(55%, 200px)',
+            lineHeight: '1.2',
         },
         quickUndoBox:{
             display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
             justifyContent:'center',
         }
     }
@@ -85,15 +100,28 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     width={50}
                     height={50}
                     style={{
-                        position:'relative',
-                        left:'35px',
-                        bottom:'28px',
+                        position:'absolute',
+                        right:'10px',
+                        top:'10px',
                         visibility: isUndoHovered ? 'visible' : 'hidden',
                     }}
                 />
-                <PreferenceButton sx={styles.quickUndo} buttonFnc={handleUndo} variant={'standard'} text={'Quick Undo'}
+                <ChatButtonComponent 
+                    sx={styles.quickUndo} 
+                    buttonFnc={handleUndoButton} 
+                    variant={'standard'} 
+                    text={'Undo'}
+                    startIcon={<UndoIcon />}
                     onMouseEnter={() => setIsUndoHovered(true)}
                     onMouseLeave={() => setIsUndoHovered(false)}
+                    disabled={!correctPlayer['availableSnapshots']?.hasQuickSnapshot}
+                />
+                <ChatButtonComponent 
+                    sx={styles.quickUndo} 
+                    buttonFnc={handleOpenPhaseUndoModal} 
+                    variant={'standard'} 
+                    text={<>Previous<br/>Phase</>}
+                    startIcon={<MenuIcon />}
                     disabled={!correctPlayer['availableSnapshots']?.hasQuickSnapshot}
                 />
             </Box>)}
@@ -104,6 +132,12 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 chatMessage={chatMessage}
                 setChatMessage={setChatMessage}
                 handleChatSubmit={handleGameChat}
+            />
+            
+            {/* Phase Undo Dialog */}
+            <PhaseUndoDialog
+                open={phaseUndoOpen}
+                onClose={handleClosePhaseUndoModal}
             />
         </Drawer>
     );
