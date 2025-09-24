@@ -25,7 +25,7 @@ const HomePagePlayMode: React.FC = () => {
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
     const { user, isLoading: userLoading, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
 
     // Deck Preferences State (moved from context)
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
@@ -50,10 +50,6 @@ const HomePagePlayMode: React.FC = () => {
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
     // Sync deck preferences to localStorage
-    useEffect(() => {
-        localStorage.setItem('useSavedDecks', showSavedDecks.toString());
-    }, [showSavedDecks]);
-
     useEffect(() => {
         localStorage.setItem('format', format);
     }, [format]);
@@ -94,11 +90,6 @@ const HomePagePlayMode: React.FC = () => {
         fetchDecks();
     }, [fetchDecks]);
 
-    const handleChangeSelectedDeck = useCallback((deckId: string) => {
-        setFavoriteDeck(deckId);
-        localStorage.setItem('selectedDeck', deckId);
-    }, []);
-
     const handleDeckManagement = useCallback(() => {
         router.push('/DeckPage');
     }, [router]);
@@ -129,9 +120,19 @@ const HomePagePlayMode: React.FC = () => {
         saveDeck,
     };
 
+    const handleShowSavedDecksChange = useCallback((value: boolean) => {
+        setShowSavedDecks(value);
+        localStorage.setItem('useSavedDecks', value.toString());
+    }, []);
+
+    const handleFavoriteDeckChange = useCallback((value: string) => {
+        setFavoriteDeck(value);
+        localStorage.setItem('selectedDeck', value);
+    }, []);
+
     const deckPreferencesHandlers = {
-        setShowSavedDecks: useCallback((value: boolean) => setShowSavedDecks(value), []),
-        setFavoriteDeck: useCallback((value: string) => setFavoriteDeck(value), []),
+        setShowSavedDecks: handleShowSavedDecksChange,
+        setFavoriteDeck: handleFavoriteDeckChange,
         setFormat: useCallback((value: SwuGameFormat) => setFormat(value), []),
         setSaveDeck: useCallback((value: boolean) => setSaveDeck(value), []),
     };
@@ -262,7 +263,6 @@ const HomePagePlayMode: React.FC = () => {
                                 setDeckLink={handleSetDeckLink}
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
-                                handleChangeSelectedDeck={handleChangeSelectedDeck}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -273,7 +273,6 @@ const HomePagePlayMode: React.FC = () => {
                                 setDeckLink={handleSetDeckLink}
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
-                                handleChangeSelectedDeck={handleChangeSelectedDeck}
                             />
                         </TabPanel>
                         {showTestGames &&

@@ -51,7 +51,6 @@ interface IQuickGameFormProps {
     setDeckLink: (value: string) => void;
     savedDecks: StoredDeck[];
     handleDeckManagement: () => void;
-    handleChangeSelectedDeck: (deckId: string) => void;
 }
 
 const QuickGameForm: React.FC<IQuickGameFormProps> = ({
@@ -60,8 +59,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     deckLink,
     setDeckLink,
     savedDecks,
-    handleDeckManagement,
-    handleChangeSelectedDeck
+    handleDeckManagement
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -330,7 +328,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             select
                             value={favoriteDeck}
                             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                handleChangeSelectedDeck(e.target.value as string)
+                                setFavoriteDeck(e.target.value as string)
                             }
                             disabled={userLoading}
                             placeholder="Favorite Decks"

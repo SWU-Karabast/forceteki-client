@@ -52,7 +52,6 @@ interface ICreateGameFormProps {
     setDeckLink: (value: string) => void;
     savedDecks: StoredDeck[];
     handleDeckManagement: () => void;
-    handleChangeSelectedDeck: (deckId: string) => void;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
@@ -61,14 +60,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     deckLink,
     setDeckLink,
     savedDecks,
-    handleDeckManagement,
-    handleChangeSelectedDeck
+    handleDeckManagement
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
     
     const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
-    const { setShowSavedDecks, setFormat, setSaveDeck } = deckPreferencesHandlers;
+    const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
     const [privateGame, setPrivateGame] = useState<boolean>(false);
@@ -334,7 +332,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 select
                                 value={favoriteDeck}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    handleChangeSelectedDeck(e.target.value as string)
+                                    setFavoriteDeck(e.target.value as string)
                                 }
                                 disabled={userLoading}
                                 placeholder="Favorite Decks"
