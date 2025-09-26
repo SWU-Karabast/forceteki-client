@@ -43,9 +43,7 @@ const HomePagePlayMode: React.FC = () => {
 
     const [deckLink, setDeckLink] = useState<string>('');
 
-    const [saveDeck, setSaveDeck] = useState<boolean>(() => {
-        return localStorage.getItem('saveDeck') === 'true';
-    });
+    const [saveDeck, setSaveDeck] = useState<boolean>(false);
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
@@ -53,10 +51,6 @@ const HomePagePlayMode: React.FC = () => {
     useEffect(() => {
         localStorage.setItem('format', format);
     }, [format]);
-
-    useEffect(() => {
-        localStorage.setItem('saveDeck', saveDeck.toString());
-    }, [saveDeck]);
 
     const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
         let selectDeck = localStorage.getItem('selectedDeck');
