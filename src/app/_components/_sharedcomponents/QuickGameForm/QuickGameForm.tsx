@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState, useCallback } from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import {
     Box,
     Button,
@@ -23,15 +23,12 @@ import {
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { FormatLabels, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
-import { DisplayDeck, StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
     getUserPayload,
-    retrieveDecksForUser,
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
-
-import { useSession } from 'next-auth/react';
 
 interface IDeckPreferences {
     showSavedDecks: boolean;
@@ -52,26 +49,28 @@ interface IQuickGameFormProps {
     deckPreferencesHandlers: IDeckPreferencesHandlers;
     deckLink: string;
     setDeckLink: (value: string) => void;
+    savedDecks: StoredDeck[];
+    handleDeckManagement: () => void;
 }
 
 const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     deckPreferences,
     deckPreferencesHandlers,
     deckLink,
-    setDeckLink
+    setDeckLink,
+    savedDecks,
+    handleDeckManagement
 }) => {
     const router = useRouter();
-    const { user } = useUser();
+    const { user, isLoading: userLoading } = useUser();
     
     const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
     const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
-    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
     const formatOptions = Object.values(SwuGameFormat);
-    const { data: session } = useSession(); // Get session from next-auth
 
     // error states
     const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -81,37 +80,6 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     // Timer ref for clearing the inline text after 5s
-
-    const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
-        let selectDeck = favoriteDeck;
-        
-        if (favoriteDeck && !allDecks.some(deck => deck.deckID === favoriteDeck)) {
-            selectDeck = '';
-        }
-
-        if (!selectDeck) {
-            selectDeck = firstDeck || '';
-        }
-
-        if (selectDeck !== favoriteDeck) {
-            setFavoriteDeck(selectDeck);
-        }
-    }, [favoriteDeck, setFavoriteDeck]);
-
-    // Load saved decks from localStorage
-    const fetchDecks = useCallback(async () => {
-        try {
-            await retrieveDecksForUser(session?.user, user,{ setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
-        }catch (err) {
-            console.log(err);
-            alert('Server error when fetching decks');
-        }
-    }, [session?.user, user, handleInitializeDeckSelection]);
-
-    // Load saved decks when component mounts
-    useEffect(() => {
-        fetchDecks();
-    }, [fetchDecks]);
 
     // Listen for tab change events to clear errors
     useEffect(() => {
@@ -128,10 +96,6 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         };
     }, []);
 
-    const handleDeckManagement = () => {
-        router.push('/DeckPage');
-    }
-
     const handleChangeFormat = (format: SwuGameFormat) => {
         setFormat(format);
     }
@@ -139,10 +103,6 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
         setShowSavedDecks(useSavedDecks);
         setDeckErrorSummary(null);
-    }
-
-    const handleSelectFavoriteDeck = (deckID: string) => {
-        setFavoriteDeck(deckID);
     }
 
     // Handle Create Game Submission
@@ -267,7 +227,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
             router.push('/quickGame');
-        } catch (error) {
+        } catch {
             setQueueState(false);
             setDeckErrorSummary('Error creating game.');
             setDeckErrorDetails(undefined);
@@ -368,8 +328,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             select
                             value={favoriteDeck}
                             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                handleSelectFavoriteDeck(e.target.value as string)
+                                setFavoriteDeck(e.target.value as string)
                             }
+                            disabled={userLoading}
                             placeholder="Favorite Decks"
                         >
                             {savedDecks.length === 0 ? (
