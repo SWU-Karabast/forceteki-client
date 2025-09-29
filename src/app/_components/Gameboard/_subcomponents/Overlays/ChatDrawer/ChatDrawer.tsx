@@ -109,6 +109,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                             marginRight: 0,
                             marginLeft: 0,
                             transform: 'skewX(5deg)',
+                            display: { xs: 'none', sm: 'none', md: 'block' },
                             '& svg': {
                                 width: '23px',
                                 height: '23px',
