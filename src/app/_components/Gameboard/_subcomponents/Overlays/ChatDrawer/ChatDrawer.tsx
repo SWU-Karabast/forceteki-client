@@ -83,9 +83,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     height={50}
                     style={{
                         position:'absolute',
-                        left:'50px',
-                        top:'20px',
-                        // visibility: isUndoHovered ? 'visible' : 'hidden',
+                        left:'53px',
+                        top:'22px',
+                        visibility: isUndoHovered ? 'visible' : 'hidden',
                     }}
                 />
                 <Button
