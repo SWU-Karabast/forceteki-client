@@ -13,6 +13,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
     const [isUndoHovered, setIsUndoHovered] = useState(false);
     const isDev = process.env.NODE_ENV === 'development';
     const correctPlayer = gameState.players[connectedPlayer];
+    const undoButtonDisabled = !correctPlayer['availableSnapshots']?.hasQuickSnapshot;
     const handleGameChat = () => {
         const trimmed = chatMessage.trim();
         if (!trimmed) return; // don't send empty messages
@@ -59,7 +60,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             paddingLeft: '0.5em',
         }
     }
-
     
 
     return (
@@ -91,11 +91,11 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     onClick={handleUndoButton}
                     onMouseEnter={() => setIsUndoHovered(true)}
                     onMouseLeave={() => setIsUndoHovered(false)}
-                    disabled={!correctPlayer['availableSnapshots']?.hasQuickSnapshot}
+                    disabled={undoButtonDisabled}
                     startIcon={<UndoIcon />}
                     sx={{
                         ...styles.quickUndo,
-                        background: 'linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, linear-gradient(to top, #1cb34a, #0a3d1e) border-box',
+                        background: undoButtonDisabled ? '#404040' : 'linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, linear-gradient(to top, #1cb34a, #0a3d1e) border-box',
                         color: '#FFF',
                         fontSize: '20px',
                         border: '1px solid transparent',
