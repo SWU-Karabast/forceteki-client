@@ -55,10 +55,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         },
         quickUndoBox:{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            paddingTop: '0.5em',
+            justifyContent:'center',
         }
     }
 
@@ -82,9 +79,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     width={50}
                     height={50}
                     style={{
-                        position:'absolute',
-                        left:'53px',
-                        top:'22px',
+                        position:'relative',
+                        left:'35px',
+                        bottom:'28px',
                         visibility: isUndoHovered ? 'visible' : 'hidden',
                     }}
                 />
