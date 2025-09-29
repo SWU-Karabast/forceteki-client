@@ -29,7 +29,7 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasPlayerModerationAction } = useGame();
+    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
     const { user } = useUser();
@@ -61,7 +61,7 @@ const Chat: React.FC<IChatProps> = ({
                     borderColor: 'yellow'
                 };
 
-            case hasOpponentModerationAction:
+            case opponentChatDisabled:
                 return {
                     reason: ChatDisabledReason.OpponentDisabledChat,
                     message: 'The opponent has disabled chat',
@@ -87,17 +87,10 @@ const Chat: React.FC<IChatProps> = ({
 
     const isPrivateLobby = lobbyState?.gameType === 'Private';
     const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
-    const hasOpponentModerationAction = hasPlayerModerationAction(getOpponent(connectedPlayer));
+    const opponentChatDisabled = hasChatDisabled(getOpponent(connectedPlayer));
     const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
-    const shouldShowChatInput = () => {
-        if (isSpectator) return false;
-        if (isPrivateLobby) return true;
-        if (!user) return false;
-        if (isAnonymousOpponent) return false;
-        if (user && user.moderation) return false;
-        return true;
-    };
+    const shouldShowChatInput = !chatDisabledInfo || chatDisabledInfo.reason === ChatDisabledReason.None;
 
     const getSpectatorDisplayName = (
         playerId: string,
@@ -376,7 +369,7 @@ const Chat: React.FC<IChatProps> = ({
 
             <Box sx={styles.inputContainer}>
                 {/* Show chat input based on game state and user permissions */}
-                {shouldShowChatInput() && (
+                {shouldShowChatInput && (
                     <TextField
                         variant="outlined"
                         placeholder="Chat"
@@ -405,7 +398,7 @@ const Chat: React.FC<IChatProps> = ({
                         }}
                     />
                 )}
-                {chatDisabledInfo && chatDisabledInfo.reason !== ChatDisabledReason.None &&(
+                {!shouldShowChatInput && !isSpectator &&(
                     <Typography sx={styles.chatDisabled(chatDisabledInfo.borderColor)}>
                         {chatDisabledInfo.message}
                     </Typography>

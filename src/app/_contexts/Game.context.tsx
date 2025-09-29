@@ -38,7 +38,7 @@ interface IGameContextType {
     isSpectator: boolean;
     lastQueueHeartbeat: number;
     isAnonymousPlayer: (player: string) => boolean;
-    hasPlayerModerationAction: (player: string) => boolean;
+    hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
 }
 
@@ -332,9 +332,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return true; // Default to true if we can't determine
     };
 
-    const hasPlayerModerationAction = (player: string): boolean => {
+    const hasChatDisabled = (player: string): boolean => {
         if (lobbyState) {
-            return !!lobbyState.users.find((p: any) => p.id === player)?.moderation;
+            return !!lobbyState.users.find((p: any) => p.id === player)?.chatDisabled;
         }
         return false; // Default to false if we can't determine
     }
@@ -373,7 +373,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 isSpectator,
                 lastQueueHeartbeat,
                 isAnonymousPlayer,
-                hasPlayerModerationAction,
+                hasChatDisabled,
                 createNewSocket
             }}
         >

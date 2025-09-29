@@ -16,6 +16,7 @@ import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 const UserContext = createContext<IUserContextType>({
     user: null,
     anonymousUserId: null,
+    isLoading: true,
     login: () => {},
     devLogin: () => {},
     logout: () => {},
@@ -30,7 +31,7 @@ const UserContext = createContext<IUserContextType>({
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const { data: session, update } = useSession(); // Get session from next-auth
+    const { data: session, update, status } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
@@ -224,7 +225,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences, updateSwuStatsRefreshToken, updateModerationSeenStatus }}>
+        <UserContext.Provider value={{ 
+            user,
+            anonymousUserId,
+            isLoading: status === 'loading' || (status === 'authenticated' && user == null),
+            login,
+            devLogin,
+            logout,
+            updateUsername,
+            updateWelcomeMessage,
+            updateNeedsUsernameChange,
+            updateUserPreferences,
+            updateSwuStatsRefreshToken,
+            updateModerationSeenStatus
+        }}>
             {children}
         </UserContext.Provider>
     );

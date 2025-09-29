@@ -28,7 +28,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
         setDecks?: T extends 'display'
             ? React.Dispatch<React.SetStateAction<DisplayDeck[]>>
             : React.Dispatch<React.SetStateAction<StoredDeck[]>>;
-        setFirstDeck?: React.Dispatch<React.SetStateAction<string>>;
+        setFirstDeck?: (firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => void;
     }
 ) => {
     try {
@@ -58,7 +58,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
 
         // Set first deck as selected if we have decks and a setter
         if (options?.setFirstDeck && decks.length > 0) {
-            options.setFirstDeck(decks[0].deckID);
+            options.setFirstDeck(decks[0].deckID, finalDecks);
         }
     } catch (err) {
         console.error('Error fetching decks:', err);
