@@ -54,8 +54,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             lineHeight: '1.2',
         },
         quickUndoBox:{
-            display: 'flex',
-            justifyContent:'center',
+            display: 'inline-flex',
+            justifyContent: 'flex-start',
+            paddingLeft: '0.5em',
         }
     }
 
