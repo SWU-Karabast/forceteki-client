@@ -93,6 +93,9 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/Preferences" sx={styles.profileLink}>
                         Preferences
                     </NextLinkMui>
+                    <NextLinkMui href="/Terms" sx={styles.profileLink}>
+                        Terms
+                    </NextLinkMui>
                     {(user) ? (
                         <>
                             <Divider
@@ -129,13 +132,6 @@ const ControlHub: React.FC<IControlHubProps> = ({
                             <GitHub />
                         </IconButton>
                     </NextLinkMui>
-                </Box>
-            </Box>
-            <Box sx={{ mt: 1 }}>
-                <Box sx={styles.socialIconsBox}>
-                    <Typography>
-                        Looking for <NextLinkMui sx={{ color: 'white', textDecorationColor: 'white' }} href="https://petranaki.net/Arena/MainMenu.php">original Karabast</NextLinkMui>?
-                    </Typography>
                 </Box>
             </Box>
         </Box>

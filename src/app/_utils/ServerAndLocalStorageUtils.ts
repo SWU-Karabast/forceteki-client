@@ -3,10 +3,10 @@ import {
     IDeckDetailedData,
     StoredDeck
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { IDeckData } from '@/app/_utils/fetchDeckData';
+import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
-import { IUser, IPreferences } from '@/app/_contexts/UserTypes';
+import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
 
@@ -29,7 +29,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
         setDecks?: T extends 'display'
             ? React.Dispatch<React.SetStateAction<DisplayDeck[]>>
             : React.Dispatch<React.SetStateAction<StoredDeck[]>>;
-        setFirstDeck?: React.Dispatch<React.SetStateAction<string>>;
+        setFirstDeck?: (firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => void;
     }
 ) => {
     try {
@@ -59,7 +59,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
 
         // Set first deck as selected if we have decks and a setter
         if (options?.setFirstDeck && decks.length > 0) {
-            options.setFirstDeck(decks[0].deckID);
+            options.setFirstDeck(decks[0].deckID, finalDecks);
         }
     } catch (err) {
         console.error('Error fetching decks:', err);
@@ -86,7 +86,7 @@ export const getUserPayload = (user: IUser | null): object => {
 
 
 /* Server */
-export const getUserFromServer = async(): Promise<{ id: string, username: string, showWelcomeMessage: boolean, preferences: IPreferences, needsUsernameChange: boolean }> =>{
+export const getUserFromServer = async(): Promise<IGetUser> =>{
     try {
         const decks = loadSavedDecks(false);
         // const preferences = loadPreferencesFromLocalStorage();
@@ -221,6 +221,32 @@ export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolea
     }
 }
 
+export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-moderation-seen`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean, user: IUser): Promise<void> => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/deck/${deckId}/favorite`, {
@@ -267,7 +293,7 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
                     favourite: false,
                     deckLink: deckLink,
                     deckLinkID: deckData.deckID, // Use existing ID or generate new one
-                    source: deckData.deckSource || (deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB')
+                    source: deckData.deckSource || determineDeckSource(deckLink)
                 }
             }
         };
@@ -434,7 +460,7 @@ export const saveDeckToLocalStorage = (deckData:IDeckData | DeckJSON | undefined
     try {
         // Save to localStorage
         const deckKey = deckData.deckID;
-        const deckSource = deckLink.includes('swustats.net') ? 'SWUSTATS' : 'SWUDB'
+        const deckSource = determineDeckSource(deckLink);
         const simplifiedDeckData = {
             leader: { id: deckData.leader.id },
             base: { id: deckData.base.id },
@@ -625,6 +651,37 @@ export const updateDeckFavoriteInLocalStorage = (deckID: string) => {
         console.error('Error updating favorite status:', error);
     }
 };
+
+
+export const unlinkSwuStatsAsync = async(
+    user: IUser | null,
+): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        };
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/unlink-swustats`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to unlink swustats');
+        }
+        return result.success;
+    } catch (error) {
+        console.error('Error unlinking swustats:', error);
+        throw error;
+    }
+};
+
+
 
 export const shouldShowAnnouncement = (announcement: IAnnouncement): boolean =>{
     try {

@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Box, Popover, Typography, useMediaQuery } from '@mui/material';
+import { Box, Button, Popover, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
@@ -105,7 +105,9 @@ const DeckDetails: React.FC = () => {
 
             return {
                 leaderId: stat.leaderId,
+                leaderMelee: stat.leaderMelee,
                 baseId: stat.baseId,
+                baseMelee: stat.baseMelee,
                 wins,
                 losses,
                 draws,
@@ -228,6 +230,37 @@ const DeckDetails: React.FC = () => {
 
     const isSmallScreen = useMediaQuery('(max-width: 1280px)');
 
+    // add near your other handlers
+    const exportOpponentStatsCSV = () => {
+        if (!opponentStats || opponentStats.length === 0) return;
+
+        const header = [
+            'OpponentLeader',
+            'OpponentBase',
+            'Wins',
+            'Losses',
+            'WinPercentage',
+        ];
+        const rows = opponentStats.map(s => [
+            `"${s.leaderMelee}"`,
+            `"${s.baseMelee}"`,
+            s.wins,
+            s.losses,
+            `${s.winPercentage}`,
+        ]);
+
+        const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const safeName = (deckData?.metadata.name || 'deck').replace(/[\\/:*?"<>|]/g, '_');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeName}_opponent-stats.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     const styles = {
         bodyRow:{
@@ -347,8 +380,8 @@ const DeckDetails: React.FC = () => {
         titleTextContainer:{
             ml:'10px',
             display:'flex',
-            flexDirection: 'row',
-            alignItems:'center',
+            flexDirection: 'column',
+            alignItems:'start',
         },
         cardPreview: {
             borderRadius: '.38em',
@@ -378,6 +411,24 @@ const DeckDetails: React.FC = () => {
                  1px  1px 0 #000
             `
         },
+        iconButton:{
+            width:'fit-content',
+            height:'30px',
+            mt:'10px',
+            ml:'-1px',
+            color:'white',
+            background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
+            '&:hover': {
+                background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
+                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
+            },
+            '&:not(:disabled)': {
+                borderColor: 'rgba(0, 140, 255, 0.4)',
+                boxShadow: '0 0 6px rgba(0, 140, 255, 0.5)',
+                border: '1px solid rgba(0, 140, 255, 0.5)',
+            },
+        }
     }
 
     return (
@@ -436,6 +487,15 @@ const DeckDetails: React.FC = () => {
                         <Typography variant="h3" sx={styles.titleText}>
                             {deckData?.metadata.name}
                         </Typography>
+                        { opponentStats && (
+                            <Box>
+                                <Tooltip title="Download as CSV">
+                                    <Button sx={styles.iconButton} onClick={exportOpponentStatsCSV}>
+                                        Download Statistics CSV
+                                    </Button>
+                                </Tooltip>
+                            </Box>
+                        )}
                         {/* <Box sx={styles.editBox} />*/}
                     </Box>
 

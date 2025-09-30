@@ -7,6 +7,8 @@ export type IButtonType = {
     buttonFnc?: () => void,
     disabled?: boolean,
     sx?: SxProps<Theme>,
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 }
 
 export type ISleeve = {
@@ -40,4 +42,23 @@ export interface IPreferenceProps {
     variant?: 'gameBoard' | 'homePage'
     title?: string,
     subtitle?: string,
+}
+
+export interface IStatsNotification {
+    id: string;
+    success: boolean;
+    type: StatsSaveStatus;
+    source: StatsSource;
+    message: string;
+}
+
+export enum StatsSaveStatus {
+    Warning = 'Warning',
+    Error = 'Error',
+    Success = 'Success'
+}
+
+export enum StatsSource {
+    Karabast = 'Karabast',
+    SwuStats = 'SWUStats'
 }

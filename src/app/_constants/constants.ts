@@ -1,3 +1,5 @@
+import { DeckSource } from '../_utils/fetchDeckData';
+
 export enum MatchType {
     Custom = 'Custom',
     Private = 'Private',
@@ -6,15 +8,35 @@ export enum MatchType {
 
 export enum SwuGameFormat {
     Premier = 'premier',
-    // NextSetPreview = 'nextSetPreview',
+    NextSetPreview = 'nextSetPreview',
     Open = 'open'
 }
 
 export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
-    // [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
+    [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
     [SwuGameFormat.Open]: 'Open',
 };
+
+export const SupportedDeckSources = Object.values(DeckSource)
+    .filter((source) => source !== DeckSource.NotSupported)
+    .map((source) => {
+        switch (source) {
+            case DeckSource.SWUStats:
+                return 'swustats.net';
+            case DeckSource.SWUDB:
+                return 'swudb.com';
+            case DeckSource.SWUnlimitedDB:
+                return 'sw-unlimited-db.com';
+            case DeckSource.SWUCardHub:
+                return 'swucardhub.fr';
+            case DeckSource.SWUBase:
+                return 'swubase.com';
+            default:
+                return source;
+        }
+    })
+    .sort();
 
 export enum ZoneName {
     Base = 'base',

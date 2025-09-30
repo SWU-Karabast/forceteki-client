@@ -11,13 +11,21 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 
+enum PhaseName {
+    Action = 'action',
+    Regroup = 'regroup',
+    Setup = 'setup',
+}
+
 function CurrentGameTab() {
     const { sendGameMessage, connectedPlayer, gameState, isSpectator } = useGame();
-
+    const isDev = process.env.NODE_ENV === 'development';
     const router = useRouter();
-    const currentPlayerName = gameState.players[connectedPlayer]?.name;
+    const currentPlayer = gameState.players[connectedPlayer];
+    const currentPlayerName = currentPlayer?.name;
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
+
 
     useEffect(() => {
         if(confirmConcede){
@@ -37,6 +45,22 @@ function CurrentGameTab() {
             setConfirmConcede(false);
         }
     };
+
+    // Click handler for the undo button
+    const handleUndoPhase = (phaseName: PhaseName.Action | PhaseName.Regroup) => {
+        sendGameMessage(['rollbackToSnapshot', {
+            type: 'phase',
+            phaseName
+        }])
+    }
+
+    const handleUndoRegroup = () => {
+        handleUndoPhase(PhaseName.Regroup);
+    }
+
+    const handleUndoAction = () => {
+        handleUndoPhase(PhaseName.Action);
+    }
 
     // Handler for opening the bug report dialog
     const handleOpenBugReport = () => {
@@ -102,22 +126,34 @@ function CurrentGameTab() {
                     </Box>
                 </Box>
             )}
-            {/* <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Undo</Typography>
-                <Divider sx={{ mb: '20px' }}/>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                    <PreferenceButton variant={'standard'} text={'Simple Undo'} />
-                    <Typography sx={styles.typeographyStyle}>
-                        Revert to your previous game state.
-                    </Typography>
+            {(isDev || gameState.undoEnabled) && (
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Advanced Undo</Typography>
+                    <Divider sx={{ mb: '20px' }}/>
+                    <Box sx={{ ...styles.contentContainer, mb: '20px' }}>
+                        <PreferenceButton
+                            variant={'standard'}
+                            text={'Action Phase'}
+                            buttonFnc={handleUndoAction}
+                            disabled={currentPlayer['availableSnapshots']?.actionPhaseSnapshots === 0}
+                        />
+                        <Typography sx={styles.typeographyStyle}>
+                            Revert to the start of the most recent action phase.
+                        </Typography>
+                    </Box>
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton 
+                            variant={'standard'} 
+                            text={'Regroup Phase'} 
+                            buttonFnc={handleUndoRegroup}
+                            disabled={currentPlayer['availableSnapshots']?.regroupPhaseSnapshots === 0}
+                        />
+                        <Typography sx={styles.typeographyStyle}>
+                            Revert to the start of the most recent regroup phase.
+                        </Typography>
+                    </Box>
                 </Box>
-                <Box sx={styles.contentContainer}>
-                    <PreferenceButton variant={'standard'} text={'This Turn'} />
-                    <Typography sx={styles.typeographyStyle}>
-                        Revert to the start of the previous turn.
-                    </Typography>
-                </Box>
-            </Box> */}
+            )}
             <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Thanks for playing</Typography>
                 <Divider sx={{ mb: '20px' }}/>

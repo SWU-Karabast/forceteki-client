@@ -9,26 +9,29 @@ import React, {
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { IUserContextType, IPreferences } from './UserTypes';
+import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
 import { v4 as uuid } from 'uuid';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
     anonymousUserId: null,
+    isLoading: true,
     login: () => {},
     devLogin: () => {},
     logout: () => {},
     updateUsername: () => {},
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
-    updateUserPreferences: () => {}
+    updateUserPreferences: () => {},
+    updateSwuStatsRefreshToken: () => {},
+    updateModerationSeenStatus: () => {}
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const { data: session, update } = useSession(); // Get session from next-auth
+    const { data: session, update, status } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
@@ -62,7 +65,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         showWelcomeMessage: serverUser.showWelcomeMessage,
                         authenticated: true,
                         preferences: serverUser.preferences,
-                        needsUsernameChange: serverUser.needsUsernameChange
+                        needsUsernameChange: serverUser.needsUsernameChange,
+                        swuStatsRefreshToken: serverUser.swuStatsRefreshToken || null,
+                        moderation: serverUser.moderation
                     });
                     update({ userId: serverUser.id });
                 } catch (error) {
@@ -111,23 +116,31 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const handleDevSetUser = (user: 'Order66' | 'ThisIsTheWay') => {
         if (user === 'Order66') {
             setUser({
+                needsUsernameChange: false,
+                showWelcomeMessage: false,
                 id: 'exe66',
                 username: 'Order66',
                 email: null,
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                preferences: { cardback: undefined }
+                swuStatsRefreshToken: null,
+                preferences: { cardback: undefined },
+                moderation: undefined
             });
         } else if (user === 'ThisIsTheWay') {
             setUser({
+                needsUsernameChange: false,
+                showWelcomeMessage: false,
                 id: 'th3w4y',
                 username: 'ThisIsTheWay',
                 email: null,
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                preferences: { cardback: undefined }
+                swuStatsRefreshToken: null,
+                preferences: { cardback: undefined },
+                moderation: undefined
             });
         }
     }
@@ -161,12 +174,33 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         })
     }
 
+    const updateModerationSeenStatus = (moderation: IModerationAction | null) => {
+        setUser((prevUser) => {
+            if (!prevUser) return null;
+            return {
+                ...prevUser,
+                moderation
+            };
+        });
+    };
+
+
     const updateUserPreferences = (newPreferences: IPreferences) => {
         setUser((prevUser) => {
             if (!prevUser) return null;
             return {
                 ...prevUser,
                 preferences: newPreferences
+            };
+        });
+    };
+
+    const updateSwuStatsRefreshToken = (swuStatsRefreshToken: string | null) => {
+        setUser((prevUser) => {
+            if (!prevUser) return null;
+            return {
+                ...prevUser,
+                swuStatsRefreshToken
             };
         });
     };
@@ -191,7 +225,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ user, anonymousUserId, login, devLogin, logout, updateUsername, updateWelcomeMessage, updateNeedsUsernameChange, updateUserPreferences }}>
+        <UserContext.Provider value={{ 
+            user,
+            anonymousUserId,
+            isLoading: status === 'loading' || (status === 'authenticated' && user == null),
+            login,
+            devLogin,
+            logout,
+            updateUsername,
+            updateWelcomeMessage,
+            updateNeedsUsernameChange,
+            updateUserPreferences,
+            updateSwuStatsRefreshToken,
+            updateModerationSeenStatus
+        }}>
             {children}
         </UserContext.Provider>
     );

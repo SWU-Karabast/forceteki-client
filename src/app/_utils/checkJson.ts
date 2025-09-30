@@ -28,6 +28,7 @@ export interface DeckJSON {
     }[];
     deckID?: string;
     deckSource?: string;
+    isPresentInDb?: boolean;
 }
 
 const ALLOWED_ROOT_KEYS = ['metadata', 'leader', 'base', 'deck', 'sideboard', 'deckID', 'deckSource'];
@@ -211,7 +212,13 @@ export const parseInputAsDeckData = (input: string): {
         return { type: 'json', data: jsonData };
     }
 
-    if(input.includes('swustats.net') || input.includes('swudb.com') || input.includes('sw-unlimited-db.com')){
+    if(
+        input.includes('swustats.net') ||
+        input.includes('swudb.com') ||
+        input.includes('sw-unlimited-db.com') ||
+        input.includes('swucardhub.fr') ||
+        input.includes('swubase.com')
+    ) {
         return { type: 'url', data: null };
     }
     return { type: 'invalid', data:null }

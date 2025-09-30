@@ -10,7 +10,7 @@ import {
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { DeckSource, fetchDeckData } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures,
     DeckValidationFailureReason,
@@ -25,6 +25,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
+import { SupportedDeckSources } from '@/app/_constants/constants';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -52,6 +53,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
 
+    const undoEnabled = lobbyState?.undoEnabled;
+
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
         sendLobbyMessage(['onStartGameAsync']);
@@ -77,7 +80,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     const handleOnChangeDeck = async () => {
         if ((!favouriteDeck && !deckLink) || readyStatus) return;
-        let userDeck;
+        let userDeck: string;
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         setDeckImportErrorsSeen(false);
         if(favouriteDeck) {
@@ -96,7 +99,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favouriteDeck && deckData && !deckLink) {
-                    deckData.deckID = favouriteDeck
+                    deckData.deckID = favouriteDeck;
+                    deckData.deckLink = userDeck;
+                    deckData.isPresentInDb = !!user;
+                }else if(deckData) {
+                    deckData.deckLink = userDeck;
+                    deckData.isPresentInDb = false;
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
@@ -113,6 +121,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         if(!await saveDeckToServer(deckData, deckLink, user)){
                             throw new Error('Error saving the deck to server');
                         }
+                        deckData.isPresentInDb = true;
                     }else{
                         saveDeckToLocalStorage(deckData, deckLink);
                     }
@@ -131,7 +140,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setErrorModalOpen(true)
             if(error instanceof Error){
                 if(error.message.includes('403')) {
-                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
+                    setDeckErrorSummary('Couldn\'t import. The deck is set to private.');
                     setDeckErrorDetails({
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     });
@@ -148,8 +157,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         // get error messages
         const deckErrors: IDeckValidationFailures = connectedUser?.deckErrors ?? [];
         const temporaryErrors: IDeckValidationFailures = connectedUser?.importDeckErrors ?? [];
-        console.log('checking deck errors', deckErrors);
-        console.log('checking import errors', temporaryErrors);
         if ((!deckErrors || Object.entries(deckErrors).length === 0) && (!temporaryErrors || Object.entries(temporaryErrors).length === 0)) {
             // No validation errors => clear any old error states
             setDeckErrorSummary(null);
@@ -200,7 +207,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     }, [connectedUser]);
 
     const handleCopyLink = () => {
-        navigator.clipboard.writeText(lobbyState.connectionLink)
+        navigator.clipboard.writeText(lobbyState?.connectionLink)
             .then(() => {
                 setShowTooltip(true);
                 // Hide the tooltip after 1 second
@@ -427,18 +434,20 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 </Box>
                             )}
                             <Box sx={styles.labelTextStyle}>
-                                <Link href="https://www.swustats.net/" target="_blank" sx={{ color: 'lightblue' }}>
-                                    SWU Stats
-                                </Link>{' '}
-                                /{' '}
-                                <Link href="https://www.swudb.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                                    SWUDB
-                                </Link>{' '}
-                                /{' '}
-                                <Link href="https://sw-unlimited-db.com/" target="_blank" sx={{ color: 'lightblue' }}>
-                                    SW-Unlimited-DB
-                                </Link>{' '}
-                                Deck Link{' '}
+                                Deck link (
+                                <Tooltip
+                                    arrow={true}
+                                    title={
+                                        <Box sx={{ whiteSpace: 'pre-line' }}>
+                                            {SupportedDeckSources.join('\n')}
+                                        </Box>
+                                    }
+                                >
+                                    <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
+                                        supported deckbuilders
+                                    </Link>
+                                </Tooltip>
+                                )
                                 <br />
                                 OR paste deck JSON directly
                             </Box>
@@ -514,6 +523,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
+            <Divider sx={{ mt: 1, borderColor: '#666', display: undoEnabled ? 'block' : 'none' }} />
+            <Box sx={{ display: undoEnabled ? 'block' : 'none' }}>
+                <Typography sx={{ fontSize: '1.4em', mt: 1, textAlign: 'center', color: 'red' }}>
+                    Undo test mode is enabled
+                </Typography>
+            </Box>
         </Card>
     )
 };

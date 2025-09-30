@@ -29,20 +29,20 @@ const PublicGames: React.FC = () => {
             fetchLobbies(setLobbies);
             count++;
 
-            if (count === 6) { 
+            if (count === 6) {
                 clearInterval(intervalId);
                 intervalId = setInterval(() => {
                     fetchLobbies(setLobbies);
                     count++;
                     if (count === 15) {
-                        clearInterval(intervalId); 
+                        clearInterval(intervalId);
                     }
-                }, 60000); 
+                }, 60000);
             }
         };
 
         fetchData();
-        intervalId = setInterval(fetchData, 10000); 
+        intervalId = setInterval(fetchData, 10000);
 
         return () => clearInterval(intervalId);
     }, []);
@@ -68,17 +68,17 @@ const PublicGames: React.FC = () => {
                 <Typography variant="h2">Public Games</Typography>
                 <Typography variant="h3">Premier</Typography>
                 <Divider sx={styles.divider} />
-                { lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
-                {/* <Typography variant="h3">Next Set Preview</Typography>
+                <Typography variant="h3">Next Set Preview</Typography>
                 <Divider sx={styles.divider} />
                 { lobbies.filter((lobby) => lobby.format === SwuGameFormat.NextSetPreview).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
-                ))} */}
+                ))}
                 <Typography variant="h3">Open</Typography>
                 <Divider sx={styles.divider} />
-                { lobbies.filter((lobby) => lobby.format === SwuGameFormat.Open).map((lobby) => (
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Open).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
                 <GamesInProgress />

@@ -20,6 +20,8 @@ import { useGame } from '@/app/_contexts/Game.context';
 import ChatCard from './ChatCard';
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { useUser } from '@/app/_contexts/User.context';
+import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
+import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -27,7 +29,7 @@ const Chat: React.FC<IChatProps> = ({
     setChatMessage,
     handleChatSubmit,
 }) => {
-    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer } = useGame();
+    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled } = useGame();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
     const { user } = useUser();
@@ -38,20 +40,57 @@ const Chat: React.FC<IChatProps> = ({
         user,
     });
 
+    const getChatDisabledInfo = (): IChatDisabledInfo => {
+        // Always allow chat for private lobbies
+        if (isPrivateLobby) {
+            return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
+        }
+
+        switch (true) {
+            case !user:
+                return {
+                    reason: ChatDisabledReason.NotLoggedIn,
+                    message: 'Log in to enable chat',
+                    borderColor: 'red'
+                };
+
+            case !!(user?.moderation):
+                return {
+                    reason: ChatDisabledReason.UserMuted,
+                    message: `You are muted for ${getMuteDisplayText(user.moderation)}`,
+                    borderColor: 'yellow'
+                };
+
+            case opponentChatDisabled:
+                return {
+                    reason: ChatDisabledReason.OpponentDisabledChat,
+                    message: 'The opponent has disabled chat',
+                    borderColor: 'yellow'
+                };
+
+            case isAnonymousOpponent:
+                return {
+                    reason: ChatDisabledReason.AnonymousOpponent,
+                    message: 'Chat disabled when playing against an anonymous opponent',
+                    borderColor: 'yellow'
+                };
+
+            default:
+                return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
+        }
+    };
+
+
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
+
     const isPrivateLobby = lobbyState?.gameType === 'Private';
     const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
-
+    const opponentChatDisabled = hasChatDisabled(getOpponent(connectedPlayer));
+    const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
-    const shouldShowChatInput = () => {
-        if (isSpectator) return false;
-        if (isPrivateLobby) return true;
-        if (!user) return false;
-        if (isAnonymousOpponent) return false;
-        return true;
-    };
+    const shouldShowChatInput = !chatDisabledInfo || chatDisabledInfo.reason === ChatDisabledReason.None;
 
     const getSpectatorDisplayName = (
         playerId: string,
@@ -299,9 +338,9 @@ const Chat: React.FC<IChatProps> = ({
                 },
             },
         },
-        chatDisabledLogin: {
+        chatDisabled: (borderColor: string) => ({
             textAlign: 'center',
-            border: '1px solid red',
+            border: `1px solid ${borderColor}`,
             backgroundColor: '#282828ff',
             borderRadius: '4px',
             p: '0.4em',
@@ -312,21 +351,7 @@ const Chat: React.FC<IChatProps> = ({
             color: '#fff',
             lineHeight: { xs: '0.75rem', md: '1rem' },
             userSelect: 'none',
-        },
-        chatDisabledAnonOpponent: {
-            textAlign: 'center',
-            border: '1px solid yellow',
-            backgroundColor: '#282828ff',
-            borderRadius: '4px',
-            p: '0.4em',
-            mt: '0.5em',
-            width: '100%',
-            display: 'block',
-            fontSize: { xs: '0.75em', md: '1em' },
-            color: '#fff',
-            lineHeight: { xs: '0.75rem', md: '1rem' },
-            userSelect: 'none',
-        }
+        })
     };
 
     
@@ -344,7 +369,7 @@ const Chat: React.FC<IChatProps> = ({
 
             <Box sx={styles.inputContainer}>
                 {/* Show chat input based on game state and user permissions */}
-                {shouldShowChatInput() && (
+                {shouldShowChatInput && (
                     <TextField
                         variant="outlined"
                         placeholder="Chat"
@@ -373,14 +398,9 @@ const Chat: React.FC<IChatProps> = ({
                         }}
                     />
                 )}
-                {!user && !isSpectator && !isPrivateLobby && (
-                    <Typography sx={styles.chatDisabledLogin}>
-                        Log in to enable chat
-                    </Typography>
-                )}
-                {user && !isSpectator && isAnonymousOpponent && !isPrivateLobby && (
-                    <Typography sx={styles.chatDisabledAnonOpponent}>
-                        Chat disabled when playing against an anonymous opponent
+                {!shouldShowChatInput && !isSpectator &&(
+                    <Typography sx={styles.chatDisabled(chatDisabledInfo.borderColor)}>
+                        {chatDisabledInfo.message}
                     </Typography>
                 )}
             </Box>

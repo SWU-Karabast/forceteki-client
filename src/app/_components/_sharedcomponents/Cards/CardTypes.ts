@@ -1,3 +1,4 @@
+import { DeckSource } from '@/app/_utils/fetchDeckData';
 
 export enum CardType {
     Base = 'base',
@@ -154,7 +155,9 @@ interface ICardPlayer {
 
 export interface IMatchTableStats {
     leaderId: string,
+    leaderMelee?: string,
     baseId: string,
+    baseMelee?: string,
     wins: number,
     losses: number,
     winPercentage: number,
@@ -164,7 +167,9 @@ export interface IMatchTableStats {
 // Interface for opponent stats
 export interface IMatchupStatEntity {
     leaderId: string;
+    leaderMelee?: string,
     baseId: string;
+    baseMelee?: string,
     wins: number;
     losses: number;
     draws: number;
@@ -212,7 +217,7 @@ export interface StoredDeck {
     deckLink: string;
     deckID:string;
     deckLinkID: string;
-    source: 'SWUSTATS' | 'SWUDB'
+    source: DeckSource;
 }
 
 export interface DisplayDeck {
@@ -222,5 +227,5 @@ export interface DisplayDeck {
     metadata: { name: string };
     favourite: boolean;
     deckLink: string;
-    source: 'SWUSTATS' | 'SWUDB';
+    source: DeckSource;
 }

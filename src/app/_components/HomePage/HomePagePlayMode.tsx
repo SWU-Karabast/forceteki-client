@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Typography, Box, Tab, Tabs, Card, CardContent, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import CreateGameForm from '../_sharedcomponents/CreateGameForm/CreateGameForm';
@@ -7,7 +7,13 @@ import QuickGameForm from '@/app/_components/_sharedcomponents/QuickGameForm/Qui
 import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/WelcomePopup';
 import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
 import UsernameChangeRequiredPopup
-    from '@/app/_components/_sharedcomponents/HomescreenWelcome/UsernameChangeRequiredPopup';
+    from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
+import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
+import { setModerationSeenAsync, retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
+import { SwuGameFormat } from '@/app/_constants/constants';
+import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { useSession } from 'next-auth/react';
 import { markAnnouncementAsSeen, shouldShowAnnouncement } from '@/app/_utils/ServerAndLocalStorageUtils';
 import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
 import { announcement } from '@/app/_constants/mockData';
@@ -20,8 +26,80 @@ const HomePagePlayMode: React.FC = () => {
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
     const [showNewFeaturePopup, setShowNewFeaturePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
-    const { user, updateWelcomeMessage } = useUser();
+    const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
+    const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
+    const { user, isLoading: userLoading, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
+    const { data: session } = useSession();
 
+    // Deck Preferences State (moved from context)
+    const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
+        return localStorage.getItem('useSavedDecks') === 'true';
+    });
+
+    const [favoriteDeck, setFavoriteDeck] = useState<string>(() => {
+        return localStorage.getItem('selectedDeck') || '';
+    });
+
+    const [format, setFormat] = useState<SwuGameFormat>(() => {
+        const stored = localStorage.getItem('format');
+        return (stored as SwuGameFormat) || SwuGameFormat.Premier;
+    });
+
+    const [deckLink, setDeckLink] = useState<string>('');
+
+    const [saveDeck, setSaveDeck] = useState<boolean>(false);
+
+    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
+
+    // Sync deck preferences to localStorage
+    useEffect(() => {
+        localStorage.setItem('format', format);
+    }, [format]);
+
+    const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
+        let selectDeck = localStorage.getItem('selectedDeck');
+
+        if (selectDeck && !allDecks.some(deck => deck.deckID === selectDeck)) {
+            selectDeck = '';
+        }
+
+        if (!selectDeck) {
+            selectDeck = firstDeck || '';
+        }
+
+        if (selectDeck !== favoriteDeck) {
+            setFavoriteDeck(selectDeck);
+        }
+
+        if (localStorage.getItem('useSavedDecks') == null) {
+            setShowSavedDecks(true);
+        }
+    }, [favoriteDeck]);
+
+    const fetchDecks = useCallback(async() => {
+        if (userLoading) {
+            return;
+        }
+
+        try {
+            await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
+        }catch (err){
+            alert('Server error when fetching decks');
+        }
+    }, [session?.user, user, userLoading, handleInitializeDeckSelection]);
+
+    useEffect(() => {
+        fetchDecks();
+    }, [fetchDecks]);
+
+    const handleDeckManagement = useCallback(() => {
+        router.push('/DeckPage');
+    }, [router]);
+
+    // Clear form errors function
+    const clearErrors = useCallback(() => {
+        window.dispatchEvent(new CustomEvent('clearDeckErrors'));
+    }, []);
 
     const closeWelcomePopup = () => {
         setShowWelcomePopup(false);
@@ -41,9 +119,49 @@ const HomePagePlayMode: React.FC = () => {
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
 
+    // Create deck preferences object for forms
+    const deckPreferences = {
+        showSavedDecks,
+        favoriteDeck,
+        format,
+        saveDeck,
+    };
+
+    const handleShowSavedDecksChange = useCallback((value: boolean) => {
+        setShowSavedDecks(value);
+        localStorage.setItem('useSavedDecks', value.toString());
+    }, []);
+
+    const handleFavoriteDeckChange = useCallback((value: string) => {
+        setFavoriteDeck(value);
+        localStorage.setItem('selectedDeck', value);
+    }, []);
+
+    const deckPreferencesHandlers = {
+        setShowSavedDecks: handleShowSavedDecksChange,
+        setFavoriteDeck: handleFavoriteDeckChange,
+        setFormat: useCallback((value: SwuGameFormat) => setFormat(value), []),
+        setSaveDeck: useCallback((value: boolean) => setSaveDeck(value), []),
+    };
+
+    const handleSetDeckLink = useCallback((value: string) => setDeckLink(value), []);
+
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
+        // Clear error messages when switching tabs
+        clearErrors();
     }
+
+    const handleCloseMutedPopup = async() => {
+        setShowMutedPopup(false);
+        const updatedModeration = { ...user?.moderation, hasSeen: true };
+        updateModerationSeenStatus(updatedModeration)
+        try {
+            await setModerationSeenAsync(user);
+        }catch(error){
+            console.log(error)
+        }
+    };
 
     const handleStartTestGame = async (filename: string) => {
         try {
@@ -74,12 +192,23 @@ const HomePagePlayMode: React.FC = () => {
     useEffect(() => {
         if(user) {
             if (user.showWelcomeMessage && !showUpdatePopup) {
+                setShowMutedPopup(false);
                 setShowNewFeaturePopup(false);
                 setShowWelcomePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
+            if(user.moderation){
+                setModerationDays(user.moderation.daysRemaining);
+                if(!user.moderation.hasSeen && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
+                    setShowMutedPopup(true);
+                }
+                // check if moderation object still exists
+                checkIfModerationExpired(user.moderation, updateModerationSeenStatus);
+            } else {
+                setShowMutedPopup(false);
+            }
         }
-        if (shouldShowAnnouncement(announcement) && (!user || !user.showWelcomeMessage)) {
+        if (shouldShowAnnouncement(announcement) && (!user || (!user.showWelcomeMessage && !user.moderation))) {
             setShowNewFeaturePopup(true);
         }
 
@@ -107,7 +236,7 @@ const HomePagePlayMode: React.FC = () => {
             }
         };
         fetchGameList();
-    }, [user]);
+    }, [user, showUpdatePopup, updateModerationSeenStatus]);
 
     const styles = {
         wrapper: {
@@ -140,10 +269,24 @@ const HomePagePlayMode: React.FC = () => {
                         </Box>
                         {showQuickMatch && 
                         <TabPanel index={0} value={value}>
-                            <QuickGameForm/>
+                            <QuickGameForm
+                                deckPreferences={deckPreferences}
+                                deckPreferencesHandlers={deckPreferencesHandlers}
+                                deckLink={deckLink}
+                                setDeckLink={handleSetDeckLink}
+                                savedDecks={savedDecks}
+                                handleDeckManagement={handleDeckManagement}
+                            />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
-                            <CreateGameForm />
+                            <CreateGameForm
+                                deckPreferences={deckPreferences}
+                                deckPreferencesHandlers={deckPreferencesHandlers}
+                                deckLink={deckLink}
+                                setDeckLink={handleSetDeckLink}
+                                savedDecks={savedDecks}
+                                handleDeckManagement={handleDeckManagement}
+                            />
                         </TabPanel>
                         {showTestGames &&
                         <TabPanel index={showQuickMatch ? 2 : 1} value={value}>
@@ -169,6 +312,7 @@ const HomePagePlayMode: React.FC = () => {
             <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
             <NewFeaturePopup open={showNewFeaturePopup} onClose={closeNewFeaturePopup} />
             <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
+            <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
         </>
     );
 };
