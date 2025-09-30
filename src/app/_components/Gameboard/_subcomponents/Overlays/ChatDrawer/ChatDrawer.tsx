@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Drawer, Box, Typography } from '@mui/material';
+import { Drawer, Box, Button } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import UndoIcon from '@mui/icons-material/Undo';
 import Image from 'next/image';
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
@@ -13,13 +13,14 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
     const [isUndoHovered, setIsUndoHovered] = useState(false);
     const isDev = process.env.NODE_ENV === 'development';
     const correctPlayer = gameState.players[connectedPlayer];
+    const undoButtonDisabled = !correctPlayer['availableSnapshots']?.hasQuickSnapshot;
     const handleGameChat = () => {
         const trimmed = chatMessage.trim();
         if (!trimmed) return; // don't send empty messages
         sendGameMessage(['chat', trimmed]);
         setChatMessage('');
     }
-    const handleUndo = () => {
+    const handleUndoButton = () => {
         sendGameMessage(['rollbackToSnapshot',{
             type: 'quick',
             playerId: connectedPlayer,
@@ -45,19 +46,51 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             display: 'flex',
             alignItems: 'center',
             position: 'relative',
-            height: '2.5em',
-        },
-        quickUndo:{
-            height:'50px',
-            mr:'30px',
-            width: 'min(50%, 280px)',
+            height: '1.5em',
         },
         quickUndoBox:{
-            display: 'flex',
-            justifyContent:'center',
+            display: 'inline-flex',
+            justifyContent: 'flex-start',
+            paddingLeft: '0.5em',
+        },
+        quickUndoButton: {
+            height:'45px',
+            mb:'10px',
+            width: 'min(55%, 200px)',
+            lineHeight: '1.2',
+            background: undoButtonDisabled ? '#404040' : 'linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, linear-gradient(to top, #1cb34a, #0a3d1e) border-box',
+            color: '#FFF',
+            fontSize: '20px',
+            border: '1px solid transparent',
+            borderRadius: '10px',
+            pt: '10px',
+            pb: '10px',
+            justifyContent: 'space-between',
+            paddingLeft: '12px',
+            paddingRight: '35px',
+            position: 'relative',
+            '& .MuiButton-startIcon': {
+                marginRight: 0,
+                marginLeft: 0,
+                transform: 'skewX(5deg)',
+                display: { xs: 'none', sm: 'none', md: 'block' },
+                '& svg': {
+                    width: '23px',
+                    height: '23px',
+                },
+            },
+            '&:hover': {
+                background: 'linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, linear-gradient(to top, #2ad44c, #0a3d1e) border-box',
+                boxShadow: '0 0 8px rgba(0, 170, 70, 0.7)',
+                border: '1px solid rgba(0, 200, 90, 0.7)',
+            },
+            '&:disabled': {
+                backgroundColor: '#404040',
+                color: '#FFF'
+            },
+            transform: 'skewX(-5deg)',
         }
     }
-
     
 
     return (
@@ -69,15 +102,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         >
             <Box sx={styles.headerBoxStyle}>
                 <ChevronRightIcon onClick={toggleSidebar} />
-                <Typography sx={{
-                    color: '#fff',
-                    fontSize: '1.5em',
-                    position: 'absolute',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: 'max-content',
-                }}>Chat</Typography>
             </Box>
+
             {(isDev || gameState.undoEnabled) && (<Box sx={styles.quickUndoBox}>
                 <Image
                     src="/porg1.png"
@@ -91,11 +117,17 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                         visibility: isUndoHovered ? 'visible' : 'hidden',
                     }}
                 />
-                <PreferenceButton sx={styles.quickUndo} buttonFnc={handleUndo} variant={'standard'} text={'Quick Undo'}
+                <Button
+                    variant="contained"
+                    onClick={handleUndoButton}
                     onMouseEnter={() => setIsUndoHovered(true)}
                     onMouseLeave={() => setIsUndoHovered(false)}
-                    disabled={!correctPlayer['availableSnapshots']?.hasQuickSnapshot}
-                />
+                    disabled={undoButtonDisabled}
+                    startIcon={<UndoIcon />}
+                    sx={styles.quickUndoButton}
+                >
+                    Undo
+                </Button>
             </Box>)}
 
             {/* Use the ChatComponent here */}
@@ -105,6 +137,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 setChatMessage={setChatMessage}
                 handleChatSubmit={handleGameChat}
             />
+            
         </Drawer>
     );
 };
