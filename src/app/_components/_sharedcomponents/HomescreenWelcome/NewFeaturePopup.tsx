@@ -17,7 +17,7 @@ interface IWhatsNewPopupProps {
     onClose: () => void;
 }
 
-const WhatsNewPopup: React.FC<IWhatsNewPopupProps> = ({ open, onClose }) => {
+const WhatsNewPopupAnnouncement: React.FC<IWhatsNewPopupProps> = ({ open, onClose }) => {
     const styles = {
         dialog: {
             '& .MuiDialog-paper': {
@@ -112,4 +112,4 @@ const WhatsNewPopup: React.FC<IWhatsNewPopupProps> = ({ open, onClose }) => {
     );
 };
 
-export default WhatsNewPopup;
+export default WhatsNewPopupAnnouncement;

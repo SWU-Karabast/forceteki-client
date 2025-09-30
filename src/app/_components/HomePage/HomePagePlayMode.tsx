@@ -200,6 +200,7 @@ const HomePagePlayMode: React.FC = () => {
             if(user.moderation){
                 setModerationDays(user.moderation.daysRemaining);
                 if(!user.moderation.hasSeen && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
+                    setShowNewFeaturePopup(false);
                     setShowMutedPopup(true);
                 }
                 // check if moderation object still exists
@@ -208,7 +209,7 @@ const HomePagePlayMode: React.FC = () => {
                 setShowMutedPopup(false);
             }
         }
-        if (shouldShowAnnouncement(announcement) && (!user || (!user.showWelcomeMessage && !user.moderation))) {
+        if (shouldShowAnnouncement(announcement) && (!user || (!user.showWelcomeMessage && (!user.moderation || (user.moderation.hasSeen))))) {
             setShowNewFeaturePopup(true);
         }
 
@@ -236,7 +237,7 @@ const HomePagePlayMode: React.FC = () => {
             }
         };
         fetchGameList();
-    }, [user, showUpdatePopup, updateModerationSeenStatus]);
+    }, [user, showUpdatePopup,showMutedPopup, updateModerationSeenStatus]);
 
     const styles = {
         wrapper: {
