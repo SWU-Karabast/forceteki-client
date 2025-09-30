@@ -9,9 +9,11 @@ import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/U
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
-import { setModerationSeenAsync } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { setModerationSeenAsync, retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
 import { SwuGameFormat } from '@/app/_constants/constants';
+import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { useSession } from 'next-auth/react';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -22,70 +24,77 @@ const HomePagePlayMode: React.FC = () => {
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
-    const { user, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
+    const { user, isLoading: userLoading, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
+    const { data: session } = useSession();
 
     // Deck Preferences State (moved from context)
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('useSavedDecks') === 'true';
-        }
-        return false;
+        return localStorage.getItem('useSavedDecks') === 'true';
     });
 
     const [favoriteDeck, setFavoriteDeck] = useState<string>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('selectedDeck') || '';
-        }
-        return '';
+        return localStorage.getItem('selectedDeck') || '';
     });
 
     const [format, setFormat] = useState<SwuGameFormat>(() => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('format');
-            return (stored as SwuGameFormat) || SwuGameFormat.Premier;
-        }
-        return SwuGameFormat.Premier;
+        const stored = localStorage.getItem('format');
+        return (stored as SwuGameFormat) || SwuGameFormat.Premier;
     });
 
     const [deckLink, setDeckLink] = useState<string>('');
 
-    const [saveDeck, setSaveDeck] = useState<boolean>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('saveDeck') === 'true';
-        }
-        return false;
-    });
+    const [saveDeck, setSaveDeck] = useState<boolean>(false);
+
+    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
     // Sync deck preferences to localStorage
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('useSavedDecks', showSavedDecks.toString());
-        }
-    }, [showSavedDecks]);
+        localStorage.setItem('format', format);
+    }, [format]);
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('selectedDeck', favoriteDeck);
+    const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
+        let selectDeck = localStorage.getItem('selectedDeck');
+        
+        if (selectDeck && !allDecks.some(deck => deck.deckID === selectDeck)) {
+            selectDeck = '';
+        }
+
+        if (!selectDeck) {
+            selectDeck = firstDeck || '';
+        }
+
+        if (selectDeck !== favoriteDeck) {
+            setFavoriteDeck(selectDeck);
+        }
+
+        if (localStorage.getItem('useSavedDecks') == null) {
+            setShowSavedDecks(true);
         }
     }, [favoriteDeck]);
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('format', format);
+    const fetchDecks = useCallback(async() => {
+        if (userLoading) {
+            return;
         }
-    }, [format]);
+
+        try {
+            await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
+        }catch (err){
+            alert('Server error when fetching decks');
+        }
+    }, [session?.user, user, userLoading, handleInitializeDeckSelection]);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('saveDeck', saveDeck.toString());
-        }
-    }, [saveDeck]);
+        fetchDecks();
+    }, [fetchDecks]);
+
+    const handleDeckManagement = useCallback(() => {
+        router.push('/DeckPage');
+    }, [router]);
 
     // Clear form errors function
     const clearErrors = useCallback(() => {
-        if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('clearDeckErrors'));
-        }
+        window.dispatchEvent(new CustomEvent('clearDeckErrors'));
     }, []);
 
     const closeWelcomePopup = () => {
@@ -109,9 +118,19 @@ const HomePagePlayMode: React.FC = () => {
         saveDeck,
     };
 
+    const handleShowSavedDecksChange = useCallback((value: boolean) => {
+        setShowSavedDecks(value);
+        localStorage.setItem('useSavedDecks', value.toString());
+    }, []);
+
+    const handleFavoriteDeckChange = useCallback((value: string) => {
+        setFavoriteDeck(value);
+        localStorage.setItem('selectedDeck', value);
+    }, []);
+
     const deckPreferencesHandlers = {
-        setShowSavedDecks: useCallback((value: boolean) => setShowSavedDecks(value), []),
-        setFavoriteDeck: useCallback((value: string) => setFavoriteDeck(value), []),
+        setShowSavedDecks: handleShowSavedDecksChange,
+        setFavoriteDeck: handleFavoriteDeckChange,
         setFormat: useCallback((value: SwuGameFormat) => setFormat(value), []),
         setSaveDeck: useCallback((value: boolean) => setSaveDeck(value), []),
     };
@@ -202,7 +221,7 @@ const HomePagePlayMode: React.FC = () => {
             }
         };
         fetchGameList();
-    }, [user]);
+    }, [user, showUpdatePopup, updateModerationSeenStatus]);
 
     const styles = {
         wrapper: {
@@ -240,6 +259,8 @@ const HomePagePlayMode: React.FC = () => {
                                 deckPreferencesHandlers={deckPreferencesHandlers}
                                 deckLink={deckLink}
                                 setDeckLink={handleSetDeckLink}
+                                savedDecks={savedDecks}
+                                handleDeckManagement={handleDeckManagement}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -248,6 +269,8 @@ const HomePagePlayMode: React.FC = () => {
                                 deckPreferencesHandlers={deckPreferencesHandlers}
                                 deckLink={deckLink}
                                 setDeckLink={handleSetDeckLink}
+                                savedDecks={savedDecks}
+                                handleDeckManagement={handleDeckManagement}
                             />
                         </TabPanel>
                         {showTestGames &&
