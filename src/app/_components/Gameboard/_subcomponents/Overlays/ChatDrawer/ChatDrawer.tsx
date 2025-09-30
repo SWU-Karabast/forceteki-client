@@ -48,16 +48,47 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             position: 'relative',
             height: '1.5em',
         },
-        quickUndo:{
-            height:'45px',
-            mb:'10px',
-            width: 'min(55%, 200px)',
-            lineHeight: '1.2',
-        },
         quickUndoBox:{
             display: 'inline-flex',
             justifyContent: 'flex-start',
             paddingLeft: '0.5em',
+        },
+        quickUndoButton: {
+            height:'45px',
+            mb:'10px',
+            width: 'min(55%, 200px)',
+            lineHeight: '1.2',
+            background: undoButtonDisabled ? '#404040' : 'linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, linear-gradient(to top, #1cb34a, #0a3d1e) border-box',
+            color: '#FFF',
+            fontSize: '20px',
+            border: '1px solid transparent',
+            borderRadius: '10px',
+            pt: '10px',
+            pb: '10px',
+            justifyContent: 'space-between',
+            paddingLeft: '12px',
+            paddingRight: '35px',
+            position: 'relative',
+            '& .MuiButton-startIcon': {
+                marginRight: 0,
+                marginLeft: 0,
+                transform: 'skewX(5deg)',
+                display: { xs: 'none', sm: 'none', md: 'block' },
+                '& svg': {
+                    width: '23px',
+                    height: '23px',
+                },
+            },
+            '&:hover': {
+                background: 'linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, linear-gradient(to top, #2ad44c, #0a3d1e) border-box',
+                boxShadow: '0 0 8px rgba(0, 170, 70, 0.7)',
+                border: '1px solid rgba(0, 200, 90, 0.7)',
+            },
+            '&:disabled': {
+                backgroundColor: '#404040',
+                color: '#FFF'
+            },
+            transform: 'skewX(-5deg)',
         }
     }
     
@@ -93,40 +124,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                     onMouseLeave={() => setIsUndoHovered(false)}
                     disabled={undoButtonDisabled}
                     startIcon={<UndoIcon />}
-                    sx={{
-                        ...styles.quickUndo,
-                        background: undoButtonDisabled ? '#404040' : 'linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, linear-gradient(to top, #1cb34a, #0a3d1e) border-box',
-                        color: '#FFF',
-                        fontSize: '20px',
-                        border: '1px solid transparent',
-                        borderRadius: '10px',
-                        pt: '10px',
-                        pb: '10px',
-                        justifyContent: 'space-between',
-                        paddingLeft: '12px',
-                        paddingRight: '35px',
-                        position: 'relative',
-                        '& .MuiButton-startIcon': {
-                            marginRight: 0,
-                            marginLeft: 0,
-                            transform: 'skewX(5deg)',
-                            display: { xs: 'none', sm: 'none', md: 'block' },
-                            '& svg': {
-                                width: '23px',
-                                height: '23px',
-                            },
-                        },
-                        '&:hover': {
-                            background: 'linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, linear-gradient(to top, #2ad44c, #0a3d1e) border-box',
-                            boxShadow: '0 0 8px rgba(0, 170, 70, 0.7)',
-                            border: '1px solid rgba(0, 200, 90, 0.7)',
-                        },
-                        '&:disabled': {
-                            backgroundColor: '#404040',
-                            color: '#FFF'
-                        },
-                        transform: 'skewX(-5deg)',
-                    }}
+                    sx={styles.quickUndoButton}
                 >
                     Undo
                 </Button>
