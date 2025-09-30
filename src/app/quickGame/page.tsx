@@ -13,7 +13,7 @@ const QuickGame: React.FC = () => {
     const { lobbyState, gameState, sendMessage } = useGame();
     const handleExit = () => {
         sendMessage('manualDisconnect');
-        router.push(`/${gameState?.undoEnabled ? '?undoTest=true' : ''}`);
+        router.push('/');
     }
 
     useEffect(() => {
