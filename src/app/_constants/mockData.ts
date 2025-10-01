@@ -117,5 +117,5 @@ export const announcement: IAnnouncement = {
     
     You can link your Karabast account to your SWUStats account so your stats will appear under "Owner" for your decks. Just go to the <a target="_blank" href="https://karabast.net/Preferences" style="color:lightblue;">Preferences page</a> to link! !`,
     endDate: '2025-10-08', // The date should be year-month-day
-    image:'/swuImage.png'
+    image:'/swuImage.webp'
 }
