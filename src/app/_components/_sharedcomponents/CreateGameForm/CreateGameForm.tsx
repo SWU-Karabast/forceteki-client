@@ -83,9 +83,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
 
-    const searchParams = useSearchParams();
-    const undoEnabled = searchParams.get('undoTest') === 'true';
-
     // Listen for tab change events to clear errors
     useEffect(() => {
         const handleClearErrors = () => {
@@ -184,7 +181,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 isPrivate: privateGame,
                 format: format,
                 lobbyName: lobbyName,
-                enableUndo: privateGame && undoEnabled,
+                enableUndo: false,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {

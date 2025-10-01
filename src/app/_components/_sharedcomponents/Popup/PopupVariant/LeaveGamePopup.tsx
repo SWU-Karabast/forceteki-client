@@ -23,7 +23,7 @@ export const LeaveGamePopupModule = ({ uuid }: LeaveGamePopupProps) => {
     const handleConfirm = () => {
         sendMessage('manualDisconnect');
         closePopup(uuid);
-        router.push(`/${gameState?.undoEnabled ? '?undoTest=true' : ''}`);
+        router.push('/');
     };
 
     const handleCancel = () => {
