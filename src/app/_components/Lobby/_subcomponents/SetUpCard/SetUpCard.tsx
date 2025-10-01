@@ -7,6 +7,7 @@ import {
     Button,
     Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider
 } from '@mui/material';
+import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -26,6 +27,7 @@ import {
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
 import { SupportedDeckSources } from '@/app/_constants/constants';
+import PreferenceOptionWithIcon from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceOption';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -53,11 +55,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
 
-    const undoEnabled = lobbyState?.undoEnabled;
+    const opponentReady = opponentUser?.ready;
+    const disableSettings = !owner || readyStatus || opponentReady;
 
     // ------------------------Additional functions------------------------//
     const handleStartGame = async () => {
         sendLobbyMessage(['onStartGameAsync']);
+    };
+
+    const handleChangeUndoSetting = async (checked: boolean) => {
+        sendLobbyMessage(['updateSetting', 'undoEnabled', checked]);
     };
 
     useEffect(() => {
@@ -304,22 +311,22 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             textDecorationColor: 'var(--initiative-red);',
         },
         checkboxStyle: {
-            color: '#fff',
+            color: disableSettings ? '#b0b0b0' : '#fff', // Lighter color when disabled and unchecked
             '&.Mui-checked': {
                 color: '#fff',
             },
+            '&.Mui-disabled': {
+                color: '#fff',
+            },
+            opacity: disableSettings ? 0.5 : 1, // Slightly less opacity when disabled and checked
         },
         checkboxAndRadioGroupTextStyle: {
-            color: '#fff',
+            color: disableSettings ? '#c0c0c0' : '#fff',  // Lighter color when disabled
             fontSize: '1em',
         },
     }
     return (
         <Card sx={styles.initiativeCardStyle}>
-            <Typography variant="h3" sx={styles.setUpTextStyle}>
-                Set Up
-            </Typography>
-
             {!opponentUser ? (
                 // If opponent is null, show "Waiting for an opponent" UI
                 <CardContent sx={styles.setUpCard}>
@@ -349,7 +356,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             ) : (
                 // If opponent is not null
                 <>
-                    {readyStatus && opponentUser.ready && owner ? (
+                    {readyStatus && opponentReady && owner ? (
                         // Both are ready
                         <>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -523,12 +530,41 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
-            <Divider sx={{ mt: 1, borderColor: '#666', display: undoEnabled ? 'block' : 'none' }} />
-            <Box sx={{ display: undoEnabled ? 'block' : 'none' }}>
-                <Typography sx={{ fontSize: '1.4em', mt: 1, textAlign: 'center', color: 'red' }}>
-                    Undo test mode is enabled
-                </Typography>
-            </Box>
+            <Divider sx={{ mt: 2, borderColor: '#666' }} />
+            <Typography variant="h5" sx={{ fontSize: '1.2em', fontWeight: '600', color: 'white', mt: 2, mb: 1 }}>
+                Game Settings
+            </Typography>
+            <FormControlLabel
+                control={
+                    <Checkbox
+                        sx={styles.checkboxStyle}
+                        checked={lobbyState.settings.undoEnabled}
+                        disabled={!owner || readyStatus || opponentReady}
+                        onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
+                            handleChangeUndoSetting(checked)
+                        }
+                    />
+                }
+                label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 1 }}>
+                        <span style={{ ...styles.checkboxAndRadioGroupTextStyle }}>
+                            Enable Undo (Beta)
+                        </span>
+                        <Tooltip title="Enable the Undo button. This feature is in beta and can potentially cause game issues. Please use the bug report button if you encounter any problems.">
+                            <Info 
+                                sx={{ 
+                                    fontSize: '14px',
+                                    color: '#1976d2',
+                                    backgroundColor: '#fff',
+                                    borderRadius: '50%',
+                                    cursor: 'help',
+                                    opacity: disableSettings ? 0.5 : 1
+                                }} 
+                            />
+                        </Tooltip>
+                    </Box>
+                }
+            />
         </Card>
     )
 };

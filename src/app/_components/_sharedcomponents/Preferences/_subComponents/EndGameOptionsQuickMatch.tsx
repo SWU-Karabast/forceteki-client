@@ -42,7 +42,7 @@ function EndGameOptionsQuickMatch() {
     // ------------------------Additional button functions------------------------//
     const handleReturnHome = () => {
         sendMessage('manualDisconnect');
-        router.push(`/${gameState?.undoEnabled ? '?undoTest=true' : ''}`);
+        router.push('/');
     }
 
     const handleRequeue = async () => {
