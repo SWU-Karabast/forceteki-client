@@ -1,6 +1,6 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { Box, Button, Popover, Tooltip, Typography, useMediaQuery } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Box, Button, CircularProgress, Popover, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
@@ -24,10 +24,6 @@ import {
 import {
     CardStyle,
     IDeckDetailedData,
-    IDeckPageStats,
-    IDeckStats,
-    IMatchTableStats,
-    IMatchupStatEntity,
     StoredDeck
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useUser } from '@/app/_contexts/User.context';
@@ -36,10 +32,9 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 const DeckDetails: React.FC = () => {
     const router = useRouter();
     const { user } = useUser();
+    const [loading, setLoading] = useState(true);
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const [deckStats, setDeckStats] = React.useState<IDeckPageStats>({ wins: 0, winPercentage: 0, draws: 0, losses: 0, totalGames: 0 });
-    const [opponentStats, setOpponentStats] = React.useState<IMatchTableStats[] | null>(null);
     const params = useParams();
     const deckId = params?.DeckId;
 
@@ -73,35 +68,42 @@ const DeckDetails: React.FC = () => {
         setAnchorElement(null);
     };
 
-    const calculateStats = (deckDataStats: IDeckStats | undefined) => {
-        const totalGames = deckDataStats ? deckDataStats.wins + deckDataStats.losses + deckDataStats.draws : 0;
-        const winPercentage = totalGames > 0 && deckDataStats ? Math.round((deckDataStats?.wins / totalGames) * 100) : 0;
-        const calculatedStats: IDeckPageStats = {
-            wins: deckDataStats?.wins ?? 0,
-            losses: deckDataStats?.losses ?? 0,
-            draws: deckDataStats?.draws ?? 0,
+    const deckStats = useMemo(() => {
+        const stats = displayDeck?.stats;
+        if (!stats) {
+            return {
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                totalGames: 0,
+                winPercentage: 0
+            };
+        }
+
+        const totalGames = stats.wins + stats.losses + stats.draws;
+        const winPercentage = totalGames > 0
+            ? Math.round((stats.wins / totalGames) * 100)
+            : 0;
+
+        return {
+            wins: stats.wins,
+            losses: stats.losses,
+            draws: stats.draws,
             totalGames,
             winPercentage
-        }
-        setDeckStats(calculatedStats);
-    }
+        };
+    }, [displayDeck?.stats]);
 
-    /**
-     * Formats opponent statistics with additional calculated fields
-     * @param opponentStats Array of opponent stats from the database
-     * @returns Formatted stats with added total and winPercentage fields
-     */
-    const getFormattedOpponentStats = (opponentStats: IMatchupStatEntity[] | undefined) => {
-        if (!opponentStats || !Array.isArray(opponentStats)) {
-            return [];
-        }
 
-        const oppStats = opponentStats.map(stat => {
+    const opponentStats = useMemo(() => {
+        const stats = displayDeck?.stats?.statsByMatchup;
+        if (!stats?.length) return [];
+
+        return stats.map(stat => {
             const wins = stat.wins || 0;
             const losses = stat.losses || 0;
             const draws = stat.draws || 0;
             const total = wins + losses + draws;
-            const winPercentage = total > 0 ? Math.round((wins / total) * 100) : 0;
 
             return {
                 leaderId: stat.leaderId,
@@ -112,11 +114,10 @@ const DeckDetails: React.FC = () => {
                 losses,
                 draws,
                 total,
-                winPercentage
+                winPercentage: total > 0 ? Math.round((wins / total) * 100) : 0
             };
         });
-        setOpponentStats(oppStats);
-    };
+    }, [displayDeck?.stats?.statsByMatchup]);
 
     useEffect(() => {
         fetchDeckFromServer(deckId)
@@ -143,6 +144,7 @@ const DeckDetails: React.FC = () => {
         if (rawDeckId) {
             // we need to check if the deck is still available
             const deckId = Array.isArray(rawDeckId) ? rawDeckId[0] : rawDeckId;
+            setLoading(true);
             try {
                 // we get the deck from localStorage and set the link
                 let deckDataServer;
@@ -159,8 +161,6 @@ const DeckDetails: React.FC = () => {
                 const data = await fetchDeckData(deckDataServer.deck.deckLink, false);
                 setDeckData(data);
                 setDisplayDeck(deckDataServer);
-                calculateStats(deckDataServer.stats);
-                getFormattedOpponentStats(deckDataServer.stats?.statsByMatchup);
             } catch (error) {
                 if (error instanceof Error) {
                     setErrorModalOpen(true);
@@ -177,6 +177,8 @@ const DeckDetails: React.FC = () => {
                     setErrorModalOpen(true);
                     setDeckErrorDetails('Server error when attempting to retrieve deck: '+error);
                 }
+            } finally {
+                setLoading(false);
             }
         }
     }
@@ -431,6 +433,14 @@ const DeckDetails: React.FC = () => {
         }
     }
 
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
     return (
         <>
             <Grid container sx={styles.bodyRow}>
@@ -518,8 +528,8 @@ const DeckDetails: React.FC = () => {
                             {opponentStats && (
                                 <AnimatedStatsTable
                                     data={opponentStats}
-                                    animationDuration={2000}
-                                    staggerDelay={100}
+                                    animationDuration={1000}
+                                    staggerDelay={10}
                                 />
                             )}
                         </Box>
