@@ -66,19 +66,9 @@ const PublicGames: React.FC = () => {
         <Card variant="black" sx={styles.publicGamesWrapper}>
             <CardContent sx={styles.cardContent}>
                 <Typography variant="h2">Public Games</Typography>
-                <Typography variant="h3">Premier</Typography>
+                <Typography variant="h3">Open Lobbies</Typography>
                 <Divider sx={styles.divider} />
-                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
-                    <JoinableGame key={lobby.id} lobby={lobby} />
-                ))}
-                <Typography variant="h3">Next Set Preview</Typography>
-                <Divider sx={styles.divider} />
-                { lobbies.filter((lobby) => lobby.format === SwuGameFormat.NextSetPreview).map((lobby) => (
-                    <JoinableGame key={lobby.id} lobby={lobby} />
-                ))}
-                <Typography variant="h3">Open</Typography>
-                <Divider sx={styles.divider} />
-                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Open).map((lobby) => (
+                {lobbies.map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
                 <GamesInProgress />
