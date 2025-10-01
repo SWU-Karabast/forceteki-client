@@ -110,7 +110,7 @@ export const articles: IArticle[] = [
 ];
 
 export const announcement: IAnnouncement = {
-    key:'swuStats-tough',
+    key:'swuStats',
     title: 'New Feature - SWUStats Integration',
     content:`
     Track your wins, losses, and match‑up win‑rates on our partner site, <strong>SWUSTATS</strong>! By adding a deck on swustats and importing it into Karabast you are able to retrieve in-depth information on your deck&#39;s performance.<br/><br/> 
