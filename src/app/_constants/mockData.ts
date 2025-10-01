@@ -115,7 +115,7 @@ export const announcement: IAnnouncement = {
     content:`
     Track your wins, losses, and match‑up win‑rates on our partner site, <strong>SWUSTATS</strong>! By adding a deck on swustats and importing it into Karabast you are able to retrieve in-depth information on your deck&#39;s performance.<br/><br/> 
     
-    You can link your Karabast account to your SWUStats account so your stats will appear under "Owner" for your decks. Just go to the <a target="_blank" href="https://karabast.net/Preferences" style="color:lightblue;">Preferences page</a> to link! !`,
+    You can link your Karabast account to your SWUStats account so your stats will appear under "Owner" for your decks. Just go to the <a target="_blank" href="https://karabast.net/Preferences" style="color:lightblue;">Preferences page</a> to link!`,
     endDate: '2025-10-08', // The date should be year-month-day
     image:'/swuImage.webp'
 }
