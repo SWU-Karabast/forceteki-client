@@ -66,11 +66,15 @@ const PublicGames: React.FC = () => {
         <Card variant="black" sx={styles.publicGamesWrapper}>
             <CardContent sx={styles.cardContent}>
                 <Typography variant="h2">Public Games</Typography>
-                <Typography variant="h3">Open Lobbies</Typography>
+                <Typography variant="h3">Available Lobbies</Typography>
                 <Divider sx={styles.divider} />
-                {lobbies.map((lobby) => (
-                    <JoinableGame key={lobby.id} lobby={lobby} />
-                ))}
+                {lobbies.length === 0 ? (
+                    <Typography variant="body1" sx={{ textAlign: 'center' }}>No available lobbies at the moment.</Typography>
+                ) : (
+                    lobbies.map((lobby) => (
+                        <JoinableGame key={lobby.id} lobby={lobby} />
+                    ))
+                )}
                 <GamesInProgress />
             </CardContent>
         </Card>
