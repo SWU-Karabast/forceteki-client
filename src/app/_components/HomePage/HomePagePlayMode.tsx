@@ -14,6 +14,9 @@ import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
 import { SwuGameFormat } from '@/app/_constants/constants';
 import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useSession } from 'next-auth/react';
+import { markAnnouncementAsSeen, shouldShowAnnouncement } from '@/app/_utils/ServerAndLocalStorageUtils';
+import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
+import { announcement } from '@/app/_constants/mockData';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -21,6 +24,7 @@ const HomePagePlayMode: React.FC = () => {
     const [testGameList, setTestGameList] = React.useState([]);
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+    const [showNewFeaturePopup, setShowNewFeaturePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
@@ -54,7 +58,7 @@ const HomePagePlayMode: React.FC = () => {
 
     const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
         let selectDeck = localStorage.getItem('selectedDeck');
-        
+
         if (selectDeck && !allDecks.some(deck => deck.deckID === selectDeck)) {
             selectDeck = '';
         }
@@ -105,6 +109,11 @@ const HomePagePlayMode: React.FC = () => {
     const closeUpdatePopup = () => {
         setShowUpdatePopup(false);
         updateWelcomeMessage();
+    }
+
+    const closeNewFeaturePopup = () => {
+        setShowNewFeaturePopup(false);
+        markAnnouncementAsSeen(announcement)
     }
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
@@ -184,12 +193,14 @@ const HomePagePlayMode: React.FC = () => {
         if(user) {
             if (user.showWelcomeMessage && !showUpdatePopup) {
                 setShowMutedPopup(false);
+                setShowNewFeaturePopup(false);
                 setShowWelcomePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
             if(user.moderation){
                 setModerationDays(user.moderation.daysRemaining);
                 if(!user.moderation.hasSeen && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
+                    setShowNewFeaturePopup(false);
                     setShowMutedPopup(true);
                 }
                 // check if moderation object still exists
@@ -198,6 +209,11 @@ const HomePagePlayMode: React.FC = () => {
                 setShowMutedPopup(false);
             }
         }
+        if (shouldShowAnnouncement(announcement) && (!user || (!user.showWelcomeMessage && (!user.moderation || (user.moderation.hasSeen))))) {
+            setShowNewFeaturePopup(true);
+        }
+
+
         if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {
             try {
@@ -221,7 +237,7 @@ const HomePagePlayMode: React.FC = () => {
             }
         };
         fetchGameList();
-    }, [user, showUpdatePopup, updateModerationSeenStatus]);
+    }, [user, showUpdatePopup,showMutedPopup, updateModerationSeenStatus]);
 
     const styles = {
         wrapper: {
@@ -295,6 +311,7 @@ const HomePagePlayMode: React.FC = () => {
             </Card>
             <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
             <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
+            <NewFeaturePopup open={showNewFeaturePopup} onClose={closeNewFeaturePopup} />
             <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
             <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
         </>
