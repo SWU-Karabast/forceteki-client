@@ -321,7 +321,10 @@ function GeneralTab() {
                                         )}
                                     </Box>
                                     <Typography variant="body2" sx={{ mt: 2, color: user.swuStatsRefreshToken ? '#81c784' : '#ffd54f', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
-                                        Linking your account will cause your stats to appear under Owner in your decks. <strong>Deck syncing is not available yet.</strong>
+                                        {user.swuStatsRefreshToken
+                                            ? 'Your stats will appear under Owner in your decks. '
+                                            : 'Linking your account will cause your stats to appear under Owner in your decks. '}
+                                        <strong>Deck syncing is not available yet.</strong>
                                     </Typography>
                                 </>
                             )}
