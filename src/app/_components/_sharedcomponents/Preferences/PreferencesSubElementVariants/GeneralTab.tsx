@@ -200,7 +200,7 @@ function GeneralTab() {
             ml: '4px'
         },
         swuStatsContainer:{
-            mb:'40px'
+            mb:'20px'
         },
         muteNoticeContainer: {
             mt: '2rem',
@@ -285,26 +285,31 @@ function GeneralTab() {
                                 </Typography>
                             </Box>
                             {(process.env.NODE_ENV === 'development' || enableLinkButton) && (
-                                <Box sx={styles.swuStatsContainer}>
-                                    <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
-                                    {swuStatsError && (
-                                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                                            Failed to link to SWUStats account. If this keeps happening, please report the problem to the
-                                            <MuiLink
-                                                href="https://discord.com/channels/1220057752961814568/1345468050568380568"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
-                                            >
-                                                Discord
-                                            </MuiLink>.
-                                        </Typography>
-                                    )}
-                                </Box>)
-                            }
+                                <>
+                                    <Box sx={styles.swuStatsContainer}>
+                                        <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
+                                        {swuStatsError && (
+                                            <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                                Failed to link to SWUStats account. If this keeps happening, please report the problem to the
+                                                <MuiLink
+                                                    href="https://discord.com/channels/1220057752961814568/1345468050568380568"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
+                                                >
+                                                    Discord
+                                                </MuiLink>.
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    <Typography variant="body2" sx={{ mt: 2, color: '#ffd54f', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                        Linking your account will cause stats on your decks to appear under the Owner category. <strong>Deck syncing</strong> is <strong>not available</strong> yet.
+                                    </Typography>
+                                </>
+                            )}
                         </Box>
                     )}
-                    <Typography variant={'h3'} sx={{ mt: user ? 0 : '1rem' }}>Player ID</Typography>
+                    <Typography variant={'h3'} sx={{ mt: user ? '2rem' : '1rem' }}>Player ID</Typography>
                     <Box sx={{ ...styles.boxStyle }}>
                         <TextField
                             value={usersId}
