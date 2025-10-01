@@ -115,7 +115,7 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
         }
        
         const preferences = getPreferences().sound;
-        if (!enabled || preferences?.muteAllSound) {
+        if (!enabled || preferences?.muteAllSound || getVolumeFromLocalStorage() === 0) {
             return;
         }
         // Check specific action mutes
