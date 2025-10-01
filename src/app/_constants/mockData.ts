@@ -114,7 +114,7 @@ export const announcement: IAnnouncement = {
     title: 'New Feature - SWUStats',
     content:`
     Track your wins, losses, and match‑up win‑rates on our partner site, <strong>SWUSTATS</strong>! By adding a deck on swustats and importing it into Karabast
-    you are able to retrieve in-depth information on your deck&#39;s performance!`,
-    endDate: '2025-15-5',
-    image:'/swustatsPreferences.png'
+    you are able to retrieve in-depth information on your deck&#39;s performance! To link your account go to the <a target="_blank" href="https://karabast.net/Preferences" style="color:lightblue;">preference page</a>!`,
+    endDate: '2025-10-08', // The date should be year-month-day
+    image:'/swuImage.png'
 }
