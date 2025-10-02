@@ -5,7 +5,7 @@ import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
-import { LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
+import { ICardData, LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const Board: React.FC<IBoardProps> = ({
@@ -20,12 +20,40 @@ const Board: React.FC<IBoardProps> = ({
     const titleCurrentPlayer = gameState.players[connectedPlayer].user.username;
 
     const playerLeader = gameState?.players[connectedPlayer].leader;
-    const playerBase = gameState?.players[connectedPlayer].base;
+    let playerBase = gameState?.players[connectedPlayer].base;
     const opponentLeader = gameState?.players[opponentId].leader;
-    const opponentBase = gameState?.players[opponentId].base;
+    let opponentBase = gameState?.players[opponentId].base;
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
     const initiativeClaimed = gameState.initiativeClaimed;
+
+    const playerCapturedCards = gameState?.players[connectedPlayer].cardPiles['capturedZone'];
+    const opponentCapturedCards = gameState?.players[opponentId].cardPiles['capturedZone'];
+
+    const attachCapturedCards = (
+        card: ICardData,
+        capturedCards: ICardData[]
+    ): ICardData => {
+        // Group captured cards by their parentCardId
+        const capturedMapping: Record<string, ICardData[]> = {};
+    
+        capturedCards.forEach((card) => {
+            if (card.parentCardId) {
+                if (!capturedMapping[card.parentCardId]) {
+                    capturedMapping[card.parentCardId] = [];
+                }
+                capturedMapping[card.parentCardId].push(card);
+            }
+        });
+    
+        if (card.uuid) {
+            card.capturedCards = capturedMapping[card.uuid] || [];
+        }
+        return card;
+    };
+
+    playerBase = attachCapturedCards(playerBase, playerCapturedCards);
+    opponentBase = attachCapturedCards(opponentBase, opponentCapturedCards);
 
     // ----------------Styles----------------//
     const styles = {
@@ -230,6 +258,7 @@ const Board: React.FC<IBoardProps> = ({
                             <LeaderBaseCard
                                 cardStyle={LeaderBaseCardStyle.Base} 
                                 card={opponentBase}
+                                capturedCards={opponentBase.capturedCards || []}
                             />
                         </Box>
                     </Box>
@@ -239,6 +268,7 @@ const Board: React.FC<IBoardProps> = ({
                             <LeaderBaseCard 
                                 cardStyle={LeaderBaseCardStyle.Base} 
                                 card={playerBase}
+                                capturedCards={playerBase.capturedCards || []}
                             />
                         </Box>
                         <Box sx={styles.leaderBaseWrapper}>

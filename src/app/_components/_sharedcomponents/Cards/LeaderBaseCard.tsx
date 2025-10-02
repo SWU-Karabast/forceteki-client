@@ -7,11 +7,13 @@ import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
+import zIndex from '@mui/material/styles/zIndex';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
     title,
     cardStyle = LeaderBaseCardStyle.Plain,
+    capturedCards = [],
     disabled = false,
     isLeader = false,
 }) => {
@@ -20,10 +22,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    const {
-        aspectRatio,
-        width,
-    } = useLeaderCardFlipPreview({
+    
+    const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
+    const leaderCardFlipPreview = useLeaderCardFlipPreview({
         anchorElement,
         cardId: card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
         setPreviewImage,
@@ -36,6 +37,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             id: card.id
         } : undefined,
     });
+    const aspectRatio = isHoveringCapturedCard ? '1 / 1.4' : leaderCardFlipPreview.aspectRatio;
+    const width = isHoveringCapturedCard ? '16rem' : leaderCardFlipPreview.width;
 
     if (!card) {
         return null
@@ -115,6 +118,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
+    const isConnectedPlayer = card.controllerId === connectedPlayer;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getForceTokenIconStyle = (player: any) => {
@@ -132,7 +136,40 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage,
             filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
+            zIndex: 2
         };
+    }
+
+    const capturedCardBackground = (card: ICardData) => {
+        if (!card.aspects){
+            return null
+        }
+        if (card.aspects.includes('villainy') && card.aspects.length === 1) {
+            return 'upgrade-black.png';
+        }
+        if (card.aspects.includes('heroism') && card.aspects.length === 1) {
+            return 'upgrade-white.png';
+        }
+        switch (true) {
+            case card.aspects.includes('aggression'):
+                return 'upgrade-red.png';
+            case card.aspects.includes('command'):
+                return 'upgrade-green.png';
+            case card.aspects.includes('cunning'):
+                return 'upgrade-yellow.png';
+            case card.aspects.includes('vigilance'):
+                return 'upgrade-blue.png';
+            default:
+                return 'upgrade-grey.png';
+        }
+    };
+
+    const subcardClick = (subCard: ICardData) => {
+        if (subCard.selectable) {
+            setAnchorElement(null);
+            setPreviewImage(null);
+            sendGameMessage(['cardClicked', subCard.uuid]);
+        }
     }
 
     const styles = {
@@ -179,7 +216,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('epic-action-token')})`,
-            display: card.epicActionSpent || card.epicDeployActionSpent && !isDeployed ? 'block' : 'none'
+            display: card.epicActionSpent || card.epicDeployActionSpent && !isDeployed ? 'block' : 'none',
+            zIndex: 1
         },
         blankIcon : {
             position: 'absolute',
@@ -243,8 +281,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            aspectRatio,
-            width,
+            aspectRatio: aspectRatio,
+            width: width,
         },
         defendIcon: {
             position: 'absolute',
@@ -274,79 +312,182 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                  1px  1px 0 #000
             `
         },
-    }
+        capturedCardsDivider:{
+            fontSize: '8px',
+            textAlign: 'center',
+            color: 'white',
+            width: '100%',
+            backgroundColor:'black',
+            mb: isConnectedPlayer ? '0px' : '-2px',
+            mt: isConnectedPlayer ? '-2px' : '0px',
+            position:'relative',
+            zIndex: -1
+        },
+        capturedCardIcon:{
+            width: '100%',
+            aspectRatio: '5.25',
+            display: 'flex',
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxSizing: 'content-box',
+            position: 'relative',
+            mb: isConnectedPlayer ? '0px' : '-4px',
+            mt: isConnectedPlayer ? '-4px' : '0px',
+            zIndex: 0, // Establish stacking context
+        },
+        capturedCardBackground: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            transform: isConnectedPlayer ? 'scaleY(-1)' : 'none',
+            zIndex: 1, // Background layer
+        },
+        capturedCardName: {
+            fontSize: 'clamp(4px, .65vw, 12px)',
+            marginTop: isConnectedPlayer ? '-3px' : '2px',
+            fontWeight: '800',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',           
+            color: 'black',
+            textAlign: 'center', 
+            userSelect: 'none',
+            position: 'relative',
+            zIndex: 2, // Text layer above background
+        },
+    };
+
+    const capturedCardsDecoration = (
+        <Box sx={{ 
+            width: '100%',
+            position: 'relative',
+            mb: isConnectedPlayer ? '-20px' : '0px',
+            mt: isConnectedPlayer ? '0px' : '-20px',
+            zIndex: 1
+        }}>
+            {!isConnectedPlayer && (
+                <Typography sx={styles.capturedCardsDivider}>
+                    Captured
+                </Typography>
+            )}
+            {capturedCards.map((capturedCard: ICardData) => (
+                <Box
+                    key={`captured-${capturedCard.uuid}`}
+                    sx={{
+                        ...styles.capturedCardIcon,
+                        cursor: capturedCard.selectable ? 'pointer' : 'normal',
+                    }}
+                    onClick={() => subcardClick(capturedCard)}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.setId })}
+                    data-card-type={capturedCard.printedType}
+                    data-card-id={capturedCard.setId ? capturedCard.setId.set + '_' + capturedCard.setId.number : capturedCard.id}
+                >
+                    {/* Background image element positioned behind text */}
+                    <Box
+                        sx={{
+                            ...styles.capturedCardBackground,
+                            backgroundImage: `url(${capturedCardBackground(capturedCard)})`,
+                            border: capturedCard.selectable ? `1.5px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none',
+                        }}
+                    />
+                    <Typography sx={{
+                        ...styles.capturedCardName
+                    }}>
+                        {capturedCard.name}
+                    </Typography>
+                </Box>
+            ))}
+            {isConnectedPlayer && (
+                <Typography sx={styles.capturedCardsDivider}>
+                    Captured
+                </Typography>
+            )}
+        </Box>
+    )
+
     return (
-        <Box
-            sx={isDeployed ? styles.deployedPlaceholder : styles.card}
-            onClick={handleClick}
-            aria-owns={open ? 'mouse-over-popover' : undefined}
-            aria-haspopup="true"
-            data-card-url={s3CardImageURL(card)}
-            data-card-type={isLeader ? 'leader' : 'base'}
-            onMouseEnter={handlePreviewOpen}
-            onMouseLeave={handlePreviewClose}
-        >
-            <Box sx={styles.cardOverlay}>
-                <Box sx={styles.unimplementedAlert}></Box>
-            </Box>
-            <Box sx={styles.epicActionIcon}></Box>
-            { showValueAdjuster() && <CardValueAdjuster card={card} /> }
-            {cardStyle === LeaderBaseCardStyle.Base && (
-                <>
-                    <Box sx={styles.damageCounterContainer}>
-                        { !!distributionAmount && 
+        <Box sx={{ width: '100%' }}>
+            {capturedCards.length > 0 && isConnectedPlayer && capturedCardsDecoration}
+            <Box
+                sx={isDeployed ? styles.deployedPlaceholder : styles.card}
+                onClick={handleClick}
+                aria-owns={open ? 'mouse-over-popover' : undefined}
+                aria-haspopup="true"
+                data-card-url={s3CardImageURL(card)}
+                data-card-type={isLeader ? 'leader' : 'base'}
+                onMouseEnter={handlePreviewOpen}
+                onMouseLeave={handlePreviewClose}
+            >
+                <Box sx={styles.cardOverlay}>
+                    <Box sx={styles.unimplementedAlert}></Box>
+                </Box>
+                <Box sx={styles.epicActionIcon}></Box>
+                { showValueAdjuster() && <CardValueAdjuster card={card} /> }
+                {cardStyle === LeaderBaseCardStyle.Base && (
+                    <>
+                        <Box sx={styles.damageCounterContainer}>
+                            { !!distributionAmount && 
                         // Need to change background/borderRadius to backgroundImage
                         <Typography variant="body1" sx={{ ...styles.damageCounter, background: distributeHealing ? 'rgba(0, 186, 255, 1)' : 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat', borderRadius: distributeHealing ? '17px 8px' : '0px' }}>
                             {distributionAmount}
                         </Typography>
-                        }
-                        <Typography variant="body1" sx={styles.damageCounter}>
-                            {card.damage}
-                        </Typography>
-                    </Box>
-                    {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
-                    {card.isDefender && <Box sx={styles.defendIcon}/>}
-                </>
-            )}
-
-            <Popover
-                id="mouse-over-popover"
-                sx={{ pointerEvents: 'none' }}
-                open={open}
-                anchorEl={anchorElement}
-                anchorOrigin={{
-                    vertical: 'center',
-                    horizontal: -5,
-                }}
-                transformOrigin={{
-                    vertical: 'center',
-                    horizontal: 'right',
-                }}
-                onClose={handlePreviewClose}
-                disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}
-            >
-                <Box sx={{
-                    ...styles.cardPreview,backgroundImage: previewImage
-                }} >
-                </Box>
-                {isLeader && (
-                    <Typography variant={'body1'} sx={styles.ctrlText}
-                    >CTRL: View Flipside</Typography>
+                            }
+                            <Typography variant="body1" sx={styles.damageCounter}>
+                                {card.damage}
+                            </Typography>
+                        </Box>
+                        {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
+                        {card.isDefender && <Box sx={styles.defendIcon}/>}
+                    </>
                 )}
-            </Popover>
 
-            {cardStyle === LeaderBaseCardStyle.Leader && title && (
-                <>
-                    <Box sx={styles.nameplateBox}>
-                        <Typography variant="body2" sx={styles.nameplateText}>
-                            {title}
-                        </Typography>
+                <Popover
+                    id="mouse-over-popover"
+                    sx={{ pointerEvents: 'none' }}
+                    open={open}
+                    anchorEl={anchorElement}
+                    anchorOrigin={{
+                        vertical: 'center',
+                        horizontal: -5,
+                    }}
+                    transformOrigin={{
+                        vertical: 'center',
+                        horizontal: 'right',
+                    }}
+                    onClose={handlePreviewClose}
+                    disableRestoreFocus
+                    slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}
+                >
+                    <Box sx={{
+                        ...styles.cardPreview,backgroundImage: previewImage
+                    }} >
                     </Box>
-                    <Box sx={styles.epicActionIcon}></Box>
-                    <Box sx={styles.blankIcon}/>
-                </>
-            )}
+                    {isLeader && (
+                        <Typography variant={'body1'} sx={styles.ctrlText}
+                        >CTRL: View Flipside</Typography>
+                    )}
+                </Popover>
+
+                {cardStyle === LeaderBaseCardStyle.Leader && title && (
+                    <>
+                        <Box sx={styles.nameplateBox}>
+                            <Typography variant="body2" sx={styles.nameplateText}>
+                                {title}
+                            </Typography>
+                        </Box>
+                        <Box sx={styles.epicActionIcon}></Box>
+                        <Box sx={styles.blankIcon}/>
+                    </>
+                )}
+            </Box>
+            {capturedCards.length > 0 && !isConnectedPlayer && capturedCardsDecoration}
         </Box>
     );
 };
