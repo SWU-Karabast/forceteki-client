@@ -269,6 +269,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('statsSubmitNotification', (notification: IStatsNotification) => {
+            console.log('Received stats notification at socket', notification);
             setStatsSubmitNotification(notification);
         });
 

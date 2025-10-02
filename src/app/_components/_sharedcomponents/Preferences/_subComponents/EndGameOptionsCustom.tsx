@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { stat } from 'fs';
 
 function EndGameOptionsCustom() {
     const router = useRouter();
@@ -41,6 +42,8 @@ function EndGameOptionsCustom() {
     useEffect(() => {
         if (statsSubmitNotification) {
             const notification = statsSubmitNotification;
+
+            console.log('Received stats notification', statsSubmitNotification);
 
             if (notification.source === StatsSource.Karabast) {
                 setKarabastStatsMessage({

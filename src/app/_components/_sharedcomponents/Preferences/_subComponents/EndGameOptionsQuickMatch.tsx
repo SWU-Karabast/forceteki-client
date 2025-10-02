@@ -24,6 +24,8 @@ function EndGameOptionsQuickMatch() {
         if (statsSubmitNotification) {
             const notification = statsSubmitNotification;
 
+            console.log('Received stats notification', statsSubmitNotification);
+
             if (notification.source === StatsSource.Karabast) {
                 setKarabastStatsMessage({
                     type: notification.type,
