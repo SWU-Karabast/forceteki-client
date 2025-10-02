@@ -68,13 +68,18 @@ const PublicGames: React.FC = () => {
                 <Typography variant="h2">Public Games</Typography>
                 <Typography variant="h3">Available Lobbies</Typography>
                 <Divider sx={styles.divider} />
-                {lobbies.length === 0 ? (
+                {lobbies.length === 0 && (
                     <Typography variant="body1" sx={{ textAlign: 'center' }}>No available lobbies at the moment.</Typography>
-                ) : (
-                    lobbies.map((lobby) => (
-                        <JoinableGame key={lobby.id} lobby={lobby} />
-                    ))
                 )}
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
+                    <JoinableGame key={lobby.id} lobby={lobby} />
+                ))}
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.NextSetPreview).map((lobby) => (
+                    <JoinableGame key={lobby.id} lobby={lobby} />
+                ))}
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Open).map((lobby) => (
+                    <JoinableGame key={lobby.id} lobby={lobby} />
+                ))}
                 <GamesInProgress />
             </CardContent>
         </Card>
