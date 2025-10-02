@@ -8,6 +8,7 @@ import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
 import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
+import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
 
 /* Secondary functions */
 /**
@@ -677,6 +678,57 @@ export const unlinkSwuStatsAsync = async(
     } catch (error) {
         console.error('Error unlinking swustats:', error);
         throw error;
+    }
+};
+
+
+
+export const shouldShowAnnouncement = (announcement: IAnnouncement): boolean =>{
+    try {
+        const now = new Date();
+        const endDate = new Date(announcement.endDate);
+        cleanupExpiredAnnouncementKeys();
+        if (now > endDate) {
+            return false; // Past end date, don't show
+        }
+        const hasSeenIt = localStorage.getItem(`swu-announcement-${announcement.key}`) !== null;
+        return !hasSeenIt;
+    }catch(error){
+        console.error('Error checking if announcement should be shown:', error);
+        return false; // should we display an error?
+    }
+}
+
+export const markAnnouncementAsSeen = (announcement: IAnnouncement): void => {
+    try {
+        localStorage.setItem(`swu-announcement-${announcement.key}`, JSON.stringify({ key:announcement.key, endDate:announcement.endDate }));
+    } catch (error) {
+        console.error('Error marking announcement as seen:', error);
+        throw error;
+    }
+};
+
+/**
+* Clean up localStorage by removing seen announcements that are no longer active
+* Call this occasionally (e.g., on app start) to keep localStorage clean
+*/
+export const cleanupExpiredAnnouncementKeys = (): void => {
+    try {
+        // Check all localStorage keys for announcement keys
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('swu-announcement-')) {
+                // If this announcement is old we remove it from localStorage
+                const storedAnnouncement = JSON.parse(<string>localStorage.getItem(key)) as IAnnouncement;
+                const now = new Date();
+                const endDate = new Date(storedAnnouncement.endDate);
+                if (now > endDate) {
+                    localStorage.removeItem(key);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error cleaning up expired announcement keys:', error);
     }
 };
 

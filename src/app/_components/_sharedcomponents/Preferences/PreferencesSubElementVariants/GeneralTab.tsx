@@ -200,7 +200,7 @@ function GeneralTab() {
             ml: '4px'
         },
         swuStatsContainer:{
-            mb:'40px'
+            mb:'20px'
         },
         muteNoticeContainer: {
             mt: '2rem',
@@ -235,7 +235,7 @@ function GeneralTab() {
                 <Typography sx={styles.typographyContainer} variant={'h2'}>Profile</Typography>
                 <Divider sx={{ mb: '20px' }} />
                 <Box sx={styles.contentContainer}>
-                    {user && (
+                    {user ? (
                         <Box>
                             <Box sx={{ mb: '30px' }}>
                                 <Typography variant={'h3'}>Username</Typography>
@@ -284,43 +284,72 @@ function GeneralTab() {
                                     After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
                                 </Typography>
                             </Box>
+                            <Typography variant={'h3'} sx={{ mt: user ? '2rem' : '1rem' }}>Player ID</Typography>
+                            <Box sx={{ ...styles.boxStyle }}>
+                                <TextField
+                                    value={usersId}
+                                    sx={styles.textFieldStyle}
+                                />
+                                <Tooltip
+                                    open={showTooltip}
+                                    title="Copied!"
+                                    arrow
+                                    placement="top"
+                                >
+                                    <Button variant="contained" onClick={() => handleCopyLink(usersId)} sx={styles.buttonStyle}>
+                                        Copy Identifier
+                                    </Button>
+                                </Tooltip>
+                            </Box>
                             {(process.env.NODE_ENV === 'development' || enableLinkButton) && (
-                                <Box sx={styles.swuStatsContainer}>
-                                    <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
-                                    {swuStatsError && (
-                                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                                            Failed to link to SWUStats account. If this keeps happening, please report the problem to the
-                                            <MuiLink
-                                                href="https://discord.com/channels/1220057752961814568/1345468050568380568"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
-                                            >
-                                                Discord
-                                            </MuiLink>.
-                                        </Typography>
-                                    )}
-                                </Box>)
-                            }
+                                <>
+                                    <Typography variant={'h3'} sx={{ mb: '1rem', mt:'3rem' }} >SWUStats Integration</Typography>
+                                    <Box sx={styles.swuStatsContainer}>
+                                        <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
+                                        {swuStatsError && (
+                                            <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                                Failed to link to SWUStats account. If this keeps happening, please report the problem to the
+                                                <MuiLink
+                                                    href="https://discord.com/channels/1220057752961814568/1345468050568380568"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
+                                                >
+                                                    Discord
+                                                </MuiLink>.
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    <Typography variant="body2" sx={{ mt: 2, color: user.swuStatsRefreshToken ? '#81c784' : '#ffd54f', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                        {user.swuStatsRefreshToken
+                                            ? 'Your stats will appear under Owner in your decks. '
+                                            : 'Linking your account will cause your stats to appear under Owner in your decks. '}
+                                        <strong>Deck syncing is not available yet.</strong>
+                                    </Typography>
+                                </>
+                            )}
                         </Box>
+                    ) : (
+                        <>
+                            <Typography variant={'h3'} sx={{ mt: user ? '2rem' : '1rem' }}>Player ID</Typography>
+                            <Box sx={{ ...styles.boxStyle }}>
+                                <TextField
+                                    value={usersId}
+                                    sx={styles.textFieldStyle}
+                                />
+                                <Tooltip
+                                    open={showTooltip}
+                                    title="Copied!"
+                                    arrow
+                                    placement="top"
+                                >
+                                    <Button variant="contained" onClick={() => handleCopyLink(usersId)} sx={styles.buttonStyle}>
+                                        Copy Identifier
+                                    </Button>
+                                </Tooltip>
+                            </Box>
+                        </>
                     )}
-                    <Typography variant={'h3'} sx={{ mt: user ? 0 : '1rem' }}>Player ID</Typography>
-                    <Box sx={{ ...styles.boxStyle }}>
-                        <TextField
-                            value={usersId}
-                            sx={styles.textFieldStyle}
-                        />
-                        <Tooltip
-                            open={showTooltip}
-                            title="Copied!"
-                            arrow
-                            placement="top"
-                        >
-                            <Button variant="contained" onClick={() => handleCopyLink(usersId)} sx={styles.buttonStyle}>
-                                Copy Identifier
-                            </Button>
-                        </Tooltip>
-                    </Box>
                     {/* Mute Notice - Only show if user is muted */}
                     {user?.moderation && (
                         <Box sx={styles.muteNoticeContainer}>
