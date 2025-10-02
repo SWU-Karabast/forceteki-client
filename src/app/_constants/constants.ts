@@ -18,6 +18,12 @@ export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Open]: 'Open',
 };
 
+export const FormatTagLabels: Record<SwuGameFormat, string> = {
+    [SwuGameFormat.Premier]: 'Premier',
+    [SwuGameFormat.NextSetPreview]: 'Next Set',
+    [SwuGameFormat.Open]: 'Open',
+};
+
 export const SupportedDeckSources = Object.values(DeckSource)
     .filter((source) => source !== DeckSource.NotSupported)
     .map((source) => {
