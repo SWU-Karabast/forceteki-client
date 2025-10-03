@@ -2,7 +2,7 @@ import { IPreferences, IUser } from '@/app/_contexts/UserTypes';
 import {
     loadPreferencesFromLocalStorage,
     savePreferencesToLocalStorage,
-    saveSoundPreferencesToServer
+    savePreferencesToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 /**
@@ -19,7 +19,7 @@ export const savePreferencesGeneric = async (
     updateUserPreferences: (preferences: IPreferences) => void
 ): Promise<{ success: boolean, updatedPreferences: IPreferences }> => {
     if (user) {
-        const success = await saveSoundPreferencesToServer(user, partialPreferences.sound);
+        const success = await savePreferencesToServer(user, partialPreferences);
 
         if (success) {
             // Update user context
