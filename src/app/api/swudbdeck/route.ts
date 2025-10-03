@@ -116,7 +116,8 @@ export async function GET(req: Request) {
                 console.error('SWUCardHub API error:', response.statusText);
                 throw new Error(`SWUCardHub API error: ${response.statusText}`);
             }
-        } else if (deckLink.includes('swubase.com')) {
+        } 
+        else if (deckLink.includes('swubase.com')) {
             // Deck Links in the form: https://swubase.com/decks/${deckId}
             const match = deckLink.match(/\/decks\/([^\/]+)\/?$/);
             const deckId = match ? match[1] : null;
@@ -142,6 +143,32 @@ export async function GET(req: Request) {
 
                 console.error('SWUBase API error:', response.statusText);
                 throw new Error(`SWUBase API error: ${response.statusText}`);
+            }
+        }
+        else if (deckLink.includes('swumetastats.com')) {
+            const match = deckLink.match(/\/decklists\/([^\/]+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if(deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.SWUMetaStats;
+            if (!deckId) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            const apiUrl = `https://www.swumetastats.com/api/decklists/${deckId}/json`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if(response.status === 404) {
+                // SWUBase returns 404 for private decks. We'll forward it to a 403 to get the correct message to the user.
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck is set to Public on swubase.com.' }, { status: 403 });
+                }
+
+                console.error('SWUMetaStats API error:', response.statusText);
+                throw new Error(`SWUMetaStats API error: ${response.statusText}`);
             }
         } else {
             console.error('Error: Deckbuilder not supported');
