@@ -550,7 +550,7 @@ export const getDeckFromServer = async (deckId: string, user:IUser): Promise<IDe
  * @returns Promise that resolves to boolean indicating success
  */
 export const savePreferencesToServer = async(
-    user: IUser | null,
+    user: IUser,
     preferences: IPreferences
 ): Promise<boolean> => {
     try {
@@ -559,7 +559,7 @@ export const savePreferencesToServer = async(
             preferences
         };
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/update-preferences`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/preferences`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
