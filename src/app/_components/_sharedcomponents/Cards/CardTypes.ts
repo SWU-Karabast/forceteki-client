@@ -121,6 +121,7 @@ export interface ILeaderBaseCardProps {
     handleSelect?: () => void;
     title?: string;
     card: ICardData | null;
+    capturedCards?: ICardData[];
     disabled?: boolean;
     cardStyle?: LeaderBaseCardStyle;
     isLeader?: boolean;
