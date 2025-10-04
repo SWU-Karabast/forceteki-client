@@ -546,21 +546,21 @@ export const getDeckFromServer = async (deckId: string, user:IUser): Promise<IDe
 /**
  * Saves sound preferences to the server
  * @param user The current user
- * @param soundPreferences The sound preferences to save
+ * @param preferences
  * @returns Promise that resolves to boolean indicating success
  */
-export const saveSoundPreferencesToServer = async(
-    user: IUser | null,
-    soundPreferences: IPreferences['sound']
+export const savePreferencesToServer = async(
+    user: IUser,
+    preferences: IPreferences
 ): Promise<boolean> => {
     try {
         const payload = {
             user,
-            soundPreferences
+            preferences
         };
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/save-sound-preferences`, {
-            method: 'POST',
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/preferences`, {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
