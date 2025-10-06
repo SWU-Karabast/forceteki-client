@@ -15,12 +15,13 @@ const tosBlocks = [
         'Users must be at least 18 years of age to use the Site.',
         'Users may access the Site without creating an account. Anonymous users will have restricted features, including disabled chat.',
         'Registered accounts may be created through third-party logins (Discord or Google).',
-        'Offensive usernames are prohibited. The Site reserves the right to reject, suspend, or require renaming of usernames that violate community standards.'
+        'Offensive usernames are prohibited. The Site reserves the right to reject, suspend, or require renaming of usernames that violate community standards.',
     ] },
     { type: 'heading', text: 'Code of Conduct' },
     { type: 'ol', items: [
         'The Site reserves the right to mute, suspend, or otherwise restrict accounts that violate the rules below, at its sole discretion, for any duration deemed appropriate.',
-        'Users must not use slurs, vulgarity, harassment, or otherwise abusive behavior.',
+        'Users must not use slurs or vulgarity in text chat or in usernames.',
+        'Harassment or abusive behavior towards other users in text chat is prohibited.',
         'Impersonation of other users, moderators, or administrators is prohibited.'
     ] },
     { type: 'heading', text: 'Decks' },

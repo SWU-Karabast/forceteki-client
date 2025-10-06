@@ -141,17 +141,26 @@ const UsernameChangeRequiredPopup: React.FC<UsernameChangeRequiredPopupProps> = 
                 </Typography>
 
                 <Typography variant="body1" sx={styles.message}>
-                    We’ve received a report that your username &#34;<strong>{user?.username}</strong>&#34; violates our guidelines. You must
-                    choose a new username before you can continue using the client.
-                </Typography>
-                <Typography>
-                    If you have any questions feel free to reach out on our <Link
-                        href="https://discord.com/channels/1220057752961814568/1220057753448616038"
+                    Your current username &#34;<strong>{user?.username}</strong>&#34; violates our {' '}
+                    <Link
+                        href="/Terms"
                         target="_blank"
                         rel="noopener noreferrer"
                         sx={{ color: 'inherit', textDecoration: 'underline' }}
                     >
-                        discord channel
+                        code of conduct
+                    </Link>. You must
+                    choose a new username before you can continue using Karabast.
+                </Typography>
+                <Typography>
+                    If you have any questions or would like to appeal this change, reach out on our{' '}
+                    <Link
+                        href="https://discord.com/channels/1220057752961814568/1417680409151410226/1418301240525193348"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ color: 'inherit', textDecoration: 'underline' }}
+                    >
+                        discord player ticketing channel.
                     </Link>
                 </Typography>
 

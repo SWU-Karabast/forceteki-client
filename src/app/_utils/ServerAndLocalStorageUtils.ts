@@ -685,6 +685,10 @@ export const unlinkSwuStatsAsync = async(
 
 export const shouldShowAnnouncement = (announcement: IAnnouncement): boolean =>{
     try {
+        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_SHOW_LOCAL_ANNOUNCEMENTS !== 'true') {
+            return false;
+        }
+
         const now = new Date();
         const endDate = new Date(announcement.endDate);
         cleanupExpiredAnnouncementKeys();
