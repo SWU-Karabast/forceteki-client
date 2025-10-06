@@ -3,12 +3,19 @@ export enum DeckValidationFailureReason {
     DeckSetToPrivate = 'deckSetToPrivate',
     IllegalInFormat = 'illegalInFormat',
     TooManyLeaders = 'tooManyLeaders',
+    InvalidDecklistLocation = 'invalidCardLocation',
     InvalidDeckData = 'invalidDeckData',
     MinDecklistSizeNotMet = 'minDecklistSizeNotMet',
     MinMainboardSizeNotMet = 'minMainboardSizeNotMet',
     MaxSideboardSizeExceeded = 'maxSideboardSizeExceeded',
     TooManyCopiesOfCard = 'tooManyCopiesOfCard',
     UnknownCardId = 'unknownCardId',
+}
+
+export enum DecklistLocation {
+    Leader = 'leader',
+    Base = 'base',
+    Deck = 'deck'
 }
 
 export interface ICardIdAndName {
@@ -20,6 +27,7 @@ export interface IDeckValidationFailures {
     [DeckValidationFailureReason.NotImplemented]?: ICardIdAndName[];
     [DeckValidationFailureReason.IllegalInFormat]?: ICardIdAndName[];
     [DeckValidationFailureReason.TooManyLeaders]?: boolean;
+    [DeckValidationFailureReason.InvalidDecklistLocation]?: { card: ICardIdAndName; location: DecklistLocation }[];
     [DeckValidationFailureReason.InvalidDeckData]?: boolean;
     [DeckValidationFailureReason.DeckSetToPrivate]?: boolean;
     [DeckValidationFailureReason.MinDecklistSizeNotMet]?: {
