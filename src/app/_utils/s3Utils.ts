@@ -28,7 +28,7 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
     const cardType = 'type' in card ? card.type || (Array.isArray(card.types) ? card.types.join() : card.types) : 'types' in card ? card.types : undefined;
     const format = cardStyle === CardStyle.InPlay ? 'truncated' : 'standard';
 
-    const tokenIds = ['3941784506', '3463348370', '7268926664', '9415311381', '8752877738', '2007868442','6665455613']
+    const tokenIds = ['3941784506', '3463348370', '7268926664', '9415311381', '8752877738', '2007868442', '6665455613']
     if (cardType?.includes('token') || (card.id && tokenIds.includes(card.id))) {
         return s3ImageURL(`cards/_tokens/${format}/${card.id}.webp`);
     }
