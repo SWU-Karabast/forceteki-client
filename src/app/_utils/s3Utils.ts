@@ -26,9 +26,11 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
     const setId = isGameOrSetCard ? card.setId : parseSetId(card.id);
     // check if the card has a type
     const cardType = 'type' in card ? card.type || (Array.isArray(card.types) ? card.types.join() : card.types) : 'types' in card ? card.types : undefined;
-    const tokenIds = ['3941784506', '3463348370', '7268926664', '9415311381', '8752877738', '2007868442']
+    const format = cardStyle === CardStyle.InPlay ? 'truncated' : 'standard';
+
+    const tokenIds = ['3941784506', '3463348370', '7268926664', '9415311381', '8752877738', '2007868442','6665455613']
     if (cardType?.includes('token') || (card.id && tokenIds.includes(card.id))) {
-        return s3ImageURL(`cards/_tokens/${card.id}.webp`);
+        return s3ImageURL(`cards/_tokens/${format}/${card.id}.webp`);
     }
 
     let cardNumber = setId.number.toString().padStart(3, '0')
@@ -40,7 +42,6 @@ export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IP
     if (cardType === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
         cardNumber += '2';
     }
-    const format = cardStyle === CardStyle.InPlay ? 'truncated' : 'standard';
 
     return s3ImageURL(`cards/${setId.set}/${format}/large/${cardNumber}.webp?v=2`);
 };
