@@ -8,8 +8,6 @@ import VolumeSlider from '@/app/_components/_sharedcomponents/Preferences/_subCo
 import { useUser } from '@/app/_contexts/User.context';
 import {
     loadPreferencesFromLocalStorage,
-    savePreferencesToLocalStorage,
-    saveSoundPreferencesToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { IPreferences, ISoundPreferences } from '@/app/_contexts/UserTypes';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
@@ -113,7 +111,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
     };
 
     // Load user preferences on component mount TODO uncomment later
-    /* useEffect(() => {
+    useEffect(() => {
         let preferences: IPreferences['sound'];
         if (user && user?.preferences?.sound) {
             preferences = {
@@ -130,10 +128,10 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
 
         setSoundPreferences(preferences);
         setOriginalPreferences(preferences);
-    }, [user]);*/
+    }, [user]);
 
     // Check if there are unsaved changes
-    /* useEffect(() => {
+    useEffect(() => {
         if (!originalPreferences) return;
         const hasUnsavedChanges =
             JSON.stringify(soundPreferences) !== JSON.stringify(originalPreferences) ||
@@ -142,7 +140,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
         if (setHasNewChanges) {
             setHasNewChanges(hasUnsavedChanges)
         }
-    }, [soundPreferences, originalPreferences, volume]);*/
+    }, [soundPreferences, originalPreferences, volume]);
 
     const handlePreferenceChange = <T extends keyof ISoundPreferences>(key: T, value: ISoundPreferences[T]) => {
         setSoundPreferences(prev => ({
@@ -193,7 +191,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                 <Typography sx={styles.typographyContainer} variant={'h2'}>General Sound</Typography>
                 <Divider sx={{ mb: '20px' }}/>
 
-                {/* <Box sx={styles.optionContainer}>
+                <Box sx={styles.optionContainer}>
                     <PreferenceOption
                         option={'Mute'}
                         optionDescription={'Remove all in-game sounds.'}
@@ -201,7 +199,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                         onChange={(muted) => handlePreferenceChange('muteAllSound', muted)}
                         defaultChecked={soundPreferences?.muteAllSound}
                     />
-                </Box> */}
+                </Box>
                 <VolumeSlider
                     label="Game Volume"
                     description="Adjust the volume of all game sounds."
@@ -212,7 +210,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                 />
             </Box>
 
-            {/* <Box sx={styles.functionContainer}>
+            <Box sx={styles.functionContainer}>
                 <Typography sx={styles.typographyContainer} variant={'h2'}>In-game Sound</Typography>
                 <Divider sx={{ mb: '20px' }}/>
 
@@ -259,10 +257,10 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                         disabled={soundPreferences?.muteAllSound}
                     />
                 </Box>
-            </Box> */}
+            </Box>
 
             {/* Save Button and Status */}
-            {/* <Box sx={styles.saveButtonContainer}>
+            <Box sx={styles.saveButtonContainer}>
                 <PreferenceButton
                     variant="standard"
                     buttonFnc={handleSavePreferences}
@@ -280,7 +278,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
                         {saveMessage}
                     </Alert>
                 )}
-            </Box> */}
+            </Box>
         </>
     );
 };
