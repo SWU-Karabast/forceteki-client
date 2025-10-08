@@ -1,8 +1,22 @@
 import {
+    DecklistLocation,
     DeckValidationFailureReason,
+    ICardIdAndName,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 
+function locationToMessage(location: DecklistLocation): string {
+    switch (location) {
+        case DecklistLocation.Leader:
+            return '"leader"';
+        case DecklistLocation.Base:
+            return '"base"';
+        case DecklistLocation.Deck:
+            return '"deck" or "sideboard"';
+        default:
+            return `<error unknown location '${location}'>`;
+    }
+}
 
 export function getReadableDeckErrors(
     failures: IDeckValidationFailures,
@@ -46,7 +60,7 @@ export function getReadableDeckErrors(
         );
     }
 
-    // Arrays (UnknownCardId, TooManyCopiesOfCard, IllegalInFormat)
+    // Arrays (UnknownCardId, TooManyCopiesOfCard, IllegalInFormat, InvalidDecklistLocation)
     const unknownIdList = failures[DeckValidationFailureReason.UnknownCardId] ?? [];
     if (unknownIdList.length > 0) {
         unknownIdList.forEach(({ id }) => {
@@ -69,7 +83,17 @@ export function getReadableDeckErrors(
     if (tooManyCopiesList.length > 0) {
         tooManyCopiesList.forEach(({ card, maxCopies, actualCopies }) => {
             messages.push(
-                `Card "${card.name}" (id: ${card.id}) exceeds the maximum copies allowed (${maxCopies}). The deck contains ${actualCopies}.`
+                `Card "${card.name}" (id: ${card.id.toUpperCase()}) exceeds the maximum copies allowed (${maxCopies}). The deck contains ${actualCopies}.`
+            );
+        });
+    }
+
+    const invalidDecklistLocationList =
+        failures[DeckValidationFailureReason.InvalidDecklistLocation] ?? [];
+    if (invalidDecklistLocationList.length > 0) {
+        invalidDecklistLocationList.forEach(({ card, location }) => {
+            messages.push(
+                `Card "${card.name}" (id: ${card.id.toUpperCase()}) is not legal in the ${locationToMessage(location)} part of the decklist.`
             );
         });
     }
