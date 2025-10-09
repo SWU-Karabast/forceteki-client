@@ -262,7 +262,7 @@ const Board: React.FC<IBoardProps> = ({
                             />
                         </Box>
                     </Box>
-                    <Box sx={{ flex: '0 1 60px', width: '100%' }} />
+                    <Box sx={{ flex: '0 1 60px', width: '100%', minHeight: '16px' }} />
                     <Box sx={styles.leaderBaseContainer}>
                         <Box sx={styles.leaderBaseWrapper}>
                             <LeaderBaseCard 

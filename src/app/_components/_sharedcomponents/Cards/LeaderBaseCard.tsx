@@ -325,7 +325,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         capturedCardIcon:{
             width: '100%',
-            aspectRatio: '5.25',
+            aspectRatio: '7/1',
             display: 'flex',
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
@@ -350,8 +350,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         capturedCardName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
-            marginTop: isConnectedPlayer ? '-3px' : '2px',
-            fontWeight: '800',
+            marginTop: isConnectedPlayer ? '-2%' : '1%',
+            fontWeight: '600',
             whiteSpace: 'nowrap',
             overflow: 'hidden',           
             color: 'black',
@@ -366,8 +366,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         <Box sx={{ 
             width: '100%',
             position: 'relative',
-            mb: isConnectedPlayer ? '-20px' : '0px',
-            mt: isConnectedPlayer ? '0px' : '-20px',
+            mb: isConnectedPlayer ? '-4%' : '0px',
+            mt: isConnectedPlayer ? '0px' : '-4%',
             zIndex: 1
         }}>
             {!isConnectedPlayer && (
