@@ -150,6 +150,12 @@ const GamesInProgress: React.FC = () => {
         );
     };
 
+    const noGamesText: () => string = () => {
+        if (!leaderData) return 'Loading leaders...';
+        if (gamesData?.numberOfOngoingGames === 0) return 'No games found...';
+        return 'No leader(s) found with that name...';
+    }
+
     const styles = {
         headerBox: {
             display: 'flex',
@@ -254,7 +260,7 @@ const GamesInProgress: React.FC = () => {
                     onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     sx={styles.filterByLeaderAutoComplete}
-                    noOptionsText='No Leaders Found...'
+                    noOptionsText={noGamesText()}
                     renderInput={(params) => (
                         <TextField
                             {...params}
