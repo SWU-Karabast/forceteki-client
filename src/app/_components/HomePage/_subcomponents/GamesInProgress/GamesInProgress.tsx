@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Autocomplete, Box, Divider, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Divider, FilterOptionsState, TextField, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
@@ -24,7 +24,7 @@ interface LeaderNameData {
     ongoingGamesCount?: number;
 }
 
-const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void) => {
+const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void, setLeaderData: (leaders: LeaderNameData[] | null) => void) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/ongoing-games`);
 
@@ -34,13 +34,14 @@ const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) 
 
         const fetchedData: OngoingGamesData = await response.json();
         setGamesData(fetchedData);
+        fetchLeaderData(fetchedData, setLeaderData);
     } catch (err) {
         console.error('Error fetching ongoing games:', err);
         setGamesData(null); // Handle error case
     }
 };
 
-const fetchLeaderData = async (setLeaderData: (leaders: LeaderNameData[] | null) => void) => {
+const fetchLeaderData = async (games: OngoingGamesData | null, setLeaderData: (leaders: LeaderNameData[] | null) => void) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-leaders`);
 
@@ -50,6 +51,7 @@ const fetchLeaderData = async (setLeaderData: (leaders: LeaderNameData[] | null)
 
         const fetchedData: LeaderNameData[] = await response.json();
         setLeaderData(fetchedData.sort((a, b) => a.name.localeCompare(b.name)));
+        updateLeaderData(games, fetchedData, setLeaderData);
     } catch (err) {
         console.error('Error fetching ongoing games:', err);
         setLeaderData(null); // Handle error case
@@ -109,13 +111,13 @@ const GamesInProgress: React.FC = () => {
         let intervalId: NodeJS.Timeout;
 
         const fetchData = () => {
-            fetchOngoingGames(setGamesData);
+            fetchOngoingGames(setGamesData, setLeaderData);
             count++;
 
             if (count === 6) {
                 clearInterval(intervalId);
                 intervalId = setInterval(() => {
-                    fetchOngoingGames(setGamesData);
+                    fetchOngoingGames(setGamesData, setLeaderData);
                     count++;
                     if (count === 15) {
                         clearInterval(intervalId);
@@ -124,22 +126,35 @@ const GamesInProgress: React.FC = () => {
             }
         };
 
-        fetchLeaderData(setLeaderData);
+        fetchLeaderData(gamesData, setLeaderData);
         fetchData();
         intervalId = setInterval(fetchData, 10000); // Fetch every 10 seconds
 
         return () => clearInterval(intervalId);
     }, []);
 
-    useEffect(() => {
-        updateLeaderData(gamesData, leaderData, setLeaderData);
-    }, [gamesData]);
-
     const filterByLeader = (match: GameCardData): boolean => {
         if (!leaderData || !sortByLeader) return true;
         const leaderIds = [match.player1Leader.id, match.player2Leader.id];
         return leaderIds.some(id => leaderData.some(leader => leader.id === id && leader.id === sortByLeader));
     };
+
+    const filterByActiveLeader = (options: LeaderNameData[], state: FilterOptionsState<LeaderNameData>) => {
+        // Show all options when typing, but only those with ongoingGamesCount > 0 in dropdown
+        if (!state.inputValue) {
+            return options.filter((opt: LeaderNameData) => (opt.ongoingGamesCount ?? 0) > 0);
+        }
+        // When typing, allow all options to be matched by input
+        return options.filter((opt: LeaderNameData) =>
+            getOptionLabel(opt).toLowerCase().includes(state.inputValue.toLowerCase())
+        );
+    };
+
+    const noGamesText: () => string = () => {
+        if (!leaderData) return 'Loading leaders...';
+        if (gamesData?.numberOfOngoingGames === 0) return 'No games found...';
+        return 'No leader(s) found with that name...';
+    }
 
     const styles = {
         headerBox: {
@@ -225,6 +240,7 @@ const GamesInProgress: React.FC = () => {
                     fullWidth
                     options={leaderData || []}
                     getOptionLabel={(option) => getOptionLabel(option)}
+                    filterOptions={filterByActiveLeader}
                     renderOption={(props, option) => {
                         const { key, ...optionProps } = props;
                         return (
@@ -244,7 +260,7 @@ const GamesInProgress: React.FC = () => {
                     onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     sx={styles.filterByLeaderAutoComplete}
-                    noOptionsText='No Leaders Found...'
+                    noOptionsText={noGamesText()}
                     renderInput={(params) => (
                         <TextField
                             {...params}
