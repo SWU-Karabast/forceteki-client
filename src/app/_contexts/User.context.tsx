@@ -24,7 +24,7 @@ const UserContext = createContext<IUserContextType>({
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
     updateUserPreferences: () => {},
-    updateSwuStatsRefreshToken: () => {},
+    updateSwuStatsLinkedStatus: () => {},
     updateModerationSeenStatus: () => {}
 });
 
@@ -66,7 +66,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         authenticated: true,
                         preferences: serverUser.preferences,
                         needsUsernameChange: serverUser.needsUsernameChange,
-                        swuStatsRefreshToken: serverUser.swuStatsRefreshToken || null,
+                        isSWUStatsLinked: serverUser.isSWUStatsLinked,
                         moderation: serverUser.moderation
                     });
                     update({ userId: serverUser.id });
@@ -124,7 +124,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                swuStatsRefreshToken: null,
+                isSWUStatsLinked: false,
                 preferences: { cardback: undefined },
                 moderation: undefined
             });
@@ -138,7 +138,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                swuStatsRefreshToken: null,
+                isSWUStatsLinked: false,
                 preferences: { cardback: undefined },
                 moderation: undefined
             });
@@ -195,12 +195,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
     };
 
-    const updateSwuStatsRefreshToken = (swuStatsRefreshToken: string | null) => {
+    const updateSwuStatsLinkedStatus = (isSWUStatsLinked: boolean) => {
         setUser((prevUser) => {
             if (!prevUser) return null;
             return {
                 ...prevUser,
-                swuStatsRefreshToken
+                isSWUStatsLinked
             };
         });
     };
@@ -236,7 +236,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             updateWelcomeMessage,
             updateNeedsUsernameChange,
             updateUserPreferences,
-            updateSwuStatsRefreshToken,
+            updateSwuStatsLinkedStatus: updateSwuStatsLinkedStatus,
             updateModerationSeenStatus
         }}>
             {children}
