@@ -64,7 +64,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     };
 
     const handleChangeUndoSetting = async (checked: boolean) => {
-        sendLobbyMessage(['updateSetting', 'undoEnabled', checked]);
+        sendLobbyMessage(['updateSetting', 'requestUndo', checked]);
     };
 
     useEffect(() => {
@@ -538,7 +538,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 control={
                     <Checkbox
                         sx={styles.checkboxStyle}
-                        checked={lobbyState.settings.undoEnabled}
+                        checked={lobbyState.settings.requestUndo}
                         disabled={!owner || readyStatus || opponentReady}
                         onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
                             handleChangeUndoSetting(checked)
@@ -548,9 +548,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 1 }}>
                         <span style={{ ...styles.checkboxAndRadioGroupTextStyle }}>
-                            Enable Undo (Beta)
+                            Undo Confirmation
                         </span>
-                        <Tooltip title="Enable the Undo button. This feature is in beta and can potentially cause game issues. Please use the bug report button if you encounter any problems.">
+                        <Tooltip title="Uses the same rules for Undo as public games. Limited number of free undos, then requires opponent approval. If this is disabled, there are no limits on undo.">
                             <Info 
                                 sx={{ 
                                     fontSize: '14px',
