@@ -260,8 +260,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
         })
         
-        newSocket.on('queueHeartbeat', (timestamp) => {
-            setLastQueueHeartbeat(timestamp);
+        newSocket.on('queueHeartbeat', () => {
+            setLastQueueHeartbeat(Date.now());
         });
 
         newSocket.on('bugReportResult', (result: any) => {
