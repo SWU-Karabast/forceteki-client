@@ -36,7 +36,6 @@ export interface IGetUser {
     showWelcomeMessage: boolean;
     preferences: IPreferences,
     needsUsernameChange: boolean;
-    isSWUStatsLinked: boolean,
     moderation?: IModerationAction | null
 }
 
@@ -64,7 +63,6 @@ export interface IUserContextType {
     updateWelcomeMessage: () => void;
     updateNeedsUsernameChange: () => void;
     updateUserPreferences: (preferences: IPreferences) => void;
-    updateSwuStatsLinkedStatus: (isSWUStatsLinked: boolean) => void;
     updateModerationSeenStatus: (moderation: IModerationAction | null) => void;
 }
 

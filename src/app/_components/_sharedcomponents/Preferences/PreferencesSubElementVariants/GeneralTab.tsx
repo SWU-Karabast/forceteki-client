@@ -5,7 +5,11 @@ import { Button, Divider, Link, TextField, Tooltip } from '@mui/material';
 import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_utils/ServerAndLocalStorageUtils';
+import {
+    checkSwuStatsLinkStatus,
+    getUsernameChangeInfoFromServer,
+    setUsernameOnServer
+} from '@/app/_utils/ServerAndLocalStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 import LinkSwuStatsButton from '@/app/_components/_sharedcomponents/SwuStats/LinkSwuStatsButton';
 import MuiLink from '@mui/material/Link';
@@ -14,7 +18,7 @@ import { useSearchParams } from 'next/navigation';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
-
+    const [isSWUStatsLinked, setIsSWUStatsLinked] = useState<boolean>(false);
     const [username, setUsername] = useState<string>('');
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Username error');
@@ -87,6 +91,22 @@ function GeneralTab() {
         }
     };
 
+    const checkSwuStatsLink = async () => {
+        if (user) {
+            try {
+                const linked = await checkSwuStatsLinkStatus(user);
+                setIsSWUStatsLinked(linked);
+            } catch (error) {
+                console.error('Failed to check SWUStats link status:', error);
+                setIsSWUStatsLinked(false);
+            }
+        }
+    };
+
+    const onLinkChange= (linkStatus: boolean) => {
+        setIsSWUStatsLinked(linkStatus);
+    }
+
     const getUsernameChangeInfo = async () => {
         if (user) {
             try {
@@ -107,7 +127,6 @@ function GeneralTab() {
         const swustatsStatus = urlParams.get('swustats');
         if (swustatsStatus === 'error') {
             setSwuStatsError(true);
-
             swuStatsErrorTimeoutRef.current = setTimeout(() => {
                 setSwuStatsError(false);
             }, 5000);
@@ -120,6 +139,7 @@ function GeneralTab() {
         const currentUsername = user?.username || '';
         setUsername(currentUsername);
         getUsernameChangeInfo();
+        checkSwuStatsLink();
         const validationError = validateDiscordUsername(currentUsername);
         setUserErrorSummary(validationError); // Show initial validation state if any
         setCanSubmitClientSide(validationError === null && currentUsername.trim() !== '');
@@ -305,7 +325,7 @@ function GeneralTab() {
                                 <>
                                     <Typography variant={'h3'} sx={{ mb: '1rem', mt:'3rem' }} >SWUStats Integration</Typography>
                                     <Box sx={styles.swuStatsContainer}>
-                                        <LinkSwuStatsButton linked={user.isSWUStatsLinked}/>
+                                        <LinkSwuStatsButton linked={isSWUStatsLinked} onLinkChange={onLinkChange}/>
                                         {swuStatsError && (
                                             <Typography variant={'body2'} sx={styles.errorMessageStyle}>
                                                 Failed to link to SWUStats account. If this keeps happening, please report the problem to the
@@ -320,8 +340,8 @@ function GeneralTab() {
                                             </Typography>
                                         )}
                                     </Box>
-                                    <Typography variant="body2" sx={{ mt: 2, color: user.isSWUStatsLinked ? '#81c784' : '#ffd54f', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
-                                        {user.isSWUStatsLinked
+                                    <Typography variant="body2" sx={{ mt: 2, color: isSWUStatsLinked ? '#81c784' : '#ffd54f', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                        {isSWUStatsLinked
                                             ? 'Your stats will appear under Owner in your decks. '
                                             : 'Linking your account will cause your stats to appear under Owner in your decks. '}
                                         <strong>Deck syncing is not available yet.</strong>

@@ -24,7 +24,6 @@ const UserContext = createContext<IUserContextType>({
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
     updateUserPreferences: () => {},
-    updateSwuStatsLinkedStatus: () => {},
     updateModerationSeenStatus: () => {}
 });
 
@@ -66,7 +65,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         authenticated: true,
                         preferences: serverUser.preferences,
                         needsUsernameChange: serverUser.needsUsernameChange,
-                        isSWUStatsLinked: serverUser.isSWUStatsLinked,
                         moderation: serverUser.moderation
                     });
                     update({ userId: serverUser.id });
@@ -124,7 +122,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                isSWUStatsLinked: false,
                 preferences: { cardback: undefined },
                 moderation: undefined
             });
@@ -138,7 +135,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 provider: null,
                 providerId: null,
                 authenticated: true,
-                isSWUStatsLinked: false,
                 preferences: { cardback: undefined },
                 moderation: undefined
             });
@@ -195,16 +191,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
     };
 
-    const updateSwuStatsLinkedStatus = (isSWUStatsLinked: boolean) => {
-        setUser((prevUser) => {
-            if (!prevUser) return null;
-            return {
-                ...prevUser,
-                isSWUStatsLinked
-            };
-        });
-    };
-
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
         clearAnonUser();
@@ -236,7 +222,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             updateWelcomeMessage,
             updateNeedsUsernameChange,
             updateUserPreferences,
-            updateSwuStatsLinkedStatus: updateSwuStatsLinkedStatus,
             updateModerationSeenStatus
         }}>
             {children}
