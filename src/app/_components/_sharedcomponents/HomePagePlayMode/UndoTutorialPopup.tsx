@@ -126,17 +126,18 @@ const UndoTutorialPopup: React.FC<IUndoTutorialPopupProps> = ({ open, onClose })
                         alt="Highlighted Stats Panel"
                         width={232}
                         height={64}
-                        style={{ borderRadius: '8px', marginRight:'100px' }}
+                        style={{ borderRadius: '8px', marginRight:'25px' }}
                     />
-                </Box>
-                <Box sx={styles.screenshotWrapper}>
                     <Image
                         src="/request-undo.png"
                         alt="Highlighted Stats Panel"
                         width={232}
                         height={66}
-                        style={{ borderRadius: '8px', marginRight:'100px' }}
+                        style={{ borderRadius: '8px', marginRight:'50px' }}
                     />
+                </Box>
+                <Box sx={styles.screenshotWrapper}>
+
                 </Box>
                 <Box sx={styles.screenshotWrapper}>
                     <Image
