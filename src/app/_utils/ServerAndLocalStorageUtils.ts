@@ -769,7 +769,12 @@ export const getUndoPopupSeenFromLocalStorage = (): string | null => {
 export const hasUserSeenUndoPopup = (user: IUser | null): boolean => {
     if (user) {
         // Signed-in user: check server data
-        return !!user.undoPopupSeenDate;
+        if (!!user.undoPopupSeenDate) {
+            saveUndoPopupSeenToLocalStorage(user.undoPopupSeenDate.toString());
+            return true;
+        }
+
+        return false;
     } else {
         // Anonymous user: check localStorage
         return !!getUndoPopupSeenFromLocalStorage();
