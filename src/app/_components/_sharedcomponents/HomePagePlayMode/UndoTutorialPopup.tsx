@@ -56,6 +56,16 @@ const UndoTutorialPopup: React.FC<IUndoTutorialPopupProps> = ({ open, onClose })
             mt: '12px',
             display: 'flex',
             justifyContent: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+            alignItems: 'center',
+        },
+        imageContainer: {
+            position: 'relative',
+            width: 'clamp(150px, 30vw, 232px)',
+            height: 'clamp(40px, 8vw, 66px)',
+            borderRadius: '8px',
+            overflow: 'hidden',
         },
         actions: {
             justifyContent: 'center',
@@ -121,32 +131,30 @@ const UndoTutorialPopup: React.FC<IUndoTutorialPopupProps> = ({ open, onClose })
                     </li>
                 </Box>
                 <Box sx={styles.screenshotWrapper}>
-                    <Image
-                        src="/undo-button.png"
-                        alt="Highlighted Stats Panel"
-                        width={232}
-                        height={64}
-                        style={{ borderRadius: '8px', marginRight:'25px' }}
-                    />
-                    <Image
-                        src="/request-undo.png"
-                        alt="Highlighted Stats Panel"
-                        width={232}
-                        height={66}
-                        style={{ borderRadius: '8px', marginRight:'50px' }}
-                    />
-                </Box>
-                <Box sx={styles.screenshotWrapper}>
-
-                </Box>
-                <Box sx={styles.screenshotWrapper}>
-                    <Image
-                        src="/blocked-undo.png"
-                        alt="Highlighted Stats Panel"
-                        width={232}
-                        height={65}
-                        style={{ borderRadius: '8px', marginRight:'100px' }}
-                    />
+                    <Box sx={styles.imageContainer}>
+                        <Image
+                            src="/undo-button.png"
+                            alt="Undo Button"
+                            fill
+                            style={{ objectFit: 'contain' }}
+                        />
+                    </Box>
+                    <Box sx={styles.imageContainer}>
+                        <Image
+                            src="/request-undo.png"
+                            alt="Request Undo Button"
+                            fill
+                            style={{ objectFit: 'contain' }}
+                        />
+                    </Box>
+                    <Box sx={styles.imageContainer}>
+                        <Image
+                            src="/blocked-undo.png"
+                            alt="Blocked Undo Button"
+                            fill
+                            style={{ objectFit: 'contain' }}
+                        />
+                    </Box>
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>
