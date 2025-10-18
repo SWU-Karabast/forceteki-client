@@ -8,6 +8,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import MessageIcon from '@mui/icons-material/Message';
 import BlockIcon from '@mui/icons-material/Block';
 import Image from 'next/image';
+import { QuickUndoAvailableState } from '@/app/_constants/constants';
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
     const { gameState, sendGameMessage, connectedPlayer } = useGame();
@@ -16,20 +17,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
     const isDev = process.env.NODE_ENV === 'development';
     const correctPlayer = gameState.players[connectedPlayer];
 
-    // const undoButtonState: string = 'blocked';
+    const quickUndoState: QuickUndoAvailableState | null = correctPlayer?.availableSnapshots?.quickSnapshotAvailable;
 
-    let undoButtonState: string;
-    if (!correctPlayer['availableSnapshots']?.hasQuickSnapshot) {
-        undoButtonState = 'disabled';
-    } else if (correctPlayer['requestUndo'] === true) {
-        undoButtonState = 'request';
-    } else if (correctPlayer['undoBlocked'] === true) {
-        undoButtonState = 'blocked';
-    } else {
-        undoButtonState = 'enabled';
-    }
-
-    const undoButtonDisabled = undoButtonState === 'disabled' || undoButtonState === 'blocked';
+    const undoButtonDisabled = quickUndoState === QuickUndoAvailableState.NoSnapshotAvailable || quickUndoState === QuickUndoAvailableState.UndoRequestsBlocked;
 
     const handleGameChat = () => {
         const trimmed = chatMessage.trim();
@@ -133,16 +123,47 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         }
     }
 
-    const undoButtonStyle = undoButtonState === 'enabled' ? styles.quickUndoButtonEnabled :
-        undoButtonState === 'blocked' ? styles.quickUndoButtonBlocked :
-            undoButtonState === 'request' ? styles.quickUndoButtonRequest :
-                styles.quickUndoButtonDisabled;
+    let undoButtonStyle;
+    switch (quickUndoState) {
+        case QuickUndoAvailableState.FreeUndoAvailable:
+            undoButtonStyle = styles.quickUndoButtonEnabled;
+            break;
+        case QuickUndoAvailableState.UndoRequestsBlocked:
+            undoButtonStyle = styles.quickUndoButtonBlocked;
+            break;
+        case QuickUndoAvailableState.RequestUndoAvailable:
+            undoButtonStyle = styles.quickUndoButtonRequest;
+            break;
+        default:
+            undoButtonStyle = styles.quickUndoButtonDisabled;
+            break;
+    }
 
-    const buttonText = undoButtonState === 'request' ? 'Request' : 
-        undoButtonState === 'blocked' ? 'Blocked' : 'Undo';
-    const buttonIcon = undoButtonState === 'request' ? <MessageIcon /> : 
-        undoButtonState === 'blocked' ? <BlockIcon /> : <UndoIcon />;
-    
+    let buttonText;
+    switch (quickUndoState) {
+        case QuickUndoAvailableState.RequestUndoAvailable:
+            buttonText = 'Request';
+            break;
+        case QuickUndoAvailableState.UndoRequestsBlocked:
+            buttonText = 'Blocked';
+            break;
+        default:
+            buttonText = 'Undo';
+            break;
+    }
+
+    let buttonIcon;
+    switch (quickUndoState) {
+        case QuickUndoAvailableState.RequestUndoAvailable:
+            buttonIcon = <MessageIcon />;
+            break;
+        case QuickUndoAvailableState.UndoRequestsBlocked:
+            buttonIcon = <BlockIcon />;
+            break;
+        default:
+            buttonIcon = <UndoIcon />;
+            break;
+    }
 
     return (
         <Drawer
