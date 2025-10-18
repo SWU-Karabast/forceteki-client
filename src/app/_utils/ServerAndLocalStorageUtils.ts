@@ -575,8 +575,7 @@ export const checkSwuStatsLinkStatus = async (
         return result.linked;
     } catch (error) {
         console.error('Error checking SWUStats link status:', error);
-        // Return false as default if there's an error
-        return false;
+        throw error;
     }
 };
 

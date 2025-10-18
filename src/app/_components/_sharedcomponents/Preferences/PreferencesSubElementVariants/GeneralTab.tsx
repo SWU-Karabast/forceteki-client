@@ -99,7 +99,9 @@ function GeneralTab() {
                 setIsSWUStatsLinked(linked);
             } catch (error) {
                 console.error('Failed to check SWUStats link status:', error);
+                setSwuStatsError(true);
                 setIsSWUStatsLinked(false);
+                setIsSWUStatsInCheck(false);
             } finally {
                 setTimeout(() => {
                     setIsSWUStatsInCheck(false);
@@ -144,9 +146,7 @@ function GeneralTab() {
         const currentUsername = user?.username || '';
         setUsername(currentUsername);
         getUsernameChangeInfo();
-        checkSwuStatsLink().finally(
-
-        );
+        checkSwuStatsLink();
         const validationError = validateDiscordUsername(currentUsername);
         setUserErrorSummary(validationError); // Show initial validation state if any
         setCanSubmitClientSide(validationError === null && currentUsername.trim() !== '');
