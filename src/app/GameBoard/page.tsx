@@ -15,7 +15,7 @@ import { MatchType } from '@/app/_constants/constants';
 
 
 const GameBoard = () => {
-    const { getOpponent, connectedPlayer, gameState, lobbyState } = useGame();
+    const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
     const router = useRouter();
 
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
@@ -56,6 +56,19 @@ const GameBoard = () => {
     const preferenceTabs = winners
         ? ['endGame','soundOptions']
         :['currentGame','soundOptions']
+    
+    // Get display name for winner (spectator-aware)
+    const getWinnerDisplayName = (winnerName: string): string => {
+        if (isSpectator && gameState?.players) {
+            const player1Name = gameState.players[connectedPlayer]?.user?.username;
+            const opponentId = getOpponent(connectedPlayer);
+            const player2Name = gameState.players[opponentId]?.user?.username;
+            
+            if (winnerName === player1Name) return 'Player 1';
+            if (winnerName === player2Name) return 'Player 2';
+        }
+        return winnerName;
+    };
 
     if (!gameState || !connectedPlayer || (!(connectedPlayer in gameState?.players) && !(connectedPlayer in gameState?.spectators))) {
         return null;
@@ -154,7 +167,7 @@ const GameBoard = () => {
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}
                 title={winners ? 'Game ended' : 'PREFERENCES'}
-                subtitle={winners ? winners.length > 1 ? 'Game ended in a draw' : `Winner is ${winners[0]}` : undefined}
+                subtitle={winners ? winners.length > 1 ? 'Game ended in a draw' : `Winner is ${getWinnerDisplayName(winners[0])}` : undefined}
             />}
         </Grid>
     );
