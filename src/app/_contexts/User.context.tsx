@@ -25,7 +25,8 @@ const UserContext = createContext<IUserContextType>({
     updateNeedsUsernameChange: () => {},
     updateUserPreferences: () => {},
     updateSwuStatsRefreshToken: () => {},
-    updateModerationSeenStatus: () => {}
+    updateModerationSeenStatus: () => {},
+    updateUndoPopupSeenDate: () => {}
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
@@ -59,15 +60,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                     setUser({
                         id: serverUser.id,
                         username: serverUser.username,
-                        email: session.user.email || null,
-                        provider: session.user.provider || null,
-                        providerId: session.user.id || null,
+                        email: session.user.email,
+                        provider: session.user.provider,
+                        providerId: session.user.id,
                         showWelcomeMessage: serverUser.showWelcomeMessage,
                         authenticated: true,
                         preferences: serverUser.preferences,
                         needsUsernameChange: serverUser.needsUsernameChange,
-                        swuStatsRefreshToken: serverUser.swuStatsRefreshToken || null,
-                        moderation: serverUser.moderation
+                        swuStatsRefreshToken: serverUser.swuStatsRefreshToken,
+                        moderation: serverUser.moderation,
+                        undoPopupSeenDate: serverUser.undoPopupSeenDate,
                     });
                     update({ userId: serverUser.id });
                 } catch (error) {
@@ -120,13 +122,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 showWelcomeMessage: false,
                 id: 'exe66',
                 username: 'Order66',
-                email: null,
-                provider: null,
-                providerId: null,
                 authenticated: true,
-                swuStatsRefreshToken: null,
-                preferences: { cardback: undefined },
-                moderation: undefined
+                preferences: { },
             });
         } else if (user === 'ThisIsTheWay') {
             setUser({
@@ -134,13 +131,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 showWelcomeMessage: false,
                 id: 'th3w4y',
                 username: 'ThisIsTheWay',
-                email: null,
-                provider: null,
-                providerId: null,
                 authenticated: true,
-                swuStatsRefreshToken: null,
-                preferences: { cardback: undefined },
-                moderation: undefined
+                preferences: { },
             });
         }
     }
@@ -164,6 +156,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             }
         })
     }
+
+    const updateUndoPopupSeenDate = () => {
+        setUser((prevUser) => {
+            if(!prevUser) return null;
+            return {
+                ...prevUser,
+                undoPopupSeenDate: new Date()
+            }
+        })
+    }
+
     const updateNeedsUsernameChange = () => {
         setUser((prevUser) => {
             if(!prevUser) return null;
@@ -234,6 +237,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             logout,
             updateUsername,
             updateWelcomeMessage,
+            updateUndoPopupSeenDate,
             updateNeedsUsernameChange,
             updateUserPreferences,
             updateSwuStatsRefreshToken,
