@@ -157,7 +157,7 @@ const HomePagePlayMode: React.FC = () => {
     // Undo Tutorial Popup handlers
     const handleFormSubmissionWithUndoCheck = useCallback((originalSubmissionFn: () => void) => {
         // Check if user has seen the undo popup (works for both signed-in and anonymous users)
-        if (!hasUserSeenUndoPopup(user)) {
+        if (!hasUserSeenUndoPopup(user) && (process.env.NODE_ENV !== 'development' || process.env.NEXT_PUBLIC_SHOW_LOCAL_ANNOUNCEMENTS === 'true')) {
             // User hasn't seen the popup, show it and store the submission function
             setPendingFormSubmission(() => originalSubmissionFn);
             setShowUndoTutorialPopup(true);
