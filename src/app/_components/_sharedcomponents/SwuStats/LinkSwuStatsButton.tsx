@@ -15,11 +15,12 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 
 type Props = {
     linked: boolean;
+    onLinkChange: (linkStatus: boolean) => void;
 };
 
-export default function LinkSwuStatsButton({ linked }: Props) {
+export default function LinkSwuStatsButton({ linked, onLinkChange }: Props) {
     const theme = useTheme();
-    const { user, updateSwuStatsRefreshToken } = useUser();
+    const { user } = useUser();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
     const handleClick = async () => {
@@ -32,10 +33,7 @@ export default function LinkSwuStatsButton({ linked }: Props) {
 
     const handleConfirmUnlink = async () => {
         try {
-            const result = await unlinkSwuStatsAsync(user);
-            if (result) {
-                updateSwuStatsRefreshToken(null);
-            }
+            await unlinkSwuStatsAsync(user);
         } catch (error) {
             if (error instanceof Error) {
                 alert(error.message);
@@ -43,6 +41,7 @@ export default function LinkSwuStatsButton({ linked }: Props) {
             console.log(error);
         } finally {
             setShowConfirmDialog(false);
+            onLinkChange(false)
         }
     };
 

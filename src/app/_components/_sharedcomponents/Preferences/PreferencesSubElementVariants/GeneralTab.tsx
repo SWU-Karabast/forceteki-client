@@ -1,20 +1,24 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { Button, Divider, Link, TextField, Tooltip } from '@mui/material';
+import { Button, CircularProgress, Divider, Link, TextField, Tooltip } from '@mui/material';
 import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { getUsernameChangeInfoFromServer, setUsernameOnServer } from '@/app/_utils/ServerAndLocalStorageUtils';
+import {
+    checkSwuStatsLinkStatus,
+    getUsernameChangeInfoFromServer,
+    setUsernameOnServer
+} from '@/app/_utils/ServerAndLocalStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 import LinkSwuStatsButton from '@/app/_components/_sharedcomponents/SwuStats/LinkSwuStatsButton';
 import MuiLink from '@mui/material/Link';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
-import { useSearchParams } from 'next/navigation';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
-
+    const [isSWUStatsLinked, setIsSWUStatsLinked] = useState<boolean>(false);
+    const [isSWUStatsInCheck, setIsSWUStatsInCheck] = useState<boolean>(false);
     const [username, setUsername] = useState<string>('');
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Username error');
@@ -87,6 +91,29 @@ function GeneralTab() {
         }
     };
 
+    const checkSwuStatsLink = async () => {
+        if (user) {
+            setIsSWUStatsInCheck(true);
+            try {
+                const linked = await checkSwuStatsLinkStatus(user);
+                setIsSWUStatsLinked(linked);
+            } catch (error) {
+                console.error('Failed to check SWUStats link status:', error);
+                setSwuStatsError(true);
+                setIsSWUStatsLinked(false);
+                setIsSWUStatsInCheck(false);
+            } finally {
+                setTimeout(() => {
+                    setIsSWUStatsInCheck(false);
+                }, 1000);
+            }
+        }
+    };
+
+    const onLinkChange= (linkStatus: boolean) => {
+        setIsSWUStatsLinked(linkStatus);
+    }
+
     const getUsernameChangeInfo = async () => {
         if (user) {
             try {
@@ -107,7 +134,6 @@ function GeneralTab() {
         const swustatsStatus = urlParams.get('swustats');
         if (swustatsStatus === 'error') {
             setSwuStatsError(true);
-
             swuStatsErrorTimeoutRef.current = setTimeout(() => {
                 setSwuStatsError(false);
             }, 5000);
@@ -120,6 +146,7 @@ function GeneralTab() {
         const currentUsername = user?.username || '';
         setUsername(currentUsername);
         getUsernameChangeInfo();
+        checkSwuStatsLink();
         const validationError = validateDiscordUsername(currentUsername);
         setUserErrorSummary(validationError); // Show initial validation state if any
         setCanSubmitClientSide(validationError === null && currentUsername.trim() !== '');
@@ -305,25 +332,41 @@ function GeneralTab() {
                                 <>
                                     <Typography variant={'h3'} sx={{ mb: '1rem', mt:'3rem' }} >SWUStats Integration</Typography>
                                     <Box sx={styles.swuStatsContainer}>
-                                        <LinkSwuStatsButton linked={!!user.swuStatsRefreshToken}/>
-                                        {swuStatsError && (
-                                            <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                                                Failed to link to SWUStats account. If this keeps happening, please report the problem to the
-                                                <MuiLink
-                                                    href="https://discord.com/channels/1220057752961814568/1345468050568380568"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
-                                                >
-                                                    Discord
-                                                </MuiLink>.
-                                            </Typography>
+                                        {isSWUStatsInCheck ? (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <CircularProgress size={20} sx={{ color: '#2F7DB6' }} />
+                                                <Typography variant="body2" sx={{ color: '#B0B0B0' }}>
+                                                    Checking SWUStats link status...
+                                                </Typography>
+                                            </Box>
+                                        ) : (
+                                            <>
+                                                <LinkSwuStatsButton
+                                                    linked={isSWUStatsLinked}
+                                                    onLinkChange={onLinkChange}
+                                                />
+                                                {swuStatsError && (
+                                                    <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                                        Failed to link to SWUStats account. If this keeps happening, please report the problem to the
+                                                        <MuiLink
+                                                            href="https://discord.com/channels/1220057752961814568/1345468050568380568"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
+                                                        >
+                                                            Discord
+                                                        </MuiLink>.
+                                                    </Typography>
+                                                )}
+                                            </>
                                         )}
                                     </Box>
-                                    <Typography variant="body2" sx={{ mt: 2, color: user.swuStatsRefreshToken ? '#81c784' : '#ffd54f', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
-                                        {user.swuStatsRefreshToken
-                                            ? 'Your stats will appear under Owner in your decks. '
-                                            : 'Linking your account will cause your stats to appear under Owner in your decks. '}
+                                    <Typography variant="body2" sx={{ mt: 2, color: isSWUStatsLinked ? '#81c784' : '#ffd54f', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                        {isSWUStatsInCheck
+                                            ? ''
+                                            : isSWUStatsLinked
+                                                ? 'Your stats will appear under Owner in your decks. '
+                                                : 'Linking your account will cause your stats to appear under Owner in your decks. '}
                                         <strong>Deck syncing is not available yet.</strong>
                                     </Typography>
                                 </>
