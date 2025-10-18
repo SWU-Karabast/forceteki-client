@@ -530,41 +530,45 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     format={lobbyFormat}
                 />
             )}
-            <Divider sx={{ mt: 2, borderColor: '#666' }} />
-            <Typography variant="h5" sx={{ fontSize: '1.2em', fontWeight: '600', color: 'white', mt: 2, mb: 1 }}>
-                Game Settings
-            </Typography>
-            <FormControlLabel
-                control={
-                    <Checkbox
-                        sx={styles.checkboxStyle}
-                        checked={lobbyState.settings.requestUndo}
-                        disabled={!owner || readyStatus || opponentReady}
-                        onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
-                            handleChangeUndoSetting(checked)
+            {lobbyState.isPrivate && (
+                <>
+                    <Divider sx={{ mt: 2, borderColor: '#666' }} />
+                    <Typography variant="h5" sx={{ fontSize: '1.2em', fontWeight: '600', color: 'white', mt: 2, mb: 1 }}>
+                        Game Settings
+                    </Typography>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                sx={styles.checkboxStyle}
+                                checked={lobbyState.settings.requestUndo}
+                                disabled={!owner || readyStatus || opponentReady}
+                                onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
+                                    handleChangeUndoSetting(checked)
+                                }
+                            />
+                        }
+                        label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 1 }}>
+                                <span style={{ ...styles.checkboxAndRadioGroupTextStyle }}>
+                                    Undo Requests
+                                </span>
+                                <Tooltip title="Uses the same rules for Undo as public games. Limited number of free undos, then requires opponent approval. If this is disabled, there are no limits on undo.">
+                                    <Info 
+                                        sx={{ 
+                                            fontSize: '14px',
+                                            color: '#1976d2',
+                                            backgroundColor: '#fff',
+                                            borderRadius: '50%',
+                                            cursor: 'help',
+                                            opacity: disableSettings ? 0.5 : 1
+                                        }} 
+                                    />
+                                </Tooltip>
+                            </Box>
                         }
                     />
-                }
-                label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 1 }}>
-                        <span style={{ ...styles.checkboxAndRadioGroupTextStyle }}>
-                            Undo Confirmation
-                        </span>
-                        <Tooltip title="Uses the same rules for Undo as public games. Limited number of free undos, then requires opponent approval. If this is disabled, there are no limits on undo.">
-                            <Info 
-                                sx={{ 
-                                    fontSize: '14px',
-                                    color: '#1976d2',
-                                    backgroundColor: '#fff',
-                                    borderRadius: '50%',
-                                    cursor: 'help',
-                                    opacity: disableSettings ? 0.5 : 1
-                                }} 
-                            />
-                        </Tooltip>
-                    </Box>
-                }
-            />
+                </>
+            )}
         </Card>
     )
 };
