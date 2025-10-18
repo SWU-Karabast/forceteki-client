@@ -736,3 +736,76 @@ export const cleanupExpiredAnnouncementKeys = (): void => {
     }
 };
 
+/**
+ * Saves the undo popup seen date to localStorage for anonymous users
+ * @param date The date string when the popup was seen
+ */
+export const saveUndoPopupSeenToLocalStorage = (date: string): void => {
+    try {
+        localStorage.setItem('undoPopupSeenDate', date);
+    } catch (error) {
+        console.error('Error saving undo popup seen date to localStorage:', error);
+    }
+};
+
+/**
+ * Gets the undo popup seen date from localStorage for anonymous users
+ * @returns The date string when the popup was seen, or null if not seen
+ */
+export const getUndoPopupSeenFromLocalStorage = (): string | null => {
+    try {
+        return localStorage.getItem('undoPopupSeenDate');
+    } catch (error) {
+        console.error('Error getting undo popup seen date from localStorage:', error);
+        return null;
+    }
+};
+
+/**
+ * Checks if the user has seen the undo popup, handling both signed-in and anonymous users
+ * @param user The current user (or null if anonymous)
+ * @returns True if the user has seen the popup, false otherwise
+ */
+export const hasUserSeenUndoPopup = (user: IUser | null): boolean => {
+    if (user) {
+        // Signed-in user: check server data
+        return !!user.undoPopupSeenDate;
+    } else {
+        // Anonymous user: check localStorage
+        return !!getUndoPopupSeenFromLocalStorage();
+    }
+};
+
+/**
+ * Marks the undo popup as seen, handling both signed-in and anonymous users
+ * @param user The current user (or null if anonymous)
+ * @param updateCachedLocalState Optional callback to update local user context state for signed-in users
+ * @returns Promise that resolves when the operation is complete (for server calls)
+ */
+export const markUndoPopupAsSeen = async (user: IUser | null, updateCachedLocalState: () => void): Promise<void> => {
+    const currentDate = new Date().toISOString();
+    
+    if (user) {
+        // Signed-in user: update local state first for immediate UI update
+        if (updateCachedLocalState) {
+            updateCachedLocalState();
+        }
+        
+        // Then save to server
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/undo-popup-seen`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+        } catch (error) {
+            console.error('Failed to mark undo popup as seen on server:', error);
+            throw error;
+        }
+    }
+    
+    // save to local storage for both signed-in and anonymous so that a signed-in user doesn't get a repeat
+    saveUndoPopupSeenToLocalStorage(currentDate);
+};

@@ -9,7 +9,12 @@ import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/U
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
-import { setModerationSeenAsync, retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { 
+    setModerationSeenAsync, 
+    retrieveDecksForUser, 
+    hasUserSeenUndoPopup, 
+    markUndoPopupAsSeen 
+} from '@/app/_utils/ServerAndLocalStorageUtils';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
 import { SwuGameFormat } from '@/app/_constants/constants';
 import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -151,8 +156,8 @@ const HomePagePlayMode: React.FC = () => {
 
     // Undo Tutorial Popup handlers
     const handleFormSubmissionWithUndoCheck = useCallback((originalSubmissionFn: () => void) => {
-        // Check if user has seen the undo popup
-        if (!user?.undoPopupSeenDate) {
+        // Check if user has seen the undo popup (works for both signed-in and anonymous users)
+        if (!hasUserSeenUndoPopup(user)) {
             // User hasn't seen the popup, show it and store the submission function
             setPendingFormSubmission(() => originalSubmissionFn);
             setShowUndoTutorialPopup(true);
@@ -160,23 +165,14 @@ const HomePagePlayMode: React.FC = () => {
             // User has seen the popup, proceed with normal submission
             originalSubmissionFn();
         }
-    }, [user?.undoPopupSeenDate]);
+    }, [user]);
 
     const handleUndoTutorialClose = useCallback(async () => {
         setShowUndoTutorialPopup(false);
         
-        // Mark the popup as seen locally
-        updateUndoPopupSeenDate();
-        
-        // Mark the popup as seen on server
+        // Mark the popup as seen (handles both signed-in and anonymous users)
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user?.id}/undo-popup-seen`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include'
-            });
+            await markUndoPopupAsSeen(user, updateUndoPopupSeenDate);
         } catch (error) {
             console.error('Failed to mark undo popup as seen:', error);
         }
@@ -186,7 +182,7 @@ const HomePagePlayMode: React.FC = () => {
             pendingFormSubmission();
             setPendingFormSubmission(null);
         }
-    }, [user?.id, pendingFormSubmission, updateUndoPopupSeenDate]);
+    }, [user, pendingFormSubmission, updateUndoPopupSeenDate]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
