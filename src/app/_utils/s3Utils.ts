@@ -18,8 +18,8 @@ export const s3ImageURL = (path: string) => {
     return s3Bucket + path;
 };
 
-export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IPreviewCard, cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain ) => {
-    if (((isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card)) && !card?.setId) && !card?.id) return s3ImageURL('game/swu-cardback.webp');
+export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IPreviewCard, cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain, cardback?: string ) => {
+    if (((isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card)) && !card?.setId) && !card?.id) return cardback ? cardback : s3ImageURL('game/swu-cardback.webp');
 
     // we check which type it is
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);

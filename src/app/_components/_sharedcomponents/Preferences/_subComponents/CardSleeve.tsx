@@ -39,7 +39,7 @@ function CardSleeve(sleeve: ISleeve) {
     }
 
     return (
-        <Button sx={styles.buttonStyle}>
+        <Button sx={styles.buttonStyle} onClick={() => sleeve.onClick}>
             <Box sx={styles.sleeveContainer}>
                 <Box sx={styles.sleeveStyle}/>
             </Box>

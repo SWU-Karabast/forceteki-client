@@ -15,6 +15,7 @@ export type ISleeve = {
     image: string,
     source: string,
     selected?: boolean,
+    onClick?: (source: string) => void,
 }
 
 export type IPreferenceOptions = {

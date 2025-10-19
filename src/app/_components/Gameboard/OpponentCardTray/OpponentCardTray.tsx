@@ -36,6 +36,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const phase = gameState.phase;
     const warning = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Warning';
     const danger = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Danger';
+    const opponentsCardback = gameState?.players[getOpponent(connectedPlayer)].user.cardback;
 
     const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
 
@@ -207,7 +208,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 }}
             >
                 <Box sx={styles.opponentHandWrapper}>
-                    <PlayerHand clickDisabled={true} maxCardOverlapPercent={0.95} scrollbarEnabled={false} cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} />
+                    <PlayerHand clickDisabled={true} maxCardOverlapPercent={0.95} scrollbarEnabled={false} cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []} cardback={opponentsCardback} />
                 </Box>
                 <Box sx={ styles.opponentTurnAura} />
             </Grid>
