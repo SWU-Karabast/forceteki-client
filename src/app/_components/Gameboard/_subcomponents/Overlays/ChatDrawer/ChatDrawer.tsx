@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { QuickUndoAvailableState } from '@/app/_constants/constants';
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
-    const { gameState, sendGameMessage, connectedPlayer } = useGame();
+    const { gameState, sendGameMessage, connectedPlayer, isSpectator } = useGame();
     const [chatMessage, setChatMessage] = useState('')
     const [isUndoHovered, setIsUndoHovered] = useState(false);
     const isDev = process.env.NODE_ENV === 'development';
@@ -176,7 +176,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 <ChevronRightIcon onClick={toggleSidebar} />
             </Box>
 
-            {(isDev || gameState.undoEnabled) && (<Box sx={styles.quickUndoBox}>
+            {(isDev || gameState.undoEnabled) && (!isSpectator) && (<Box sx={styles.quickUndoBox}>
                 <Image
                     src="/porg1.png"
                     alt="Highlighted Stats Panel"
