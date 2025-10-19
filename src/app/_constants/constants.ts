@@ -55,3 +55,10 @@ export enum ZoneName {
     Resource = 'resource',
     SpaceArena = 'spaceArena',
 }
+
+export enum QuickUndoAvailableState {
+    NoSnapshotAvailable = 'noSnapshotAvailable',
+    UndoRequestsBlocked = 'undoRequestsBlocked',
+    FreeUndoAvailable = 'freeUndoAvailable',
+    RequestUndoAvailable = 'requestUndoAvailable',
+}

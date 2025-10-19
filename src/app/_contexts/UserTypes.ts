@@ -1,7 +1,7 @@
 export interface IUser extends IGetUser{
-    email: string | null;
-    provider: string | null;
-    providerId: string | null;
+    email?: string;
+    provider?: string;
+    providerId?: string;
     authenticated: boolean,
 }
 
@@ -36,7 +36,8 @@ export interface IGetUser {
     showWelcomeMessage: boolean;
     preferences: IPreferences,
     needsUsernameChange: boolean;
-    moderation?: IModerationAction | null
+    moderation?: IModerationAction | null,
+    undoPopupSeenDate?: Date | null
 }
 
 export interface ISoundPreferences {
@@ -64,6 +65,7 @@ export interface IUserContextType {
     updateNeedsUsernameChange: () => void;
     updateUserPreferences: (preferences: IPreferences) => void;
     updateModerationSeenStatus: (moderation: IModerationAction | null) => void;
+    updateUndoPopupSeenDate: () => void;
 }
 
 // Extend Next-auth types
@@ -76,12 +78,12 @@ declare module 'next-auth' {
     interface Session {
         jwtToken: string;
         user: {
-            id: string | null;
-            name?: string | null;
-            email?: string | null;
-            image?: string | null;
+            id?: string;
+            name?: string;
+            email?: string;
+            image?: string;
             provider: string;
-            userId?: string | null;
+            userId?: string;
         };
     }
 }
