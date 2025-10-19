@@ -491,12 +491,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         />
                     </RadioGroup>
                 </FormControl>
-
-                {/* Beta Announcement */}
-                <Typography variant="body1" sx={{ color: 'yellow', textAlign: 'center', mb: '1rem' }}>
-                    Undo is now available in beta for private lobbies
-                </Typography>
-
+                
                 {!privateGame && (
                     <>
                         <FormControl fullWidth sx={styles.formControlStyle}>
