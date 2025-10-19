@@ -51,6 +51,7 @@ interface IQuickGameFormProps {
     setDeckLink: (value: string) => void;
     savedDecks: StoredDeck[];
     handleDeckManagement: () => void;
+    handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
 }
 
 const QuickGameForm: React.FC<IQuickGameFormProps> = ({
@@ -59,7 +60,8 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     deckLink,
     setDeckLink,
     savedDecks,
-    handleDeckManagement
+    handleDeckManagement,
+    handleFormSubmissionWithUndoCheck
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -106,8 +108,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     }
 
     // Handle Create Game Submission
-    const handleJoinGameQueue = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const handleJoinGameQueueActual = async () => {
         setQueueState(true);
         // Get the deck link - either from selected favorite or direct input
         let userDeck = '';
@@ -234,6 +235,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             setErrorTitle('Server error');
             setErrorModalOpen(true);
         }
+    };
+
+    const handleJoinGameQueue = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        handleFormSubmissionWithUndoCheck(handleJoinGameQueueActual);
     };
 
     const styles = {
