@@ -18,7 +18,7 @@ enum PhaseName {
 }
 
 function CurrentGameTab() {
-    const { sendGameMessage, connectedPlayer, gameState, isSpectator } = useGame();
+    const { sendGameMessage, connectedPlayer, gameState, isSpectator, lobbyState } = useGame();
     const isDev = process.env.NODE_ENV === 'development';
     const router = useRouter();
     const currentPlayer = gameState.players[connectedPlayer];
@@ -26,6 +26,7 @@ function CurrentGameTab() {
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
+    const isPrivateLobby = lobbyState?.gameType === 'Private';
 
     useEffect(() => {
         if(confirmConcede){
@@ -131,7 +132,7 @@ function CurrentGameTab() {
                     </Box>
                 </Box>
             )}
-            {(isDev || gameState.undoEnabled) && (
+            {(isDev || gameState.undoEnabled) && isPrivateLobby && (
                 <Box sx={styles.functionContainer}>
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Advanced Undo</Typography>
                     <Divider sx={{ mb: '20px' }}/>
