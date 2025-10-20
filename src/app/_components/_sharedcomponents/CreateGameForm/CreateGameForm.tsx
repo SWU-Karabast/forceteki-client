@@ -52,6 +52,7 @@ interface ICreateGameFormProps {
     setDeckLink: (value: string) => void;
     savedDecks: StoredDeck[];
     handleDeckManagement: () => void;
+    handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
@@ -60,7 +61,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     deckLink,
     setDeckLink,
     savedDecks,
-    handleDeckManagement
+    handleDeckManagement,
+    handleFormSubmissionWithUndoCheck
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -106,8 +108,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     }
 
     // Handle Create Game Submission
-    const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const handleCreateGameSubmitActual = async () => {
         let userDeck;
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         if(showSavedDecks) {
@@ -231,6 +232,11 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             setErrorTitle('Server error');
             setErrorModalOpen(true);
         }
+    };
+
+    const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        handleFormSubmissionWithUndoCheck(handleCreateGameSubmitActual);
     };
 
     const styles = {
@@ -485,12 +491,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         />
                     </RadioGroup>
                 </FormControl>
-
-                {/* Beta Announcement */}
-                <Typography variant="body1" sx={{ color: 'yellow', textAlign: 'center', mb: '1rem' }}>
-                    Undo is now available in beta for private lobbies
-                </Typography>
-
+                
                 {!privateGame && (
                     <>
                         <FormControl fullWidth sx={styles.formControlStyle}>

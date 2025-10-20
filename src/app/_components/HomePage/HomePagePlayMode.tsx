@@ -9,7 +9,12 @@ import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/U
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
-import { setModerationSeenAsync, retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { 
+    setModerationSeenAsync, 
+    retrieveDecksForUser, 
+    hasUserSeenUndoPopup, 
+    markUndoPopupAsSeen 
+} from '@/app/_utils/ServerAndLocalStorageUtils';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
 import { SwuGameFormat } from '@/app/_constants/constants';
 import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -17,6 +22,7 @@ import { useSession } from 'next-auth/react';
 import { markAnnouncementAsSeen, shouldShowAnnouncement } from '@/app/_utils/ServerAndLocalStorageUtils';
 import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
 import { announcement } from '@/app/_constants/mockData';
+import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/UndoTutorialPopup';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -27,8 +33,10 @@ const HomePagePlayMode: React.FC = () => {
     const [showNewFeaturePopup, setShowNewFeaturePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
+    const [showUndoTutorialPopup, setShowUndoTutorialPopup] = useState<boolean>(false);
+    const [pendingFormSubmission, setPendingFormSubmission] = useState<(() => void) | null>(null);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
-    const { user, isLoading: userLoading, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
+    const { user, isLoading: userLoading, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate } = useUser();
     const { data: session } = useSession();
 
     // Deck Preferences State (moved from context)
@@ -83,7 +91,7 @@ const HomePagePlayMode: React.FC = () => {
 
         try {
             await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
-        }catch (err){
+        }catch {
             alert('Server error when fetching decks');
         }
     }, [session?.user, user, userLoading, handleInitializeDeckSelection]);
@@ -145,6 +153,36 @@ const HomePagePlayMode: React.FC = () => {
     };
 
     const handleSetDeckLink = useCallback((value: string) => setDeckLink(value), []);
+
+    // Undo Tutorial Popup handlers
+    const handleFormSubmissionWithUndoCheck = useCallback((originalSubmissionFn: () => void) => {
+        // Check if user has seen the undo popup (works for both signed-in and anonymous users)
+        if (!hasUserSeenUndoPopup(user) && (process.env.NODE_ENV !== 'development' || process.env.NEXT_PUBLIC_SHOW_LOCAL_ANNOUNCEMENTS === 'true')) {
+            // User hasn't seen the popup, show it and store the submission function
+            setPendingFormSubmission(() => originalSubmissionFn);
+            setShowUndoTutorialPopup(true);
+        } else {
+            // User has seen the popup, proceed with normal submission
+            originalSubmissionFn();
+        }
+    }, [user]);
+
+    const handleUndoTutorialClose = useCallback(async () => {
+        setShowUndoTutorialPopup(false);
+        
+        // Mark the popup as seen (handles both signed-in and anonymous users)
+        try {
+            await markUndoPopupAsSeen(user, updateUndoPopupSeenDate);
+        } catch (error) {
+            console.error('Failed to mark undo popup as seen:', error);
+        }
+
+        // Execute the pending form submission
+        if (pendingFormSubmission) {
+            pendingFormSubmission();
+            setPendingFormSubmission(null);
+        }
+    }, [user, pendingFormSubmission, updateUndoPopupSeenDate]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -277,6 +315,7 @@ const HomePagePlayMode: React.FC = () => {
                                 setDeckLink={handleSetDeckLink}
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
+                                handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -287,6 +326,7 @@ const HomePagePlayMode: React.FC = () => {
                                 setDeckLink={handleSetDeckLink}
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
+                                handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
                             />
                         </TabPanel>
                         {showTestGames &&
@@ -314,6 +354,7 @@ const HomePagePlayMode: React.FC = () => {
             <NewFeaturePopup open={showNewFeaturePopup} onClose={closeNewFeaturePopup} />
             <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
             <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
+            <UndoTutorialPopup open={showUndoTutorialPopup} onClose={handleUndoTutorialClose} />
         </>
     );
 };
