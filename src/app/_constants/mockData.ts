@@ -110,12 +110,12 @@ export const articles: IArticle[] = [
 ];
 
 export const announcement: IAnnouncement = {
-    key:'swuStats',
-    title: 'New Feature - SWUStats Integration',
+    key:'awsOutage',
+    title: 'AWS Outage Affecting Karabast',
     content:`
-    Track your wins, losses, and match‑up win‑rates on our partner site, <strong>SWUSTATS</strong>! By adding a deck on swustats and importing it into Karabast you are able to retrieve in-depth information on your deck&#39;s performance.<br/><br/> 
-    
-    You can link your Karabast account to your SWUStats account so your stats will appear under "Owner" for your decks. Just go to the <a target="_blank" href="https://karabast.net/Preferences" style="color:lightblue;">Preferences page</a> to link!`,
-    endDate: '2025-10-08', // The date should be year-month-day
-    image:'/swuImage.webp'
+    There is currently a global outage with Amazon Web Services (AWS) that is affecting Karabast's servers. As a result, you may experience difficulties with logins, deck stats, and game stability. The Karabast team is actively monitoring the situation.
+    <br/><br/>
+    For more details, see <a target="_blank" href="https://www.cnn.com/business/live-news/amazon-tech-outage-10-20-25-intl" style="color:lightblue;">news updates</a> about the outage.`,
+    endDate: '2025-10-22', // The date should be year-month-day
+    image:'/aws-news.png'
 }
