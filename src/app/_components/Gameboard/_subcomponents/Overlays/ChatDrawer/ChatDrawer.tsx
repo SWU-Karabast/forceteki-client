@@ -19,8 +19,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
 
     const quickUndoState: QuickUndoAvailableState | null = correctPlayer?.availableSnapshots?.quickSnapshotAvailable;
 
-    const undoButtonDisabled = quickUndoState === QuickUndoAvailableState.NoSnapshotAvailable || quickUndoState === QuickUndoAvailableState.UndoRequestsBlocked;
-
     const handleGameChat = () => {
         const trimmed = chatMessage.trim();
         if (!trimmed) return; // don't send empty messages
@@ -123,12 +121,25 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         }
     }
 
+    let undoButtonDisabled;
+    switch (quickUndoState) {
+        case QuickUndoAvailableState.NoSnapshotAvailable:
+        case QuickUndoAvailableState.UndoRequestsBlocked:
+        case QuickUndoAvailableState.WaitingForConfirmation:
+            undoButtonDisabled = true;
+            break;
+        default:
+            undoButtonDisabled = false;
+            break;
+    }
+
     let undoButtonStyle;
     switch (quickUndoState) {
         case QuickUndoAvailableState.FreeUndoAvailable:
             undoButtonStyle = styles.quickUndoButtonEnabled;
             break;
         case QuickUndoAvailableState.UndoRequestsBlocked:
+        case QuickUndoAvailableState.WaitingForConfirmation:
             undoButtonStyle = styles.quickUndoButtonBlocked;
             break;
         case QuickUndoAvailableState.RequestUndoAvailable:
@@ -147,6 +158,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         case QuickUndoAvailableState.UndoRequestsBlocked:
             buttonText = 'Blocked';
             break;
+        case QuickUndoAvailableState.WaitingForConfirmation:
+            buttonText = 'Waiting';
+            break;
         default:
             buttonText = 'Undo';
             break;
@@ -158,6 +172,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             buttonIcon = <MessageIcon />;
             break;
         case QuickUndoAvailableState.UndoRequestsBlocked:
+        case QuickUndoAvailableState.WaitingForConfirmation:
             buttonIcon = <BlockIcon />;
             break;
         default:
