@@ -544,6 +544,42 @@ export const getDeckFromServer = async (deckId: string, user:IUser): Promise<IDe
 };
 
 /**
+ * Checks if the user has linked their SWUStats account
+ * @param user The current user
+ * @returns Promise that resolves to boolean indicating if SWUStats is linked
+ */
+export const checkSwuStatsLinkStatus = async (
+    user: IUser
+): Promise<boolean> => {
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/swustatsLink`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            }
+        );
+
+        if (!response.ok) {
+            // Handle authentication errors gracefully
+            if (response.status === 401) {
+                return false;
+            }
+            throw new Error('Failed to check SWUStats link status');
+        }
+
+        const result = await response.json();
+        return result.linked;
+    } catch (error) {
+        console.error('Error checking SWUStats link status:', error);
+        throw error;
+    }
+};
+
+/**
  * Saves sound preferences to the server
  * @param user The current user
  * @param preferences

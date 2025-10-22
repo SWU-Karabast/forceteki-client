@@ -24,7 +24,6 @@ const UserContext = createContext<IUserContextType>({
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
     updateUserPreferences: () => {},
-    updateSwuStatsRefreshToken: () => {},
     updateModerationSeenStatus: () => {},
     updateUndoPopupSeenDate: () => {}
 });
@@ -67,7 +66,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         authenticated: true,
                         preferences: serverUser.preferences,
                         needsUsernameChange: serverUser.needsUsernameChange,
-                        swuStatsRefreshToken: serverUser.swuStatsRefreshToken,
                         moderation: serverUser.moderation,
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
                     });
@@ -198,16 +196,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
     };
 
-    const updateSwuStatsRefreshToken = (swuStatsRefreshToken: string | null) => {
-        setUser((prevUser) => {
-            if (!prevUser) return null;
-            return {
-                ...prevUser,
-                swuStatsRefreshToken
-            };
-        });
-    };
-
     const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
         handleDevSetUser(user);
         clearAnonUser();
@@ -240,7 +228,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             updateUndoPopupSeenDate,
             updateNeedsUsernameChange,
             updateUserPreferences,
-            updateSwuStatsRefreshToken,
             updateModerationSeenStatus
         }}>
             {children}
