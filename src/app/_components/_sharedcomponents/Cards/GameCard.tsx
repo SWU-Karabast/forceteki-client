@@ -29,7 +29,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 
     const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
-    const cardShouldHaveBorder = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
+    const isHiddenHandCard = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -227,7 +227,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
-            border: cardShouldHaveBorder
+            border: isHiddenHandCard
                 ? '1px solid rgb(32, 30, 30)'
                 : borderColor
                     ? card.selected && card.zone !== 'hand'
