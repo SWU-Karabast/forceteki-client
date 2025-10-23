@@ -446,7 +446,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
                 {/* Beta Announcement */}
                 <Typography variant="body1" sx={{ color: 'yellow', textAlign: 'center', mb: '1rem' }}>
-                    30-card decks are now playable in Open format with private lobbies
+                    30-card decks now available in Open format with private lobbies
                 </Typography>
 
                 {/* Submit Button */}
