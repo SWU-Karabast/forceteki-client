@@ -112,6 +112,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         setQueueState(true);
         // Get the deck link - either from selected favorite or direct input
         let userDeck = '';
+        let deckType = 'url';
         if(showSavedDecks) {
             const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
             if (selectedDeck?.deckLink) {
@@ -123,6 +124,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         let deckData = null
         try {
             const parsedInput = parseInputAsDeckData(userDeck);
+            deckType = parsedInput.type;
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favoriteDeck && deckData && showSavedDecks) {
@@ -169,7 +171,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         }
         try {
             // Save the deck if needed first!
-            if (saveDeck && deckData && userDeck) {
+            if (saveDeck && deckData && userDeck && deckType === 'url') {
                 if(user) {
                     await saveDeckToServer(deckData, userDeck, user);
                     deckData.isPresentInDb = true;
@@ -380,7 +382,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                                 </Tooltip>
                                 )
                                 <br />
-                                OR paste deck JSON directly
+                                OR paste deck JSON directly (we do <strong>not</strong> support saving JSON)
                             </Box>
                             <StyledTextField
                                 type="text"

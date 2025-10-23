@@ -88,6 +88,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const handleOnChangeDeck = async () => {
         if ((!favouriteDeck && !deckLink) || readyStatus) return;
         let userDeck: string;
+        let deckType = 'url';
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         setDeckImportErrorsSeen(false);
         if(favouriteDeck) {
@@ -103,6 +104,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         try {
             let deckData;
             const parsedInput = parseInputAsDeckData(userDeck);
+            deckType = parsedInput.type
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favouriteDeck && deckData && !deckLink) {
@@ -122,7 +124,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 return;
             }
             // save deck to local storage
-            if (saveDeck && deckData && deckLink){
+            if (saveDeck && deckData && deckLink && deckType === 'url'){
                 try {
                     if(user) {
                         if(!await saveDeckToServer(deckData, deckLink, user)){
@@ -456,7 +458,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 </Tooltip>
                                 )
                                 <br />
-                                OR paste deck JSON directly
+                                OR paste deck JSON directly (we do <strong>not</strong> support saving JSON)
                             </Box>
                             <StyledTextField
                                 type="text"

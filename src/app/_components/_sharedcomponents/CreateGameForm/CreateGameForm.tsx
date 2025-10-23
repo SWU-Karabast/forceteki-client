@@ -110,6 +110,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     // Handle Create Game Submission
     const handleCreateGameSubmitActual = async () => {
         let userDeck;
+        let deckType = 'url';
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         if(showSavedDecks) {
             const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
@@ -124,6 +125,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         let deckData = null;
         try {
             const parsedInput = parseInputAsDeckData(userDeck);
+            deckType = parsedInput.type;
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favoriteDeck && deckData && showSavedDecks) {
@@ -168,7 +170,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         }
         try {
             // save deck to storage first!
-            if (saveDeck && deckData && deckLink){
+            if (saveDeck && deckData && deckLink && deckType === 'url'){
                 if(user) {
                     await saveDeckToServer(deckData, deckLink, user);
                     deckData.isPresentInDb = true;
@@ -392,7 +394,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 </Tooltip>
                                 )
                                 <br />
-                                OR paste deck JSON directly
+                                OR paste deck JSON directly (we do <strong>not</strong> support saving JSON)
                             </Box>
                             <StyledTextField
                                 type="text"
