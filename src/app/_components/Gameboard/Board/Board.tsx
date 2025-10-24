@@ -36,7 +36,7 @@ const Board: React.FC<IBoardProps> = ({
     ): ICardData => {
         // Group captured cards by their parentCardId
         const capturedMapping: Record<string, ICardData[]> = {};
-    
+
         capturedCards.forEach((card) => {
             if (card.parentCardId) {
                 if (!capturedMapping[card.parentCardId]) {
@@ -45,7 +45,7 @@ const Board: React.FC<IBoardProps> = ({
                 capturedMapping[card.parentCardId].push(card);
             }
         });
-    
+
         if (card.uuid) {
             card.capturedCards = capturedMapping[card.uuid] || [];
         }
@@ -69,7 +69,7 @@ const Board: React.FC<IBoardProps> = ({
             height: '100%',
             position: 'absolute',
             pointerEvents: 'none', // make it invisible to mouse
-        },  
+        },
         unitsLayer: {
             position: 'relative',
             margin: isPortrait ? '0 0.2em' : '0 1rem',
@@ -217,20 +217,20 @@ const Board: React.FC<IBoardProps> = ({
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             h4: {
-                margin: '0.2rem 1rem 0', 
-                textAlign: 'center',  
+                margin: '0.2rem 1rem 0',
+                textAlign: 'center',
                 display: 'block',
-                fontSize: '1em', 
+                fontSize: '1em',
                 fontWeight: 600,
                 userSelect: 'none',
                 color: !initiativeClaimed && hasInitiative ? 'var(--initiative-blue)' : !initiativeClaimed && !hasInitiative ? 'var(--initiative-red)' : 'black',
             }
         },
     }
-    
+
     return (
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
-        <Box sx={styles.boardWrapper}> 
+        <Box sx={styles.boardWrapper}>
             <Box sx={styles.columnStyle}>
                 <Box sx={styles.borderLayer}>
                     <Box sx={styles.leftColumnBorderLeft} />
@@ -256,7 +256,7 @@ const Board: React.FC<IBoardProps> = ({
                         </Box>
                         <Box sx={styles.leaderBaseWrapper}>
                             <LeaderBaseCard
-                                cardStyle={LeaderBaseCardStyle.Base} 
+                                cardStyle={LeaderBaseCardStyle.Base}
                                 card={opponentBase}
                                 capturedCards={opponentBase.capturedCards || []}
                             />
@@ -265,8 +265,8 @@ const Board: React.FC<IBoardProps> = ({
                     <Box sx={{ flex: '0 1 60px', width: '100%', minHeight: '16px' }} />
                     <Box sx={styles.leaderBaseContainer}>
                         <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard 
-                                cardStyle={LeaderBaseCardStyle.Base} 
+                            <LeaderBaseCard
+                                cardStyle={LeaderBaseCardStyle.Base}
                                 card={playerBase}
                                 capturedCards={playerBase.capturedCards || []}
                             />
@@ -289,7 +289,7 @@ const Board: React.FC<IBoardProps> = ({
                     <Box sx={styles.rightColumnBorderRight} />
                     <Box sx={styles.initiativeWrapper}>
                         <Typography variant={'h4'}>Initiative</Typography>
-                    </Box> 
+                    </Box>
                 </Box>
                 <Box sx={styles.unitsLayer}>
                     <UnitsBoard

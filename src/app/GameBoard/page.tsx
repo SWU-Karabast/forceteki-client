@@ -12,6 +12,8 @@ import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
 import { MatchType } from '@/app/_constants/constants';
+import { useUser } from '../_contexts/User.context';
+import { Cosmetics } from '../_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/cosmetics';
 
 
 const GameBoard = () => {
@@ -22,6 +24,9 @@ const GameBoard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
+    const { user, updateUserPreferences } = useUser();
+    const background = Cosmetics.backgrounds.find((bg) => bg.name === user?.preferences?.background)
+        || Cosmetics.backgrounds.find((bg) => bg.name === 'Default')!;
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -55,7 +60,7 @@ const GameBoard = () => {
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
         ? ['endGame','soundOptions']
-        :['currentGame','soundOptions']
+        :['currentGame','soundOptions', 'cosmetics']
 
     if (!gameState || !connectedPlayer || (!(connectedPlayer in gameState?.players) && !(connectedPlayer in gameState?.spectators))) {
         return null;
@@ -71,11 +76,14 @@ const GameBoard = () => {
             transition: 'padding-right 0.3s ease-in-out',
             height: '100vh',
             position: 'relative',
-            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
+            // backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
+            backgroundImage: `url(${background.path})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
             flexDirection: 'column',
+            // dark backdrop overlay
+            '&::before': { }
         },
         centralPromptContainer: {
             position: 'absolute',
@@ -97,8 +105,8 @@ const GameBoard = () => {
             padding: '0.5rem',
             position: 'relative',
             borderRadius: '20px',
-            background: !menuTitle ? 'transparent' : promptTitle 
-                ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)' 
+            background: !menuTitle ? 'transparent' : promptTitle
+                ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)'
                 : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
         },
         promptShadow: {
@@ -113,6 +121,22 @@ const GameBoard = () => {
             WebkitFilter: 'blur(10px)'
         }
     };
+
+    if(background.darkened) {
+        styles.mainBoxStyle = {
+            ...styles.mainBoxStyle,
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgba(10, 10, 10, 0.57)',
+                zIndex: 0,
+            }
+        };
+    }
 
     return (
         <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>

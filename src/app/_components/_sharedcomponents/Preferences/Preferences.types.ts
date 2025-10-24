@@ -11,11 +11,11 @@ export type IButtonType = {
     onMouseLeave?: () => void;
 }
 
-export type ISleeve = {
+export type ICosmeticItem = {
     image: string,
-    source: string,
-    selected?: boolean,
-    onClick?: (source: string) => void,
+    name: string,
+    selected: boolean,
+    onClick: (name: string) => void,
 }
 
 export type IPreferenceOptions = {

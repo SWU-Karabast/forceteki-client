@@ -47,7 +47,7 @@ const Preferences: React.FC = () => {
             <PreferencesComponent
                 sidebarOpen={false}
                 isPreferenceOpen={true}
-                tabs={['general','soundOptions','cardSleeves']}
+                tabs={['general','soundOptions','cosmetics']}
                 variant={'homePage'}
             />
             <Typography variant="body1" sx={styles.disclaimer}>
