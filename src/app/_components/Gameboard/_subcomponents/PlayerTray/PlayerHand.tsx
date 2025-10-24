@@ -23,7 +23,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         }
         .custom-scrollbar::before {
             background-color: rgba(91, 104, 110, 0.85) !important;
-            
+
             border-radius: 0 !important;
             opacity: 0.95 !important;
             z-index: 101 !important;
@@ -66,7 +66,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
             transition: opacity 0.3s ease;
         }
     `;
-    
+
     React.useEffect(() => {
         if (scrollbarEnabled) {
             const styleEl = document.createElement('style');
@@ -105,7 +105,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         ro.observe(containerRef.current);
         return () => ro.disconnect();
     }, [measureContainerDimensions]);
-    
+
     React.useEffect(() => {
         const timer = setTimeout(measureContainerDimensions, 100);
         return () => clearTimeout(timer);
@@ -116,39 +116,39 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     const CARD_HOVER_TRANSLATE_PERCENT = 0.075;
     const PORTRAIT_CARD_HEIGHT_PERCENT = 0.75;
     const CARD_GAP_PX = 6;
-    
+
     const cardTranslationPx = containerHeight * CARD_HOVER_TRANSLATE_PERCENT;
 
     // Calculate card height by offsetting from the translation amount
     const cardHeightPx = containerHeight - cardTranslationPx;
-    
+
     // Manually scale the card width with aspect ratio for the calculations
     const cardWidthPx = cardHeightPx * CARD_ASPECT_RATIO;
-    
+
     // Initialize the gradient visibility on component mount and update their height
     React.useEffect(() => {
         if (!scrollbarEnabled) return;
-        
+
         // Set a small delay to ensure SimpleBar is properly initialized
         const timer = setTimeout(() => {
             if (scrollContainerRef.current && leftGradientRef.current && rightGradientRef.current) {
                 const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-                
+
                 // Initial left gradient state
                 leftGradientRef.current.style.opacity = scrollLeft > 0 ? '1' : '0';
-                
+
                 // Initial right gradient state
                 const isScrolledToEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth;
                 rightGradientRef.current.style.opacity = isScrolledToEnd ? '0' : '1';
             }
         }, 100);
-        
+
         return () => clearTimeout(timer);
     }, [scrollbarEnabled, cards.length, cardHeightPx]);
 
     // Downsize the container width slightly to not trigger the scrollbar on an exact fit
     const adjustedContainerWidth = containerWidth - 2;
-   
+
     // Total width if laid out side-by-side with  gaps included
     const totalNeededWidth =
         cards.length * cardWidthPx + (cards.length - 1) * CARD_GAP_PX;
@@ -161,9 +161,9 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     if (needsOverlap && cards.length > 1) {
         // Calculate overlap needed to fit all cards in the container width
         overlapWidthPx = ((cards.length * cardWidthPx) - adjustedContainerWidth) / (cards.length - 1);
-    } 
+    }
 
-    // Cap it by the max ratio 
+    // Cap it by the max ratio
     overlapWidthPx = Math.min(overlapWidthPx, cardWidthPx * maxCardOverlapPercent);
 
     const containerStyle = {
@@ -281,18 +281,18 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
             >
                 {scrollbarEnabled ? (
                     <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
-                        <div 
-                            ref={leftGradientRef} 
-                            className="left-gradient" 
+                        <div
+                            ref={leftGradientRef}
+                            className="left-gradient"
                             style={{ height: `${cardHeightPx}px`, top: cardTranslationPx }}
                         ></div>
-                        <div 
-                            ref={rightGradientRef} 
-                            className="right-gradient" 
+                        <div
+                            ref={rightGradientRef}
+                            className="right-gradient"
                             style={{ height: `${cardHeightPx}px`, top: cardTranslationPx }}
                         ></div>
                         <SimpleBar
-                            style={{ width: '100%', height: '100%', overflowY: 'hidden'}}
+                            style={{ width: '100%', height: '100%', overflowY: 'hidden' }}
                             classNames={{ scrollbar: 'simplebar-scrollbar custom-scrollbar' }}
                             onWheel={(e: React.WheelEvent<HTMLElement>) => {
                                 e.preventDefault();
@@ -309,12 +309,12 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                     // Get scroll information
                                     const scrollElement = e.currentTarget;
                                     const { scrollLeft, scrollWidth, clientWidth } = scrollElement;
-                                    
+
                                     // Show/hide left gradient based on scroll position
                                     if (leftGradientRef.current) {
                                         leftGradientRef.current.style.opacity = scrollLeft > 0 ? '1' : '0';
                                     }
-                                    
+
                                     // Show/hide right gradient based on scroll position
                                     if (rightGradientRef.current) {
                                         const isScrolledToEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth;
