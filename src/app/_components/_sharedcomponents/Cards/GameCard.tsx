@@ -9,7 +9,7 @@ import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
-import { Cosmetics } from '../Preferences/PreferencesSubElementVariants/cosmetics';
+import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -23,6 +23,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
     const { clearPopups } = usePopup();
+    const { cosmetics } = useCosmetics();
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
@@ -200,7 +201,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
     const updatedCardId = card.clonedCardId ?? card.setId;
-    const cardbackPath = Cosmetics.cardbacks.find((cb) => cb.name === (cardback || 'Default'))!.path;
+    const cardbackPath = cosmetics.cardbacks.find((cb) => cb.id === (cardback || 'Default'))!.path;
     const cardbackgroundImage = card.selected && (phase === 'setup' || phase === 'regroup')
         ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle, cardbackPath)})`
         : `url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle, cardbackPath)})`;

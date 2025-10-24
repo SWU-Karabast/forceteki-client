@@ -4,6 +4,7 @@ import PreferencesComponent from '@/app/_components/_sharedcomponents/Preference
 import React from 'react';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation'
+import { useUser } from '../_contexts/User.context';
 
 const Preferences: React.FC = () => {
     const router = useRouter();
@@ -26,7 +27,7 @@ const Preferences: React.FC = () => {
         mainContainer:{
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
+            backgroundImage: `url(${s3ImageURL('ui/default-background.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display:'grid',
@@ -47,7 +48,7 @@ const Preferences: React.FC = () => {
             <PreferencesComponent
                 sidebarOpen={false}
                 isPreferenceOpen={true}
-                tabs={['general','soundOptions','cosmetics']}
+                tabs={['general','soundOptions'].concat(useUser().user ? ['cosmetics'] : [])}
                 variant={'homePage'}
             />
             <Typography variant="body1" sx={styles.disclaimer}>

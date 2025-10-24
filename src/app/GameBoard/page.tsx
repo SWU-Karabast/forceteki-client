@@ -13,20 +13,18 @@ import PreferencesComponent from '@/app/_components/_sharedcomponents/Preference
 import { useRouter } from 'next/navigation';
 import { MatchType } from '@/app/_constants/constants';
 import { useUser } from '../_contexts/User.context';
-import { Cosmetics } from '../_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/cosmetics';
-
+import { useCosmetics } from '../_contexts/CosmeticsContext';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState } = useGame();
     const router = useRouter();
-
+    const { getBackground } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const { user, updateUserPreferences } = useUser();
-    const background = Cosmetics.backgrounds.find((bg) => bg.name === user?.preferences?.background)
-        || Cosmetics.backgrounds.find((bg) => bg.name === 'Default')!;
+    const background = getBackground(user?.preferences.background ?? 'Default');
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -58,9 +56,10 @@ const GameBoard = () => {
     // const winners = ['order66']
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
+    const cosmeticsInGame = false; // disable cosmetics in-game for now
     const preferenceTabs = winners
         ? ['endGame','soundOptions']
-        :['currentGame','soundOptions', 'cosmetics']
+        : ['currentGame','soundOptions'].concat(user && cosmeticsInGame ? ['cosmetics'] : []);
 
     if (!gameState || !connectedPlayer || (!(connectedPlayer in gameState?.players) && !(connectedPlayer in gameState?.spectators))) {
         return null;
@@ -76,13 +75,11 @@ const GameBoard = () => {
             transition: 'padding-right 0.3s ease-in-out',
             height: '100vh',
             position: 'relative',
-            // backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
             backgroundImage: `url(${background.path})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
             flexDirection: 'column',
-            // dark backdrop overlay
             '&::before': { }
         },
         centralPromptContainer: {

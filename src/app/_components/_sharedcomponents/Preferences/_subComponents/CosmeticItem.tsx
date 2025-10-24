@@ -6,7 +6,7 @@ import { ICosmeticItem } from '@/app/_components/_sharedcomponents/Preferences/P
 function CosmeticItem(cosmeticItem: ICosmeticItem) {
     const styles = {
         sleeveStyle:{
-            backgroundImage: `url(${cosmeticItem.image})`,
+            backgroundImage: `url(${cosmeticItem.path})`,
             backgroundRepeat: 'no-repeat',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
@@ -39,12 +39,12 @@ function CosmeticItem(cosmeticItem: ICosmeticItem) {
     }
 
     return (
-        <Button sx={styles.buttonStyle} onClick={() => cosmeticItem.onClick(cosmeticItem.name)}>
+        <Button sx={styles.buttonStyle} onClick={() => cosmeticItem.onClick(cosmeticItem.id)}>
             <Box sx={styles.cosmeticItemContainer}>
                 <Box sx={styles.sleeveStyle}/>
             </Box>
             <Box sx={styles.sourceContainer}>
-                <Typography variant="h4" sx={{ mb:'0px' }}>{cosmeticItem.name}</Typography>
+                <Typography variant="h4" sx={{ mb:'0px' }}>{cosmeticItem.title}</Typography>
             </Box>
         </Button>
     );

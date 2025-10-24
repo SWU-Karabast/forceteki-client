@@ -13,7 +13,7 @@ export default function DeckLayout({
         mainContainer: {
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
+            backgroundImage: `url(${s3ImageURL('ui/default-background.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',

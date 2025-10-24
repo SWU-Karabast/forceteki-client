@@ -1,18 +1,18 @@
 import * as React from 'react';
 import Grid from '@mui/material/Grid2';
-import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
 import CosmeticItem from '@/app/_components/_sharedcomponents/Preferences/_subComponents/CosmeticItem';
 import { Accordion, AccordionSummary, AccordionDetails, Typography, Box } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Cosmetics } from './cosmetics';
+import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
-    const [selectedCardback, setSelectedCardback] = useState<string>('Default');
-    const [selectedBackground, setSelectedBackground] = useState<string>('Default');
+    const { cosmetics } = useCosmetics();
+    const [selectedCardback, setSelectedCardback] = useState<string>('');
+    const [selectedBackground, setSelectedBackground] = useState<string>('');
 
     const onCardbackClick = async (name: string) => {
         try {
@@ -88,7 +88,6 @@ function CosmeticsTab() {
 
     return (
         <Box>
-            {/* Card Sleeves Section */}
             <Box sx={styles.accordionContainer}>
                 <Accordion sx={styles.accordionStyle} defaultExpanded>
                     <AccordionSummary
@@ -102,13 +101,14 @@ function CosmeticsTab() {
                     <AccordionDetails sx={styles.accordionDetailsStyle}>
                         <Grid sx={styles.functionContainer}>
                             {
-                                Cosmetics.cardbacks.map((cardback) => (
+                                cosmetics.cardbacks.length > 0 && cosmetics.cardbacks.map((cardback) => (
                                     <CosmeticItem
-                                        key={cardback.name}
-                                        image={cardback.path}
-                                        onClick={() => onCardbackClick(cardback.name)}
-                                        name={cardback.name}
-                                        selected={selectedCardback === cardback.name}
+                                        key={cardback.id}
+                                        id={cardback.id}
+                                        path={cardback.path}
+                                        onClick={() => onCardbackClick(cardback.id)}
+                                        title={cardback.title}
+                                        selected={selectedCardback === cardback.id}
                                     />
                                 ))
                             }
@@ -116,8 +116,6 @@ function CosmeticsTab() {
                     </AccordionDetails>
                 </Accordion>
             </Box>
-
-            {/* Game Backgrounds Section */}
             <Box sx={styles.accordionContainer}>
                 <Accordion sx={styles.accordionStyle}>
                     <AccordionSummary
@@ -131,13 +129,14 @@ function CosmeticsTab() {
                     <AccordionDetails sx={styles.accordionDetailsStyle}>
                         <Grid sx={styles.functionContainer}>
                             {
-                                Cosmetics.backgrounds.map((background) => (
+                                cosmetics.backgrounds.length > 0 && cosmetics.backgrounds.map((background) => (
                                     <CosmeticItem
-                                        key={background.name}
-                                        image={background.path}
-                                        onClick={() => onBackgroundClick(background.name)}
-                                        name={background.name}
-                                        selected={selectedBackground === background.name}
+                                        key={background.id}
+                                        id={background.id}
+                                        path={background.path}
+                                        onClick={() => onBackgroundClick(background.id)}
+                                        title={background.title}
+                                        selected={selectedBackground === background.id}
                                     />
                                 ))
                             }

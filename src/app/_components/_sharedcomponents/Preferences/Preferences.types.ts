@@ -12,10 +12,11 @@ export type IButtonType = {
 }
 
 export type ICosmeticItem = {
-    image: string,
-    name: string,
+    id: string,
+    path: string,
+    title: string,
     selected: boolean,
-    onClick: (name: string) => void,
+    onClick: (id: string) => void,
 }
 
 export type IPreferenceOptions = {
@@ -53,6 +54,23 @@ export interface IStatsNotification {
     message: string;
 }
 
+export type CosmeticType = 'cardback' | 'background' | 'playmat';
+
+export interface CosmeticOption {
+    id: string;
+    title: string;
+    type: CosmeticType;
+    path: string;
+    darkened?: boolean;
+};
+
+export interface Cosmetics {
+    cardbacks: CosmeticOption[];
+    backgrounds: CosmeticOption[];
+    playmats: CosmeticOption[];
+}
+
+// constants
 export enum StatsSaveStatus {
     Warning = 'Warning',
     Error = 'Error',

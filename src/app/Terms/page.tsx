@@ -65,7 +65,7 @@ const TermsOfService: React.FC = () => {
     const styles = {
         page: {
             minHeight: '100vh',
-            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
+            backgroundImage: `url(${s3ImageURL('ui/default-background.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
@@ -171,7 +171,7 @@ const TermsOfService: React.FC = () => {
                                                     const afterColon = it.substring(colonIndex);
                                                     return (
                                                         <ListItem key={i} component="li" sx={styles.li}>
-                                                            <ListItemText 
+                                                            <ListItemText
                                                                 primary={
                                                                     <>
                                                                         <Typography component="span" sx={{ fontWeight: 'bold' }}>
@@ -179,7 +179,7 @@ const TermsOfService: React.FC = () => {
                                                                         </Typography>
                                                                         {afterColon}
                                                                     </>
-                                                                } 
+                                                                }
                                                             />
                                                         </ListItem>
                                                     );
