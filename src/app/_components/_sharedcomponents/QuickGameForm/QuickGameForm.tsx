@@ -68,9 +68,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     
     const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
     const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
-
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+    const [isJsonDeck, setIsJsonDeck] = useState<boolean>(false)
 
     const formatOptions = Object.values(SwuGameFormat);
 
@@ -90,7 +90,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
         };
-
+        handleJsonDeck(deckLink);
         window.addEventListener('clearDeckErrors', handleClearErrors);
 
         return () => {
@@ -107,11 +107,21 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         setDeckErrorSummary(null);
     }
 
+    const handleJsonDeck = (deckLink: string) => {
+        const parsedInput = parseInputAsDeckData(deckLink);
+        if(parsedInput.type === 'json'){
+            setIsJsonDeck(true)
+            return;
+        }
+        setIsJsonDeck(false);
+    }
+
     // Handle Create Game Submission
     const handleJoinGameQueueActual = async () => {
         setQueueState(true);
         // Get the deck link - either from selected favorite or direct input
         let userDeck = '';
+        let deckType = 'url';
         if(showSavedDecks) {
             const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
             if (selectedDeck?.deckLink) {
@@ -123,6 +133,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         let deckData = null
         try {
             const parsedInput = parseInputAsDeckData(userDeck);
+            deckType = parsedInput.type;
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favoriteDeck && deckData && showSavedDecks) {
@@ -169,7 +180,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         }
         try {
             // Save the deck if needed first!
-            if (saveDeck && deckData && userDeck) {
+            if (saveDeck && deckData && userDeck && deckType === 'url') {
                 if(user) {
                     await saveDeckToServer(deckData, userDeck, user);
                     deckData.isPresentInDb = true;
@@ -387,6 +398,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                     setDeckLink(e.target.value);
+                                    handleJsonDeck(e.target.value);
                                     setDeckErrorSummary(null);
                                     setDeckErrorDetails(undefined);
                                 }}
@@ -399,6 +411,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             control={
                                 <Checkbox
                                     sx={styles.checkboxStyle}
+                                    disabled={isJsonDeck}
                                     checked={saveDeck}
                                     onChange={(
                                         e: ChangeEvent<HTMLInputElement>,
@@ -408,7 +421,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             }
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Save Deck List
+                                    {isJsonDeck ? 'JSON format cannot be saved' : 'Save Deck List'}
                                 </Typography>
                             }
                         />

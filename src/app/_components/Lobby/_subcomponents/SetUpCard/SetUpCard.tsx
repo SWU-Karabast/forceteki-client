@@ -46,6 +46,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
+    const [isJsonDeck, setIsJsonDeck] = useState<boolean>(false)
     const { data: session } = useSession(); // Get session from next-auth
 
     // For deck error display
@@ -81,6 +82,15 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         }
     };
 
+    const handleJsonDeck = (deckLink: string) => {
+        const parsedInput = parseInputAsDeckData(deckLink);
+        if(parsedInput.type === 'json'){
+            setIsJsonDeck(true)
+            return;
+        }
+        setIsJsonDeck(false);
+    }
+
     const handleLinkToggle = () =>{
         setshowLink(!showLink);
     }
@@ -88,6 +98,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const handleOnChangeDeck = async () => {
         if ((!favouriteDeck && !deckLink) || readyStatus) return;
         let userDeck: string;
+        let deckType = 'url';
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         setDeckImportErrorsSeen(false);
         if(favouriteDeck) {
@@ -103,6 +114,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         try {
             let deckData;
             const parsedInput = parseInputAsDeckData(userDeck);
+            deckType = parsedInput.type
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favouriteDeck && deckData && !deckLink) {
@@ -122,7 +134,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 return;
             }
             // save deck to local storage
-            if (saveDeck && deckData && deckLink){
+            if (saveDeck && deckData && deckLink && deckType === 'url'){
                 try {
                     if(user) {
                         if(!await saveDeckToServer(deckData, deckLink, user)){
@@ -463,6 +475,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 disabled={readyStatus}
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                    handleJsonDeck(e.target.value);
                                     setDeckLink(e.target.value);
                                     if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
                                         setDisplayerror(true);
@@ -479,6 +492,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 control={
                                     <Checkbox
                                         sx={styles.checkboxStyle}
+                                        disabled={isJsonDeck}
                                         checked={saveDeck}
                                         onChange={(
                                             e: ChangeEvent<HTMLInputElement>,
@@ -488,7 +502,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 }
                                 label={
                                     <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        Save Deck List
+                                        {isJsonDeck ? 'JSON format cannot be saved' : 'Save Deck List'}
                                     </Typography>
                                 }
                             />
