@@ -38,6 +38,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'swucardhub.fr';
             case DeckSource.SWUBase:
                 return 'swubase.com';
+            case DeckSource.SWUMetaStats:
+                return 'swumetastats.com';
             default:
                 return source;
         }
