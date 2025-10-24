@@ -38,8 +38,8 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
             const deckType = parseInputAsDeckData(deckLink)
             if(deckType.type === 'json'){
                 setErrorTitle('Deck Validation Error');
-                setDeckErrorSummary('We do not support direct deck JSON imports.');
-                setDeckErrorDetails('We do not support direct deck JSON imports.')
+                setDeckErrorSummary('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
+                setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.')
                 setErrorModalOpen(true);
                 return;
             }

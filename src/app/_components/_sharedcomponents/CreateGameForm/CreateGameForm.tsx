@@ -71,6 +71,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
+    const [isJsonDeck, setIsJsonDeck] = useState<boolean>(false)
     const [privateGame, setPrivateGame] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
@@ -92,7 +93,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             setDeckErrorDetails(undefined);
             setErrorTitle('Deck Validation Error');
         };
-
+        handleJsonDeck(deckLink);
         window.addEventListener('clearDeckErrors', handleClearErrors);
 
         return () => {
@@ -102,6 +103,16 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const handleChangeFormat = (format: SwuGameFormat) => {
         setFormat(format);
     }
+
+    const handleJsonDeck = (deckLink: string) => {
+        const parsedInput = parseInputAsDeckData(deckLink);
+        if(parsedInput.type === 'json'){
+            setIsJsonDeck(true)
+            return;
+        }
+        setIsJsonDeck(false);
+    }
+
     const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
         setShowSavedDecks(useSavedDecks);
         setDeckErrorSummary(null);
@@ -394,13 +405,14 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 </Tooltip>
                                 )
                                 <br />
-                                OR paste deck JSON directly (we do <strong>not</strong> support saving JSON)
+                                OR paste deck JSON directly
                             </Box>
                             <StyledTextField
                                 type="text"
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>{
                                     setDeckLink(e.target.value);
+                                    handleJsonDeck(e.target.value);
                                     setDeckErrorSummary(null);
                                     setDeckErrorDetails(undefined);
                                 }}
@@ -423,6 +435,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             control={
                                 <Checkbox
                                     sx={styles.checkboxStyle}
+                                    disabled={isJsonDeck}
                                     checked={saveDeck}
                                     onChange={(
                                         e: ChangeEvent<HTMLInputElement>,
@@ -432,7 +445,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             }
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Save Deck List
+                                    {isJsonDeck ? 'JSON format cannot be saved' : 'Save Deck List'}
                                 </Typography>
                             }
                         />

@@ -46,6 +46,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
+    const [isJsonDeck, setIsJsonDeck] = useState<boolean>(false)
     const { data: session } = useSession(); // Get session from next-auth
 
     // For deck error display
@@ -80,6 +81,15 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             alert('Server error when fetching decks');
         }
     };
+
+    const handleJsonDeck = (deckLink: string) => {
+        const parsedInput = parseInputAsDeckData(deckLink);
+        if(parsedInput.type === 'json'){
+            setIsJsonDeck(true)
+            return;
+        }
+        setIsJsonDeck(false);
+    }
 
     const handleLinkToggle = () =>{
         setshowLink(!showLink);
@@ -458,13 +468,14 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 </Tooltip>
                                 )
                                 <br />
-                                OR paste deck JSON directly (we do <strong>not</strong> support saving JSON)
+                                OR paste deck JSON directly
                             </Box>
                             <StyledTextField
                                 type="text"
                                 disabled={readyStatus}
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                    handleJsonDeck(e.target.value);
                                     setDeckLink(e.target.value);
                                     if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
                                         setDisplayerror(true);
@@ -481,6 +492,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 control={
                                     <Checkbox
                                         sx={styles.checkboxStyle}
+                                        disabled={isJsonDeck}
                                         checked={saveDeck}
                                         onChange={(
                                             e: ChangeEvent<HTMLInputElement>,
@@ -490,7 +502,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 }
                                 label={
                                     <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        Save Deck List
+                                        {isJsonDeck ? 'JSON format cannot be saved' : 'Save Deck List'}
                                     </Typography>
                                 }
                             />
