@@ -82,7 +82,7 @@ const ModPage = () => {
 
     // Validation rules for different cosmetic types
     const validationRules: ValidationRules = {
-        cardback: { width: 300, height: 419 }, // Standard card aspect ratio
+        cardback: { width: 718, height: 1000 }, // based on default cardback image size
         background: { width: 1920, height: 1080 }, // 16:9 ratio
         playmat: { width: 2680, height: 900 } // Custom playmat ratio
     };
@@ -249,7 +249,7 @@ const ModPage = () => {
         if (!imageDimensions) return false;
 
         const rules = validationRules[cosmeticType];
-        const tolerance = 20;
+        const tolerance = 30;
 
         // Check if image is larger than target or within tolerance for cropping
         const widthDiff = imageDimensions.width - rules.width;
@@ -257,7 +257,7 @@ const ModPage = () => {
 
         // Need processing if:
         // 1. Image is larger than target
-        // 2. Image is within tolerance range (1-20px off)
+        // 2. Image is within tolerance range (1-30px off)
         return (widthDiff > 0 || heightDiff > 0) ||
                (Math.abs(widthDiff) <= tolerance && Math.abs(heightDiff) <= tolerance);
     };
@@ -266,7 +266,7 @@ const ModPage = () => {
         if (!imageDimensions) return 'Image dimensions not available';
 
         const rules = validationRules[cosmeticType];
-        const tolerance = 20;
+        const tolerance = 30;
 
         // Check if dimensions are exact match
         if (imageDimensions.width === rules.width && imageDimensions.height === rules.height) {
@@ -777,7 +777,7 @@ const ModPage = () => {
                             disabled={uploadLoading}
                             label="Cosmetic Type"
                         >
-                            <MenuItem value="cardback">Cardback (300x419px)</MenuItem>
+                            <MenuItem value="cardback">Cardback (718x1000)</MenuItem>
                             <MenuItem value="background">Background (1920x1080px)</MenuItem>
                             <MenuItem value="playmat">Playmat (2680x900px)</MenuItem>
                         </Select>
