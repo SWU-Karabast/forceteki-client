@@ -55,7 +55,7 @@ export const savePreferencesGeneric = async (
 const getDefaultPreferences = (): IPreferences => ({
     cardback: undefined,
     background: undefined,
-    // playmat: undefined,
+    playmat: undefined,
     sound: {
         muteAllSound: false,
         muteCardAndButtonClickSound: false,

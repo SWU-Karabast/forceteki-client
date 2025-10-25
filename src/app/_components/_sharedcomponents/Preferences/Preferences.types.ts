@@ -17,6 +17,7 @@ export type ICosmeticItem = {
     title: string,
     selected: boolean,
     onClick: (id: string) => void,
+    isNoneOption?: boolean,
 }
 
 export type IPreferenceOptions = {

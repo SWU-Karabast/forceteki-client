@@ -84,7 +84,7 @@ const ModPage = () => {
     const validationRules: ValidationRules = {
         cardback: { width: 718, height: 1000 }, // based on default cardback image size
         background: { width: 1920, height: 1080 }, // 16:9 ratio
-        playmat: { width: 2680, height: 900 } // Custom playmat ratio
+        playmat: { width: 2680, height: 1200 } // Custom playmat ratio
     };
 
     useEffect(() => {
@@ -779,7 +779,7 @@ const ModPage = () => {
                         >
                             <MenuItem value="cardback">Cardback (718x1000)</MenuItem>
                             <MenuItem value="background">Background (1920x1080px)</MenuItem>
-                            <MenuItem value="playmat">Playmat (2680x900px)</MenuItem>
+                            <MenuItem value="playmat">Playmat (2680x1200px)</MenuItem>
                         </Select>
                     </FormControl>
 

@@ -15,12 +15,14 @@ function CosmeticsTab() {
     const { cosmetics } = useCosmetics();
     const [selectedCardback, setSelectedCardback] = useState<string>('');
     const [selectedBackground, setSelectedBackground] = useState<string>('');
+    const [selectedPlaymat, setSelectedPlaymat] = useState<string>('');
     const [expandedAccordion, setExpandedAccordion] = useState<string>('cardbacks'); // Default to cardbacks expanded
 
     useEffect(() => {
         if(user){
             setSelectedCardback(user.preferences.cardback ? user.preferences.cardback : DefaultCosmeticId.Cardback);
             setSelectedBackground(user.preferences.background ? user.preferences.background : DefaultCosmeticId.Background);
+            setSelectedPlaymat(user.preferences.playmat ? user.preferences.playmat : 'none');
         }
     }, [user]);
 
@@ -39,6 +41,15 @@ function CosmeticsTab() {
             setSelectedBackground(name);
         } catch (error) {
             console.error('Failed to save background preferences:', error);
+        }
+    }
+
+    const onPlaymatClick = async (name: string) => {
+        try {
+            await savePreferencesGeneric(user, { playmat: name }, updateUserPreferences)
+            setSelectedPlaymat(name);
+        } catch (error) {
+            console.error('Failed to save playmat preferences:', error);
         }
     }
 
@@ -63,6 +74,18 @@ function CosmeticsTab() {
 
             return titleA.localeCompare(titleB);
         });
+    };
+
+    // Create playmats list with 'None' option
+    const getPlaymatOptions = () => {
+        const noneOption: CosmeticOption = {
+            id: 'none',
+            title: 'None',
+            type: 'playmat',
+            path: '' // Empty path for none option
+        };
+
+        return [noneOption, ...sortCosmeticsByTitle(cosmetics.playmats)];
     };
 
     const styles = {
@@ -206,6 +229,54 @@ function CosmeticsTab() {
                                         onClick={() => onBackgroundClick(background.id)}
                                         title={background.title}
                                         selected={selectedBackground === background.id}
+                                    />
+                                ))
+                            }
+                        </Grid>
+                    </AccordionDetails>
+                </Accordion>
+            </Box>
+            <Box sx={styles.accordionContainer}>
+                <Accordion
+                    sx={styles.accordionStyle}
+                    expanded={expandedAccordion === 'playmats'}
+                    onChange={handleAccordionChange('playmats')}
+                >
+                    <AccordionSummary
+                        expandIcon={<ExpandMoreIcon sx={{ color: '#ECEFF4' }} />}
+                        sx={styles.accordionSummaryStyle}
+                    >
+                        <Typography sx={styles.sectionTitle}>
+                            Playmats
+                        </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{
+                        ...styles.accordionDetailsStyle,
+                        maxHeight: '50vh',
+                        overflowY: 'auto',
+                        '::-webkit-scrollbar': {
+                            width: '6px',
+                        },
+                        '::-webkit-scrollbar-thumb': {
+                            backgroundColor: '#D3D3D3B3',
+                            borderRadius: '3px',
+                        },
+                        '::-webkit-scrollbar-track': {
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                            borderRadius: '3px',
+                        },
+                    }}>
+                        <Grid sx={styles.functionContainer}>
+                            {
+                                getPlaymatOptions().map((playmat) => (
+                                    <CosmeticItem
+                                        key={playmat.id}
+                                        id={playmat.id}
+                                        path={playmat.path}
+                                        onClick={() => onPlaymatClick(playmat.id)}
+                                        title={playmat.title}
+                                        selected={selectedPlaymat === playmat.id}
+                                        isNoneOption={playmat.id === 'none'}
                                     />
                                 ))
                             }

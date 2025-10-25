@@ -6,12 +6,18 @@ import { ICosmeticItem } from '@/app/_components/_sharedcomponents/Preferences/P
 function CosmeticItem(cosmeticItem: ICosmeticItem) {
     const styles = {
         sleeveStyle:{
-            backgroundImage: `url(${cosmeticItem.path})`,
+            backgroundImage: cosmeticItem.isNoneOption ? 'none' : `url(${cosmeticItem.path})`,
             backgroundRepeat: 'no-repeat',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
             width:'100%',
-            height:'9.5rem'
+            height:'9.5rem',
+            backgroundColor: cosmeticItem.isNoneOption ? 'rgba(46, 52, 64, 0.3)' : 'transparent',
+            border: cosmeticItem.isNoneOption ? '2px dashed #4C566A' : 'none',
+            borderRadius: cosmeticItem.isNoneOption ? '8px' : '0',
+            display: cosmeticItem.isNoneOption ? 'flex' : 'block',
+            alignItems: cosmeticItem.isNoneOption ? 'center' : 'normal',
+            justifyContent: cosmeticItem.isNoneOption ? 'center' : 'normal',
         },
         buttonStyle:{
             border: '1px solid',
@@ -41,7 +47,21 @@ function CosmeticItem(cosmeticItem: ICosmeticItem) {
     return (
         <Button sx={styles.buttonStyle} onClick={() => cosmeticItem.onClick(cosmeticItem.id)}>
             <Box sx={styles.cosmeticItemContainer}>
-                <Box sx={styles.sleeveStyle}/>
+                <Box sx={styles.sleeveStyle}>
+                    {cosmeticItem.isNoneOption && (
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                color: '#8892b0',
+                                fontSize: '0.8rem',
+                                textAlign: 'center',
+                                fontStyle: 'italic'
+                            }}
+                        >
+                            No Playmat
+                        </Typography>
+                    )}
+                </Box>
             </Box>
             <Box sx={styles.sourceContainer}>
                 <Typography variant="h4" sx={{ mb:'0px' }}>{cosmeticItem.title}</Typography>

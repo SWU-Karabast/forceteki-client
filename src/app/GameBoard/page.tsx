@@ -18,13 +18,28 @@ import { useCosmetics } from '../_contexts/CosmeticsContext';
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
     const router = useRouter();
-    const { getBackground } = useCosmetics();
+    const { getBackground, getPlaymat } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const { user, updateUserPreferences } = useUser();
     const background = getBackground(user?.preferences.background ?? DefaultCosmeticId.Background);
+    const myPlaymatId = user?.preferences.playmat;
+    const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
+    const opponentId = getOpponent(connectedPlayer);
+    const theirPlaymatId = gameState?.players[opponentId]?.user?.playmat;
+    const theirPlaymat = theirPlaymatId && theirPlaymatId !== 'none' ? getPlaymat(theirPlaymatId) : null;
+
+    // Debug logging
+    console.log('Debug Playmat Info:', {
+        myPlaymatId,
+        myPlaymat,
+        myPlaymatPath: myPlaymat?.path,
+        theirPlaymatId,
+        theirPlaymat,
+        theirPlaymatPath: theirPlaymat?.path
+    });
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -129,6 +144,36 @@ const GameBoard = () => {
             background: 'rgba(0, 0, 0, .9)',
             filter: 'blur(10px)',
             WebkitFilter: 'blur(10px)'
+        },
+        playerPlaymat: {
+            position: 'absolute',
+            bottom: 0, // Touch bottom edge
+            left: '2rem', // Add left margin to constrain width
+            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
+            height: '47vh', // Reduced height for middle spacing
+            backgroundSize: 'cover', // Fill container width, crop overflow edges
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+            borderRadius: '8px', // Add subtle rounded corners
+            opacity: 0.54, // Subtle transparency
+            zIndex: 1, // Above background and darkening overlay, below UI elements
+            transition: 'right 0.3s ease-in-out',
+            pointerEvents: 'none',
+        },
+        opponentPlaymat: {
+            position: 'absolute',
+            top: 0, // Touch top edge
+            left: '2rem', // Add left margin to constrain width
+            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
+            height: '47vh', // Reduced height for middle spacing
+            backgroundSize: 'cover', // Fill container width, crop overflow edges
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+            borderRadius: '8px', // Add subtle rounded corners
+            opacity: 0.54, // Subtle transparency
+            zIndex: 1, // Above background and darkening overlay, below UI elements
+            transition: 'right 0.3s ease-in-out',
+            pointerEvents: 'none',
         }
     };
 
@@ -148,16 +193,71 @@ const GameBoard = () => {
         };
     }
 
+    if(myPlaymat?.darkened) {
+        styles.playerPlaymat = {
+            ...styles.playerPlaymat,
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgba(10, 10, 10, 0.57)',
+                borderRadius: '8px',
+                zIndex: 1,
+            }
+        };
+    }
+
+    if(theirPlaymat?.darkened) {
+        styles.opponentPlaymat = {
+            ...styles.opponentPlaymat,
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgba(10, 10, 10, 0.57)',
+                borderRadius: '8px',
+                zIndex: 1,
+            }
+        };
+    }
+
     return (
         <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>
-            <Box component="main" sx={styles.mainBoxStyle}>
-                <Box sx={{ height: '15vh' }}>
+            <Box component="main" sx={styles.mainBoxStyle} data-testid="gameboard-main-box">
+                {/* Opponent Playmat - top half */}
+                {theirPlaymat && (
+                    <Box
+                        sx={{
+                            ...styles.opponentPlaymat,
+                            backgroundImage: `url("${theirPlaymat.path}")`,
+                        }}
+                    />
+                )}
+
+                {/* Player Playmat - bottom half */}
+                {myPlaymat && (
+                    <Box
+                        sx={{
+                            ...styles.playerPlaymat,
+                            backgroundImage: `url("${myPlaymat.path}")`,
+                        }}
+                        onError={(e) => {
+                            console.error('Playmat image failed to load:', myPlaymat.path);
+                        }}
+                    />
+                )}                <Box sx={{ height: '15vh' }}>
                     <OpponentCardTray
                         trayPlayer={getOpponent(connectedPlayer)}
                         preferenceToggle={handlePreferenceToggle}
                     />
                 </Box>
-                <Box sx={{ height: '67vh' }}>
+                <Box sx={{ height: '67vh', position: 'relative', zIndex: 2 }}>
                     <Board sidebarOpen={sidebarOpen} />
                 </Box>
                 <Box sx={{ height: '18vh' }}>

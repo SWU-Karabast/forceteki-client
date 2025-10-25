@@ -51,7 +51,7 @@ export interface ISoundPreferences {
 export interface IPreferences {
     cardback?: string;
     background?: string;
-    // TODO: playmat?: string;
+    playmat?: string;
     sound?: ISoundPreferences
 }
 

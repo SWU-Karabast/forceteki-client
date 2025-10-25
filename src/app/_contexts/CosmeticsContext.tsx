@@ -7,7 +7,7 @@ interface CosmeticsContextProps {
     setCosmetics: React.Dispatch<React.SetStateAction<Cosmetics>>;
     getCardback: (id: string) => CosmeticOption;
     getBackground: (id: string) => CosmeticOption;
-    getPlaymat: (id: string) => CosmeticOption;
+    getPlaymat: (id?: string) => CosmeticOption;
 }
 
 const defaultCosmetics: Cosmetics = {
@@ -35,7 +35,7 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
             case 'background':
                 return cosmetics.backgrounds.find((bg) => bg.title === 'Default')!;
             case 'playmat':
-                return cosmetics.playmats.find((pm) => pm.title === 'Default')!;
+                return { id: 'none', title: 'None', type: 'playmat', path: '' };
             default:
                 throw new Error('Invalid cosmetic type');
         }
@@ -46,7 +46,10 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
     const getBackground = (id: string) => {
         return cosmetics.backgrounds.find((bg) => bg.id === id) || getCosmeticDefault('background');
     }
-    const getPlaymat = (id: string) => {
+    const getPlaymat = (id?: string) => {
+        if (!id) {
+            return getCosmeticDefault('playmat');
+        }
         return cosmetics.playmats.find((pm) => pm.id === id) || getCosmeticDefault('playmat');
     }
 

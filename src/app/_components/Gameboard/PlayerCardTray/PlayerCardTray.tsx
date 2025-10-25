@@ -41,8 +41,8 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'flex-end',
-            padding: { 
-                xs: '0.5rem 0.5rem 0.5rem 0', 
+            padding: {
+                xs: '0.5rem 0.5rem 0.5rem 0',
                 sm: '0.75rem 1rem 0.75rem 0',
                 md: '1rem 2rem 1rem 0'
             },
@@ -57,8 +57,8 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
         chatColumn: {
             ...debugBorder('yellow'),
             display: 'flex',
-            alignItems: 'center', 
-            alignSelf: 'flex-end', 
+            alignItems: 'center',
+            alignSelf: 'flex-end',
             height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
             width: 'auto',
             marginBottom: { xs: '0.25rem', md: '0.5rem' }, // Match the padding of actionContainer
@@ -85,12 +85,13 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '1rem',
-                position: 'relative'
+                position: 'relative',
+                zIndex: 2 // Above playmats
             }}
             className="playerCardTrayWrapper"
         >
-            <Grid  
-                size={{ xs: 3, md: 3 }}              
+            <Grid
+                size={{ xs: 3, md: 3 }}
                 sx={{
                     ...styles.leftColumnStyle,
                 }}
@@ -114,7 +115,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                     />
                 </Box>
                 <Box sx={styles.playerTurnAura} />
-            </Grid>            
+            </Grid>
             <Grid
                 size={{ xs: 3, md: 3 }}
                 sx={{

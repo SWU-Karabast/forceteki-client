@@ -230,7 +230,7 @@ const Board: React.FC<IBoardProps> = ({
 
     return (
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
-        <Box sx={styles.boardWrapper}>
+        <Box sx={styles.boardWrapper} data-testid="gameboard-board-wrapper">
             <Box sx={styles.columnStyle}>
                 <Box sx={styles.borderLayer}>
                     <Box sx={styles.leftColumnBorderLeft} />
