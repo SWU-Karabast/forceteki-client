@@ -5,7 +5,8 @@ import {
     Typography,
     TextField,
     Button,
-    Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider
+    Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider,
+    FormControl
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -26,7 +27,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
-import { SupportedDeckSources } from '@/app/_constants/constants';
+import { SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import PreferenceOptionWithIcon from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceOption';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
@@ -232,6 +233,26 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         setUpCard: {
             paddingLeft: '20px',
             paddingRight: '20px',
+        },
+        formControlStyle: {
+            mb: '1rem',
+        },
+        disabledDropdownStyle: {
+            mb: '1rem',
+            width: { xs: '100%', sm: '50%' }, // Full width on extra small screens, half width on small and up
+            maxWidth: '300px', // Reasonable maximum width
+            '& .MuiOutlinedInput-root': {
+                '&.Mui-disabled': {
+                    pointerEvents: 'none', // Disable all mouse interactions
+                    '& fieldset': {
+                        borderColor: '#888888', // Lighter gray border when disabled
+                    },
+                },
+            },
+            '& .MuiInputBase-input.Mui-disabled': {
+                color: '#aaaaaa', // Lighter gray text when disabled
+                WebkitTextFillColor: '#aaaaaa', // Override WebKit's default disabled text color
+            },
         },
         readyImg: {
             width: '15px',
@@ -536,6 +557,24 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     <Typography variant="h5" sx={{ fontSize: '1.2em', fontWeight: '600', color: 'white', mt: 2, mb: 1 }}>
                         Game Settings
                     </Typography>
+                    {lobbyFormat === SwuGameFormat.Open && (
+                        <>
+                            <Typography variant="body1" sx={styles.labelTextStyle}>
+                                Mainboard Minimum Size
+                            </Typography>
+                            <FormControl fullWidth sx={styles.disabledDropdownStyle}>
+                                <StyledTextField
+                                    select
+                                    value={lobbyState.allow30CardsInMainBoard ? '30Card' : '50Card'}
+                                    onChange={() => {}}
+                                    disabled={true}
+                                >
+                                    <MenuItem value="50Card">50 Cards</MenuItem>
+                                    <MenuItem value="30Card">30 Cards</MenuItem>
+                                </StyledTextField>
+                            </FormControl>
+                        </>
+                    )}
                     <FormControlLabel
                         control={
                             <Checkbox
