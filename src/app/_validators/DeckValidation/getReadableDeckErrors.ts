@@ -40,7 +40,7 @@ export function getReadableDeckErrors(
         const { minDecklistSize, actualDecklistSize } =
             failures[DeckValidationFailureReason.MinDecklistSizeNotMet]!;
         messages.push(
-            `Minimum deck size is ${minDecklistSize}, this deck only has ${actualDecklistSize} cards.`
+            `Minimum count for main deck + sideboard is ${minDecklistSize}, this deck only has ${actualDecklistSize} cards.`
         );
     }
 
