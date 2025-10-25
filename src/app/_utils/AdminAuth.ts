@@ -5,8 +5,9 @@ import { authOptions } from '@/app/_utils/auth';
 // List of allowed usernames for admin access - must match exactly what NextAuth provides
 const allowedAdminUsers = [
     'Veld',
-    'SWU Petranaki', // Exact match for what NextAuth session provides
-    'CheBato'
+    'ninin',
+    'CheBato',
+    'Cazagar',
 ];
 
 /**
