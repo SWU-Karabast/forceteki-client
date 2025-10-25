@@ -7,7 +7,7 @@ const allowedAdminUsers = [
     'Veld',
     'ninin',
     'CheBato',
-    'Cazagar',
+    'Cazargar',
 ];
 
 /**
