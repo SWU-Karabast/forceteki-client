@@ -6,7 +6,7 @@ import {
     QueryCommandOutput,
     DeleteCommand
 } from '@aws-sdk/lib-dynamodb';
-import { CosmeticOption } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import { CosmeticOption, CosmeticType } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 
 // Singleton pattern for DynamoDB client
 let dynamoDbService: DynamoDBService;
@@ -115,7 +115,7 @@ export class DynamoDBService {
             return (result.Items || []).map((item: Record<string, unknown>) => ({
                 id: item.id as string,
                 title: item.title as string,
-                type: item.type as 'cardback' | 'background' | 'playmat',
+                type: item.type as CosmeticType,
                 path: item.path as string,
                 darkened: item.darkened as boolean | undefined
             }));

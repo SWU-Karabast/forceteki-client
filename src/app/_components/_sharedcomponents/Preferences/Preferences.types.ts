@@ -55,7 +55,11 @@ export interface IStatsNotification {
     message: string;
 }
 
-export type CosmeticType = 'cardback' | 'background' | 'playmat';
+export enum CosmeticType {
+    Cardback = 'cardback',
+    Background = 'background',
+    Playmat = 'playmat',
+}
 
 export interface CosmeticOption {
     id: string;

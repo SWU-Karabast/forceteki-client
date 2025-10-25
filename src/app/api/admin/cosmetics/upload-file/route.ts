@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
 import { getDynamoDbServiceAsync } from '@/app/_services/DynamoDBService';
-import { CosmeticOption } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { CosmeticOption, CosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
 
 export const POST = withAdminAuth(async (request: NextRequest) => {
@@ -88,17 +88,14 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
         // Convert file to buffer
         const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-        // Determine content type - use webp for converted files
-        const contentType = originalExtension === 'webp' ? file.type : 'image/webp';
-
         // Upload to S3
-        const s3Url = await s3Service.uploadFile(s3Key, fileBuffer, contentType);
+        const s3Url = await s3Service.uploadFile(s3Key, fileBuffer, 'image/webp');
 
         // Create cosmetic metadata
         const cosmeticData: CosmeticOption = {
             id: cosmeticId,
             title: cosmeticTitle,
-            type: cosmeticType as 'cardback' | 'background' | 'playmat',
+            type: cosmeticType as CosmeticType,
             path: s3Url,
             darkened: isDarkened // Use the parsed darkened parameter
         };

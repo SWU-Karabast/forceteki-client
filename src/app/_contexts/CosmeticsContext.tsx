@@ -5,8 +5,8 @@ import { CosmeticOption, Cosmetics, CosmeticType } from '../_components/_sharedc
 interface CosmeticsContextProps {
     cosmetics: Cosmetics;
     setCosmetics: React.Dispatch<React.SetStateAction<Cosmetics>>;
-    getCardback: (id: string) => CosmeticOption;
-    getBackground: (id: string) => CosmeticOption;
+    getCardback: (id?: string) => CosmeticOption;
+    getBackground: (id?: string) => CosmeticOption;
     getPlaymat: (id?: string) => CosmeticOption;
 }
 
@@ -19,9 +19,9 @@ const defaultCosmetics: Cosmetics = {
 const CosmeticsContext = React.createContext<CosmeticsContextProps>({
     cosmetics: defaultCosmetics,
     setCosmetics: () => {},
-    getCardback: () => ({ id: '', title: '', type: 'cardback', path: '' }),
-    getBackground: () => ({ id: '', title: '', type: 'background', path: '' }),
-    getPlaymat: () => ({ id: '', title: '', type: 'playmat', path: '' }),
+    getCardback: () => ({ id: '', title: '', type: CosmeticType.Cardback, path: '' }),
+    getBackground: () => ({ id: '', title: '', type: CosmeticType.Background, path: '' }),
+    getPlaymat: () => ({ id: '', title: '', type: CosmeticType.Playmat, path: '' }),
 });
 
 export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -35,22 +35,28 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
             case 'background':
                 return cosmetics.backgrounds.find((bg) => bg.title === 'Default')!;
             case 'playmat':
-                return { id: 'none', title: 'None', type: 'playmat', path: '' };
+                return { id: 'none', title: 'None', type: CosmeticType.Playmat, path: '' };
             default:
                 throw new Error('Invalid cosmetic type');
         }
     }
-    const getCardback = (id: string) => {
-        return cosmetics.cardbacks.find((cb) => cb.id === id) || getCosmeticDefault('cardback');
+    const getCardback = (id?: string) => {
+        if (!id) {
+            return getCosmeticDefault(CosmeticType.Cardback);
+        }
+        return cosmetics.cardbacks.find((cb) => cb.id === id) || getCosmeticDefault(CosmeticType.Cardback);
     }
-    const getBackground = (id: string) => {
-        return cosmetics.backgrounds.find((bg) => bg.id === id) || getCosmeticDefault('background');
+    const getBackground = (id?: string) => {
+        if (!id) {
+            return getCosmeticDefault(CosmeticType.Background);
+        }
+        return cosmetics.backgrounds.find((bg) => bg.id === id) || getCosmeticDefault(CosmeticType.Background);
     }
     const getPlaymat = (id?: string) => {
         if (!id) {
-            return getCosmeticDefault('playmat');
+            return getCosmeticDefault(CosmeticType.Playmat);
         }
-        return cosmetics.playmats.find((pm) => pm.id === id) || getCosmeticDefault('playmat');
+        return cosmetics.playmats.find((pm) => pm.id === id) || getCosmeticDefault(CosmeticType.Playmat);
     }
 
     React.useEffect(() => {

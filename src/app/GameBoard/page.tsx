@@ -11,7 +11,7 @@ import { useGame } from '../_contexts/Game.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
-import { DefaultCosmeticId, MatchType } from '@/app/_constants/constants';
+import { MatchType } from '@/app/_constants/constants';
 import { useUser } from '../_contexts/User.context';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 
@@ -24,7 +24,7 @@ const GameBoard = () => {
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer].user;
-    const background = getBackground(user?.cosmetics?.background ?? DefaultCosmeticId.Background);
+    const background = getBackground(user?.cosmetics?.background ?? null);
     const playMatsDisabled = user?.cosmetics?.disablePlaymats ?? false;
     const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
     const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;

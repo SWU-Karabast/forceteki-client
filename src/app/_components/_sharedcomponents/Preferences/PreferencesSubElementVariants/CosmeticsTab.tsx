@@ -7,15 +7,15 @@ import CosmeticItem from '@/app/_components/_sharedcomponents/Preferences/_subCo
 import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
-import { DefaultCosmeticId } from '@/app/_constants/constants';
-import { CosmeticOption } from '../Preferences.types';
+
+import { CosmeticOption, CosmeticType } from '../Preferences.types';
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
     const { cosmetics } = useCosmetics();
-    const [selectedCardback, setSelectedCardback] = useState<string>('');
-    const [selectedBackground, setSelectedBackground] = useState<string>('');
-    const [selectedPlaymat, setSelectedPlaymat] = useState<string>('');
+    const [selectedCardback, setSelectedCardback] = useState<string|null>(null);
+    const [selectedBackground, setSelectedBackground] = useState<string|null>(null);
+    const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
     const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
     const [expandedAccordion, setExpandedAccordion] = useState<string>('cardbacks'); // Default to cardbacks expanded
 
@@ -23,9 +23,9 @@ function CosmeticsTab() {
         if (user) {
             const { cosmetics } = user.preferences;
             if (cosmetics) {
-                setSelectedCardback(cosmetics.cardback ?? DefaultCosmeticId.Cardback);
-                setSelectedBackground(cosmetics.background ?? DefaultCosmeticId.Background);
-                setSelectedPlaymat(cosmetics.playmat ?? 'none');
+                setSelectedCardback(cosmetics.cardback ?? null);
+                setSelectedBackground(cosmetics.background ?? null);
+                setSelectedPlaymat(cosmetics.playmat ?? null);
                 setDisablePlaymats(cosmetics.disablePlaymats ?? false);
             }
         }
@@ -115,7 +115,7 @@ function CosmeticsTab() {
         const noneOption: CosmeticOption = {
             id: 'none',
             title: 'None',
-            type: 'playmat',
+            type: CosmeticType.Playmat,
             path: '' // Empty path for none option
         };
 

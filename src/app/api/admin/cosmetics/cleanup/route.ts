@@ -10,7 +10,14 @@ function checkDevelopmentMode() {
     }
 }
 
-export const DELETE = withAdminAuth(async (request: NextRequest) => {
+enum CleanupAction {
+    Single = 'single',
+    All = 'all',
+    Reset = 'reset'
+}
+
+// DELETE endpoint to handle cleanup operations
+export const DELETE = async (request: NextRequest) => {
     try {
         checkDevelopmentMode();
 
@@ -31,7 +38,7 @@ export const DELETE = withAdminAuth(async (request: NextRequest) => {
         const cosmeticId = searchParams.get('id');
 
         switch (action) {
-            case 'single':
+            case CleanupAction.Single:
                 if (!cosmeticId) {
                     return NextResponse.json(
                         { error: 'Cosmetic ID is required for single deletion' },
@@ -69,7 +76,7 @@ export const DELETE = withAdminAuth(async (request: NextRequest) => {
                     { status: 200 }
                 );
 
-            case 'all':
+            case CleanupAction.All:
                 // Get all cosmetics first to delete their associated files
                 const allCosmetics = await dynamoService.getCosmeticsAsync();
                 const s3Service = await getS3ServiceAsync();
@@ -102,7 +109,7 @@ export const DELETE = withAdminAuth(async (request: NextRequest) => {
                     { status: 200 }
                 );
 
-            case 'reset':
+            case CleanupAction.Reset:
                 // Get all cosmetics first to delete their associated files before reset
                 const cosmeticsForReset = await dynamoService.getCosmeticsAsync();
                 const s3ServiceForReset = await getS3ServiceAsync();
@@ -158,10 +165,10 @@ export const DELETE = withAdminAuth(async (request: NextRequest) => {
             { status: 500 }
         );
     }
-});
+};
 
 // GET endpoint to show cleanup options (development only)
-export const GET = withAdminAuth(async (request: NextRequest) => {
+export const GET = async (request: NextRequest) => {
     try {
         checkDevelopmentMode();
 
@@ -184,4 +191,4 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
             { status: 403 }
         );
     }
-});
+};
