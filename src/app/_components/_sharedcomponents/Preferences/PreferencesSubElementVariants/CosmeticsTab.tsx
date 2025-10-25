@@ -8,6 +8,7 @@ import { Accordion, AccordionSummary, AccordionDetails, Typography, Box } from '
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 import { DefaultCosmeticId } from '@/app/_constants/constants';
+import { CosmeticOption } from '../Preferences.types';
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
@@ -43,6 +44,25 @@ function CosmeticsTab() {
 
     const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
         setExpandedAccordion(isExpanded ? panel : '');
+    };
+
+    // Utility function to sort cosmetics by title, ignoring articles
+    const sortCosmeticsByTitle = (cosmetics: CosmeticOption[]) => {
+        return [...cosmetics].sort((a, b) => {
+            // Always put "Default" first
+            if (a.title === 'Default') return -1;
+            if (b.title === 'Default') return 1;
+
+            // Remove articles 'The', 'A', 'An' from the beginning of titles for sorting
+            const cleanTitle = (title: string) => {
+                return title.replace(/^(The|A|An)\s+/i, '').toLowerCase();
+            };
+
+            const titleA = cleanTitle(a.title);
+            const titleB = cleanTitle(b.title);
+
+            return titleA.localeCompare(titleB);
+        });
     };
 
     const styles = {
@@ -131,7 +151,7 @@ function CosmeticsTab() {
                     }}>
                         <Grid sx={styles.functionContainer}>
                             {
-                                cosmetics.cardbacks.length > 0 && cosmetics.cardbacks.map((cardback) => (
+                                cosmetics.cardbacks.length > 0 && sortCosmeticsByTitle(cosmetics.cardbacks).map((cardback) => (
                                     <CosmeticItem
                                         key={cardback.id}
                                         id={cardback.id}
@@ -178,7 +198,7 @@ function CosmeticsTab() {
                     }}>
                         <Grid sx={styles.functionContainer}>
                             {
-                                cosmetics.backgrounds.length > 0 && cosmetics.backgrounds.map((background) => (
+                                cosmetics.backgrounds.length > 0 && sortCosmeticsByTitle(cosmetics.backgrounds).map((background) => (
                                     <CosmeticItem
                                         key={background.id}
                                         id={background.id}
