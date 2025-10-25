@@ -57,7 +57,7 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
                 : 'https://karabast.net';
             const response = await fetch(`${baseUrl}/api/cosmetics`);
             const data = await response.json();
-            setCosmetics(data.cosmetics);
+            setCosmetics(data);
         };
         fetchCosmetics();
     }, []);
