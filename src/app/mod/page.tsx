@@ -30,7 +30,7 @@ import { useRouter } from 'next/navigation';
 import { CosmeticOption } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { v4 as uuidv4 } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
-import { isMod } from '@/app/_utils/ModerationUtils';
+import { isAdminUser } from '../_utils/AdminAuth';
 
 interface ImageDimensions {
     width: number;
@@ -51,10 +51,6 @@ const ModPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
-
-    // Check if user has mod access
-    const hasModAccess = user ? isMod(user) : false;
-
     // Filter states
     const [typeFilter, setTypeFilter] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
@@ -572,7 +568,7 @@ const ModPage = () => {
         );
     }
 
-    if (!hasModAccess) {
+    if (!isAdminUser(user?.id)) {
         return (
             <Box sx={{ ...styles.pageContainer, justifyContent: 'center', alignItems: 'center' }}>
                 <Alert severity="error" sx={{ mb: 2 }}>Access denied. You do not have permission to access mod tools.</Alert>

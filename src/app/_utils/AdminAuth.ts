@@ -2,20 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/_utils/auth';
 
-// List of allowed usernames for admin access - must match exactly what NextAuth provides
+// List of allowed user IDs for admin access - must match exactly what NextAuth provides
 const allowedAdminUsers = [
-    'Veld',
-    'ninin',
-    'CheBato',
-    'Cazargar',
+    '4644b207-9307-4b78-8df7-69493f97c920',//ninin
 ];
 
-/**
- * Check if a username has admin privileges
- * Uses exact string matching for security
- */
-function isAdminUser(username?: string | null): boolean {
-    return Boolean(username && allowedAdminUsers.includes(username));
+export function isAdminUser(userId?: string | null): boolean {
+    if(process.env.NODE_ENV === 'development') {
+        return true;
+    }
+
+    return Boolean(userId && allowedAdminUsers.includes(userId));
 }
 
 /**
@@ -38,12 +35,12 @@ export async function requireAdminAuth(request: NextRequest) {
         }
 
         // Check if user has admin privileges using the username from NextAuth
-        const username = session.user.name; // NextAuth typically stores the username in 'name'
-        if (!isAdminUser(username)) {
+        const userId = session.user.id; // NextAuth typically stores the user ID in 'id'
+        if (!isAdminUser(userId)) {
             return NextResponse.json(
                 {
                     error: 'Insufficient privileges',
-                    details: `Admin access required for this operation. User: ${username || 'unknown'}`
+                    details: `Admin access required for this operation. User: ${userId || 'unknown'}`
                 },
                 { status: 403 }
             );

@@ -4,7 +4,7 @@ import { GitHub } from '@mui/icons-material';
 import { FaDiscord } from 'react-icons/fa6';
 import NextLinkMui from './_subcomponents/NextLinkMui/NextLinkMui';
 import { IControlHubProps } from './ControlHubTypes';
-import { isMod } from '@/app/_utils/ModerationUtils';
+import { isAdminUser } from '@/app/_utils/AdminAuth';
 
 const ControlHub: React.FC<IControlHubProps> = ({
     sidebarOpen,
@@ -97,7 +97,7 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/Terms" sx={styles.profileLink}>
                         Terms
                     </NextLinkMui>
-                    {user && isMod(user) && (
+                    {user && isAdminUser(user.id) && (
                         <>
                             <Divider
                                 orientation="vertical"

@@ -1,12 +1,5 @@
 import { IModerationAction, IUser } from '@/app/_contexts/UserTypes';
 
-// List of allowed usernames for mod access
-const allowedModUsers = ['Veld', 'SWUPetranaki', 'CheBato'];
-
-export const isMod = (user: IUser): boolean => {
-    return Boolean(user.username && allowedModUsers.includes(user.username));
-};
-
 export const getMuteDisplayText = (moderation?: IModerationAction): string | null => {
     if (!moderation?.endDate) return '';
     const timeDiff = new Date(moderation.endDate).getTime() - Date.now();
