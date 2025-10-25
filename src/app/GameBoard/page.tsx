@@ -23,13 +23,13 @@ const GameBoard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
-    const { user, updateUserPreferences } = useUser();
-    const background = getBackground(user?.preferences.cosmetics?.background ?? DefaultCosmeticId.Background);
-    const playMatsDisabled = user?.preferences.cosmetics?.disablePlaymats ?? false;
-    const myPlaymatId = !playMatsDisabled ? user?.preferences.cosmetics?.playmat : 'none';
+    const user = gameState?.players[connectedPlayer].user;
+    const background = getBackground(user?.cosmetics?.background ?? DefaultCosmeticId.Background);
+    const playMatsDisabled = user?.cosmetics?.disablePlaymats ?? false;
+    const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
     const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
-    const opponentId = getOpponent(connectedPlayer);
-    const theirPlaymatId = !playMatsDisabled ? gameState?.players[opponentId]?.user?.cosmetics?.playmat : 'none';
+    const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
+    const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : 'none';
     const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId !== 'none' ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
@@ -62,10 +62,11 @@ const GameBoard = () => {
     // const winners = ['order66']
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
-    const cosmeticsInGame = false; // disable cosmetics in-game for now
+    const anonymousPattern = /anonymous [0-9a-f]{6}/;
+    const cosmeticsInGame = true; // disable cosmetics in-game for now
     const preferenceTabs = winners
         ? ['endGame','soundOptions']
-        : ['currentGame','soundOptions'].concat(user && cosmeticsInGame ? ['cosmetics'] : []);
+        : ['currentGame','soundOptions'].concat(!anonymousPattern.test(user?.username) && cosmeticsInGame ? ['cosmetics'] : []);
 
     // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {
