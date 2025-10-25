@@ -24,22 +24,13 @@ const GameBoard = () => {
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const { user, updateUserPreferences } = useUser();
-    const background = getBackground(user?.preferences.background ?? DefaultCosmeticId.Background);
-    const myPlaymatId = user?.preferences.playmat;
+    const background = getBackground(user?.preferences.cosmetics?.background ?? DefaultCosmeticId.Background);
+    const playMatsDisabled = user?.preferences.cosmetics?.disablePlaymats ?? false;
+    const myPlaymatId = !playMatsDisabled ? user?.preferences.cosmetics?.playmat : 'none';
     const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
     const opponentId = getOpponent(connectedPlayer);
-    const theirPlaymatId = gameState?.players[opponentId]?.user?.playmat;
-    const theirPlaymat = theirPlaymatId && theirPlaymatId !== 'none' ? getPlaymat(theirPlaymatId) : null;
-
-    // Debug logging
-    console.log('Debug Playmat Info:', {
-        myPlaymatId,
-        myPlaymat,
-        myPlaymatPath: myPlaymat?.path,
-        theirPlaymatId,
-        theirPlaymat,
-        theirPlaymatPath: theirPlaymat?.path
-    });
+    const theirPlaymatId = !playMatsDisabled ? gameState?.players[opponentId]?.user?.preferences?.cosmetics?.playmat : 'none';
+    const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId !== 'none' ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -159,6 +150,7 @@ const GameBoard = () => {
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
+            '&::before': { }
         },
         opponentPlaymat: {
             position: 'absolute',
@@ -174,6 +166,7 @@ const GameBoard = () => {
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
+            '&::before': { }
         }
     };
 

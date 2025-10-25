@@ -22,17 +22,43 @@ export const savePreferencesGeneric = async (
         const success = await savePreferencesToServer(user, partialPreferences);
 
         if (success) {
-            // Update user context
+            // Deep merge for nested objects like sound and cosmetics
             const updatedUserPreferences = {
                 ...user.preferences,
-                ...partialPreferences
+                ...partialPreferences,
+                // Explicitly handle nested objects
+                ...(partialPreferences.sound && {
+                    sound: {
+                        ...user.preferences.sound,
+                        ...partialPreferences.sound
+                    }
+                }),
+                ...(partialPreferences.cosmetics && {
+                    cosmetics: {
+                        ...user.preferences.cosmetics,
+                        ...partialPreferences.cosmetics
+                    }
+                })
             }
             updateUserPreferences(updatedUserPreferences);
 
             const currentLocalPreferences = loadPreferencesFromLocalStorage();
             const updatedLocalPreferences = {
                 ...currentLocalPreferences,
-                ...partialPreferences
+                ...partialPreferences,
+                // Explicitly handle nested objects for localStorage too
+                ...(partialPreferences.sound && {
+                    sound: {
+                        ...currentLocalPreferences.sound,
+                        ...partialPreferences.sound
+                    }
+                }),
+                ...(partialPreferences.cosmetics && {
+                    cosmetics: {
+                        ...currentLocalPreferences.cosmetics,
+                        ...partialPreferences.cosmetics
+                    }
+                })
             };
             savePreferencesToLocalStorage(updatedLocalPreferences);
 
@@ -44,7 +70,20 @@ export const savePreferencesGeneric = async (
         const currentPreferences = loadPreferencesFromLocalStorage();
         const updatedPreferences = {
             ...currentPreferences,
-            ...partialPreferences
+            ...partialPreferences,
+            // Explicitly handle nested objects
+            ...(partialPreferences.sound && {
+                sound: {
+                    ...currentPreferences.sound,
+                    ...partialPreferences.sound
+                }
+            }),
+            ...(partialPreferences.cosmetics && {
+                cosmetics: {
+                    ...currentPreferences.cosmetics,
+                    ...partialPreferences.cosmetics
+                }
+            })
         };
 
         savePreferencesToLocalStorage(updatedPreferences);
@@ -53,14 +92,17 @@ export const savePreferencesGeneric = async (
 };
 
 const getDefaultPreferences = (): IPreferences => ({
-    cardback: undefined,
-    background: undefined,
-    playmat: undefined,
     sound: {
         muteAllSound: false,
         muteCardAndButtonClickSound: false,
         muteYourTurn: false,
         muteChatSound: false,
         muteOpponentFoundSound: false,
+    },
+    cosmetics: {
+        cardback: undefined,
+        background: undefined,
+        playmat: undefined,
+        disablePlaymats: false,
     }
 });

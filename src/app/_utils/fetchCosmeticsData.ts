@@ -14,14 +14,11 @@ export const fetchCosmeticsDataAsync = async (): Promise<Cosmetics> => {
         const dynamoService = await getDynamoDbServiceAsync();
 
         if (dynamoService) {
-            console.log('DynamoDB service available, fetching cosmetics...');
-
             // First check if we have cosmetics in DB
             let cosmeticsFromDb = await dynamoService.getCosmeticsAsync();
 
             // If no cosmetics in DB, initialize with fallback data
             if (cosmeticsFromDb.length === 0) {
-                console.log('No cosmetics found in DynamoDB, initializing with default data...');
                 const fallbackCosmetics = getFallbackCosmetics();
 
                 await dynamoService.initializeCosmeticsAsync(fallbackCosmetics);
@@ -35,10 +32,8 @@ export const fetchCosmeticsDataAsync = async (): Promise<Cosmetics> => {
                 playmats: cosmeticsFromDb.filter(item => item.type === 'playmat')
             };
 
-            console.log(`Fetched ${cosmeticsFromDb.length} cosmetics from DynamoDB`);
             return cosmetics;
         } else {
-            console.log('DynamoDB service not available, using fallback data');
             const fallbackCosmetics = getFallbackCosmetics();
 
             return {

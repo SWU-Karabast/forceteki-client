@@ -810,8 +810,8 @@ const ModPage = () => {
                         </Button>
                     </Box>
 
-                    {/* Show darkened toggle only for background type */}
-                    {cosmeticType === 'background' && (
+                    {/* Show darkened toggle for background and playmat types */}
+                    {(cosmeticType === 'background' || cosmeticType === 'playmat') && (
                         <FormControlLabel
                             control={
                                 <Switch
@@ -834,7 +834,10 @@ const ModPage = () => {
                                         Apply darkening effect
                                     </Typography>
                                     <Typography variant="caption" color="textSecondary">
-                                        Darkens the background for better text readability in-game
+                                        {cosmeticType === 'background'
+                                            ? 'Darkens the background for better text readability in-game'
+                                            : 'Darkens the playmat to reduce visual distraction during gameplay'
+                                        }
                                     </Typography>
                                 </Box>
                             }
@@ -868,6 +871,25 @@ const ModPage = () => {
                                 borderRadius: '8px',
                                 overflow: 'hidden'
                             }}>
+                                {/* Show background image behind playmat for better context */}
+                                {cosmeticType === 'playmat' && (
+                                    <Image
+                                        src="/default-background.webp"
+                                        alt="Background"
+                                        width={300}
+                                        height={300}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                            borderRadius: '8px',
+                                            zIndex: 0
+                                        }}
+                                    />
+                                )}
                                 <Image
                                     src={imagePreview}
                                     alt="Preview"
@@ -879,11 +901,14 @@ const ModPage = () => {
                                         objectFit: 'contain',
                                         borderRadius: '8px',
                                         border: '1px solid #ddd',
-                                        display: 'block'
+                                        display: 'block',
+                                        opacity: cosmeticType === 'playmat' ? 0.54 : 1,
+                                        position: 'relative',
+                                        zIndex: 1
                                     }}
                                 />
-                                {/* Apply darkening overlay if it's a background type and darkened is enabled */}
-                                {cosmeticType === 'background' && isDarkened && (
+                                {/* Apply darkening overlay if it's a background or playmat type and darkened is enabled */}
+                                {(cosmeticType === 'background' || cosmeticType === 'playmat') && isDarkened && (
                                     <Box sx={{
                                         position: 'absolute',
                                         top: 0,
@@ -892,7 +917,8 @@ const ModPage = () => {
                                         height: '100%',
                                         backgroundColor: 'rgba(10, 10, 10, 0.57)',
                                         borderRadius: '8px',
-                                        pointerEvents: 'none'
+                                        pointerEvents: 'none',
+                                        zIndex: 2
                                     }} />
                                 )}
                             </Box>

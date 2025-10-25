@@ -4,7 +4,7 @@ import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
 import CosmeticItem from '@/app/_components/_sharedcomponents/Preferences/_subComponents/CosmeticItem';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Box } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 import { DefaultCosmeticId } from '@/app/_constants/constants';
@@ -16,40 +16,74 @@ function CosmeticsTab() {
     const [selectedCardback, setSelectedCardback] = useState<string>('');
     const [selectedBackground, setSelectedBackground] = useState<string>('');
     const [selectedPlaymat, setSelectedPlaymat] = useState<string>('');
+    const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
     const [expandedAccordion, setExpandedAccordion] = useState<string>('cardbacks'); // Default to cardbacks expanded
 
     useEffect(() => {
-        if(user){
-            setSelectedCardback(user.preferences.cardback ? user.preferences.cardback : DefaultCosmeticId.Cardback);
-            setSelectedBackground(user.preferences.background ? user.preferences.background : DefaultCosmeticId.Background);
-            setSelectedPlaymat(user.preferences.playmat ? user.preferences.playmat : 'none');
+        if (user) {
+            const { cosmetics } = user.preferences;
+            if (cosmetics) {
+                setSelectedCardback(cosmetics.cardback ?? DefaultCosmeticId.Cardback);
+                setSelectedBackground(cosmetics.background ?? DefaultCosmeticId.Background);
+                setSelectedPlaymat(cosmetics.playmat ?? 'none');
+                setDisablePlaymats(cosmetics.disablePlaymats ?? false);
+            }
         }
     }, [user]);
 
-    const onCardbackClick = async (name: string) => {
+    const onCardbackClick = async (is: string) => {
         try {
-            await savePreferencesGeneric(user, { cardback: name }, updateUserPreferences)
-            setSelectedCardback(name);
-        }catch (error) {
+            await savePreferencesGeneric(user, {
+                cosmetics: {
+                    ...user?.preferences.cosmetics,
+                    cardback: is
+                }
+            }, updateUserPreferences)
+            setSelectedCardback(is);
+        } catch (error) {
             console.error('Failed to save cardback preferences:', error);
         }
     }
 
-    const onBackgroundClick = async (name: string) => {
+    const onBackgroundClick = async (id: string) => {
         try {
-            await savePreferencesGeneric(user, { background: name }, updateUserPreferences)
-            setSelectedBackground(name);
+            await savePreferencesGeneric(user, {
+                cosmetics: {
+                    ...user?.preferences.cosmetics,
+                    background: id
+                }
+            }, updateUserPreferences)
+            setSelectedBackground(id);
         } catch (error) {
             console.error('Failed to save background preferences:', error);
         }
     }
 
-    const onPlaymatClick = async (name: string) => {
+    const onPlaymatClick = async (id: string) => {
         try {
-            await savePreferencesGeneric(user, { playmat: name }, updateUserPreferences)
-            setSelectedPlaymat(name);
+            await savePreferencesGeneric(user, {
+                cosmetics: {
+                    ...user?.preferences.cosmetics,
+                    playmat: id
+                }
+            }, updateUserPreferences)
+            setSelectedPlaymat(id);
         } catch (error) {
             console.error('Failed to save playmat preferences:', error);
+        }
+    }
+
+    const onDisablePlaymatsChange = async (checked: boolean) => {
+        try {
+            await savePreferencesGeneric(user, {
+                cosmetics: {
+                    ...user?.preferences.cosmetics,
+                    disablePlaymats: checked,
+                }
+            }, updateUserPreferences)
+            setDisablePlaymats(checked);
+        } catch (error) {
+            console.error('Failed to save disable playmats preference:', error);
         }
     }
 
@@ -92,16 +126,17 @@ function CosmeticsTab() {
         typographyContainer: {
             mb: '0.5rem',
         },
-        contentContainer:{
-            display:'flex',
-            flexDirection:'row',
-            alignItems: 'center'
+        contentContainer: {
+            display: 'flex',
+            flexDirection: 'column',
+            height: 'calc(90vh - 240px)',
+            overflowY: 'auto',
         },
-        functionContainer:{
-            display:'grid',
+        functionContainer: {
+            display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(10.5rem, 1fr))',
-            rowGap:'14px',
-            columnGap:'10px',
+            rowGap: '14px',
+            columnGap: '10px',
         },
         accordionContainer: {
             mb: '1rem',
@@ -136,12 +171,7 @@ function CosmeticsTab() {
     }
 
     return (
-        <Box sx={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-        }}>
+        <Box sx={styles.contentContainer} data-testid="cosmetics-tab">
             <Box sx={styles.accordionContainer}>
                 <Accordion
                     sx={styles.accordionStyle}
@@ -283,6 +313,37 @@ function CosmeticsTab() {
                         </Grid>
                     </AccordionDetails>
                 </Accordion>
+            </Box>
+            <Box sx={{
+                ...styles.accordionContainer,
+                backgroundColor: 'rgba(59, 66, 82, 0.07)',
+                border: '1px solid #4C566A',
+                borderRadius: '8px',
+                padding: '16px',
+            }}>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={disablePlaymats}
+                            onChange={(e) => onDisablePlaymatsChange(e.target.checked)}
+                            sx={{
+                                color: '#ECEFF4',
+                                '&.Mui-checked': {
+                                    color: '#5E81AC',
+                                },
+                            }}
+                        />
+                    }
+                    label={
+                        <Typography sx={{
+                            color: '#ECEFF4',
+                            fontSize: '1rem',
+                            fontWeight: 500,
+                        }}>
+                            Disable Playmats
+                        </Typography>
+                    }
+                />
             </Box>
         </Box>
     );

@@ -203,7 +203,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
     const updatedCardId = card.clonedCardId ?? card.setId;
-    const cardbackPath = getCardback(cardback ?? DefaultCosmeticId.Cardback)!.path;
+    const cardbackPath = getCardback(cardback ?? DefaultCosmeticId.Cardback).path;
     const cardbackgroundImage = card.selected && (phase === 'setup' || phase === 'regroup')
         ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle, cardbackPath)})`
         : `url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle, cardbackPath)})`;

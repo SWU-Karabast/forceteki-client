@@ -48,11 +48,16 @@ export interface ISoundPreferences {
     muteOpponentFoundSound?: boolean;
 }
 
-export interface IPreferences {
+export interface ICosmeticsPreferences {
     cardback?: string;
     background?: string;
     playmat?: string;
-    sound?: ISoundPreferences
+    disablePlaymats?: boolean;
+}
+
+export interface IPreferences {
+    sound?: ISoundPreferences;
+    cosmetics?: ICosmeticsPreferences;
 }
 
 export interface IUserContextType {

@@ -36,7 +36,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const phase = gameState.phase;
     const warning = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Warning';
     const danger = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Danger';
-    const opponentsCardback = gameState?.players[getOpponent(connectedPlayer)].user.cardback;
+    const opponentsCardback = gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
 
     const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
 
