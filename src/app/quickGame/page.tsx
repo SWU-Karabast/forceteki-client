@@ -30,7 +30,7 @@ const QuickGame: React.FC = () => {
         containerStyle: {
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: `url(${s3ImageURL('ui/default-background.webp')})`,
+            backgroundImage: 'url("/default-background.webp")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
         },
