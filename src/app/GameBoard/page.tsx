@@ -29,7 +29,7 @@ const GameBoard = () => {
     const myPlaymatId = !playMatsDisabled ? user?.preferences.cosmetics?.playmat : 'none';
     const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
     const opponentId = getOpponent(connectedPlayer);
-    const theirPlaymatId = !playMatsDisabled ? gameState?.players[opponentId]?.user?.preferences?.cosmetics?.playmat : 'none';
+    const theirPlaymatId = !playMatsDisabled ? gameState?.players[opponentId]?.user?.cosmetics?.playmat : 'none';
     const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId !== 'none' ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
