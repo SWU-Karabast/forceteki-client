@@ -7,12 +7,20 @@ import CosmeticItem from '@/app/_components/_sharedcomponents/Preferences/_subCo
 import { Accordion, AccordionSummary, AccordionDetails, Typography, Box } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
+import { DefaultCosmeticId } from '@/app/_constants/constants';
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
     const { cosmetics } = useCosmetics();
     const [selectedCardback, setSelectedCardback] = useState<string>('');
     const [selectedBackground, setSelectedBackground] = useState<string>('');
+
+    useEffect(() => {
+        if(user){
+            setSelectedCardback(user.preferences.cardback ? user.preferences.cardback : DefaultCosmeticId.Cardback);
+            setSelectedBackground(user.preferences.background ? user.preferences.background : DefaultCosmeticId.Background);
+        }
+    }, [user]);
 
     const onCardbackClick = async (name: string) => {
         try {
@@ -27,17 +35,10 @@ function CosmeticsTab() {
         try {
             await savePreferencesGeneric(user, { background: name }, updateUserPreferences)
             setSelectedBackground(name);
-        }catch (error) {
+        } catch (error) {
             console.error('Failed to save background preferences:', error);
         }
     }
-
-    useEffect(() => {
-        if(user){
-            setSelectedCardback(user.preferences.cardback ? user.preferences.cardback : 'Default');
-            setSelectedBackground(user.preferences.background ? user.preferences.background : 'Default');
-        }
-    }, [user]);
 
     const styles = {
         typographyContainer: {

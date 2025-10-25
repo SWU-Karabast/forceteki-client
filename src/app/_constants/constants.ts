@@ -55,3 +55,9 @@ export enum ZoneName {
     Resource = 'resource',
     SpaceArena = 'spaceArena',
 }
+
+export const enum DefaultCosmeticId {
+    Cardback = '5da51f47-66f2-4c3a-a016-c979246034a7',
+    Background = 'eabf26d3-a85c-4999-a045-abf143518faf',
+    Playmat = '00000000-0000-0000-0000-000000000003',
+}
