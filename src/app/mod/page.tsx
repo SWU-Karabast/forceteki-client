@@ -18,7 +18,9 @@ import {
     Select,
     Accordion,
     AccordionSummary,
-    AccordionDetails
+    AccordionDetails,
+    Switch,
+    FormControlLabel
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Image from 'next/image';
@@ -76,6 +78,7 @@ const ModPage = () => {
     const [cosmeticType, setCosmeticType] = useState<'cardback' | 'background' | 'playmat'>('cardback');
     const [cosmeticTitle, setCosmeticTitle] = useState('');
     const [cosmeticId, setCosmeticId] = useState(() => uuidv4()); // Initialize with GUID
+    const [isDarkened, setIsDarkened] = useState(true); // Default to darkened for backgrounds
 
     // Validation rules for different cosmetic types
     const validationRules: ValidationRules = {
@@ -214,18 +217,27 @@ const ModPage = () => {
                     scaledWidth, scaledHeight
                 );
 
+                // Determine output format - convert PNG/JPEG to WebP, keep WebP as is
+                const isWebPInput = file.type === 'image/webp';
+                const outputType = isWebPInput ? 'image/webp' : 'image/webp';
+                const quality = isWebPInput ? 0.95 : 0.85; // Slightly lower quality for conversions
+
+                // Generate new filename with correct extension
+                const originalName = file.name.split('.').slice(0, -1).join('.');
+                const newFileName = isWebPInput ? file.name : `${originalName}.webp`;
+
                 // Convert canvas to blob and create new file
                 canvas.toBlob((blob) => {
                     if (blob) {
-                        const newFile = new File([blob], file.name, {
-                            type: file.type,
+                        const newFile = new File([blob], newFileName, {
+                            type: outputType,
                             lastModified: Date.now()
                         });
                         resolve(newFile);
                     } else {
                         reject(new Error('Failed to convert canvas to blob'));
                     }
-                }, file.type, 0.95);
+                }, outputType, quality);
             };
 
             img.onerror = () => reject(new Error('Failed to load image'));
@@ -297,15 +309,19 @@ const ModPage = () => {
         try {
             let fileToUpload = selectedFile;
 
-            // Process image if it needs scaling/cropping
-            if (needsProcessing()) {
+            // Convert to WebP if it's PNG/JPEG, or process if it needs scaling/cropping
+            const shouldConvertToWebP = selectedFile.type === 'image/png' || selectedFile.type === 'image/jpeg';
+            if (needsProcessing() || shouldConvertToWebP) {
                 const rules = validationRules[cosmeticType];
-                fileToUpload = await scaleAndCropImage(selectedFile, rules.width, rules.height);
+                const targetWidth = imageDimensions?.width && !needsProcessing() ? imageDimensions.width : rules.width;
+                const targetHeight = imageDimensions?.height && !needsProcessing() ? imageDimensions.height : rules.height;
+
+                fileToUpload = await scaleAndCropImage(selectedFile, targetWidth, targetHeight);
 
                 // Update preview with processed image
                 const processedUrl = URL.createObjectURL(fileToUpload);
                 setImagePreview(processedUrl);
-                setImageDimensions({ width: rules.width, height: rules.height });
+                setImageDimensions({ width: targetWidth, height: targetHeight });
             }
 
             // Create FormData for file upload
@@ -314,6 +330,7 @@ const ModPage = () => {
             formData.append('cosmeticId', cosmeticId);
             formData.append('cosmeticTitle', cosmeticTitle);
             formData.append('cosmeticType', cosmeticType);
+            formData.append('isDarkened', String(isDarkened));
 
             // Upload to S3 and save to DynamoDB
             const response = await fetch('/api/admin/cosmetics/upload-file', {
@@ -351,6 +368,7 @@ const ModPage = () => {
         setCosmeticType('cardback');
         setCosmeticTitle('');
         setCosmeticId(uuidv4()); // Generate new GUID when resetting form
+        setIsDarkened(true); // Reset to default darkened state
         setUploadError(null);
         setUploadSuccess(false);
     };
@@ -792,6 +810,38 @@ const ModPage = () => {
                         </Button>
                     </Box>
 
+                    {/* Show darkened toggle only for background type */}
+                    {cosmeticType === 'background' && (
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={isDarkened}
+                                    onChange={(e) => setIsDarkened(e.target.checked)}
+                                    disabled={uploadLoading}
+                                    sx={{
+                                        '& .MuiSwitch-switchBase.Mui-checked': {
+                                            color: '#1976d2',
+                                        },
+                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                            backgroundColor: '#1976d2',
+                                        },
+                                    }}
+                                />
+                            }
+                            label={
+                                <Box>
+                                    <Typography variant="body2" color="white">
+                                        Apply darkening effect
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary">
+                                        Darkens the background for better text readability in-game
+                                    </Typography>
+                                </Box>
+                            }
+                            sx={{ alignItems: 'flex-start', mb: 2 }}
+                        />
+                    )}
+
                     <Box>
                         <input
                             type="file"
@@ -800,6 +850,9 @@ const ModPage = () => {
                             disabled={uploadLoading}
                             style={{ marginBottom: '1rem' }}
                         />
+                        <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mb: 1 }}>
+                            PNG and JPEG files will be automatically converted to WebP format for better compression.
+                        </Typography>
                         {imageDimensions && (
                             <Typography variant="body2" color="textSecondary">
                                 Image dimensions: {imageDimensions.width}x{imageDimensions.height}px
@@ -809,19 +862,40 @@ const ModPage = () => {
 
                     {imagePreview && (
                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <Image
-                                src={imagePreview}
-                                alt="Preview"
-                                width={300}
-                                height={300}
-                                style={{
-                                    maxWidth: '100%',
-                                    height: 'auto',
-                                    objectFit: 'contain',
-                                    borderRadius: '8px',
-                                    border: '1px solid #ddd'
-                                }}
-                            />
+                            <Box sx={{
+                                position: 'relative',
+                                display: 'inline-block',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
+                            }}>
+                                <Image
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    width={300}
+                                    height={300}
+                                    style={{
+                                        maxWidth: '100%',
+                                        height: 'auto',
+                                        objectFit: 'contain',
+                                        borderRadius: '8px',
+                                        border: '1px solid #ddd',
+                                        display: 'block'
+                                    }}
+                                />
+                                {/* Apply darkening overlay if it's a background type and darkened is enabled */}
+                                {cosmeticType === 'background' && isDarkened && (
+                                    <Box sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(10, 10, 10, 0.57)',
+                                        borderRadius: '8px',
+                                        pointerEvents: 'none'
+                                    }} />
+                                )}
+                            </Box>
                         </Box>
                     )}
                 </DialogContent>

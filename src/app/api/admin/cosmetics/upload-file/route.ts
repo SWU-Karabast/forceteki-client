@@ -11,6 +11,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
         const cosmeticId = formData.get('cosmeticId') as string;
         const cosmeticTitle = formData.get('cosmeticTitle') as string;
         const cosmeticType = formData.get('cosmeticType') as string;
+        const isDarkenedParam = formData.get('isDarkened') as string;
 
         if (!file || !cosmeticId || !cosmeticTitle || !cosmeticType) {
             return NextResponse.json(
@@ -18,6 +19,11 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
                 { status: 400 }
             );
         }
+
+        // Parse darkened parameter - default to true for backgrounds, false for others
+        const isDarkened = cosmeticType === 'background' ?
+            (isDarkenedParam ? isDarkenedParam === 'true' : true) :
+            false;
 
         // Validate cosmetic type
         if (!['cardback', 'background', 'playmat'].includes(cosmeticType)) {
@@ -35,14 +41,17 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
             );
         }
 
-        // Get file extension
-        const fileExtension = file.name.split('.').pop()?.toLowerCase();
-        if (!fileExtension || !['jpg', 'jpeg', 'png', 'webp'].includes(fileExtension)) {
+        // Get file extension and determine if conversion will happen
+        const originalExtension = file.name.split('.').pop()?.toLowerCase();
+        if (!originalExtension || !['jpg', 'jpeg', 'png', 'webp'].includes(originalExtension)) {
             return NextResponse.json(
-                { error: 'Unsupported file type. Please use JPG, PNG, or WebP' },
+                { error: 'Unsupported file type. Please use JPG, PNG, or WebP (PNG/JPEG will be converted to WebP)' },
                 { status: 400 }
             );
         }
+
+        // Always use webp extension for S3 key since PNG/JPEG will be converted to WebP
+        const fileExtension = 'webp';
 
         // Initialize services
         const s3Service = await getS3ServiceAsync();
@@ -79,8 +88,11 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
         // Convert file to buffer
         const fileBuffer = Buffer.from(await file.arrayBuffer());
 
+        // Determine content type - use webp for converted files
+        const contentType = originalExtension === 'webp' ? file.type : 'image/webp';
+
         // Upload to S3
-        const s3Url = await s3Service.uploadFile(s3Key, fileBuffer, file.type);
+        const s3Url = await s3Service.uploadFile(s3Key, fileBuffer, contentType);
 
         // Create cosmetic metadata
         const cosmeticData: CosmeticOption = {
@@ -88,7 +100,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
             title: cosmeticTitle,
             type: cosmeticType as 'cardback' | 'background' | 'playmat',
             path: s3Url,
-            darkened: cosmeticType === 'background' // Only backgrounds can be darkened
+            darkened: isDarkened // Use the parsed darkened parameter
         };
 
         // Save to DynamoDB

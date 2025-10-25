@@ -11,7 +11,7 @@ import { useGame } from '../_contexts/Game.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
-import { MatchType } from '@/app/_constants/constants';
+import { DefaultCosmeticId, MatchType } from '@/app/_constants/constants';
 import { useUser } from '../_contexts/User.context';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 
@@ -24,7 +24,7 @@ const GameBoard = () => {
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const { user, updateUserPreferences } = useUser();
-    const background = getBackground(user?.preferences.background ?? 'Default');
+    const background = getBackground(user?.preferences.background ?? DefaultCosmeticId.Background);
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -60,14 +60,14 @@ const GameBoard = () => {
     const preferenceTabs = winners
         ? ['endGame','soundOptions']
         : ['currentGame','soundOptions'].concat(user && cosmeticsInGame ? ['cosmetics'] : []);
-    
+
     // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {
         if (isSpectator && gameState?.players) {
             const player1Name = gameState.players[connectedPlayer]?.user?.username;
             const opponentId = getOpponent(connectedPlayer);
             const player2Name = gameState.players[opponentId]?.user?.username;
-            
+
             if (winnerName === player1Name) return 'Player 1';
             if (winnerName === player2Name) return 'Player 2';
         }
