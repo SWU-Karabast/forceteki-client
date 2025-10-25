@@ -22,7 +22,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     overlapEnabled = false,
     cardback = undefined,
 }) => {
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator } = useGame();
     const { clearPopups } = usePopup();
     const { getCardback } = useCosmetics();
 
@@ -33,6 +33,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 
     const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
+    const isHiddenHandCard = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -232,8 +233,13 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
-            border: overlapEnabled && cardInOpponentsHand ? '1px solid rgb(32, 30, 30)' // subtle edges for overlapping cards
-                : borderColor ? card.selected && card.zone !== 'hand' ? `4px solid ${borderColor}` : `2px solid ${borderColor}` : '2px solid transparent',
+            border: isHiddenHandCard
+                ? '1px solid rgb(32, 30, 30)'
+                : borderColor
+                    ? card.selected && card.zone !== 'hand'
+                        ? `4px solid ${borderColor}`
+                        : `2px solid ${borderColor}`
+                    : '2px solid transparent',
             boxShadow: borderColor && card.selected && card.zone !== 'hand' ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },

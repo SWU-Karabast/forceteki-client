@@ -56,6 +56,14 @@ export enum ZoneName {
     SpaceArena = 'spaceArena',
 }
 
+export enum QuickUndoAvailableState {
+    NoSnapshotAvailable = 'noSnapshotAvailable',
+    UndoRequestsBlocked = 'undoRequestsBlocked',
+    FreeUndoAvailable = 'freeUndoAvailable',
+    RequestUndoAvailable = 'requestUndoAvailable',
+    WaitingForConfirmation = 'waitingForConfirmation',
+}
+
 export const enum DefaultCosmeticId {
     Cardback = '5da51f47-66f2-4c3a-a016-c979246034a7',
     Background = 'eabf26d3-a85c-4999-a045-abf143518faf',
