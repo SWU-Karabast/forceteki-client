@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDynamoDbServiceAsync } from '@/app/_services/DynamoDBService';
 import { CosmeticOption } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { withAdminAuth } from '@/app/_utils/AdminAuth';
 
-export async function POST(request: NextRequest) {
+export const POST = withAdminAuth(async (request: NextRequest) => {
     try {
         const dynamoService = await getDynamoDbServiceAsync();
 
@@ -66,4 +67,4 @@ export async function POST(request: NextRequest) {
             { status: 500 }
         );
     }
-}
+});
