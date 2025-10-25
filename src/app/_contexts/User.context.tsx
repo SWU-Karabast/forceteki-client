@@ -202,7 +202,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         localStorage.setItem('devUser', user);
         router.push('/');
     };
-	
+
 
     const logout = () => {
         signOut({ callbackUrl: '/' });
@@ -216,7 +216,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     return (
-        <UserContext.Provider value={{ 
+        <UserContext.Provider value={{
             user,
             anonymousUserId,
             isLoading: status === 'loading' || (status === 'authenticated' && user == null),

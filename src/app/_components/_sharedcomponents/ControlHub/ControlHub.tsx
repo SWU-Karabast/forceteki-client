@@ -4,6 +4,7 @@ import { GitHub } from '@mui/icons-material';
 import { FaDiscord } from 'react-icons/fa6';
 import NextLinkMui from './_subcomponents/NextLinkMui/NextLinkMui';
 import { IControlHubProps } from './ControlHubTypes';
+import { isMod } from '@/app/_utils/ModerationUtils';
 
 const ControlHub: React.FC<IControlHubProps> = ({
     sidebarOpen,
@@ -96,6 +97,21 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/Terms" sx={styles.profileLink}>
                         Terms
                     </NextLinkMui>
+                    {user && isMod(user) && (
+                        <>
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ borderColor: '#ffffff4D', mx: 1 }}
+                            />
+                            <NextLinkMui href="/mod" sx={{
+                                ...styles.profileLink,
+                                '&:hover': { color: '#9DD9D2' }
+                            }}>
+                                Mod Page
+                            </NextLinkMui>
+                        </>
+                    )}
                     {(user) ? (
                         <>
                             <Divider
