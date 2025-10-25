@@ -18,13 +18,11 @@ export const s3ImageURL = (path: string) => {
     return s3Bucket + path;
 };
 
-interface IProps {
-    card: ICardData | ISetCode | IServerCardData | IPreviewCard;
-    cardStyle?: CardStyle | LeaderBaseCardStyle;
-    cardback?: string;
-}
-
-export const s3CardImageURL = ({ card, cardStyle = CardStyle.Plain, cardback }: IProps) => {
+export function s3CardImageURL(
+  card: ICardData | ISetCode | IServerCardData | IPreviewCard,
+  cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain,
+  cardback?: string,
+): string {
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
     if ((isGameOrSetCard && !card?.setId) && !card?.id) {
         return cardback ? cardback : s3ImageURL('game/swu-cardback.webp');
