@@ -14,6 +14,7 @@ function CosmeticsTab() {
     const { cosmetics } = useCosmetics();
     const [selectedCardback, setSelectedCardback] = useState<string>('');
     const [selectedBackground, setSelectedBackground] = useState<string>('');
+    const [expandedAccordion, setExpandedAccordion] = useState<string>('cardbacks'); // Default to cardbacks expanded
 
     useEffect(() => {
         if(user){
@@ -39,6 +40,10 @@ function CosmeticsTab() {
             console.error('Failed to save background preferences:', error);
         }
     }
+
+    const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+        setExpandedAccordion(isExpanded ? panel : '');
+    };
 
     const styles = {
         typographyContainer: {
@@ -88,9 +93,18 @@ function CosmeticsTab() {
     }
 
     return (
-        <Box>
+        <Box sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+        }}>
             <Box sx={styles.accordionContainer}>
-                <Accordion sx={styles.accordionStyle} defaultExpanded>
+                <Accordion
+                    sx={styles.accordionStyle}
+                    expanded={expandedAccordion === 'cardbacks'}
+                    onChange={handleAccordionChange('cardbacks')}
+                >
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon sx={{ color: '#ECEFF4' }} />}
                         sx={styles.accordionSummaryStyle}
@@ -99,7 +113,22 @@ function CosmeticsTab() {
                             Card Sleeves
                         </Typography>
                     </AccordionSummary>
-                    <AccordionDetails sx={styles.accordionDetailsStyle}>
+                    <AccordionDetails sx={{
+                        ...styles.accordionDetailsStyle,
+                        maxHeight: '50vh',
+                        overflowY: 'auto',
+                        '::-webkit-scrollbar': {
+                            width: '6px',
+                        },
+                        '::-webkit-scrollbar-thumb': {
+                            backgroundColor: '#D3D3D3B3',
+                            borderRadius: '3px',
+                        },
+                        '::-webkit-scrollbar-track': {
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                            borderRadius: '3px',
+                        },
+                    }}>
                         <Grid sx={styles.functionContainer}>
                             {
                                 cosmetics.cardbacks.length > 0 && cosmetics.cardbacks.map((cardback) => (
@@ -118,7 +147,11 @@ function CosmeticsTab() {
                 </Accordion>
             </Box>
             <Box sx={styles.accordionContainer}>
-                <Accordion sx={styles.accordionStyle}>
+                <Accordion
+                    sx={styles.accordionStyle}
+                    expanded={expandedAccordion === 'backgrounds'}
+                    onChange={handleAccordionChange('backgrounds')}
+                >
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon sx={{ color: '#ECEFF4' }} />}
                         sx={styles.accordionSummaryStyle}
@@ -127,7 +160,22 @@ function CosmeticsTab() {
                             Game Backgrounds
                         </Typography>
                     </AccordionSummary>
-                    <AccordionDetails sx={styles.accordionDetailsStyle}>
+                    <AccordionDetails sx={{
+                        ...styles.accordionDetailsStyle,
+                        maxHeight: '50vh',
+                        overflowY: 'auto',
+                        '::-webkit-scrollbar': {
+                            width: '6px',
+                        },
+                        '::-webkit-scrollbar-thumb': {
+                            backgroundColor: '#D3D3D3B3',
+                            borderRadius: '3px',
+                        },
+                        '::-webkit-scrollbar-track': {
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                            borderRadius: '3px',
+                        },
+                    }}>
                         <Grid sx={styles.functionContainer}>
                             {
                                 cosmetics.backgrounds.length > 0 && cosmetics.backgrounds.map((background) => (
