@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
-import { getDynamoDbServiceAsync } from '@/app/_services/DynamoDBService';
+import { getServerApiService } from '@/app/_services/ServerApiService';
 import { CosmeticOption, CosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
 
@@ -55,7 +55,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
 
         // Initialize services
         const s3Service = await getS3ServiceAsync();
-        const dynamoService = await getDynamoDbServiceAsync();
+        const serverApiService = getServerApiService();
 
         if (!s3Service) {
             return NextResponse.json(
@@ -64,22 +64,20 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
             );
         }
 
-        if (!dynamoService) {
-            return NextResponse.json(
-                { error: 'DynamoDB service not available' },
-                { status: 500 }
-            );
-        }
-
         // Check if cosmetic with this ID already exists
-        const existingCosmetics = await dynamoService.getCosmeticsAsync();
-        const existingCosmetic = existingCosmetics.find(c => c.id === cosmeticId);
+        try {
+            const existingCosmetics = await serverApiService.getCosmeticsAsync();
+            const existingCosmetic = existingCosmetics.find(c => c.id === cosmeticId);
 
-        if (existingCosmetic) {
-            return NextResponse.json(
-                { error: `Cosmetic with ID '${cosmeticId}' already exists` },
-                { status: 409 }
-            );
+            if (existingCosmetic) {
+                return NextResponse.json(
+                    { error: `Cosmetic with ID '${cosmeticId}' already exists` },
+                    { status: 409 }
+                );
+            }
+        } catch (error) {
+            // If we can't check existing cosmetics, we'll proceed but log the error
+            console.warn('Could not check existing cosmetics from server:', error);
         }
 
         // Generate S3 key
@@ -100,8 +98,11 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
             darkened: isDarkened // Use the parsed darkened parameter
         };
 
-        // Save to DynamoDB
-        await dynamoService.saveCosmeticAsync(cosmeticData);
+        // Forward cookies from the original request to the server API call
+        const cookies = request.headers.get('cookie');
+
+        // Save to server via API with cookies forwarded
+        await serverApiService.saveCosmeticAsync(cosmeticData, cookies || undefined);
 
         return NextResponse.json(
             {

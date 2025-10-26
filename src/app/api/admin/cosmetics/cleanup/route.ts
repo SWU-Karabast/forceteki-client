@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDynamoDbServiceAsync } from '@/app/_services/DynamoDBService';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
+import { getServerApiService } from '@/app/_services/ServerApiService';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
 
 // Only allow cleanup operations in development
@@ -17,21 +17,12 @@ enum CleanupAction {
 }
 
 // DELETE endpoint to handle cleanup operations
-export const DELETE = async (request: NextRequest) => {
+export const DELETE = withAdminAuth(async (request: NextRequest) => {
     try {
         checkDevelopmentMode();
 
-        const dynamoService = await getDynamoDbServiceAsync();
-
-        if (!dynamoService) {
-            return NextResponse.json(
-                {
-                    error: 'DynamoDB service not available',
-                    details: 'Check AWS credentials in environment variables'
-                },
-                { status: 500 }
-            );
-        }
+        const serverApiService = getServerApiService();
+        const cookies = request.headers.get('cookie');
 
         const { searchParams } = new URL(request.url);
         const action = searchParams.get('action');
@@ -47,8 +38,8 @@ export const DELETE = async (request: NextRequest) => {
                 }
 
                 // First get the cosmetic to check if it has an associated file
-                const cosmeticsForSingle = await dynamoService.getCosmeticsAsync();
-                const cosmetic = cosmeticsForSingle.find(c => c.id === cosmeticId);
+                const cosmeticsForSingle = await serverApiService.getCosmeticsAsync();
+                const cosmetic = cosmeticsForSingle.find((c) => c.id === cosmeticId);
 
                 // Delete the file from S3 if it exists
                 if (cosmetic?.path) {
@@ -66,7 +57,7 @@ export const DELETE = async (request: NextRequest) => {
                     }
                 }
 
-                await dynamoService.deleteCosmeticAsync(cosmeticId);
+                await serverApiService.deleteCosmeticAsync(cosmeticId, cookies || undefined);
 
                 return NextResponse.json(
                     {
@@ -78,7 +69,7 @@ export const DELETE = async (request: NextRequest) => {
 
             case CleanupAction.All:
                 // Get all cosmetics first to delete their associated files
-                const allCosmetics = await dynamoService.getCosmeticsAsync();
+                const allCosmetics = await serverApiService.getCosmeticsAsync();
                 const s3Service = await getS3ServiceAsync();
 
                 // Delete all files from S3
@@ -98,7 +89,7 @@ export const DELETE = async (request: NextRequest) => {
                     }
                 }
 
-                const clearResult = await dynamoService.clearAllCosmeticsAsync();
+                const clearResult = await serverApiService.clearAllCosmeticsAsync(cookies || undefined);
 
                 return NextResponse.json(
                     {
@@ -111,7 +102,7 @@ export const DELETE = async (request: NextRequest) => {
 
             case CleanupAction.Reset:
                 // Get all cosmetics first to delete their associated files before reset
-                const cosmeticsForReset = await dynamoService.getCosmeticsAsync();
+                const cosmeticsForReset = await serverApiService.getCosmeticsAsync();
                 const s3ServiceForReset = await getS3ServiceAsync();
 
                 // Delete all files from S3 (they will be replaced with defaults)
@@ -131,7 +122,7 @@ export const DELETE = async (request: NextRequest) => {
                     }
                 }
 
-                const resetResult = await dynamoService.resetCosmeticsToDefaultAsync();
+                const resetResult = await serverApiService.resetCosmeticsToDefaultAsync(cookies || undefined);
 
                 return NextResponse.json(
                     {
@@ -165,10 +156,10 @@ export const DELETE = async (request: NextRequest) => {
             { status: 500 }
         );
     }
-};
+});
 
 // GET endpoint to show cleanup options (development only)
-export const GET = async (request: NextRequest) => {
+export const GET = async () => {
     try {
         checkDevelopmentMode();
 

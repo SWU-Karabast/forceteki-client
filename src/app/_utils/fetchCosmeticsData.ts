@@ -1,6 +1,7 @@
 import { Cosmetics, CosmeticOption } from '../_components/_sharedcomponents/Preferences/Preferences.types';
-import { getDynamoDbServiceAsync } from '../_services/DynamoDBService';
+import { getServerApiService } from '../_services/ServerApiService';
 import fallbackCosmetics from '@/app/_temp/fallback-cosmetics.json';
+
 const fallbackCosmeticsData = (() => {
     const data = fallbackCosmetics as CosmeticOption[] | null | undefined;
     if (data == null) throw new Error('Fallback cosmetics data is invalid');
@@ -10,28 +11,21 @@ const fallbackCosmeticsData = (() => {
 
 export const fetchCosmeticsDataAsync = async (): Promise<Cosmetics> => {
     try {
-        // Try to get DynamoDB service
-        const dynamoService = await getDynamoDbServiceAsync();
+        // Try to get cosmetics from server API
+        const serverApiService = getServerApiService();
+        const cosmeticsFromServer = await serverApiService.getCosmeticsAsync();
 
-        if (dynamoService) {
-            // First check if we have cosmetics in DB
-            let cosmeticsFromDb = await dynamoService.getCosmeticsAsync();
-
-            // If no cosmetics in DB, initialize with fallback data
-            if (cosmeticsFromDb.length === 0) {
-                await dynamoService.initializeCosmeticsAsync(fallbackCosmeticsData);
-                cosmeticsFromDb = fallbackCosmeticsData;
-            }
-
-            // Organize by type
+        // If we got cosmetics from server, organize by type
+        if (cosmeticsFromServer && cosmeticsFromServer.length > 0) {
             const cosmetics: Cosmetics = {
-                cardbacks: cosmeticsFromDb.filter(item => item.type === 'cardback'),
-                backgrounds: cosmeticsFromDb.filter(item => item.type === 'background'),
-                playmats: cosmeticsFromDb.filter(item => item.type === 'playmat')
+                cardbacks: cosmeticsFromServer.filter(item => item.type === 'cardback'),
+                backgrounds: cosmeticsFromServer.filter(item => item.type === 'background'),
+                playmats: cosmeticsFromServer.filter(item => item.type === 'playmat')
             };
 
             return cosmetics;
         } else {
+            // Fall back to static data
             return {
                 cardbacks: fallbackCosmeticsData.filter(item => item.type === 'cardback'),
                 backgrounds: fallbackCosmeticsData.filter(item => item.type === 'background'),
@@ -39,8 +33,9 @@ export const fetchCosmeticsDataAsync = async (): Promise<Cosmetics> => {
             };
         }
     } catch (error) {
-        console.error('Error fetching cosmetics from DynamoDB:', error);
+        console.error('Error fetching cosmetics from server:', error);
 
+        // Fall back to static data on error
         return {
             cardbacks: fallbackCosmeticsData.filter(item => item.type === 'cardback'),
             backgrounds: fallbackCosmeticsData.filter(item => item.type === 'background'),

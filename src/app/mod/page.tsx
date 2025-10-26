@@ -27,7 +27,7 @@ import Image from 'next/image';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
-import { CosmeticOption } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { CosmeticOption, CosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { v4 as uuidv4 } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
 import { isAdminUser } from '../_utils/AdminAuth';
@@ -71,7 +71,7 @@ const ModPage = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageDimensions, setImageDimensions] = useState<ImageDimensions | null>(null);
-    const [cosmeticType, setCosmeticType] = useState<'cardback' | 'background' | 'playmat'>('cardback');
+    const [cosmeticType, setCosmeticType] = useState<CosmeticType>(CosmeticType.Cardback);
     const [cosmeticTitle, setCosmeticTitle] = useState('');
     const [cosmeticId, setCosmeticId] = useState(() => uuidv4()); // Initialize with GUID
     const [isDarkened, setIsDarkened] = useState(true); // Default to darkened for backgrounds
@@ -361,7 +361,7 @@ const ModPage = () => {
         setSelectedFile(null);
         setImagePreview(null);
         setImageDimensions(null);
-        setCosmeticType('cardback');
+        setCosmeticType(CosmeticType.Cardback);
         setCosmeticTitle('');
         setCosmeticId(uuidv4()); // Generate new GUID when resetting form
         setIsDarkened(true); // Reset to default darkened state
@@ -769,7 +769,7 @@ const ModPage = () => {
                         </InputLabel>
                         <Select
                             value={cosmeticType}
-                            onChange={(e) => setCosmeticType(e.target.value as 'cardback' | 'background' | 'playmat')}
+                            onChange={(e) => setCosmeticType(e.target.value as CosmeticType)}
                             disabled={uploadLoading}
                             label="Cosmetic Type"
                         >

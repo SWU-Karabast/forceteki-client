@@ -4,15 +4,11 @@ import { authOptions } from '@/app/_utils/auth';
 
 // List of allowed user IDs for admin access - must match exactly what NextAuth provides
 const allowedAdminUsers = [
-    '4644b207-9307-4b78-8df7-69493f97c920',//ninin
+    '4644b207-9307-4b78-8df7-69493f97c920',// ninin
 ];
 
 export function isAdminUser(userId?: string | null): boolean {
-    if(process.env.NODE_ENV === 'development') {
-        return true;
-    }
-
-    return Boolean(userId && allowedAdminUsers.includes(userId));
+    return Boolean(process.env.NODE_ENV === 'development' || (userId && allowedAdminUsers.includes(userId)));
 }
 
 /**
@@ -23,7 +19,7 @@ export async function requireAdminAuth(request: NextRequest) {
     try {
         // Get the session from the request
         const session = await getServerSession(authOptions);
-
+        console.log('Admin auth session:', session);
         if (!session?.user) {
             return NextResponse.json(
                 {
