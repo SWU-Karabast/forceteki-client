@@ -52,6 +52,8 @@ interface IQuickGameFormProps {
     savedDecks: StoredDeck[];
     handleDeckManagement: () => void;
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
+    setIsJsonDeck: (value: boolean) => void;
+    isJsonDeck: boolean;
 }
 
 const QuickGameForm: React.FC<IQuickGameFormProps> = ({
@@ -61,7 +63,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     setDeckLink,
     savedDecks,
     handleDeckManagement,
-    handleFormSubmissionWithUndoCheck
+    handleFormSubmissionWithUndoCheck,
+    setIsJsonDeck,
+    isJsonDeck
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -70,7 +74,6 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
-    const [isJsonDeck, setIsJsonDeck] = useState<boolean>(false)
 
     const formatOptions = Object.values(SwuGameFormat);
 
@@ -111,6 +114,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         const parsedInput = parseInputAsDeckData(deckLink);
         if(parsedInput.type === 'json'){
             setIsJsonDeck(true)
+            setSaveDeck(false);
+            setErrorTitle('Deck Validation Error');
+            setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
             return;
         }
         setIsJsonDeck(false);
@@ -270,6 +276,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             '&.Mui-checked': {
                 color: '#fff',
             },
+            '&.Mui-disabled': {
+                color: 'rgba(255, 255, 255, 0.3)',
+            },
         },
         checkboxAndRadioGroupTextStyle: {
             color: '#fff',
@@ -284,6 +293,12 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         errorMessageStyle: {
             color: 'var(--initiative-red);',
             mt: '0.5rem'
+        },
+        errorMessageLinkPlain:{
+            ml: '2px',
+            cursor: 'pointer',
+            color: 'white',
+            textDecorationColor: 'white',
         },
         errorMessageLink:{
             cursor: 'pointer',
@@ -397,10 +412,10 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                                 type="text"
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                    setDeckLink(e.target.value);
-                                    handleJsonDeck(e.target.value);
                                     setDeckErrorSummary(null);
                                     setDeckErrorDetails(undefined);
+                                    setDeckLink(e.target.value);
+                                    handleJsonDeck(e.target.value);
                                 }}
                             />
                         </FormControl>
@@ -421,7 +436,16 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             }
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    {isJsonDeck ? 'JSON format cannot be saved' : 'Save Deck List'}
+                                    {isJsonDeck ? (
+                                        <Box>
+                                            JSON format cannot be saved.
+                                            <Link
+                                                sx={styles.errorMessageLinkPlain}
+                                                onClick={() => setErrorModalOpen(true)}
+                                            >Details
+                                            </Link>
+                                        </Box>
+                                    ) : 'Save Deck List'}
                                 </Typography>
                             }
                         />

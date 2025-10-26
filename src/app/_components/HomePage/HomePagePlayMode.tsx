@@ -54,7 +54,7 @@ const HomePagePlayMode: React.FC = () => {
     });
 
     const [deckLink, setDeckLink] = useState<string>('');
-
+    const [isJsonDeck, setIsJsonDeck] = useState<boolean>(false)
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
@@ -316,6 +316,8 @@ const HomePagePlayMode: React.FC = () => {
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
                                 handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
+                                setIsJsonDeck={setIsJsonDeck}
+                                isJsonDeck={isJsonDeck}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -327,6 +329,8 @@ const HomePagePlayMode: React.FC = () => {
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
                                 handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
+                                setIsJsonDeck={setIsJsonDeck}
+                                isJsonDeck={isJsonDeck}
                             />
                         </TabPanel>
                         {showTestGames &&

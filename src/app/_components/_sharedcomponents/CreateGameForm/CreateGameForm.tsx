@@ -53,6 +53,8 @@ interface ICreateGameFormProps {
     savedDecks: StoredDeck[];
     handleDeckManagement: () => void;
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
+    setIsJsonDeck: (value: boolean) => void;
+    isJsonDeck: boolean;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
@@ -62,7 +64,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     setDeckLink,
     savedDecks,
     handleDeckManagement,
-    handleFormSubmissionWithUndoCheck
+    handleFormSubmissionWithUndoCheck,
+    setIsJsonDeck,
+    isJsonDeck
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -71,7 +75,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
-    const [isJsonDeck, setIsJsonDeck] = useState<boolean>(false)
     const [privateGame, setPrivateGame] = useState<boolean>(false);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
@@ -108,6 +111,10 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         const parsedInput = parseInputAsDeckData(deckLink);
         if(parsedInput.type === 'json'){
             setIsJsonDeck(true)
+            setSaveDeck(false);
+            setErrorTitle('Deck Validation Error');
+            setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
+            console.log(deckErrorDetails);
             return;
         }
         setIsJsonDeck(false);
@@ -269,6 +276,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             '&.Mui-checked': {
                 color: '#fff',
             },
+            '&.Mui-disabled': {
+                color: 'rgba(255, 255, 255, 0.3)',
+            },
         },
         checkboxAndRadioGroupTextStyle: {
             color: '#fff',
@@ -287,6 +297,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             cursor: 'pointer',
             color: 'var(--selection-red);',
             textDecorationColor: 'var(--initiative-red);',
+        },
+        errorMessageLinkPlain:{
+            ml: '2px',
+            cursor: 'pointer',
+            color: 'white',
+            textDecorationColor: 'white',
         },
         manageDecks:{
             mt: '1rem',
@@ -411,10 +427,10 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 type="text"
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>{
-                                    setDeckLink(e.target.value);
-                                    handleJsonDeck(e.target.value);
                                     setDeckErrorSummary(null);
                                     setDeckErrorDetails(undefined);
+                                    setDeckLink(e.target.value);
+                                    handleJsonDeck(e.target.value);
                                 }}
                             />
                         </FormControl>
@@ -445,7 +461,16 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             }
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    {isJsonDeck ? 'JSON format cannot be saved' : 'Save Deck List'}
+                                    {isJsonDeck ? (
+                                        <Box>
+                                            JSON format cannot be saved.
+                                            <Link
+                                                sx={styles.errorMessageLinkPlain}
+                                                onClick={() => setErrorModalOpen(true)}
+                                            >Details
+                                            </Link>
+                                        </Box>
+                                    ) : 'Save Deck List'}
                                 </Typography>
                             }
                         />

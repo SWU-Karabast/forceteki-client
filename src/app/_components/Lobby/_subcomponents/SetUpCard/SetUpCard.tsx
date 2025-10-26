@@ -85,7 +85,9 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const handleJsonDeck = (deckLink: string) => {
         const parsedInput = parseInputAsDeckData(deckLink);
         if(parsedInput.type === 'json'){
-            setIsJsonDeck(true)
+            setIsJsonDeck(true);
+            setSaveDeck(false);
+            setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
             return;
         }
         setIsJsonDeck(false);
@@ -317,6 +319,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             mt: '0.5rem',
             mb: '0px'
         },
+        errorMessageLinkPlain:{
+            ml: '2px',
+            cursor: 'pointer',
+            color: 'white',
+            textDecorationColor: 'white',
+        },
         errorMessageLink:{
             cursor: 'pointer',
             color: 'var(--selection-red);',
@@ -328,7 +336,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 color: '#fff',
             },
             '&.Mui-disabled': {
-                color: '#fff',
+                color: 'rgba(255, 255, 255, 0.3)',
             },
             opacity: disableSettings ? 0.5 : 1, // Slightly less opacity when disabled and checked
         },
@@ -475,8 +483,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 disabled={readyStatus}
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                    handleJsonDeck(e.target.value);
-                                    setDeckLink(e.target.value);
                                     if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
                                         setDisplayerror(true);
                                         setDeckErrorSummary('Deck is invalid.');
@@ -486,6 +492,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                         setDeckErrorSummary(null);
                                         setDeckErrorDetails(undefined);
                                     }
+                                    handleJsonDeck(e.target.value);
+                                    setDeckLink(e.target.value);
                                 }}
                             />
                             <FormControlLabel
@@ -502,7 +510,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 }
                                 label={
                                     <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        {isJsonDeck ? 'JSON format cannot be saved' : 'Save Deck List'}
+                                        {isJsonDeck ? (
+                                            <Box>
+                                                JSON format cannot be saved.
+                                                <Link
+                                                    sx={styles.errorMessageLinkPlain}
+                                                    onClick={() => setErrorModalOpen(true)}
+                                                >Details
+                                                </Link>
+                                            </Box>
+                                        ) : 'Save Deck List'}
                                     </Typography>
                                 }
                             />
