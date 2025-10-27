@@ -338,6 +338,13 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
         },
+        blankedShieldIcon:{
+            width: '28%',
+            aspectRatio: '1 / 1',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: `url(${s3TokenImageURL('shield-token-blanked')})`,
+        },
         upgradeIcon:{
             width: '100%',
             aspectRatio: '4.85',
@@ -585,7 +592,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 <Box
                                     key={`${card.uuid}-shield-${index}`}
                                     sx={{
-                                        ...styles.shieldIcon,
+                                        ...(shieldCard.isBlanked ? styles.blankedShieldIcon : styles.shieldIcon),
                                         border: shieldCard.selectable ? `2px solid ${getBorderColor(shieldCard, connectedPlayer)}` : 'none',
                                         cursor: shieldCard.selectable ? 'pointer' : 'normal'
                                     }}
