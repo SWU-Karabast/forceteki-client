@@ -192,7 +192,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     };
     // Filter subcards into Shields and other upgrades
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
-    const otherUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
+    const nonShieldUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
     const promptType = getConnectedPlayerPrompt()?.promptType;
     const borderColor = getBorderColor(card, connectedPlayer, promptType, cardStyle, isOpponentEffect);
     const cardCounter = card.count || 0;
@@ -247,6 +247,19 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+        },
+        upgradeOverlay: {
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'transparent',
+            filter: 'none',
+            clickEvents: 'none',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row',
+            paddingRight: '4px',
         },
         numberFont: {
             fontSize: '1em',
@@ -338,6 +351,13 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
         },
+        blankedShieldIcon:{
+            width: '28%',
+            aspectRatio: '1 / 1',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: `url(${s3TokenImageURL('shield-token-blanked')})`,
+        },
         upgradeIcon:{
             width: '100%',
             aspectRatio: '4.85',
@@ -350,13 +370,14 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         upgradeName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
-            marginTop: '2px',
             fontWeight: '800',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             color: 'black',
-            textAlign: 'center',
-            userSelect: 'none'
+            userSelect: 'none',
+            margin: 0,
+            padding: 0,
+            lineHeight: 1,
         },
         cloneIcon:{
             width: '100%',
@@ -424,6 +445,15 @@ const GameCard: React.FC<IGameCardProps> = ({
             aspectRatio: '1 / 1',
             top:'32%',
             right: '-4%',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(/BlankIcon.png)',
+        },
+        upgradeBlankIcon:{
+            position: 'absolute',
+            right: '4px',
+            width: '18%',
+            aspectRatio: '1 / 1',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/BlankIcon.png)',
@@ -585,7 +615,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 <Box
                                     key={`${card.uuid}-shield-${index}`}
                                     sx={{
-                                        ...styles.shieldIcon,
+                                        ...(shieldCard.isBlanked ? styles.blankedShieldIcon : styles.shieldIcon),
                                         border: shieldCard.selectable ? `2px solid ${getBorderColor(shieldCard, connectedPlayer)}` : 'none',
                                         cursor: shieldCard.selectable ? 'pointer' : 'normal'
                                     }}
@@ -636,7 +666,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
             </Popover>
 
-            {otherUpgradeCards.map((subcard) => (
+            {nonShieldUpgradeCards.map((subcard) => (
                 <Box
                     key={subcard.uuid}
                     sx={{ ...styles.upgradeIcon,
@@ -651,9 +681,15 @@ const GameCard: React.FC<IGameCardProps> = ({
                     data-card-type={subcard.printedType}
                     data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
                 >
-                    <Typography key={subcard.uuid} sx={styles.upgradeName}>
-                        {subcard.clonedCardName ?? subcard.name}
-                    </Typography>
+                    <Box sx={styles.upgradeOverlay}>
+                        <Typography key={subcard.uuid} sx={styles.upgradeName}>
+                            {subcard.clonedCardName ?? subcard.name}
+                        </Typography>
+
+                        {subcard.isBlanked && (
+                            <Box sx={styles.upgradeBlankIcon}/>
+                        )}
+                    </Box>
                 </Box>
             ))}
 
