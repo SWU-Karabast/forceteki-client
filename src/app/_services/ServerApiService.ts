@@ -7,9 +7,7 @@ export class ServerApiService {
     private baseUrl: string;
 
     constructor() {
-        // Use the game server URL from environment variables
-        // Default to localhost:3001 which is the typical game server port
-        this.baseUrl = process.env.NEXT_PUBLIC_ROOT_URL || 'http://localhost:3001';
+        this.baseUrl = process.env.NEXT_PUBLIC_ROOT_URL || 'http://localhost:9500';
     }
 
     /**
