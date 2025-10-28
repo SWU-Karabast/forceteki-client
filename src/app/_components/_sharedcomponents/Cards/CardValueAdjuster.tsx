@@ -16,7 +16,9 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
         updateDistributionPrompt(card.uuid, amount);
     };
 
-    const atMaxAssignable = isIndirect && distributionPromptData && distributionPromptData.valueDistribution.find((entry: DistributionEntry) => entry.uuid === card.uuid)?.amount === ((card.hp ?? 0) - (card.damage ?? 0));
+    const counter = distributionPromptData?.valueDistribution.find((entry: DistributionEntry) => entry.uuid === card.uuid)?.amount ?? 0;
+    const atZero = counter === 0;
+    const atMaxAssignable = isIndirect && distributionPromptData && counter === ((card.hp ?? 0) - (card.damage ?? 0));
 
     const type = gameState.players[connectedPlayer]?.promptState.distributeAmongTargets.type;
     const distributeDamage = type === 'distributeDamage' || type === 'distributeIndirectDamage';
@@ -53,7 +55,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
     }
     return (
         <Box sx={styles.valueAdjuster}>
-            <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" onClick={() => handleValueAdjusterClick(-1)} >-1</Button>
+            <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" disabled={!!atZero} onClick={() => handleValueAdjusterClick(-1)} >-1</Button>
             <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" disabled={!!atMaxAssignable} onClick={() => handleValueAdjusterClick(+1)}>+1</Button>
         </Box>
     );
