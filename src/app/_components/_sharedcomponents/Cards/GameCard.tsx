@@ -359,6 +359,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: `url(${s3TokenImageURL('shield-token-blanked')})`,
         },
         upgradeIcon:{
+            position: 'relative',
             width: '100%',
             aspectRatio: '4.85',
             display: 'flex',
