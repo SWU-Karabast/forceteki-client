@@ -219,7 +219,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: card.epicActionSpent || card.epicDeployActionSpent && !isDeployed ? 'block' : 'none',
             zIndex: 1
         },
-        blankIcon : {
+        leaderBlankIcon : {
             position: 'absolute',
             width: '1.8rem',
             aspectRatio: '1 / 1',
@@ -229,6 +229,17 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/BlankIcon.png)',
             display: card.isBlanked && !isDeployed ? 'block' : 'none'
+        },
+        baseBlankIcon : {
+            position: 'absolute',
+            width: '2.5rem',
+            aspectRatio: '1 / 1',
+            top:'0%',
+            right: '-4px',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(/BlankIcon.png)',
+            display: card.isBlanked ? 'block' : 'none'
         },
         damageCounterContainer: {
             position: 'absolute',
@@ -445,6 +456,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         </Box>
                         {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
                         {card.isDefender && <Box sx={styles.defendIcon}/>}
+                        <Box sx={styles.baseBlankIcon}/>
                     </>
                 )}
 
@@ -483,7 +495,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                             </Typography>
                         </Box>
                         <Box sx={styles.epicActionIcon}></Box>
-                        <Box sx={styles.blankIcon}/>
+                        <Box sx={styles.leaderBlankIcon}/>
                     </>
                 )}
             </Box>
