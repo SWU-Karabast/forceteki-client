@@ -850,3 +850,54 @@ export const markUndoPopupAsSeen = async (user: IUser | null, updateCachedLocalS
     // save to local storage for both signed-in and anonymous so that a signed-in user doesn't get a repeat
     saveUndoPopupSeenToLocalStorage(currentDate);
 };
+
+/**
+ * Updates the name of a deck
+ * @param deckId The deck ID to update
+ * @param newName The new name for the deck
+ * @param user The current user (or null if anonymous)
+ * @returns Promise that resolves when the update is complete
+ */
+export const updateDeckName = async (deckId: string, newName: string, user: IUser | null): Promise<void> => {
+    if (user) {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck/${deckId}/rename`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                newName,
+                user
+            }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error('Failed to update deck name:', data.message);
+            throw new Error(`Failed to update deck name: ${data.message}`);
+        }
+    } else {
+        updateDeckNameInLocalStorage(deckId, newName);
+    }
+};
+
+/**
+ * Updates a deck name in localStorage
+ * @param deckId The deck ID to update
+ * @param newName The new name for the deck
+ */
+const updateDeckNameInLocalStorage = (deckId: string, newName: string): void => {
+    const deckKey = `swu_deck_${deckId}`;
+    const deckDataJSON = localStorage.getItem(deckKey);
+
+    if (deckDataJSON) {
+        const deckData = JSON.parse(deckDataJSON) as StoredDeck;
+        deckData.name = newName;
+        localStorage.setItem(deckKey, JSON.stringify(deckData));
+    } else {
+        console.error(`Deck with ID ${deckId} not found in localStorage`);
+        throw new Error(`Deck with ID ${deckId} not found`);
+    }
+};
