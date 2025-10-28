@@ -19,7 +19,7 @@ export async function requireAdminAuth(request: NextRequest) {
     try {
         // Get the session from the request
         const session = await getServerSession(authOptions);
-        console.log('Admin auth session:', session);
+
         if (!session?.user) {
             return NextResponse.json(
                 {
