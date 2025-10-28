@@ -54,6 +54,8 @@ interface IQuickGameFormProps {
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
     setIsJsonDeck: (value: boolean) => void;
     isJsonDeck: boolean;
+    setModalType: (value: string) => void;
+    modalType: string;
 }
 
 const QuickGameForm: React.FC<IQuickGameFormProps> = ({
@@ -65,7 +67,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     handleDeckManagement,
     handleFormSubmissionWithUndoCheck,
     setIsJsonDeck,
-    isJsonDeck
+    isJsonDeck,
+    setModalType,
+    modalType
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -112,13 +116,16 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     const handleJsonDeck = (deckLink: string) => {
         const parsedInput = parseInputAsDeckData(deckLink);
+        console.log(parsedInput);
         if(parsedInput.type === 'json'){
             setIsJsonDeck(true)
             setSaveDeck(false);
-            setErrorTitle('Deck Validation Error');
+            setErrorTitle('JSON Decks Notice');
             setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
+            setModalType('warning');
             return;
         }
+        setModalType('error');
         setIsJsonDeck(false);
     }
 
@@ -494,10 +501,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             </form>
             <ErrorModal
                 open={errorModalOpen}
-                onClose={() => setErrorModalOpen(false)}
+                onClose={() => setErrorModalOpen(false) }
                 title={errorTitle}
                 errors={deckErrorDetails}
                 format={format}
+                modalType={modalType}
             />
         </Box>
     );

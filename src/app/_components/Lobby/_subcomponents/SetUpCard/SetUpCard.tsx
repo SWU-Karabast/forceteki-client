@@ -39,6 +39,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [deckLink, setDeckLink] = useState<string>('');
     const [showTooltip, setShowTooltip] = useState(false);
     const [showLink, setshowLink] = useState(false)
+
     const [deckImportErrorsSeen, setDeckImportErrorsSeen] = useState(false);
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
@@ -47,6 +48,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [isJsonDeck, setIsJsonDeck] = useState<boolean>(false)
+    const [modalType, setModalType] = useState<string>('error');
+    const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     const { data: session } = useSession(); // Get session from next-auth
 
     // For deck error display
@@ -87,10 +90,14 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         if(parsedInput.type === 'json'){
             setIsJsonDeck(true);
             setSaveDeck(false);
+            setErrorTitle('JSON Decks Notice');
             setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
+            setModalType('warning')
             return;
         }
         setIsJsonDeck(false);
+        setModalType('error');
+        setErrorTitle('Deck Validation Error');
     }
 
     const handleLinkToggle = () =>{
@@ -551,7 +558,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             )}
             {deckErrorDetails && (
                 <ErrorModal
-                    title="Deck Validation Error"
+                    title={errorTitle}
                     open={errorModalOpen}
                     onClose={() => {
                         setErrorModalOpen(false)
@@ -559,6 +566,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     }}
                     errors={deckErrorDetails}
                     format={lobbyFormat}
+                    modalType={modalType}
                 />
             )}
             {lobbyState.isPrivate && (

@@ -14,8 +14,8 @@ function PreferenceButton(buttonType: IButtonType) {
     const styles = {
         buttonStyle:{
             ...(hasBackgroundColor ? {} : { background: buttonType.disabled ? '#404040' : buttonType.variant === 'concede' ? 'linear-gradient(#380707, #380707) padding-box,' +
-                'linear-gradient(#7C0707, #C40000) border-box' : 'linear-gradient(#1E2D32, #1E2D32) padding-box,' +
-                'linear-gradient(#404040, #008FC4) border-box',
+                'linear-gradient(#7C0707, #C40000) border-box' : buttonType.variant === 'standard' ? 'linear-gradient(#1E2D32, #1E2D32) padding-box,' +
+                'linear-gradient(#404040, #008FC4) border-box' : 'linear-gradient(#a07f26, #a07f26) padding-box, linear-gradient(#404040, #7a611d) border-box'
             }),
             color: '#FFF',
             fontSize: '16px',
@@ -25,8 +25,8 @@ function PreferenceButton(buttonType: IButtonType) {
             pb:'10px',
             '&:hover': {
                 ...(hasHoverStyle ? {} : { background: buttonType.variant === 'concede' ? 'linear-gradient(#7C0707, #C40000) padding-box, ' +
-                    'linear-gradient(#7C0707, #C40000) border-box' : 'linear-gradient(#2C4046, #2C4046) padding-box,' +
-                    'linear-gradient(#404040, #008FC4) border-box' }),
+                    'linear-gradient(#7C0707, #C40000) border-box' : buttonType.variant === 'standard' ? 'linear-gradient(#2C4046, #2C4046) padding-box,' +
+                    'linear-gradient(#404040, #008FC4) border-box' : 'linear-gradient(#8d6f20, #8d6f20) padding-box, linear-gradient(#404040, #7a611d) border-box' }),
                 boxShadow: 'none',
             },
             '&:disabled': {

@@ -55,6 +55,8 @@ interface ICreateGameFormProps {
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
     setIsJsonDeck: (value: boolean) => void;
     isJsonDeck: boolean;
+    setModalType: (value: string) => void;
+    modalType: string;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
@@ -66,7 +68,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     handleDeckManagement,
     handleFormSubmissionWithUndoCheck,
     setIsJsonDeck,
-    isJsonDeck
+    isJsonDeck,
+    setModalType,
+    modalType,
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -80,6 +84,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     const formatOptions = Object.values(SwuGameFormat);
 
+
     // For a short, user-friendly error message
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
 
@@ -88,7 +93,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
-
     // Listen for tab change events to clear errors
     useEffect(() => {
         const handleClearErrors = () => {
@@ -98,7 +102,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         };
         handleJsonDeck(deckLink);
         window.addEventListener('clearDeckErrors', handleClearErrors);
-
         return () => {
             window.removeEventListener('clearDeckErrors', handleClearErrors);
         };
@@ -112,11 +115,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         if(parsedInput.type === 'json'){
             setIsJsonDeck(true)
             setSaveDeck(false);
-            setErrorTitle('Deck Validation Error');
+            setErrorTitle('JSON Decks Notice');
+            setModalType('warning');
             setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
-            console.log(deckErrorDetails);
             return;
         }
+        setModalType('error');
         setIsJsonDeck(false);
     }
 
@@ -561,6 +565,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 title={errorTitle}
                 errors={deckErrorDetails}
                 format={format}
+                modalType={modalType}
             />
         </Box>
     );
