@@ -17,8 +17,8 @@ enum CleanupAction {
     Reset = 'reset'
 }
 
+// DELETE endpoint to handle cleanup operations
 export const DELETE = withAdminAuth(AdminRole.Developer, async (request: NextRequest) => {
-    // DELETE endpoint to handle cleanup operations
     try {
         const serverApiService = getServerApiService();
         const cookies = request.headers.get('cookie');

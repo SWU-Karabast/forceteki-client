@@ -2,11 +2,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerApiService } from '@/app/_services/ServerApiService';
 
-export async function withAdminAuth(
+export function withAdminAuth(
     role: string,
     handler: (request: NextRequest) => Promise<NextResponse>
-): Promise<(request: NextRequest) => Promise<NextResponse>> {
-    return async (request: NextRequest) => {
+) {
+    return async (request: NextRequest): Promise<NextResponse> => {
         if(process.env.NODE_ENV === 'development') {
             return handler(request);
         }
