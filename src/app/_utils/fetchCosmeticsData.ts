@@ -1,15 +1,15 @@
-import { Cosmetics, CosmeticOption } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import { IRegisteredCosmetics, IRegisteredCosmeticOption } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 import { getServerApiService } from '../_services/ServerApiService';
 import fallbackCosmetics from '@/app/_temp/fallback-cosmetics.json';
 
 const fallbackCosmeticsData = (() => {
-    const data = fallbackCosmetics as CosmeticOption[] | null | undefined;
+    const data = fallbackCosmetics as IRegisteredCosmeticOption[] | null | undefined;
     if (data == null) throw new Error('Fallback cosmetics data is invalid');
 
     return data;
 })();
 
-export const fetchCosmeticsDataAsync = async (): Promise<Cosmetics> => {
+export const fetchCosmeticsDataAsync = async (): Promise<IRegisteredCosmetics> => {
     try {
         // Try to get cosmetics from server API
         const serverApiService = getServerApiService();
@@ -17,7 +17,7 @@ export const fetchCosmeticsDataAsync = async (): Promise<Cosmetics> => {
 
         // If we got cosmetics from server, organize by type
         if (cosmeticsFromServer && cosmeticsFromServer.length > 0) {
-            const cosmetics: Cosmetics = {
+            const cosmetics: IRegisteredCosmetics = {
                 cardbacks: cosmeticsFromServer.filter(item => item.type === 'cardback'),
                 backgrounds: cosmeticsFromServer.filter(item => item.type === 'background'),
                 playmats: cosmeticsFromServer.filter(item => item.type === 'playmat')

@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
 import { getServerApiService } from '@/app/_services/ServerApiService';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
+import { AdminRole } from '@/app/_contexts/UserTypes';
 
 // Only allow cleanup operations in development
-function checkDevelopmentMode() {
+function checkOnlyForDevelopmentMode() {
     if (process.env.NODE_ENV !== 'development') {
         throw new Error('Cleanup operations are only allowed in development mode');
     }
@@ -17,10 +18,8 @@ enum CleanupAction {
 }
 
 // DELETE endpoint to handle cleanup operations
-export const DELETE = withAdminAuth(async (request: NextRequest) => {
+export const DELETE = withAdminAuth(AdminRole.Developer, async (request: NextRequest) => {
     try {
-        checkDevelopmentMode();
-
         const serverApiService = getServerApiService();
         const cookies = request.headers.get('cookie');
 
@@ -68,6 +67,7 @@ export const DELETE = withAdminAuth(async (request: NextRequest) => {
                 );
 
             case CleanupAction.All:
+                checkOnlyForDevelopmentMode();
                 // Get all cosmetics first to delete their associated files
                 const allCosmetics = await serverApiService.getCosmeticsAsync();
                 const s3Service = await getS3ServiceAsync();
@@ -101,6 +101,7 @@ export const DELETE = withAdminAuth(async (request: NextRequest) => {
                 );
 
             case CleanupAction.Reset:
+                checkOnlyForDevelopmentMode();
                 // Get all cosmetics first to delete their associated files before reset
                 const cosmeticsForReset = await serverApiService.getCosmeticsAsync();
                 const s3ServiceForReset = await getS3ServiceAsync();
@@ -136,12 +137,7 @@ export const DELETE = withAdminAuth(async (request: NextRequest) => {
             default:
                 return NextResponse.json(
                     {
-                        error: 'Invalid action. Use: single (with id), all, or reset',
-                        examples: [
-                            'DELETE /api/admin/cosmetics/cleanup?action=single&id=my-cosmetic-id',
-                            'DELETE /api/admin/cosmetics/cleanup?action=all',
-                            'DELETE /api/admin/cosmetics/cleanup?action=reset'
-                        ]
+                        error: 'Invalid action.',
                     },
                     { status: 400 }
                 );
@@ -161,7 +157,7 @@ export const DELETE = withAdminAuth(async (request: NextRequest) => {
 // GET endpoint to show cleanup options (development only)
 export const GET = async () => {
     try {
-        checkDevelopmentMode();
+        checkOnlyForDevelopmentMode();
 
         return NextResponse.json(
             {

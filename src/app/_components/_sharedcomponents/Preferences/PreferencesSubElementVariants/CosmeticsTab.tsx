@@ -8,7 +8,7 @@ import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, FormCon
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
-import { CosmeticOption, CosmeticType } from '../Preferences.types';
+import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '../Preferences.types';
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
@@ -92,7 +92,7 @@ function CosmeticsTab() {
     };
 
     // Utility function to sort cosmetics by title, ignoring articles
-    const sortCosmeticsByTitle = (cosmetics: CosmeticOption[]) => {
+    const sortCosmeticsByTitle = (cosmetics: IRegisteredCosmeticOption[]) => {
         return [...cosmetics].sort((a, b) => {
             // Always put "Default" first
             if (a.title === 'Default') return -1;
@@ -112,10 +112,10 @@ function CosmeticsTab() {
 
     // Create playmats list with 'None' option
     const getPlaymatOptions = () => {
-        const noneOption: CosmeticOption = {
+        const noneOption: IRegisteredCosmeticOption = {
             id: 'none',
             title: 'None',
-            type: CosmeticType.Playmat,
+            type: RegisteredCosmeticType.Playmat,
             path: '' // Empty path for none option
         };
 

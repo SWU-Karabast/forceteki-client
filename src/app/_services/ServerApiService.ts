@@ -1,4 +1,4 @@
-import { CosmeticOption } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import { IRegisteredCosmeticOption } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 
 /**
  * Service for communicating with the forceteki server API
@@ -17,6 +17,7 @@ export class ServerApiService {
         try {
             const response = await fetch(url, {
                 ...options,
+                credentials: 'include', // Include cookies in cross-origin requests
                 headers: {
                     'Content-Type': 'application/json',
                     ...options?.headers,
@@ -36,21 +37,21 @@ export class ServerApiService {
     }
 
     // Cosmetics API methods
-    public async getCosmeticsAsync(): Promise<CosmeticOption[]> {
+    public async getCosmeticsAsync(): Promise<IRegisteredCosmeticOption[]> {
         const response = await this.fetchWithErrorHandling<{
             success: boolean;
-            cosmetics: CosmeticOption[];
+            cosmetics: IRegisteredCosmeticOption[];
             count: number;
         }>(`${this.baseUrl}/api/cosmetics`);
 
         return response.cosmetics;
     }
 
-    public async saveCosmeticAsync(cosmetic: CosmeticOption, cookies?: string): Promise<CosmeticOption> {
+    public async saveCosmeticAsync(cosmetic: IRegisteredCosmeticOption, cookies?: string): Promise<IRegisteredCosmeticOption> {
         const response = await this.fetchWithErrorHandling<{
             success: boolean;
             message: string;
-            cosmetic: CosmeticOption;
+            cosmetic: IRegisteredCosmeticOption;
         }>(`${this.baseUrl}/api/cosmetics`, {
             method: 'POST',
             headers: {
@@ -102,6 +103,46 @@ export class ServerApiService {
         });
 
         return { message: response.message, deletedCount: response.deletedCount };
+    }
+
+    // Admin user management methods
+    public async userIsAdminAsync(cookies?: string): Promise<boolean> {
+        const response = await this.fetchWithErrorHandling<{
+            success: boolean;
+        }>(`${this.baseUrl}/api/user-is-admin`, {
+            method: 'GET',
+            headers: {
+                ...(cookies && { Cookie: cookies }),
+            },
+        });
+
+        return response.success;
+    }
+
+    public async userIsDevAsync(cookies?: string): Promise<boolean> {
+        const response = await this.fetchWithErrorHandling<{
+            success: boolean;
+        }>(`${this.baseUrl}/api/user-is-dev`, {
+            method: 'GET',
+            headers: {
+                ...(cookies && { Cookie: cookies }),
+            },
+        });
+
+        return response.success;
+    }
+
+    public async userIsModAsync(cookies?: string): Promise<boolean> {
+        const response = await this.fetchWithErrorHandling<{
+            success: boolean;
+        }>(`${this.baseUrl}/api/user-is-mod`, {
+            method: 'GET',
+            headers: {
+                ...(cookies && { Cookie: cookies }),
+            },
+        });
+
+        return response.success;
     }
 }
 

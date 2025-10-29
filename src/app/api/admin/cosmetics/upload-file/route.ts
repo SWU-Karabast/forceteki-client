@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
 import { getServerApiService } from '@/app/_services/ServerApiService';
-import { CosmeticOption, CosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
+import { AdminRole } from '@/app/_contexts/UserTypes';
 
-export const POST = withAdminAuth(async (request: NextRequest) => {
+// uploads the cosmetic file to S3 and saves the cosmetic metadata to the DB via the server API
+export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextRequest) => {
     try {
         const formData = await request.formData();
         const file = formData.get('file') as File;
@@ -90,10 +92,10 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
         const s3Url = await s3Service.uploadFile(s3Key, fileBuffer, 'image/webp');
 
         // Create cosmetic metadata
-        const cosmeticData: CosmeticOption = {
+        const cosmeticData: IRegisteredCosmeticOption = {
             id: cosmeticId,
             title: cosmeticTitle,
-            type: cosmeticType as CosmeticType,
+            type: cosmeticType as RegisteredCosmeticType,
             path: s3Url,
             darkened: isDarkened // Use the parsed darkened parameter
         };

@@ -50,9 +50,10 @@ export class S3Service {
                 return;
             }
 
-            const credentials: any = {
+            const credentials = {
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID,
                 secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                sessionToken: undefined as string | undefined
             };
 
             // Add session token if available (for temporary credentials)

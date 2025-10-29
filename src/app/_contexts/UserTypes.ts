@@ -75,6 +75,12 @@ export interface IUserContextType {
     updateUndoPopupSeenDate: () => void;
 }
 
+export enum AdminRole {
+    SuperUser = 'SuperUser',
+    Developer = 'Developer',
+    Moderator = 'Moderator',
+}
+
 // Extend Next-auth types
 declare module 'next-auth' {
     interface User {

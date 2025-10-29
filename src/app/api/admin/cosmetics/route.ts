@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerApiService } from '@/app/_services/ServerApiService';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
+import { AdminRole } from '@/app/_contexts/UserTypes';
 
-export const GET = withAdminAuth(async (request: NextRequest) => {
+export const GET = async (request: NextRequest) => {
     try {
         const serverApiService = getServerApiService();
         const s3Service = await getS3ServiceAsync();
@@ -59,9 +60,9 @@ export const GET = withAdminAuth(async (request: NextRequest) => {
             { status: 500 }
         );
     }
-});
+};
 
-export const POST = withAdminAuth(async (_request: NextRequest) => {
+export const POST = withAdminAuth(AdminRole.Moderator, async (_request: NextRequest) => {
     try {
         const serverApiService = getServerApiService();
         const s3Service = await getS3ServiceAsync();

@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { CosmeticOption } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { IRegisteredCosmeticOption } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
 import { getServerApiService } from '@/app/_services/ServerApiService';
+import { AdminRole } from '@/app/_contexts/UserTypes';
 
-export const POST = withAdminAuth(async (request: NextRequest) => {
+export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextRequest) => {
     try {
-        const dynamoService = await getServerApiService();
-
-        if (!dynamoService) {
-            return NextResponse.json(
-                {
-                    error: 'DynamoDB service not available',
-                    details: 'Check AWS credentials in environment variables'
-                },
-                { status: 500 }
-            );
-        }
-
-        const cosmeticData: CosmeticOption = await request.json();
-
+        const serverApiService = await getServerApiService();
+        const cosmeticData: IRegisteredCosmeticOption = await request.json();
         // Validate required fields
         if (!cosmeticData.id || !cosmeticData.title || !cosmeticData.type || !cosmeticData.path) {
             return NextResponse.json(
@@ -37,7 +26,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
         }
 
         // Check if cosmetic with this ID already exists
-        const existingCosmetics = await dynamoService.getCosmeticsAsync();
+        const existingCosmetics = await serverApiService.getCosmeticsAsync();
         const existingCosmetic = existingCosmetics.find((c) => c.id === cosmeticData.id);
 
         if (existingCosmetic) {
@@ -46,9 +35,8 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
                 { status: 409 }
             );
         }
-
-        // Save the cosmetic to DynamoDB
-        await dynamoService.saveCosmeticAsync(cosmeticData);
+        // Save the new cosmetic through the server API
+        await serverApiService.saveCosmeticAsync(cosmeticData);
 
         return NextResponse.json(
             {
