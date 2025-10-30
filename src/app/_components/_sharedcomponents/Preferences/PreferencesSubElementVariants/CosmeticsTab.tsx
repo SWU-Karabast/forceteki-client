@@ -23,9 +23,9 @@ function CosmeticsTab() {
         if (user) {
             const { cosmetics } = user.preferences;
             if (cosmetics) {
-                setSelectedCardback(cosmetics.cardback ?? null);
-                setSelectedBackground(cosmetics.background ?? null);
-                setSelectedPlaymat(cosmetics.playmat ?? null);
+                setSelectedCardback(cosmetics.cardback ?? 'Default');
+                setSelectedBackground(cosmetics.background ?? 'Default');
+                setSelectedPlaymat(cosmetics.playmat ?? 'none');
                 setDisablePlaymats(cosmetics.disablePlaymats ?? false);
             }
         }
@@ -61,11 +61,16 @@ function CosmeticsTab() {
 
     const onPlaymatClick = async (id: string) => {
         try {
+            const updatedCosmetics = {
+                ...user?.preferences.cosmetics,
+                playmat: id,
+            };
+            if (id !== 'none' && disablePlaymats) {
+                updatedCosmetics.disablePlaymats = false;
+                setDisablePlaymats(false);
+            }
             await savePreferencesGeneric(user, {
-                cosmetics: {
-                    ...user?.preferences.cosmetics,
-                    playmat: id
-                }
+                cosmetics: updatedCosmetics
             }, updateUserPreferences)
             setSelectedPlaymat(id);
         } catch (error) {
@@ -75,11 +80,16 @@ function CosmeticsTab() {
 
     const onDisablePlaymatsChange = async (checked: boolean) => {
         try {
+            const updatedCosmetics = {
+                ...user?.preferences.cosmetics,
+                disablePlaymats: checked,
+            };
+            if (checked && selectedPlaymat !== 'none') {
+                updatedCosmetics.playmat = 'none';
+                setSelectedPlaymat('none');
+            }
             await savePreferencesGeneric(user, {
-                cosmetics: {
-                    ...user?.preferences.cosmetics,
-                    disablePlaymats: checked,
-                }
+                cosmetics: updatedCosmetics
             }, updateUserPreferences)
             setDisablePlaymats(checked);
         } catch (error) {

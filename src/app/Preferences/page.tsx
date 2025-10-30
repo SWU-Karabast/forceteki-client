@@ -48,7 +48,7 @@ const Preferences: React.FC = () => {
             <PreferencesComponent
                 sidebarOpen={false}
                 isPreferenceOpen={true}
-                tabs={['general','soundOptions'].concat(useUser().user ? ['cosmetics'] : [])}
+                tabs={['general','soundOptions','cosmetics']}
                 variant={'homePage'}
             />
             <Typography variant="body1" sx={styles.disclaimer}>

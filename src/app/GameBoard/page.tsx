@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useEffect} from 'react';
 import { Box, Grid2 as Grid, Typography } from '@mui/material';
-import { s3ImageURL } from '../_utils/s3Utils';
 import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
@@ -12,7 +11,6 @@ import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
 import { MatchType } from '@/app/_constants/constants';
-import { useUser } from '../_contexts/User.context';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 
 const GameBoard = () => {
@@ -62,11 +60,10 @@ const GameBoard = () => {
     // const winners = ['order66']
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
-    const anonymousPattern = /anonymous [0-9a-f]{6}/;
     const cosmeticsInGame = true; // disable cosmetics in-game for now
     const preferenceTabs = winners
         ? ['endGame','soundOptions']
-        : ['currentGame','soundOptions'].concat(!anonymousPattern.test(user?.username) && cosmeticsInGame ? ['cosmetics'] : []);
+        : ['currentGame','soundOptions'].concat(cosmeticsInGame ? ['cosmetics'] : []);
 
     // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {
