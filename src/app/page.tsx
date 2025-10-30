@@ -31,6 +31,7 @@ const Home: React.FC = () => {
             fontSize: '0.75rem',
         },
     };
+
     return (
         <Grid container sx={styles.gridContainer}>
 

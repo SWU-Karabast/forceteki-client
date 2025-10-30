@@ -63,3 +63,4 @@ export enum QuickUndoAvailableState {
     RequestUndoAvailable = 'requestUndoAvailable',
     WaitingForConfirmation = 'waitingForConfirmation',
 }
+

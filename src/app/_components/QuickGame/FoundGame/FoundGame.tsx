@@ -62,6 +62,7 @@ const FoundGame: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            zIndex: 2,
         },
         connectingText: {
             fontFamily: 'var(--font-barlow), sans-serif',
