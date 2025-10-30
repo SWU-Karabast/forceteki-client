@@ -18,7 +18,18 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
 
     const counter = distributionPromptData?.valueDistribution.find((entry: DistributionEntry) => entry.uuid === card.uuid)?.amount ?? 0;
     const atZero = counter === 0;
-    const atMaxAssignable = isIndirect && distributionPromptData && counter === ((card.hp ?? 0) - (card.damage ?? 0));
+    const atMaxAssignable = distributionPromptData && counter === ((card.hp ?? 0) - (card.damage ?? 0));
+
+    // Add debug logging
+    console.log('CardValueAdjuster Debug:', {
+        cardName: card.name,
+        cardHP: card.hp,
+        cardDamage: card.damage,
+        counter: counter,
+        maxAssignable: (card.hp ?? 0) - (card.damage ?? 0),
+        atMaxAssignable: atMaxAssignable,
+        isIndirect: isIndirect
+    });
 
     const type = gameState.players[connectedPlayer]?.promptState.distributeAmongTargets.type;
     const distributeDamage = type === 'distributeDamage' || type === 'distributeIndirectDamage';
