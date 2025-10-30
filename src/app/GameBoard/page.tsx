@@ -12,6 +12,8 @@ import PreferencesComponent from '@/app/_components/_sharedcomponents/Preference
 import { useRouter } from 'next/navigation';
 import { MatchType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
+import { BackgroundsDarkenBox, PlaymatDarkenBox } from '../_theme/theme-helper';
+import { Play } from 'next/font/google';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
@@ -171,50 +173,21 @@ const GameBoard = () => {
     if(background.darkened) {
         styles.mainBoxStyle = {
             ...styles.mainBoxStyle,
-            '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                backgroundColor: 'rgba(10, 10, 10, 0.57)',
-                zIndex: 0,
-            }
+            '&::before': BackgroundsDarkenBox,
         };
     }
 
     if(myPlaymat?.darkened) {
         styles.playerPlaymat = {
             ...styles.playerPlaymat,
-            '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                backgroundColor: 'rgba(10, 10, 10, 0.57)',
-                borderRadius: '8px',
-                zIndex: 1,
-            }
+            '&::before': PlaymatDarkenBox,
         };
     }
 
     if(theirPlaymat?.darkened) {
         styles.opponentPlaymat = {
             ...styles.opponentPlaymat,
-            '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                backgroundColor: 'rgba(10, 10, 10, 0.57)',
-                borderRadius: '8px',
-                zIndex: 1,
-            }
+            '&::before': PlaymatDarkenBox,
         };
     }
 

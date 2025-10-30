@@ -17,6 +17,7 @@ const styles = {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        zIndex: 2,
     },
     connectingText: {
         fontFamily: 'var(--font-barlow), sans-serif',
@@ -43,23 +44,23 @@ const SearchingForGame: React.FC = () => {
     useEffect(() => {
         timerRef.current = setInterval(() => {
             const secondsSinceLastHeartbeat = Math.floor((Date.now() - lastQueueHeartbeatState.current) / 1000);
-    
+
             if (secondsSinceLastHeartbeat > 15) {
                 alert(`Connection lost. Please try again.\nUser ID: ${user?.id || anonymousUserId}`);
                 router.push('/');
                 return;
             }
-    
+
             if (secondsSinceLastHeartbeat >= 5 && !reconnectingRef.current) {
                 reconnectingRef.current = true;
                 createNewSocket();
 
                 setTimeout(() => {
                     reconnectingRef.current = false;
-                }, 2000); 
+                }, 2000);
             }
         }, 1000);
-    
+
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };

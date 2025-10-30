@@ -6,7 +6,9 @@ import FoundGame from '@/app/_components/QuickGame/FoundGame/FoundGame';
 import { useGame } from '@/app/_contexts/Game.context';
 import SearchingForGame from '@/app/_components/QuickGame/SearchingForGame/SearchingForGame';
 import { useRouter } from 'next/navigation';
-import { s3ImageURL } from '@/app/_utils/s3Utils';
+import { useCosmetics } from '../_contexts/CosmeticsContext';
+import { useUser } from '../_contexts/User.context';
+import { QuickGameDarkenBox } from '../_theme/theme-helper';
 
 const QuickGame: React.FC = () => {
     const router = useRouter();
@@ -15,6 +17,9 @@ const QuickGame: React.FC = () => {
         sendMessage('manualDisconnect');
         router.push('/');
     }
+    const { getBackground } = useCosmetics();
+    const { user } = useUser();
+    const background = getBackground(user?.preferences.cosmetics?.background);
 
     useEffect(() => {
         if (gameState) {
@@ -30,9 +35,10 @@ const QuickGame: React.FC = () => {
         containerStyle: {
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: 'url("/default-background.webp")',
+            backgroundImage: `url(${background.path})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            '&::before': {},
         },
         disclaimer: {
             position: 'absolute',
@@ -41,6 +47,7 @@ const QuickGame: React.FC = () => {
             padding: '1rem',
             textAlign: 'center',
             fontSize: '0.75rem',
+            zIndex: 2,
         },
         searchBoxContainer: {
             display: 'flex',
@@ -65,13 +72,21 @@ const QuickGame: React.FC = () => {
             top: '16px',
             display: 'flex',
             height: '48px',
-            borderRadius: '50px 0 0 50px',
-            backgroundColor: 'rgb(0, 0, 0, 0.40)',
+            borderRadius: '50px',
+            backgroundColor: 'rgb(0, 0, 0, 0.08)',
             backdropFilter: 'blur(20px)',
             alignItems: 'center',
             p: '1rem',
+            zIndex: 2,
         },
     };
+
+    if(background?.darkened) {
+        styles.containerStyle = {
+            ...styles.containerStyle,
+            '&::before': QuickGameDarkenBox,
+        };
+    }
     return (
         <Grid container sx={styles.containerStyle}>
             <Grid size={12} height={'100%'}>
