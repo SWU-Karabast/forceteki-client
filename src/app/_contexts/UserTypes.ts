@@ -64,6 +64,7 @@ export interface IUserContextType {
     user: IUser | null;
     anonymousUserId: string | null;
     isLoading: boolean;
+    isMod: boolean;
     login: (provider: 'google' | 'discord') => void;
     devLogin: (user: 'Order66' | 'ThisIsTheWay') => void;
     logout: () => void;

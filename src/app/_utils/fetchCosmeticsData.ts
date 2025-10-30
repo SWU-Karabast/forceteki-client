@@ -1,19 +1,10 @@
-import { IRegisteredCosmetics, IRegisteredCosmeticOption } from '../_components/_sharedcomponents/Preferences/Preferences.types';
-import { getServerApiService } from '../_services/ServerApiService';
-import fallbackCosmetics from '@/app/_temp/fallback-cosmetics.json';
-
-const fallbackCosmeticsData = (() => {
-    const data = fallbackCosmetics as IRegisteredCosmeticOption[] | null | undefined;
-    if (data == null) throw new Error('Fallback cosmetics data is invalid');
-
-    return data;
-})();
+import { IRegisteredCosmetics } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import { ServerApiService } from '../_services/ServerApiService';
 
 export const fetchCosmeticsDataAsync = async (): Promise<IRegisteredCosmetics> => {
     try {
         // Try to get cosmetics from server API
-        const serverApiService = getServerApiService();
-        const cosmeticsFromServer = await serverApiService.getCosmeticsAsync();
+        const cosmeticsFromServer = await ServerApiService.getCosmeticsAsync();
 
         // If we got cosmetics from server, organize by type
         if (cosmeticsFromServer && cosmeticsFromServer.length > 0) {
@@ -24,22 +15,11 @@ export const fetchCosmeticsDataAsync = async (): Promise<IRegisteredCosmetics> =
             };
 
             return cosmetics;
-        } else {
-            // Fall back to static data
-            return {
-                cardbacks: fallbackCosmeticsData.filter(item => item.type === 'cardback'),
-                backgrounds: fallbackCosmeticsData.filter(item => item.type === 'background'),
-                playmats: fallbackCosmeticsData.filter(item => item.type === 'playmat')
-            };
         }
+
+        throw new Error('No cosmetics data received from server');
     } catch (error) {
         console.error('Error fetching cosmetics from server:', error);
-
-        // Fall back to static data on error
-        return {
-            cardbacks: fallbackCosmeticsData.filter(item => item.type === 'cardback'),
-            backgrounds: fallbackCosmeticsData.filter(item => item.type === 'background'),
-            playmats: fallbackCosmeticsData.filter(item => item.type === 'playmat')
-        };
+        throw error;
     }
 }

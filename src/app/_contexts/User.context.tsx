@@ -17,6 +17,7 @@ const UserContext = createContext<IUserContextType>({
     user: null,
     anonymousUserId: null,
     isLoading: true,
+    isMod: false,
     login: () => {},
     devLogin: () => {},
     logout: () => {},
@@ -37,6 +38,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const router = useRouter();
     const pathname = usePathname();
     const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
+    const [isMod, setIsMod] = useState(false);
 
     useEffect(() => {
         // check dev user first
@@ -70,12 +72,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
                     });
                     update({ userId: serverUser.id });
+                    // Fetch mod status
+                    const modStatus = await import('@/app/_services/ServerApiService').then(m => m.ServerApiService.userIsModAsync());
+                    setIsMod(await modStatus);
                 } catch (error) {
                     // Just flag the error, handle anonymous user setting separately
                     console.error('Error syncing user with server:', error);
                     // we need to logout the user when an error with getting the user happens
                     needsLogout = true;
                 }
+            } else {
+                setIsMod(false);
             }
             if(needsLogout){
                 logout();
@@ -220,6 +227,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             user,
             anonymousUserId,
             isLoading: status === 'loading' || (status === 'authenticated' && user == null),
+            isMod,
             login,
             devLogin,
             logout,

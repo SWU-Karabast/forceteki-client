@@ -61,10 +61,7 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     React.useEffect(() => {
         const fetchCosmetics = async () => {
-            const baseUrl = process.env.NODE_ENV === 'development'
-                ? 'http://localhost:3000'
-                : 'https://karabast.net';
-            const response = await fetch(`${baseUrl}/api/cosmetics`);
+            const response = await fetch('/api/cosmetics');
             const data = await response.json();
             setCosmetics(data);
         };

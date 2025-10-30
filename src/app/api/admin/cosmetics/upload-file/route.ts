@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
-import { getServerApiService } from '@/app/_services/ServerApiService';
 import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
 import { AdminRole } from '@/app/_contexts/UserTypes';
+import { ServerApiService } from '@/app/_services/ServerApiService';
 
 // uploads the cosmetic file to S3 and saves the cosmetic metadata to the DB via the server API
 export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextRequest) => {
@@ -57,7 +57,6 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
 
         // Initialize services
         const s3Service = await getS3ServiceAsync();
-        const serverApiService = getServerApiService();
 
         if (!s3Service) {
             return NextResponse.json(
@@ -68,7 +67,7 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
 
         // Check if cosmetic with this ID already exists
         try {
-            const existingCosmetics = await serverApiService.getCosmeticsAsync();
+            const existingCosmetics = await ServerApiService.getCosmeticsAsync();
             const existingCosmetic = existingCosmetics.find(c => c.id === cosmeticId);
 
             if (existingCosmetic) {
@@ -104,7 +103,7 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
         const cookies = request.headers.get('cookie');
 
         // Save to server via API with cookies forwarded
-        await serverApiService.saveCosmeticAsync(cosmeticData, cookies || undefined);
+        await ServerApiService.saveCosmeticAsync(cosmeticData, cookies || undefined);
 
         return NextResponse.json(
             {

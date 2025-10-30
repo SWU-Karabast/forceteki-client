@@ -4,6 +4,7 @@ import { authOptions } from '@/app/_utils/auth';
 import { Box, Alert } from '@mui/material';
 import Link from 'next/link';
 import ModPageClient from './ModPageClient';
+import { ServerApiService } from '../_services/ServerApiService';
 
 async function checkModAccess(): Promise<boolean> {
     const session = await getServerSession(authOptions);
@@ -13,16 +14,8 @@ async function checkModAccess(): Promise<boolean> {
     }
 
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_ROOT_URL || 'http://localhost:9500';
-        const response = await fetch(`${baseUrl}/api/user-is-mod`, {
-            headers: {
-                'Content-Type': 'application/json',
-                Cookie: `next-auth.session-token=${session.jwtToken}`
-            },
-            credentials: 'include'
-        });
-
-        return response.ok;
+        const res = await ServerApiService.userIsModAsync(`next-auth.session-token=${session.jwtToken}`);
+        return res;
     } catch (error) {
         console.error('Error checking mod access:', error);
         return false;

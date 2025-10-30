@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Box, Divider, IconButton, Typography } from '@mui/material';
 import { GitHub } from '@mui/icons-material';
 import { FaDiscord } from 'react-icons/fa6';
 import NextLinkMui from './_subcomponents/NextLinkMui/NextLinkMui';
 import { IControlHubProps } from './ControlHubTypes';
-import { getServerApiService } from '@/app/_services/ServerApiService';
+import { useUser } from '@/app/_contexts/User.context';
 
 const ControlHub: React.FC<IControlHubProps> = ({
     sidebarOpen,
@@ -14,28 +14,7 @@ const ControlHub: React.FC<IControlHubProps> = ({
     logout,
 }) => {
     const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
-    const [isMod, setIsMod] = useState(false);
-
-    // Check if user has mod access when user is logged in
-    useEffect(() => {
-        const checkModAccess = async () => {
-            if (!user) {
-                setIsMod(false);
-                return;
-            }
-
-            try {
-                const serverApi = getServerApiService();
-                const hasModAccess = await serverApi.userIsModAsync();
-                setIsMod(hasModAccess);
-            } catch (error) {
-                console.error('Error checking mod access:', error);
-                setIsMod(false);
-            }
-        };
-
-        checkModAccess();
-    }, [user]);
+    const { isMod } = useUser();
 
     const styles = {
         wrapperContainer:{

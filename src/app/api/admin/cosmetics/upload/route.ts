@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { IRegisteredCosmeticOption } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
-import { getServerApiService } from '@/app/_services/ServerApiService';
 import { AdminRole } from '@/app/_contexts/UserTypes';
+import { ServerApiService } from '@/app/_services/ServerApiService';
 
 export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextRequest) => {
     try {
-        const serverApiService = await getServerApiService();
         const cosmeticData: IRegisteredCosmeticOption = await request.json();
         // Validate required fields
         if (!cosmeticData.id || !cosmeticData.title || !cosmeticData.type || !cosmeticData.path) {
@@ -26,7 +25,7 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
         }
 
         // Check if cosmetic with this ID already exists
-        const existingCosmetics = await serverApiService.getCosmeticsAsync();
+        const existingCosmetics = await ServerApiService.getCosmeticsAsync();
         const existingCosmetic = existingCosmetics.find((c) => c.id === cosmeticData.id);
 
         if (existingCosmetic) {
@@ -36,7 +35,7 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
             );
         }
         // Save the new cosmetic through the server API
-        await serverApiService.saveCosmeticAsync(cosmeticData);
+        await ServerApiService.saveCosmeticAsync(cosmeticData);
 
         return NextResponse.json(
             {

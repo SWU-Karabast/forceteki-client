@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
-import { getServerApiService } from '@/app/_services/ServerApiService';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
 import { AdminRole } from '@/app/_contexts/UserTypes';
+import { ServerApiService } from '@/app/_services/ServerApiService';
 
 // Only allow cleanup operations in development
 function checkOnlyForDevelopmentMode() {
@@ -20,7 +20,6 @@ enum CleanupAction {
 // DELETE endpoint to handle cleanup operations
 export const DELETE = withAdminAuth(AdminRole.Developer, async (request: NextRequest) => {
     try {
-        const serverApiService = getServerApiService();
         const cookies = request.headers.get('cookie');
 
         const { searchParams } = new URL(request.url);
@@ -37,7 +36,7 @@ export const DELETE = withAdminAuth(AdminRole.Developer, async (request: NextReq
                 }
 
                 // First get the cosmetic to check if it has an associated file
-                const cosmeticsForSingle = await serverApiService.getCosmeticsAsync();
+                const cosmeticsForSingle = await ServerApiService.getCosmeticsAsync();
                 const cosmetic = cosmeticsForSingle.find((c) => c.id === cosmeticId);
 
                 // Delete the file from S3 if it exists
@@ -56,7 +55,7 @@ export const DELETE = withAdminAuth(AdminRole.Developer, async (request: NextReq
                     }
                 }
 
-                await serverApiService.deleteCosmeticAsync(cosmeticId, cookies || undefined);
+                await ServerApiService.deleteCosmeticAsync(cosmeticId, cookies || undefined);
 
                 return NextResponse.json(
                     {
@@ -69,7 +68,7 @@ export const DELETE = withAdminAuth(AdminRole.Developer, async (request: NextReq
             case CleanupAction.All:
                 checkOnlyForDevelopmentMode();
                 // Get all cosmetics first to delete their associated files
-                const allCosmetics = await serverApiService.getCosmeticsAsync();
+                const allCosmetics = await ServerApiService.getCosmeticsAsync();
                 const s3Service = await getS3ServiceAsync();
 
                 // Delete all files from S3
@@ -89,7 +88,7 @@ export const DELETE = withAdminAuth(AdminRole.Developer, async (request: NextReq
                     }
                 }
 
-                const clearResult = await serverApiService.clearAllCosmeticsAsync(cookies || undefined);
+                const clearResult = await ServerApiService.clearAllCosmeticsAsync(cookies || undefined);
 
                 return NextResponse.json(
                     {
@@ -103,7 +102,7 @@ export const DELETE = withAdminAuth(AdminRole.Developer, async (request: NextReq
             case CleanupAction.Reset:
                 checkOnlyForDevelopmentMode();
                 // Get all cosmetics first to delete their associated files before reset
-                const cosmeticsForReset = await serverApiService.getCosmeticsAsync();
+                const cosmeticsForReset = await ServerApiService.getCosmeticsAsync();
                 const s3ServiceForReset = await getS3ServiceAsync();
 
                 // Delete all files from S3 (they will be replaced with defaults)
@@ -123,7 +122,7 @@ export const DELETE = withAdminAuth(AdminRole.Developer, async (request: NextReq
                     }
                 }
 
-                const resetResult = await serverApiService.resetCosmeticsToDefaultAsync(cookies || undefined);
+                const resetResult = await ServerApiService.resetCosmeticsToDefaultAsync(cookies || undefined);
 
                 return NextResponse.json(
                     {

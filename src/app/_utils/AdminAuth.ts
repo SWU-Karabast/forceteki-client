@@ -1,6 +1,6 @@
 // Admin authentication middleware
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerApiService } from '@/app/_services/ServerApiService';
+import { ServerApiService } from '../_services/ServerApiService';
 
 export function withAdminAuth(
     role: string,
@@ -12,19 +12,18 @@ export function withAdminAuth(
         }
 
         const cookies = request.headers.get('cookie') || undefined;
-        const serverApiService = getServerApiService();
 
         try {
             let isAuthorized = false;
             switch(role) {
                 case 'admin':
-                    isAuthorized = await serverApiService.userIsAdminAsync(cookies);
+                    isAuthorized = await ServerApiService.userIsAdminAsync(cookies);
                     break;
                 case 'dev':
-                    isAuthorized = await serverApiService.userIsDevAsync(cookies);
+                    isAuthorized = await ServerApiService.userIsDevAsync(cookies);
                     break;
                 case 'mod':
-                    isAuthorized = await serverApiService.userIsModAsync(cookies);
+                    isAuthorized = await ServerApiService.userIsModAsync(cookies);
                     break;
                 default:
                     return NextResponse.json(

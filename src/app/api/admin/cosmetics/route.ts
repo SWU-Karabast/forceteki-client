@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerApiService } from '@/app/_services/ServerApiService';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
 import { AdminRole } from '@/app/_contexts/UserTypes';
+import { ServerApiService } from '@/app/_services/ServerApiService';
 
 export const GET = async (request: NextRequest) => {
     try {
-        const serverApiService = getServerApiService();
         const s3Service = await getS3ServiceAsync();
 
         // Check service availability
@@ -27,7 +26,7 @@ export const GET = async (request: NextRequest) => {
         }
 
         try {
-            const cosmetics = await serverApiService.getCosmeticsAsync();
+            const cosmetics = await ServerApiService.getCosmeticsAsync();
 
             return NextResponse.json(
                 {
@@ -64,7 +63,6 @@ export const GET = async (request: NextRequest) => {
 
 export const POST = withAdminAuth(AdminRole.Moderator, async (_request: NextRequest) => {
     try {
-        const serverApiService = getServerApiService();
         const s3Service = await getS3ServiceAsync();
 
         // Check service availability
@@ -86,25 +84,13 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (_request: NextRequ
 
         try {
             // Check if cosmetics already exist
-            const existingCosmetics = await serverApiService.getCosmeticsAsync();
-
-            if (existingCosmetics.length > 0) {
-                return NextResponse.json(
-                    {
-                        success: true,
-                        message: `Found ${existingCosmetics.length} existing cosmetics in server`,
-                        cosmetics: existingCosmetics,
-                        serviceStatus
-                    },
-                    { status: 200 }
-                );
-            }
+            const existingCosmetics = await ServerApiService.getCosmeticsAsync();
 
             return NextResponse.json(
                 {
                     success: true,
-                    message: 'No cosmetics found. They will be auto-initialized on first fetchCosmeticsDataAsync call.',
-                    suggestion: 'Call the /api/cosmetics endpoint to trigger initialization',
+                    message: `Found ${existingCosmetics.length} existing cosmetics in server`,
+                    cosmetics: existingCosmetics,
                     serviceStatus
                 },
                 { status: 200 }
