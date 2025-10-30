@@ -60,8 +60,8 @@ export class ServerApiService {
         return response.cosmetic;
     }
 
-    public static async deleteCosmeticAsync(cosmeticId: string, cookies?: string): Promise<void> {
-        await this.fetchWithErrorHandling<{
+    public static async deleteCosmeticAsync(cosmeticId: string, cookies?: string): Promise<{ success: boolean; message: string }> {
+        return await this.fetchWithErrorHandling<{
             success: boolean;
             message: string;
         }>(`${this.baseUrl}/api/cosmetics/${cosmeticId}`, {

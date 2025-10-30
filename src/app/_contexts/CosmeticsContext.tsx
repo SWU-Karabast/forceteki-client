@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { IRegisteredCosmeticOption, IRegisteredCosmetics, RegisteredCosmeticType } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import { ServerApiService } from '../_services/ServerApiService';
 
 interface CosmeticsContextProps {
     cosmetics: IRegisteredCosmetics;
@@ -61,9 +62,22 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     React.useEffect(() => {
         const fetchCosmetics = async () => {
-            const response = await fetch('/api/cosmetics');
-            const data = await response.json();
-            setCosmetics(data);
+            ServerApiService.getCosmeticsAsync().then((data) => {
+                setCosmetics(data.reduce((acc: IRegisteredCosmetics, cosmetic) => {
+                    switch (cosmetic.type) {
+                        case RegisteredCosmeticType.Cardback:
+                            acc.cardbacks.push(cosmetic);
+                            break;
+                        case RegisteredCosmeticType.Background:
+                            acc.backgrounds.push(cosmetic);
+                            break;
+                        case RegisteredCosmeticType.Playmat:
+                            acc.playmats.push(cosmetic);
+                            break;
+                    }
+                    return acc;
+                }, { cardbacks: [], backgrounds: [], playmats: [] }));
+            });
         };
         fetchCosmetics();
     }, []);

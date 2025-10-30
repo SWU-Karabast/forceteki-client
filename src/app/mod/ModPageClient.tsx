@@ -29,6 +29,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { useRouter } from 'next/navigation';
 import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { v4 as uuidv4 } from 'uuid';
+import { ServerApiService } from '../_services/ServerApiService';
 
 interface ImageDimensions {
     width: number;
@@ -40,6 +41,8 @@ interface ValidationRules {
     background: { width: number; height: number };
     playmat: { width: number; height: number };
 }
+
+const isDev = process.env.NODE_ENV === 'development';
 
 const ModPageClient = () => {
     const [cosmetics, setCosmetics] = useState<IRegisteredCosmeticOption[]>([]);
@@ -109,18 +112,12 @@ const ModPageClient = () => {
     const fetchCosmetics = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/admin/cosmetics');
+            const response = await ServerApiService.getCosmeticsAsync();
 
-            if (!response.ok) {
-                throw new Error(`Error fetching cosmetics: ${response.statusText}`);
-            }
+            if (response.length > 0) {
+                setCosmetics(response);
 
-            const data = await response.json();
-
-            if (data.success) {
-                setCosmetics(data.cosmetics || []);
-
-                const types = data.cosmetics?.reduce((acc: string[], cosmetic: IRegisteredCosmeticOption) => {
+                const types = response.reduce((acc: string[], cosmetic: IRegisteredCosmeticOption) => {
                     const type = cosmetic.type.charAt(0).toUpperCase() + cosmetic.type.slice(1);
                     if (!acc.includes(type)) {
                         acc.push(type);
@@ -336,57 +333,49 @@ const ModPageClient = () => {
         setUploadSuccess(false);
     };
 
-    const handleCleanupAction = async (action: 'all' | 'reset') => {
+    const handleDevCleanupAction = async (action: 'all' | 'reset') => {
+        if(!isDev) {
+            return;
+        }
         setCleanupLoading(true);
         setCleanupError(null);
         setCleanupSuccess(false);
 
-        try {
-            const response = await fetch(`/api/admin/cosmetics/cleanup?action=${action}`, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Cleanup operation failed');
-            }
-
-            setCleanupSuccess(true);
-
-            await fetchCosmetics();
-
-            setTimeout(() => {
-                setCleanupDialogOpen(false);
-                setCleanupSuccess(false);
-            }, 2000);
-        } catch (error) {
-            console.error('Cleanup error:', error);
-            setCleanupError(error instanceof Error ? error.message : 'Cleanup failed');
-        } finally {
-            setCleanupLoading(false);
+        let response;
+        switch(action) {
+            case 'all':
+                response = await ServerApiService.clearAllCosmeticsAsync();
+                break;
+            case 'reset':
+                response = await ServerApiService.resetCosmeticsToDefaultAsync();
+                break;
         }
+
+        if (!response) {
+            throw new Error('Cleanup operation failed');
+        }
+
+        setCleanupSuccess(true);
+        await fetchCosmetics();
+
+        setTimeout(() => {
+            setCleanupDialogOpen(false);
+            setCleanupSuccess(false);
+        }, 2000);
+        setCleanupLoading(false);
     };
 
     const handleDeleteSingleCosmetic = async (cosmeticId: string) => {
         if (!confirm(`Are you sure you want to delete the cosmetic "${cosmeticId}"? This action cannot be undone.`)) {
             return;
         }
-
-        try {
-            const response = await fetch(`/api/admin/cosmetics/cleanup?action=single&id=${cosmeticId}`, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Delete operation failed');
-            }
-
-            await fetchCosmetics();
-        } catch (error) {
-            console.error('Delete error:', error);
-            alert(`Failed to delete cosmetic: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        const response = await ServerApiService.deleteCosmeticAsync(cosmeticId);
+        if (!response.success) {
+            alert('Failed to delete cosmetic');
+            console.error('Delete error:', response.message);
         }
+
+        await fetchCosmetics();
     };
 
     const styles = {
@@ -566,7 +555,7 @@ const ModPageClient = () => {
                                 {/* Cosmetics Manager Header Controls */}
                                 <Box sx={styles.cosmeticsHeader}>
                                     <Box sx={{ display: 'flex', gap: '10px', marginBottom: '1rem' }}>
-                                        {process.env.NODE_ENV === 'development' && (
+                                        {isDev && (
                                             <PreferenceButton
                                                 variant={'standard'}
                                                 text="Dev Cleanup"
@@ -634,17 +623,15 @@ const ModPageClient = () => {
                                                         <Typography variant="caption" color="gray">
                                                             {cosmetic.type} • {cosmetic.id}
                                                         </Typography>
-                                                        {process.env.NODE_ENV === 'development' && (
-                                                            <Button
-                                                                size="small"
-                                                                color="error"
-                                                                variant="outlined"
-                                                                onClick={() => handleDeleteSingleCosmetic(cosmetic.id)}
-                                                                sx={{ mt: 1, fontSize: '0.7rem' }}
-                                                            >
-                                                                Delete
-                                                            </Button>
-                                                        )}
+                                                        <Button
+                                                            size="small"
+                                                            color="error"
+                                                            variant="outlined"
+                                                            onClick={() => handleDeleteSingleCosmetic(cosmetic.id)}
+                                                            sx={{ mt: 1, fontSize: '0.7rem' }}
+                                                        >
+                                                            Delete
+                                                        </Button>
                                                     </Box>
                                                 </Box>
                                             ))}
@@ -883,67 +870,69 @@ const ModPageClient = () => {
             </Dialog>
 
             {/* Cleanup Dialog */}
-            <Dialog
-                open={cleanupDialogOpen}
-                onClose={() => !cleanupLoading && setCleanupDialogOpen(false)}
-                maxWidth="sm"
-                fullWidth
-                PaperProps={{
-                    sx: { backgroundColor: '#2D2D2D', minHeight: '400px' }
-                }}
-            >
-                <DialogTitle>Development Cleanup Tools</DialogTitle>
-                <DialogContent sx={{ padding: '2rem' }}>
-                    {cleanupError && (
-                        <Alert severity="error" sx={{ mb: 2 }}>{cleanupError}</Alert>
-                    )}
-                    {cleanupSuccess && (
-                        <Alert severity="success" sx={{ mb: 2 }}>Cleanup completed successfully!</Alert>
-                    )}
+            {
+                isDev && <Dialog
+                    open={cleanupDialogOpen}
+                    onClose={() => !cleanupLoading && setCleanupDialogOpen(false)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                        sx: { backgroundColor: '#2D2D2D', minHeight: '400px' }
+                    }}
+                >
+                    <DialogTitle>Development Cleanup Tools</DialogTitle>
+                    <DialogContent sx={{ padding: '2rem' }}>
+                        {cleanupError && (
+                            <Alert severity="error" sx={{ mb: 2 }}>{cleanupError}</Alert>
+                        )}
+                        {cleanupSuccess && (
+                            <Alert severity="success" sx={{ mb: 2 }}>Cleanup completed successfully!</Alert>
+                        )}
 
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                        These cleanup operations are only available in development mode:
-                    </Typography>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                            These cleanup operations are only available in development mode:
+                        </Typography>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Button
+                                variant="outlined"
+                                color="warning"
+                                onClick={() => handleDevCleanupAction('all')}
+                                disabled={cleanupLoading}
+                                fullWidth
+                            >
+                                Clear All Cosmetics
+                            </Button>
+
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                onClick={() => handleDevCleanupAction('reset')}
+                                disabled={cleanupLoading}
+                                fullWidth
+                            >
+                                Reset to Default Cosmetics
+                            </Button>
+                        </Box>
+
+                        <Typography variant="caption" color="textSecondary" sx={{ mt: 2, display: 'block' }}>
+                            Warning: These operations are irreversible. Individual cosmetics can be deleted using the &quot;Delete&quot; button on each item.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
                         <Button
-                            variant="outlined"
-                            color="warning"
-                            onClick={() => handleCleanupAction('all')}
+                            onClick={() => {
+                                setCleanupDialogOpen(false);
+                                setCleanupError(null);
+                                setCleanupSuccess(false);
+                            }}
                             disabled={cleanupLoading}
-                            fullWidth
                         >
-                            Clear All Cosmetics
+                            Close
                         </Button>
-
-                        <Button
-                            variant="outlined"
-                            color="primary"
-                            onClick={() => handleCleanupAction('reset')}
-                            disabled={cleanupLoading}
-                            fullWidth
-                        >
-                            Reset to Default Cosmetics
-                        </Button>
-                    </Box>
-
-                    <Typography variant="caption" color="textSecondary" sx={{ mt: 2, display: 'block' }}>
-                        Warning: These operations are irreversible. Individual cosmetics can be deleted using the &quot;Delete&quot; button on each item.
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button
-                        onClick={() => {
-                            setCleanupDialogOpen(false);
-                            setCleanupError(null);
-                            setCleanupSuccess(false);
-                        }}
-                        disabled={cleanupLoading}
-                    >
-                        Close
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                    </DialogActions>
+                </Dialog>
+            }
         </Box>
     );
 };
