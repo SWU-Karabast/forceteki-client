@@ -41,6 +41,10 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
             '&:hover': {
                 background: distributeDamage ? 'rgba(219, 19, 29, 1)' : distributeHealing && 'rgba(0, 186, 255, 1)',
             },
+            '&.Mui-disabled' : {
+                background: distributeDamage ? 'rgba(219, 19, 29, 0.3)' : distributeHealing && 'rgba(0, 186, 255, 0.3)',
+                color: 'rgba(255, 255, 255, 0.5)',
+            },
             flex: 1,
             minWidth: '50%',
             padding: '.2rem', // overrides the variant "contained"'s padding that was breaking layout
@@ -55,8 +59,26 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
     }
     return (
         <Box sx={styles.valueAdjuster}>
-            <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" disabled={!!atZero} onClick={() => handleValueAdjusterClick(-1)} >-1</Button>
-            <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" disabled={!!atMaxAssignable} onClick={() => handleValueAdjusterClick(+1)}>+1</Button>
+            <Button 
+                sx={styles.valueAdjusterButton} 
+                variant="contained" 
+                color="primary" 
+                disabled={!!atZero} 
+                onClick={() => handleValueAdjusterClick(-1)} 
+                onMouseEnter={(e) => e.stopPropagation()}
+            >
+                -1
+            </Button>
+            <Button 
+                sx={styles.valueAdjusterButton} 
+                variant="contained" 
+                color="primary" 
+                disabled={!!atMaxAssignable} 
+                onClick={() => handleValueAdjusterClick(+1)}
+                onMouseEnter={(e) => e.stopPropagation()}
+            >
+                +1
+            </Button>
         </Box>
     );
 }
