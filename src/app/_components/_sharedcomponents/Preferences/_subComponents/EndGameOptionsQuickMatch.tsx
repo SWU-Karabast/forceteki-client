@@ -9,7 +9,11 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
-function EndGameOptionsQuickMatch() {
+interface IProps {
+    handleOpenBugReport: () => void;
+}
+
+function EndGameOptionsQuickMatch({ handleOpenBugReport }: IProps) {
     const router = useRouter();
     const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, gameState, statsSubmitNotification } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
@@ -105,7 +109,8 @@ function EndGameOptionsQuickMatch() {
         contentContainer:{
             display:'flex',
             flexDirection:'row',
-            alignItems: 'center'
+            alignItems: 'center',
+            mb: '20px',
         }
     }
 
@@ -114,7 +119,7 @@ function EndGameOptionsQuickMatch() {
             <Box sx={styles.functionContainer}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Actions</Typography>
                 <Divider sx={{ mb: '20px' }}/>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                <Box sx={styles.contentContainer}>
                     <PreferenceButton variant={'concede'} text={'Return Home'} buttonFnc={handleReturnHome} />
                     <Typography sx={styles.typeographyStyle}>
                         Return to main page.
@@ -122,7 +127,7 @@ function EndGameOptionsQuickMatch() {
                 </Box>
                 {!isSpectator && (
                     <Box sx={styles.functionContainer}>
-                        <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                        <Box sx={styles.contentContainer}>
                             <PreferenceButton variant={'standard'} text={'Requeue'} buttonFnc={handleRequeue}/>
                             <Typography sx={styles.typeographyStyle}>
                                 Reenter the queue for a new opponent.
@@ -141,6 +146,17 @@ function EndGameOptionsQuickMatch() {
                                         ? 'Waiting for your opponent to confirm rematch.'
                                         : 'Confirm you wish to rematch with your opponent.'
                                     : 'Return to lobby to start a new game with the same opponent.'}
+                            </Typography>
+                        </Box>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report Bug'}
+                                buttonFnc={handleOpenBugReport}
+                                sx={{ minWidth: '140px' }}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                Report a bug to the developer team
                             </Typography>
                         </Box>
                     </Box>
