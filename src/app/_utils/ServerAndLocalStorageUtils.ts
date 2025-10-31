@@ -873,8 +873,7 @@ export const updateDeckName = async (deckId: string, newName: string, user: IUse
         });
 
         const data = await response.json();
-
-        if (!data.success) {
+        if (!response.ok) {
             console.error('Failed to update deck name:', data.message);
             throw new Error(`Failed to update deck name: ${data.message}`);
         }
