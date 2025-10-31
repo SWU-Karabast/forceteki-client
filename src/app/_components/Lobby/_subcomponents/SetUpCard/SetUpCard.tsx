@@ -11,7 +11,7 @@ import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { DeckSource, fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures,
     DeckValidationFailureReason,
@@ -27,7 +27,7 @@ import {
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
 import { SupportedDeckSources } from '@/app/_constants/constants';
-import PreferenceOptionWithIcon from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceOption';
+import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -47,16 +47,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
-    const [isJsonDeck, setIsJsonDeck] = useState<boolean>(false)
-    const [modalType, setModalType] = useState<string>('error');
-    const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     const { data: session } = useSession(); // Get session from next-auth
 
     // For deck error display
-    const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
-    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
+    const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
     const [displayError, setDisplayerror] = useState(false);
-    const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [blockError, setBlockError] = useState(false);
 
     const opponentReady = opponentUser?.ready;
@@ -90,14 +85,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         if(parsedInput.type === 'json'){
             setIsJsonDeck(true);
             setSaveDeck(false);
-            setErrorTitle('JSON Decks Notice');
-            setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
-            setModalType('warning')
+            setError(null, 'We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.', 'JSON Decks Notice', 'warning');
             return;
         }
         setIsJsonDeck(false);
-        setModalType('error');
-        setErrorTitle('Deck Validation Error');
+        clearErrorsFunc();
     }
 
     const handleLinkToggle = () =>{
@@ -137,9 +129,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
-                setDeckErrorSummary('Couldn\'t import. Deck is invalid or unsupported deckbuilder');
-                setDeckErrorDetails('Incorrect deck format or unsupported deckbuilder.');
-                setErrorModalOpen(true);
+                setError('Couldn\'t import. Deck is invalid or unsupported deckbuilder',
+                    'Incorrect deck format or unsupported deckbuilder.',
+                    undefined,
+                    'error')
+                setModalOpen(true);
                 return;
             }
             // save deck to local storage
@@ -155,25 +149,25 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     }
                 }catch (err) {
                     console.log(err);
-                    setDeckErrorSummary('Server error when saving deck to server.');
-                    setDeckErrorDetails('There was an error when saving deck to the server. Please contact the developer team on discord.');
-                    setErrorModalOpen(true);
+                    setError('Server error when saving deck to server.',
+                        'There was an error when saving deck to the server. Please contact the developer team on discord.',
+                        'Deck Validation Error', 'error');
+                    setModalOpen(true);
                 }
             }
 
             sendLobbyMessage(['changeDeck', deckData])
         }catch (error){
             setDisplayerror(true);
-            setDeckErrorDetails(undefined);
-            setErrorModalOpen(true)
+            clearErrorsFunc();
+            setModalOpen(true)
             if(error instanceof Error){
                 if(error.message.includes('403')) {
-                    setDeckErrorSummary('Couldn\'t import. The deck is set to private.');
-                    setDeckErrorDetails({
+                    setError('Couldn\'t import. The deck is set to private.',{
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
-                    });
+                    }, 'Deck Validation Error', 'error');
                 }else{
-                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                    setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error', 'error');
                 }
             }
             return;
@@ -187,9 +181,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         const temporaryErrors: IDeckValidationFailures = connectedUser?.importDeckErrors ?? [];
         if ((!deckErrors || Object.entries(deckErrors).length === 0) && (!temporaryErrors || Object.entries(temporaryErrors).length === 0)) {
             // No validation errors => clear any old error states
-            setDeckErrorSummary(null);
-            setDeckErrorDetails(undefined);
-            setErrorModalOpen(false);
+            clearErrorsFunc();
+            setModalOpen(false);
             setDisplayerror(false);
             setBlockError(false);
             return;
@@ -202,8 +195,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         if (deckErrors && Object.keys(deckErrors).length > 0) {
             // Show a short inline error message and store the full list
             setDisplayerror(true);
-            setDeckErrorSummary('Deck is invalid.');
-            setDeckErrorDetails(deckErrors);
+            setError('Deck is invalid.',deckErrors,'Deck Validation Error', 'error');
             setBlockError(true);
 
             // Check if any errors other than the specified ones exist
@@ -214,23 +206,21 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
             // Only open modal if there are validation errors besides the two excluded types
             if (hasOtherErrors) {
-                setErrorModalOpen(true);
+                setModalOpen(true);
             } else {
-                setErrorModalOpen(false);
+                setModalOpen(false);
             }
         }else{
-            setDeckErrorSummary(null);
-            setDeckErrorDetails(undefined);
-            setErrorModalOpen(false);
+            clearErrorsFunc();
+            setModalOpen(false);
             setDisplayerror(false);
             setBlockError(false);
         }
         if (temporaryErrors && !deckImportErrorsSeen) {
             // Only 'notImplemented' or no errors => clear them out
             setDisplayerror(true);
-            setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-            setDeckErrorDetails(temporaryErrors);
-            setErrorModalOpen(true);
+            setError('Couldn\'t import. Deck is invalid.',temporaryErrors, 'Deck Validation Error', 'error');
+            setModalOpen(true);
         }
     }, [connectedUser]);
 
@@ -492,12 +482,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                     if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
                                         setDisplayerror(true);
-                                        setDeckErrorSummary('Deck is invalid.');
-                                        setDeckErrorDetails(connectedUser.deckErrors);
+                                        setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error')
                                     } else {
                                         setDisplayerror(false);
-                                        setDeckErrorSummary(null);
-                                        setDeckErrorDetails(undefined);
+                                        clearErrorsFunc();
                                     }
                                     handleJsonDeck(e.target.value);
                                     setDeckLink(e.target.value);
@@ -507,7 +495,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 control={
                                     <Checkbox
                                         sx={styles.checkboxStyle}
-                                        disabled={isJsonDeck}
+                                        disabled={errorState.isJsonDeck}
                                         checked={saveDeck}
                                         onChange={(
                                             e: ChangeEvent<HTMLInputElement>,
@@ -517,12 +505,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                 }
                                 label={
                                     <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        {isJsonDeck ? (
+                                        {errorState.isJsonDeck ? (
                                             <Box>
                                                 JSON format cannot be saved.
                                                 <Link
                                                     sx={styles.errorMessageLinkPlain}
-                                                    onClick={() => setErrorModalOpen(true)}
+                                                    onClick={() => setModalOpen(true)}
                                                 >Details
                                                 </Link>
                                             </Box>
@@ -534,11 +522,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     )}
                     {(displayError || blockError) && (
                         <Typography variant={'body1'} color={'error'} sx={styles.errorMessageStyle}>
-                            {deckErrorSummary}{' '}
-                            {deckErrorDetails && (
+                            {errorState.summary}{' '}
+                            {errorState.details && (
                                 <Link
                                     sx={styles.errorMessageLink}
-                                    onClick={() => setErrorModalOpen(true) }
+                                    onClick={() => setModalOpen(true) }
                                 >
                                     Details
                                 </Link>
@@ -556,17 +544,17 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     </Button>
                 </>
             )}
-            {deckErrorDetails && (
+            {errorState.details && (
                 <ErrorModal
-                    title={errorTitle}
-                    open={errorModalOpen}
+                    title={errorState.title}
+                    open={errorState.modalOpen}
                     onClose={() => {
-                        setErrorModalOpen(false)
+                        setModalOpen(false)
                         setDeckImportErrorsSeen(true);
                     }}
-                    errors={deckErrorDetails}
+                    errors={errorState.details}
                     format={lobbyFormat}
-                    modalType={modalType}
+                    modalType={errorState.modalType}
                 />
             )}
             {lobbyState.isPrivate && (
