@@ -23,6 +23,7 @@ import { markAnnouncementAsSeen, shouldShowAnnouncement } from '@/app/_utils/Ser
 import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
 import { announcement } from '@/app/_constants/mockData';
 import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/UndoTutorialPopup';
+import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -53,8 +54,8 @@ const HomePagePlayMode: React.FC = () => {
         return (stored as SwuGameFormat) || SwuGameFormat.Premier;
     });
 
+    const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
     const [deckLink, setDeckLink] = useState<string>('');
-
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
 
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
@@ -316,6 +317,11 @@ const HomePagePlayMode: React.FC = () => {
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
                                 handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
+                                errorState={errorState}
+                                setError={setError}
+                                clearErrors={clearErrorsFunc}
+                                setIsJsonDeck={setIsJsonDeck}
+                                setModalOpen={setModalOpen}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -327,6 +333,11 @@ const HomePagePlayMode: React.FC = () => {
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
                                 handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
+                                errorState={errorState}
+                                setError={setError}
+                                clearErrors={clearErrorsFunc}
+                                setIsJsonDeck={setIsJsonDeck}
+                                setModalOpen={setModalOpen}
                             />
                         </TabPanel>
                         {showTestGames &&
