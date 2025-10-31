@@ -65,6 +65,12 @@ const GameCard: React.FC<IGameCardProps> = ({
             return;
         }
 
+        // Check if we're hovering over CardValueAdjuster
+        const eventTarget = event.target as HTMLElement;
+        if (eventTarget.closest('[data-value-adjuster]')) {
+            return;
+        }
+
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
