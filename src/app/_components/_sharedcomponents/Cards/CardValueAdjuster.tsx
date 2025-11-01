@@ -16,7 +16,19 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
         updateDistributionPrompt(card.uuid, amount);
     };
 
-    const atMaxAssignable = isIndirect && distributionPromptData && distributionPromptData.valueDistribution.find((entry: DistributionEntry) => entry.uuid === card.uuid)?.amount === ((card.hp ?? 0) - (card.damage ?? 0));
+
+    const counter = distributionPromptData?.valueDistribution.find((entry: DistributionEntry) => entry.uuid === card.uuid)?.amount ?? 0;
+    const atZero = counter === 0;
+    const maxAssignableForCard = (card.hp ?? 0) - (card.damage ?? 0);
+    // Only prevent over-assignment for indirect damage; for other types, allow over-assignment
+    const atMaxAssignable = isIndirect && distributionPromptData && counter === maxAssignableForCard;
+
+    // Calculate total amount already distributed across all targets
+    const totalDistributed = distributionPromptData?.valueDistribution.reduce((sum: number, entry: DistributionEntry) => sum + entry.amount, 0) ?? 0;
+    // Get the total amount available to distribute from the prompt state
+    const totalAvailable = gameState.players[connectedPlayer]?.promptState?.distributeAmongTargets?.amount ?? 0;
+    // Disable +1 if all available damage/healing has been distributed
+    const allDamageDistributed = totalDistributed >= totalAvailable && totalAvailable > 0;
 
     const type = gameState.players[connectedPlayer]?.promptState.distributeAmongTargets.type;
     const distributeDamage = type === 'distributeDamage' || type === 'distributeIndirectDamage';
@@ -36,8 +48,12 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
         },
         valueAdjusterButton: {
             background: distributeDamage ? 'rgba(219, 19, 29, 0.8)' : distributeHealing && 'rgba(0, 186, 255, 0.8)',
-            '&:hover': {
+            '&:hover:not(.Mui-disabled)': {
                 background: distributeDamage ? 'rgba(219, 19, 29, 1)' : distributeHealing && 'rgba(0, 186, 255, 1)',
+            },
+            '&.Mui-disabled' : {
+                background: distributeDamage ? 'rgba(219, 19, 29, 0.3)' : distributeHealing && 'rgba(0, 186, 255, 0.3)',
+                color: 'rgba(255, 255, 255, 0.5)',
             },
             flex: 1,
             minWidth: '50%',
@@ -52,9 +68,25 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
         },
     }
     return (
-        <Box sx={styles.valueAdjuster}>
-            <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" onClick={() => handleValueAdjusterClick(-1)} >-1</Button>
-            <Button sx={styles.valueAdjusterButton} variant="contained" color="primary" disabled={!!atMaxAssignable} onClick={() => handleValueAdjusterClick(+1)}>+1</Button>
+        <Box sx={styles.valueAdjuster} data-value-adjuster="true">
+            <Button
+                sx={styles.valueAdjusterButton}
+                variant="contained"
+                color="primary"
+                disabled={!!atZero}
+                onClick={() => handleValueAdjusterClick(-1)}
+            >
+                -1
+            </Button>
+            <Button
+                sx={styles.valueAdjusterButton}
+                variant="contained"
+                color="primary"
+                disabled={!!atMaxAssignable || allDamageDistributed}
+                onClick={() => handleValueAdjusterClick(+1)}
+            >
+                +1
+            </Button>
         </Box>
     );
 }
