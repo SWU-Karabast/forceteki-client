@@ -166,8 +166,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return styles.tags.format.premier;
             case SwuGameFormat.Open:
                 return styles.tags.format.open;
-            case SwuGameFormat.NextSetPreview:
-                return styles.tags.format.nextSet;
+            // case SwuGameFormat.NextSetPreview:
+            //     return styles.tags.format.nextSet;
             default:
                 return {};
         }
