@@ -17,6 +17,7 @@ export enum DeckSource {
     SWUnlimitedDB = 'SWUnlimitedDB',
     SWUCardHub = 'SWUCardHub',
     SWUBase = 'SWUBase',
+    MySWU = 'MySWU',
 }
 
 export interface IDeckData {
@@ -75,6 +76,8 @@ export const determineDeckSource = (deckLink: string): DeckSource => {
         return DeckSource.SWUBase;
     } else if (deckLink.includes('swucardhub.fr')) {
         return DeckSource.SWUCardHub;
+    } else if (deckLink.includes('my-swu.com')) {
+        return DeckSource.MySWU;
     }
 
     // Default fallback
