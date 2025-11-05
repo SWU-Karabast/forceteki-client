@@ -76,6 +76,8 @@ export const determineDeckSource = (deckLink: string): DeckSource => {
         return DeckSource.SWUBase;
     } else if (deckLink.includes('swucardhub.fr')) {
         return DeckSource.SWUCardHub;
+    } else if (deckLink.includes('swumetastats.com')) {
+        return DeckSource.SWUMetaStats;
     }
 
     // Default fallback

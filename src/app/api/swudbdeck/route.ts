@@ -162,11 +162,6 @@ export async function GET(req: Request) {
 
             response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
             if (!response.ok) {
-                if(response.status === 404) {
-                // SWUBase returns 404 for private decks. We'll forward it to a 403 to get the correct message to the user.
-                    return NextResponse.json({ error: 'Deck not found. Make sure the deck is set to Public on swubase.com.' }, { status: 403 });
-                }
-
                 console.error('SWUMetaStats API error:', response.statusText);
                 throw new Error(`SWUMetaStats API error: ${response.statusText}`);
             }
