@@ -235,6 +235,8 @@ const DeckPage: React.FC = () => {
                 return styles.swuBaseTag;
             case 'SWUMETASTATS':
                 return styles.swuMetaStatsTag;
+            case 'MYSWU':
+                return styles.mySwuTag;
             default:
                 console.log(`Unknown deck source: ${deckSource}`);
                 return styles.unknownTag;
@@ -444,6 +446,15 @@ const DeckPage: React.FC = () => {
                 color: '#000000',
             },
             boxShadow: '0 0 5px #00DBCC',
+        },
+        mySwuTag: {
+            borderColor: '#F65526',
+            color: '#F65526',
+            '&:hover': {
+                backgroundColor: '#F65526',
+                color: '#000000',
+            },
+            boxShadow: '0 0 5px #F65526',
         },
         unknownTag: {
             color: 'white',

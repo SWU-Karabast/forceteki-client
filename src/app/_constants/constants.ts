@@ -8,13 +8,19 @@ export enum MatchType {
 
 export enum SwuGameFormat {
     Premier = 'premier',
-    NextSetPreview = 'nextSetPreview',
+    // NextSetPreview = 'nextSetPreview',
     Open = 'open'
 }
 
 export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
-    [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
+    // [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
+    [SwuGameFormat.Open]: 'Open',
+};
+
+export const FormatTagLabels: Record<SwuGameFormat, string> = {
+    [SwuGameFormat.Premier]: 'Premier',
+    // [SwuGameFormat.NextSetPreview]: 'Next Set',
     [SwuGameFormat.Open]: 'Open',
 };
 
@@ -34,6 +40,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'swubase.com';
             case DeckSource.SWUMetaStats:
                 return 'swumetastats.com';
+            case DeckSource.MySWU:
+                return 'my-swu.com';
             default:
                 return source;
         }
@@ -50,4 +58,12 @@ export enum ZoneName {
     OutsideTheGame = 'outsideTheGame',
     Resource = 'resource',
     SpaceArena = 'spaceArena',
+}
+
+export enum QuickUndoAvailableState {
+    NoSnapshotAvailable = 'noSnapshotAvailable',
+    UndoRequestsBlocked = 'undoRequestsBlocked',
+    FreeUndoAvailable = 'freeUndoAvailable',
+    RequestUndoAvailable = 'requestUndoAvailable',
+    WaitingForConfirmation = 'waitingForConfirmation',
 }

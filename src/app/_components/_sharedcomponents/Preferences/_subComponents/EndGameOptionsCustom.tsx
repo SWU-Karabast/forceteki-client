@@ -9,9 +9,13 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
-function EndGameOptionsCustom() {
+interface IProps {
+    handleOpenBugReport: () => void;
+}
+
+function EndGameOptionsCustom({ handleOpenBugReport }: IProps) {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, gameState, statsSubmitNotification } = useGame();
+    const { sendLobbyMessage, sendMessage, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
 
@@ -19,7 +23,7 @@ function EndGameOptionsCustom() {
 
     const handleReturnHome = () => {
         sendMessage('manualDisconnect');
-        router.push(`/${gameState?.undoEnabled ? '?undoTest=true' : ''}`);
+        router.push('/');
     }
     const rematchRequest = lobbyState?.rematchRequest || null;
     const isInitiator = rematchRequest && rematchRequest.initiator === connectedPlayer;
@@ -141,7 +145,8 @@ function EndGameOptionsCustom() {
         contentContainer:{
             display:'flex',
             flexDirection:'row',
-            alignItems: 'center'
+            alignItems: 'center',
+            mb: '20px',
         }
     }
     return (
@@ -149,7 +154,7 @@ function EndGameOptionsCustom() {
             <Box sx={styles.functionContainer}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Home</Typography>
                 <Divider sx={{ mb: '20px' }}/>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                <Box sx={styles.contentContainer}>
                     <PreferenceButton variant={'concede'} text={'Return Home'} buttonFnc={handleReturnHome} />
                     <Typography sx={styles.typeographyStyle}>
                         Return to main page.
@@ -168,7 +173,7 @@ function EndGameOptionsCustom() {
                 <Box sx={styles.functionContainer}>
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Rematch</Typography>
                     <Divider sx={{ mb: '20px' }}/>
-                    <Box sx={{ ...styles.contentContainer, mb: '20px' }}>
+                    <Box sx={styles.contentContainer}>
                         <PreferenceButton
                             variant={'standard'}
                             text={resetButtonText}
@@ -179,7 +184,7 @@ function EndGameOptionsCustom() {
                             Restart the current game with no deck changes.
                         </Typography>
                     </Box>
-                    <Box sx={{ ...styles.contentContainer, mb: '20px' }}>
+                    <Box sx={styles.contentContainer}>
                         <PreferenceButton
                             variant={'standard'}
                             text={regularButtonText}
@@ -188,6 +193,17 @@ function EndGameOptionsCustom() {
                         />
                         <Typography sx={styles.typeographyStyle}>
                             Return to lobby to start a new game with the same opponent.
+                        </Typography>
+                    </Box>
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton
+                            variant={'standard'}
+                            text={'Report Bug'}
+                            buttonFnc={handleOpenBugReport}
+                            sx={{ minWidth: '140px' }}
+                        />
+                        <Typography sx={styles.typeographyStyle}>
+                            Report a bug to the developer team
                         </Typography>
                     </Box>
                 </Box>)

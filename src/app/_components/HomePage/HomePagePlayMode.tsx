@@ -9,9 +9,21 @@ import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/U
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
-import { setModerationSeenAsync } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { 
+    setModerationSeenAsync, 
+    retrieveDecksForUser, 
+    hasUserSeenUndoPopup, 
+    markUndoPopupAsSeen 
+} from '@/app/_utils/ServerAndLocalStorageUtils';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
 import { SwuGameFormat } from '@/app/_constants/constants';
+import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { useSession } from 'next-auth/react';
+import { markAnnouncementAsSeen, shouldShowAnnouncement } from '@/app/_utils/ServerAndLocalStorageUtils';
+import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
+import { announcement } from '@/app/_constants/mockData';
+import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/UndoTutorialPopup';
+import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -19,73 +31,83 @@ const HomePagePlayMode: React.FC = () => {
     const [testGameList, setTestGameList] = React.useState([]);
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+    const [showNewFeaturePopup, setShowNewFeaturePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
+    const [showUndoTutorialPopup, setShowUndoTutorialPopup] = useState<boolean>(false);
+    const [pendingFormSubmission, setPendingFormSubmission] = useState<(() => void) | null>(null);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
-    const { user, updateWelcomeMessage, updateModerationSeenStatus } = useUser();
+    const { user, isLoading: userLoading, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate } = useUser();
+    const { data: session } = useSession();
 
     // Deck Preferences State (moved from context)
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('useSavedDecks') === 'true';
-        }
-        return false;
+        return localStorage.getItem('useSavedDecks') === 'true';
     });
 
     const [favoriteDeck, setFavoriteDeck] = useState<string>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('selectedDeck') || '';
-        }
-        return '';
+        return localStorage.getItem('selectedDeck') || '';
     });
 
     const [format, setFormat] = useState<SwuGameFormat>(() => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('format');
-            return (stored as SwuGameFormat) || SwuGameFormat.Premier;
-        }
-        return SwuGameFormat.Premier;
+        const stored = localStorage.getItem('format');
+        return (stored as SwuGameFormat) || SwuGameFormat.Premier;
     });
 
+    const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
     const [deckLink, setDeckLink] = useState<string>('');
+    const [saveDeck, setSaveDeck] = useState<boolean>(false);
 
-    const [saveDeck, setSaveDeck] = useState<boolean>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('saveDeck') === 'true';
-        }
-        return false;
-    });
+    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
     // Sync deck preferences to localStorage
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('useSavedDecks', showSavedDecks.toString());
-        }
-    }, [showSavedDecks]);
+        localStorage.setItem('format', format);
+    }, [format]);
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('selectedDeck', favoriteDeck);
+    const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
+        let selectDeck = localStorage.getItem('selectedDeck');
+
+        if (selectDeck && !allDecks.some(deck => deck.deckID === selectDeck)) {
+            selectDeck = '';
+        }
+
+        if (!selectDeck) {
+            selectDeck = firstDeck || '';
+        }
+
+        if (selectDeck !== favoriteDeck) {
+            setFavoriteDeck(selectDeck);
+        }
+
+        if (localStorage.getItem('useSavedDecks') == null) {
+            setShowSavedDecks(true);
         }
     }, [favoriteDeck]);
 
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('format', format);
+    const fetchDecks = useCallback(async() => {
+        if (userLoading) {
+            return;
         }
-    }, [format]);
+
+        try {
+            await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
+        }catch {
+            alert('Server error when fetching decks');
+        }
+    }, [session?.user, user, userLoading, handleInitializeDeckSelection]);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('saveDeck', saveDeck.toString());
-        }
-    }, [saveDeck]);
+        fetchDecks();
+    }, [fetchDecks]);
+
+    const handleDeckManagement = useCallback(() => {
+        router.push('/DeckPage');
+    }, [router]);
 
     // Clear form errors function
     const clearErrors = useCallback(() => {
-        if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('clearDeckErrors'));
-        }
+        window.dispatchEvent(new CustomEvent('clearDeckErrors'));
     }, []);
 
     const closeWelcomePopup = () => {
@@ -96,6 +118,11 @@ const HomePagePlayMode: React.FC = () => {
     const closeUpdatePopup = () => {
         setShowUpdatePopup(false);
         updateWelcomeMessage();
+    }
+
+    const closeNewFeaturePopup = () => {
+        setShowNewFeaturePopup(false);
+        markAnnouncementAsSeen(announcement)
     }
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
@@ -109,14 +136,54 @@ const HomePagePlayMode: React.FC = () => {
         saveDeck,
     };
 
+    const handleShowSavedDecksChange = useCallback((value: boolean) => {
+        setShowSavedDecks(value);
+        localStorage.setItem('useSavedDecks', value.toString());
+    }, []);
+
+    const handleFavoriteDeckChange = useCallback((value: string) => {
+        setFavoriteDeck(value);
+        localStorage.setItem('selectedDeck', value);
+    }, []);
+
     const deckPreferencesHandlers = {
-        setShowSavedDecks: useCallback((value: boolean) => setShowSavedDecks(value), []),
-        setFavoriteDeck: useCallback((value: string) => setFavoriteDeck(value), []),
+        setShowSavedDecks: handleShowSavedDecksChange,
+        setFavoriteDeck: handleFavoriteDeckChange,
         setFormat: useCallback((value: SwuGameFormat) => setFormat(value), []),
         setSaveDeck: useCallback((value: boolean) => setSaveDeck(value), []),
     };
 
     const handleSetDeckLink = useCallback((value: string) => setDeckLink(value), []);
+
+    // Undo Tutorial Popup handlers
+    const handleFormSubmissionWithUndoCheck = useCallback((originalSubmissionFn: () => void) => {
+        // Check if user has seen the undo popup (works for both signed-in and anonymous users)
+        if (!hasUserSeenUndoPopup(user) && (process.env.NODE_ENV !== 'development' || process.env.NEXT_PUBLIC_SHOW_LOCAL_ANNOUNCEMENTS === 'true')) {
+            // User hasn't seen the popup, show it and store the submission function
+            setPendingFormSubmission(() => originalSubmissionFn);
+            setShowUndoTutorialPopup(true);
+        } else {
+            // User has seen the popup, proceed with normal submission
+            originalSubmissionFn();
+        }
+    }, [user]);
+
+    const handleUndoTutorialClose = useCallback(async () => {
+        setShowUndoTutorialPopup(false);
+        
+        // Mark the popup as seen (handles both signed-in and anonymous users)
+        try {
+            await markUndoPopupAsSeen(user, updateUndoPopupSeenDate);
+        } catch (error) {
+            console.error('Failed to mark undo popup as seen:', error);
+        }
+
+        // Execute the pending form submission
+        if (pendingFormSubmission) {
+            pendingFormSubmission();
+            setPendingFormSubmission(null);
+        }
+    }, [user, pendingFormSubmission, updateUndoPopupSeenDate]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -165,12 +232,14 @@ const HomePagePlayMode: React.FC = () => {
         if(user) {
             if (user.showWelcomeMessage && !showUpdatePopup) {
                 setShowMutedPopup(false);
+                setShowNewFeaturePopup(false);
                 setShowWelcomePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
             if(user.moderation){
                 setModerationDays(user.moderation.daysRemaining);
                 if(!user.moderation.hasSeen && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
+                    setShowNewFeaturePopup(false);
                     setShowMutedPopup(true);
                 }
                 // check if moderation object still exists
@@ -179,6 +248,11 @@ const HomePagePlayMode: React.FC = () => {
                 setShowMutedPopup(false);
             }
         }
+        if (shouldShowAnnouncement(announcement) && (!user || (!user.showWelcomeMessage && (!user.moderation || (user.moderation.hasSeen))))) {
+            setShowNewFeaturePopup(true);
+        }
+
+
         if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {
             try {
@@ -202,7 +276,7 @@ const HomePagePlayMode: React.FC = () => {
             }
         };
         fetchGameList();
-    }, [user]);
+    }, [user, showUpdatePopup,showMutedPopup, updateModerationSeenStatus]);
 
     const styles = {
         wrapper: {
@@ -240,6 +314,14 @@ const HomePagePlayMode: React.FC = () => {
                                 deckPreferencesHandlers={deckPreferencesHandlers}
                                 deckLink={deckLink}
                                 setDeckLink={handleSetDeckLink}
+                                savedDecks={savedDecks}
+                                handleDeckManagement={handleDeckManagement}
+                                handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
+                                errorState={errorState}
+                                setError={setError}
+                                clearErrors={clearErrorsFunc}
+                                setIsJsonDeck={setIsJsonDeck}
+                                setModalOpen={setModalOpen}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -248,6 +330,14 @@ const HomePagePlayMode: React.FC = () => {
                                 deckPreferencesHandlers={deckPreferencesHandlers}
                                 deckLink={deckLink}
                                 setDeckLink={handleSetDeckLink}
+                                savedDecks={savedDecks}
+                                handleDeckManagement={handleDeckManagement}
+                                handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
+                                errorState={errorState}
+                                setError={setError}
+                                clearErrors={clearErrorsFunc}
+                                setIsJsonDeck={setIsJsonDeck}
+                                setModalOpen={setModalOpen}
                             />
                         </TabPanel>
                         {showTestGames &&
@@ -272,8 +362,10 @@ const HomePagePlayMode: React.FC = () => {
             </Card>
             <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
             <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
+            <NewFeaturePopup open={showNewFeaturePopup} onClose={closeNewFeaturePopup} />
             <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
             <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
+            <UndoTutorialPopup open={showUndoTutorialPopup} onClose={handleUndoTutorialClose} />
         </>
     );
 };

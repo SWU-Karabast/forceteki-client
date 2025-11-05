@@ -1,6 +1,16 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { Box, Button, Popover, Tooltip, Typography, useMediaQuery } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+    Box,
+    Button,
+    CircularProgress,
+    IconButton,
+    Popover,
+    TextField,
+    Tooltip,
+    Typography,
+    useMediaQuery
+} from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
@@ -19,29 +29,33 @@ import {
     convertStoredToDeckDetailedData,
     deleteDecks,
     getDeckFromServer,
-    removeDeckFromLocalStorage,
+    removeDeckFromLocalStorage, updateDeckName,
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import {
     CardStyle,
     IDeckDetailedData,
-    IDeckPageStats,
-    IDeckStats,
-    IMatchTableStats,
-    IMatchupStatEntity,
     StoredDeck
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useUser } from '@/app/_contexts/User.context';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
+
 
 const DeckDetails: React.FC = () => {
     const router = useRouter();
     const { user } = useUser();
+    const [loading, setLoading] = useState(true);
     const [deckData, setDeckData] = useState<IDeckData | undefined>(undefined);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const [deckStats, setDeckStats] = React.useState<IDeckPageStats>({ wins: 0, winPercentage: 0, draws: 0, losses: 0, totalGames: 0 });
-    const [opponentStats, setOpponentStats] = React.useState<IMatchTableStats[] | null>(null);
     const params = useParams();
     const deckId = params?.DeckId;
+
+    // Rename states
+    const [isRenaming, setIsRenaming] = useState(false);
+    const [newDeckName, setNewDeckName] = useState('');
+    const [renameError, setRenameError] = useState<string | null>(null);
 
     // error handling
     const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -73,35 +87,42 @@ const DeckDetails: React.FC = () => {
         setAnchorElement(null);
     };
 
-    const calculateStats = (deckDataStats: IDeckStats | undefined) => {
-        const totalGames = deckDataStats ? deckDataStats.wins + deckDataStats.losses + deckDataStats.draws : 0;
-        const winPercentage = totalGames > 0 && deckDataStats ? Math.round((deckDataStats?.wins / totalGames) * 100) : 0;
-        const calculatedStats: IDeckPageStats = {
-            wins: deckDataStats?.wins ?? 0,
-            losses: deckDataStats?.losses ?? 0,
-            draws: deckDataStats?.draws ?? 0,
+    const deckStats = useMemo(() => {
+        const stats = displayDeck?.stats;
+        if (!stats) {
+            return {
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                totalGames: 0,
+                winPercentage: 0
+            };
+        }
+
+        const totalGames = stats.wins + stats.losses + stats.draws;
+        const winPercentage = totalGames > 0
+            ? Math.round((stats.wins / totalGames) * 100)
+            : 0;
+
+        return {
+            wins: stats.wins,
+            losses: stats.losses,
+            draws: stats.draws,
             totalGames,
             winPercentage
-        }
-        setDeckStats(calculatedStats);
-    }
+        };
+    }, [displayDeck?.stats]);
 
-    /**
-     * Formats opponent statistics with additional calculated fields
-     * @param opponentStats Array of opponent stats from the database
-     * @returns Formatted stats with added total and winPercentage fields
-     */
-    const getFormattedOpponentStats = (opponentStats: IMatchupStatEntity[] | undefined) => {
-        if (!opponentStats || !Array.isArray(opponentStats)) {
-            return [];
-        }
 
-        const oppStats = opponentStats.map(stat => {
+    const opponentStats = useMemo(() => {
+        const stats = displayDeck?.stats?.statsByMatchup;
+        if (!stats?.length) return [];
+
+        return stats.map(stat => {
             const wins = stat.wins || 0;
             const losses = stat.losses || 0;
             const draws = stat.draws || 0;
             const total = wins + losses + draws;
-            const winPercentage = total > 0 ? Math.round((wins / total) * 100) : 0;
 
             return {
                 leaderId: stat.leaderId,
@@ -112,11 +133,10 @@ const DeckDetails: React.FC = () => {
                 losses,
                 draws,
                 total,
-                winPercentage
+                winPercentage: total > 0 ? Math.round((wins / total) * 100) : 0
             };
         });
-        setOpponentStats(oppStats);
-    };
+    }, [displayDeck?.stats?.statsByMatchup]);
 
     useEffect(() => {
         fetchDeckFromServer(deckId)
@@ -139,10 +159,62 @@ const DeckDetails: React.FC = () => {
         } : undefined,
     });
 
+    const handleStartRename = () => {
+        setNewDeckName(displayDeck?.deck.name || '');
+        setIsRenaming(true);
+        setRenameError(null);
+    };
+
+    const handleCancelRename = () => {
+        setIsRenaming(false);
+        setNewDeckName('');
+        setRenameError(null);
+    };
+
+    const handleRenameKeyPress = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            handleConfirmRename();
+        } else if (event.key === 'Escape') {
+            handleCancelRename();
+        }
+    };
+
+    const handleConfirmRename = async () => {
+        if (!newDeckName.trim()) {
+            setRenameError('Deck name cannot be empty');
+            return;
+        }
+
+        if (newDeckName.trim().length > 50) {
+            setRenameError('Deck name must be 50 characters or less');
+            return;
+        }
+        try {
+            if (typeof deckId === 'string') {
+                await updateDeckName(deckId, newDeckName.trim(), user);
+                if (displayDeck) {
+                    setDisplayDeck({
+                        ...displayDeck,
+                        deck: {
+                            ...displayDeck.deck,
+                            name: newDeckName.trim()
+                        }
+                    });
+                }
+                setIsRenaming(false);
+                setRenameError(null);
+            }
+        } catch (error) {
+            console.error('Error renaming deck:', error);
+            setRenameError('Failed to rename deck. Please try again.');
+        }
+    };
+
     const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
         if (rawDeckId) {
             // we need to check if the deck is still available
             const deckId = Array.isArray(rawDeckId) ? rawDeckId[0] : rawDeckId;
+            setLoading(true);
             try {
                 // we get the deck from localStorage and set the link
                 let deckDataServer;
@@ -159,8 +231,6 @@ const DeckDetails: React.FC = () => {
                 const data = await fetchDeckData(deckDataServer.deck.deckLink, false);
                 setDeckData(data);
                 setDisplayDeck(deckDataServer);
-                calculateStats(deckDataServer.stats);
-                getFormattedOpponentStats(deckDataServer.stats?.statsByMatchup);
             } catch (error) {
                 if (error instanceof Error) {
                     setErrorModalOpen(true);
@@ -177,6 +247,8 @@ const DeckDetails: React.FC = () => {
                     setErrorModalOpen(true);
                     setDeckErrorDetails('Server error when attempting to retrieve deck: '+error);
                 }
+            } finally {
+                setLoading(false);
             }
         }
     }
@@ -383,6 +455,33 @@ const DeckDetails: React.FC = () => {
             flexDirection: 'column',
             alignItems:'start',
         },
+        renameContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            width: '100%',
+        },
+        renameTextField: {
+            '& .MuiInputBase-root': {
+                color: '#fff',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            },
+            '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(255, 255, 255, 0.23)',
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(255, 255, 255, 0.4)',
+            },
+            '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#038FC3',
+            },
+        },
+        renameIconButton: {
+            color: '#fff',
+            '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            },
+        },
         cardPreview: {
             borderRadius: '.38em',
             backgroundSize: 'cover',
@@ -429,6 +528,14 @@ const DeckDetails: React.FC = () => {
                 border: '1px solid rgba(0, 140, 255, 0.5)',
             },
         }
+    }
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     return (
@@ -484,9 +591,53 @@ const DeckDetails: React.FC = () => {
                         )}
                     </Popover>
                     <Box sx={styles.titleTextContainer}>
-                        <Typography variant="h3" sx={styles.titleText}>
-                            {deckData?.metadata.name}
-                        </Typography>
+                        {isRenaming ? (
+                            <Box sx={styles.renameContainer}>
+                                <TextField
+                                    autoFocus
+                                    size="small"
+                                    value={newDeckName}
+                                    onChange={(e) => setNewDeckName(e.target.value)}
+                                    onKeyDown={handleRenameKeyPress}
+                                    error={!!renameError}
+                                    helperText={renameError}
+                                    sx={styles.renameTextField}
+                                />
+                                <Tooltip title="Confirm">
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleConfirmRename}
+                                        sx={{ ...styles.renameIconButton, color: '#4caf50' }}
+                                    >
+                                        <CheckIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Cancel">
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleCancelRename}
+                                        sx={{ ...styles.renameIconButton, color: '#f44336' }}
+                                    >
+                                        <CloseIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        ) : (
+                            <Box sx={styles.renameContainer}>
+                                <Typography variant="h3" sx={styles.titleText}>
+                                    {displayDeck?.deck.name}
+                                </Typography>
+                                <Tooltip title="Rename deck">
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleStartRename}
+                                        sx={styles.renameIconButton}
+                                    >
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        )}
                         { opponentStats && (
                             <Box>
                                 <Tooltip title="Download as CSV">
@@ -518,8 +669,8 @@ const DeckDetails: React.FC = () => {
                             {opponentStats && (
                                 <AnimatedStatsTable
                                     data={opponentStats}
-                                    animationDuration={2000}
-                                    staggerDelay={100}
+                                    animationDuration={1000}
+                                    staggerDelay={10}
                                 />
                             )}
                         </Box>

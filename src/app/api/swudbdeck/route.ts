@@ -165,6 +165,37 @@ export async function GET(req: Request) {
                 console.error('SWUMetaStats API error:', response.statusText);
                 throw new Error(`SWUMetaStats API error: ${response.statusText}`);
             }
+        } else if (deckLink.includes('my-swu.com')) {
+            // Deck Links in the forms:
+            // https://my-swu.com/decks/${deckId}
+            // https://my-swu.com/decks/me/${deckId}
+            // https://my-swu.com/decks/explore/${category}/${deckId}
+            const withoutQuery = deckLink.split('?')[0];
+            const match = withoutQuery.match(/\/decks\/(?:me\/|explore\/[^\/]+\/)?([^\/]+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if (deckId == null) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            deckIdentifier = deckId;
+            deckSource = DeckSource.MySWU;
+
+            const apiUrl = `https://my-swu.com/api/decks/${deckId}/json`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if (response.status === 404) {
+                    // My-SWU returns 404 for private decks. We'll forward it to a 403 to get the correct message to the user.
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck is set to Public or Unlisted on my-swu.com.' }, { status: 403 });
+                }
+
+                console.error('My-SWU API error:', response.statusText);
+                throw new Error(`My-SWU API error: ${response.statusText}`);
+            }
         } else {
             console.error('Error: Deckbuilder not supported');
             return NextResponse.json({ error: 'Deckbuilder not supported' }, { status: 400 });

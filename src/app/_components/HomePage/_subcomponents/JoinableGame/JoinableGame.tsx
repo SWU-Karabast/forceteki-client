@@ -7,6 +7,8 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { ILobbyCardData } from '../../HomePageTypes';
 import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { FormatLabels, FormatTagLabels, SwuGameFormat } from '@/app/_constants/constants';
+import { get } from 'http';
 
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
@@ -121,9 +123,54 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         },
         lobbyInfo: {
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             gap: '1rem',
         },
+        tags: {
+            lobbySetting: {
+                padding: '4px 10px',
+                borderRadius: '15px',
+                fontSize: '0.75rem',
+                fontWeight: '500',
+                display: 'inline-block',
+                marginTop: '8px',
+                marginBottom: '12px',
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                border: '1px solid',
+                boxShadow: '0 0 5px',
+                width:'fit-content',
+            },
+            format: {
+                premier: {
+                    borderColor: '#70fb6e',
+                    color: '#70fb6e',
+                    boxShadow: '0 0 5px #70fb6e',
+                },
+                open: {
+                    borderColor: '#32e6da',
+                    color: '#32e6da',
+                    boxShadow: '0 0 5px #32e6da',
+                },
+                nextSet: {
+                    borderColor: '#ada2fd',
+                    color: '#ada2fd',
+                    boxShadow: '0 0 5px #ada2fd',
+                }
+            }
+        }
+    };
+
+    const getGameFormatTagStyle = (format: SwuGameFormat) => {
+        switch (format) {
+            case SwuGameFormat.Premier:
+                return styles.tags.format.premier;
+            case SwuGameFormat.Open:
+                return styles.tags.format.open;
+            // case SwuGameFormat.NextSetPreview:
+            //     return styles.tags.format.nextSet;
+            default:
+                return {};
+        }
     };
 
     const createCardObject = (cardData: ILobbyCardData): ISetCode => {
@@ -177,9 +224,19 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                             </Box>
                         </Box>
                     )}
-                    <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
+                    <Box>
+                        <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
+                        <Typography
+                            sx={{
+                                ...styles.tags.lobbySetting,
+                                ...getGameFormatTagStyle(lobby.format)
+                            }}
+                        >
+                            { FormatTagLabels[lobby.format] || lobby.format.toUpperCase() }
+                        </Typography>
+                    </Box>
                 </Box>
-                <Button onClick={() => joinLobby(lobby.id)}>Join Game</Button>
+                <Button onClick={() => joinLobby(lobby.id)}>Join</Button>
             </Box>
             <Popover
                 id="mouse-over-popover"

@@ -1,4 +1,4 @@
-import React, { useState, FormEvent, ChangeEvent, useEffect, useCallback } from 'react';
+import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react';
 import {
     Box,
     Button,
@@ -9,15 +9,14 @@ import {
     Typography,
     Radio,
     RadioGroup,
-    Link, IconButton,
+    Link,
     Divider,
     Tooltip,
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
 import StyledTextField from '../_styledcomponents/StyledTextField';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { DeckSource, fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
     DeckValidationFailureReason,
@@ -25,15 +24,13 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { SwuGameFormat, FormatLabels, SupportedDeckSources } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
-import { DisplayDeck, StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
     getUserPayload,
-    retrieveDecksForUser,
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
-import SWUDeckIcon from '@/app/_components/_sharedcomponents/customIcons/swuDeckIcon';
-import { useSession } from 'next-auth/react';
+import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 
 interface IDeckPreferences {
     showSavedDecks: boolean;
@@ -54,103 +51,72 @@ interface ICreateGameFormProps {
     deckPreferencesHandlers: IDeckPreferencesHandlers;
     deckLink: string;
     setDeckLink: (value: string) => void;
+    savedDecks: StoredDeck[];
+    handleDeckManagement: () => void;
+    handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
+    errorState: DeckErrorState;
+    setError: (summary: string | null, details?: IDeckValidationFailures | string, title?: string, modalType?: 'error' | 'warning') => void;
+    clearErrors: () => void;
+    setIsJsonDeck: (value: boolean) => void;
+    setModalOpen: (value: boolean) => void;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     deckPreferences,
     deckPreferencesHandlers,
     deckLink,
-    setDeckLink
+    setDeckLink,
+    savedDecks,
+    handleDeckManagement,
+    handleFormSubmissionWithUndoCheck,
+    errorState,
+    setError,
+    clearErrors,
+    setIsJsonDeck,
+    setModalOpen
 }) => {
     const router = useRouter();
-    const { user } = useUser();
+    const { user, isLoading: userLoading } = useUser();
     
     const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
     const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
-    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
     const [privateGame, setPrivateGame] = useState<boolean>(false);
-    const [errorModalOpen, setErrorModalOpen] = useState(false);
-    const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
-    const { data: session } = useSession(); // Get session from next-auth
+    const [thirtyCardMode, setThirtyCardMode] = useState<boolean>(false);
     const formatOptions = Object.values(SwuGameFormat);
-
-    // For a short, user-friendly error message
-    const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
-
-    // For the raw/technical error details
-    const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
-
-    const searchParams = useSearchParams();
-    const undoEnabled = searchParams.get('undoTest') === 'true';
-
-    const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
-        let selectDeck = favoriteDeck;
-        
-        if (favoriteDeck && !allDecks.some(deck => deck.deckID === favoriteDeck)) {
-            selectDeck = '';
-        }
-
-        if (!selectDeck) {
-            selectDeck = firstDeck || '';
-        }
-
-        if (selectDeck !== favoriteDeck) {
-            setFavoriteDeck(selectDeck);
-        }
-    }, [favoriteDeck, setFavoriteDeck]);
-
-    const handleDeckManagement = () => {
-        router.push('/DeckPage');
-    }
-
-    // Load saved decks from localStorage
-    const fetchDecks = useCallback(async() => {
-        try {
-            await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
-        }catch (err){
-            console.log(err);
-            alert('Server error when fetching decks');
-        }
-    }, [session?.user, user, handleInitializeDeckSelection]);
-
-    useEffect(() => {
-        fetchDecks();
-    }, [fetchDecks]);
-
-    // Listen for tab change events to clear errors
-    useEffect(() => {
-        const handleClearErrors = () => {
-            setDeckErrorSummary(null);
-            setDeckErrorDetails(undefined);
-            setErrorTitle('Deck Validation Error');
-        };
-
-        window.addEventListener('clearDeckErrors', handleClearErrors);
-
-        return () => {
-            window.removeEventListener('clearDeckErrors', handleClearErrors);
-        };
-    }, []);
     const handleChangeFormat = (format: SwuGameFormat) => {
         setFormat(format);
     }
+
+    useEffect(() => {
+        handleJsonDeck(deckLink);
+    }, [deckLink]);
+
+    const handleJsonDeck = (deckLink: string) => {
+        const parsedInput = parseInputAsDeckData(deckLink);
+        if(parsedInput.type === 'json'){
+            setIsJsonDeck(true)
+            setSaveDeck(false);
+            setError(null,'We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.','JSON Decks Notice','warning')
+            return;
+        }
+        clearErrors()
+        setIsJsonDeck(false);
+    }
+
     const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
         setShowSavedDecks(useSavedDecks);
-        setDeckErrorSummary(null);
-    }
-    const handleSelectFavoriteDeck = (deckID: string) => {
-        setFavoriteDeck(deckID);
+        clearErrors();
     }
 
     // Handle Create Game Submission
-    const handleCreateGameSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const handleCreateGameSubmitActual = async () => {
         let userDeck;
+        let deckType = 'url';
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         if(showSavedDecks) {
             const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
@@ -165,6 +131,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         let deckData = null;
         try {
             const parsedInput = parseInputAsDeckData(userDeck);
+            deckType = parsedInput.type;
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
                 if(favoriteDeck && deckData && showSavedDecks) {
@@ -178,38 +145,34 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
             }else{
-                setErrorTitle('Deck Validation Error');
-                setDeckErrorDetails('Incorrect deck format or unsupported deckbuilder.');
-                setDeckErrorSummary('Couldn\'t import. Deck is invalid or unsupported deckbuilder');
-                setErrorModalOpen(true);
+                setError('Couldn\'t import. Deck is invalid or unsupported deckbuilder',
+                    'Incorrect deck format or unsupported deckbuilder.',
+                    'Deck Validation Error','error');
+                setModalOpen(true);
             }
         }catch (error){
-            setDeckErrorDetails(undefined);
+            clearErrors();
             if(error instanceof Error){
                 if(error.message?.includes('403')) {
-                    setDeckErrorSummary('Couldn\'t import. The deck is set to private.');
-                    setErrorTitle('Deck Validation Error');
-                    setDeckErrorDetails({
-                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
-                    });
-                    setErrorModalOpen(true);
+                    setError('Couldn\'t import. The deck is set to private.',
+                        { [DeckValidationFailureReason.DeckSetToPrivate]: true },
+                        'Deck Validation Error',
+                        'error')
+                    setModalOpen(true);
                 } else if(error.message?.includes('Deck not found')) {
                     // Handle the specific 404 error messages from any deck source
-                    setDeckErrorSummary(error.message);
-                    setErrorTitle('Deck Not Found');
-                    setDeckErrorDetails(error.message);
-                    setErrorModalOpen(true);
+                    setError(error.message,error.message,'Deck not found','error');
+                    setModalOpen(true);
                 } else {
-                    setErrorTitle('Deck Validation Error');
-                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-                    setErrorModalOpen(true);
+                    setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');
+                    setModalOpen(true);
                 }
             }
             return;
         }
         try {
             // save deck to storage first!
-            if (saveDeck && deckData && deckLink){
+            if (saveDeck && deckData && deckLink && deckType === 'url'){
                 if(user) {
                     await saveDeckToServer(deckData, deckLink, user);
                     deckData.isPresentInDb = true;
@@ -223,7 +186,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 isPrivate: privateGame,
                 format: format,
                 lobbyName: lobbyName,
-                enableUndo: privateGame && undoEnabled,
+                allow30CardsInMainBoard: thirtyCardMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -239,40 +202,35 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             if (!response.ok) {
                 const errors = result.errors || {};
                 if(response.status === 403){
-                    setDeckErrorSummary('You must wait at least 20s before creating a new game.');
-                    setErrorTitle('Creation not allowed')
-                    setDeckErrorDetails('You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buts in the UI and avoid using the back button or closing the browser to leave games.');
-                    setErrorModalOpen(true);
+                    setError('You must wait at least 20s before creating a new game.',
+                        'You left the previous game/lobby abruptly, you can reconnect or wait 20s before starting a new game/lobby. Please use the game/lobby exit buts in the UI and avoid using the back button or closing the browser to leave games.',
+                        'Creation not allowed',
+                        'error');
+                    setModalOpen(true);
                 } else if(response.status === 400) {
                     if (result.message?.includes('Invalid game format')) {
-                        setErrorTitle('Create Game Error');
-                        setDeckErrorDetails(result.message);
-                        setDeckErrorSummary(null);
+                        setError(null,result.message,'Create Game Error','error');
                     } else {
-                        setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-                        setDeckErrorDetails(errors);
-                        setErrorTitle('Deck Validation Error');
+                        setError('Couldn\'t import. Deck is invalid.',errors,'Deck Validation Error','error');
                     }
-                    setErrorModalOpen(true);
+                    setModalOpen(true);
                 } else {
-                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-                    setErrorTitle('Deck Validation Error');
-                    setDeckErrorDetails(errors);
-                    setErrorModalOpen(true);
+                    setError('Couldn\'t import. Deck is invalid.',errors,'Deck Validation Error','error');
+                    setModalOpen(true);
                 }
                 return;
             }
-
-            setDeckErrorSummary(null);
-            setDeckErrorDetails(undefined);
-            setErrorTitle('Deck Validation Error');
+            clearErrors();
             router.push('/lobby');
-        } catch (error) {
-            setDeckErrorSummary('Error creating game.');
-            setDeckErrorDetails(undefined);
-            setErrorTitle('Server error');
-            setErrorModalOpen(true);
+        } catch {
+            setError('Error creating game.',undefined,'Server error','error');
+            setModalOpen(true);
         }
+    };
+
+    const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        handleFormSubmissionWithUndoCheck(handleCreateGameSubmitActual);
     };
 
     const styles = {
@@ -292,6 +250,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             '&.Mui-checked': {
                 color: '#fff',
             },
+            '&.Mui-disabled': {
+                color: 'rgba(255, 255, 255, 0.3)',
+            },
         },
         checkboxAndRadioGroupTextStyle: {
             color: '#fff',
@@ -310,6 +271,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             cursor: 'pointer',
             color: 'var(--selection-red);',
             textDecorationColor: 'var(--initiative-red);',
+        },
+        errorMessageLinkPlain:{
+            ml: '2px',
+            cursor: 'pointer',
+            color: 'white',
+            textDecorationColor: 'white',
         },
         manageDecks:{
             mt: '1rem',
@@ -371,8 +338,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 select
                                 value={favoriteDeck}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    handleSelectFavoriteDeck(e.target.value as string)
+                                    setFavoriteDeck(e.target.value as string)
                                 }
+                                disabled={userLoading}
                                 placeholder="Favorite Decks"
                             >
                                 {savedDecks.length === 0 ? (
@@ -396,12 +364,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 </Button>
                             </Box>
                         </FormControl>
-                        {deckErrorSummary && (
+                        {errorState.summary && (
                             <Typography variant={'body1'} sx={styles.errorMessageStyle}>
-                                {deckErrorSummary}{' '}
+                                {errorState.summary}{' '}
                                 <Link
                                     sx={styles.errorMessageLink}
-                                    onClick={() => setErrorModalOpen(true)}
+                                    onClick={() => setModalOpen(true)}
                                 >Details
                                 </Link>
                             </Typography>
@@ -433,18 +401,18 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 type="text"
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>{
+                                    clearErrors();
                                     setDeckLink(e.target.value);
-                                    setDeckErrorSummary(null);
-                                    setDeckErrorDetails(undefined);
+                                    handleJsonDeck(e.target.value);
                                 }}
                             />
                         </FormControl>
-                        {deckErrorSummary && (
+                        {errorState.summary && (
                             <Typography variant={'body1'} sx={styles.errorMessageStyle}>
-                                {deckErrorSummary}{' '}
+                                {errorState.summary}{' '}
                                 <Link
                                     sx={styles.errorMessageLink}
-                                    onClick={() => setErrorModalOpen(true)}
+                                    onClick={() => setModalOpen(true)}
                                 >Details
                                 </Link>
                             </Typography>
@@ -456,6 +424,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             control={
                                 <Checkbox
                                     sx={styles.checkboxStyle}
+                                    disabled={errorState.isJsonDeck}
                                     checked={saveDeck}
                                     onChange={(
                                         e: ChangeEvent<HTMLInputElement>,
@@ -465,7 +434,16 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             }
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Save Deck List
+                                    {errorState.isJsonDeck ? (
+                                        <Box>
+                                            JSON format cannot be saved.
+                                            <Link
+                                                sx={styles.errorMessageLinkPlain}
+                                                onClick={() => setModalOpen(true)}
+                                            >Details
+                                            </Link>
+                                        </Box>
+                                    ) : 'Save Deck List'}
                                 </Typography>
                             }
                         />
@@ -527,6 +505,11 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     </RadioGroup>
                 </FormControl>
 
+                {/* Beta Announcement */}
+                <Typography variant="body1" sx={{ color: 'yellow', textAlign: 'center', mb: '1rem' }}>
+                    30-card decks now available in Open format with private lobbies
+                </Typography>
+
                 {!privateGame && (
                     <>
                         <FormControl fullWidth sx={styles.formControlStyle}>
@@ -545,6 +528,25 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     </>
                 )}
 
+                {privateGame && format === SwuGameFormat.Open && (
+                    <>
+                        <Typography variant="body1" sx={styles.labelTextStyle}>
+                            Mainboard Minimum Size
+                        </Typography>
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            <StyledTextField
+                                select
+                                value={thirtyCardMode ? '30Card' : '50Card'}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setThirtyCardMode(e.target.value === '30Card')
+                                }
+                            >
+                                <MenuItem value="50Card">50 Cards</MenuItem>
+                                <MenuItem value="30Card">30 Cards</MenuItem>
+                            </StyledTextField>
+                        </FormControl>
+                    </>
+                )}
 
                 {/* Submit Button */}
                 <Button type="submit" variant="contained" sx={styles.submitButtonStyle}>
@@ -552,11 +554,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </Button>
             </form>
             <ErrorModal
-                open={errorModalOpen}
-                onClose={() => setErrorModalOpen(false)}
-                title={errorTitle}
-                errors={deckErrorDetails}
+                open={errorState.modalOpen}
+                onClose={() => setModalOpen(false)}
+                title={errorState.title}
+                errors={errorState.details}
                 format={format}
+                modalType={errorState.modalType}
             />
         </Box>
     );

@@ -100,12 +100,12 @@ export const authOptions: AuthOptions = {
             const rawToken = jwt.sign(token as object, process.env.NEXTAUTH_SECRET!, { algorithm: 'HS256' });
             session.jwtToken = rawToken
             session.user = {
-                id: token.id as string || null,
-                name: token.name || session.user?.name || null,
-                email: token.email || session.user?.email || null,
-                image: token.picture || session.user?.image || null,
+                id: token.id as string,
+                name: token.name || session.user?.name,
+                email: token.email || session.user?.email,
+                image: token.picture || session.user?.image,
                 provider: token.provider as string || 'unknown',
-                userId: token.userId ?? null
+                userId: token.userId
             };
             return session;
         },

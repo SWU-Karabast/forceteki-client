@@ -13,6 +13,7 @@ import { v4 as uuid } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
 import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { SupportedDeckSources } from '@/app/_constants/constants';
+import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 
 interface AddDeckDialogProps {
     open: boolean;
@@ -34,6 +35,14 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
     const handleSubmit = async () => {
         if (!deckLink) return;
         try {
+            const deckType = parseInputAsDeckData(deckLink)
+            if(deckType.type === 'json'){
+                setErrorTitle('Deck Validation Error');
+                setDeckErrorSummary('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
+                setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.')
+                setErrorModalOpen(true);
+                return;
+            }
             const deckData = await fetchDeckData(deckLink, false);
             if (deckData) {
                 deckData.deckID = user ? await saveDeckToServer(deckData, deckLink, user) : saveDeckToLocalStorage(deckData,deckLink);
@@ -154,7 +163,7 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                         </Tooltip>
                         )
                         <br />
-                        OR paste deck JSON directly
+                        We do <strong>not</strong> support direct JSON input
                     </Typography>
 
                     <Box sx={styles.inputContainerStyle}>

@@ -12,6 +12,7 @@ interface ErrorModalProps {
     title: string;
     errors?: IDeckValidationFailures | string;
     format?: SwuGameFormat;
+    modalType?: string;
 }
 
 export const ErrorModal: React.FC<ErrorModalProps> = ({
@@ -20,6 +21,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
     title,
     errors,
     format = SwuGameFormat.Premier,
+    modalType = 'error',
 }) => {
     // Inline styling for the modal content
     let messages: string[];
@@ -34,7 +36,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
         left: '50%',
         transform: 'translate(-50%, -50%)',
         backgroundColor: 'rgba(0, 0, 0, 0.87)', // A dark background
-        border: '2px solid var(--initiative-red)', // initiative-red border
+        border: modalType === 'error' ? '2px solid var(--initiative-red)' : '2px solid #ffd54f', // initiative-red border
         borderRadius: '5px',
         padding: '1.5rem',
         color: 'black',
@@ -51,7 +53,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
     return (
         <Modal open={open} onClose={onClose}>
             <Box sx={modalStyle}>
-                <Typography variant="h6" sx={{ color: 'var(--initiative-red)' }}>
+                <Typography variant="h6" sx={modalType === 'error' ? { color: 'var(--initiative-red)' } : { color: '#ffd54f' } }>
                     {title}
                 </Typography>
 
@@ -66,7 +68,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
                 </ul>
 
                 <PreferenceButton
-                    variant="concede"
+                    variant={modalType === 'error' ? 'concede' : 'warning'}
                     buttonFnc={onClose}
                     text={'Close'}
                 />

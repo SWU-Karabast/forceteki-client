@@ -18,7 +18,7 @@ enum PhaseName {
 }
 
 function CurrentGameTab() {
-    const { sendGameMessage, connectedPlayer, gameState, isSpectator } = useGame();
+    const { sendGameMessage, connectedPlayer, gameState, isSpectator, lobbyState } = useGame();
     const isDev = process.env.NODE_ENV === 'development';
     const router = useRouter();
     const currentPlayer = gameState.players[connectedPlayer];
@@ -26,6 +26,7 @@ function CurrentGameTab() {
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
+    const isPrivateLobby = lobbyState?.gameType === 'Private';
 
     useEffect(() => {
         if(confirmConcede){
@@ -119,14 +120,19 @@ function CurrentGameTab() {
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Concede</Typography>
                     <Divider sx={{ mb: '20px' }}/>
                     <Box sx={styles.contentContainer}>
-                        <PreferenceButton variant={'concede'} text={confirmConcede ? 'Are you sure?' : 'Concede Game'} buttonFnc={handleConcede}/>
+                        <PreferenceButton 
+                            variant={'concede'}
+                            text={confirmConcede ? 'Are you sure?' : 'Concede Game'}
+                            buttonFnc={handleConcede}
+                            sx={{ minWidth: '140px' }}
+                        />
                         <Typography sx={styles.typeographyStyle}>
                             Yield  current game and abandon. This match will count as a loss.
                         </Typography>
                     </Box>
                 </Box>
             )}
-            {(isDev || gameState.undoEnabled) && (
+            {(isDev || gameState.undoEnabled) && isPrivateLobby && (
                 <Box sx={styles.functionContainer}>
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Advanced Undo</Typography>
                     <Divider sx={{ mb: '20px' }}/>
@@ -136,9 +142,10 @@ function CurrentGameTab() {
                             text={'Action Phase'}
                             buttonFnc={handleUndoAction}
                             disabled={currentPlayer['availableSnapshots']?.actionPhaseSnapshots === 0}
+                            sx={{ minWidth: '140px' }}
                         />
                         <Typography sx={styles.typeographyStyle}>
-                            Revert to the start of the most recent action phase.
+                            Revert to the start of the most recent action phase
                         </Typography>
                     </Box>
                     <Box sx={styles.contentContainer}>
@@ -147,9 +154,10 @@ function CurrentGameTab() {
                             text={'Regroup Phase'} 
                             buttonFnc={handleUndoRegroup}
                             disabled={currentPlayer['availableSnapshots']?.regroupPhaseSnapshots === 0}
+                            sx={{ minWidth: '140px' }}
                         />
                         <Typography sx={styles.typeographyStyle}>
-                            Revert to the start of the most recent regroup phase.
+                            Revert to the start of the most recent regroup phase
                         </Typography>
                     </Box>
                 </Box>
@@ -169,9 +177,14 @@ function CurrentGameTab() {
                     </MuiLink>. Thanks!
                 </Typography>
                 <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                    <PreferenceButton variant={'standard'} text={'Report Bug'} buttonFnc={handleOpenBugReport} />
+                    <PreferenceButton
+                        variant={'standard'}
+                        text={'Report Bug'}
+                        buttonFnc={handleOpenBugReport}
+                        sx={{ minWidth: '140px' }}
+                    />
                     <Typography sx={styles.typeographyStyle}>
-                        Report a bug to the developer team.
+                        Report a bug to the developer team
                     </Typography>
                 </Box>
             </Box>

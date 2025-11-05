@@ -8,6 +8,7 @@ import { DeckJSON } from '@/app/_utils/checkJson';
 import { v4 as uuid } from 'uuid';
 import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
+import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
 
 /* Secondary functions */
 /**
@@ -543,23 +544,59 @@ export const getDeckFromServer = async (deckId: string, user:IUser): Promise<IDe
 };
 
 /**
+ * Checks if the user has linked their SWUStats account
+ * @param user The current user
+ * @returns Promise that resolves to boolean indicating if SWUStats is linked
+ */
+export const checkSwuStatsLinkStatus = async (
+    user: IUser
+): Promise<boolean> => {
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/swustatsLink`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            }
+        );
+
+        if (!response.ok) {
+            // Handle authentication errors gracefully
+            if (response.status === 401) {
+                return false;
+            }
+            throw new Error('Failed to check SWUStats link status');
+        }
+
+        const result = await response.json();
+        return result.linked;
+    } catch (error) {
+        console.error('Error checking SWUStats link status:', error);
+        throw error;
+    }
+};
+
+/**
  * Saves sound preferences to the server
  * @param user The current user
- * @param soundPreferences The sound preferences to save
+ * @param preferences
  * @returns Promise that resolves to boolean indicating success
  */
-export const saveSoundPreferencesToServer = async(
-    user: IUser | null,
-    soundPreferences: IPreferences['sound']
+export const savePreferencesToServer = async(
+    user: IUser,
+    preferences: IPreferences
 ): Promise<boolean> => {
     try {
         const payload = {
             user,
-            soundPreferences
+            preferences
         };
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/save-sound-preferences`, {
-            method: 'POST',
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/preferences`, {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -680,3 +717,186 @@ export const unlinkSwuStatsAsync = async(
     }
 };
 
+
+
+export const shouldShowAnnouncement = (announcement: IAnnouncement): boolean =>{
+    try {
+        if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_SHOW_LOCAL_ANNOUNCEMENTS !== 'true') {
+            return false;
+        }
+
+        const now = new Date();
+        const endDate = new Date(announcement.endDate);
+        cleanupExpiredAnnouncementKeys();
+        if (now > endDate) {
+            return false; // Past end date, don't show
+        }
+        const hasSeenIt = localStorage.getItem(`swu-announcement-${announcement.key}`) !== null;
+        return !hasSeenIt;
+    }catch(error){
+        console.error('Error checking if announcement should be shown:', error);
+        return false; // should we display an error?
+    }
+}
+
+export const markAnnouncementAsSeen = (announcement: IAnnouncement): void => {
+    try {
+        localStorage.setItem(`swu-announcement-${announcement.key}`, JSON.stringify({ key:announcement.key, endDate:announcement.endDate }));
+    } catch (error) {
+        console.error('Error marking announcement as seen:', error);
+        throw error;
+    }
+};
+
+/**
+* Clean up localStorage by removing seen announcements that are no longer active
+* Call this occasionally (e.g., on app start) to keep localStorage clean
+*/
+export const cleanupExpiredAnnouncementKeys = (): void => {
+    try {
+        // Check all localStorage keys for announcement keys
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('swu-announcement-')) {
+                // If this announcement is old we remove it from localStorage
+                const storedAnnouncement = JSON.parse(<string>localStorage.getItem(key)) as IAnnouncement;
+                const now = new Date();
+                const endDate = new Date(storedAnnouncement.endDate);
+                if (now > endDate) {
+                    localStorage.removeItem(key);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error cleaning up expired announcement keys:', error);
+    }
+};
+
+/**
+ * Saves the undo popup seen date to localStorage for anonymous users
+ * @param date The date string when the popup was seen
+ */
+export const saveUndoPopupSeenToLocalStorage = (date: string): void => {
+    try {
+        localStorage.setItem('undoPopupSeenDate', date);
+    } catch (error) {
+        console.error('Error saving undo popup seen date to localStorage:', error);
+    }
+};
+
+/**
+ * Gets the undo popup seen date from localStorage for anonymous users
+ * @returns The date string when the popup was seen, or null if not seen
+ */
+export const getUndoPopupSeenFromLocalStorage = (): string | null => {
+    try {
+        return localStorage.getItem('undoPopupSeenDate');
+    } catch (error) {
+        console.error('Error getting undo popup seen date from localStorage:', error);
+        return null;
+    }
+};
+
+/**
+ * Checks if the user has seen the undo popup, handling both signed-in and anonymous users
+ * @param user The current user (or null if anonymous)
+ * @returns True if the user has seen the popup, false otherwise
+ */
+export const hasUserSeenUndoPopup = (user: IUser | null): boolean => {
+    if (user) {
+        // Signed-in user: check server data
+        if (!!user.undoPopupSeenDate) {
+            saveUndoPopupSeenToLocalStorage(user.undoPopupSeenDate.toString());
+            return true;
+        }
+
+        return false;
+    } else {
+        // Anonymous user: check localStorage
+        return !!getUndoPopupSeenFromLocalStorage();
+    }
+};
+
+/**
+ * Marks the undo popup as seen, handling both signed-in and anonymous users
+ * @param user The current user (or null if anonymous)
+ * @param updateCachedLocalState Optional callback to update local user context state for signed-in users
+ * @returns Promise that resolves when the operation is complete (for server calls)
+ */
+export const markUndoPopupAsSeen = async (user: IUser | null, updateCachedLocalState: () => void): Promise<void> => {
+    const currentDate = new Date().toISOString();
+    
+    if (user) {
+        // Signed-in user: update local state first for immediate UI update
+        if (updateCachedLocalState) {
+            updateCachedLocalState();
+        }
+        
+        // Then save to server
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/undo-popup-seen`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+        } catch (error) {
+            console.error('Failed to mark undo popup as seen on server:', error);
+            throw error;
+        }
+    }
+    
+    // save to local storage for both signed-in and anonymous so that a signed-in user doesn't get a repeat
+    saveUndoPopupSeenToLocalStorage(currentDate);
+};
+
+/**
+ * Updates the name of a deck
+ * @param deckId The deck ID to update
+ * @param newName The new name for the deck
+ * @param user The current user (or null if anonymous)
+ * @returns Promise that resolves when the update is complete
+ */
+export const updateDeckName = async (deckId: string, newName: string, user: IUser | null): Promise<void> => {
+    if (user) {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck/${deckId}/rename`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                newName,
+                user
+            }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            console.error('Failed to update deck name:', data.message);
+            throw new Error(`Failed to update deck name: ${data.message}`);
+        }
+    } else {
+        updateDeckNameInLocalStorage(deckId, newName);
+    }
+};
+
+/**
+ * Updates a deck name in localStorage
+ * @param deckId The deck ID to update
+ * @param newName The new name for the deck
+ */
+const updateDeckNameInLocalStorage = (deckId: string, newName: string): void => {
+    const deckKey = `swu_deck_${deckId}`;
+    const deckDataJSON = localStorage.getItem(deckKey);
+
+    if (deckDataJSON) {
+        const deckData = JSON.parse(deckDataJSON) as StoredDeck;
+        deckData.name = newName;
+        localStorage.setItem(deckKey, JSON.stringify(deckData));
+    } else {
+        console.error(`Deck with ID ${deckId} not found in localStorage`);
+        throw new Error(`Deck with ID ${deckId} not found`);
+    }
+};
