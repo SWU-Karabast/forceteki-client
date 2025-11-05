@@ -116,7 +116,8 @@ export async function GET(req: Request) {
                 console.error('SWUCardHub API error:', response.statusText);
                 throw new Error(`SWUCardHub API error: ${response.statusText}`);
             }
-        } else if (deckLink.includes('swubase.com')) {
+        } 
+        else if (deckLink.includes('swubase.com')) {
             // Deck Links in the form: https://swubase.com/decks/${deckId}
             const match = deckLink.match(/\/decks\/([^\/]+)\/?$/);
             const deckId = match ? match[1] : null;
@@ -142,6 +143,27 @@ export async function GET(req: Request) {
 
                 console.error('SWUBase API error:', response.statusText);
                 throw new Error(`SWUBase API error: ${response.statusText}`);
+            }
+        }
+        else if (deckLink.includes('swumetastats.com')) {
+            const match = deckLink.match(/\/decklists\/([^\/]+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if(deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.SWUMetaStats;
+            if (!deckId) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            const apiUrl = `https://www.swumetastats.com/api/decklists/${deckId}/json`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                console.error('SWUMetaStats API error:', response.statusText);
+                throw new Error(`SWUMetaStats API error: ${response.statusText}`);
             }
         } else if (deckLink.includes('my-swu.com')) {
             // Deck Links in the forms:
