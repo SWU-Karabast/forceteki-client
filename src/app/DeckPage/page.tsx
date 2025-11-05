@@ -437,13 +437,13 @@ const DeckPage: React.FC = () => {
             boxShadow: '0 0 5px #4CFF85',
         },
         mySwuTag: {
-            borderColor: '#F6BD26',
-            color: '#F6BD26',
+            borderColor: '#F65526',
+            color: '#F65526',
             '&:hover': {
-                backgroundColor: '#F6BD26',
+                backgroundColor: '#F65526',
                 color: '#000000',
             },
-            boxShadow: '0 0 5px #F6BD26',
+            boxShadow: '0 0 5px #F65526',
         },
         unknownTag: {
             color: 'white',
