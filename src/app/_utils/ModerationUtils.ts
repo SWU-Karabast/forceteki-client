@@ -1,4 +1,4 @@
-import { IModerationAction } from '@/app/_contexts/UserTypes';
+import { IModerationAction, IUser } from '@/app/_contexts/UserTypes';
 
 export const getMuteDisplayText = (moderation?: IModerationAction): string | null => {
     if (!moderation?.endDate) return '';

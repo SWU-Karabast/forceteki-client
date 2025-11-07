@@ -7,14 +7,13 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
-const DeckDiscard: React.FC<IDeckDiscardProps> = (
-    trayPlayer
-) => {
+const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
     const { isPortrait } = useScreenOrientation();
-    
+    const { getCardback } = useCosmetics();
     // Refs for individual card containers
     const discardRef = useRef<HTMLDivElement>(null);
     const deckRef = useRef<HTMLDivElement>(null);
@@ -67,13 +66,13 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         };
     }, [isPortrait]); // Re-run when portrait mode changes
 
-    const topDiscardCard = gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'].at(-1);
+    const topDiscardCard = gameState?.players[trayPlayer]?.cardPiles['discard'].at(-1);
     const topDiscardCardUrl = topDiscardCard && typeof topDiscardCard === 'object' ? `url(${s3CardImageURL(topDiscardCard)})` : 'none';
-    const selectableDiscardCard = gameState.players[trayPlayer.trayPlayer].cardPiles.discard.some((item: { selectable: boolean }) => item.selectable === true);
+    const selectableDiscardCard = gameState.players[trayPlayer].cardPiles.discard.some((item: { selectable: boolean }) => item.selectable === true);
 
     const handleDiscardToggle = () => {
-        const playerName = connectedPlayer != trayPlayer.trayPlayer ? 'Your Opponent\'s' : 'Your';
-        const existingPopup = popups.find(popup => popup.uuid === `${trayPlayer.trayPlayer}-discard`);
+        const playerName = connectedPlayer != trayPlayer ? 'Your Opponent\'s' : 'Your';
+        const existingPopup = popups.find(popup => popup.uuid === `${trayPlayer}-discard`);
 
         if (existingPopup && existingPopup.source === PopupSource.PromptState) {
             // TODO: allow game propt to be toggled
@@ -83,9 +82,9 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
             // });
         } else {
             togglePopup('pile', {
-                uuid: `${trayPlayer.trayPlayer}-discard`,
+                uuid: `${trayPlayer}-discard`,
                 title: `${playerName} discard`,
-                cards: gameState?.players[trayPlayer.trayPlayer]?.cardPiles['discard'],
+                cards: gameState?.players[trayPlayer]?.cardPiles['discard'],
                 source: PopupSource.User,
                 buttons: null
             })
@@ -111,16 +110,16 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
         return { 
             anchorOrigin:{
-                vertical: connectedPlayer != trayPlayer.trayPlayer ? 'top' : 'bottom',
+                vertical: connectedPlayer != trayPlayer ? 'top' : 'bottom',
                 horizontal: 'right',
             },
             transformOrigin: {
-                vertical: connectedPlayer != trayPlayer.trayPlayer ? 'top' : 'bottom',
+                vertical: connectedPlayer != trayPlayer ? 'top' : 'bottom',
                 horizontal: 'left',
             } 
         };
     }
-
+    console.log(cardback);
     const styles = {
         containerStyle: {
             ...debugBorder('yellow'),
@@ -184,7 +183,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
                 backgroundSize: '88%',
-                backgroundImage: 'url(\'/card-back.png\')',
+                backgroundImage: cardback ? `url(${getCardback(cardback).path})` : 'url(\'/card-back.png\')',
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',
                 alignItems: 'center',
@@ -222,7 +221,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = (
         }
     }
 
-    const deckComponent = <Typography sx={styles.deck.deckContentStyle}>{gameState?.players[trayPlayer.trayPlayer].numCardsInDeck}</Typography>
+    const deckComponent = <Typography sx={styles.deck.deckContentStyle}>{gameState?.players[trayPlayer].numCardsInDeck}</Typography>
 
     return (
         <Box sx={styles.containerStyle}>

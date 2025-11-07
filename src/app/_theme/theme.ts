@@ -1,4 +1,3 @@
-import { Height } from '@mui/icons-material';
 import { Theme, createTheme } from '@mui/material/styles';
 
 export const theme: Theme = createTheme({
@@ -23,7 +22,7 @@ export const theme: Theme = createTheme({
             desktopHD: 1600,
             xl: 1920,
             xxl: 2560,
-            xxxl: 3840             
+            xxxl: 3840
         },
     },
     typography: {
@@ -242,7 +241,7 @@ export const theme: Theme = createTheme({
                         borderColor: 'transparent',
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: 'transparent', 
+                        borderColor: 'transparent',
                     },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                         borderColor: '#7286A0',
@@ -300,6 +299,6 @@ export const theme: Theme = createTheme({
                 },
             }
         },
-        
+
     },
 });

@@ -18,14 +18,23 @@ export const s3ImageURL = (path: string) => {
     return s3Bucket + path;
 };
 
-export const s3CardImageURL = (card: ICardData | IServerCardData | ISetCode | IPreviewCard, cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain ) => {
-    if (((isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card)) && !card?.setId) && !card?.id) return s3ImageURL('game/swu-cardback.webp');
-
-    // we check which type it is
+export function s3CardImageURL(
+    card: ICardData | ISetCode | IServerCardData | IPreviewCard,
+    cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain,
+    cardback?: string,
+): string {
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
+    if ((isGameOrSetCard && !card?.setId) && !card?.id) {
+        return cardback ? cardback : s3ImageURL('game/swu-cardback.webp');
+    }
     const setId = isGameOrSetCard ? card.setId : parseSetId(card.id);
     // check if the card has a type
-    const cardType = 'type' in card ? card.type || (Array.isArray(card.types) ? card.types.join() : card.types) : 'types' in card ? card.types : undefined;
+    let cardType: string | undefined;
+    if ('type' in card && card.type) {
+        cardType = card.type;
+    } else if ('types' in card && card.types != null) {
+        cardType = Array.isArray(card.types) ? card.types.join() : card.types;
+    }
     const format = cardStyle === CardStyle.InPlay ? 'truncated' : 'standard';
 
     const tokenIds = ['3941784506', '3463348370', '7268926664', '9415311381', '8752877738', '2007868442', '6665455613']

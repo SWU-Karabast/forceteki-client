@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 
 
-export default function DeckLayout({
+export default function ModLayout({
     children,
 }: {
     children: React.ReactNode;
@@ -43,7 +43,6 @@ export default function DeckLayout({
         },
     }
     return (
-        // TODO: Update this to use Card
         <Box sx={styles.mainContainer}>
             <Box sx={styles.overlayStyle}>
                 {children}
