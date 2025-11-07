@@ -119,7 +119,6 @@ function CosmeticsTab() {
             return titleA.localeCompare(titleB);
         });
     };
-
     // Create playmats list with 'None' option
     const getPlaymatOptions = () => {
         const noneOption: IRegisteredCosmeticOption = {
@@ -221,7 +220,7 @@ function CosmeticsTab() {
                                         path={cardback.path}
                                         onClick={() => onCardbackClick(cardback.id)}
                                         title={cardback.title}
-                                        selected={selectedCardback === cardback.id}
+                                        selected={selectedCardback === 'Default' ? cardback.title === 'Default' : selectedCardback === cardback.id}
                                     />
                                 ))
                             }
@@ -268,7 +267,7 @@ function CosmeticsTab() {
                                         path={background.path}
                                         onClick={() => onBackgroundClick(background.id)}
                                         title={background.title}
-                                        selected={selectedBackground === background.id}
+                                        selected={selectedBackground === 'Default' ? background.title === 'Default' : selectedBackground === background.id}
                                     />
                                 ))
                             }

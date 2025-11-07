@@ -43,7 +43,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-
+    console.log(opponentsCardback);
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         hoverTimeout.current = window.setTimeout(() => {
@@ -197,7 +197,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.leftColumn,
                 }}
             >
-                <DeckDiscard trayPlayer={trayPlayer} />
+                <DeckDiscard trayPlayer={trayPlayer} cardback={opponentsCardback} />
                 <Resources trayPlayer={trayPlayer}/>
             </Grid>
 

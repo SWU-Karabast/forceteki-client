@@ -25,12 +25,12 @@ const GameBoard = () => {
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer].user;
     const background = getBackground(user?.cosmetics?.background ?? null);
-    const playMatsDisabled = user?.cosmetics?.disablePlaymats ?? false;
+    const playMatsDisabled = user?.cosmetics?.disablePlaymats ?? true;
     const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
     const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
     const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
-    const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : 'none';
-    const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId !== 'none' ? getPlaymat(theirPlaymatId) : null;
+    const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
+    const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {

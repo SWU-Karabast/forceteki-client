@@ -22,7 +22,7 @@ function CosmeticItem(cosmeticItem: ICosmeticItem) {
         buttonStyle:{
             border: '1px solid',
             borderColor: '#20344280',
-            backgroundColor: cosmeticItem.selected ? 'rgba(50, 80, 102, 0.2)' : 'transparent',
+            backgroundColor: cosmeticItem.selected ? 'rgba(50, 80, 102, 0.6)' : 'transparent',
             display: 'flex',
             height: '13.5rem',
             width: '10.5rem',

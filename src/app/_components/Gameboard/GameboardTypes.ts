@@ -33,6 +33,7 @@ export interface IBoardProps {
 
 export interface IDeckDiscardProps {
     trayPlayer: string;
+    cardback?: string;
 }
 
 export interface IResourcesProps {

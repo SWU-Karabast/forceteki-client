@@ -13,7 +13,7 @@ export const GET = async (request: NextRequest) => {
             server: true, // We'll assume server is available if we can make the call
             s3: s3Service !== null
         };
-
+        console.log('HELLO???');
         if (!s3Service) {
             return NextResponse.json(
                 {

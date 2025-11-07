@@ -1,6 +1,10 @@
 'use client';
 import React from 'react';
-import { IRegisteredCosmeticOption, IRegisteredCosmetics, RegisteredCosmeticType } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import {
+    IRegisteredCosmeticOption,
+    IRegisteredCosmetics,
+    RegisteredCosmeticType
+} from '../_components/_sharedcomponents/Preferences/Preferences.types';
 import { ServerApiService } from '../_services/ServerApiService';
 
 interface CosmeticsContextProps {
@@ -31,11 +35,11 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
     const [cosmetics, setCosmetics] = React.useState<IRegisteredCosmetics>(defaultCosmetics);
     const getCosmeticDefault = (type: RegisteredCosmeticType): IRegisteredCosmeticOption => {
         switch(type) {
-            case 'cardback':
+            case RegisteredCosmeticType.Cardback:
                 return cosmetics.cardbacks.find((cb) => cb.title === 'Default')!;
-            case 'background':
+            case RegisteredCosmeticType.Background:
                 return cosmetics.backgrounds.find((bg) => bg.title === 'Default')!;
-            case 'playmat':
+            case RegisteredCosmeticType.Playmat:
                 return { id: 'none', title: 'None', type: RegisteredCosmeticType.Playmat, path: '' };
             default:
                 throw new Error('Invalid cosmetic type');

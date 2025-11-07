@@ -5,7 +5,7 @@ import { IRegisteredCosmeticOption } from '../_components/_sharedcomponents/Pref
  * Static helper class for communicating with the forceteki server API
  */
 export class ServerApiService {
-    private static baseUrl: string = process.env.NEXT_PUBLIC_ROOT_URL || 'http://localhost:9500';
+    private static baseUrl: string | undefined = process.env.NEXT_PUBLIC_ROOT_URL;
 
     /**
      * Wrapper for fetch requests with error handling
@@ -77,7 +77,7 @@ export class ServerApiService {
         const response = await this.fetchWithErrorHandling<{
             success: boolean;
             deletedCount: number;
-        }>(`${this.baseUrl}/api/cosmetics/cleanup/all`, {
+        }>(`${this.baseUrl}/api/cosmetics`, {
             method: 'DELETE',
             headers: {
                 ...(cookies && { Cookie: cookies }),
@@ -92,8 +92,8 @@ export class ServerApiService {
             success: boolean;
             message: string;
             deletedCount: number;
-        }>(`${this.baseUrl}/api/cosmetics/cleanup/reset`, {
-            method: 'DELETE',
+        }>(`${this.baseUrl}/api/cosmetics-reset`, {
+            method: 'POST',
             headers: {
                 ...(cookies && { Cookie: cookies }),
             },

@@ -19,9 +19,9 @@ export const s3ImageURL = (path: string) => {
 };
 
 export function s3CardImageURL(
-  card: ICardData | ISetCode | IServerCardData | IPreviewCard,
-  cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain,
-  cardback?: string,
+    card: ICardData | ISetCode | IServerCardData | IPreviewCard,
+    cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain,
+    cardback?: string,
 ): string {
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
     if ((isGameOrSetCard && !card?.setId) && !card?.id) {
