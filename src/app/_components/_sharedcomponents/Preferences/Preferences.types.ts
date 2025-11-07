@@ -2,7 +2,7 @@ import { SxProps } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 
 export type IButtonType = {
-    variant: 'concede' | 'standard',
+    variant: 'concede' | 'standard' | 'warning',
     text?: string,
     buttonFnc?: () => void,
     disabled?: boolean,

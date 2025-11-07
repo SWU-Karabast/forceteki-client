@@ -1,6 +1,16 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Button, CircularProgress, Popover, Tooltip, Typography, useMediaQuery } from '@mui/material';
+import {
+    Box,
+    Button,
+    CircularProgress,
+    IconButton,
+    Popover,
+    TextField,
+    Tooltip,
+    Typography,
+    useMediaQuery
+} from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
@@ -19,7 +29,7 @@ import {
     convertStoredToDeckDetailedData,
     deleteDecks,
     getDeckFromServer,
-    removeDeckFromLocalStorage,
+    removeDeckFromLocalStorage, updateDeckName,
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import {
     CardStyle,
@@ -28,6 +38,10 @@ import {
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useUser } from '@/app/_contexts/User.context';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
+
 
 const DeckDetails: React.FC = () => {
     const router = useRouter();
@@ -37,6 +51,11 @@ const DeckDetails: React.FC = () => {
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const params = useParams();
     const deckId = params?.DeckId;
+
+    // Rename states
+    const [isRenaming, setIsRenaming] = useState(false);
+    const [newDeckName, setNewDeckName] = useState('');
+    const [renameError, setRenameError] = useState<string | null>(null);
 
     // error handling
     const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -139,6 +158,57 @@ const DeckDetails: React.FC = () => {
             id: deckData.leader.id
         } : undefined,
     });
+
+    const handleStartRename = () => {
+        setNewDeckName(displayDeck?.deck.name || '');
+        setIsRenaming(true);
+        setRenameError(null);
+    };
+
+    const handleCancelRename = () => {
+        setIsRenaming(false);
+        setNewDeckName('');
+        setRenameError(null);
+    };
+
+    const handleRenameKeyPress = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            handleConfirmRename();
+        } else if (event.key === 'Escape') {
+            handleCancelRename();
+        }
+    };
+
+    const handleConfirmRename = async () => {
+        if (!newDeckName.trim()) {
+            setRenameError('Deck name cannot be empty');
+            return;
+        }
+
+        if (newDeckName.trim().length > 50) {
+            setRenameError('Deck name must be 50 characters or less');
+            return;
+        }
+        try {
+            if (typeof deckId === 'string') {
+                await updateDeckName(deckId, newDeckName.trim(), user);
+                if (displayDeck) {
+                    setDisplayDeck({
+                        ...displayDeck,
+                        deck: {
+                            ...displayDeck.deck,
+                            name: newDeckName.trim()
+                        }
+                    });
+                }
+                setIsRenaming(false);
+                setRenameError(null);
+            }
+        } catch (error) {
+            console.error('Error renaming deck:', error);
+            setRenameError('Failed to rename deck. Please try again.');
+        }
+    };
 
     const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
         if (rawDeckId) {
@@ -385,6 +455,33 @@ const DeckDetails: React.FC = () => {
             flexDirection: 'column',
             alignItems:'start',
         },
+        renameContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            width: '100%',
+        },
+        renameTextField: {
+            '& .MuiInputBase-root': {
+                color: '#fff',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            },
+            '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(255, 255, 255, 0.23)',
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'rgba(255, 255, 255, 0.4)',
+            },
+            '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#038FC3',
+            },
+        },
+        renameIconButton: {
+            color: '#fff',
+            '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+            },
+        },
         cardPreview: {
             borderRadius: '.38em',
             backgroundSize: 'cover',
@@ -494,9 +591,53 @@ const DeckDetails: React.FC = () => {
                         )}
                     </Popover>
                     <Box sx={styles.titleTextContainer}>
-                        <Typography variant="h3" sx={styles.titleText}>
-                            {deckData?.metadata.name}
-                        </Typography>
+                        {isRenaming ? (
+                            <Box sx={styles.renameContainer}>
+                                <TextField
+                                    autoFocus
+                                    size="small"
+                                    value={newDeckName}
+                                    onChange={(e) => setNewDeckName(e.target.value)}
+                                    onKeyDown={handleRenameKeyPress}
+                                    error={!!renameError}
+                                    helperText={renameError}
+                                    sx={styles.renameTextField}
+                                />
+                                <Tooltip title="Confirm">
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleConfirmRename}
+                                        sx={{ ...styles.renameIconButton, color: '#4caf50' }}
+                                    >
+                                        <CheckIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Cancel">
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleCancelRename}
+                                        sx={{ ...styles.renameIconButton, color: '#f44336' }}
+                                    >
+                                        <CloseIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        ) : (
+                            <Box sx={styles.renameContainer}>
+                                <Typography variant="h3" sx={styles.titleText}>
+                                    {displayDeck?.deck.name}
+                                </Typography>
+                                <Tooltip title="Rename deck">
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleStartRename}
+                                        sx={styles.renameIconButton}
+                                    >
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        )}
                         { opponentStats && (
                             <Box>
                                 <Tooltip title="Download as CSV">
