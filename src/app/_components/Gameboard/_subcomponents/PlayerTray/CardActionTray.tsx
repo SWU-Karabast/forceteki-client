@@ -155,10 +155,16 @@ const CardActionTray: React.FC = () => {
 
     const styles = createStyles(isPortrait);
 
+    const hasSelectedCards =
+        playerState.cardPiles.groundArena.some((card: any) => card.selected)
+        || playerState.cardPiles.spaceArena.some((card: any) => card.selected)
+
+
     const showTrayButtons = () => {
         if ( playerState.promptState.promptType === 'actionWindow' ||
              playerState.promptState.promptType === 'resource' ||
              playerState.promptState.promptType === 'distributeAmongTargets' ||
+             (hasSelectedCards && playerState.promptState.buttons?.length == 2) ||
              !!playerState.promptState.selectCardMode === true ) {
             return true;
         }

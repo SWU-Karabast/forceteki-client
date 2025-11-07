@@ -95,12 +95,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const handleGameStatePopups = (gameState: any, connectedPlayerId: string, isSpectatorMode: boolean) => {
         if (!connectedPlayerId || isSpectatorMode) return;
         if (gameState.players?.[connectedPlayerId]?.promptState) {
-            const promptState = gameState.players?.[connectedPlayerId].promptState;
+            const playerState = gameState.players?.[connectedPlayerId]
+            const promptState = playerState.promptState;
 
             // we play sound when its the players turn
             if(promptState.playerIsNewlyActive){
                 playSound('yourTurn');
             }
+
+            const hasSelectedCards =
+                playerState.cardPiles.groundArena.some((card: any) => card.selected)
+                || playerState.cardPiles.spaceArena.some((card: any) => card.selected)
 
             const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
             prunePromptStatePopups(promptUuid);
@@ -110,6 +115,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             } 
             else if (promptType === 'distributeAmongTargets') {
                 initDistributionPrompt(promptState.distributeAmongTargets);
+                return;
+            }
+            else if (hasSelectedCards && buttons.length == 2) {
                 return;
             }
             else if (promptType === 'displayCards') {
