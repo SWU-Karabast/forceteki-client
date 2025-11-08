@@ -95,8 +95,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const handleGameStatePopups = (gameState: any, connectedPlayerId: string, isSpectatorMode: boolean) => {
         if (!connectedPlayerId || isSpectatorMode) return;
         if (gameState.players?.[connectedPlayerId]?.promptState) {
-            const playerState = gameState.players?.[connectedPlayerId]
-            const promptState = playerState.promptState;
+            const promptState = gameState.players?.[connectedPlayerId].promptState;
 
             // we play sound when its the players turn
             if(promptState.playerIsNewlyActive){
