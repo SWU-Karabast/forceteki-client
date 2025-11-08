@@ -1,4 +1,3 @@
-import { Height } from '@mui/icons-material';
 import { Theme, createTheme } from '@mui/material/styles';
 
 export const theme: Theme = createTheme({
