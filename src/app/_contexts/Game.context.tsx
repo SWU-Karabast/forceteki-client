@@ -103,9 +103,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 playSound('yourTurn');
             }
 
-            const hasSelectedCards =
-                playerState.cardPiles.groundArena.some((card: any) => card.selected)
-                || playerState.cardPiles.spaceArena.some((card: any) => card.selected)
+
+            let hasSelectedCards = false;
+            for (const player in gameState.players) {
+                if (!gameState.players.hasOwnProperty(player)){
+                    continue;
+                }
+                hasSelectedCards ||=
+                    gameState.players[player].cardPiles.groundArena.some((card: any) => card.selected)
+                    || gameState.players[player].cardPiles.spaceArena.some((card: any) => card.selected);
+            }
 
             const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
             prunePromptStatePopups(promptUuid);

@@ -155,10 +155,15 @@ const CardActionTray: React.FC = () => {
 
     const styles = createStyles(isPortrait);
 
-    const hasSelectedCards =
-        playerState.cardPiles.groundArena.some((card: any) => card.selected)
-        || playerState.cardPiles.spaceArena.some((card: any) => card.selected)
-
+    let hasSelectedCards = false;
+    for (const player in gameState.players) {
+        if (!gameState.players.hasOwnProperty(player)){
+            continue;
+        }
+        hasSelectedCards ||=
+            gameState.players[player].cardPiles.groundArena.some((card: any) => card.selected)
+            || gameState.players[player].cardPiles.spaceArena.some((card: any) => card.selected);
+    }
 
     const showTrayButtons = () => {
         if ( playerState.promptState.promptType === 'actionWindow' ||
