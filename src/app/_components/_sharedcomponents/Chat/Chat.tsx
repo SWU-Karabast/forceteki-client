@@ -200,9 +200,6 @@ const Chat: React.FC<IChatProps> = ({
                 <Typography sx={textStyle} component="div">
                     {messageComponents}
                 </Typography>
-                {index < (chatHistory?.length || 0) - 1 && (
-                    <Divider sx={styles.chatEntryDivider} />
-                )}
             </Box>
         );
     };
@@ -212,21 +209,19 @@ const Chat: React.FC<IChatProps> = ({
         const displayName = isSpectator 
             ? getSpectatorDisplayName(playerMessage.id, connectedPlayer, getOpponent)
             : playerMessage.name;
+        const playerColor = getPlayerColor(playerMessage.id, connectedPlayer);
 
         return (
-            <Box key={index} sx={styles.chatEntryBox}>
+            <Box key={index} sx={{ ...styles.chatEntryBox, backgroundColor: `color-mix(in srgb, ${playerColor} 13%, transparent)` }}>
                 <Typography sx={styles.messageText}>
                     <span style={{ 
-                        color: getPlayerColor(playerMessage.id, connectedPlayer),
+                        color: playerColor,
                         fontWeight: 'bold'
                     }}>
                         {displayName}
                     </span>
                     : {messageContent.join('')}
                 </Typography>
-                {index < (chatHistory?.length || 0) - 1 && (
-                    <Divider sx={styles.chatEntryDivider} />
-                )}
             </Box>
         );
     };
@@ -292,6 +287,8 @@ const Chat: React.FC<IChatProps> = ({
             fontSize: { xs: '0.75em', md: '1em' },
             color: '#fff',
             lineHeight: { xs: '0.75rem', md: '1rem' },
+            m: 0
+
         },
         // Base style for alert messages
         alertBase: {
@@ -299,12 +296,13 @@ const Chat: React.FC<IChatProps> = ({
             lineHeight: { xs: '0.85rem', md: '1em' },
         },
         chatEntryBox: {
-            py: '0.25rem',
+            p: '1rem .25rem',
+            borderTop: '1px solid',
+            borderColor: '#FFFE5031',
         },
         chatEntryDivider: {
             borderColor: '#FFFE50',
             opacity: 0.3,
-            my: '0.25rem',
         },
         inputContainer: {
             display: 'flex',
