@@ -82,7 +82,7 @@ const ModPageClient = () => {
         background: { width: 1920, height: 1080 },
         playmat: { width: 2680, height: 1200 }
     };
-
+    console.log(cosmetics);
     useEffect(() => {
         fetchCosmetics();
     }, []);
@@ -354,7 +354,8 @@ const ModPageClient = () => {
         if (!response) {
             throw new Error('Cleanup operation failed');
         }
-
+        setFilteredCosmetics([]);
+        setCosmetics([])
         setCleanupSuccess(true);
         await fetchCosmetics();
 

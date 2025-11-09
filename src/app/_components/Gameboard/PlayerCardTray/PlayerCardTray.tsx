@@ -12,11 +12,11 @@ import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSidebar }) => {
-    const { gameState, connectedPlayer } = useGame();
+    const { gameState, connectedPlayer, isSpectator } = useGame();
     const { isPortrait } = useScreenOrientation();
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
-    const connectedUserCardback = gameState?.players[connectedPlayer].user?.cosmetics?.cardback;
+    const connectedUserCardback = isSpectator ? undefined : gameState?.players[connectedPlayer].user?.cosmetics?.cardback;
     const phase = gameState.phase;
 
     const styles = {

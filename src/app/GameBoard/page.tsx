@@ -24,8 +24,8 @@ const GameBoard = () => {
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer].user;
-    const background = getBackground(user?.cosmetics?.background ?? null);
-    const playMatsDisabled = user?.cosmetics?.disablePlaymats ?? true;
+    const background = getBackground(isSpectator ? null : user?.cosmetics?.background ?? null);
+    const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
     const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
     const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
     const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;

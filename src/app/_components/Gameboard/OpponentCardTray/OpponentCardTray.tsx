@@ -36,14 +36,13 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const phase = gameState.phase;
     const warning = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Warning';
     const danger = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Danger';
-    const opponentsCardback = gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
+    const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
 
     const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    console.log(opponentsCardback);
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         hoverTimeout.current = window.setTimeout(() => {

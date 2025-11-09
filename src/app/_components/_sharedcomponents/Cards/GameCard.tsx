@@ -208,11 +208,6 @@ const GameCard: React.FC<IGameCardProps> = ({
         { ...card, setId: updatedCardId },
         cardStyle,
         cardbackPath);
-
-    const plainCardUrl = s3CardImageURL(
-        { ...card, setId: updatedCardId },
-        CardStyle.Plain,
-        cardbackPath);
     const cardbackgroundImage = card.selected && (phase === 'setup' || phase === 'regroup')
         ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${styledCardUrl})`
         : `url(${styledCardUrl})`;
@@ -585,7 +580,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     sx={styles.cloneIcon}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
-                    data-card-url={plainCardUrl}
+                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
                     data-card-type="clone"
                     data-card-id={card.setId.set + '_' + card.setId.number}
                 >
@@ -598,7 +593,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 onClick={handleClick}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
-                data-card-url={styledCardUrl}
+                data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
                 data-card-type={card.printedType}
                 data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >

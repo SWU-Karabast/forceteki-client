@@ -18,6 +18,7 @@ function CosmeticsTab() {
     const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
     const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
     const [expandedAccordion, setExpandedAccordion] = useState<string>('cardbacks'); // Default to cardbacks expanded
+    console.log(cosmetics);
 
     useEffect(() => {
         if (user) {
