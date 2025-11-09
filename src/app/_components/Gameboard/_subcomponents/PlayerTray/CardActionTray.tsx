@@ -6,6 +6,7 @@ import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
+import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
 
 const pulseBorder = keyframes`
   0% {
@@ -155,21 +156,11 @@ const CardActionTray: React.FC = () => {
 
     const styles = createStyles(isPortrait);
 
-    let hasSelectedCards = false;
-    for (const player in gameState.players) {
-        if (!gameState.players.hasOwnProperty(player)){
-            continue;
-        }
-        hasSelectedCards ||=
-            gameState.players[player].cardPiles.groundArena.some((card: any) => card.selected)
-            || gameState.players[player].cardPiles.spaceArena.some((card: any) => card.selected);
-    }
-
     const showTrayButtons = () => {
         if ( playerState.promptState.promptType === 'actionWindow' ||
              playerState.promptState.promptType === 'resource' ||
              playerState.promptState.promptType === 'distributeAmongTargets' ||
-             (hasSelectedCards && playerState.promptState.buttons?.length == 2) ||
+             (hasSelectedCards(gameState, ['groundArena','spaceArena']) && playerState.promptState.buttons?.length == 2) ||
              !!playerState.promptState.selectCardMode === true ) {
             return true;
         }
@@ -246,7 +237,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
     const styles = createStyles(isPortrait);
     
     const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
-        if (button.arg === 'claimInitiative') {
+        if (button.arg === 'claimInitiative' || button.text === 'Draw') {
             return disabled ? {} : {
                 background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
                     linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
@@ -262,7 +253,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
             };
         }
 
-        if (button.arg === 'pass' || button.arg === 'passAbility') {
+        if (button.arg === 'pass' || button.arg === 'passAbility' || button.text === 'Return' || button.text === 'Exhaust' || button.text === 'Discard') {
             return disabled ? {} : {
                 background: `linear-gradient(rgb(29, 29, 29), #3d3a0a) padding-box, 
                     linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
@@ -280,7 +271,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
             };
         }
         
-        if (button.arg === 'done') {
+        if (button.arg === 'done' || button.text === 'Pay' || button.text === 'Top' || button.text === 'Play') {
             return disabled ? {} : {
                 background: `linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, 
                     linear-gradient(to top, #1cb34a, #0a3d1e) border-box`,
@@ -298,7 +289,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
             };
         }
 
-        if (button.arg === 'cancel') {
+        if (button.arg === 'cancel' || button.text === 'Damage' || button.text === 'Bottom') {
             return disabled ? {} : {
                 background: `linear-gradient(rgb(29, 29, 29), #641515) padding-box, 
                     linear-gradient(to top, #b82121, #641515) border-box`,

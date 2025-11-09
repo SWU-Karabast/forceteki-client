@@ -20,6 +20,7 @@ import { useSession } from 'next-auth/react';
 import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/useDistributionPrompt';
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { hasSelectedCards } from '../_utils/gameStateHelpers';
 
 interface IGameContextType {
     gameState: any;
@@ -102,17 +103,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 playSound('yourTurn');
             }
 
-
-            let hasSelectedCards = false;
-            for (const player in gameState.players) {
-                if (!gameState.players.hasOwnProperty(player)){
-                    continue;
-                }
-                hasSelectedCards ||=
-                    gameState.players[player].cardPiles.groundArena.some((card: any) => card.selected)
-                    || gameState.players[player].cardPiles.spaceArena.some((card: any) => card.selected);
-            }
-
             const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
             prunePromptStatePopups(promptUuid);
             if (promptType === 'actionWindow') {
@@ -123,7 +113,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 initDistributionPrompt(promptState.distributeAmongTargets);
                 return;
             }
-            else if (hasSelectedCards && buttons.length == 2) {
+            else if (hasSelectedCards(gameState, ['groundArena','spaceArena']) && buttons.length == 2) {
                 return;
             }
             else if (promptType === 'displayCards') {
