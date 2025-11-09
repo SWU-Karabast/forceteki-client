@@ -7,7 +7,7 @@ import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
-import zIndex from '@mui/material/styles/zIndex';
+import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -248,7 +248,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'space-around',
+            justifyContent: 'center',
+            gap: '1rem',
             pointerEvents: 'none',
         },
         damageCounter: {
@@ -444,15 +445,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 {cardStyle === LeaderBaseCardStyle.Base && (
                     <>
                         <Box sx={styles.damageCounterContainer}>
-                            { !!distributionAmount && 
-                        // Need to change background/borderRadius to backgroundImage
-                        <Typography variant="body1" sx={{ ...styles.damageCounter, background: distributeHealing ? 'rgba(0, 186, 255, 1)' : 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat', borderRadius: distributeHealing ? '17px 8px' : '0px' }}>
-                            {distributionAmount}
-                        </Typography>
-                            }
-                            <Typography variant="body1" sx={styles.damageCounter}>
-                                {card.damage}
-                            </Typography>
+                            { !!distributionAmount && (
+                                <DamageCounterToken value={distributionAmount} variant={distributeHealing ? 'distributeHealing' : 'distributeDamage'} />
+                            )}
+                            <DamageCounterToken value={card.damage || 0} />
                         </Box>
                         {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
                         {card.isDefender && <Box sx={styles.defendIcon}/>}
