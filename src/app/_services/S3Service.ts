@@ -28,10 +28,10 @@ export class S3Service {
     private bucketName: string;
 
     constructor() {
-        this.bucketName = process.env.AWS_S3_BUCKET_NAME || 'karabast-customization';
+        this.bucketName = process.env.S3_BUCKET_NAME || 'karabast-customization';
 
         const s3ClientConfig: S3ClientConfig = {
-            region: process.env.AWS_REGION || 'us-east-1',
+            region: process.env.REGION || 'us-east-1',
         };
 
         // Use local S3 (Adobe S3Mock) if in development and specified
@@ -44,22 +44,16 @@ export class S3Service {
             s3ClientConfig.forcePathStyle = true; // Required for Adobe S3Mock/local S3
         } else {
             // Only initialize if we have the required environment variables
-            if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+            if (!process.env.CUSTOMIZATION_ACCESS_KEY_ID || !process.env.CUSTOMIZATION_ACCESS_KEY) {
                 console.warn('AWS credentials not found, S3 service unavailable');
                 this.s3Client = null;
                 return;
             }
 
             const credentials = {
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-                sessionToken: undefined as string | undefined
+                accessKeyId: process.env.CUSTOMIZATION_ACCESS_KEY_ID,
+                secretAccessKey: process.env.CUSTOMIZATION_ACCESS_KEY,
             };
-
-            // Add session token if available (for temporary credentials)
-            if (process.env.AWS_SESSION_TOKEN) {
-                credentials.sessionToken = process.env.AWS_SESSION_TOKEN;
-            }
 
             s3ClientConfig.credentials = credentials;
         }
@@ -96,23 +90,6 @@ export class S3Service {
     }
 
     /**
-     * Generate a presigned URL for client-side upload
-     */
-    async getPresignedUploadUrl(key: string, contentType: string, expiresIn: number = 3600): Promise<string> {
-        if (!this.s3Client) {
-            throw new Error('S3 service is not available. Check AWS credentials.');
-        }
-
-        const command = new PutObjectCommand({
-            Bucket: this.bucketName,
-            Key: key,
-            ContentType: contentType,
-        });
-
-        return await getSignedUrl(this.s3Client, command, { expiresIn });
-    }
-
-    /**
      * Delete a file from S3
      */
     async deleteFile(key: string): Promise<void> {
@@ -138,21 +115,7 @@ export class S3Service {
             return `${endpoint}/${this.bucketName}/${key}`;
         }
 
-        return `https://${this.bucketName}.s3.amazonaws.com/${key}`;
+        return `https://${this.bucketName}.s3.us-east-1.amazonaws.com/${key}`;
     }
-
-    /**
-     * Extract S3 key from full URL
-     */
-    extractKeyFromUrl(url: string): string | null {
-        // Handle AWS S3 URLs
-        let match = url.match(/https:\/\/[^\/]+\.s3\.amazonaws\.com\/(.+)/);
-        if (match) {
-            return match[1];
-        }
-
-        // Handle local S3 (Adobe S3Mock) URLs - format: http://localhost:9090/bucket/key
-        match = url.match(/https?:\/\/[^\/]+\/[^\/]+\/(.+)/);
-        return match ? match[1] : null;
-    }
+    // https://karabast-customization.s3.us-east-1.amazonaws.com/cardbacks/050b1d23-7144-4412-92a9-130e0c64b2b7.webp
 }
