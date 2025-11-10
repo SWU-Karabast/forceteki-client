@@ -13,6 +13,7 @@ interface CosmeticsContextProps {
     getCardback: (id?: string) => IRegisteredCosmeticOption;
     getBackground: (id?: string) => IRegisteredCosmeticOption;
     getPlaymat: (id?: string) => IRegisteredCosmeticOption;
+    fetchCosmetics: () => void;
 }
 
 const defaultCosmetics: IRegisteredCosmetics = {
@@ -27,6 +28,7 @@ const CosmeticsContext = React.createContext<CosmeticsContextProps>({
     getCardback: () => ({ id: '', title: '', type: RegisteredCosmeticType.Cardback, path: '' }),
     getBackground: () => ({ id: '', title: '', type: RegisteredCosmeticType.Background, path: '' }),
     getPlaymat: () => ({ id: '', title: '', type: RegisteredCosmeticType.Playmat, path: '' }),
+    fetchCosmetics: () => {}
 });
 
 export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -64,31 +66,32 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
         return cosmetics.playmats.find((pm) => pm.id === id) || getCosmeticDefault(RegisteredCosmeticType.Playmat);
     }
 
+    const fetchCosmetics = async () => {
+        ServerApiService.getCosmeticsAsync().then((data) => {
+            setCosmetics(data.reduce((acc: IRegisteredCosmetics, cosmetic) => {
+                switch (cosmetic.type) {
+                    case RegisteredCosmeticType.Cardback:
+                        acc.cardbacks.push(cosmetic);
+                        break;
+                    case RegisteredCosmeticType.Background:
+                        acc.backgrounds.push(cosmetic);
+                        break;
+                    case RegisteredCosmeticType.Playmat:
+                        acc.playmats.push(cosmetic);
+                        break;
+                }
+                return acc;
+            }, { cardbacks: [], backgrounds: [], playmats: [] }));
+        });
+    };
+
     React.useEffect(() => {
-        const fetchCosmetics = async () => {
-            ServerApiService.getCosmeticsAsync().then((data) => {
-                setCosmetics(data.reduce((acc: IRegisteredCosmetics, cosmetic) => {
-                    switch (cosmetic.type) {
-                        case RegisteredCosmeticType.Cardback:
-                            acc.cardbacks.push(cosmetic);
-                            break;
-                        case RegisteredCosmeticType.Background:
-                            acc.backgrounds.push(cosmetic);
-                            break;
-                        case RegisteredCosmeticType.Playmat:
-                            acc.playmats.push(cosmetic);
-                            break;
-                    }
-                    return acc;
-                }, { cardbacks: [], backgrounds: [], playmats: [] }));
-            });
-        };
         fetchCosmetics();
     }, []);
 
     return (
         <CosmeticsContext.Provider value={{ cosmetics, setCosmetics,
-            getCardback, getBackground, getPlaymat
+            getCardback, getBackground, getPlaymat, fetchCosmetics
         }}>
             {children}
         </CosmeticsContext.Provider>

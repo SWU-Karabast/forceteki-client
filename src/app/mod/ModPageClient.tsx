@@ -30,6 +30,7 @@ import { useRouter } from 'next/navigation';
 import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { v4 as uuidv4 } from 'uuid';
 import { ServerApiService } from '../_services/ServerApiService';
+import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
 interface ImageDimensions {
     width: number;
@@ -45,7 +46,7 @@ interface ValidationRules {
 const isDev = process.env.NODE_ENV === 'development';
 
 const ModPageClient = () => {
-    const [cosmetics, setCosmetics] = useState<IRegisteredCosmeticOption[]>([]);
+    const { cosmetics, setCosmetics, fetchCosmetics } = useCosmetics();
     const [filteredCosmetics, setFilteredCosmetics] = useState<IRegisteredCosmeticOption[]>([]);
     const [availableTypes, setAvailableTypes] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -82,14 +83,20 @@ const ModPageClient = () => {
         background: { width: 1920, height: 1080 },
         playmat: { width: 2680, height: 1200 }
     };
-    console.log(cosmetics);
+
+    const allCosmetics = React.useMemo(() => [
+        ...cosmetics.cardbacks,
+        ...cosmetics.backgrounds,
+        ...cosmetics.playmats
+    ], [cosmetics]);
+
     useEffect(() => {
-        fetchCosmetics();
+        getCosmetics();
     }, []);
 
     // Apply filters whenever filter criteria change
     useEffect(() => {
-        let results = cosmetics;
+        let results = allCosmetics;
 
         if (typeFilter !== 'All') {
             results = results.filter((cosmetic: IRegisteredCosmeticOption) =>
@@ -107,26 +114,27 @@ const ModPageClient = () => {
         }
 
         setFilteredCosmetics(results);
-    }, [cosmetics, typeFilter, searchQuery]);
+    }, [allCosmetics, typeFilter, searchQuery]);
 
-    const fetchCosmetics = async () => {
+    useEffect(() => {
+        if (allCosmetics.length > 0) {
+            const types = allCosmetics.reduce((acc: string[], cosmetic: IRegisteredCosmeticOption) => {
+                const type = cosmetic.type.charAt(0).toUpperCase() + cosmetic.type.slice(1);
+                if (!acc.includes(type)) {
+                    acc.push(type);
+                }
+                return acc;
+            }, []) || [];
+
+            setAvailableTypes(types);
+        }
+    }, [allCosmetics]);
+
+
+    const getCosmetics = async () => {
         try {
             setLoading(true);
-            const response = await ServerApiService.getCosmeticsAsync();
-
-            if (response.length > 0) {
-                setCosmetics(response);
-
-                const types = response.reduce((acc: string[], cosmetic: IRegisteredCosmeticOption) => {
-                    const type = cosmetic.type.charAt(0).toUpperCase() + cosmetic.type.slice(1);
-                    if (!acc.includes(type)) {
-                        acc.push(type);
-                    }
-                    return acc;
-                }, []) || [];
-
-                setAvailableTypes(types);
-            }
+            fetchCosmetics();
         } catch (error) {
             console.error('Error fetching cosmetics:', error);
             setError(error instanceof Error ? error.message : 'Failed to load cosmetics');
@@ -355,7 +363,7 @@ const ModPageClient = () => {
             throw new Error('Cleanup operation failed');
         }
         setFilteredCosmetics([]);
-        setCosmetics([])
+        setCosmetics({ cardbacks: [], backgrounds: [], playmats: [] })
         setCleanupSuccess(true);
         await fetchCosmetics();
 
@@ -602,7 +610,7 @@ const ModPageClient = () => {
 
                                 {/* Results count */}
                                 <Typography variant="body1" sx={styles.resultsCount}>
-                                    Showing {filteredCosmetics.length} of {cosmetics.length} cosmetics
+                                    Showing {filteredCosmetics.length} of {allCosmetics.length} cosmetics
                                 </Typography>
 
                                 {/* Main cosmetics area */}

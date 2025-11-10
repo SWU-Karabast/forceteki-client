@@ -12,13 +12,13 @@ import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '../Preference
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
-    const { cosmetics } = useCosmetics();
+    const { cosmetics, fetchCosmetics } = useCosmetics();
     const [selectedCardback, setSelectedCardback] = useState<string|null>(null);
     const [selectedBackground, setSelectedBackground] = useState<string|null>(null);
     const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
     const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
     const [expandedAccordion, setExpandedAccordion] = useState<string>('cardbacks'); // Default to cardbacks expanded
-    console.log(cosmetics);
+
 
     useEffect(() => {
         if (user) {
@@ -29,6 +29,7 @@ function CosmeticsTab() {
                 setSelectedPlaymat(cosmetics.playmat ?? 'none');
                 setDisablePlaymats(cosmetics.disablePlaymats ?? false);
             }
+            fetchCosmetics();
         }
     }, [user]);
 
