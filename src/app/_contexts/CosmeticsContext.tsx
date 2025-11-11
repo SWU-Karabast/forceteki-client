@@ -6,6 +6,7 @@ import {
     RegisteredCosmeticType
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 import { ServerApiService } from '../_services/ServerApiService';
+import { useUser } from '@/app/_contexts/User.context';
 
 interface CosmeticsContextProps {
     cosmetics: IRegisteredCosmetics;
@@ -34,6 +35,7 @@ const CosmeticsContext = React.createContext<CosmeticsContextProps>({
 export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
+    const { user } = useUser();
     const [cosmetics, setCosmetics] = React.useState<IRegisteredCosmetics>(defaultCosmetics);
     const getCosmeticDefault = (type: RegisteredCosmeticType): IRegisteredCosmeticOption => {
         switch(type) {

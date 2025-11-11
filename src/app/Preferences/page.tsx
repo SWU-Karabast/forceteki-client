@@ -8,6 +8,7 @@ import { useUser } from '../_contexts/User.context';
 
 const Preferences: React.FC = () => {
     const router = useRouter();
+    const { user } = useUser();
     const handleExit = () => {
         router.push('/');
     }
@@ -48,7 +49,7 @@ const Preferences: React.FC = () => {
             <PreferencesComponent
                 sidebarOpen={false}
                 isPreferenceOpen={true}
-                tabs={['general','soundOptions','cosmetics']}
+                tabs={user ? ['general','soundOptions','cosmetics'] : ['general','soundOptions']}
                 variant={'homePage'}
             />
             <Typography variant="body1" sx={styles.disclaimer}>
