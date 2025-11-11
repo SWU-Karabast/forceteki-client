@@ -28,7 +28,7 @@ const Preferences: React.FC = () => {
         mainContainer:{
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: 'url("/default-background.webp")',
+            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display:'grid',

@@ -65,7 +65,7 @@ const TermsOfService: React.FC = () => {
     const styles = {
         page: {
             minHeight: '100vh',
-            backgroundImage: 'url("/default-background.webp")',
+            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
