@@ -35,7 +35,6 @@ const CosmeticsContext = React.createContext<CosmeticsContextProps>({
 export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
-    const { user } = useUser();
     const [cosmetics, setCosmetics] = React.useState<IRegisteredCosmetics>(defaultCosmetics);
     const getCosmeticDefault = (type: RegisteredCosmeticType): IRegisteredCosmeticOption => {
         switch(type) {
