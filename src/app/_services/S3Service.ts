@@ -35,13 +35,18 @@ export class S3Service {
         };
 
         // Use local S3 (Adobe S3Mock) if in development and specified
-        if (process.env.NODE_ENV === 'development' && process.env.USE_LOCAL_S3 === 'true') {
-            s3ClientConfig.endpoint = process.env.LOCAL_S3_ENDPOINT || 'http://localhost:9090';
-            s3ClientConfig.credentials = {
-                accessKeyId: process.env.LOCAL_S3_ACCESS_KEY || 'accessKey1',
-                secretAccessKey: process.env.LOCAL_S3_SECRET_KEY || 'verySecretKey1'
-            };
-            s3ClientConfig.forcePathStyle = true; // Required for Adobe S3Mock/local S3
+        if (process.env.NODE_ENV === 'development') {
+            if(process.env.USE_LOCAL_S3 === 'true') {
+                s3ClientConfig.endpoint = process.env.LOCAL_S3_ENDPOINT || 'http://localhost:9090';
+                s3ClientConfig.credentials = {
+                    accessKeyId: process.env.LOCAL_S3_ACCESS_KEY || 'accessKey1',
+                    secretAccessKey: process.env.LOCAL_S3_SECRET_KEY || 'verySecretKey1'
+                };
+                s3ClientConfig.forcePathStyle = true; // Required for Adobe S3Mock/local S3
+            } else{
+                console.log('S3 service not started since credentials are not set for local environment')
+                throw new Error('S3 service not started since credentials are not set for local environment');
+            }
         } else {
             // Only initialize if we have the required environment variables
             if (!process.env.CUSTOMIZATION_ACCESS_KEY_ID || !process.env.CUSTOMIZATION_ACCESS_KEY) {
