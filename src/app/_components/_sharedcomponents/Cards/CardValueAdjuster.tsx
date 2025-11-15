@@ -7,9 +7,11 @@ import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 interface ICardValueAdjusterProps {
     card: ICardData;
     isIndirect?: boolean;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 }
 
-const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect = false }) => {
+const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect = false, onMouseEnter, onMouseLeave }) => {
     const { updateDistributionPrompt, distributionPromptData, gameState, connectedPlayer } = useGame();
 
     const handleValueAdjusterClick = (amount: number) => {
@@ -30,7 +32,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
     // Disable +1 if all available damage/healing has been distributed
     const allDamageDistributed = totalDistributed >= totalAvailable && totalAvailable > 0;
 
-    const type = gameState.players[connectedPlayer]?.promptState.distributeAmongTargets.type;
+    const type = gameState.players[connectedPlayer]?.promptState?.distributeAmongTargets?.type;
     const distributeDamage = type === 'distributeDamage' || type === 'distributeIndirectDamage';
     const distributeHealing = type === 'distributeHealing';
 
@@ -68,7 +70,12 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
         },
     }
     return (
-        <Box sx={styles.valueAdjuster} data-value-adjuster="true">
+        <Box 
+            sx={styles.valueAdjuster} 
+            data-value-adjuster="true"
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+        >
             <Button
                 sx={styles.valueAdjusterButton}
                 variant="contained"

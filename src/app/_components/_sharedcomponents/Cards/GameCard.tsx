@@ -34,7 +34,9 @@ const GameCard: React.FC<IGameCardProps> = ({
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const [isOverAdjuster, setIsOverAdjuster] = React.useState(false);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const wasOverAdjuster = React.useRef(false);
     const open = Boolean(anchorElement);
 
     const {
@@ -66,9 +68,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             return;
         }
 
-        // Check if we're hovering over CardValueAdjuster
-        const eventTarget = event.target as HTMLElement;
-        if (eventTarget.closest('[data-value-adjuster]')) {
+        // Don't show preview if currently over the adjuster
+        if (isOverAdjuster) {
             return;
         }
 
@@ -82,6 +83,36 @@ const GameCard: React.FC<IGameCardProps> = ({
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
         setPreviewImage(null);
+        wasOverAdjuster.current = false;
+    };
+
+    const handleAdjusterMouseEnter = () => {
+        setIsOverAdjuster(true);
+        wasOverAdjuster.current = true;
+        clearTimeout(hoverTimeout.current);
+        setAnchorElement(null);
+        setPreviewImage(null);
+    };
+
+    const handleAdjusterMouseLeave = () => {
+        setIsOverAdjuster(false);
+        // Keep wasOverAdjuster flag set - handleCardMouseMove will clear it when mouse re-enters card area
+    };
+
+    const handleCardMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+        // Only trigger if we just left the adjuster and preview isn't already showing
+        if (wasOverAdjuster.current && !isOverAdjuster && !anchorElement) {
+            wasOverAdjuster.current = false;
+            
+            const target = event.currentTarget;
+            const imageUrl = target.getAttribute('data-card-url');
+            if (!imageUrl || cardInOpponentsHand) return;
+
+            hoverTimeout.current = window.setTimeout(() => {
+                setAnchorElement(target);
+                setPreviewImage(`url(${imageUrl})`);
+            }, 200);
+        }
     };
 
 
@@ -590,6 +621,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 sx={styles.card}
                 onClick={handleClick}
                 onMouseEnter={handlePreviewOpen}
+                onMouseMove={handleCardMouseMove}
                 onMouseLeave={handlePreviewClose}
                 data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
                 data-card-type={card.printedType}
@@ -615,7 +647,14 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
-                        { showValueAdjuster() && <CardValueAdjuster card={card} isIndirect={isIndirectDamage} /> }
+                        { showValueAdjuster() && (
+                            <CardValueAdjuster 
+                                card={card} 
+                                isIndirect={isIndirectDamage}
+                                onMouseEnter={handleAdjusterMouseEnter}
+                                onMouseLeave={handleAdjusterMouseLeave}
+                            /> 
+                        )}
                         <Grid direction="row" container sx={styles.shieldContainer}>
                             {shieldCards.map((shieldCard, index) => (
                                 <Box
