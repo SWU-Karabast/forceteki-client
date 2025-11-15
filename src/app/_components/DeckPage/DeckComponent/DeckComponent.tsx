@@ -144,12 +144,12 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
     }
 
     // Calculate the total counts from the decks.
-    const deckCount = mainDeck?.deck.reduce(
+    const deckCount = mainDeck?.deck?.reduce(
         (sum: number, item: { count: number }) => sum + (item.count || 0),
         0
     ) ?? 0;
 
-    const sideboardCount = mainDeck?.sideboard.reduce(
+    const sideboardCount = mainDeck?.sideboard?.reduce(
         (sum: number, item: { count: number }) => sum + (item.count || 0),
         0
     ) ?? 0;

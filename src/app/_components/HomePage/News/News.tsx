@@ -24,17 +24,9 @@ const NewsColumn: React.FC = () => {;
     return (
         <Box sx={styles.box}>
 
-            <Card variant="blue" sx={styles.notice}>
-                <CardContent>
-                    <Typography variant="bodyBold">Pardon our dust!</Typography>
-                    <Typography variant="body1">We are working on bringing you important platform features. This will often result in a brief maintenance downtime which we are doing in the mornings EST. These will become less frequent as we get closer to being feature complete.</Typography>
-                    <Typography variant="body1">We appreciate your patience as we make Karabast the best it can be!</Typography>
-                </CardContent>
-            </Card>
-
             <Card variant="black" sx={styles.boxNews}>
                 <Box>
-                    <Typography variant="h2">
+                    <Typography variant="h2" sx={{ p: '0.4rem', borderBottom: '1px solid #404040' }}>
                         News
                     </Typography>
                 </Box>

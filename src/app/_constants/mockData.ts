@@ -86,6 +86,17 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: 'Secrets of Power + Intro Battle: Hoth in Premier',
+        content: `
+        <p>The Secrets of Power and Intro Battle: Hoth sets are now legal in Premier format! We have closed down Next Set Preview format until the next preview season begins. We wish everyone luck with practicing for the new season!</p>
+    
+        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always open to new contributors.</p><p></p>
+	  `,
+        date: '11/3/25',
+        image: s3ImageURL('ui/sec-banner.webp'),
+        imageAlt: 'News Announcement',
+    },
+    {
         title: 'Undo Button in Private Lobbies - Beta Test',
         content: `
         <p>We are doing a beta test of the Undo button! Create a private lobby and enable the "Undo" option in the lobby settings to test. See the <a target="_blank" href="https://discord.com/channels/1220057752961814568/1225597332301680640/1422673270649655316" style="color:lightblue;">official announcement</a> in our Discord for full details. Please help us test so we can turn it on for all games soon!</p>
@@ -94,17 +105,6 @@ export const articles: IArticle[] = [
 	  `,
         date: '10/3/25',
         image: '/undo-announcement.webp',
-        imageAlt: 'News Announcement',
-    },
-    {
-        title: 'Force Throw Ban',
-        content: `
-        <p>Force Throw is officially no longer legal in Premier or Next Set Preview formats. See the <a target="_blank" href="https://starwarsunlimited.com/articles/throwing-the-meta-for-a-loop" style="color:lightblue;">official FFG announcement</a>. It will continue to be playable in the Open format.</p>
-    
-        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always open to new contributors.</p><p></p>
-	  `,
-        date: '9/23/25',
-        image: s3ImageURL('ui/forcethrow.webp'),
         imageAlt: 'News Announcement',
     }
 ];
