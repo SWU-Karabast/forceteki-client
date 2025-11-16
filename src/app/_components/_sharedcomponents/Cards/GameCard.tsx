@@ -581,10 +581,10 @@ const GameCard: React.FC<IGameCardProps> = ({
 
             <Box
                 sx={styles.card}
+                onClick={handleClick}
             >
                 <Box 
                     sx={styles.cardOverlay}
-                    onClick={handleClick}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
