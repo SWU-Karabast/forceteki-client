@@ -11,6 +11,7 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
+import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -601,9 +602,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     <Box sx={styles.unimplementedAlert}></Box>
                     <Box sx={styles.resourceIcon}/>
                     { !!distributionAmount && (
-                        <Typography variant="body1" sx={styles.damageCounter}>
-                            {distributionAmount}
-                        </Typography>
+                        <DamageCounterToken value={distributionAmount} variant={distributeHealing ? 'distributeHealing' : 'distributeDamage'} />
                     )}
                 </Box>
                 {cardStyle === CardStyle.Lobby && (

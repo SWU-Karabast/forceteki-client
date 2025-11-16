@@ -93,7 +93,7 @@ export const articles: IArticle[] = [
         <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always open to new contributors.</p><p></p>
 	  `,
         date: '11/3/25',
-        image: s3ImageURL('ui/palpatinepadme-banner.webp'),
+        image: s3ImageURL('ui/sec-banner.webp'),
         imageAlt: 'News Announcement',
     },
     {

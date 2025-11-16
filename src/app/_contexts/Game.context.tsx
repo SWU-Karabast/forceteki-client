@@ -20,6 +20,7 @@ import { useSession } from 'next-auth/react';
 import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/useDistributionPrompt';
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { hasSelectedCards } from '../_utils/gameStateHelpers';
 
 interface IGameContextType {
     gameState: any;
@@ -110,6 +111,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             } 
             else if (promptType === 'distributeAmongTargets') {
                 initDistributionPrompt(promptState.distributeAmongTargets);
+                return;
+            }
+            else if (hasSelectedCards(gameState, ['groundArena','spaceArena']) && buttons.length == 2) {
                 return;
             }
             else if (promptType === 'displayCards') {
