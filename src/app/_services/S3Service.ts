@@ -31,7 +31,7 @@ export class S3Service {
         this.bucketName = process.env.S3_BUCKET_NAME || 'karabast-customization';
 
         const s3ClientConfig: S3ClientConfig = {
-            region: process.env.REGION || 'us-east-1',
+            region: 'us-east-1',
         };
 
         // Use local S3 (Adobe S3Mock) if in development and specified
