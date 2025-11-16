@@ -7,11 +7,9 @@ import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 interface ICardValueAdjusterProps {
     card: ICardData;
     isIndirect?: boolean;
-    onMouseEnter?: () => void;
-    onMouseLeave?: () => void;
 }
 
-const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect = false, onMouseEnter, onMouseLeave }) => {
+const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect = false }) => {
     const { updateDistributionPrompt, distributionPromptData, gameState, connectedPlayer } = useGame();
 
     const handleValueAdjusterClick = (amount: number) => {
@@ -70,12 +68,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
         },
     }
     return (
-        <Box 
-            sx={styles.valueAdjuster} 
-            data-value-adjuster="true"
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-        >
+        <Box sx={styles.valueAdjuster}>
             <Button
                 sx={styles.valueAdjusterButton}
                 variant="contained"

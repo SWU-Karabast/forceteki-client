@@ -34,9 +34,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const [isOverAdjuster, setIsOverAdjuster] = React.useState(false);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
-    const wasOverAdjuster = React.useRef(false);
     const open = Boolean(anchorElement);
 
     const {
@@ -68,11 +66,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             return;
         }
 
-        // Don't show preview if currently over the adjuster
-        if (isOverAdjuster) {
-            return;
-        }
-
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
@@ -83,36 +76,6 @@ const GameCard: React.FC<IGameCardProps> = ({
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
         setPreviewImage(null);
-        wasOverAdjuster.current = false;
-    };
-
-    const handleAdjusterMouseEnter = () => {
-        setIsOverAdjuster(true);
-        wasOverAdjuster.current = true;
-        clearTimeout(hoverTimeout.current);
-        setAnchorElement(null);
-        setPreviewImage(null);
-    };
-
-    const handleAdjusterMouseLeave = () => {
-        setIsOverAdjuster(false);
-        // Keep wasOverAdjuster flag set - handleCardMouseMove will clear it when mouse re-enters card area
-    };
-
-    const handleCardMouseMove = (event: React.MouseEvent<HTMLElement>) => {
-        // Only trigger if we just left the adjuster and preview isn't already showing
-        if (wasOverAdjuster.current && !isOverAdjuster && !anchorElement) {
-            wasOverAdjuster.current = false;
-            
-            const target = event.currentTarget;
-            const imageUrl = target.getAttribute('data-card-url');
-            if (!imageUrl || cardInOpponentsHand) return;
-
-            hoverTimeout.current = window.setTimeout(() => {
-                setAnchorElement(target);
-                setPreviewImage(`url(${imageUrl})`);
-            }, 200);
-        }
     };
 
 
@@ -281,7 +244,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             height: '100%',
             backgroundColor: getBackgroundColor(card),
             filter: 'none',
-            clickEvents: 'none',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -619,15 +581,16 @@ const GameCard: React.FC<IGameCardProps> = ({
 
             <Box
                 sx={styles.card}
-                onClick={handleClick}
-                onMouseEnter={handlePreviewOpen}
-                onMouseMove={handleCardMouseMove}
-                onMouseLeave={handlePreviewClose}
-                data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
-                data-card-type={card.printedType}
-                data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >
-                <Box sx={styles.cardOverlay}>
+                <Box 
+                    sx={styles.cardOverlay}
+                    onClick={handleClick}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
+                    data-card-type={card.printedType}
+                    data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
+                >
                     <Box sx={styles.unimplementedAlert}></Box>
                     <Box sx={styles.resourceIcon}/>
                     { !!distributionAmount && (
@@ -651,8 +614,6 @@ const GameCard: React.FC<IGameCardProps> = ({
                             <CardValueAdjuster 
                                 card={card} 
                                 isIndirect={isIndirectDamage}
-                                onMouseEnter={handleAdjusterMouseEnter}
-                                onMouseLeave={handleAdjusterMouseLeave}
                             /> 
                         )}
                         <Grid direction="row" container sx={styles.shieldContainer}>
