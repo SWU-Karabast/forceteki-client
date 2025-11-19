@@ -62,10 +62,9 @@ const GameBoard = () => {
     // const winners = ['order66']
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
-    const cosmeticsInGame = true; // disable cosmetics in-game for now
     const preferenceTabs = winners
         ? ['endGame','soundOptions']
-        : ['currentGame','soundOptions'].concat(cosmeticsInGame ? ['cosmetics'] : []);
+        : ['currentGame','soundOptions'];
 
     // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {
