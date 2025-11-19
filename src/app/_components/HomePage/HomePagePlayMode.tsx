@@ -51,6 +51,11 @@ const HomePagePlayMode: React.FC = () => {
 
     const [format, setFormat] = useState<SwuGameFormat>(() => {
         const stored = localStorage.getItem('format');
+
+        if (stored !== SwuGameFormat.Premier && stored !== SwuGameFormat.Open) {
+            return SwuGameFormat.Premier;
+        }
+
         return (stored as SwuGameFormat) || SwuGameFormat.Premier;
     });
 
