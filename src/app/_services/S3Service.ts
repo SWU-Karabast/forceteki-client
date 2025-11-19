@@ -22,13 +22,13 @@ export async function getS3ServiceAsync(): Promise<S3Service | null> {
     return s3Service;
 }
 
-// Simple Storage Service Service
+// Simple Storage Service
 export class S3Service {
     private s3Client: S3Client | null = null;
     private bucketName: string;
 
     constructor() {
-        this.bucketName = process.env.S3_BUCKET_NAME || 'karabast-customization';
+        this.bucketName = 'karabast-customization';
 
         const s3ClientConfig: S3ClientConfig = {
             region: 'us-east-1',
@@ -37,10 +37,10 @@ export class S3Service {
         // Use local S3 (Adobe S3Mock) if in development and specified
         if (process.env.NODE_ENV === 'development') {
             if(process.env.USE_LOCAL_S3 === 'true') {
-                s3ClientConfig.endpoint = process.env.LOCAL_S3_ENDPOINT || 'http://localhost:9090';
+                s3ClientConfig.endpoint = 'http://localhost:9090';
                 s3ClientConfig.credentials = {
-                    accessKeyId: process.env.LOCAL_S3_ACCESS_KEY || 'accessKey1',
-                    secretAccessKey: process.env.LOCAL_S3_SECRET_KEY || 'verySecretKey1'
+                    accessKeyId: 'accessKey1',
+                    secretAccessKey: 'verySecretKey1'
                 };
                 s3ClientConfig.forcePathStyle = true; // Required for Adobe S3Mock/local S3
             } else{
@@ -49,18 +49,16 @@ export class S3Service {
             }
         } else {
             // Only initialize if we have the required environment variables
-            if (!process.env.CUSTOMIZATION_ACCESS_KEY_ID || !process.env.CUSTOMIZATION_ACCESS_KEY) {
+            if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
                 console.warn('AWS credentials not found, S3 service unavailable');
                 this.s3Client = null;
                 return;
             }
 
-            const credentials = {
-                accessKeyId: process.env.CUSTOMIZATION_ACCESS_KEY_ID,
-                secretAccessKey: process.env.CUSTOMIZATION_ACCESS_KEY,
+            s3ClientConfig.credentials = {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
             };
-
-            s3ClientConfig.credentials = credentials;
         }
 
         this.s3Client = new S3Client(s3ClientConfig);
@@ -95,7 +93,7 @@ export class S3Service {
     }
 
     /**
-     * Delete a file from S3
+     * Delete a file from S3 Might be useful later on
      */
     async deleteFile(key: string): Promise<void> {
         if (!this.s3Client) {
@@ -116,7 +114,7 @@ export class S3Service {
     getPublicUrl(key: string): string {
         // Handle local S3 (Adobe S3Mock) URLs differently
         if (process.env.NODE_ENV === 'development' && process.env.USE_LOCAL_S3 === 'true') {
-            const endpoint = process.env.LOCAL_S3_ENDPOINT || 'http://localhost:9090';
+            const endpoint = 'http://localhost:9090';
             return `${endpoint}/${this.bucketName}/${key}`;
         }
 
