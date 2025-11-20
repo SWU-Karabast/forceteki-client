@@ -30,7 +30,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
     // Disable +1 if all available damage/healing has been distributed
     const allDamageDistributed = totalDistributed >= totalAvailable && totalAvailable > 0;
 
-    const type = gameState.players[connectedPlayer]?.promptState.distributeAmongTargets.type;
+    const type = gameState.players[connectedPlayer]?.promptState?.distributeAmongTargets?.type;
     const distributeDamage = type === 'distributeDamage' || type === 'distributeIndirectDamage';
     const distributeHealing = type === 'distributeHealing';
 
@@ -68,7 +68,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
         },
     }
     return (
-        <Box sx={styles.valueAdjuster} data-value-adjuster="true">
+        <Box sx={styles.valueAdjuster}>
             <Button
                 sx={styles.valueAdjusterButton}
                 variant="contained"
