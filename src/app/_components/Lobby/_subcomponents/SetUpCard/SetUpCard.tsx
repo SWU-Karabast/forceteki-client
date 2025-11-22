@@ -341,7 +341,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             color: 'var(--selection-red);',
             textDecorationColor: 'var(--initiative-red);',
         },
+        // Styles for deck selection components (always enabled)
         checkboxStyle: {
+            color: '#fff',
+        },
+        checkboxAndRadioGroupTextStyle: {
+            color: '#fff',
+            fontSize: '1em',
+        },
+        // Styles for game settings components (can be disabled)
+        settingsCheckboxStyle: {
             color: disableSettings ? '#b0b0b0' : '#fff', // Lighter color when disabled and unchecked
             '&.Mui-checked': {
                 color: '#fff',
@@ -351,7 +360,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             },
             opacity: disableSettings ? 0.5 : 1, // Slightly less opacity when disabled and checked
         },
-        checkboxAndRadioGroupTextStyle: {
+        settingsCheckboxAndRadioGroupTextStyle: {
             color: disableSettings ? '#c0c0c0' : '#fff',  // Lighter color when disabled
             fontSize: '1em',
         },
@@ -622,7 +631,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     <FormControlLabel
                         control={
                             <Checkbox
-                                sx={styles.checkboxStyle}
+                                sx={styles.settingsCheckboxStyle}
                                 checked={lobbyState.settings.requestUndo}
                                 disabled={!owner || readyStatus || opponentReady}
                                 onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
@@ -632,7 +641,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         }
                         label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 1 }}>
-                                <span style={{ ...styles.checkboxAndRadioGroupTextStyle }}>
+                                <span style={{ ...styles.settingsCheckboxAndRadioGroupTextStyle }}>
                                     Undo Requests
                                 </span>
                                 <Tooltip title="Uses the same rules for Undo as public games. Limited number of free undos, then requires opponent approval. If this is disabled, there are no limits on undo.">
