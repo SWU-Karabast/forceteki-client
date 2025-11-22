@@ -6,7 +6,7 @@ import {
     TextField,
     Button,
     Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider,
-    FormControl
+    FormControl, Radio, RadioGroup
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -19,17 +19,15 @@ import {
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
-import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+
 import {
-    retrieveDecksForUser,
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { useSession } from 'next-auth/react';
 import { SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
-import PreferenceOptionWithIcon from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceOption';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
+import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 
 const SetUpCard: React.FC<ISetUpProps> = ({
     readyStatus,
@@ -37,19 +35,26 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 }) => {
     const { lobbyState, connectedPlayer, sendLobbyMessage } = useGame();
     const { user } = useUser();
-    const [favouriteDeck, setFavouriteDeck] = useState<string>('');
-    const [deckLink, setDeckLink] = useState<string>('');
+    
+    // Use shared deck management hook
+    const {
+        deckPreferences,
+        deckPreferencesHandlers,
+        deckLink,
+        setDeckLink,
+        savedDecks,
+        fetchDecks
+    } = useDeckManagement();
+    
+    const { showSavedDecks, favoriteDeck, saveDeck } = deckPreferences;
+    const { setShowSavedDecks, setFavoriteDeck, setSaveDeck } = deckPreferencesHandlers;
+    
     const [showTooltip, setShowTooltip] = useState(false);
-    const [showLink, setshowLink] = useState(false)
-
     const [deckImportErrorsSeen, setDeckImportErrorsSeen] = useState(false);
+    
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const lobbyFormat = lobbyState ? lobbyState.gameFormat : null;
-
-    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
-    const [saveDeck, setSaveDeck] = useState<boolean>(false);
-    const { data: session } = useSession(); // Get session from next-auth
 
     // For deck error display
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
@@ -70,17 +75,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     useEffect(() => {
         fetchDecks();
-    }, []);
-
-    // Load saved decks from localStorage
-    const fetchDecks = async () => {
-        try {
-            await retrieveDecksForUser(session?.user,user,{ setDecks: setSavedDecks, setFirstDeck: setFavouriteDeck });
-        } catch (err){
-            console.log(err);
-            alert('Server error when fetching decks');
-        }
-    };
+    }, [fetchDecks]);
 
     const handleJsonDeck = (deckLink: string) => {
         const parsedInput = parseInputAsDeckData(deckLink);
@@ -94,24 +89,23 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         clearErrorsFunc();
     }
 
-    const handleLinkToggle = () =>{
-        setshowLink(!showLink);
+    const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
+        setShowSavedDecks(useSavedDecks);
+        clearErrorsFunc();
     }
 
     const handleOnChangeDeck = async () => {
-        if ((!favouriteDeck && !deckLink) || readyStatus) return;
-        let userDeck: string;
+        if ((!favoriteDeck && !deckLink) || readyStatus) return;
+        let userDeck = '';
         let deckType = 'url';
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         setDeckImportErrorsSeen(false);
-        if(favouriteDeck) {
-            const selectedDeck = savedDecks.find(deck => deck.deckID === favouriteDeck);
-            if (selectedDeck?.deckLink && !deckLink) {
+        if(showSavedDecks) {
+            const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
+            if (selectedDeck?.deckLink) {
                 userDeck = selectedDeck?.deckLink
-            }else{
-                userDeck = deckLink;
             }
-        }else{
+        } else {
             userDeck = deckLink;
         }
         try {
@@ -120,11 +114,11 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             deckType = parsedInput.type
             if(parsedInput.type === 'url') {
                 deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
-                if(favouriteDeck && deckData && !deckLink) {
-                    deckData.deckID = favouriteDeck;
+                if(favoriteDeck && deckData && showSavedDecks) {
+                    deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
                     deckData.isPresentInDb = !!user;
-                }else if(deckData) {
+                } else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck;
                     deckData.isPresentInDb = false;
                 }
@@ -236,9 +230,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             .catch(err => console.error('Failed to copy link', err));
     };
 
-    const handleUseForceBase = () => {
-        sendLobbyMessage(['useForceBase'])
-    }
+
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -247,10 +239,10 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             paddingRight: '20px',
         },
         formControlStyle: {
-            mb: '1rem',
+            mb: '0.5rem',
         },
         disabledDropdownStyle: {
-            mb: '1rem',
+            mb: '0.5rem',
             width: { xs: '100%', sm: '50%' }, // Full width on extra small screens, half width on small and up
             maxWidth: '300px', // Reasonable maximum width
             '& .MuiOutlinedInput-root': {
@@ -319,8 +311,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             alignSelf: 'flex-start',
         },
         labelTextStyle: {
-            mt:'1em',
-            mb: '.5em',
+            mt:'0.5em',
+            mb: '.25em',
             color: 'white',
         },
         labelTextStyleSecondary: {
@@ -331,7 +323,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             display: 'block',
             ml: 'auto',
             mr: 'auto',
-            mt: '10px',
+            mt: '0.5rem',
         },
         errorMessageStyle: {
             color: 'var(--initiative-red);',
@@ -439,21 +431,44 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
             {lobbyState && (
                 <>
-                    {savedDecks && !showLink ? (
-                        <Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="body1" sx={styles.labelTextStyle}>
-                                    Favorite Decks
-                                </Typography>
-                                <Typography onClick={handleLinkToggle} sx={{ ...styles.labelTextStyle, color: 'lightblue', cursor:'pointer', textDecoration:'underline' }} >
-                                    Import New Deck
-                                </Typography>
-                            </Box>
+                    <Divider sx={{ mt: 1, borderColor: '#666' }} />
+                    <FormControl component="fieldset" sx={styles.formControlStyle}>
+                        <RadioGroup
+                            row
+                            value={showSavedDecks ? 'Saved Deck' : 'New Deck'}
+                            onChange={(
+                                e: ChangeEvent<HTMLInputElement>,
+                                value: string
+                            ) => handleChangeDeckSelectionType(value === 'Saved Deck')}
+                        >
+                            <FormControlLabel
+                                value="Saved Deck"
+                                control={<Radio sx={styles.checkboxStyle} />}
+                                label={
+                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                        Saved Deck
+                                    </Typography>
+                                }
+                            />
+                            <FormControlLabel
+                                value="New Deck"
+                                control={<Radio sx={styles.checkboxStyle} />}
+                                label={
+                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                        New Deck
+                                    </Typography>
+                                }
+                            />
+                        </RadioGroup>
+                    </FormControl>
+                    {showSavedDecks && (
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
                             <StyledTextField
                                 select
-                                value={favouriteDeck}
+                                value={favoriteDeck}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setFavouriteDeck(e.target.value)
+                                    setFavoriteDeck(e.target.value as string)
                                 }
                                 placeholder="Favorite Decks"
                             >
@@ -469,51 +484,50 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                     ))
                                 )}
                             </StyledTextField>
-                        </Box>
-                    ) : (
+                        </FormControl>
+                    ) || (
                         <>
-                            {savedDecks && (
-                                <Box sx={{ display: 'flex', justifyContent: 'end', mt: '1em' }}>
-                                    <Typography onClick={handleLinkToggle} sx={{ color: 'lightblue', cursor:'pointer', textDecoration:'underline' }} >
-                                        Use Favorites Deck
-                                    </Typography>
-                                </Box>
-                            )}
-                            <Box sx={styles.labelTextStyle}>
-                                Deck link (
-                                <Tooltip
-                                    arrow={true}
-                                    title={
-                                        <Box sx={{ whiteSpace: 'pre-line' }}>
-                                            {SupportedDeckSources.join('\n')}
-                                        </Box>
-                                    }
-                                >
-                                    <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
-                                        supported deckbuilders
-                                    </Link>
-                                </Tooltip>
-                                )
-                                <br />
-                                OR paste deck JSON directly
-                            </Box>
-                            <StyledTextField
-                                type="text"
-                                disabled={readyStatus}
-                                value={deckLink}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                    if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
-                                        setDisplayerror(true);
-                                        setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error')
-                                    } else {
-                                        setDisplayerror(false);
-                                        clearErrorsFunc();
-                                    }
-                                    handleJsonDeck(e.target.value);
-                                    setDeckLink(e.target.value);
-                                }}
-                            />
+                            {/* Deck Link Input */}
+                            <FormControl fullWidth sx={styles.formControlStyle}>
+                                <Typography variant="body1" sx={styles.labelTextStyle}>
+                                    Deck link (
+                                    <Tooltip
+                                        arrow={true}
+                                        title={
+                                            <Box sx={{ whiteSpace: 'pre-line' }}>
+                                                {SupportedDeckSources.join('\n')}
+                                            </Box>
+                                        }
+                                    >
+                                        <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
+                                            supported deckbuilders
+                                        </Link>
+                                    </Tooltip>
+                                    )
+                                    <br />
+                                    OR paste deck JSON directly
+                                </Typography>
+                                <StyledTextField
+                                    type="text"
+                                    disabled={readyStatus}
+                                    value={deckLink}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                        if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
+                                            setDisplayerror(true);
+                                            setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error')
+                                        } else {
+                                            setDisplayerror(false);
+                                            clearErrorsFunc();
+                                        }
+                                        handleJsonDeck(e.target.value);
+                                        setDeckLink(e.target.value);
+                                    }}
+                                />
+                            </FormControl>
+
+                            {/* Save Deck To Favourites Checkbox */}
                             <FormControlLabel
+                                sx={{ mb: '0.5rem' }}
                                 control={
                                     <Checkbox
                                         sx={styles.checkboxStyle}
@@ -542,6 +556,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                             />
                         </>
                     )}
+
                     {(displayError || blockError) && (
                         <Typography variant={'body1'} color={'error'} sx={styles.errorMessageStyle}>
                             {errorState.summary}{' '}
@@ -555,6 +570,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                             )}
                         </Typography>
                     )}
+
                     <Button
                         type="button"
                         onClick={handleOnChangeDeck}
@@ -562,7 +578,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                         disabled={readyStatus}
                         sx={styles.submitButtonStyle}
                     >
-                        {savedDecks && !showLink ? ('Load Deck') : ('Import Deck')}
+                        {showSavedDecks ? 'Load Deck' : 'Import Deck'}
                     </Button>
                 </>
             )}
@@ -581,8 +597,8 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             )}
             {lobbyState.isPrivate && (
                 <>
-                    <Divider sx={{ mt: 2, borderColor: '#666' }} />
-                    <Typography variant="h5" sx={{ fontSize: '1.2em', fontWeight: '600', color: 'white', mt: 2, mb: 1 }}>
+                    <Divider sx={{ mt: 1, borderColor: '#666' }} />
+                    <Typography variant="h5" sx={{ fontSize: '1.2em', fontWeight: '600', color: 'white', mt: 1, mb: 0.5 }}>
                         Game Settings
                     </Typography>
                     {lobbyFormat === SwuGameFormat.Open && (
