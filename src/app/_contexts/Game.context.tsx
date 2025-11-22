@@ -21,6 +21,7 @@ import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/use
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
+import { useGameAnimations } from '@/hooks/useGameAnimations';
 
 interface IGameContextType {
     gameState: any;
@@ -61,6 +62,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
     const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
+
+    // Initialize animation system
+    const { processAnimations, clearAnimations } = useGameAnimations(user?.preferences?.animations);
 
     // Initialize sound handler with user preferences
     const { playSound } = useSoundHandler({
@@ -108,7 +112,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             if (promptType === 'actionWindow') {
                 clearDistributionPrompt();
                 return;
-            } 
+            }
             else if (promptType === 'distributeAmongTargets') {
                 initDistributionPrompt(promptState.distributeAmongTargets);
                 return;
@@ -235,12 +239,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             resetStates();
         });
 
-        newSocket.on('inactiveDisconnect', () => {            
+        newSocket.on('inactiveDisconnect', () => {
             alert('You have been disconnected due to inactivity');
             newSocket.disconnect();
         });
 
-        newSocket.on('gamestate', (gameState: any) => {
+        newSocket.on('gamestate', async (gameState: any) => {
             if(isSpectatorMode){
                 setConnectedPlayer(Object.keys(gameState.players)[0])
             }
@@ -248,8 +252,43 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 clearPopups();
                 lastGameIdRef.current = gameState.id;
             }
-            
+
+            // Clear any pending animations when new game state arrives
+            // This prevents old animations from blocking UI updates
+            clearAnimations();
+
+            // Process ALL animations BEFORE updating game state if there are defeat animations
+            // (defeat animations need the elements to still be in DOM)
+            // Damage animations will execute first due to higher priority (90 vs 85)
+
+            const hasDefeatAnimations = gameState.animations?.events?.some(
+                (event: any) => event.type === 'DEFEAT'
+            );
+
+            const hasShieldAnimations = gameState.animations?.events?.some(
+                (event: any) => event.type === 'LOSE_SHIELD' || event.type === 'GAIN_SHIELD'
+            );
+
+            // Process animations BEFORE updating game state if there are defeat or shield animations
+            // (these animations need the elements to still be in DOM)
+            if ((hasDefeatAnimations || hasShieldAnimations) && gameState.animations) {
+                try {
+                    await processAnimations(gameState.animations);
+                } catch (error) {
+                    console.error('Error processing animations:', error);
+                }
+            }
+
+            // Update game state - this may remove defeated cards or shields from DOM
             setGameState(gameState);
+
+            // Process animations asynchronously if no defeats/shields (normal flow)
+            if (!hasDefeatAnimations && !hasShieldAnimations && gameState.animations) {
+                processAnimations(gameState.animations).catch((error) => {
+                    console.error('Error processing animations:', error);
+                });
+            }
+
             if (process.env.NODE_ENV === 'development') {
                 const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
                 console.log(`Game state received (${byteSize} bytes):`, gameState);
@@ -263,7 +302,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 console.log('Lobby state received:', lobbyState);
             }
         })
-        
+
         newSocket.on('queueHeartbeat', () => {
             setLastQueueHeartbeat(Date.now());
         });
@@ -310,7 +349,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.warn('Error playing sound:', error);
         }
-        
+
         socket?.emit('game', ...args);
     };
 

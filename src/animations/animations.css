@@ -1,0 +1,381 @@
+/* Damage Flash Overlay */
+.damage-flash {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 100%;
+  height: calc(100% - 8px);
+  padding: 0 2px;
+  border-radius: 12px;
+  background-color: rgba(220, 38, 38, 0.5);
+  z-index: 1000;
+  pointer-events: none;
+  animation: damageFlash 0.3s ease-in-out forwards;
+}
+
+@keyframes damageFlash {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Damage Numeric Label */
+.damage-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.60);
+  z-index: 1001;
+  pointer-events: none;
+  animation: damageSlideUp 0.3s ease-out forwards;
+}
+
+@keyframes damageSlideUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(-20px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+
+/* Heal Flash Overlay */
+.heal-flash {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 100%;
+  height: calc(100% - 8px);
+  padding: 0 2px;
+  border-radius: 12px;
+  background-color: rgba(0, 186, 255, 0.5);
+  z-index: 1000;
+  pointer-events: none;
+  animation: healFlash 0.3s ease-in-out forwards;
+}
+
+@keyframes healFlash {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Heal Numeric Label */
+.heal-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.60);
+  z-index: 1001;
+  pointer-events: none;
+  animation: healSlideUp 0.3s ease-out forwards;
+}
+
+@keyframes healSlideUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(-20px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+
+/* Shield Animations */
+
+/* Shield break/defeat animation - explosive shrapnel effect with 4 pieces */
+/* Original shield fades out while shrapnel pieces fly outward */
+
+/* Original shield element - simple fade out */
+.shield-fade-out {
+  animation: shieldFadeOut 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes shieldFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Top left piece */
+.shield-shrapnel-top-left {
+  pointer-events: none;
+  animation: shieldShrapnelTopLeft 0.5s ease-out forwards;
+}
+
+/* Top right piece */
+.shield-shrapnel-top-right {
+  pointer-events: none;
+  animation: shieldShrapnelTopRight 0.5s ease-out forwards;
+}
+
+/* Bottom left piece */
+.shield-shrapnel-bottom-left {
+  pointer-events: none;
+  animation: shieldShrapnelBottomLeft 0.5s ease-out forwards;
+}
+
+/* Bottom right piece */
+.shield-shrapnel-bottom-right {
+  pointer-events: none;
+  animation: shieldShrapnelBottomRight 0.5s ease-out forwards;
+}
+
+/* Top left piece flies toward top left */
+@keyframes shieldShrapnelTopLeft {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, -8px);
+    filter: blur(0) brightness(1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.1) translate(-70px, -56px);
+    filter: blur(3px) brightness(1);
+  }
+}
+
+/* Top right piece flies toward top right */
+@keyframes shieldShrapnelTopRight {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, -8px);
+    filter: blur(0) brightness(1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.1) translate(70px, -56px);
+    filter: blur(3px) brightness(1);
+  }
+}
+
+/* Bottom left piece flies toward bottom left (mirrored from top left) */
+@keyframes shieldShrapnelBottomLeft {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, 8px);
+    filter: blur(0) brightness(1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.1) translate(-70px, 56px);
+    filter: blur(3px) brightness(1);
+  }
+}
+
+/* Bottom right piece flies toward bottom right (mirrored from top right) */
+@keyframes shieldShrapnelBottomRight {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, 8px);
+    filter: blur(0) brightness(1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.1) translate(70px, 56px);
+    filter: blur(3px) brightness(1);
+  }
+}
+
+/* Alternative simpler animation (fallback if pseudo-elements cause issues) */
+/* Visual sequence: Flash → Break/expand → Disperse outward → Fade */
+.shield-defeat-simple {
+  animation: shieldDefeatSimple 0.5s ease-in-out forwards;
+  pointer-events: none;
+}
+
+@keyframes shieldDefeatSimple {
+  /* Initial state */
+  0% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+    opacity: 1;
+  }
+  /* Impact flash with shake */
+  15% {
+    transform: scale(1.05) translateX(-3px);
+    filter: brightness(1.8);
+    opacity: 1;
+  }
+  /* Crack complete, beginning to break */
+  30% {
+    transform: scale(1.05) rotate(2deg);
+    filter: brightness(1.5);
+    opacity: 1;
+  }
+  /* Shards expanding outward from center */
+  60% {
+    transform: scale(1.15) rotate(8deg);
+    filter: brightness(1.2);
+    opacity: 0.5;
+  }
+  /* Final dispersion and fade */
+  100% {
+    transform: scale(1.3) rotate(15deg);
+    filter: brightness(0.8);
+    opacity: 0;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .damage-flash {
+    animation-duration: 0.1s;
+  }
+
+  .damage-label {
+    animation: none;
+    opacity: 1;
+  }
+
+  .heal-flash {
+    animation-duration: 0.1s;
+  }
+
+  .heal-label {
+    animation: none;
+    opacity: 1;
+  }
+
+  .defeat-upgrade,
+  .defeat-unit {
+    animation-duration: 0.15s;
+  }
+
+  @keyframes defeatUpgrade {
+    0% { opacity: 1; }
+    100% {
+      transform: none;
+      opacity: 0;
+    }
+  }
+
+  @keyframes defeatUnit {
+    0% { opacity: 1; }
+    100% {
+      transform: none;
+      opacity: 0;
+    }
+  }
+
+  .shield-defeat,
+  .shield-defeat-simple {
+    animation-duration: 0.15s;
+  }
+
+  .shield-defeat,
+  .shield-defeat::before,
+  .shield-defeat::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  @keyframes shieldShrapnelUp {
+    0% { opacity: 1; }
+    100% {
+      transform: none;
+      filter: none;
+      opacity: 0;
+    }
+  }
+
+  @keyframes shieldDefeatSimple {
+    0% { opacity: 1; }
+    100% {
+      transform: none;
+      filter: none;
+      opacity: 0;
+    }
+  }
+}
+
+/* Defeat Animations */
+
+/* Upgrade defeat animation */
+.defeat-upgrade {
+  animation: defeatUpgrade 0.3s ease-in forwards;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+@keyframes defeatUpgrade {
+  0% {
+    opacity: 1;
+  }
+  99% {
+    opacity: 0.01;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Unit defeat animation */
+.defeat-unit {
+  animation: defeatUnit 0.45s ease-in-out forwards;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+@keyframes defeatUnit {
+  0% {
+    opacity: 1;
+  }
+  99% {
+    opacity: 0.01;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}

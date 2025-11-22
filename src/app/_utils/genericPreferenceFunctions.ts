@@ -53,12 +53,15 @@ export const savePreferencesGeneric = async (
 };
 
 const getDefaultPreferences = (): IPreferences => ({
-    cardback: undefined,
     sound: {
         muteAllSound: false,
         muteCardAndButtonClickSound: false,
         muteYourTurn: false,
         muteChatSound: false,
         muteOpponentFoundSound: false,
+    },
+    animations: {
+        disableAnimations: false,
+        onlyDamageAnimations: false,
     }
 });

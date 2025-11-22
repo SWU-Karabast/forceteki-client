@@ -48,9 +48,15 @@ export interface ISoundPreferences {
     muteOpponentFoundSound?: boolean;
 }
 
+export interface IAnimationPreferences {
+    disableAnimations?: boolean;
+    onlyDamageAnimations?: boolean;
+    fastAnimations?: boolean;
+}
+
 export interface IPreferences {
-    cardback?: string;
-    sound?: ISoundPreferences
+    sound?: ISoundPreferences;
+    animations?: IAnimationPreferences;
 }
 
 export interface IUserContextType {

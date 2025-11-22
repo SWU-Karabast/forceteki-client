@@ -4,6 +4,7 @@
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { GameProvider } from '@/app/_contexts/Game.context';
+import '../animations/animations.css';
 
 const ClientProviders = dynamic(
     () => import('@/app/_components/ClientProviders/ClientProviders'),
@@ -24,7 +25,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                     <GameProvider>
                         {children}
                     </GameProvider>
-                </ClientProviders> 
+                </ClientProviders>
             ) : (
                 <ClientProviders>
                     <Navbar />
