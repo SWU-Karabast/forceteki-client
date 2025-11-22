@@ -2,7 +2,8 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 
-export default function DeckLayout({
+
+export default function ModLayout({
     children,
 }: {
     children: React.ReactNode;
@@ -12,10 +13,11 @@ export default function DeckLayout({
         mainContainer: {
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
+            backgroundImage: 'url("/default-background.webp")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
         },

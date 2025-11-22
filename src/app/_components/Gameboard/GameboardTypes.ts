@@ -33,6 +33,7 @@ export interface IBoardProps {
 
 export interface IDeckDiscardProps {
     trayPlayer: string;
+    cardback?: string;
 }
 
 export interface IResourcesProps {
@@ -50,4 +51,5 @@ export interface IPlayerHandProps {
     allowHover?: boolean;
     maxCardOverlapPercent?: number; 
     scrollbarEnabled?: boolean;
+    cardback?: string;
 }

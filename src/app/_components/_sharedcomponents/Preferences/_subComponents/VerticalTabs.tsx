@@ -8,7 +8,6 @@ import CurrentGameTab
     from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CurrentGameTab';
 import KeyboardShortcutsTab
     from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/KeyboardShortcutsTab';
-import CardSleevesTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CardSleevesTab';
 import SoundOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/SoundOptionsTab';
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
@@ -16,6 +15,7 @@ import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/Prefer
 import { useUser } from '@/app/_contexts/User.context';
 import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
 import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
+import CosmeticsTab from '../PreferencesSubElementVariants/CosmeticsTab';
 
 function tabProps(index: number) {
     return {
@@ -28,7 +28,7 @@ function tabProps(index: number) {
 enum TabType {
     CurrentGame = 'currentGame',
     KeyboardShortcuts = 'keyboardShortcuts',
-    CardSleeves = 'cardSleeves',
+    Cosmetics = 'cosmetics',
     SoundOptions = 'soundOptions',
     EndGame = 'endGame',
     BlockList = 'blockList',
@@ -36,7 +36,7 @@ enum TabType {
     Logout = 'logout'
 }
 
-function VerticalTabs({ 
+function VerticalTabs({
     tabs,
     variant = 'gameBoard',
     attemptingClose = false,
@@ -109,8 +109,8 @@ function VerticalTabs({
                 return <CurrentGameTab/>;
             case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
-            case TabType.CardSleeves:
-                return <CardSleevesTab/>;
+            case TabType.Cosmetics:
+                return <CosmeticsTab />;
             case TabType.SoundOptions:
                 return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
             case TabType.EndGame:
@@ -129,8 +129,8 @@ function VerticalTabs({
                 return 'Current Game';
             case TabType.KeyboardShortcuts:
                 return 'Keyboard Shortcuts';
-            case TabType.CardSleeves:
-                return 'Card Sleeves';
+            case TabType.Cosmetics:
+                return 'Cosmetics';
             case TabType.SoundOptions:
                 return 'Sound Options';
             case TabType.EndGame:

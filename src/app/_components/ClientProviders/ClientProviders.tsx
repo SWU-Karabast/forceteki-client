@@ -1,5 +1,6 @@
 'use client';
 
+import { CosmeticsProvider } from '@/app/_contexts/CosmeticsContext';
 import { PopupProvider } from '@/app/_contexts/Popup.context';
 import { ThemeContextProvider } from '@/app/_contexts/Theme.context';
 import { UserProvider } from '@/app/_contexts/User.context';
@@ -14,7 +15,9 @@ const ClientProviders: React.FC<IClientProvidersProps> = ({ children }) => {
         <SessionProvider>
             <UserProvider>
                 <PopupProvider>
-                    <ThemeContextProvider>{children}</ThemeContextProvider>
+                    <CosmeticsProvider>
+                        <ThemeContextProvider>{children}</ThemeContextProvider>
+                    </CosmeticsProvider>
                 </PopupProvider>
             </UserProvider>
         </SessionProvider>

@@ -22,7 +22,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    
+
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
     const leaderCardFlipPreview = useLeaderCardFlipPreview({
         anchorElement,
@@ -55,7 +55,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             setPreviewImage(`url(${imageUrl})`);
         }, 200);
     };
-        
+
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
@@ -83,33 +83,33 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     }
 
     const notImplemented = (card: ICardData) => card?.hasOwnProperty('unimplemented') && card.unimplemented;
-    
+
     const getBackgroundColor = (card: ICardData) => {
         if (
             (notImplemented(card) || card.exhausted) && !isDeployed
         ) {
             return 'rgba(0, 0, 0, 0.5)';
         }
-    
+
         return 'transparent';
     }
 
     const showValueAdjuster = () => {
         const prompt = getConnectedPlayerPrompt();
-    
+
         // Ensure prompt is valid and conditions are met
         if (!prompt || prompt.promptType !== 'distributeAmongTargets' || !card.selectable || !distributionPromptData || isDeployed) {
             return false;
         }
-    
+
         const maxTargets = prompt.distributeAmongTargets.maxTargets;
         const isInDistributionData = distributionPromptData.valueDistribution.some((item: DistributionEntry) => item.uuid === card.uuid);
-    
+
         // If maxTargets is defined and already reached, allow only if the card is part of the selection
         if (maxTargets && distributionPromptData.valueDistribution.length >= maxTargets && !isInDistributionData) {
             return false;
         }
-    
+
         return true;
     };
 
@@ -184,7 +184,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             cursor: clickDisabled() ? 'normal' : 'pointer',
-            position: 'relative', 
+            position: 'relative',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
         },
@@ -195,7 +195,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             maxHeight: '100%',
             aspectRatio: '1.39',
             cursor: 'normal',
-            position: 'relative', 
+            position: 'relative',
             border: '2px solid #FFFFFF55',
         },
         cardOverlay : {
@@ -257,7 +257,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             fontSize: '1.9rem',
             color: 'white',
             minWidth: '2.5rem',
-            padding: '0 10px', 
+            padding: '0 10px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -318,7 +318,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             fontSize: '1rem',
             fontWeight: 'bold',
             textShadow: `
-                -1px -1px 0 #000,  
+                -1px -1px 0 #000,
                  1px -1px 0 #000,
                 -1px  1px 0 #000,
                  1px  1px 0 #000
@@ -365,9 +365,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             marginTop: isConnectedPlayer ? '-2%' : '1%',
             fontWeight: '600',
             whiteSpace: 'nowrap',
-            overflow: 'hidden',           
+            overflow: 'hidden',
             color: 'black',
-            textAlign: 'center', 
+            textAlign: 'center',
             userSelect: 'none',
             position: 'relative',
             zIndex: 2, // Text layer above background
@@ -375,7 +375,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     };
 
     const capturedCardsDecoration = (
-        <Box sx={{ 
+        <Box sx={{
             width: '100%',
             position: 'relative',
             mb: isConnectedPlayer ? '-4%' : '0px',
@@ -445,7 +445,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 {cardStyle === LeaderBaseCardStyle.Base && (
                     <>
                         <Box sx={styles.damageCounterContainer}>
-                            { !!distributionAmount && (
+                            { !!distributionAmount &&(
                                 <DamageCounterToken value={distributionAmount} variant={distributeHealing ? 'distributeHealing' : 'distributeDamage'} />
                             )}
                             <DamageCounterToken value={card.damage || 0} />

@@ -1,0 +1,11 @@
+services:
+  s3mock:
+    image: adobe/s3mock
+    ports:
+      - "9090:9090"
+    environment:
+      - initialBuckets=karabast-customization
+    volumes:
+      - s3mock-data:/data
+volumes:
+  s3mock-data:
