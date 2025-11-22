@@ -151,6 +151,7 @@ function CosmeticsTab() {
         },
         accordionContainer: {
             mb: '1rem',
+            width: '98%',
         },
         accordionStyle: {
             backgroundColor: 'rgba(59, 66, 82, 0.07)',

@@ -1,7 +1,3 @@
-export const CardBacksDarkenBox = {
-
-}
-
 export const BackgroundsDarkenBox = {
     content: '""',
     position: 'absolute',

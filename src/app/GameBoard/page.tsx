@@ -145,7 +145,6 @@ const GameBoard = () => {
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
             borderRadius: '8px', // Add subtle rounded corners
-            opacity: 0.54, // Subtle transparency
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
@@ -161,7 +160,6 @@ const GameBoard = () => {
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
             borderRadius: '8px', // Add subtle rounded corners
-            opacity: 0.54, // Subtle transparency
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',

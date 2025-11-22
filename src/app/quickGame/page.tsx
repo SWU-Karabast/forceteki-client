@@ -35,7 +35,7 @@ const QuickGame: React.FC = () => {
         containerStyle: {
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: `url(${background.path})`,
+            backgroundImage: `url(${background?.path})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             '&::before': {},

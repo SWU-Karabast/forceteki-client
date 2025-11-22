@@ -298,7 +298,7 @@ const ModPageClient = () => {
 
             const formData = new FormData();
             formData.append('file', fileToUpload);
-            formData.append('cosmeticId', cosmeticId);
+            formData.append('cosmeticId', uuidv4());
             formData.append('cosmeticTitle', cosmeticTitle);
             formData.append('cosmeticType', cosmeticType);
             formData.append('isDarkened', String(isDarkened));
@@ -632,15 +632,17 @@ const ModPageClient = () => {
                                                         <Typography variant="caption" color="gray">
                                                             {cosmetic.type} • {cosmetic.id}
                                                         </Typography>
-                                                        <Button
-                                                            size="small"
-                                                            color="error"
-                                                            variant="outlined"
-                                                            onClick={() => handleDeleteSingleCosmetic(cosmetic.id)}
-                                                            sx={{ mt: 1, fontSize: '0.7rem' }}
-                                                        >
-                                                            Delete
-                                                        </Button>
+                                                        {cosmetic.title?.toLowerCase() !== 'default' && (
+                                                            <Button
+                                                                size="small"
+                                                                color="error"
+                                                                variant="outlined"
+                                                                onClick={() => handleDeleteSingleCosmetic(cosmetic.id)}
+                                                                sx={{ mt: 1, fontSize: '0.7rem' }}
+                                                            >
+                                                                Delete
+                                                            </Button>
+                                                        )}
                                                     </Box>
                                                 </Box>
                                             ))}
@@ -717,34 +719,17 @@ const ModPageClient = () => {
                             <MenuItem value="playmat">Playmat (2680x1200px)</MenuItem>
                         </Select>
                     </FormControl>
-
-                    <StyledTextField
-                        label="Title"
-                        value={cosmeticTitle}
-                        onChange={(e) => setCosmeticTitle(e.target.value)}
-                        disabled={uploadLoading}
-                        fullWidth
-                    />
-
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                    <FormControl fullWidth sx={{ mt: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                            Title
+                        </Typography>
                         <StyledTextField
-                            label="ID (auto-generated GUID)"
-                            value={cosmeticId}
-                            onChange={(e) => setCosmeticId(e.target.value)}
+                            value={cosmeticTitle}
+                            onChange={(e) => setCosmeticTitle(e.target.value)}
                             disabled={uploadLoading}
                             fullWidth
-                            helperText="Auto-generated unique identifier"
                         />
-                        <Button
-                            variant="outlined"
-                            onClick={() => setCosmeticId(uuidv4())}
-                            disabled={uploadLoading}
-                            sx={{ mt: 1, minWidth: 'auto', px: 2 }}
-                        >
-                            New ID
-                        </Button>
-                    </Box>
-
+                    </FormControl>
                     {/* Show darkened toggle for background and playmat types */}
                     {(cosmeticType === 'background' || cosmeticType === 'playmat') && (
                         <FormControlLabel
@@ -786,9 +771,9 @@ const ModPageClient = () => {
                             accept="image/*"
                             onChange={handleFileSelect}
                             disabled={uploadLoading}
-                            style={{ marginBottom: '1rem' }}
+                            style={{ marginBottom: '1rem', color:'white' }}
                         />
-                        <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mb: 1 }}>
+                        <Typography variant="caption" color="white" sx={{ display: 'block', mb: 1 }}>
                             PNG and JPEG files will be automatically converted to WebP format for better compression.
                         </Typography>
                         {imageDimensions && (
