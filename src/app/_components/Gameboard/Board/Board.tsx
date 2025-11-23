@@ -128,6 +128,7 @@ const Board: React.FC<IBoardProps> = ({
             url('border-llt.svg') no-repeat left top,
             url('border-llb.svg') no-repeat left bottom`,
             mixBlendMode: 'soft-light',
+            opacity: 0.3,
             left: '0',
             width: '250px',
             height: '100%',
@@ -135,6 +136,7 @@ const Board: React.FC<IBoardProps> = ({
         },
         leftColumnBorderCenter: {
             flexGrow: 1,
+            opacity: 0.3,
             background: `
             url('border-ct.svg') repeat-x top,
             url('border-cb.svg') repeat-x bottom`,
@@ -148,6 +150,7 @@ const Board: React.FC<IBoardProps> = ({
             url('border-lrb.svg') no-repeat right bottom`,
             mixBlendMode: 'soft-light',
             width: '50px',
+            opacity: 0.3,
             right: '0',
             height: '100%',
             position: 'relative',
@@ -158,12 +161,14 @@ const Board: React.FC<IBoardProps> = ({
             url('border-rrb.svg') no-repeat right bottom`,
             mixBlendMode: 'soft-light',
             right: '0',
+            opacity: 0.3,
             width: '250px',
             height: '100%',
             position: 'relative',
         },
         rightColumnBorderCenter: {
             flexGrow: 1,
+            opacity: 0.3,
             background: `
             url('border-ct.svg') repeat-x top,
             url('border-cb.svg') repeat-x bottom`,
@@ -172,6 +177,7 @@ const Board: React.FC<IBoardProps> = ({
             position: 'relative',
         },
         rightColumnBorderLeft: {
+            opacity: 0.3,
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
@@ -182,6 +188,7 @@ const Board: React.FC<IBoardProps> = ({
             position: 'relative',
         },
         middleColumnBorderRight: {
+            opacity: 0.3,
             background: `
             url('border-lrt.svg') no-repeat right top,
             url('border-lrb.svg') no-repeat right bottom`,
@@ -192,6 +199,7 @@ const Board: React.FC<IBoardProps> = ({
             position: 'absolute',
         },
         middleColumnBorderLeft: {
+            opacity: 0.3,
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
