@@ -286,7 +286,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         boxStyle: {
             display: 'flex',
             justifyContent: 'center',
-            mt: '1em',
+            mt: '1rem',
         },
         buttonStyle: {
             backgroundColor: '#292929',
@@ -305,14 +305,14 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             width: '100%',
         },
         setUpTextStyle: {
-            fontSize: '1.5em',
+            fontSize: '1.5rem',
             fontWeight: '800',
             color: 'white',
             alignSelf: 'flex-start',
         },
         labelTextStyle: {
-            mt:'0.5em',
-            mb: '.25em',
+            mt:'0.5rem',
+            mb: '.25rem',
             color: 'white',
         },
         labelTextStyleSecondary: {
@@ -347,7 +347,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         },
         checkboxAndRadioGroupTextStyle: {
             color: '#fff',
-            fontSize: '1em',
+            fontSize: '1rem',
         },
         // Styles for game settings components (can be disabled)
         settingsCheckboxStyle: {
@@ -362,7 +362,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         },
         settingsCheckboxAndRadioGroupTextStyle: {
             color: disableSettings ? '#c0c0c0' : '#fff',  // Lighter color when disabled
-            fontSize: '1em',
+            fontSize: '1rem',
         },
     }
     return (
@@ -607,7 +607,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             {lobbyState.isPrivate && (
                 <>
                     <Divider sx={{ mt: 1, borderColor: '#666' }} />
-                    <Typography variant="h5" sx={{ fontSize: '1.2em', fontWeight: '600', color: 'white', mt: 1, mb: 0.5 }}>
+                    <Typography variant="h5" sx={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', mt: 1, mb: 0.5 }}>
                         Game Settings
                     </Typography>
                     {lobbyFormat === SwuGameFormat.Open && (

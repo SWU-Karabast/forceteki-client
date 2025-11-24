@@ -35,17 +35,14 @@ export const useDeckManagement = (): IDeckManagementState => {
     
     // Deck Preferences State
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
-        if (typeof window === 'undefined') return true;
         return localStorage.getItem('useSavedDecks') === 'true';
     });
 
     const [favoriteDeck, setFavoriteDeck] = useState<string>(() => {
-        if (typeof window === 'undefined') return '';
         return localStorage.getItem('selectedDeck') || '';
     });
 
     const [format, setFormat] = useState<SwuGameFormat>(() => {
-        if (typeof window === 'undefined') return SwuGameFormat.Premier;
         const stored = localStorage.getItem('format');
 
         if (stored !== SwuGameFormat.Premier && stored !== SwuGameFormat.Open) {
@@ -61,16 +58,11 @@ export const useDeckManagement = (): IDeckManagementState => {
 
     // Sync deck preferences to localStorage
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('format', format);
-        }
+        localStorage.setItem('format', format);
     }, [format]);
 
     const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
-        let selectDeck = '';
-        if (typeof window !== 'undefined') {
-            selectDeck = localStorage.getItem('selectedDeck') || '';
-        }
+        let selectDeck = localStorage.getItem('selectedDeck') || '';
 
         if (selectDeck && !allDecks.some(deck => deck.deckID === selectDeck)) {
             selectDeck = '';
@@ -84,7 +76,7 @@ export const useDeckManagement = (): IDeckManagementState => {
             setFavoriteDeck(selectDeck);
         }
 
-        if (typeof window !== 'undefined' && localStorage.getItem('useSavedDecks') == null) {
+        if (localStorage.getItem('useSavedDecks') == null) {
             setShowSavedDecks(true);
         }
     }, [favoriteDeck]);
@@ -103,16 +95,12 @@ export const useDeckManagement = (): IDeckManagementState => {
 
     const handleShowSavedDecksChange = useCallback((value: boolean) => {
         setShowSavedDecks(value);
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('useSavedDecks', value.toString());
-        }
+        localStorage.setItem('useSavedDecks', value.toString());
     }, []);
 
     const handleFavoriteDeckChange = useCallback((value: string) => {
         setFavoriteDeck(value);
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('selectedDeck', value);
-        }
+        localStorage.setItem('selectedDeck', value);
     }, []);
 
     const handleSetDeckLink = useCallback((value: string) => setDeckLink(value), []);
