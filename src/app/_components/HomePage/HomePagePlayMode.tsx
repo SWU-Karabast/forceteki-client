@@ -9,17 +9,15 @@ import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/U
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
+import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 import { 
     setModerationSeenAsync, 
-    retrieveDecksForUser, 
     hasUserSeenUndoPopup, 
-    markUndoPopupAsSeen 
+    markUndoPopupAsSeen,
+    markAnnouncementAsSeen, 
+    shouldShowAnnouncement 
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
-import { SwuGameFormat } from '@/app/_constants/constants';
-import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { useSession } from 'next-auth/react';
-import { markAnnouncementAsSeen, shouldShowAnnouncement } from '@/app/_utils/ServerAndLocalStorageUtils';
 import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
 import { announcement } from '@/app/_constants/mockData';
 import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/UndoTutorialPopup';
@@ -37,70 +35,19 @@ const HomePagePlayMode: React.FC = () => {
     const [showUndoTutorialPopup, setShowUndoTutorialPopup] = useState<boolean>(false);
     const [pendingFormSubmission, setPendingFormSubmission] = useState<(() => void) | null>(null);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
-    const { user, isLoading: userLoading, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate } = useUser();
-    const { data: session } = useSession();
+    const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate } = useUser();
 
-    // Deck Preferences State (moved from context)
-    const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
-        return localStorage.getItem('useSavedDecks') === 'true';
-    });
-
-    const [favoriteDeck, setFavoriteDeck] = useState<string>(() => {
-        return localStorage.getItem('selectedDeck') || '';
-    });
-
-    const [format, setFormat] = useState<SwuGameFormat>(() => {
-        const stored = localStorage.getItem('format');
-
-        if (stored !== SwuGameFormat.Premier && stored !== SwuGameFormat.Open) {
-            return SwuGameFormat.Premier;
-        }
-
-        return (stored as SwuGameFormat) || SwuGameFormat.Premier;
-    });
+    // Use shared deck management hook
+    const {
+        deckPreferences,
+        deckPreferencesHandlers,
+        deckLink,
+        setDeckLink,
+        savedDecks,
+        fetchDecks
+    } = useDeckManagement();
 
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
-    const [deckLink, setDeckLink] = useState<string>('');
-    const [saveDeck, setSaveDeck] = useState<boolean>(false);
-
-    const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
-
-    // Sync deck preferences to localStorage
-    useEffect(() => {
-        localStorage.setItem('format', format);
-    }, [format]);
-
-    const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
-        let selectDeck = localStorage.getItem('selectedDeck');
-
-        if (selectDeck && !allDecks.some(deck => deck.deckID === selectDeck)) {
-            selectDeck = '';
-        }
-
-        if (!selectDeck) {
-            selectDeck = firstDeck || '';
-        }
-
-        if (selectDeck !== favoriteDeck) {
-            setFavoriteDeck(selectDeck);
-        }
-
-        if (localStorage.getItem('useSavedDecks') == null) {
-            setShowSavedDecks(true);
-        }
-    }, [favoriteDeck]);
-
-    const fetchDecks = useCallback(async() => {
-        if (userLoading) {
-            return;
-        }
-
-        try {
-            await retrieveDecksForUser(session?.user, user, { setDecks: setSavedDecks, setFirstDeck: handleInitializeDeckSelection });
-        }catch {
-            alert('Server error when fetching decks');
-        }
-    }, [session?.user, user, userLoading, handleInitializeDeckSelection]);
 
     useEffect(() => {
         fetchDecks();
@@ -132,33 +79,6 @@ const HomePagePlayMode: React.FC = () => {
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
-
-    // Create deck preferences object for forms
-    const deckPreferences = {
-        showSavedDecks,
-        favoriteDeck,
-        format,
-        saveDeck,
-    };
-
-    const handleShowSavedDecksChange = useCallback((value: boolean) => {
-        setShowSavedDecks(value);
-        localStorage.setItem('useSavedDecks', value.toString());
-    }, []);
-
-    const handleFavoriteDeckChange = useCallback((value: string) => {
-        setFavoriteDeck(value);
-        localStorage.setItem('selectedDeck', value);
-    }, []);
-
-    const deckPreferencesHandlers = {
-        setShowSavedDecks: handleShowSavedDecksChange,
-        setFavoriteDeck: handleFavoriteDeckChange,
-        setFormat: useCallback((value: SwuGameFormat) => setFormat(value), []),
-        setSaveDeck: useCallback((value: boolean) => setSaveDeck(value), []),
-    };
-
-    const handleSetDeckLink = useCallback((value: string) => setDeckLink(value), []);
 
     // Undo Tutorial Popup handlers
     const handleFormSubmissionWithUndoCheck = useCallback((originalSubmissionFn: () => void) => {
@@ -318,7 +238,7 @@ const HomePagePlayMode: React.FC = () => {
                                 deckPreferences={deckPreferences}
                                 deckPreferencesHandlers={deckPreferencesHandlers}
                                 deckLink={deckLink}
-                                setDeckLink={handleSetDeckLink}
+                                setDeckLink={setDeckLink}
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
                                 handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
@@ -334,7 +254,7 @@ const HomePagePlayMode: React.FC = () => {
                                 deckPreferences={deckPreferences}
                                 deckPreferencesHandlers={deckPreferencesHandlers}
                                 deckLink={deckLink}
-                                setDeckLink={handleSetDeckLink}
+                                setDeckLink={setDeckLink}
                                 savedDecks={savedDecks}
                                 handleDeckManagement={handleDeckManagement}
                                 handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
