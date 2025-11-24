@@ -244,7 +244,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             height: '100%',
             backgroundColor: getBackgroundColor(card),
             filter: 'none',
-            clickEvents: 'none',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -583,13 +582,15 @@ const GameCard: React.FC<IGameCardProps> = ({
             <Box
                 sx={styles.card}
                 onClick={handleClick}
-                onMouseEnter={handlePreviewOpen}
-                onMouseLeave={handlePreviewClose}
-                data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
-                data-card-type={card.printedType}
-                data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
             >
-                <Box sx={styles.cardOverlay}>
+                <Box 
+                    sx={styles.cardOverlay}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
+                    data-card-type={card.printedType}
+                    data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
+                >
                     <Box sx={styles.unimplementedAlert}></Box>
                     <Box sx={styles.resourceIcon}/>
                     { !!distributionAmount && (
@@ -609,7 +610,12 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
-                        { showValueAdjuster() && <CardValueAdjuster card={card} isIndirect={isIndirectDamage} /> }
+                        { showValueAdjuster() && (
+                            <CardValueAdjuster 
+                                card={card} 
+                                isIndirect={isIndirectDamage}
+                            /> 
+                        )}
                         <Grid direction="row" container sx={styles.shieldContainer}>
                             {shieldCards.map((shieldCard, index) => (
                                 <Box
