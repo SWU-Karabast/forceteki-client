@@ -777,7 +777,7 @@ const ModPageClient = () => {
                             PNG and JPEG files will be automatically converted to WebP format for better compression.
                         </Typography>
                         {imageDimensions && (
-                            <Typography variant="body2" color="textSecondary">
+                            <Typography variant="body2" color='white'>
                                 Image dimensions: {imageDimensions.width}x{imageDimensions.height}px
                             </Typography>
                         )}
