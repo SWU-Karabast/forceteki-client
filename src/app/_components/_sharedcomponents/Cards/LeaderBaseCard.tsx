@@ -50,6 +50,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
         if (!imageUrl) return;
+
         hoverTimeout.current = window.setTimeout(() => {
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
