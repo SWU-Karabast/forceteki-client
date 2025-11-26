@@ -110,12 +110,13 @@ export const articles: IArticle[] = [
 ];
 
 export const announcement: IAnnouncement = {
-    key:'awsOutage',
-    title: 'AWS Outage Affecting Karabast',
+    key:'cloudflareOutage',
+    title: 'Cloudflare Outage Affecting Karabast',
     content:`
-    There is currently a global outage with Amazon Web Services (AWS) that is affecting Karabast's servers. As a result, you may experience difficulties with logins, deck stats, and game stability. The Karabast team is actively monitoring the situation.
+    There is currently a global outage with Cloudflare, a major internet infrastructure provider. Karabast is not affected directly, but many deckbuilder sites such as SWUDB are currently down.
+    As a result, games cannot be played using deck links from affected deckbuilder sites. This includes decks that are saved to your profile.
     <br/><br/>
-    For more details, see <a target="_blank" href="https://www.cnn.com/business/live-news/amazon-tech-outage-10-20-25-intl" style="color:lightblue;">news updates</a> about the outage.`,
-    endDate: '2025-10-22', // The date should be year-month-day
-    image:'/aws-news.png'
+    For more details, see <a target="_blank" href="https://www.techradar.com/pro/live/a-cloudflare-outage-is-taking-down-parts-of-the-internet" style="color:lightblue;">news updates</a> about the outage.`,
+    endDate: '2025-11-20', // The date should be year-month-day
+    image:'/cloudflareOutage.png'
 }
