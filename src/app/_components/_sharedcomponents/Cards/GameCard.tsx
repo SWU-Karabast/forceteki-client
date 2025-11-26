@@ -607,6 +607,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                 {card.cannotBeAttacked && (
                     <Box sx={styles.cannotBeAttacked}/>
                 )}
+                {card.isBlanked && !card.sentinel && (
+                    <Box sx={styles.blankIcon}/>
+                )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
                         { showValueAdjuster() && <CardValueAdjuster card={card} isIndirect={isIndirectDamage} /> }
@@ -625,9 +628,6 @@ const GameCard: React.FC<IGameCardProps> = ({
                         </Grid>
                         {card.sentinel && (
                             <Box sx={styles.sentinelIcon}/>
-                        )}
-                        {card.isBlanked && (
-                            <Box sx={styles.blankIcon}/>
                         )}
                         <Box sx={styles.powerIcon}>
                             <Typography sx={styles.numberFont}>{card.power}</Typography>
