@@ -442,10 +442,11 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         blankIcon:{
             position: 'absolute',
-            width: '28%',
+            width: cardStyle === CardStyle.InPlay ? '28%' : '35%',
             aspectRatio: '1 / 1',
-            top:'32%',
-            right: '-4%',
+            top: cardStyle === CardStyle.InPlay ? '32%' : '2%',
+            right: cardStyle === CardStyle.InPlay ? '-4%' : 'auto',
+            left: cardStyle === CardStyle.InPlay ? 'auto' : '-4%',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/BlankIcon.png)',
@@ -608,7 +609,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 {card.cannotBeAttacked && (
                     <Box sx={styles.cannotBeAttacked}/>
                 )}
-                {card.isBlanked && !card.sentinel && (
+                {card.isBlanked && (
                     <Box sx={styles.blankIcon}/>
                 )}
                 {cardStyle === CardStyle.InPlay && (
