@@ -446,7 +446,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             aspectRatio: '1 / 1',
             top: '32%',
             right: cardStyle === CardStyle.InPlay ? '-4%' : 'auto',
-            left: cardStyle === CardStyle.InPlay ? 'auto' : '-4%',
+            left: cardStyle === CardStyle.InPlay ? 'auto' : '1%',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/BlankIcon.png)',
