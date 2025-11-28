@@ -40,7 +40,7 @@ interface ImageDimensions {
 interface ValidationRules {
     cardback: { width: number; height: number };
     background: { width: number; height: number };
-    playmat: { width: number; height: number };
+    // playmat: { width: number; height: number };
 }
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -81,13 +81,12 @@ const ModPageClient = () => {
     const validationRules: ValidationRules = {
         cardback: { width: 718, height: 1000 },
         background: { width: 1920, height: 1080 },
-        playmat: { width: 2680, height: 1200 }
+        // playmat: { width: 2680, height: 1200 }
     };
 
     const allCosmetics = React.useMemo(() => [
         ...cosmetics.cardbacks,
         ...cosmetics.backgrounds,
-        ...cosmetics.playmats
     ], [cosmetics]);
 
     useEffect(() => {
@@ -363,7 +362,7 @@ const ModPageClient = () => {
             throw new Error('Cleanup operation failed');
         }
         setFilteredCosmetics([]);
-        setCosmetics({ cardbacks: [], backgrounds: [], playmats: [] })
+        setCosmetics({ cardbacks: [], backgrounds: [] })
         setCleanupSuccess(true);
         await fetchCosmetics();
 
@@ -716,7 +715,7 @@ const ModPageClient = () => {
                         >
                             <MenuItem value="cardback">Cardback (718x1000)</MenuItem>
                             <MenuItem value="background">Background (1920x1080px)</MenuItem>
-                            <MenuItem value="playmat">Playmat (2680x1200px)</MenuItem>
+                            {/*<MenuItem value="playmat">Playmat (2680x1200px)</MenuItem>*/}
                         </Select>
                     </FormControl>
                     <FormControl fullWidth sx={{ mt: 2 }}>
@@ -731,7 +730,7 @@ const ModPageClient = () => {
                         />
                     </FormControl>
                     {/* Show darkened toggle for background and playmat types */}
-                    {(cosmeticType === 'background' || cosmeticType === 'playmat') && (
+                    {(cosmeticType === 'background') && (
                         <FormControlLabel
                             control={
                                 <Switch
@@ -791,7 +790,7 @@ const ModPageClient = () => {
                                 borderRadius: '8px',
                                 overflow: 'hidden'
                             }}>
-                                {cosmeticType === 'playmat' && (
+                                {/*cosmeticType === 'playmat' && (
                                     <Image
                                         src="/default-background.webp"
                                         alt="Background"
@@ -808,7 +807,7 @@ const ModPageClient = () => {
                                             zIndex: 0
                                         }}
                                     />
-                                )}
+                                )*/}
                                 <Image
                                     src={imagePreview}
                                     alt="Preview"
@@ -821,12 +820,12 @@ const ModPageClient = () => {
                                         borderRadius: '8px',
                                         border: '1px solid #ddd',
                                         display: 'block',
-                                        opacity: cosmeticType === 'playmat' ? 0.54 : 1,
+                                        opacity: 1,
                                         position: 'relative',
                                         zIndex: 1
                                     }}
                                 />
-                                {(cosmeticType === 'background' || cosmeticType === 'playmat') && isDarkened && (
+                                {(cosmeticType === 'background') && isDarkened && (
                                     <Box sx={{
                                         position: 'absolute',
                                         top: 0,

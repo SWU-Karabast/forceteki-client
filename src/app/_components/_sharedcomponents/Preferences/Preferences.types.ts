@@ -59,7 +59,7 @@ export interface IStatsNotification {
 export enum RegisteredCosmeticType {
     Cardback = 'cardback',
     Background = 'background',
-    Playmat = 'playmat',
+    // Playmat = 'playmat',
 }
 
 export interface IRegisteredCosmeticOption {
@@ -73,7 +73,7 @@ export interface IRegisteredCosmeticOption {
 export interface IRegisteredCosmetics {
     cardbacks: IRegisteredCosmeticOption[];
     backgrounds: IRegisteredCosmeticOption[];
-    playmats: IRegisteredCosmeticOption[];
+    //playmats: IRegisteredCosmeticOption[];
 }
 
 // constants

@@ -182,7 +182,10 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
             deckCardStyle: {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
-                backgroundSize: '88%',
+                backgroundSize: '100%',
+                borderWidth:'2px',
+                borderColor:'black',
+                borderStyle:'solid',
                 backgroundImage: cardback ? `url(${getCardback(cardback).path})` : 'url(\'/card-back.png\')',
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',

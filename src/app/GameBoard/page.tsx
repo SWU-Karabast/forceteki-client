@@ -25,12 +25,12 @@ const GameBoard = () => {
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer].user;
     const background = getBackground(isSpectator ? null : user?.cosmetics?.background ?? null);
-    const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
-    const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
-    const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
+    //const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
+    //const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
+    //const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
     const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
-    const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
-    const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+    //const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
+    //const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -174,7 +174,7 @@ const GameBoard = () => {
         };
     }
 
-    if(myPlaymat?.darkened) {
+    /*if(myPlaymat?.darkened) {
         styles.playerPlaymat = {
             ...styles.playerPlaymat,
             '&::before': PlaymatDarkenBox,
@@ -186,12 +186,12 @@ const GameBoard = () => {
             ...styles.opponentPlaymat,
             '&::before': PlaymatDarkenBox,
         };
-    }
+    }*/
 
     return (
         <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>
             <Box component="main" sx={styles.mainBoxStyle} data-testid="gameboard-main-box">
-                {/* Opponent Playmat - top half */}
+                {/* Opponent Playmat - top half
                 {theirPlaymat && (
                     <Box
                         sx={{
@@ -201,7 +201,7 @@ const GameBoard = () => {
                     />
                 )}
 
-                {/* Player Playmat - bottom half */}
+                {/* Player Playmat - bottom half
                 {myPlaymat && (
                     <Box
                         sx={{
@@ -212,7 +212,8 @@ const GameBoard = () => {
                             console.error('Playmat image failed to load:', myPlaymat.path);
                         }}
                     />
-                )}                <Box sx={{ height: '15vh' }}>
+                )} */}
+                <Box sx={{ height: '15vh' }}>
                     <OpponentCardTray
                         trayPlayer={getOpponent(connectedPlayer)}
                         preferenceToggle={handlePreferenceToggle}

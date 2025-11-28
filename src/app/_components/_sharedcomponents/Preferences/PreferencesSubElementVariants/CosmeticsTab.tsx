@@ -15,8 +15,8 @@ function CosmeticsTab() {
     const { cosmetics, fetchCosmetics } = useCosmetics();
     const [selectedCardback, setSelectedCardback] = useState<string|null>(null);
     const [selectedBackground, setSelectedBackground] = useState<string|null>(null);
-    const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
-    const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
+    //const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
+    //const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
     const [expandedAccordion, setExpandedAccordion] = useState<string>('cardbacks'); // Default to cardbacks expanded
 
 
@@ -26,8 +26,8 @@ function CosmeticsTab() {
             if (cosmetics) {
                 setSelectedCardback(cosmetics.cardback ?? 'Default');
                 setSelectedBackground(cosmetics.background ?? 'Default');
-                setSelectedPlaymat(cosmetics.playmat ?? 'none');
-                setDisablePlaymats(cosmetics.disablePlaymats ?? false);
+                /*setSelectedPlaymat(cosmetics.playmat ?? 'none');
+                setDisablePlaymats(cosmetics.disablePlaymats ?? false);*/
             }
             fetchCosmetics();
         }
@@ -61,7 +61,7 @@ function CosmeticsTab() {
         }
     }
 
-    const onPlaymatClick = async (id: string) => {
+    /*const onPlaymatClick = async (id: string) => {
         try {
             const updatedCosmetics = {
                 ...user?.preferences.cosmetics,
@@ -78,9 +78,9 @@ function CosmeticsTab() {
         } catch (error) {
             console.error('Failed to save playmat preferences:', error);
         }
-    }
+    }*/
 
-    const onDisablePlaymatsChange = async (checked: boolean) => {
+    /*const onDisablePlaymatsChange = async (checked: boolean) => {
         try {
             const updatedCosmetics = {
                 ...user?.preferences.cosmetics,
@@ -97,7 +97,7 @@ function CosmeticsTab() {
         } catch (error) {
             console.error('Failed to save disable playmats preference:', error);
         }
-    }
+    }*/
 
     const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
         setExpandedAccordion(isExpanded ? panel : '');
@@ -122,7 +122,7 @@ function CosmeticsTab() {
         });
     };
     // Create playmats list with 'None' option
-    const getPlaymatOptions = () => {
+    /*const getPlaymatOptions = () => {
         const noneOption: IRegisteredCosmeticOption = {
             id: 'none',
             title: 'None',
@@ -131,7 +131,7 @@ function CosmeticsTab() {
         };
 
         return [noneOption, ...sortCosmeticsByTitle(cosmetics.playmats)];
-    };
+    };*/
 
     const styles = {
         typographyContainer: {
@@ -278,7 +278,7 @@ function CosmeticsTab() {
                     </AccordionDetails>
                 </Accordion>
             </Box>
-            <Box sx={styles.accordionContainer}>
+            {/*<Box sx={styles.accordionContainer}>
                 <Accordion
                     sx={styles.accordionStyle}
                     expanded={expandedAccordion === 'playmats'}
@@ -325,8 +325,8 @@ function CosmeticsTab() {
                         </Grid>
                     </AccordionDetails>
                 </Accordion>
-            </Box>
-            <Box sx={{
+            </Box>*/}
+            {/*<Box sx={{
                 ...styles.accordionContainer,
                 backgroundColor: 'rgba(59, 66, 82, 0.07)',
                 border: '1px solid #4C566A',
@@ -356,7 +356,7 @@ function CosmeticsTab() {
                         </Typography>
                     }
                 />
-            </Box>
+            </Box>*/}
         </Box>
     );
 }
