@@ -640,13 +640,16 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
             const preferences = JSON.parse(preferencesJSON) as IPreferences;
             // Ensure sound preferences have defaults if missing
             return {
-                cardback: preferences.cardback || undefined,
                 sound: {
                     muteAllSound: preferences.sound?.muteAllSound ?? false,
                     muteCardAndButtonClickSound: preferences.sound?.muteCardAndButtonClickSound ?? false,
                     muteYourTurn: preferences.sound?.muteYourTurn ?? false,
                     muteChatSound: preferences.sound?.muteChatSound ?? false,
                     muteOpponentFoundSound: preferences.sound?.muteOpponentFoundSound ?? false,
+                },
+                animations: {
+                    disableAnimations: preferences.animations?.disableAnimations ?? false,
+                    onlyDamageAnimations: preferences.animations?.onlyDamageAnimations ?? false,
                 }
             };
         }
@@ -656,13 +659,16 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
 
     // Return default preferences if nothing found or error occurred
     return {
-        cardback: undefined,
         sound: {
             muteAllSound: false,
             muteCardAndButtonClickSound: false,
             muteYourTurn: false,
             muteChatSound: false,
             muteOpponentFoundSound: false,
+        },
+        animations: {
+            disableAnimations: false,
+            onlyDamageAnimations: false,
         }
     };
 };
@@ -825,13 +831,13 @@ export const hasUserSeenUndoPopup = (user: IUser | null): boolean => {
  */
 export const markUndoPopupAsSeen = async (user: IUser | null, updateCachedLocalState: () => void): Promise<void> => {
     const currentDate = new Date().toISOString();
-    
+
     if (user) {
         // Signed-in user: update local state first for immediate UI update
         if (updateCachedLocalState) {
             updateCachedLocalState();
         }
-        
+
         // Then save to server
         try {
             await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/undo-popup-seen`, {
@@ -846,7 +852,7 @@ export const markUndoPopupAsSeen = async (user: IUser | null, updateCachedLocalS
             throw error;
         }
     }
-    
+
     // save to local storage for both signed-in and anonymous so that a signed-in user doesn't get a repeat
     saveUndoPopupSeenToLocalStorage(currentDate);
 };

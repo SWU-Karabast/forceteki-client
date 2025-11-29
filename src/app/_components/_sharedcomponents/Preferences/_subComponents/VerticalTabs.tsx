@@ -16,6 +16,7 @@ import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/Prefer
 import { useUser } from '@/app/_contexts/User.context';
 import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
 import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
+import AnimationOptionsTab from '../PreferencesSubElementVariants/AnimationOptionsTab';
 
 function tabProps(index: number) {
     return {
@@ -30,13 +31,14 @@ enum TabType {
     KeyboardShortcuts = 'keyboardShortcuts',
     CardSleeves = 'cardSleeves',
     SoundOptions = 'soundOptions',
+    AnimationOptions = 'animationOptions',
     EndGame = 'endGame',
     BlockList = 'blockList',
     General = 'general',
     Logout = 'logout'
 }
 
-function VerticalTabs({ 
+function VerticalTabs({
     tabs,
     variant = 'gameBoard',
     attemptingClose = false,
@@ -54,6 +56,10 @@ function VerticalTabs({
             if (tabs[value] === 'soundOptions' && hasUnsavedChanges) {
                 e.preventDefault();
                 e.returnValue = 'You have unsaved sound preferences. Are you sure you want to leave?';
+            }
+            if (tabs[value] === 'animationOptions' && hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved animation preferences. Are you sure you want to leave?';
             }
         };
 
@@ -76,7 +82,11 @@ function VerticalTabs({
         if (tabs[value] === 'soundOptions' && hasUnsavedChanges && newValue !== value) {
             setPendingTabIndex(newValue);
             setShowUnsavedDialog(true);
-        } else {
+        } else if (tabs[value] === 'animationOptions' && hasUnsavedChanges && newValue !== value) {
+            setPendingTabIndex(newValue);
+            setShowUnsavedDialog(true);
+        }
+        else {
             setValue(newValue);
         }
     };
@@ -113,6 +123,8 @@ function VerticalTabs({
                 return <CardSleevesTab/>;
             case TabType.SoundOptions:
                 return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
+            case TabType.AnimationOptions:
+                return <AnimationOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
             case TabType.EndGame:
                 return <EndGameTab/>;
             case TabType.BlockList:
@@ -133,6 +145,8 @@ function VerticalTabs({
                 return 'Card Sleeves';
             case TabType.SoundOptions:
                 return 'Sound Options';
+            case TabType.AnimationOptions:
+                return 'Animation Options';
             case TabType.EndGame:
                 return 'Current Game';
             case TabType.BlockList:

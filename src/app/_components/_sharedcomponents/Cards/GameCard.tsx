@@ -583,15 +583,14 @@ const GameCard: React.FC<IGameCardProps> = ({
             <Box
                 sx={styles.card}
                 onClick={handleClick}
+                onMouseEnter={handlePreviewOpen}
+                onMouseLeave={handlePreviewClose}
+                data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
+                data-card-type={card.printedType}
+                data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
+                data-card-uuid={card.uuid}
             >
-                <Box 
-                    sx={styles.cardOverlay}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
-                    data-card-type={card.printedType}
-                    data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
-                >
+                <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
                     <Box sx={styles.resourceIcon}/>
                     { !!distributionAmount && (
@@ -621,9 +620,10 @@ const GameCard: React.FC<IGameCardProps> = ({
                             /> 
                         )}
                         <Grid direction="row" container sx={styles.shieldContainer}>
-                            {shieldCards.map((shieldCard, index) => (
+                            {shieldCards.map((shieldCard) => (
                                 <Box
-                                    key={`${card.uuid}-shield-${index}`}
+                                    key={shieldCard.uuid}
+                                    data-shield-uuid={shieldCard.uuid}
                                     sx={{
                                         ...(shieldCard.isBlanked ? styles.blankedShieldIcon : styles.shieldIcon),
                                         border: shieldCard.selectable ? `2px solid ${getBorderColor(shieldCard, connectedPlayer)}` : 'none',
@@ -687,6 +687,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     data-card-url={s3CardImageURL({ ...subcard, setId: subcard.clonedCardId ?? subcard.setId })}
                     data-card-type={subcard.printedType}
                     data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
+                    data-card-uuid={subcard.uuid}
                 >
                     <Box sx={styles.upgradeOverlay}>
                         <Typography key={subcard.uuid} sx={styles.upgradeName}>

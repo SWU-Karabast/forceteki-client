@@ -54,16 +54,16 @@ const GameBoard = () => {
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','soundOptions']
-        :['currentGame','soundOptions']
-    
+        ? ['endGame','soundOptions', 'animationOptions']
+        :['currentGame','soundOptions', 'animationOptions'];
+
     // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {
         if (isSpectator && gameState?.players) {
             const player1Name = gameState.players[connectedPlayer]?.user?.username;
             const opponentId = getOpponent(connectedPlayer);
             const player2Name = gameState.players[opponentId]?.user?.username;
-            
+
             if (winnerName === player1Name) return 'Player 1';
             if (winnerName === player2Name) return 'Player 2';
         }
@@ -110,8 +110,8 @@ const GameBoard = () => {
             padding: '0.5rem',
             position: 'relative',
             borderRadius: '20px',
-            background: !menuTitle ? 'transparent' : promptTitle 
-                ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)' 
+            background: !menuTitle ? 'transparent' : promptTitle
+                ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)'
                 : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
         },
         promptShadow: {
