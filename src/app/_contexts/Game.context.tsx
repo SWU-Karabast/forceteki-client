@@ -240,7 +240,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             newSocket.disconnect();
         });
 
-        newSocket.on('gamestate', (gameState: any) => {
+        newSocket.on('gamestate', (gameStateJson: any) => {
+            const gameState = JSON.parse(gameStateJson);
             if(isSpectatorMode){
                 setConnectedPlayer(Object.keys(gameState.players)[0])
             }
@@ -251,7 +252,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             
             setGameState(gameState);
             if (process.env.NODE_ENV === 'development') {
-                const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
+                const byteSize = new TextEncoder().encode(gameStateJson).length;
                 console.log(`Game state received (${byteSize} bytes):`, gameState);
             }
             handleGameStatePopups(gameState, connectedPlayerId, isSpectatorMode);
