@@ -51,8 +51,8 @@ export interface ISoundPreferences {
 export interface ICosmeticsPreferences {
     cardback?: string;
     background?: string;
-    playmat?: string;
-    disablePlaymats?: boolean;
+    // playmat?: string;
+    // disablePlaymats?: boolean;
 }
 
 export interface IPreferences {

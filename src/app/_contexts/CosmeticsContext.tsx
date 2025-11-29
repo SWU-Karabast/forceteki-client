@@ -12,14 +12,14 @@ interface CosmeticsContextProps {
     setCosmetics: React.Dispatch<React.SetStateAction<IRegisteredCosmetics>>;
     getCardback: (id?: string) => IRegisteredCosmeticOption;
     getBackground: (id?: string) => IRegisteredCosmeticOption;
-    getPlaymat: (id?: string) => IRegisteredCosmeticOption;
+    // getPlaymat: (id?: string) => IRegisteredCosmeticOption;
     fetchCosmetics: () => void;
 }
 
 const defaultCosmetics: IRegisteredCosmetics = {
     cardbacks: [],
     backgrounds: [],
-    playmats: []
+    // playmats: []
 };
 
 const CosmeticsContext = React.createContext<CosmeticsContextProps>({
@@ -27,7 +27,7 @@ const CosmeticsContext = React.createContext<CosmeticsContextProps>({
     setCosmetics: () => {},
     getCardback: () => ({ id: '', title: '', type: RegisteredCosmeticType.Cardback, path: '' }),
     getBackground: () => ({ id: '', title: '', type: RegisteredCosmeticType.Background, path: '' }),
-    getPlaymat: () => ({ id: '', title: '', type: RegisteredCosmeticType.Playmat, path: '' }),
+    // getPlaymat: () => ({ id: '', title: '', type: RegisteredCosmeticType.Playmat, path: '' }),
     fetchCosmetics: () => {}
 });
 
@@ -41,8 +41,8 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
                 return cosmetics.cardbacks.find((cb) => cb.title === 'Default')!;
             case RegisteredCosmeticType.Background:
                 return cosmetics.backgrounds.find((bg) => bg.title === 'Default')!;
-            case RegisteredCosmeticType.Playmat:
-                return { id: 'none', title: 'None', type: RegisteredCosmeticType.Playmat, path: '' };
+            /*case RegisteredCosmeticType.Playmat:
+                return { id: 'none', title: 'None', type: RegisteredCosmeticType.Playmat, path: '' };*/
             default:
                 throw new Error('Invalid cosmetic type');
         }
@@ -59,12 +59,12 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         return cosmetics.backgrounds.find((bg) => bg.id === id) || getCosmeticDefault(RegisteredCosmeticType.Background);
     }
-    const getPlaymat = (id?: string) => {
+    /*const getPlaymat = (id?: string) => {
         if (!id) {
             return getCosmeticDefault(RegisteredCosmeticType.Playmat);
         }
         return cosmetics.playmats.find((pm) => pm.id === id) || getCosmeticDefault(RegisteredCosmeticType.Playmat);
-    }
+    }*/
 
     const fetchCosmetics = async () => {
         ServerApiService.getCosmeticsAsync().then((data) => {
@@ -76,12 +76,12 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
                     case RegisteredCosmeticType.Background:
                         acc.backgrounds.push(cosmetic);
                         break;
-                    case RegisteredCosmeticType.Playmat:
+                    /* case RegisteredCosmeticType.Playmat:
                         acc.playmats.push(cosmetic);
-                        break;
+                        break; */
                 }
                 return acc;
-            }, { cardbacks: [], backgrounds: [], playmats: [] }));
+            }, { cardbacks: [], backgrounds: [] }));
         });
     };
 
@@ -91,7 +91,7 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return (
         <CosmeticsContext.Provider value={{ cosmetics, setCosmetics,
-            getCardback, getBackground, getPlaymat, fetchCosmetics
+            getCardback, getBackground, fetchCosmetics
         }}>
             {children}
         </CosmeticsContext.Provider>

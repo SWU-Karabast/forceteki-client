@@ -28,9 +28,9 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
             false;
 
         // Validate cosmetic type
-        if (!['cardback', 'background', 'playmat'].includes(cosmeticType)) {
+        if (!['cardback', 'background'].includes(cosmeticType)) {
             return NextResponse.json(
-                { error: 'Invalid cosmetic type. Must be cardback, background, or playmat' },
+                { error: 'Invalid cosmetic type. Must be cardback, background' },
                 { status: 400 }
             );
         }

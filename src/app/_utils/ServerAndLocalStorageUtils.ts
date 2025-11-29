@@ -671,8 +671,8 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
                 cosmetics: {
                     cardback: preferences.cosmetics?.cardback,
                     background: preferences.cosmetics?.background,
-                    playmat: preferences.cosmetics?.playmat,
-                    disablePlaymats: preferences.cosmetics?.disablePlaymats ?? false,
+                    // playmat: preferences.cosmetics?.playmat,
+                    // disablePlaymats: preferences.cosmetics?.disablePlaymats ?? false,
                 }
             };
         }
@@ -692,8 +692,8 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
         cosmetics: {
             cardback: undefined,
             background: undefined,
-            playmat: undefined,
-            disablePlaymats: false,
+            // playmat: undefined,
+            // disablePlaymats: false,
         }
     };
 };

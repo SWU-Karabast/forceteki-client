@@ -102,7 +102,7 @@ const getDefaultPreferences = (): IPreferences => ({
     cosmetics: {
         cardback: undefined,
         background: undefined,
-        playmat: undefined,
-        disablePlaymats: false,
+        // playmat: undefined,
+        // disablePlaymats: false,
     }
 });

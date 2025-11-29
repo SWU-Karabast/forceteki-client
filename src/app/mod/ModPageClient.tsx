@@ -752,7 +752,7 @@ const ModPageClient = () => {
                                     <Typography variant="body2" color="white">
                                         Apply darkening effect
                                     </Typography>
-                                    <Typography variant="caption" color="textSecondary">
+                                    <Typography variant="caption" color="white">
                                         {cosmeticType === 'background'
                                             ? 'Darkens the background for better text readability in-game'
                                             : 'Darkens the playmat to reduce visual distraction during gameplay'
@@ -908,7 +908,7 @@ const ModPageClient = () => {
                             </Button>
                         </Box>
 
-                        <Typography variant="caption" color="textSecondary" sx={{ mt: 2, display: 'block' }}>
+                        <Typography variant="caption" color="white" sx={{ mt: 2, display: 'block' }}>
                             Warning: These operations are irreversible. Individual cosmetics can be deleted using the &quot;Delete&quot; button on each item.
                         </Typography>
                     </DialogContent>

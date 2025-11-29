@@ -11,7 +11,7 @@ export const fetchCosmeticsDataAsync = async (): Promise<IRegisteredCosmetics> =
             const cosmetics: IRegisteredCosmetics = {
                 cardbacks: cosmeticsFromServer.filter(item => item.type === 'cardback'),
                 backgrounds: cosmeticsFromServer.filter(item => item.type === 'background'),
-                playmats: cosmeticsFromServer.filter(item => item.type === 'playmat')
+                // playmats: cosmeticsFromServer.filter(item => item.type === 'playmat')
             };
 
             return cosmetics;

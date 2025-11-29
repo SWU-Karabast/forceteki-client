@@ -12,13 +12,13 @@ import PreferencesComponent from '@/app/_components/_sharedcomponents/Preference
 import { useRouter } from 'next/navigation';
 import { MatchType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
-import { BackgroundsDarkenBox, PlaymatDarkenBox } from '../_theme/theme-helper';
+import { BackgroundsDarkenBox } from '../_theme/theme-helper';
 import { Play } from 'next/font/google';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
     const router = useRouter();
-    const { getBackground, getPlaymat } = useCosmetics();
+    const { getBackground } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
