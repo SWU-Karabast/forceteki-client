@@ -9,6 +9,8 @@ import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
+import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
+
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
 
 const GameCard: React.FC<IGameCardProps> = ({
@@ -19,9 +21,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     capturedCards = [],
     disabled = false,
     overlapEnabled = false,
+    cardback = undefined,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator } = useGame();
     const { clearPopups } = usePopup();
+    const { getCardback } = useCosmetics();
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
@@ -200,7 +204,14 @@ const GameCard: React.FC<IGameCardProps> = ({
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
     const updatedCardId = card.clonedCardId ?? card.setId;
-
+    const cardbackPath = getCardback(cardback).path;
+    const styledCardUrl = s3CardImageURL(
+        { ...card, setId: updatedCardId },
+        cardStyle,
+        cardbackPath);
+    const cardbackgroundImage = card.selected && (phase === 'setup' || phase === 'regroup')
+        ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${styledCardUrl})`
+        : `url(${styledCardUrl})`;
     // Styles
     const styles = {
         cardContainer: {
@@ -221,9 +232,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '0.5rem',
             position: 'relative',
-            backgroundImage: card.selected && (phase === 'setup' || phase === 'regroup')
-                ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle)})`
-                : `url(${s3CardImageURL({ ...card, setId: updatedCardId }, cardStyle)})`,
+            backgroundImage: cardbackgroundImage,
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
@@ -572,7 +581,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     sx={styles.cloneIcon}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
-                    data-card-url={s3CardImageURL({ ...card, setId: card.setId })}
+                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
                     data-card-type="clone"
                     data-card-id={card.setId.set + '_' + card.setId.number}
                 >
@@ -684,7 +693,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                     onClick={() => subcardClick(subcard)}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
-                    data-card-url={s3CardImageURL({ ...subcard, setId: subcard.clonedCardId ?? subcard.setId })}
+                    data-card-url={s3CardImageURL(
+                        { ...subcard, setId: subcard.clonedCardId ?? subcard.setId },
+                        CardStyle.Plain,
+                        cardbackPath)
+                    }
                     data-card-type={subcard.printedType}
                     data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
                 >
@@ -718,7 +731,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 onClick={() => subcardClick(capturedCard)}
                                 onMouseEnter={handlePreviewOpen}
                                 onMouseLeave={handlePreviewClose}
-                                data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId })}
+                                data-card-url={s3CardImageURL(
+                                    { ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId },
+                                    CardStyle.Plain,
+                                    cardbackPath)
+                                }
                                 data-card-type={capturedCard.printedType}
                                 data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
                             >

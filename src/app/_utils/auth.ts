@@ -3,6 +3,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import DiscordProvider from 'next-auth/providers/discord';
 import type { JWT } from 'next-auth/jwt';
 import jwt from 'jsonwebtoken';
+import { ServerApiService } from '../_services/ServerApiService';
 
 
 const TwoMonthsInSeconds = 60 * 24 * 60 * 60; // 60 days
@@ -92,6 +93,7 @@ export const authOptions: AuthOptions = {
                 token.email = user?.email || token.email;
                 token.picture = user?.image || token.picture;
             }
+
             // On every JWT callback (including updates) extend expiration
             token.exp = Math.floor(Date.now() / 1000) + TwoMonthsInSeconds;
             return token;

@@ -5,8 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import Players from '../_components/Lobby/Players/Players';
 import Deck from '../_components/Lobby/Deck/Deck';
 import SetUp from '../_components/Lobby/SetUp/SetUp';
-import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useGame } from '@/app/_contexts/Game.context';
+import {s3ImageURL} from "@/app/_utils/s3Utils";
 
 const Lobby = () => {
     const pathname = usePathname();

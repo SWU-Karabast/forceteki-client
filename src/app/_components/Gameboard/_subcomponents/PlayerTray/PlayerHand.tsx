@@ -8,7 +8,7 @@ import { debugBorder, isDebugHandScalingEnabled } from '@/app/_utils/debug';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
-const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, scrollbarEnabled = true }) => {
+const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, scrollbarEnabled = true, cardback = undefined }) => {
     const { connectedPlayer } = useGame();
     const { isPortrait } = useScreenOrientation();
     const showDebugInfo = isDebugHandScalingEnabled();
@@ -204,7 +204,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                 },
                             }}
                         >
-                            <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap} />
+                            <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap} cardback={cardback} />
                         </Box>
                     ))}
                 </Box>
@@ -237,7 +237,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                                 },
                             }}
                         >
-                            <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap}/>
+                            <GameCard card={card} disabled={clickDisabled} overlapEnabled={needsOverlap} cardback={cardback}/>
                         </Box>
                     ))}
                 </Box>

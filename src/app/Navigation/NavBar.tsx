@@ -51,7 +51,7 @@ const Navbar = () => {
                     GAME LOBBY
                 </Typography>
             )}
-            {(pathname === '/Unimplemented' || pathname.includes('/DeckPage')) && (
+            {(pathname === '/Unimplemented' || pathname.includes('/DeckPage') || pathname === '/mod') && (
                 <Typography sx={navbarStyles.lobbyTextStyle} onClick={handleExit}>KARABAST</Typography>
             )
             }
