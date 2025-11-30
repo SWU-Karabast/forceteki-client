@@ -219,10 +219,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             setBlockError(false);
         }
         if (temporaryErrors && !deckImportErrorsSeen) {
+            if (hasSomeNonSideboardingErrors(temporaryErrors)) {
             // Only 'notImplemented' or no errors => clear them out
-            setDisplayError(true);
-            setError('Couldn\'t import. Deck is invalid.',temporaryErrors, 'Deck Validation Error', 'error');
-            setModalOpen(true);
+                setDisplayError(true);
+                setError('Couldn\'t import. Deck is invalid.',temporaryErrors, 'Deck Validation Error', 'error');
+                setModalOpen(true);
+            } else {
+                setDisplayError(true);
+                setError('Sideboarding restrictions not met');
+                setModalOpen(false);
+            }
         }
     }, [connectedUser]);
 
