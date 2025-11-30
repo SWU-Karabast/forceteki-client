@@ -49,15 +49,15 @@ export class S3Service {
             }
         } else {
             // Only initialize if we have the required environment variables
-            if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+            if (!process.env.CUSTOMIZATION_ACCESS_KEY_ID || !process.env.CUSTOMIZATION_ACCESS_KEY) {
                 console.warn('AWS credentials not found, S3 service unavailable');
                 this.s3Client = null;
                 return;
             }
 
             s3ClientConfig.credentials = {
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                accessKeyId: process.env.CUSTOMIZATION_ACCESS_KEY_ID,
+                secretAccessKey: process.env.CUSTOMIZATION_ACCESS_KEY,
             };
         }
 
