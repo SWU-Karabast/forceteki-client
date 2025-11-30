@@ -58,7 +58,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
     // For deck error display
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
-    const [displayError, setDisplayerror] = useState(false);
+    const [displayError, setDisplayError] = useState(false);
     const [blockError, setBlockError] = useState(false);
 
     const opponentReady = opponentUser?.ready;
@@ -93,6 +93,14 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         setShowSavedDecks(useSavedDecks);
         clearErrorsFunc();
     }
+
+    const hasSomeNonSideboardingErrors = (deckErrors: IDeckValidationFailures): boolean => {
+        if (!deckErrors) return false;
+        return Object.keys(deckErrors).some(key =>
+            key !== DeckValidationFailureReason.MinMainboardSizeNotMet &&
+            key !== DeckValidationFailureReason.MaxSideboardSizeExceeded
+        );
+    };
 
     const handleOnChangeDeck = async () => {
         if ((!favoriteDeck && !deckLink) || readyStatus) return;
@@ -154,7 +162,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
             sendLobbyMessage(['changeDeck', deckData])
         }catch (error){
-            setDisplayerror(true);
+            setDisplayError(true);
             clearErrorsFunc();
             setModalOpen(true)
             if(error instanceof Error){
@@ -179,7 +187,7 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             // No validation errors => clear any old error states
             clearErrorsFunc();
             setModalOpen(false);
-            setDisplayerror(false);
+            setDisplayError(false);
             setBlockError(false);
             return;
         }
@@ -190,18 +198,16 @@ const SetUpCard: React.FC<ISetUpProps> = ({
 
         if (deckErrors && Object.keys(deckErrors).length > 0) {
             // Show a short inline error message and store the full list
-            setDisplayerror(true);
-            setError('Deck is invalid.',deckErrors,'Deck Validation Error', 'error');
+            setDisplayError(true);
+            if (hasSomeNonSideboardingErrors(connectedUser.deckErrors)) {
+                setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error');
+            } else {
+                setError('Sideboarding restrictions not met');
+            }
             setBlockError(true);
 
-            // Check if any errors other than the specified ones exist
-            const hasOtherErrors = Object.keys(deckErrors).some(key =>
-                key !== DeckValidationFailureReason.MinMainboardSizeNotMet &&
-                key !== DeckValidationFailureReason.MaxSideboardSizeExceeded
-            );
-
             // Only open modal if there are validation errors besides the two excluded types
-            if (hasOtherErrors) {
+            if (hasSomeNonSideboardingErrors(deckErrors)) {
                 setModalOpen(true);
             } else {
                 setModalOpen(false);
@@ -209,12 +215,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
         }else{
             clearErrorsFunc();
             setModalOpen(false);
-            setDisplayerror(false);
+            setDisplayError(false);
             setBlockError(false);
         }
         if (temporaryErrors && !deckImportErrorsSeen) {
             // Only 'notImplemented' or no errors => clear them out
-            setDisplayerror(true);
+            setDisplayError(true);
             setError('Couldn\'t import. Deck is invalid.',temporaryErrors, 'Deck Validation Error', 'error');
             setModalOpen(true);
         }
@@ -522,10 +528,15 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                                     value={deckLink}
                                     onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                         if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
-                                            setDisplayerror(true);
-                                            setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error')
+                                            setDisplayError(true);
+
+                                            if (hasSomeNonSideboardingErrors(connectedUser.deckErrors)) {
+                                                setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error');
+                                            } else {
+                                                setError('Sideboarding restrictions not met');
+                                            }
                                         } else {
-                                            setDisplayerror(false);
+                                            setDisplayError(false);
                                             clearErrorsFunc();
                                         }
                                         handleJsonDeck(e.target.value);
