@@ -671,17 +671,6 @@ const ModPageClient = () => {
                     </AccordionSummary>
                 </Accordion>
 
-                <Accordion sx={styles.accordion} disabled>
-                    <AccordionSummary
-                        expandIcon={<ExpandMoreIcon sx={{ color: 'gray' }} />}
-                        sx={styles.accordionSummary}
-                    >
-                        <Typography variant="h6" color="gray">
-                            Mock Card Manager (Coming Soon)
-                        </Typography>
-                    </AccordionSummary>
-                </Accordion>
-
             </Box>
 
             {/* Upload Dialog */}
@@ -715,7 +704,7 @@ const ModPageClient = () => {
                         >
                             <MenuItem value="cardback">Cardback (718x1000)</MenuItem>
                             <MenuItem value="background">Background (1920x1080px)</MenuItem>
-                            {/*<MenuItem value="playmat">Playmat (2680x1200px)</MenuItem>*/}
+                            {/* <MenuItem value="playmat">Playmat (2680x1200px)</MenuItem>*/}
                         </Select>
                     </FormControl>
                     <FormControl fullWidth sx={{ mt: 2 }}>
@@ -790,7 +779,7 @@ const ModPageClient = () => {
                                 borderRadius: '8px',
                                 overflow: 'hidden'
                             }}>
-                                {/*cosmeticType === 'playmat' && (
+                                {/* cosmeticType === 'playmat' && (
                                     <Image
                                         src="/default-background.webp"
                                         alt="Background"
