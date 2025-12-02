@@ -7,13 +7,11 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
-import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
-const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
+const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback: cardbackUri }) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
     const { isPortrait } = useScreenOrientation();
-    const { getCardback } = useCosmetics();
     // Refs for individual card containers
     const discardRef = useRef<HTMLDivElement>(null);
     const deckRef = useRef<HTMLDivElement>(null);
@@ -119,7 +117,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
             } 
         };
     }
-    console.log(cardback);
+    console.log(cardbackUri);
     const styles = {
         containerStyle: {
             ...debugBorder('yellow'),
@@ -186,7 +184,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
                 borderWidth:'2px',
                 borderColor:'black',
                 borderStyle:'solid',
-                backgroundImage: cardback ? `url(${getCardback(cardback).path})` : 'url(\'/card-back.png\')',
+                backgroundImage: cardbackUri ? `url(${cardbackUri})` : 'url(\'/card-back.png\')',
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',
                 alignItems: 'center',

@@ -21,11 +21,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     capturedCards = [],
     disabled = false,
     overlapEnabled = false,
-    cardback = undefined,
+    cardbackUri = undefined,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator } = useGame();
     const { clearPopups } = usePopup();
-    const { getCardback } = useCosmetics();
+    const { getCardbackUri } = useCosmetics();
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
@@ -204,11 +204,10 @@ const GameCard: React.FC<IGameCardProps> = ({
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
     const updatedCardId = card.clonedCardId ?? card.setId;
-    const cardbackPath = getCardback(cardback).path;
     const styledCardUrl = s3CardImageURL(
         { ...card, setId: updatedCardId },
         cardStyle,
-        cardbackPath);
+        cardbackUri);
     const cardbackgroundImage = card.selected && (phase === 'setup' || phase === 'regroup')
         ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${styledCardUrl})`
         : `url(${styledCardUrl})`;
@@ -696,7 +695,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     data-card-url={s3CardImageURL(
                         { ...subcard, setId: subcard.clonedCardId ?? subcard.setId },
                         CardStyle.Plain,
-                        cardbackPath)
+                        cardbackUri)
                     }
                     data-card-type={subcard.printedType}
                     data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
@@ -734,7 +733,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 data-card-url={s3CardImageURL(
                                     { ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId },
                                     CardStyle.Plain,
-                                    cardbackPath)
+                                    cardbackUri)
                                 }
                                 data-card-type={capturedCard.printedType}
                                 data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}

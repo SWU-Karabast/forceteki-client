@@ -17,9 +17,9 @@ const QuickGame: React.FC = () => {
         sendMessage('manualDisconnect');
         router.push('/');
     }
-    const { getBackground } = useCosmetics();
+    const { getBackgroundFromUserPreferences } = useCosmetics();
     const { user } = useUser();
-    const background = getBackground(user?.preferences.cosmetics?.background);
+    const background = getBackgroundFromUserPreferences(user);
 
     useEffect(() => {
         if (gameState) {

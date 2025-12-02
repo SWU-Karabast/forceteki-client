@@ -114,7 +114,7 @@ export interface IGameCardProps {
     cardStyle?: CardStyle;
     capturedCards?: ICardData[];
     overlapEnabled?: boolean;
-    cardback?: string;
+    cardbackUri?: string;
 }
 
 export interface ILeaderBaseCardProps {

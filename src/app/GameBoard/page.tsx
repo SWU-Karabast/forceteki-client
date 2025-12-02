@@ -18,19 +18,19 @@ import { Play } from 'next/font/google';
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
     const router = useRouter();
-    const { getBackground } = useCosmetics();
+    const { getBackgroundFromGameState } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
-    const user = gameState?.players[connectedPlayer].user;
-    const background = getBackground(isSpectator ? null : user?.cosmetics?.background ?? null);
-    //const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
-    //const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
-    //const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
-    const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
-    //const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
-    //const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+    const player = gameState?.players[connectedPlayer];
+    const background = getBackgroundFromGameState(player, isSpectator);
+    // const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
+    // const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
+    // const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
+    // const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
+    // const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
+    // const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
@@ -174,7 +174,7 @@ const GameBoard = () => {
         };
     }
 
-    /*if(myPlaymat?.darkened) {
+    /* if(myPlaymat?.darkened) {
         styles.playerPlaymat = {
             ...styles.playerPlaymat,
             '&::before': PlaymatDarkenBox,

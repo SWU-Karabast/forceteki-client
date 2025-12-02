@@ -21,11 +21,11 @@ export const s3ImageURL = (path: string) => {
 export function s3CardImageURL(
     card: ICardData | ISetCode | IServerCardData | IPreviewCard,
     cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain,
-    cardback?: string,
+    cardbackUri?: string,
 ): string {
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
     if ((isGameOrSetCard && !card?.setId) && !card?.id) {
-        return cardback ? cardback : s3ImageURL('game/swu-cardback.webp');
+        return cardbackUri ? cardbackUri : s3ImageURL('game/swu-cardback.webp');
     }
     const setId = isGameOrSetCard ? card.setId : parseSetId(card.id);
     // check if the card has a type

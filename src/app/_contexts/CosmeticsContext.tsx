@@ -6,12 +6,23 @@ import {
     RegisteredCosmeticType
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 import { ServerApiService } from '../_services/ServerApiService';
+import { s3ImageURL } from '../_utils/s3Utils';
+import { IUser } from './UserTypes';
+
+// const DEFAULT_CARDBACK_URI = 'https://karabast-data.s3.amazonaws.com/game/swu-cardback.webp';
+const DEFAULT_BACKGROUND: IRegisteredCosmeticOption = {
+    id: 'default',
+    title: 'Default Background',
+    type: RegisteredCosmeticType.Background,
+    path: s3ImageURL('ui/board-background-1.webp')
+};
 
 interface CosmeticsContextProps {
     cosmetics: IRegisteredCosmetics;
     setCosmetics: React.Dispatch<React.SetStateAction<IRegisteredCosmetics>>;
-    getCardback: (id?: string) => IRegisteredCosmeticOption;
-    getBackground: (id?: string) => IRegisteredCosmeticOption;
+    getCardbackUri: (connectedPlayer: any | null, isSpectator: boolean) => string | null;
+    getBackgroundFromUserPreferences: (user: IUser | null) => IRegisteredCosmeticOption;
+    getBackgroundFromGameState: (connectedPlayer: any | null, isSpectator: boolean) => IRegisteredCosmeticOption;
     // getPlaymat: (id?: string) => IRegisteredCosmeticOption;
     fetchCosmetics: () => void;
 }
@@ -25,8 +36,9 @@ const defaultCosmetics: IRegisteredCosmetics = {
 const CosmeticsContext = React.createContext<CosmeticsContextProps>({
     cosmetics: defaultCosmetics,
     setCosmetics: () => {},
-    getCardback: () => ({ id: '', title: '', type: RegisteredCosmeticType.Cardback, path: '' }),
-    getBackground: () => ({ id: '', title: '', type: RegisteredCosmeticType.Background, path: '' }),
+    getCardbackUri: () => null,
+    getBackgroundFromUserPreferences: () => DEFAULT_BACKGROUND,
+    getBackgroundFromGameState: () => DEFAULT_BACKGROUND,
     // getPlaymat: () => ({ id: '', title: '', type: RegisteredCosmeticType.Playmat, path: '' }),
     fetchCosmetics: () => {}
 });
@@ -35,31 +47,39 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
     const [cosmetics, setCosmetics] = React.useState<IRegisteredCosmetics>(defaultCosmetics);
-    const getCosmeticDefault = (type: RegisteredCosmeticType): IRegisteredCosmeticOption => {
-        switch(type) {
-            case RegisteredCosmeticType.Cardback:
-                return cosmetics.cardbacks.find((cb) => cb.title === 'Default')!;
-            case RegisteredCosmeticType.Background:
-                return cosmetics.backgrounds.find((bg) => bg.title === 'Default')!;
-            /*case RegisteredCosmeticType.Playmat:
-                return { id: 'none', title: 'None', type: RegisteredCosmeticType.Playmat, path: '' };*/
-            default:
-                throw new Error('Invalid cosmetic type');
+    // const getCosmeticDefaultUri = (type: RegisteredCosmeticType): string => {
+    //     switch(type) {
+    //         case RegisteredCosmeticType.Cardback:
+    //             return DEFAULT_CARDBACK_URI;
+    //         case RegisteredCosmeticType.Background:
+    //             return DEFAULT_BACKGROUND_URI;
+
+    //         /* case RegisteredCosmeticType.Playmat:
+    //             return { id: 'none', title: 'None', type: RegisteredCosmeticType.Playmat, path: '' };*/
+    //         default:
+    //             throw new Error('Invalid cosmetic type');
+    //     }
+    // }
+    const getCardbackUri = (connectedPlayer: any | null, isSpectator: boolean) => {
+        if (isSpectator) {
+            return null;
         }
+
+        const cardbackUri = connectedPlayer?.user?.cosmetics?.cardbackUri;
+        return cardbackUri == null || cardbackUri === '' ? null : cardbackUri;
     }
-    const getCardback = (id?: string) => {
-        if (!id) {
-            return getCosmeticDefault(RegisteredCosmeticType.Cardback);
+    const getBackgroundFromUserPreferences = (user: IUser | null) => {
+        return user?.preferences.cosmetics?.background ?? DEFAULT_BACKGROUND;
+    }
+    const getBackgroundFromGameState = (connectedPlayer: any | null, isSpectator: boolean) => {
+        if (isSpectator) {
+            return DEFAULT_BACKGROUND;
         }
-        return cosmetics.cardbacks.find((cb) => cb.id === id) || getCosmeticDefault(RegisteredCosmeticType.Cardback);
+
+        return connectedPlayer?.preferences.cosmetics?.background ?? DEFAULT_BACKGROUND;
     }
-    const getBackground = (id?: string) => {
-        if (!id) {
-            return getCosmeticDefault(RegisteredCosmeticType.Background);
-        }
-        return cosmetics.backgrounds.find((bg) => bg.id === id) || getCosmeticDefault(RegisteredCosmeticType.Background);
-    }
-    /*const getPlaymat = (id?: string) => {
+
+    /* const getPlaymat = (id?: string) => {
         if (!id) {
             return getCosmeticDefault(RegisteredCosmeticType.Playmat);
         }
@@ -76,6 +96,7 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
                     case RegisteredCosmeticType.Background:
                         acc.backgrounds.push(cosmetic);
                         break;
+
                     /* case RegisteredCosmeticType.Playmat:
                         acc.playmats.push(cosmetic);
                         break; */
@@ -85,13 +106,9 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
         });
     };
 
-    React.useEffect(() => {
-        fetchCosmetics();
-    }, []);
-
     return (
         <CosmeticsContext.Provider value={{ cosmetics, setCosmetics,
-            getCardback, getBackground, fetchCosmetics
+            getCardbackUri: getCardbackUri, getBackgroundFromUserPreferences, getBackgroundFromGameState, fetchCosmetics
         }}>
             {children}
         </CosmeticsContext.Provider>

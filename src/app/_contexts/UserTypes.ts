@@ -34,10 +34,10 @@ export interface IGetUser {
     id: string;
     username: string;
     showWelcomeMessage: boolean;
-    preferences: IPreferences,
+    preferences: IPreferences;
     needsUsernameChange: boolean;
-    moderation?: IModerationAction | null,
-    undoPopupSeenDate?: Date | null
+    moderation?: IModerationAction | null;
+    undoPopupSeenDate?: Date | null;
 }
 
 export interface ISoundPreferences {
