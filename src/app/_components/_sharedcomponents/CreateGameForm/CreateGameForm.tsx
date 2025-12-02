@@ -22,7 +22,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, FormatLabels, SupportedDeckSources } from '@/app/_constants/constants';
+import { SwuGameFormat, FormatLabels, SupportedDeckSources, GamesToWinMode } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -187,6 +187,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 format: format,
                 lobbyName: lobbyName,
                 allow30CardsInMainBoard: thirtyCardMode,
+                gamesToWinMode: GamesToWinMode.BestOfOne,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {

@@ -21,7 +21,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { FormatLabels, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
+import { FormatLabels, GamesToWinMode, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -179,6 +179,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 user: getUserPayload(user),
                 deck: deckData,
                 format: format,
+                gamesToWinMode: GamesToWinMode.BestOfOne,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {

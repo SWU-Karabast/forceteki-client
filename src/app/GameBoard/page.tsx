@@ -10,7 +10,7 @@ import { useGame } from '../_contexts/Game.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
-import { MatchType } from '@/app/_constants/constants';
+import { MatchmakingType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 import { BackgroundsDarkenBox } from '../_theme/theme-helper';
 import { Play } from 'next/font/google';
@@ -25,15 +25,15 @@ const GameBoard = () => {
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer].user;
     const background = getBackground(isSpectator ? null : user?.cosmetics?.background ?? null);
-    //const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
-    //const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
-    //const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
+    // const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
+    // const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
+    // const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
     const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
-    //const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
-    //const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+    // const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
+    // const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
-        if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
+        if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchmakingType.Quick) {
             router.push('/lobby');
         }
     }, [lobbyState, router]);
@@ -174,7 +174,7 @@ const GameBoard = () => {
         };
     }
 
-    /*if(myPlaymat?.darkened) {
+    /* if(myPlaymat?.darkened) {
         styles.playerPlaymat = {
             ...styles.playerPlaymat,
             '&::before': PlaymatDarkenBox,

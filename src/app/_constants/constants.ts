@@ -1,15 +1,20 @@
 import { DeckSource } from '../_utils/fetchDeckData';
 
-export enum MatchType {
-    Custom = 'Custom',
-    Private = 'Private',
-    Quick = 'Quick',
+export enum MatchmakingType {
+    PublicLobby= 'publicLobby',
+    PrivateLobby = 'privateLobby',
+    Quick = 'quick',
 }
 
 export enum SwuGameFormat {
     Premier = 'premier',
     // NextSetPreview = 'nextSetPreview',
     Open = 'open'
+}
+
+export enum GamesToWinMode {
+    BestOfOne = 'bestOfOne',
+    BestOfThree = 'bestOfThree',
 }
 
 export const FormatLabels: Record<SwuGameFormat, string> = {

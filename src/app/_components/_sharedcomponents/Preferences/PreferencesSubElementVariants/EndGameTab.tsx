@@ -5,12 +5,12 @@ import EndGameOptionsQuickMatch
     from '@/app/_components/_sharedcomponents/Preferences/_subComponents/EndGameOptionsQuickMatch';
 import EndGameOptionsCustom from '../_subComponents/EndGameOptionsCustom';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
-import { MatchType } from '@/app/_constants/constants';
+import { MatchmakingType } from '@/app/_constants/constants';
 
 function EndGameTab() {
     // handle change based on what the match is.
     const { lobbyState } = useGame();
-    const isQuickMatch = lobbyState && lobbyState.gameType ? lobbyState.gameType === MatchType.Quick : false;
+    const isQuickMatch = lobbyState && lobbyState.gameType ? lobbyState.gameType === MatchmakingType.Quick : false;
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
     const handleOpenBugReport = () => {
