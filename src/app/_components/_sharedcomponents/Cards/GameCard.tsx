@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Popover, PopoverOrigin, Typography } from '@mui/material';
+import { Box, Popover, PopoverOrigin, Tooltip, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
@@ -31,6 +31,9 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
     const isHiddenHandCard = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
+    
+    // Check if card is blocked from play by opponent's effect (e.g., Regional Governor, Trade Route Taxation)
+    const isBlockedFromPlay = !!card.blockedFromPlayReason;
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -470,6 +473,18 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/HiddenIcon.png)',
         },
+        blockedFromPlayIcon:{
+            position: 'absolute',
+            width: '35%',
+            aspectRatio: '1 / 1',
+            top: '32%',
+            left: '1%',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(/LockIcon.png)',
+            filter: 'drop-shadow(0 4px 4px 0 #00000080)',
+            zIndex: 2,
+        },
         unimplementedAlert: {
             display: notImplemented(card) ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
@@ -608,6 +623,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {card.cannotBeAttacked && (
                     <Box sx={styles.cannotBeAttacked}/>
+                )}
+                {isBlockedFromPlay && (
+                    <Tooltip title={card.blockedFromPlayReason || 'Cannot play this card'} arrow>
+                        <Box sx={styles.blockedFromPlayIcon}/>
+                    </Tooltip>
                 )}
                 {card.isBlanked && (
                     <Box sx={styles.blankIcon}/>
