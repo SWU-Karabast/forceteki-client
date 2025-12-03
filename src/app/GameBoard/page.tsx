@@ -28,7 +28,7 @@ const GameBoard = () => {
     //const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
     //const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
     //const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
-    const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
+    // const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
     //const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
     //const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
@@ -39,9 +39,12 @@ const GameBoard = () => {
     }, [lobbyState, router]);
 
     useEffect(() => {
+        const hasWinners = !!gameState?.winners.length;
         // open preferences automatically if game ended and user hasn't closed it themselves yet.
-        if (!!gameState?.winners.length && !userClosedWinScreen) {
+        if (hasWinners && !userClosedWinScreen) {
             setPreferenceOpen(true);
+        } else if (!hasWinners && userClosedWinScreen) {
+            setUserClosedWinScreen(false);
         }
     }, [gameState?.winners, userClosedWinScreen]);
 
