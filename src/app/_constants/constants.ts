@@ -17,6 +17,35 @@ export enum GamesToWinMode {
     BestOfThree = 'bestOfThree',
 }
 
+export enum RematchMode {
+    Regular = 'regular',
+    Reset = 'reset',
+    Bo1ConvertToBo3 = 'bo1ConvertToBo3',
+    NewBo3 = 'newBo3'
+}
+
+// Combined format + game mode for queue/lobby creation
+export interface IQueueFormat {
+    format: SwuGameFormat;
+    gamesToWinMode: GamesToWinMode;
+}
+
+export const QueueFormatOptions: Record<string, IQueueFormat> = {
+    premierBo1: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfOne },
+    premierBo3: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfThree },
+    openBo1: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfOne },
+    openBo3: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfThree },
+};
+
+export const QueueFormatLabels: Record<string, string> = {
+    premierBo1: 'Premier Best-of-One',
+    premierBo3: 'Premier Best-of-Three',
+    openBo1: 'Open Best-of-One',
+    openBo3: 'Open Best-of-Three',
+};
+
+export const DefaultQueueFormatKey = 'premierBo1';
+
 export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
     // [SwuGameFormat.NextSetPreview]: 'Next Set Preview',

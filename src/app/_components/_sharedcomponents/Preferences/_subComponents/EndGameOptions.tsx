@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { GamesToWinMode, RematchMode } from '@/app/_constants/constants';
 
 export enum GameMode {
     QuickMatch = 'quickMatch',
@@ -30,6 +31,16 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest || null;
     const isRequestInitiator = rematchRequest && rematchRequest.initiator === connectedPlayer;
+
+    // Bo3 state from lobbyState
+    const winHistory = lobbyState?.winHistory || null;
+    const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
+    const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
+    const hasConfirmedNextGame = lobbyState?.hasConfirmedNextGame || false;
+
+    // Determine if we're in Bo3 mode and if the set is complete
+    const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
+    const isBo3SetComplete = isBo3Mode && Object.values(winsPerPlayer).some((wins) => wins >= 2);
 
     useEffect(() => {
         if (statsSubmitNotification) {
@@ -62,14 +73,14 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
         router.push('/quickGame');
     };
 
-    // For Reset Game/Quick Rematch (Custom mode only):
+    // For Reset Game/Quick Rematch (Bo1 Custom mode only):
     // - If no rematch request is active, send a request with mode "reset".
     // - If a reset request is active and the current user is not the initiator,
     //   then confirm by sending the actual reset command.
     const handleResetRequestOrConfirm = () => {
         if (!rematchRequest) {
-            sendLobbyMessage(['requestRematch', 'reset']);
-        } else if (rematchRequest.mode === 'reset' && !isRequestInitiator) {
+            sendLobbyMessage(['requestRematch', RematchMode.Reset]);
+        } else if (rematchRequest.mode === RematchMode.Reset && !isRequestInitiator) {
             sendLobbyMessage(['onStartGameAsync']);
         }
     };
@@ -80,14 +91,39 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
     //   then confirm it.
     const handleRegularRequestOrConfirm = () => {
         if (!rematchRequest) {
-            sendLobbyMessage(['requestRematch', 'regular']);
-        } else if (rematchRequest.mode === 'regular' && !isRequestInitiator) {
-            if (isQuickMatch) {
-                sendLobbyMessage(['rematch']);
-            } else {
-                sendLobbyMessage(['rematch']);
-            }
+            sendLobbyMessage(['requestRematch', RematchMode.Regular]);
+        } else if (rematchRequest.mode === RematchMode.Regular && !isRequestInitiator) {
+            sendLobbyMessage(['rematch']);
         }
+    };
+
+    // For Convert to Bo3 (Bo1 only):
+    // - If no request active, send a request with mode "bo1ConvertToBo3".
+    // - If a bo1ConvertToBo3 request is active and the user is not the initiator,
+    //   then confirm it.
+    const handleConvertToBo3RequestOrConfirm = () => {
+        if (!rematchRequest) {
+            sendLobbyMessage(['requestRematch', RematchMode.Bo1ConvertToBo3]);
+        } else if (rematchRequest.mode === RematchMode.Bo1ConvertToBo3 && !isRequestInitiator) {
+            sendLobbyMessage(['rematch']);
+        }
+    };
+
+    // For New Bo3 Set (Bo3 only, after set completes):
+    // - If no request active, send a request with mode "newBo3".
+    // - If a newBo3 request is active and the user is not the initiator,
+    //   then confirm it.
+    const handleNewBo3RequestOrConfirm = () => {
+        if (!rematchRequest) {
+            sendLobbyMessage(['requestRematch', RematchMode.NewBo3]);
+        } else if (rematchRequest.mode === RematchMode.NewBo3 && !isRequestInitiator) {
+            sendLobbyMessage(['rematch']);
+        }
+    };
+
+    // For proceeding to next game in Bo3 mid-set:
+    const handleProceedToNextGame = () => {
+        sendLobbyMessage(['proceedToNextBo3Game']);
     };
 
     // Function to get color based on notification type
@@ -104,11 +140,11 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
 
     // --- Determine Button State & Text ---
 
-    // For Reset Game (Custom mode only):
+    // For Reset Game (Bo1 Custom mode only):
     let resetButtonText = 'Reset Game/Quick Rematch';
     let resetButtonDisabled = false;
     if (rematchRequest) {
-        if (rematchRequest.mode !== 'reset') {
+        if (rematchRequest.mode !== RematchMode.Reset) {
             resetButtonDisabled = true;
             resetButtonText = 'Disabled';
         } else {
@@ -121,11 +157,11 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
         }
     }
 
-    // For Regular Rematch:
+    // For Regular Rematch (Bo1 only):
     let regularButtonText = isQuickMatch ? 'Request Rematch' : 'Regular Rematch';
     let regularButtonDisabled = false;
     if (rematchRequest) {
-        if (rematchRequest.mode !== 'regular') {
+        if (rematchRequest.mode !== RematchMode.Regular) {
             regularButtonDisabled = true;
             regularButtonText = 'Disabled';
         } else {
@@ -136,6 +172,48 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
                 regularButtonText = 'Confirm Rematch';
             }
         }
+    }
+
+    // For Convert to Bo3 (Bo1 only):
+    let convertToBo3ButtonText = 'Convert to Best of 3';
+    let convertToBo3ButtonDisabled = false;
+    if (rematchRequest) {
+        if (rematchRequest.mode !== RematchMode.Bo1ConvertToBo3) {
+            convertToBo3ButtonDisabled = true;
+            convertToBo3ButtonText = 'Disabled';
+        } else {
+            if (isRequestInitiator) {
+                convertToBo3ButtonText = 'Waiting for confirmation...';
+                convertToBo3ButtonDisabled = true;
+            } else {
+                convertToBo3ButtonText = 'Confirm Convert to Bo3';
+            }
+        }
+    }
+
+    // For New Bo3 Set (Bo3 set complete only):
+    let newBo3ButtonText = 'New Bo3 Set';
+    let newBo3ButtonDisabled = false;
+    if (rematchRequest) {
+        if (rematchRequest.mode !== RematchMode.NewBo3) {
+            newBo3ButtonDisabled = true;
+            newBo3ButtonText = 'Disabled';
+        } else {
+            if (isRequestInitiator) {
+                newBo3ButtonText = 'Waiting for confirmation...';
+                newBo3ButtonDisabled = true;
+            } else {
+                newBo3ButtonText = 'Confirm New Bo3';
+            }
+        }
+    }
+
+    // For Ready for Next Game (Bo3 mid-set only):
+    let readyForNextGameButtonText = 'Ready for Next Game';
+    let readyForNextGameButtonDisabled = false;
+    if (hasConfirmedNextGame) {
+        readyForNextGameButtonText = 'Waiting for opponent...';
+        readyForNextGameButtonDisabled = true;
     }
 
     // Check if we have any stats messages to show
@@ -192,12 +270,12 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
                 !isSpectator && (
                     <Box sx={styles.functionContainer}>
                         <Typography sx={styles.typographyContainer} variant={'h3'}>
-                            {isQuickMatch ? 'Actions' : 'Rematch'}
+                            {isBo3Mode ? 'Best of 3' : (isQuickMatch ? 'Actions' : 'Rematch')}
                         </Typography>
                         <Divider sx={{ mb: '20px' }} />
 
-                        {/* Requeue - QuickMatch only */}
-                        {isQuickMatch && (
+                        {/* Requeue - QuickMatch only, Bo1 only */}
+                        {isQuickMatch && !isBo3Mode && (
                             <Box sx={styles.contentContainer}>
                                 <PreferenceButton variant={'standard'} text={'Requeue'} buttonFnc={handleRequeue} />
                                 <Typography sx={styles.typeographyStyle}>
@@ -206,8 +284,8 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
                             </Box>
                         )}
 
-                        {/* Reset Game/Quick Rematch - Custom only */}
-                        {!isQuickMatch && (
+                        {/* Reset Game/Quick Rematch - Custom only, Bo1 only */}
+                        {!isQuickMatch && !isBo3Mode && (
                             <Box sx={styles.contentContainer}>
                                 <PreferenceButton
                                     variant={'standard'}
@@ -221,24 +299,81 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
                             </Box>
                         )}
 
-                        {/* Regular Rematch - Both modes */}
-                        <Box sx={styles.contentContainer}>
-                            <PreferenceButton
-                                variant={'standard'}
-                                text={regularButtonText}
-                                buttonFnc={handleRegularRequestOrConfirm}
-                                disabled={regularButtonDisabled}
-                            />
-                            <Typography sx={styles.typeographyStyle}>
-                                {rematchRequest
-                                    ? isRequestInitiator
-                                        ? 'Waiting for your opponent to confirm rematch.'
-                                        : 'Confirm you wish to rematch with your opponent.'
-                                    : 'Return to lobby to start a new game with the same opponent.'}
-                            </Typography>
-                        </Box>
+                        {/* Regular Rematch - Bo1 only */}
+                        {!isBo3Mode && (
+                            <Box sx={styles.contentContainer}>
+                                <PreferenceButton
+                                    variant={'standard'}
+                                    text={regularButtonText}
+                                    buttonFnc={handleRegularRequestOrConfirm}
+                                    disabled={regularButtonDisabled}
+                                />
+                                <Typography sx={styles.typeographyStyle}>
+                                    {rematchRequest
+                                        ? isRequestInitiator
+                                            ? 'Waiting for your opponent to confirm rematch.'
+                                            : 'Confirm you wish to rematch with your opponent.'
+                                        : 'Return to lobby to start a new game with the same opponent.'}
+                                </Typography>
+                            </Box>
+                        )}
 
-                        {/* Report Bug - Both modes */}
+                        {/* Convert to Best of 3 - Bo1 only */}
+                        {!isBo3Mode && (
+                            <Box sx={styles.contentContainer}>
+                                <PreferenceButton
+                                    variant={'standard'}
+                                    text={convertToBo3ButtonText}
+                                    buttonFnc={handleConvertToBo3RequestOrConfirm}
+                                    disabled={convertToBo3ButtonDisabled}
+                                />
+                                <Typography sx={styles.typeographyStyle}>
+                                    {rematchRequest && rematchRequest.mode === RematchMode.Bo1ConvertToBo3
+                                        ? isRequestInitiator
+                                            ? 'Waiting for your opponent to confirm conversion to Bo3.'
+                                            : 'Confirm you wish to convert this match to a Best of 3.'
+                                        : 'Convert this match to a Best of 3, counting this game as game 1.'}
+                                </Typography>
+                            </Box>
+                        )}
+
+                        {/* Ready for Next Game - Bo3 mid-set only */}
+                        {isBo3Mode && !isBo3SetComplete && (
+                            <Box sx={styles.contentContainer}>
+                                <PreferenceButton
+                                    variant={'standard'}
+                                    text={readyForNextGameButtonText}
+                                    buttonFnc={handleProceedToNextGame}
+                                    disabled={readyForNextGameButtonDisabled}
+                                />
+                                <Typography sx={styles.typeographyStyle}>
+                                    {hasConfirmedNextGame
+                                        ? 'Waiting for your opponent to confirm they are ready.'
+                                        : 'Confirm you are ready to proceed to the next game.'}
+                                </Typography>
+                            </Box>
+                        )}
+
+                        {/* New Bo3 Set - Bo3 set complete only */}
+                        {isBo3Mode && isBo3SetComplete && (
+                            <Box sx={styles.contentContainer}>
+                                <PreferenceButton
+                                    variant={'standard'}
+                                    text={newBo3ButtonText}
+                                    buttonFnc={handleNewBo3RequestOrConfirm}
+                                    disabled={newBo3ButtonDisabled}
+                                />
+                                <Typography sx={styles.typeographyStyle}>
+                                    {rematchRequest && rematchRequest.mode === RematchMode.NewBo3
+                                        ? isRequestInitiator
+                                            ? 'Waiting for your opponent to confirm new Bo3 set.'
+                                            : 'Confirm you wish to start a new Best of 3 set.'
+                                        : 'Start a fresh Best of 3 set with your opponent.'}
+                                </Typography>
+                            </Box>
+                        )}
+
+                        {/* Report Bug - All modes */}
                         <Box sx={styles.contentContainer}>
                             <PreferenceButton
                                 variant={'standard'}

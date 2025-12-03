@@ -10,7 +10,7 @@ import { useGame } from '../_contexts/Game.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
-import { MatchmakingType } from '@/app/_constants/constants';
+import { GamesToWinMode, MatchmakingType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 import { BackgroundsDarkenBox } from '../_theme/theme-helper';
 import { Play } from 'next/font/google';
@@ -33,7 +33,8 @@ const GameBoard = () => {
     // const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
-        if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchmakingType.Quick) {
+        console.log('lobbyState changed:', lobbyState.gameOngoing);
+        if(lobbyState && !lobbyState.gameOngoing && (lobbyState.gameType !== MatchmakingType.Quick || lobbyState.winHistory.gamesToWinMode === GamesToWinMode.BestOfThree)) {
             router.push('/lobby');
         }
     }, [lobbyState, router]);

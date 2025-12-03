@@ -21,7 +21,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { FormatLabels, GamesToWinMode, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatOptions, QueueFormatLabels, DefaultQueueFormatKey } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -35,6 +35,7 @@ interface IDeckPreferences {
     showSavedDecks: boolean;
     favoriteDeck: string;
     format: SwuGameFormat;
+    gamesToWinMode: GamesToWinMode;
     saveDeck: boolean;
 }
 
@@ -42,6 +43,7 @@ interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
     setFavoriteDeck: (value: string) => void;
     setFormat: (value: SwuGameFormat) => void;
+    setGamesToWinMode: (value: GamesToWinMode) => void;
     setSaveDeck: (value: boolean) => void;
 }
 
@@ -77,21 +79,35 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
     
-    const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
-    const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
+    const { showSavedDecks, favoriteDeck, format, gamesToWinMode, saveDeck } = deckPreferences;
+    const { setShowSavedDecks, setFavoriteDeck, setFormat, setGamesToWinMode, setSaveDeck } = deckPreferencesHandlers;
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
 
-    const formatOptions = Object.values(SwuGameFormat);
+    // Get the current format option key from format and gamesToWinMode
+    const getCurrentFormatOptionKey = (): string => {
+        for (const [key, value] of Object.entries(QueueFormatOptions)) {
+            if (value.format === format && value.gamesToWinMode === gamesToWinMode) {
+                return key;
+            }
+        }
+        return DefaultQueueFormatKey;
+    };
+
+    const formatOptionKeys = Object.keys(QueueFormatOptions);
     // Timer ref for clearing the inline text after 5s
 
     useEffect(() => {
         handleJsonDeck(deckLink);
     }, [deckLink]);
 
-    const handleChangeFormat = (format: SwuGameFormat) => {
-        setFormat(format);
-    }
+    const handleChangeFormatOption = (optionKey: string) => {
+        const option = QueueFormatOptions[optionKey];
+        if (option) {
+            setFormat(option.format);
+            setGamesToWinMode(option.gamesToWinMode);
+        }
+    };
 
     const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
         setShowSavedDecks(useSavedDecks);
@@ -179,7 +195,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 user: getUserPayload(user),
                 deck: deckData,
                 format: format,
-                gamesToWinMode: GamesToWinMode.BestOfOne,
+                gamesToWinMode: gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
@@ -438,15 +454,15 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
                     <StyledTextField
                         select
-                        value={format}
+                        value={getCurrentFormatOptionKey()}
                         required
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleChangeFormat(e.target.value as SwuGameFormat)
+                            handleChangeFormatOption(e.target.value)
                         }
                     >
-                        {formatOptions.map((fmt) => (
-                            <MenuItem key={fmt} value={fmt}>
-                                {FormatLabels[fmt] || fmt}
+                        {formatOptionKeys.map((key) => (
+                            <MenuItem key={key} value={key}>
+                                {QueueFormatLabels[key] || key}
                             </MenuItem>
                         ))}
                     </StyledTextField>

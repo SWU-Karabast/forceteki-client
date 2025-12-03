@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SwuGameFormat } from '@/app/_constants/constants';
+import { SwuGameFormat, GamesToWinMode, DefaultQueueFormatKey, QueueFormatOptions } from '@/app/_constants/constants';
 import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
@@ -9,6 +9,7 @@ export interface IDeckPreferences {
     showSavedDecks: boolean;
     favoriteDeck: string;
     format: SwuGameFormat;
+    gamesToWinMode: GamesToWinMode;
     saveDeck: boolean;
 }
 
@@ -16,6 +17,7 @@ export interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
     setFavoriteDeck: (value: string) => void;
     setFormat: (value: SwuGameFormat) => void;
+    setGamesToWinMode: (value: GamesToWinMode) => void;
     setSaveDeck: (value: boolean) => void;
 }
 
@@ -52,6 +54,16 @@ export const useDeckManagement = (): IDeckManagementState => {
         return (stored as SwuGameFormat) || SwuGameFormat.Premier;
     });
 
+    const [gamesToWinMode, setGamesToWinMode] = useState<GamesToWinMode>(() => {
+        const stored = localStorage.getItem('gamesToWinMode');
+
+        if (stored !== GamesToWinMode.BestOfOne && stored !== GamesToWinMode.BestOfThree) {
+            return GamesToWinMode.BestOfOne;
+        }
+
+        return (stored as GamesToWinMode) || GamesToWinMode.BestOfOne;
+    });
+
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
@@ -60,6 +72,10 @@ export const useDeckManagement = (): IDeckManagementState => {
     useEffect(() => {
         localStorage.setItem('format', format);
     }, [format]);
+
+    useEffect(() => {
+        localStorage.setItem('gamesToWinMode', gamesToWinMode);
+    }, [gamesToWinMode]);
 
     const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
         let selectDeck = localStorage.getItem('selectedDeck') || '';
@@ -109,6 +125,7 @@ export const useDeckManagement = (): IDeckManagementState => {
         showSavedDecks,
         favoriteDeck,
         format,
+        gamesToWinMode,
         saveDeck,
     };
 
@@ -116,6 +133,7 @@ export const useDeckManagement = (): IDeckManagementState => {
         setShowSavedDecks: handleShowSavedDecksChange,
         setFavoriteDeck: handleFavoriteDeckChange,
         setFormat: useCallback((value: SwuGameFormat) => setFormat(value), []),
+        setGamesToWinMode: useCallback((value: GamesToWinMode) => setGamesToWinMode(value), []),
         setSaveDeck: useCallback((value: boolean) => setSaveDeck(value), []),
     };
 

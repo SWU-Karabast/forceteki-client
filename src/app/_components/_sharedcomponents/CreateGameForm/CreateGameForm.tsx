@@ -22,7 +22,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, FormatLabels, SupportedDeckSources, GamesToWinMode } from '@/app/_constants/constants';
+import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, QueueFormatOptions, QueueFormatLabels, DefaultQueueFormatKey } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -36,6 +36,7 @@ interface IDeckPreferences {
     showSavedDecks: boolean;
     favoriteDeck: string;
     format: SwuGameFormat;
+    gamesToWinMode: GamesToWinMode;
     saveDeck: boolean;
 }
 
@@ -43,6 +44,7 @@ interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
     setFavoriteDeck: (value: string) => void;
     setFormat: (value: SwuGameFormat) => void;
+    setGamesToWinMode: (value: GamesToWinMode) => void;
     setSaveDeck: (value: boolean) => void;
 }
 
@@ -78,19 +80,35 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
     
-    const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
-    const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
+    const { showSavedDecks, favoriteDeck, format, gamesToWinMode, saveDeck } = deckPreferences;
+    const { setShowSavedDecks, setFavoriteDeck, setFormat, setGamesToWinMode, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
     const [privateGame, setPrivateGame] = useState<boolean>(false);
     const [thirtyCardMode, setThirtyCardMode] = useState<boolean>(false);
-    const formatOptions = Object.values(SwuGameFormat);
+    
+    // Get the current format option key from format and gamesToWinMode
+    const getCurrentFormatOptionKey = (): string => {
+        for (const [key, value] of Object.entries(QueueFormatOptions)) {
+            if (value.format === format && value.gamesToWinMode === gamesToWinMode) {
+                return key;
+            }
+        }
+        return DefaultQueueFormatKey;
+    };
+
+    const formatOptionKeys = Object.keys(QueueFormatOptions);
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
-    const handleChangeFormat = (format: SwuGameFormat) => {
-        setFormat(format);
-    }
+    
+    const handleChangeFormatOption = (optionKey: string) => {
+        const option = QueueFormatOptions[optionKey];
+        if (option) {
+            setFormat(option.format);
+            setGamesToWinMode(option.gamesToWinMode);
+        }
+    };
 
     useEffect(() => {
         handleJsonDeck(deckLink);
@@ -187,7 +205,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 format: format,
                 lobbyName: lobbyName,
                 allow30CardsInMainBoard: thirtyCardMode,
-                gamesToWinMode: GamesToWinMode.BestOfOne,
+                gamesToWinMode: gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -462,15 +480,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
                     <StyledTextField
                         select
-                        value={format}
+                        value={getCurrentFormatOptionKey()}
                         required
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleChangeFormat(e.target.value as SwuGameFormat)
+                            handleChangeFormatOption(e.target.value)
                         }
                     >
-                        {formatOptions.map((fmt) => (
-                            <MenuItem key={fmt} value={fmt}>
-                                {FormatLabels[fmt] || fmt}
+                        {formatOptionKeys.map((key) => (
+                            <MenuItem key={key} value={key}>
+                                {QueueFormatLabels[key] || key}
                             </MenuItem>
                         ))}
                     </StyledTextField>
