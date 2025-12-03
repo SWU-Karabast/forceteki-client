@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useGame } from '@/app/_contexts/Game.context';
-import EndGameOptionsQuickMatch
-    from '@/app/_components/_sharedcomponents/Preferences/_subComponents/EndGameOptionsQuickMatch';
-import EndGameOptionsCustom from '../_subComponents/EndGameOptionsCustom';
+import EndGameOptions, { GameMode } from '@/app/_components/_sharedcomponents/Preferences/_subComponents/EndGameOptions';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 import { MatchmakingType } from '@/app/_constants/constants';
 
@@ -22,11 +20,10 @@ function EndGameTab() {
     };
 
     return <>
-        {
-            isQuickMatch
-                ? <EndGameOptionsQuickMatch handleOpenBugReport={handleOpenBugReport} />
-                : <EndGameOptionsCustom handleOpenBugReport={handleOpenBugReport} />
-        }
+        <EndGameOptions
+            handleOpenBugReport={handleOpenBugReport}
+            gameMode={isQuickMatch ? GameMode.QuickMatch : GameMode.Custom}
+        />
         <BugReportDialog
             open={bugReportOpen}
             onClose={handleCloseBugReport}
