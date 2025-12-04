@@ -93,7 +93,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
-    const open = Boolean(anchorElement);
+    const open = Boolean(anchorElement) && Boolean(topDiscardCard);
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
