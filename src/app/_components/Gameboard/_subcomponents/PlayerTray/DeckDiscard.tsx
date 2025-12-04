@@ -204,6 +204,9 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
                     }),
                 aspectRatio: '1 / 1.4',
                 borderRadius: '5px',
+                '&:hover': {
+                    cursor: 'pointer',
+                },
             },
 
             deckContentStyle: {
