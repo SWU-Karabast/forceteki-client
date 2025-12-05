@@ -39,6 +39,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
 
     const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
+    const hasLastPlayedCard = gameState.clientUIProperties?.lastPlayedCard ? true : false;
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -132,12 +133,24 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         },
         lastPlayed: {
             ...debugBorder('yellow'),
-            width: '4.6rem',
-            height: '6.5rem',
+            height: '100%',
+            width: 'auto',
+            maxWidth: '50%',
+            aspectRatio: '1 / 1.4',
             borderRadius: '5px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            '&:hover':  hasLastPlayedCard ? {
+                cursor: 'pointer',
+                scale: '1.1',
+                transition: 'all ease-in-out 0.15s',
+            } : null,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            backgroundPosition: 'center',
             backgroundSize: 'cover',
             backgroundImage: lastPlayedCardUrl,
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backgroundRepeat: 'no-repeat',
         },
         menuStyles: {
             ...debugBorder('yellow'),
@@ -236,7 +249,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 <Popover
                     id="mouse-over-popover"
                     sx={{ pointerEvents: 'none' }}
-                    open={open}
+                    open={hasLastPlayedCard && open}
                     anchorEl={anchorElement}
                     onClose={handlePreviewClose}
                     disableRestoreFocus
