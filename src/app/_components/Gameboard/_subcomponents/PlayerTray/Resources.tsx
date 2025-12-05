@@ -9,7 +9,6 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
-import { AspectRatio } from '@mui/icons-material';
 
 /**
  * Determines if resources should use column style based on screen size and orientation
@@ -147,6 +146,7 @@ const Resources: React.FC<IResourcesProps> = ({
             ref={containerRef}
             sx={styles.cardStyle}
             onClick={handleResourceToggle}
+            elevation={0}
         >
             <Box sx={styles.resourceBorderRight} />
             <Box sx={styles.resourceBorderLeft} />
