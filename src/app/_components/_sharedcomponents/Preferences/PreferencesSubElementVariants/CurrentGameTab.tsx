@@ -7,9 +7,11 @@ import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_subComponents/Bo3ScoreDisplay';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
+import { GamesToWinMode } from '@/app/_constants/constants';
 
 enum PhaseName {
     Action = 'action',
@@ -27,6 +29,16 @@ function CurrentGameTab() {
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
     const isPrivateLobby = lobbyState?.gameType === 'Private';
+
+    // Bo3 state from lobbyState
+    const winHistory = lobbyState?.winHistory || null;
+    const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
+    const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
+    const currentGameNumber = winHistory?.currentGameNumber || 1;
+
+    // Determine if we're in Bo3 mode and if the set is complete
+    const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
+    const isBo3SetComplete = isBo3Mode && Object.values(winsPerPlayer).some((wins) => wins >= 2);
 
     useEffect(() => {
         if(confirmConcede){
@@ -131,6 +143,16 @@ function CurrentGameTab() {
                         </Typography>
                     </Box>
                 </Box>
+            )}
+            {/* Bo3 Score Section */}
+            {isBo3Mode && gameState?.players && (
+                <Bo3ScoreDisplay
+                    currentGameNumber={currentGameNumber}
+                    winsPerPlayer={winsPerPlayer}
+                    players={gameState.players}
+                    connectedPlayer={connectedPlayer}
+                    isBo3SetComplete={isBo3SetComplete}
+                />
             )}
             {(isDev || gameState.undoEnabled) && isPrivateLobby && (
                 <Box sx={styles.functionContainer}>
