@@ -5,12 +5,13 @@ import {
     Typography,
     TextField,
     Button,
-    Box, CardActions, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider,
+    Box, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider,
     FormControl, Radio, RadioGroup
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
-import { ILobbyUserProps, ISetUpProps } from '@/app/_components/Lobby/LobbyTypes';
+import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
+import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 import {
@@ -25,11 +26,11 @@ import {
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 
-const SetUpCard: React.FC<ISetUpProps> = ({
+const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     readyStatus,
     owner,
 }) => {
@@ -56,6 +57,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const lobbyFormat = lobbyState ? lobbyState.gameFormat : null;
 
+    // Bo3 state from lobbyState
+    const winHistory = lobbyState?.winHistory || null;
+    const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
+    const currentGameNumber = winHistory?.currentGameNumber || 1;
+    const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
+
     // For deck error display
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
     const [displayError, setDisplayError] = useState(false);
@@ -65,10 +72,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     const disableSettings = !owner || readyStatus || opponentReady;
 
     // ------------------------Additional functions------------------------//
-    const handleStartGame = async () => {
-        sendLobbyMessage(['onStartGameAsync']);
-    };
-
     const handleChangeUndoSetting = async (checked: boolean) => {
         sendLobbyMessage(['updateSetting', 'requestUndo', checked]);
     };
@@ -270,15 +273,6 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                 WebkitTextFillColor: '#aaaaaa', // Override WebKit's default disabled text color
             },
         },
-        readyImg: {
-            width: '15px',
-            height: '15px',
-            backgroundImage: `url(${readyStatus ? '/ready.png' : '/notReady.png'})`,
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            marginTop: '7px',
-            marginRight: '5px'
-        },
         cardStyle: {
             height: 'fit-content',
             background: '#18325199',
@@ -311,10 +305,12 @@ const SetUpCard: React.FC<ISetUpProps> = ({
             flexDirection: 'column',
             maxHeight: '45vh',
         },
-        buttonsContainerStyle: {
-            display: 'flex',
-            justifyContent: 'center',
-            width: '100%',
+        gameHeaderStyle: {
+            fontSize: '1.75rem',
+            fontWeight: '700',
+            color: 'white',
+            textAlign: 'center',
+            mb: 1,
         },
         setUpTextStyle: {
             fontSize: '1.5rem',
@@ -406,47 +402,20 @@ const SetUpCard: React.FC<ISetUpProps> = ({
                     </Box>
                 </CardContent>
             ) : (
-                // If opponent is not null
+                // If opponent is not null - show ready buttons
                 <>
-                    {readyStatus && opponentReady && owner ? (
-                        // Both are ready
-                        <>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Box sx={styles.readyImg} />
-                                <Typography variant="h6" sx={{ marginTop: '6px' }}>
-                                    Both players are ready.
-                                </Typography>
-                            </Box>
-                            <CardActions sx={styles.buttonsContainerStyle}>
-                                <Button variant="contained" onClick={() => handleStartGame()}>
-                                    Start Game
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    onClick={() => sendLobbyMessage(['setReadyStatus', !readyStatus])}
-                                >
-                                    {readyStatus ? 'Unready' : 'Ready'}
-                                </Button>
-                            </CardActions>
-                        </>
-                    ) : (
-                        // Not both ready — show toggle-ready button
-                        connectedUser && connectedUser.deck ? (
-                            <CardActions sx={styles.buttonsContainerStyle}>
-                                <Box sx={styles.readyImg} />
-                                <Button
-                                    disabled={blockError}
-                                    variant="contained"
-                                    onClick={() => sendLobbyMessage(['setReadyStatus', !readyStatus])}
-                                >
-                                    {readyStatus ? 'Unready' : 'Ready'}
-                                </Button>
-                            </CardActions>
-
-                        ) : (
-                            <Typography>Please import a deck</Typography>
-                        )
+                    {/* Game X Setup Header for Bo3 mode */}
+                    {isBo3Mode && (
+                        <Typography variant="h5" sx={styles.gameHeaderStyle}>
+                            Game {currentGameNumber} Setup
+                        </Typography>
                     )}
+                    <LobbyReadyButtons
+                        readyStatus={readyStatus}
+                        isOwner={owner}
+                        blockError={blockError}
+                        hasDeck={!!(connectedUser && connectedUser.deck)}
+                    />
                 </>
             )}
 
@@ -682,4 +651,4 @@ const SetUpCard: React.FC<ISetUpProps> = ({
     )
 };
 
-export default SetUpCard;
+export default DeckSelectionCard;
