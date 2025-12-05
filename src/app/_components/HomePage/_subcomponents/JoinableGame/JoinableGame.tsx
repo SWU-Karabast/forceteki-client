@@ -8,9 +8,9 @@ import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/C
 import { ILobbyCardData } from '../../HomePageTypes';
 import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { FormatLabels, FormatTagLabels, SwuGameFormat } from '@/app/_constants/constants';
-import PremierIcon from '../../../../../../public/premier.svg';
-import OpenIcon from '../../../../../../public/open.svg';
-import NextSetIcon from '../../../../../../public/next set.svg';
+import PremierIcon from '/public/premier.svg';
+import OpenIcon from '/public/open.svg';
+import NextSetIcon from '/public/next_set.svg';
 
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
