@@ -9,10 +9,11 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
 import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '../Preferences.types';
+import {filter} from "eslint-config-next";
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
-    const { cosmetics, fetchCosmetics } = useCosmetics();
+    const { cosmetics, fetchCosmetics, isContributor } = useCosmetics();
     const [selectedCardback, setSelectedCardback] = useState<string|null>(null);
     const [selectedBackground, setSelectedBackground] = useState<string|null>(null);
     //const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
@@ -101,6 +102,13 @@ function CosmeticsTab() {
 
     const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
         setExpandedAccordion(isExpanded ? panel : '');
+    };
+
+    const filterSelectableCosmetics = (cosmeticsList: IRegisteredCosmeticOption[]): IRegisteredCosmeticOption[] => {
+        if (isContributor) {
+            return cosmeticsList;
+        }
+        return cosmeticsList.filter(cosmetic => cosmetic.title !== 'Karabast Developer');
     };
 
     // Utility function to sort cosmetics by title, ignoring articles
@@ -216,7 +224,7 @@ function CosmeticsTab() {
                     }}>
                         <Grid sx={styles.functionContainer}>
                             {
-                                cosmetics.cardbacks.length > 0 && sortCosmeticsByTitle(cosmetics.cardbacks).map((cardback) => (
+                                cosmetics.cardbacks.length > 0 && sortCosmeticsByTitle(filterSelectableCosmetics(cosmetics.cardbacks)).map((cardback) => (
                                     <CosmeticItem
                                         key={cardback.id}
                                         id={cardback.id}
@@ -263,7 +271,7 @@ function CosmeticsTab() {
                     }}>
                         <Grid sx={styles.functionContainer}>
                             {
-                                cosmetics.backgrounds.length > 0 && sortCosmeticsByTitle(cosmetics.backgrounds).map((background) => (
+                                cosmetics.backgrounds.length > 0 && sortCosmeticsByTitle(filterSelectableCosmetics(cosmetics.backgrounds)).map((background) => (
                                     <CosmeticItem
                                         key={background.id}
                                         id={background.id}
