@@ -407,7 +407,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     {/* Game X Setup Header for Bo3 mode */}
                     {isBo3Mode && (
                         <Typography variant="h5" sx={styles.gameHeaderStyle}>
-                            Game {currentGameNumber} Setup
+                            {currentGameNumber === 1 ? 'Best-of-Three Setup' : `Game ${currentGameNumber} Setup`}
                         </Typography>
                     )}
                     <LobbyReadyButtons
