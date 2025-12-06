@@ -392,8 +392,8 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
                                 {rematchRequest && rematchRequest.mode === RematchMode.Bo1ConvertToBo3
                                     ? isRequestInitiator
                                         ? 'Waiting for your opponent to confirm conversion to Bo3.'
-                                        : 'Confirm you wish to convert this match to a Best of 3.'
-                                    : 'Convert this match to a Best of 3, counting this game as game 1.'}
+                                        : 'Confirm you wish to convert this match to a best of 3.'
+                                    : 'Convert this match to a best of 3, counting this game as game 1.'}
                             </Typography>
                         </Box>
 
