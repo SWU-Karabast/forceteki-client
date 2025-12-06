@@ -36,7 +36,7 @@ const Board: React.FC<IBoardProps> = ({
     ): ICardData => {
         // Group captured cards by their parentCardId
         const capturedMapping: Record<string, ICardData[]> = {};
-    
+
         capturedCards.forEach((card) => {
             if (card.parentCardId) {
                 if (!capturedMapping[card.parentCardId]) {
@@ -45,7 +45,7 @@ const Board: React.FC<IBoardProps> = ({
                 capturedMapping[card.parentCardId].push(card);
             }
         });
-    
+
         if (card.uuid) {
             card.capturedCards = capturedMapping[card.uuid] || [];
         }
@@ -69,7 +69,7 @@ const Board: React.FC<IBoardProps> = ({
             height: '100%',
             position: 'absolute',
             pointerEvents: 'none', // make it invisible to mouse
-        },  
+        },
         unitsLayer: {
             position: 'relative',
             margin: isPortrait ? '0 0.2em' : '0 1rem',
@@ -128,6 +128,7 @@ const Board: React.FC<IBoardProps> = ({
             url('border-llt.svg') no-repeat left top,
             url('border-llb.svg') no-repeat left bottom`,
             mixBlendMode: 'soft-light',
+            opacity: 0.3,
             left: '0',
             width: '250px',
             height: '100%',
@@ -135,6 +136,7 @@ const Board: React.FC<IBoardProps> = ({
         },
         leftColumnBorderCenter: {
             flexGrow: 1,
+            opacity: 0.3,
             background: `
             url('border-ct.svg') repeat-x top,
             url('border-cb.svg') repeat-x bottom`,
@@ -148,6 +150,7 @@ const Board: React.FC<IBoardProps> = ({
             url('border-lrb.svg') no-repeat right bottom`,
             mixBlendMode: 'soft-light',
             width: '50px',
+            opacity: 0.3,
             right: '0',
             height: '100%',
             position: 'relative',
@@ -158,12 +161,14 @@ const Board: React.FC<IBoardProps> = ({
             url('border-rrb.svg') no-repeat right bottom`,
             mixBlendMode: 'soft-light',
             right: '0',
+            opacity: 0.3,
             width: '250px',
             height: '100%',
             position: 'relative',
         },
         rightColumnBorderCenter: {
             flexGrow: 1,
+            opacity: 0.3,
             background: `
             url('border-ct.svg') repeat-x top,
             url('border-cb.svg') repeat-x bottom`,
@@ -172,6 +177,7 @@ const Board: React.FC<IBoardProps> = ({
             position: 'relative',
         },
         rightColumnBorderLeft: {
+            opacity: 0.3,
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
@@ -182,6 +188,7 @@ const Board: React.FC<IBoardProps> = ({
             position: 'relative',
         },
         middleColumnBorderRight: {
+            opacity: 0.3,
             background: `
             url('border-lrt.svg') no-repeat right top,
             url('border-lrb.svg') no-repeat right bottom`,
@@ -192,6 +199,7 @@ const Board: React.FC<IBoardProps> = ({
             position: 'absolute',
         },
         middleColumnBorderLeft: {
+            opacity: 0.3,
             background: `
             url('border-rlt.svg') no-repeat left top,
             url('border-rlb.svg') no-repeat left bottom`,
@@ -217,20 +225,20 @@ const Board: React.FC<IBoardProps> = ({
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             h4: {
-                margin: '0.2rem 1rem 0', 
-                textAlign: 'center',  
+                margin: '0.2rem 1rem 0',
+                textAlign: 'center',
                 display: 'block',
-                fontSize: '1em', 
+                fontSize: '1em',
                 fontWeight: 600,
                 userSelect: 'none',
                 color: !initiativeClaimed && hasInitiative ? 'var(--initiative-blue)' : !initiativeClaimed && !hasInitiative ? 'var(--initiative-red)' : 'black',
             }
         },
     }
-    
+
     return (
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
-        <Box sx={styles.boardWrapper}> 
+        <Box sx={styles.boardWrapper} data-testid="gameboard-board-wrapper">
             <Box sx={styles.columnStyle}>
                 <Box sx={styles.borderLayer}>
                     <Box sx={styles.leftColumnBorderLeft} />
@@ -256,7 +264,7 @@ const Board: React.FC<IBoardProps> = ({
                         </Box>
                         <Box sx={styles.leaderBaseWrapper}>
                             <LeaderBaseCard
-                                cardStyle={LeaderBaseCardStyle.Base} 
+                                cardStyle={LeaderBaseCardStyle.Base}
                                 card={opponentBase}
                                 capturedCards={opponentBase.capturedCards || []}
                             />
@@ -265,8 +273,8 @@ const Board: React.FC<IBoardProps> = ({
                     <Box sx={{ flex: '0 1 60px', width: '100%', minHeight: '16px' }} />
                     <Box sx={styles.leaderBaseContainer}>
                         <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard 
-                                cardStyle={LeaderBaseCardStyle.Base} 
+                            <LeaderBaseCard
+                                cardStyle={LeaderBaseCardStyle.Base}
                                 card={playerBase}
                                 capturedCards={playerBase.capturedCards || []}
                             />
@@ -289,7 +297,7 @@ const Board: React.FC<IBoardProps> = ({
                     <Box sx={styles.rightColumnBorderRight} />
                     <Box sx={styles.initiativeWrapper}>
                         <Typography variant={'h4'}>Initiative</Typography>
-                    </Box> 
+                    </Box>
                 </Box>
                 <Box sx={styles.unitsLayer}>
                     <UnitsBoard

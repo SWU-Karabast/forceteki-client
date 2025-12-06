@@ -11,10 +11,13 @@ export type IButtonType = {
     onMouseLeave?: () => void;
 }
 
-export type ISleeve = {
-    image: string,
-    source: string,
-    selected?: boolean,
+export type ICosmeticItem = {
+    id: string,
+    path: string,
+    title: string,
+    selected: boolean,
+    onClick: (id: string) => void,
+    isNoneOption?: boolean,
 }
 
 export type IPreferenceOptions = {
@@ -52,6 +55,28 @@ export interface IStatsNotification {
     message: string;
 }
 
+// Registered cosmetic types
+export enum RegisteredCosmeticType {
+    Cardback = 'cardback',
+    Background = 'background',
+    // Playmat = 'playmat',
+}
+
+export interface IRegisteredCosmeticOption {
+    id: string;
+    title: string;
+    type: RegisteredCosmeticType;
+    path: string;
+    darkened?: boolean;
+};
+
+export interface IRegisteredCosmetics {
+    cardbacks: IRegisteredCosmeticOption[];
+    backgrounds: IRegisteredCosmeticOption[];
+    //playmats: IRegisteredCosmeticOption[];
+}
+
+// constants
 export enum StatsSaveStatus {
     Warning = 'Warning',
     Error = 'Error',

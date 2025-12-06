@@ -8,7 +8,9 @@ import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/C
 import { ILobbyCardData } from '../../HomePageTypes';
 import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { FormatLabels, FormatTagLabels, SwuGameFormat } from '@/app/_constants/constants';
-import { get } from 'http';
+import PremierIcon from '/public/premier.svg';
+import OpenIcon from '/public/open.svg';
+import NextSetIcon from '/public/next_set.svg';
 
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
@@ -132,7 +134,9 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 borderRadius: '15px',
                 fontSize: '0.75rem',
                 fontWeight: '500',
-                display: 'inline-block',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
                 marginTop: '8px',
                 marginBottom: '12px',
                 backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -170,6 +174,20 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             //     return styles.tags.format.nextSet;
             default:
                 return {};
+        }
+    };
+
+    const getFormatIcon = (format: SwuGameFormat) => {
+        const iconStyle = { height: '0.75rem', width: 'auto' };
+        switch (format) {
+            case SwuGameFormat.Premier:
+                return <PremierIcon style={iconStyle} />;
+            case SwuGameFormat.Open:
+                return <OpenIcon style={iconStyle} />;
+            // case SwuGameFormat.NextSetPreview:
+            //     return <NextSetIcon style={iconStyle} />;
+            default:
+                return null;
         }
     };
 
@@ -226,14 +244,15 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     )}
                     <Box>
                         <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
-                        <Typography
+                        <Box
                             sx={{
                                 ...styles.tags.lobbySetting,
-                                ...getGameFormatTagStyle(lobby.format)
+                                ...getGameFormatTagStyle(lobby.format),
                             }}
                         >
+                            {getFormatIcon(lobby.format)}
                             { FormatTagLabels[lobby.format] || lobby.format.toUpperCase() }
-                        </Typography>
+                        </Box>
                     </Box>
                 </Box>
                 <Button onClick={() => joinLobby(lobby.id)}>Join</Button>

@@ -22,11 +22,7 @@ npm install
 npm run dev
 ```
 
-Once this is running you can go to http://localhost:3000 to get to the home page. 
-
-To start a game with 2 players open one tab to http://localhost:300/Gameboard and another tab to http://localhost:3000/GameBoard?player=ThisIsTheWay
-
-The state updater is currently set to log game state updates to the console as they are received. 
+Once this is running you can go to http://localhost:3000 to get to the home page. Testing with real games requires setting up the BE repo and running the server, see full instructions for that at this wiki: https://github.com/SWU-Karabast/forceteki/wiki/Client-&-Server-Setup
 
 ### Mobile Testing and Custom Environment
 

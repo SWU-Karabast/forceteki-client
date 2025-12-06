@@ -48,15 +48,23 @@ export interface ISoundPreferences {
     muteOpponentFoundSound?: boolean;
 }
 
-export interface IPreferences {
+export interface ICosmeticsPreferences {
     cardback?: string;
-    sound?: ISoundPreferences
+    background?: string;
+    // playmat?: string;
+    // disablePlaymats?: boolean;
+}
+
+export interface IPreferences {
+    sound?: ISoundPreferences;
+    cosmetics?: ICosmeticsPreferences;
 }
 
 export interface IUserContextType {
     user: IUser | null;
     anonymousUserId: string | null;
     isLoading: boolean;
+    isMod: boolean;
     login: (provider: 'google' | 'discord') => void;
     devLogin: (user: 'Order66' | 'ThisIsTheWay') => void;
     logout: () => void;
@@ -66,6 +74,12 @@ export interface IUserContextType {
     updateUserPreferences: (preferences: IPreferences) => void;
     updateModerationSeenStatus: (moderation: IModerationAction | null) => void;
     updateUndoPopupSeenDate: () => void;
+}
+
+export enum AdminRole {
+    SuperUser = 'SuperUser',
+    Developer = 'Developer',
+    Moderator = 'Moderator',
 }
 
 // Extend Next-auth types

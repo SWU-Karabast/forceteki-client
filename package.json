@@ -10,10 +10,15 @@
 		"lint": "npx tsc --noemit && next lint"
 	},
 	"dependencies": {
+		"@aws-sdk/client-dynamodb": "^3.917.0",
+		"@aws-sdk/client-s3": "^3.917.0",
+		"@aws-sdk/lib-dynamodb": "^3.917.0",
+		"@aws-sdk/s3-request-presigner": "^3.917.0",
 		"@emotion/react": "^11.13.5",
 		"@emotion/styled": "^11.13.5",
 		"@mui/icons-material": "^6.1.8",
 		"@mui/material": "^6.1.8",
+		"@svgr/webpack": "^8.1.0",
 		"html-react-parser": "^5.1.18",
 		"jsonwebtoken": "^9.0.2",
 		"next": "14.2.26",

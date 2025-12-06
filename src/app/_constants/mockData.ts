@@ -110,13 +110,17 @@ export const articles: IArticle[] = [
 ];
 
 export const announcement: IAnnouncement = {
-    key:'cloudflareOutage',
-    title: 'Cloudflare Outage Affecting Karabast',
+    key:'callForVolunteers01',
+    title: 'Dev Volunteers Needed',
     content:`
-    There is currently a global outage with Cloudflare, a major internet infrastructure provider. Karabast is not affected directly, but many deckbuilder sites such as SWUDB are currently down.
-    As a result, games cannot be played using deck links from affected deckbuilder sites. This includes decks that are saved to your profile.
-    <br/><br/>
-    For more details, see <a target="_blank" href="https://www.techradar.com/pro/live/a-cloudflare-outage-is-taking-down-parts-of-the-internet" style="color:lightblue;">news updates</a> about the outage.`,
-    endDate: '2025-11-20', // The date should be year-month-day
-    image:'/cloudflareOutage.png'
+    The Karabast dev team is entirely volunteer-based and we are looking for more help! As the SWU community has grown, so have the needs of the Karabast platform, and some existing volunteers have needed to step back for personal reasons.<br/><br/> 
+    
+    So, we are seeking additional developers to join our team so that we can efficiently bring <b>new features, bug fixes, and new cards</b> to the community! We are particularly seeking contributors who have any of the following skill sets, but all help is welcomed:<br/><br/>
+    - Senior-level backend experience with JavaScript / TypeScript<br/>
+    - Anyone with design experience, especially related to UI/UX<br/>
+    - Senior- or junior-level frontend experience with React<br/>
+    <br/>
+    If you're interested, please reach out in our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>!`,
+    endDate: '2025-12-21', // The date should be year-month-day
+    image:'/karabastdevlogoedited.png'
 }
