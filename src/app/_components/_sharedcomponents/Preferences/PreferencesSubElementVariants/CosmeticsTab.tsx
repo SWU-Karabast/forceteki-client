@@ -8,8 +8,7 @@ import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, FormCon
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
-import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '../Preferences.types';
-import {filter} from "eslint-config-next";
+import { IRegisteredCosmeticOption } from '../Preferences.types';
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
