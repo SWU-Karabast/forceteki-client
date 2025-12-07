@@ -35,7 +35,7 @@ const ALLOWED_ROOT_KEYS = ['metadata', 'leader', 'base', 'deck', 'sideboard', 'd
 const ALLOWED_METADATA_KEYS = ['name', 'author'];
 const ALLOWED_CARD_KEYS = ['id', 'count'];
 const CARD_ID_REGEX = /^[A-Z]{3}_\d{3}$/;
-const MAX_JSON_SIZE = 2000;
+const MAX_JSON_SIZE = 5000;
 
 /**
  * Validates if a card ID follows the expected format (CCC_###)
