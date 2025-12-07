@@ -10,7 +10,6 @@ import React, {
     useRef,
 } from 'react';
 import io, { Socket } from 'socket.io-client';
-import parser from 'socket.io-json-parser';
 import { useUser } from './User.context';
 import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
@@ -217,7 +216,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const token = session?.jwtToken;
         const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
-            parser,
             query: {
                 user: JSON.stringify(user ? user : { username: 'anonymous '+anonymousUserId?.substring(0,6), id: anonymousUserId }),
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null }),
