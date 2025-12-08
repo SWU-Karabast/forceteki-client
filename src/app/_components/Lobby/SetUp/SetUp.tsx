@@ -40,6 +40,9 @@ const SetUp: React.FC = ({
     };
 
     const handleExit = () => {
+        if (isBo3Mode) {
+            sendLobbyMessage(['concedeBo3']);
+        }
         sendMessage('manualDisconnect');
         router.push('/');
     }
