@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Button, CardActions, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
+import { GamesToWinMode } from '@/app/_constants/constants';
 
 interface ILobbyReadyButtonsProps {
     readyStatus: boolean;
@@ -34,12 +35,18 @@ function LobbyReadyButtons({ readyStatus, isOwner, blockError = false, hasDeck =
     const opponentReady = opponentUser?.ready || false;
     const bothReady = readyStatus && opponentReady;
 
+    // Bo3 detection: check if we're in a Bo3 game after the first game
+    const winHistory = lobbyState?.winHistory;
+    const isBo3Mode = winHistory?.gamesToWinMode === GamesToWinMode.BestOfThree;
+    const currentGameNumber = winHistory?.currentGameNumber || 1;
+    const isBo3AfterFirstGame = isBo3Mode && currentGameNumber > 1;
+
     const handleReadyClick = () => {
         sendLobbyMessage(['setReadyStatus', !readyStatus]);
     };
 
     const handleStartGame = () => {
-        sendLobbyMessage(['onStartGameAsync']);
+        sendLobbyMessage(['startGameAsync']);
     };
 
     // If no opponent yet, don't show buttons
@@ -52,8 +59,20 @@ function LobbyReadyButtons({ readyStatus, isOwner, blockError = false, hasDeck =
         return <Typography>Please import a deck</Typography>;
     }
 
-    // Both ready and owner - show start game button
-    if (bothReady && isOwner) {
+    // Bo3 after first game: both ready means game auto-starts
+    if (isBo3AfterFirstGame && bothReady) {
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={styles.readyImg(readyStatus)} />
+                <Typography variant="h6" sx={{ marginTop: '6px' }}>
+                    Both players are ready. Starting game...
+                </Typography>
+            </Box>
+        );
+    }
+
+    // Both ready and owner - show start game button (Bo1 or Bo3 first game only)
+    if (bothReady && isOwner && !isBo3AfterFirstGame) {
         return (
             <>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

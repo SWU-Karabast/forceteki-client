@@ -100,7 +100,7 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
         if (!rematchRequest) {
             sendLobbyMessage(['requestRematch', RematchMode.Reset]);
         } else if (rematchRequest.mode === RematchMode.Reset && !isRequestInitiator) {
-            sendLobbyMessage(['onStartGameAsync']);
+            sendLobbyMessage(['startGameAsync']);
         }
     };
 
