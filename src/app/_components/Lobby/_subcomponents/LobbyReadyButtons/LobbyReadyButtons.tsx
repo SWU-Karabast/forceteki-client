@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Button, CardActions, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
@@ -19,17 +19,31 @@ const styles = {
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         marginTop: '7px',
-        marginRight: '5px'
+        marginRight: '10px'
     }),
     buttonsContainerStyle: {
         display: 'flex',
         justifyContent: 'center',
+        alignItems: 'center',
         width: '100%',
+        gap: '4rem',
+        flexWrap: 'wrap',
+    },
+    readyButtonGroup: {
+        display: 'flex',
+        alignItems: 'center',
+    },
+    concedeButton: {
+        backgroundColor: '#8B0000',
+        '&:hover': {
+            backgroundColor: '#A00000',
+        },
     },
 };
 
 function LobbyReadyButtons({ readyStatus, isOwner, blockError = false, hasDeck = true }: ILobbyReadyButtonsProps) {
     const { sendLobbyMessage, lobbyState, connectedPlayer } = useGame();
+    const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
 
     const opponentUser = lobbyState?.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer);
     const opponentReady = opponentUser?.ready || false;
@@ -41,12 +55,29 @@ function LobbyReadyButtons({ readyStatus, isOwner, blockError = false, hasDeck =
     const currentGameNumber = winHistory?.currentGameNumber || 1;
     const isBo3AfterFirstGame = isBo3Mode && currentGameNumber > 1;
 
+    // Auto-reset confirm state after 5 seconds
+    useEffect(() => {
+        if (confirmConcede) {
+            const timer = setTimeout(() => setConfirmConcede(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [confirmConcede]);
+
     const handleReadyClick = () => {
         sendLobbyMessage(['setReadyStatus', !readyStatus]);
     };
 
     const handleStartGame = () => {
         sendLobbyMessage(['startGameAsync']);
+    };
+
+    const handleConcedeClick = () => {
+        if (!confirmConcede) {
+            setConfirmConcede(true);
+        } else {
+            sendLobbyMessage(['concedeBo3']);
+            setConfirmConcede(false);
+        }
     };
 
     // If no opponent yet, don't show buttons
@@ -93,17 +124,28 @@ function LobbyReadyButtons({ readyStatus, isOwner, blockError = false, hasDeck =
         );
     }
 
-    // Not both ready - show ready toggle button
+    // Not both ready - show ready toggle button (and concede for Bo3 after first game)
     return (
         <CardActions sx={styles.buttonsContainerStyle}>
-            <Box sx={styles.readyImg(readyStatus)} />
-            <Button
-                disabled={blockError}
-                variant="contained"
-                onClick={handleReadyClick}
-            >
-                {readyStatus ? 'Unready' : 'Ready'}
-            </Button>
+            <Box sx={styles.readyButtonGroup}>
+                <Box sx={styles.readyImg(readyStatus)} />
+                <Button
+                    disabled={blockError}
+                    variant="contained"
+                    onClick={handleReadyClick}
+                >
+                    {readyStatus ? 'Unready' : 'Ready'}
+                </Button>
+            </Box>
+            {isBo3AfterFirstGame && (
+                <Button
+                    variant="contained"
+                    onClick={handleConcedeClick}
+                    sx={styles.concedeButton}
+                >
+                    {confirmConcede ? 'Are you sure?' : 'Concede'}
+                </Button>
+            )}
         </CardActions>
     );
 }

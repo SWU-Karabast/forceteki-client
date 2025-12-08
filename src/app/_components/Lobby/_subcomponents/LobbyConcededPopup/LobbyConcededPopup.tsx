@@ -78,8 +78,8 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
 
     // --- Determine Button State & Text ---
 
-    // For New Bo3 Set:
-    let newBo3ButtonText = 'New Bo3 Set';
+    // For Rematch Bo3:
+    let newBo3ButtonText = 'Rematch Bo3';
     let newBo3ButtonDisabled = false;
     if (rematchRequest) {
         if (rematchRequest.mode !== RematchMode.NewBo3) {
@@ -162,12 +162,12 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
             <Card sx={styles.card}>
                 {/* Title */}
                 <Typography sx={styles.title}>
-                    Best-of-Three Set Ended
+                    Best-of-Three Ended
                 </Typography>
 
                 {/* Concede Notice */}
                 <Typography sx={styles.concedeNotice}>
-                    {getConcedePlayerName()} conceded the set.
+                    {getConcedePlayerName()} conceded
                 </Typography>
 
                 <Divider sx={{ borderColor: '#444', mb: 2 }} />
@@ -245,8 +245,8 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
                         </Typography>
                     </Box>
 
-                    {/* New Bo3 Set - for non-spectators in custom games */}
-                    {!isSpectator && !isQuickMatch && !isMaintenanceMode && (
+                    {/* New Bo3 Set - for non-spectators */}
+                    {!isSpectator && !isMaintenanceMode && (
                         <Box sx={styles.buttonRow}>
                             <PreferenceButton
                                 variant={'standard'}
@@ -258,8 +258,8 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
                                 {rematchRequest && rematchRequest.mode === RematchMode.NewBo3
                                     ? isRequestInitiator
                                         ? 'Waiting for opponent to confirm.'
-                                        : 'Confirm new Bo3 set.'
-                                    : 'Start a fresh Best of 3 set.'}
+                                        : 'Confirm Bo3 rematch.'
+                                    : 'Rematch with a new best of 3 set.'}
                             </Typography>
                         </Box>
                     )}

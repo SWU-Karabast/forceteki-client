@@ -210,8 +210,8 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
         }
     }
 
-    // For New Bo3 Set (Bo3 set complete only):
-    let newBo3ButtonText = 'New Bo3 Set';
+    // For Rematch Bo3 (Bo3 set complete only):
+    let newBo3ButtonText = 'Rematch Bo3';
     let newBo3ButtonDisabled = false;
     if (rematchRequest) {
         if (rematchRequest.mode !== RematchMode.NewBo3) {
@@ -330,9 +330,9 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
                         <Typography sx={styles.typeographyStyle}>
                             {rematchRequest && rematchRequest.mode === RematchMode.NewBo3
                                 ? isRequestInitiator
-                                    ? 'Waiting for your opponent to confirm new Bo3 set.'
-                                    : 'Confirm you wish to start a new Best of 3 set.'
-                                : 'Start a fresh Best of 3 set with your opponent.'}
+                                    ? 'Waiting for your opponent to confirm Bo3 rematch.'
+                                    : 'Confirm you wish to start a new best of 3 set.'
+                                : 'Start a fresh best of 3 set with your opponent.'}
                         </Typography>
                     </Box>
                 )}
