@@ -20,7 +20,7 @@ enum PhaseName {
 }
 
 function CurrentGameTab() {
-    const { sendGameMessage, connectedPlayer, gameState, isSpectator, lobbyState } = useGame();
+    const { sendGameMessage, getOpponent, connectedPlayer, gameState, isSpectator, lobbyState } = useGame();
     const isDev = process.env.NODE_ENV === 'development';
     const router = useRouter();
     const currentPlayer = gameState.players[connectedPlayer];
@@ -35,10 +35,11 @@ function CurrentGameTab() {
     const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
     const currentGameNumber = winHistory?.currentGameNumber || 1;
+    const setConcededByPlayerId = winHistory?.setConcededByPlayerId || null;
 
     // Determine if we're in Bo3 mode and if the set is complete
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
-    const isBo3SetComplete = isBo3Mode && Object.values(winsPerPlayer).some((wins) => wins >= 2);
+    const isBo3SetComplete = isBo3Mode && (Object.values(winsPerPlayer).some((wins) => wins >= 2) || !!setConcededByPlayerId);
 
     useEffect(() => {
         if(confirmConcede){
@@ -139,7 +140,7 @@ function CurrentGameTab() {
                             sx={{ minWidth: '140px' }}
                         />
                         <Typography sx={styles.typeographyStyle}>
-                            Yield  current game and abandon. This match will count as a loss.
+                            Yield current game. This game will count as a loss.
                         </Typography>
                     </Box>
                 </Box>
@@ -152,6 +153,9 @@ function CurrentGameTab() {
                     players={gameState.players}
                     connectedPlayer={connectedPlayer}
                     isBo3SetComplete={isBo3SetComplete}
+                    setConcededByPlayerId={setConcededByPlayerId}
+                    isSpectator={isSpectator}
+                    getOpponent={getOpponent}
                 />
             )}
             {(isDev || gameState.undoEnabled) && isPrivateLobby && (

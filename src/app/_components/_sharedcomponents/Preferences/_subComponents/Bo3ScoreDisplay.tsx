@@ -10,6 +10,9 @@ interface IBo3ScoreDisplayProps {
     connectedPlayer: string;
     isBo3SetComplete: boolean;
     containerStyle?: object;
+    setConcededByPlayerId?: string | null;
+    isSpectator?: boolean;
+    getOpponent?: (playerId: string) => string;
 }
 
 function Bo3ScoreDisplay({
@@ -19,7 +22,21 @@ function Bo3ScoreDisplay({
     connectedPlayer,
     isBo3SetComplete,
     containerStyle = {},
+    setConcededByPlayerId = null,
+    isSpectator = false,
+    getOpponent,
 }: IBo3ScoreDisplayProps) {
+    // Get display name for a player (spectator-aware)
+    const getDisplayName = (playerId: string): string => {
+        const playerName = players[playerId]?.user?.username || playerId;
+        if (isSpectator && getOpponent) {
+            const opponentId = getOpponent(connectedPlayer);
+            if (playerId === connectedPlayer) return 'Player 1';
+            if (playerId === opponentId) return 'Player 2';
+        }
+        return playerName;
+    };
+
     const styles = {
         typographyContainer: {
             mb: '0.5rem',
@@ -43,6 +60,12 @@ function Bo3ScoreDisplay({
                 Best-of-Three Score (Game {currentGameNumber})
             </Typography>
             <Divider sx={{ mb: '20px' }} />
+            {/* Show concede notice above the table */}
+            {setConcededByPlayerId && (
+                <Typography sx={{ color: '#ff9800', fontWeight: 'bold', mb: '15px', fontSize: '1.3rem' }}>
+                    {setConcededByPlayerId === connectedPlayer ? 'You conceded the Bo3 set' : `${getDisplayName(setConcededByPlayerId)} conceded the Bo3 set`}
+                </Typography>
+            )}
             <TableContainer>
                 <Table size="medium" sx={{ maxWidth: '300px' }}>
                     <TableHead>
@@ -97,7 +120,9 @@ function Bo3ScoreDisplay({
             </TableContainer>
             {isBo3SetComplete && (
                 <Typography sx={{ ...styles.typeographyStyle, color: '#ff9800', mt: '15px', ml: 0 }}>
-                    Set complete! {Object.entries(winsPerPlayer).find(([, wins]) => wins >= 2)?.[0] === connectedPlayer ? 'You won the set!' : 'Your opponent won the set.'}
+                    Set complete! {setConcededByPlayerId
+                        ? (setConcededByPlayerId === connectedPlayer ? 'You conceded the set.' : 'Your opponent conceded the set.')
+                        : (Object.entries(winsPerPlayer).find(([, wins]) => wins >= 2)?.[0] === connectedPlayer ? 'You won the set!' : 'Your opponent won the set.')}
                 </Typography>
             )}
         </Box>

@@ -9,25 +9,22 @@ import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import { GamesToWinMode, RematchMode } from '@/app/_constants/constants';
-
-export enum GameMode {
-    QuickMatch = 'quickMatch',
-    Custom = 'custom'
-}
+import { GamesToWinMode, MatchmakingType, RematchMode } from '@/app/_constants/constants';
 
 interface IProps {
     handleOpenBugReport: () => void;
-    gameMode: GameMode;
+    gameType: MatchmakingType;
 }
 
-function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
+function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState } = useGame();
+    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
+    const [confirmConcedeBo3, setConfirmConcedeBo3] = useState<boolean>(false);
 
-    const isQuickMatch = gameMode === GameMode.QuickMatch;
+    const isQuickMatch = gameType === MatchmakingType.Quick;
+    console.log('isQuickMatch:', isQuickMatch);
 
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest || null;
@@ -39,10 +36,11 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
     const currentGameNumber = winHistory?.currentGameNumber || 1;
     const hasConfirmedNextGame = lobbyState?.hasConfirmedNextGame || false;
+    const setConcededByPlayerId = winHistory?.setConcededByPlayerId || null;
 
     // Determine if we're in Bo3 mode and if the set is complete
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
-    const isBo3SetComplete = isBo3Mode && Object.values(winsPerPlayer).some((wins) => wins >= 2);
+    const isBo3SetComplete = isBo3Mode && (Object.values(winsPerPlayer).some((wins) => wins >= 2) || !!setConcededByPlayerId);
 
     useEffect(() => {
         if (statsSubmitNotification) {
@@ -62,11 +60,30 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
         }
     }, [statsSubmitNotification]);
 
+    useEffect(() => {
+        if (confirmConcedeBo3) {
+            const timer = setTimeout(() => setConfirmConcedeBo3(false), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [confirmConcedeBo3]);
+
     // ------------------------ Button Handlers ------------------------//
 
     const handleReturnHome = () => {
         sendMessage('manualDisconnect');
         router.push('/');
+    };
+
+    // Click handler for the Concede Bo3 Set button.
+    const handleConcedeBo3 = () => {
+        if (!confirmConcedeBo3) {
+            setConfirmConcedeBo3(true);
+        } else {
+            // Send the lobby message only on the second click
+            sendLobbyMessage(['concedeBo3']);
+            // Reset the confirmation
+            setConfirmConcedeBo3(false);
+        }
     };
 
     const handleRequeue = async () => {
@@ -252,14 +269,8 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
             <Box sx={styles.functionContainer}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Actions</Typography>
                 <Divider sx={{ mb: '20px' }} />
-                <Box sx={styles.contentContainer}>
-                    <PreferenceButton variant={'concede'} text={'Return Home'} buttonFnc={handleReturnHome} />
-                    <Typography sx={styles.typeographyStyle}>
-                        Return to main page.
-                    </Typography>
-                </Box>
 
-                {/* Ready for Next Game - Bo3 mid-set only */}
+                {/* Ready for Next Game - Bo3 mid-set only (shown first) */}
                 {isBo3Mode && !isBo3SetComplete && !isSpectator && !isMaintenanceMode && (
                     <Box sx={styles.contentContainer}>
                         <PreferenceButton
@@ -267,11 +278,42 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
                             text={readyForNextGameButtonText}
                             buttonFnc={handleProceedToNextGame}
                             disabled={readyForNextGameButtonDisabled}
+                            sx={hasConfirmedNextGame ? {
+                                minWidth: '140px',
+                            } : {
+                                minWidth: '140px',
+                                background: 'linear-gradient(#0a3d1e, #0a3d1e) padding-box, linear-gradient(to top, #1cb34a, #0a3d1e) border-box',
+                                '&:hover': {
+                                    background: 'linear-gradient(#0d4d26, #0d4d26) padding-box, linear-gradient(to top, #2ad44c, #0a3d1e) border-box',
+                                },
+                            }}
                         />
                         <Typography sx={styles.typeographyStyle}>
                             {hasConfirmedNextGame
                                 ? 'Waiting for your opponent to confirm they are ready.'
                                 : 'Confirm you are ready to proceed to the next game.'}
+                        </Typography>
+                    </Box>
+                )}
+
+                {/* Concede Bo3 Set - Bo3 mid-set only (non-spectator) */}
+                {isBo3Mode && !isBo3SetComplete && !isSpectator ? (
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton
+                            variant={'concede'}
+                            text={confirmConcedeBo3 ? 'Are you sure?' : 'Concede Bo3 Set'}
+                            buttonFnc={handleConcedeBo3}
+                            sx={{ minWidth: '140px' }}
+                        />
+                        <Typography sx={styles.typeographyStyle}>
+                            Yield entire Bo3 set. The set will count as a loss.
+                        </Typography>
+                    </Box>
+                ) : (
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton variant={'concede'} text={'Return Home'} buttonFnc={handleReturnHome} />
+                        <Typography sx={styles.typeographyStyle}>
+                            Return to main page.
                         </Typography>
                     </Box>
                 )}
@@ -291,6 +333,16 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
                                     ? 'Waiting for your opponent to confirm new Bo3 set.'
                                     : 'Confirm you wish to start a new Best of 3 set.'
                                 : 'Start a fresh Best of 3 set with your opponent.'}
+                        </Typography>
+                    </Box>
+                )}
+
+                {/* Requeue - Bo3 QuickMatch set complete only */}
+                {isBo3Mode && isBo3SetComplete && isQuickMatch && !isSpectator && !isMaintenanceMode && (
+                    <Box sx={styles.contentContainer}>
+                        <PreferenceButton variant={'standard'} text={'Requeue'} buttonFnc={handleRequeue} />
+                        <Typography sx={styles.typeographyStyle}>
+                            Reenter the queue for a new opponent.
                         </Typography>
                     </Box>
                 )}
@@ -319,6 +371,9 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
                     players={gameState.players}
                     connectedPlayer={connectedPlayer}
                     isBo3SetComplete={isBo3SetComplete}
+                    setConcededByPlayerId={setConcededByPlayerId}
+                    isSpectator={isSpectator}
+                    getOpponent={getOpponent}
                 />
             )}
 

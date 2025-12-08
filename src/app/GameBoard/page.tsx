@@ -33,7 +33,6 @@ const GameBoard = () => {
     // const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
-        console.log('lobbyState changed:', lobbyState?.gameOngoing);
         if(lobbyState && !lobbyState.gameOngoing && (lobbyState.gameType !== MatchmakingType.Quick || lobbyState.winHistory.gamesToWinMode === GamesToWinMode.BestOfThree)) {
             router.push('/lobby');
         }
@@ -74,7 +73,13 @@ const GameBoard = () => {
     const winHistory = lobbyState?.winHistory;
     const isBo3Mode = winHistory?.gamesToWinMode === GamesToWinMode.BestOfThree;
     const currentGameNumber = winHistory?.currentGameNumber || 1;
-    const gameEndedTitle = isBo3Mode ? `Game ${currentGameNumber} ended` : 'Game ended';
+    const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
+    const setConcededByPlayerId = winHistory?.setConcededByPlayerId || null;
+    const isBo3SetComplete = isBo3Mode && (Object.values(winsPerPlayer).some((wins) => wins >= 2) || !!setConcededByPlayerId);
+    
+    const gameEndedTitle = isBo3Mode 
+        ? (isBo3SetComplete ? 'Best-of-Three Set Ended' : `Game ${currentGameNumber} ended`)
+        : 'Game ended';
 
     // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {

@@ -10,16 +10,21 @@ import {
     titleStyle,
 } from '../Popup.styles';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { GamesToWinMode } from '@/app/_constants/constants';
 
 interface LeaveGamePopupProps {
     uuid: string;
 }
 
 export const LeaveGamePopupModule = ({ uuid }: LeaveGamePopupProps) => {
-    const { sendMessage, gameState } = useGame();
+    const { sendMessage, gameState, lobbyState } = useGame();
     const { closePopup } = usePopup();
     const router = useRouter();
     const hasWinner = !!gameState?.winners.length;
+    
+    // Check if we're in a Bo3 match
+    const isBo3Mode = lobbyState?.winHistory?.gamesToWinMode === GamesToWinMode.BestOfThree;
+    
     const handleConfirm = () => {
         sendMessage('manualDisconnect');
         closePopup(uuid);
@@ -30,13 +35,24 @@ export const LeaveGamePopupModule = ({ uuid }: LeaveGamePopupProps) => {
         closePopup(uuid);
     };
 
+    // Determine the appropriate leave message
+    const getLeaveMessage = () => {
+        if (hasWinner) {
+            return 'Leave the game and return to homescreen?';
+        }
+        if (isBo3Mode) {
+            return 'Leaving the game will concede the best-of-three set.';
+        }
+        return 'Leaving the game will concede.';
+    };
+
     return (
         <Box sx={containerStyle}>
             <Box sx={headerStyle(false)}>
                 <Typography sx={titleStyle}>Leave Game</Typography>
             </Box>
             <Typography sx={textStyle}>
-                {hasWinner ? 'Leave the game and return to homescreen?' : 'Leaving the game will concede.' }
+                {getLeaveMessage()}
             </Typography>
             <Box sx={footerStyle}>
                 <PreferenceButton
