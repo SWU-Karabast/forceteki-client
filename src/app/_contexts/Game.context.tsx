@@ -205,6 +205,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         if (status === 'loading') {
             return;
         }
+        if (status === 'authenticated' && !session?.jwtToken){
+            return;
+        }
+
         const lobbyId = searchParams.get('lobbyId');
         const connectedPlayerId = user?.id || anonymousUserId || '';
         if (!connectedPlayerId) return;
@@ -291,7 +295,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups, status]);
+    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups, status, session?.jwtToken]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         socket?.emit(message, ...args);
