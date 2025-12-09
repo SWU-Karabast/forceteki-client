@@ -8,7 +8,7 @@ import SetUp from '../_components/Lobby/SetUp/SetUp';
 import LobbyConcededPopup from '../_components/Lobby/_subcomponents/LobbyConcededPopup/LobbyConcededPopup';
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
-import { GamesToWinMode, MatchmakingType } from '@/app/_constants/constants';
+import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 
 const Lobby = () => {
     const pathname = usePathname();
@@ -16,12 +16,12 @@ const Lobby = () => {
     const { lobbyState } = useGame();
     const router = useRouter();
 
-    // Bo3 concede detection
+    // Bo3 set end detection
     const winHistory = lobbyState?.winHistory || null;
     const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
-    const setConcededByPlayerId = winHistory?.setConcededByPlayerId || null;
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
-    const showConcededPopup = isBo3Mode && !!setConcededByPlayerId;
+    const showSetEndedPopup = isBo3Mode && !!setEndResult;
     const gameType = lobbyState?.gameType || MatchmakingType.PrivateLobby;
 
     useEffect(() => {
@@ -64,7 +64,7 @@ const Lobby = () => {
 
     return (
         <>
-            {showConcededPopup && <LobbyConcededPopup gameType={gameType} />}
+            {showSetEndedPopup && <LobbyConcededPopup gameType={gameType} />}
             <Grid container sx={styles.containerStyle} spacing={2}>
                 <Grid size={4} sx={styles.setUpGridStyle}>
                     <SetUp/>

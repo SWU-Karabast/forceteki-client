@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import { GamesToWinMode, MatchmakingType, RematchMode } from '@/app/_constants/constants';
+import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType, RematchMode } from '@/app/_constants/constants';
 
 interface IProps {
     handleOpenBugReport: () => void;
@@ -24,7 +24,6 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
     const [confirmConcedeBo3, setConfirmConcedeBo3] = useState<boolean>(false);
 
     const isQuickMatch = gameType === MatchmakingType.Quick;
-    console.log('isQuickMatch:', isQuickMatch);
 
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest || null;
@@ -36,11 +35,11 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
     const currentGameNumber = winHistory?.currentGameNumber || 1;
     const hasConfirmedNextGame = lobbyState?.hasConfirmedNextGame || false;
-    const setConcededByPlayerId = winHistory?.setConcededByPlayerId || null;
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
 
     // Determine if we're in Bo3 mode and if the set is complete
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
-    const isBo3SetComplete = isBo3Mode && (Object.values(winsPerPlayer).some((wins) => wins >= 2) || !!setConcededByPlayerId);
+    const isBo3SetComplete = isBo3Mode && !!setEndResult;
 
     useEffect(() => {
         if (statsSubmitNotification) {
@@ -371,7 +370,7 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
                     players={gameState.players}
                     connectedPlayer={connectedPlayer}
                     isBo3SetComplete={isBo3SetComplete}
-                    setConcededByPlayerId={setConcededByPlayerId}
+                    setEndResult={setEndResult}
                     isSpectator={isSpectator}
                     getOpponent={getOpponent}
                 />

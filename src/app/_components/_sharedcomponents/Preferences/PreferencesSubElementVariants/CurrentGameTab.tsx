@@ -11,7 +11,7 @@ import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_su
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
-import { GamesToWinMode } from '@/app/_constants/constants';
+import { GamesToWinMode, Bo3SetEndedReason, IBo3SetEndResult } from '@/app/_constants/constants';
 
 enum PhaseName {
     Action = 'action',
@@ -35,11 +35,14 @@ function CurrentGameTab() {
     const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
     const currentGameNumber = winHistory?.currentGameNumber || 1;
-    const setConcededByPlayerId = winHistory?.setConcededByPlayerId || null;
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
 
     // Determine if we're in Bo3 mode and if the set is complete
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
-    const isBo3SetComplete = isBo3Mode && (Object.values(winsPerPlayer).some((wins) => wins >= 2) || !!setConcededByPlayerId);
+    const isBo3SetComplete = isBo3Mode && (
+        setEndResult?.endedReason === Bo3SetEndedReason.WonTwoGames ||
+        setEndResult?.endedReason === Bo3SetEndedReason.Concede
+    );
 
     useEffect(() => {
         if(confirmConcede){
@@ -153,7 +156,7 @@ function CurrentGameTab() {
                     players={gameState.players}
                     connectedPlayer={connectedPlayer}
                     isBo3SetComplete={isBo3SetComplete}
-                    setConcededByPlayerId={setConcededByPlayerId}
+                    setEndResult={setEndResult}
                     isSpectator={isSpectator}
                     getOpponent={getOpponent}
                 />

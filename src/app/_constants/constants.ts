@@ -102,3 +102,30 @@ export enum QuickUndoAvailableState {
     WaitingForConfirmation = 'waitingForConfirmation',
 }
 
+// Bo3 Set End Result types
+export enum Bo3SetEndedReason {
+    Concede = 'concede',
+    OnePlayerLobbyTimeout = 'onePlayerLobbyTimeout',
+    BothPlayersLobbyTimeout = 'bothPlayersLobbyTimeout',
+    WonTwoGames = 'wonTwoGames',
+}
+
+export interface IBo3ConcedeResult {
+    endedReason: Bo3SetEndedReason.Concede;
+    concedingPlayerId: string;
+}
+
+export interface IBo3OnePlayerTimeoutResult {
+    endedReason: Bo3SetEndedReason.OnePlayerLobbyTimeout;
+    timeoutPlayerId: string;
+}
+
+export interface IBo3BothPlayersTimeoutResult {
+    endedReason: Bo3SetEndedReason.BothPlayersLobbyTimeout;
+}
+
+export interface IBo3WonGamesResult {
+    endedReason: Bo3SetEndedReason.WonTwoGames;
+}
+
+export type IBo3SetEndResult = IBo3ConcedeResult | IBo3OnePlayerTimeoutResult | IBo3BothPlayersTimeoutResult | IBo3WonGamesResult;

@@ -10,7 +10,7 @@ import { useGame } from '../_contexts/Game.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
-import { GamesToWinMode, MatchmakingType } from '@/app/_constants/constants';
+import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 import { BackgroundsDarkenBox } from '../_theme/theme-helper';
 import { Play } from 'next/font/google';
@@ -74,8 +74,8 @@ const GameBoard = () => {
     const isBo3Mode = winHistory?.gamesToWinMode === GamesToWinMode.BestOfThree;
     const currentGameNumber = winHistory?.currentGameNumber || 1;
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
-    const setConcededByPlayerId = winHistory?.setConcededByPlayerId || null;
-    const isBo3SetComplete = isBo3Mode && (Object.values(winsPerPlayer).some((wins) => wins >= 2) || !!setConcededByPlayerId);
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
+    const isBo3SetComplete = isBo3Mode && !!setEndResult;
     
     const gameEndedTitle = isBo3Mode 
         ? (isBo3SetComplete ? 'Best-of-Three Set Ended' : `Game ${currentGameNumber} ended`)

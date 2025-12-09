@@ -15,7 +15,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
-import { MatchmakingType, RematchMode } from '@/app/_constants/constants';
+import { MatchmakingType, RematchMode, Bo3SetEndedReason, IBo3SetEndResult } from '@/app/_constants/constants';
 
 interface ILobbyConcededPopupProps {
     gameType: MatchmakingType;
@@ -30,7 +30,7 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
     // Bo3 state from lobbyState
     const winHistory = lobbyState?.winHistory || null;
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
-    const setConcededByPlayerId = winHistory?.setConcededByPlayerId || null;
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
 
     // Rematch request state
     const rematchRequest = lobbyState?.rematchRequest || null;
@@ -38,19 +38,21 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
 
     // Get display name for the player who conceded
     const getConcedePlayerName = (): string => {
-        if (!setConcededByPlayerId || !lobbyState?.users) return 'A player';
+        if (!setEndResult || setEndResult.endedReason !== Bo3SetEndedReason.Concede || !lobbyState?.users) return 'A player';
+        
+        const concedingPlayerId = setEndResult.concedingPlayerId;
         
         if (isSpectator) {
             // For spectators, show "Player 1" or "Player 2"
-            const playerIndex = lobbyState.users.findIndex((u: ILobbyUserProps) => u.id === setConcededByPlayerId);
+            const playerIndex = lobbyState.users.findIndex((u: ILobbyUserProps) => u.id === concedingPlayerId);
             return `Player ${playerIndex + 1}`;
         }
         
         // For participants
-        if (setConcededByPlayerId === connectedPlayer) {
+        if (concedingPlayerId === connectedPlayer) {
             return 'You';
         }
-        const concedingUser = lobbyState.users.find((u: ILobbyUserProps) => u.id === setConcededByPlayerId);
+        const concedingUser = lobbyState.users.find((u: ILobbyUserProps) => u.id === concedingPlayerId);
         return concedingUser?.username || 'Your opponent';
     };
 
