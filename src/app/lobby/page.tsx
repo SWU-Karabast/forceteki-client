@@ -21,7 +21,13 @@ const Lobby = () => {
     const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
     const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
-    const showSetEndedPopup = isBo3Mode && !!setEndResult;
+    // Show popup for concede, won games, or any timeout scenario
+    const showSetEndedPopup = isBo3Mode && (
+        setEndResult?.endedReason === Bo3SetEndedReason.Concede ||
+        setEndResult?.endedReason === Bo3SetEndedReason.WonTwoGames ||
+        setEndResult?.endedReason === Bo3SetEndedReason.OnePlayerLobbyTimeout ||
+        setEndResult?.endedReason === Bo3SetEndedReason.BothPlayersLobbyTimeout
+    );
     const gameType = lobbyState?.gameType || MatchmakingType.PrivateLobby;
 
     useEffect(() => {

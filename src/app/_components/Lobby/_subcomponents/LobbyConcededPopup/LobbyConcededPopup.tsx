@@ -36,25 +36,51 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
     const rematchRequest = lobbyState?.rematchRequest || null;
     const isRequestInitiator = rematchRequest && rematchRequest.initiator === connectedPlayer;
 
-    // Get display name for the player who conceded
-    const getConcedePlayerName = (): string => {
-        if (!setEndResult || setEndResult.endedReason !== Bo3SetEndedReason.Concede || !lobbyState?.users) return 'A player';
-        
-        const concedingPlayerId = setEndResult.concedingPlayerId;
-        
-        if (isSpectator) {
-            // For spectators, show "Player 1" or "Player 2"
-            const playerIndex = lobbyState.users.findIndex((u: ILobbyUserProps) => u.id === concedingPlayerId);
-            return `Player ${playerIndex + 1}`;
+    // Requeue is disabled if current player timed out
+    const requeueDisabled = 
+        setEndResult?.endedReason === Bo3SetEndedReason.BothPlayersLobbyTimeout ||
+        (setEndResult?.endedReason === Bo3SetEndedReason.OnePlayerLobbyTimeout && 
+            setEndResult.timeoutPlayerId === connectedPlayer);
+
+    // End result description
+    const users = lobbyState?.users;
+    let endResultDescription = '';
+    if (setEndResult && users) {
+        switch (setEndResult.endedReason) {
+            case Bo3SetEndedReason.Concede: {
+                const concedingPlayerId = setEndResult.concedingPlayerId;
+                if (isSpectator) {
+                    const playerIndex = users.findIndex((u: ILobbyUserProps) => u.id === concedingPlayerId);
+                    endResultDescription = `Player ${playerIndex + 1} conceded`;
+                } else if (concedingPlayerId === connectedPlayer) {
+                    endResultDescription = 'You conceded';
+                } else {
+                    const concedingUser = users.find((u: ILobbyUserProps) => u.id === concedingPlayerId);
+                    endResultDescription = `${concedingUser?.username || 'Your opponent'} conceded`;
+                }
+                break;
+            }
+            case Bo3SetEndedReason.OnePlayerLobbyTimeout: {
+                const timeoutPlayerId = setEndResult.timeoutPlayerId;
+                if (isSpectator) {
+                    const playerIndex = users.findIndex((u: ILobbyUserProps) => u.id === timeoutPlayerId);
+                    endResultDescription = `Player ${playerIndex + 1} timed out`;
+                } else if (timeoutPlayerId === connectedPlayer) {
+                    endResultDescription = 'You timed out';
+                } else {
+                    const timeoutUser = users.find((u: ILobbyUserProps) => u.id === timeoutPlayerId);
+                    endResultDescription = `${timeoutUser?.username || 'Your opponent'} timed out`;
+                }
+                break;
+            }
+            case Bo3SetEndedReason.BothPlayersLobbyTimeout:
+                endResultDescription = 'Both players timed out';
+                break;
+            case Bo3SetEndedReason.WonTwoGames:
+                endResultDescription = 'Set completed';
+                break;
         }
-        
-        // For participants
-        if (concedingPlayerId === connectedPlayer) {
-            return 'You';
-        }
-        const concedingUser = lobbyState.users.find((u: ILobbyUserProps) => u.id === concedingPlayerId);
-        return concedingUser?.username || 'Your opponent';
-    };
+    }
 
     // ------------------------ Button Handlers ------------------------//
 
@@ -80,9 +106,12 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
 
     // --- Determine Button State & Text ---
 
-    // For Rematch Bo3:
+    // For Rematch Bo3: disabled if any timeout occurred
+    const isTimeoutResult = setEndResult?.endedReason === Bo3SetEndedReason.OnePlayerLobbyTimeout ||
+        setEndResult?.endedReason === Bo3SetEndedReason.BothPlayersLobbyTimeout;
+
     let newBo3ButtonText = 'Rematch Bo3';
-    let newBo3ButtonDisabled = false;
+    let newBo3ButtonDisabled = isTimeoutResult; // Disable if timeout
     if (rematchRequest) {
         if (rematchRequest.mode !== RematchMode.NewBo3) {
             newBo3ButtonDisabled = true;
@@ -167,68 +196,72 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
                     Best-of-Three Ended
                 </Typography>
 
-                {/* Concede Notice */}
+                {/* End Result Notice */}
                 <Typography sx={styles.concedeNotice}>
-                    {getConcedePlayerName()} conceded
+                    {endResultDescription}
                 </Typography>
 
-                <Divider sx={{ borderColor: '#444', mb: 2 }} />
+                {/* Score Table - hide if both players timed out */}
+                {setEndResult?.endedReason !== Bo3SetEndedReason.BothPlayersLobbyTimeout && (
+                    <>
+                        <Divider sx={{ borderColor: '#444', mb: 2 }} />
 
-                {/* Score Table */}
-                <Typography sx={styles.sectionTitle}>Final Score</Typography>
-                <TableContainer>
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell sx={{ color: 'white', borderBottom: '1px solid #444' }}>
-                                    Player
-                                </TableCell>
-                                <TableCell align="center" sx={{ color: 'white', borderBottom: '1px solid #444' }}>
-                                    Wins
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {lobbyState?.users && lobbyState.users
-                                .slice()
-                                .sort((a: ILobbyUserProps, b: ILobbyUserProps) => {
-                                    // Sort so that connected player comes first
-                                    if (a.id === connectedPlayer) return -1;
-                                    if (b.id === connectedPlayer) return 1;
-                                    return 0;
-                                })
-                                .map((user: ILobbyUserProps) => {
-                                    const wins = winsPerPlayer[user.id] || 0;
-                                    const isCurrentPlayer = user.id === connectedPlayer;
-                                    const displayName = isSpectator 
-                                        ? `Player ${lobbyState.users.findIndex((u: ILobbyUserProps) => u.id === user.id) + 1}`
-                                        : user.username;
-                                    return (
-                                        <TableRow key={user.id}>
-                                            <TableCell
-                                                sx={{
-                                                    color: 'white',
-                                                    fontWeight: 'bold',
-                                                    borderBottom: '1px solid #333',
-                                                }}
-                                            >
-                                                {displayName}{!isSpectator && isCurrentPlayer && ' (You)'}
-                                            </TableCell>
-                                            <TableCell
-                                                align="center"
-                                                sx={{
-                                                    color: 'white',
-                                                    borderBottom: '1px solid #333',
-                                                }}
-                                            >
-                                                {wins}
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                        <Typography sx={styles.sectionTitle}>Final Score</Typography>
+                        <TableContainer>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell sx={{ color: 'white', borderBottom: '1px solid #444' }}>
+                                            Player
+                                        </TableCell>
+                                        <TableCell align="center" sx={{ color: 'white', borderBottom: '1px solid #444' }}>
+                                            Wins
+                                        </TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {lobbyState?.users && lobbyState.users
+                                        .slice()
+                                        .sort((a: ILobbyUserProps, b: ILobbyUserProps) => {
+                                            // Sort so that connected player comes first
+                                            if (a.id === connectedPlayer) return -1;
+                                            if (b.id === connectedPlayer) return 1;
+                                            return 0;
+                                        })
+                                        .map((user: ILobbyUserProps) => {
+                                            const wins = winsPerPlayer[user.id] || 0;
+                                            const isCurrentPlayer = user.id === connectedPlayer;
+                                            const displayName = isSpectator 
+                                                ? `Player ${lobbyState.users.findIndex((u: ILobbyUserProps) => u.id === user.id) + 1}`
+                                                : user.username;
+                                            return (
+                                                <TableRow key={user.id}>
+                                                    <TableCell
+                                                        sx={{
+                                                            color: 'white',
+                                                            fontWeight: 'bold',
+                                                            borderBottom: '1px solid #333',
+                                                        }}
+                                                    >
+                                                        {displayName}{!isSpectator && isCurrentPlayer && ' (You)'}
+                                                    </TableCell>
+                                                    <TableCell
+                                                        align="center"
+                                                        sx={{
+                                                            color: 'white',
+                                                            borderBottom: '1px solid #333',
+                                                        }}
+                                                    >
+                                                        {wins}
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </>
+                )}
 
                 <Divider sx={{ borderColor: '#444', mt: 2, mb: 2 }} />
 
@@ -273,9 +306,12 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
                                 variant={'standard'}
                                 text={'Requeue'}
                                 buttonFnc={handleRequeue}
+                                disabled={requeueDisabled}
                             />
                             <Typography sx={styles.buttonDescription}>
-                                Reenter the queue for a new opponent.
+                                {requeueDisabled 
+                                    ? 'Requeue unavailable due to timeout.'
+                                    : 'Reenter the queue for a new opponent.'}
                             </Typography>
                         </Box>
                     )}
