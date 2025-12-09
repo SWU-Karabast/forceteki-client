@@ -209,6 +209,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
 
+        if (status === 'authenticated' && !session?.jwtToken){
+            return;
+        }
+        if (user?.authenticated && !session?.jwtToken){
+            return;
+        }
+
         const lobbyId = searchParams.get('lobbyId');
         const connectedPlayerId = user?.id || anonymousUserId || '';
         if (!connectedPlayerId) return;
