@@ -10,7 +10,6 @@ import React, {
     useRef,
 } from 'react';
 import io, { Socket } from 'socket.io-client';
-import parser from 'socket.io-json-parser';
 import { useUser } from './User.context';
 import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
@@ -206,6 +205,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         if (status === 'loading') {
             return;
         }
+        if (status === 'authenticated' && !session?.jwtToken){
+            return;
+        }
+
+        if (status === 'authenticated' && !session?.jwtToken){
+            return;
+        }
+        if (user?.authenticated && !session?.jwtToken){
+            return;
+        }
+
         const lobbyId = searchParams.get('lobbyId');
         const connectedPlayerId = user?.id || anonymousUserId || '';
         if (!connectedPlayerId) return;
@@ -217,7 +227,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const token = session?.jwtToken;
         const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
-            parser,
             query: {
                 user: JSON.stringify(user ? user : { username: 'anonymous '+anonymousUserId?.substring(0,6), id: anonymousUserId }),
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null }),
@@ -293,7 +302,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => {
             newSocket?.disconnect();
         };
-    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups, status]);
+    }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups, status, session?.jwtToken]);
 
     const sendMessage = (message: string, args: any[] = []) => {
         socket?.emit(message, ...args);
