@@ -205,14 +205,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         if (status === 'loading') {
             return;
         }
-        if (status === 'authenticated' && !session?.jwtToken){
-            return;
-        }
 
-        if (status === 'authenticated' && !session?.jwtToken){
-            return;
-        }
-        if (user?.authenticated && !session?.jwtToken){
+        if (
+            process.env.NODE_ENV !== 'development' &&
+            (status === 'authenticated' || user?.authenticated) && !session?.jwtToken
+        ){
             return;
         }
 
