@@ -44,7 +44,8 @@ const HomePagePlayMode: React.FC = () => {
         deckLink,
         setDeckLink,
         savedDecks,
-        fetchDecks
+        fetchDecks,
+        isBo3Allowed,
     } = useDeckManagement();
 
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
@@ -247,6 +248,7 @@ const HomePagePlayMode: React.FC = () => {
                                 clearErrors={clearErrorsFunc}
                                 setIsJsonDeck={setIsJsonDeck}
                                 setModalOpen={setModalOpen}
+                                isBo3Allowed={isBo3Allowed}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -263,6 +265,7 @@ const HomePagePlayMode: React.FC = () => {
                                 clearErrors={clearErrorsFunc}
                                 setIsJsonDeck={setIsJsonDeck}
                                 setModalOpen={setModalOpen}
+                                isBo3Allowed={isBo3Allowed}
                             />
                         </TabPanel>
                         {showTestGames &&

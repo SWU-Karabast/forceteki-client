@@ -60,6 +60,7 @@ interface IQuickGameFormProps {
     clearErrors: () => void;
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
+    isBo3Allowed: boolean;
 }
 
 const QuickGameForm: React.FC<IQuickGameFormProps> = ({
@@ -74,7 +75,8 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     setError,
     clearErrors,
     setIsJsonDeck,
-    setModalOpen
+    setModalOpen,
+    isBo3Allowed
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -95,6 +97,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     };
 
     const formatOptionKeys = Object.keys(QueueFormatOptions);
+
+    // Helper to check if a format option is Bo3
+    const isBo3Option = (key: string) => 
+        QueueFormatOptions[key]?.gamesToWinMode === GamesToWinMode.BestOfThree;
+
     // Timer ref for clearing the inline text after 5s
 
     useEffect(() => {
@@ -460,11 +467,23 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             handleChangeFormatOption(e.target.value)
                         }
                     >
-                        {formatOptionKeys.map((key) => (
-                            <MenuItem key={key} value={key}>
-                                {QueueFormatLabels[key] || key}
-                            </MenuItem>
-                        ))}
+                        {formatOptionKeys
+                            .slice()
+                            .sort((a, b) => {
+                                const aDisabled = isBo3Option(a) && !isBo3Allowed;
+                                const bDisabled = isBo3Option(b) && !isBo3Allowed;
+                                return Number(aDisabled) - Number(bDisabled);
+                            })
+                            .map((key) => {
+                                const isBo3 = isBo3Option(key);
+                                const disabled = isBo3 && !isBo3Allowed;
+                                return (
+                                    <MenuItem key={key} value={key} disabled={disabled}>
+                                        {QueueFormatLabels[key] || key}
+                                        {disabled && ' (must be logged in)'}
+                                    </MenuItem>
+                                );
+                            })}
                     </StyledTextField>
                 </FormControl>
 

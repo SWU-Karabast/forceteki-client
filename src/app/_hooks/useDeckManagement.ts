@@ -29,6 +29,7 @@ export interface IDeckManagementState {
     savedDecks: StoredDeck[];
     setSavedDecks: (decks: StoredDeck[]) => void;
     fetchDecks: () => Promise<void>;
+    isBo3Allowed: boolean;
 }
 
 export const useDeckManagement = (): IDeckManagementState => {
@@ -67,6 +68,22 @@ export const useDeckManagement = (): IDeckManagementState => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
+
+    // Bo3 is only allowed for logged-in users, but in dev mode we allow it unless explicitly blocked
+    const isDev = process.env.NODE_ENV === 'development';
+    const blockBo3AnonLocal = process.env.NEXT_PUBLIC_BLOCK_BO3_ANON === 'true';
+    const isBo3Allowed = (isDev && !blockBo3AnonLocal) || !!user;
+
+    console.log('isDev:', process.env.NODE_ENV, 'blockBo3AnonLocal:', process.env.NEXT_PUBLIC_BLOCK_BO3_ANON, 'isBo3Allowed:', isBo3Allowed);
+    console.log(process.env);
+
+    // Revert to Bo1 if user logs out while Bo3 is selected (only when restriction applies)
+    useEffect(() => {
+        if (!isBo3Allowed && gamesToWinMode === GamesToWinMode.BestOfThree) {
+            setGamesToWinMode(GamesToWinMode.BestOfOne);
+            localStorage.setItem('gamesToWinMode', GamesToWinMode.BestOfOne);
+        }
+    }, [isBo3Allowed, gamesToWinMode]);
 
     // Sync deck preferences to localStorage
     useEffect(() => {
@@ -145,5 +162,6 @@ export const useDeckManagement = (): IDeckManagementState => {
         savedDecks,
         setSavedDecks,
         fetchDecks,
+        isBo3Allowed,
     };
 };
