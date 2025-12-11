@@ -225,7 +225,8 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                         'error');
                     setModalOpen(true)
                 }else if(response.status === 400) {
-                    if (result.message?.includes('Invalid game format')) {
+                    // TODO: better error handling between BE and FE
+                    if (result.message?.includes('Invalid game format') || result.message?.includes('You must be logged in')) {
                         setError(null,result.message,'Join Queue Error','error');
                     } else {
                         setError('Couldn\'t import. Deck is invalid.',errors,'Deck Validation Error','error');
