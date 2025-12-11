@@ -71,10 +71,10 @@ export const useDeckManagement = (): IDeckManagementState => {
 
     // Bo3 is only allowed for logged-in users, but in dev mode we allow it unless explicitly blocked
     const isDev = process.env.NODE_ENV === 'development';
-    const blockBo3AnonLocal = process.env.NEXT_PUBLIC_BLOCK_BO3_ANON === 'true';
+    const blockBo3AnonLocal = process.env.NEXT_PUBLIC_BLOCK_BO3_ANON_LOCAL === 'true';
     const isBo3Allowed = (isDev && !blockBo3AnonLocal) || !!user;
 
-    console.log('isDev:', process.env.NODE_ENV, 'blockBo3AnonLocal:', process.env.NEXT_PUBLIC_BLOCK_BO3_ANON, 'isBo3Allowed:', isBo3Allowed);
+    console.log('isDev:', process.env.NODE_ENV, 'blockBo3AnonLocal:', process.env.NEXT_PUBLIC_BLOCK_BO3_ANON_LOCAL, 'isBo3Allowed:', isBo3Allowed);
     console.log(process.env);
 
     // Revert to Bo1 if user logs out while Bo3 is selected (only when restriction applies)
