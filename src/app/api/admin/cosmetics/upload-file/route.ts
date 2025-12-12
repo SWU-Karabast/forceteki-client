@@ -68,7 +68,7 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
         // Check if cosmetic with this ID already exists
         try {
             const existingCosmetics = await ServerApiService.getCosmeticsAsync();
-            const existingCosmetic = existingCosmetics.find(c => c.id === cosmeticId);
+            const existingCosmetic = existingCosmetics.cosmetics.find(c => c.id === cosmeticId);
 
             if (existingCosmetic) {
                 return NextResponse.json(

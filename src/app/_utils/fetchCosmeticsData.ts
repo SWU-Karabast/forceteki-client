@@ -7,10 +7,10 @@ export const fetchCosmeticsDataAsync = async (): Promise<IRegisteredCosmetics> =
         const cosmeticsFromServer = await ServerApiService.getCosmeticsAsync();
 
         // If we got cosmetics from server, organize by type
-        if (cosmeticsFromServer && cosmeticsFromServer.length > 0) {
+        if (cosmeticsFromServer.cosmetics && cosmeticsFromServer.cosmetics.length > 0) {
             const cosmetics: IRegisteredCosmetics = {
-                cardbacks: cosmeticsFromServer.filter(item => item.type === 'cardback'),
-                backgrounds: cosmeticsFromServer.filter(item => item.type === 'background'),
+                cardbacks: cosmeticsFromServer.cosmetics.filter(item => item.type === 'cardback'),
+                backgrounds: cosmeticsFromServer.cosmetics.filter(item => item.type === 'background'),
                 // playmats: cosmeticsFromServer.filter(item => item.type === 'playmat')
             };
 

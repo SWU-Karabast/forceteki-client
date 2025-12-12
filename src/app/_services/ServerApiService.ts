@@ -34,14 +34,18 @@ export class ServerApiService {
     }
 
     // Cosmetics API methods
-    public static async getCosmeticsAsync(): Promise<IRegisteredCosmeticOption[]> {
+    public static async getCosmeticsAsync(): Promise<{ cosmetics: IRegisteredCosmeticOption[], isContributor: boolean }> {
         const response = await this.fetchWithErrorHandling<{
             success: boolean;
             cosmetics: IRegisteredCosmeticOption[];
             count: number;
+            isContributor: boolean;
         }>(`${this.baseUrl}/api/cosmetics`);
 
-        return response.cosmetics;
+        return {
+            cosmetics: response.cosmetics,
+            isContributor: response.isContributor
+        };
     }
 
     public static async saveCosmeticAsync(cosmetic: IRegisteredCosmeticOption, cookies?: string): Promise<IRegisteredCosmeticOption> {
