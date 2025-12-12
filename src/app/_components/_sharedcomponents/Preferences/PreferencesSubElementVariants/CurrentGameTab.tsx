@@ -11,7 +11,7 @@ import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_su
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
-import { GamesToWinMode, Bo3SetEndedReason, IBo3SetEndResult } from '@/app/_constants/constants';
+import { GamesToWinMode, Bo3SetEndedReason, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 
 enum PhaseName {
     Action = 'action',
@@ -28,7 +28,7 @@ function CurrentGameTab() {
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
-    const isPrivateLobby = lobbyState?.gameType === 'Private';
+    const isPrivateLobby = lobbyState?.gameType === MatchmakingType.PrivateLobby;
 
     // Bo3 state from lobbyState
     const winHistory = lobbyState?.winHistory || null;

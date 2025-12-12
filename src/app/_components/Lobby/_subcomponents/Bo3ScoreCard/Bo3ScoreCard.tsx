@@ -3,7 +3,8 @@ import { Card, CardContent, Typography, Box, Divider, Table, TableBody, TableCel
 import { useGame } from '@/app/_contexts/Game.context';
 import { IBo3ScoreCardProps, ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
-import { GamesToWinMode } from '@/app/_constants/constants';
+import { GamesToWinMode, IBo3SetEndResult } from '@/app/_constants/constants';
+import { scoreTableStyles, sortPlayersConnectedFirst } from '@/app/_components/_sharedcomponents/Bo3/Bo3ScoreTable.styles';
 
 const Bo3ScoreCard: React.FC<IBo3ScoreCardProps> = ({
     readyStatus,
@@ -18,11 +19,19 @@ const Bo3ScoreCard: React.FC<IBo3ScoreCardProps> = ({
     const winHistory = lobbyState?.winHistory || null;
     const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
+    const playerNames: Record<string, string> = winHistory?.playerNames || {};
     const currentGameNumber = winHistory?.currentGameNumber || 1;
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
 
-    // Determine if the set is complete
+    // Determine if the set is complete - use setEndResult if available, otherwise fallback to wins check
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
-    const isBo3SetComplete = isBo3Mode && Object.values(winsPerPlayer).some((wins) => wins >= 2);
+    const isBo3SetComplete = isBo3Mode && (setEndResult !== null || Object.values(winsPerPlayer).some((wins) => wins >= 2));
+
+    // Helper to get player name with fallback to playerNames from winHistory
+    const getPlayerName = (playerId: string): string => {
+        const user = lobbyState?.users?.find((u: ILobbyUserProps) => u.id === playerId);
+        return user?.username || playerNames[playerId] || 'Opponent';
+    };
 
     // Get current deck name for display
     const currentDeckName = connectedUser?.deck?.name || null;
@@ -60,6 +69,22 @@ const Bo3ScoreCard: React.FC<IBo3ScoreCardProps> = ({
             color: 'white',
             fontWeight: 'bold',
         },
+        waitingContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        waitingText: {
+            marginTop: '6px',
+        },
+        divider: {
+            mt: 1,
+            mb: 1,
+            borderColor: '#666',
+        },
+        deckContainer: {
+            mb: 2,
+        },
     };
 
     return (
@@ -67,8 +92,8 @@ const Bo3ScoreCard: React.FC<IBo3ScoreCardProps> = ({
             {!opponentUser ? (
                 // If opponent is null, show waiting message
                 <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Typography variant="h6" sx={{ marginTop: '6px' }}>
+                    <Box sx={styles.waitingContainer}>
+                        <Typography variant="h6" sx={styles.waitingText}>
                             Waiting for opponent to rejoin...
                         </Typography>
                     </Box>
@@ -87,11 +112,11 @@ const Bo3ScoreCard: React.FC<IBo3ScoreCardProps> = ({
                         hasDeck={!!(connectedUser && connectedUser.deck)}
                     />
 
-                    <Divider sx={{ mt: 1, mb: 1, borderColor: '#666' }} />
+                    <Divider sx={styles.divider} />
 
                     {/* Current deck display (read-only) */}
                     {currentDeckName && (
-                        <Box sx={{ mb: 2 }}>
+                        <Box sx={styles.deckContainer}>
                             <Typography sx={styles.deckInfoStyle}>
                                 Your deck: <span style={{ color: 'white', fontWeight: 'bold' }}>{currentDeckName}</span>
                             </Typography>
@@ -100,49 +125,30 @@ const Bo3ScoreCard: React.FC<IBo3ScoreCardProps> = ({
 
                     {/* Bo3 Score Table */}
                     <TableContainer>
-                        <Table size="medium" sx={{ width: '100%' }}>
+                        <Table size="medium" sx={scoreTableStyles.tableFullWidth}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ color: 'white', borderBottom: '1px solid #444', fontWeight: 'normal', fontSize: '1rem' }}>
+                                    <TableCell sx={scoreTableStyles.headerCell}>
                                         Player
                                     </TableCell>
-                                    <TableCell align="center" sx={{ color: 'white', borderBottom: '1px solid #444', fontWeight: 'normal', fontSize: '1rem' }}>
+                                    <TableCell align="center" sx={scoreTableStyles.headerCell}>
                                         Wins
                                     </TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {lobbyState?.users && lobbyState.users
-                                    .slice()
-                                    .sort((a: ILobbyUserProps, b: ILobbyUserProps) => {
-                                        // Sort so that connected player comes first
-                                        if (a.id === connectedPlayer) return -1;
-                                        if (b.id === connectedPlayer) return 1;
-                                        return 0;
-                                    })
-                                    .map((user: ILobbyUserProps) => {
-                                        const wins = winsPerPlayer[user.id] || 0;
-                                        const isCurrentPlayer = user.id === connectedPlayer;
+                                {Object.keys(winsPerPlayer)
+                                    .sort(sortPlayersConnectedFirst(connectedPlayer))
+                                    .map((playerId) => {
+                                        const wins = winsPerPlayer[playerId] || 0;
+                                        const isCurrentPlayer = playerId === connectedPlayer;
+                                        const displayName = getPlayerName(playerId);
                                         return (
-                                            <TableRow key={user.id}>
-                                                <TableCell
-                                                    sx={{
-                                                        color: 'white',
-                                                        fontWeight: 'bold',
-                                                        borderBottom: '1px solid #333',
-                                                        fontSize: '1rem',
-                                                    }}
-                                                >
-                                                    {user.username}{isCurrentPlayer && ' (You)'}
+                                            <TableRow key={playerId}>
+                                                <TableCell sx={scoreTableStyles.bodyCell}>
+                                                    {displayName}{isCurrentPlayer && ' (You)'}
                                                 </TableCell>
-                                                <TableCell
-                                                    align="center"
-                                                    sx={{
-                                                        color: 'white',
-                                                        borderBottom: '1px solid #333',
-                                                        fontSize: '1rem',
-                                                    }}
-                                                >
+                                                <TableCell align="center" sx={scoreTableStyles.bodyCellWins}>
                                                     {wins}
                                                 </TableCell>
                                             </TableRow>
@@ -153,7 +159,7 @@ const Bo3ScoreCard: React.FC<IBo3ScoreCardProps> = ({
                     </TableContainer>
 
                     {isBo3SetComplete && (
-                        <Typography sx={{ color: '#ff9800', mt: '15px' }}>
+                        <Typography sx={scoreTableStyles.setCompleteNotice}>
                             Set complete! {Object.entries(winsPerPlayer).find(([, wins]) => wins >= 2)?.[0] === connectedPlayer ? 'You won the set!' : 'Your opponent won the set.'}
                         </Typography>
                     )}

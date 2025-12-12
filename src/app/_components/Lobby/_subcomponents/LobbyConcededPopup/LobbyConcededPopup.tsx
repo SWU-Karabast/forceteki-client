@@ -2,6 +2,7 @@ import React from 'react';
 import {
     Box,
     Card,
+    CardActions,
     Typography,
     Divider,
     Table,
@@ -16,6 +17,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 import { MatchmakingType, RematchMode, Bo3SetEndedReason, IBo3SetEndResult } from '@/app/_constants/constants';
+import { scoreTableStyles, sortPlayersConnectedFirst } from '@/app/_components/_sharedcomponents/Bo3/Bo3ScoreTable.styles';
 
 interface ILobbyConcededPopupProps {
     gameType: MatchmakingType;
@@ -179,6 +181,8 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
         buttonContainer: {
             display: 'flex',
             flexDirection: 'column',
+            alignItems: 'flex-start',
+            justifyContent: 'flex-start',
             gap: '12px',
             mt: 2,
         },
@@ -190,6 +194,15 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
         buttonDescription: {
             color: '#878787',
             fontSize: '0.85rem',
+        },
+        sectionDivider: {
+            borderColor: '#444',
+            mb: 2,
+        },
+        actionsDivider: {
+            borderColor: '#444',
+            mt: 2,
+            mb: 2,
         },
     };
 
@@ -209,29 +222,24 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
                 {/* Score Table - hide if both players timed out */}
                 {setEndResult?.endedReason !== Bo3SetEndedReason.BothPlayersLobbyTimeout && (
                     <>
-                        <Divider sx={{ borderColor: '#444', mb: 2 }} />
+                        <Divider sx={styles.sectionDivider} />
 
                         <Typography sx={styles.sectionTitle}>Final Score</Typography>
                         <TableContainer>
                             <Table size="small">
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell sx={{ color: 'white', borderBottom: '1px solid #444' }}>
+                                        <TableCell sx={scoreTableStyles.headerCell}>
                                             Player
                                         </TableCell>
-                                        <TableCell align="center" sx={{ color: 'white', borderBottom: '1px solid #444' }}>
+                                        <TableCell align="center" sx={scoreTableStyles.headerCell}>
                                             Wins
                                         </TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {Object.keys(winsPerPlayer)
-                                        .sort((a, b) => {
-                                            // Sort so that connected player comes first
-                                            if (a === connectedPlayer) return -1;
-                                            if (b === connectedPlayer) return 1;
-                                            return 0;
-                                        })
+                                        .sort(sortPlayersConnectedFirst(connectedPlayer))
                                         .map((playerId) => {
                                             const wins = winsPerPlayer[playerId] || 0;
                                             const isCurrentPlayer = playerId === connectedPlayer;
@@ -245,22 +253,10 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
                                             }
                                             return (
                                                 <TableRow key={playerId}>
-                                                    <TableCell
-                                                        sx={{
-                                                            color: 'white',
-                                                            fontWeight: 'bold',
-                                                            borderBottom: '1px solid #333',
-                                                        }}
-                                                    >
+                                                    <TableCell sx={scoreTableStyles.bodyCell}>
                                                         {displayName}{!isSpectator && isCurrentPlayer && ' (You)'}
                                                     </TableCell>
-                                                    <TableCell
-                                                        align="center"
-                                                        sx={{
-                                                            color: 'white',
-                                                            borderBottom: '1px solid #333',
-                                                        }}
-                                                    >
+                                                    <TableCell align="center" sx={scoreTableStyles.bodyCellWins}>
                                                         {wins}
                                                     </TableCell>
                                                 </TableRow>
@@ -272,11 +268,11 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
                     </>
                 )}
 
-                <Divider sx={{ borderColor: '#444', mt: 2, mb: 2 }} />
+                <Divider sx={styles.actionsDivider} />
 
                 {/* Action Buttons */}
                 <Typography sx={styles.sectionTitle}>Actions</Typography>
-                <Box sx={styles.buttonContainer}>
+                <CardActions sx={styles.buttonContainer}>
                     {/* Return Home - always shown */}
                     <Box sx={styles.buttonRow}>
                         <PreferenceButton
@@ -324,7 +320,7 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
                             </Typography>
                         </Box>
                     )}
-                </Box>
+                </CardActions>
             </Card>
         </Box>
     );

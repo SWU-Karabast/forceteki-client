@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Divider, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { Bo3SetEndedReason, IBo3SetEndResult } from '@/app/_constants/constants';
+import { scoreTableStyles, sortPlayersConnectedFirst } from '@/app/_components/_sharedcomponents/Bo3/Bo3ScoreTable.styles';
 
 interface IBo3ScoreDisplayProps {
     currentGameNumber: number;
@@ -17,7 +18,7 @@ interface IBo3ScoreDisplayProps {
     playerNames?: Record<string, string>;
 }
 
-function Bo3ScoreDisplay({
+const Bo3ScoreDisplay: React.FC<IBo3ScoreDisplayProps> = ({
     currentGameNumber,
     winsPerPlayer,
     players,
@@ -28,7 +29,7 @@ function Bo3ScoreDisplay({
     isSpectator = false,
     getOpponent,
     playerNames = {},
-}: IBo3ScoreDisplayProps) {
+}) => {
     // Get display name for a player (spectator-aware)
     // Falls back to playerNames from winHistory if player is no longer in players list
     const getDisplayName = (playerId: string): string => {
@@ -70,54 +71,35 @@ function Bo3ScoreDisplay({
             <Divider sx={{ mb: '20px' }} />
             {/* Show concede notice above the table */}
             {concedingPlayerId && (
-                <Typography sx={{ color: '#ff9800', fontWeight: 'bold', mb: '15px', fontSize: '1.3rem' }}>
+                <Typography sx={scoreTableStyles.concedeNotice}>
                     {concedingPlayerId === connectedPlayer ? 'You conceded the Bo3 set' : `${getDisplayName(concedingPlayerId)} conceded the Bo3 set`}
                 </Typography>
             )}
             <TableContainer>
-                <Table size="medium" sx={{ maxWidth: '300px' }}>
+                <Table size="medium" sx={scoreTableStyles.table}>
                     <TableHead>
                         <TableRow>
-                            <TableCell sx={{ color: 'white', borderBottom: '1px solid #444', fontWeight: 'normal', fontSize: '1rem' }}>
+                            <TableCell sx={scoreTableStyles.headerCell}>
                                 Player
                             </TableCell>
-                            <TableCell align="center" sx={{ color: 'white', borderBottom: '1px solid #444', fontWeight: 'normal', fontSize: '1rem' }}>
+                            <TableCell align="center" sx={scoreTableStyles.headerCell}>
                                 Wins
                             </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {Object.keys(winsPerPlayer)
-                            .sort((a, b) => {
-                                // Sort so that connected player comes first
-                                if (a === connectedPlayer) return -1;
-                                if (b === connectedPlayer) return 1;
-                                return 0;
-                            })
+                            .sort(sortPlayersConnectedFirst(connectedPlayer))
                             .map((playerId) => {
                                 const displayName = getDisplayName(playerId);
                                 const wins = winsPerPlayer[playerId] || 0;
                                 const isCurrentPlayer = playerId === connectedPlayer;
                                 return (
                                     <TableRow key={playerId}>
-                                        <TableCell
-                                            sx={{
-                                                color: 'white',
-                                                fontWeight: 'bold',
-                                                borderBottom: '1px solid #333',
-                                                fontSize: '1rem',
-                                            }}
-                                        >
+                                        <TableCell sx={scoreTableStyles.bodyCell}>
                                             {displayName}{isCurrentPlayer && ' (You)'}
                                         </TableCell>
-                                        <TableCell
-                                            align="center"
-                                            sx={{
-                                                color: 'white',
-                                                borderBottom: '1px solid #333',
-                                                fontSize: '1rem',
-                                            }}
-                                        >
+                                        <TableCell align="center" sx={scoreTableStyles.bodyCellWins}>
                                             {wins}
                                         </TableCell>
                                     </TableRow>
@@ -127,7 +109,7 @@ function Bo3ScoreDisplay({
                 </Table>
             </TableContainer>
             {isBo3SetComplete && (
-                <Typography sx={{ ...styles.typeographyStyle, color: '#ff9800', mt: '15px', ml: 0 }}>
+                <Typography sx={{ ...styles.typeographyStyle, ...scoreTableStyles.setCompleteNotice, ml: 0 }}>
                     Set complete! {concedingPlayerId
                         ? (concedingPlayerId === connectedPlayer ? 'You conceded the set.' : 'Your opponent conceded the set.')
                         : (Object.entries(winsPerPlayer).find(([, wins]) => wins >= 2)?.[0] === connectedPlayer ? 'You won the set!' : 'Your opponent won the set.')}
@@ -135,6 +117,6 @@ function Bo3ScoreDisplay({
             )}
         </Box>
     );
-}
+};
 
 export default Bo3ScoreDisplay;

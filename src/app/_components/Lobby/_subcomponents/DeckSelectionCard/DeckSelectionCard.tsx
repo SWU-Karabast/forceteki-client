@@ -5,8 +5,16 @@ import {
     Typography,
     TextField,
     Button,
-    Box, Link, Tooltip, MenuItem, Checkbox, FormControlLabel, Divider,
-    FormControl, Radio, RadioGroup
+    Box,
+    Link,
+    Tooltip,
+    MenuItem,
+    Checkbox,
+    FormControlLabel,
+    Divider,
+    FormControl,
+    Radio,
+    RadioGroup,
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
