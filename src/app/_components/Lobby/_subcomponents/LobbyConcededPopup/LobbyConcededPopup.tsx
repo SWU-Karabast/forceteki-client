@@ -30,7 +30,9 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
     // Bo3 state from lobbyState
     const winHistory = lobbyState?.winHistory || null;
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
+    const playerNames: Record<string, string> = winHistory?.playerNames || {};
     const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
+    const users = lobbyState?.users;
 
     // Rematch request state
     const rematchRequest = lobbyState?.rematchRequest || null;
@@ -42,34 +44,37 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
         (setEndResult?.endedReason === Bo3SetEndedReason.OnePlayerLobbyTimeout && 
             setEndResult.timeoutPlayerId === connectedPlayer);
 
+    // Helper to get player name with fallback to playerNames from winHistory
+    const getPlayerName = (playerId: string): string => {
+        const user = users?.find((u: ILobbyUserProps) => u.id === playerId);
+        return user?.username || playerNames[playerId] || 'Your opponent';
+    };
+
     // End result description
-    const users = lobbyState?.users;
     let endResultDescription = '';
-    if (setEndResult && users) {
+    if (setEndResult) {
         switch (setEndResult.endedReason) {
             case Bo3SetEndedReason.Concede: {
                 const concedingPlayerId = setEndResult.concedingPlayerId;
                 if (isSpectator) {
-                    const playerIndex = users.findIndex((u: ILobbyUserProps) => u.id === concedingPlayerId);
-                    endResultDescription = `Player ${playerIndex + 1} conceded`;
+                    const playerIndex = users?.findIndex((u: ILobbyUserProps) => u.id === concedingPlayerId) ?? -1;
+                    endResultDescription = playerIndex >= 0 ? `Player ${playerIndex + 1} conceded` : `${getPlayerName(concedingPlayerId)} conceded`;
                 } else if (concedingPlayerId === connectedPlayer) {
                     endResultDescription = 'You conceded';
                 } else {
-                    const concedingUser = users.find((u: ILobbyUserProps) => u.id === concedingPlayerId);
-                    endResultDescription = `${concedingUser?.username || 'Your opponent'} conceded`;
+                    endResultDescription = `${getPlayerName(concedingPlayerId)} conceded`;
                 }
                 break;
             }
             case Bo3SetEndedReason.OnePlayerLobbyTimeout: {
                 const timeoutPlayerId = setEndResult.timeoutPlayerId;
                 if (isSpectator) {
-                    const playerIndex = users.findIndex((u: ILobbyUserProps) => u.id === timeoutPlayerId);
-                    endResultDescription = `Player ${playerIndex + 1} timed out`;
+                    const playerIndex = users?.findIndex((u: ILobbyUserProps) => u.id === timeoutPlayerId) ?? -1;
+                    endResultDescription = playerIndex >= 0 ? `Player ${playerIndex + 1} timed out` : `${getPlayerName(timeoutPlayerId)} timed out`;
                 } else if (timeoutPlayerId === connectedPlayer) {
                     endResultDescription = 'You timed out';
                 } else {
-                    const timeoutUser = users.find((u: ILobbyUserProps) => u.id === timeoutPlayerId);
-                    endResultDescription = `${timeoutUser?.username || 'Your opponent'} timed out`;
+                    endResultDescription = `${getPlayerName(timeoutPlayerId)} timed out`;
                 }
                 break;
             }
@@ -220,22 +225,26 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {lobbyState?.users && lobbyState.users
-                                        .slice()
-                                        .sort((a: ILobbyUserProps, b: ILobbyUserProps) => {
+                                    {Object.keys(winsPerPlayer)
+                                        .sort((a, b) => {
                                             // Sort so that connected player comes first
-                                            if (a.id === connectedPlayer) return -1;
-                                            if (b.id === connectedPlayer) return 1;
+                                            if (a === connectedPlayer) return -1;
+                                            if (b === connectedPlayer) return 1;
                                             return 0;
                                         })
-                                        .map((user: ILobbyUserProps) => {
-                                            const wins = winsPerPlayer[user.id] || 0;
-                                            const isCurrentPlayer = user.id === connectedPlayer;
-                                            const displayName = isSpectator 
-                                                ? `Player ${lobbyState.users.findIndex((u: ILobbyUserProps) => u.id === user.id) + 1}`
-                                                : user.username;
+                                        .map((playerId) => {
+                                            const wins = winsPerPlayer[playerId] || 0;
+                                            const isCurrentPlayer = playerId === connectedPlayer;
+                                            const user = lobbyState?.users?.find((u: ILobbyUserProps) => u.id === playerId);
+                                            const playerIndex = lobbyState?.users?.findIndex((u: ILobbyUserProps) => u.id === playerId) ?? -1;
+                                            let displayName: string;
+                                            if (isSpectator) {
+                                                displayName = playerIndex >= 0 ? `Player ${playerIndex + 1}` : (playerNames[playerId] || 'Opponent');
+                                            } else {
+                                                displayName = user?.username || playerNames[playerId] || 'Opponent';
+                                            }
                                             return (
-                                                <TableRow key={user.id}>
+                                                <TableRow key={playerId}>
                                                     <TableCell
                                                         sx={{
                                                             color: 'white',

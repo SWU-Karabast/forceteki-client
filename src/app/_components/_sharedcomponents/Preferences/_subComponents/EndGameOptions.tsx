@@ -373,6 +373,7 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
                     setEndResult={setEndResult}
                     isSpectator={isSpectator}
                     getOpponent={getOpponent}
+                    playerNames={winHistory?.playerNames}
                 />
             )}
 

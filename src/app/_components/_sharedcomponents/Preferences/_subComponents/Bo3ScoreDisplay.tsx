@@ -14,6 +14,7 @@ interface IBo3ScoreDisplayProps {
     setEndResult?: IBo3SetEndResult | null;
     isSpectator?: boolean;
     getOpponent?: (playerId: string) => string;
+    playerNames?: Record<string, string>;
 }
 
 function Bo3ScoreDisplay({
@@ -26,10 +27,12 @@ function Bo3ScoreDisplay({
     setEndResult = null,
     isSpectator = false,
     getOpponent,
+    playerNames = {},
 }: IBo3ScoreDisplayProps) {
     // Get display name for a player (spectator-aware)
+    // Falls back to playerNames from winHistory if player is no longer in players list
     const getDisplayName = (playerId: string): string => {
-        const playerName = players[playerId]?.user?.username || playerId;
+        const playerName = players[playerId]?.user?.username || playerNames[playerId] || 'Opponent';
         if (isSpectator && getOpponent) {
             const opponentId = getOpponent(connectedPlayer);
             if (playerId === connectedPlayer) return 'Player 1';
@@ -84,7 +87,7 @@ function Bo3ScoreDisplay({
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {players && Object.keys(players)
+                        {Object.keys(winsPerPlayer)
                             .sort((a, b) => {
                                 // Sort so that connected player comes first
                                 if (a === connectedPlayer) return -1;
@@ -92,7 +95,7 @@ function Bo3ScoreDisplay({
                                 return 0;
                             })
                             .map((playerId) => {
-                                const playerName = players[playerId]?.user?.username || playerId;
+                                const displayName = getDisplayName(playerId);
                                 const wins = winsPerPlayer[playerId] || 0;
                                 const isCurrentPlayer = playerId === connectedPlayer;
                                 return (
@@ -105,7 +108,7 @@ function Bo3ScoreDisplay({
                                                 fontSize: '1rem',
                                             }}
                                         >
-                                            {playerName}{isCurrentPlayer && ' (You)'}
+                                            {displayName}{isCurrentPlayer && ' (You)'}
                                         </TableCell>
                                         <TableCell
                                             align="center"

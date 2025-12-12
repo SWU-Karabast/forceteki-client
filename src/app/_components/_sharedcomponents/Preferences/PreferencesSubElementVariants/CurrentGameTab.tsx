@@ -159,6 +159,7 @@ function CurrentGameTab() {
                     setEndResult={setEndResult}
                     isSpectator={isSpectator}
                     getOpponent={getOpponent}
+                    playerNames={winHistory?.playerNames}
                 />
             )}
             {(isDev || gameState.undoEnabled) && isPrivateLobby && (
