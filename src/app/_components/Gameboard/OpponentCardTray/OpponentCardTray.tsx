@@ -38,7 +38,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const danger = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Danger';
     const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
 
-    const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
     const hasLastPlayedCard = !!gameState.clientUIProperties?.lastPlayedCard
     const lastPlayedCardUrl = hasLastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
 
@@ -143,7 +142,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             alignItems: 'center',
             justifyContent: 'center',
             '&:hover':  hasLastPlayedCard ? {
-                cursor: 'pointer',
                 scale: '1.1',
                 transition: 'all ease-in-out 0.15s',
             } : null,
