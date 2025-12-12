@@ -278,6 +278,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
+            cursor: 'default'
         },
         counterIcon:{
             position: 'absolute',
