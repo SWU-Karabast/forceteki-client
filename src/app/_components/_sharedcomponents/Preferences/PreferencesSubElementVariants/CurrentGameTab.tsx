@@ -7,9 +7,11 @@ import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_subComponents/Bo3ScoreDisplay';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
+import { GamesToWinMode, Bo3SetEndedReason, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 
 enum PhaseName {
     Action = 'action',
@@ -18,7 +20,7 @@ enum PhaseName {
 }
 
 function CurrentGameTab() {
-    const { sendGameMessage, connectedPlayer, gameState, isSpectator, lobbyState } = useGame();
+    const { sendGameMessage, getOpponent, connectedPlayer, gameState, isSpectator, lobbyState } = useGame();
     const isDev = process.env.NODE_ENV === 'development';
     const router = useRouter();
     const currentPlayer = gameState.players[connectedPlayer];
@@ -26,7 +28,21 @@ function CurrentGameTab() {
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
-    const isPrivateLobby = lobbyState?.gameType === 'Private';
+    const isPrivateLobby = lobbyState?.gameType === MatchmakingType.PrivateLobby;
+
+    // Bo3 state from lobbyState
+    const winHistory = lobbyState?.winHistory || null;
+    const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
+    const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
+    const currentGameNumber = winHistory?.currentGameNumber || 1;
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
+
+    // Determine if we're in Bo3 mode and if the set is complete
+    const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
+    const isBo3SetComplete = isBo3Mode && (
+        setEndResult?.endedReason === Bo3SetEndedReason.WonTwoGames ||
+        setEndResult?.endedReason === Bo3SetEndedReason.Concede
+    );
 
     useEffect(() => {
         if(confirmConcede){
@@ -127,10 +143,24 @@ function CurrentGameTab() {
                             sx={{ minWidth: '140px' }}
                         />
                         <Typography sx={styles.typeographyStyle}>
-                            Yield  current game and abandon. This match will count as a loss.
+                            Yield current game. This game will count as a loss.
                         </Typography>
                     </Box>
                 </Box>
+            )}
+            {/* Bo3 Score Section */}
+            {isBo3Mode && gameState?.players && (
+                <Bo3ScoreDisplay
+                    currentGameNumber={currentGameNumber}
+                    winsPerPlayer={winsPerPlayer}
+                    players={gameState.players}
+                    connectedPlayer={connectedPlayer}
+                    isBo3SetComplete={isBo3SetComplete}
+                    setEndResult={setEndResult}
+                    isSpectator={isSpectator}
+                    getOpponent={getOpponent}
+                    playerNames={winHistory?.playerNames}
+                />
             )}
             {(isDev || gameState.undoEnabled) && isPrivateLobby && (
                 <Box sx={styles.functionContainer}>

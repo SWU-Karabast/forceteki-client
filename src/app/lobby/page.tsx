@@ -5,14 +5,30 @@ import { usePathname, useRouter } from 'next/navigation';
 import Players from '../_components/Lobby/Players/Players';
 import Deck from '../_components/Lobby/Deck/Deck';
 import SetUp from '../_components/Lobby/SetUp/SetUp';
+import LobbyConcededPopup from '../_components/Lobby/_subcomponents/LobbyConcededPopup/LobbyConcededPopup';
 import { useGame } from '@/app/_contexts/Game.context';
-import {s3ImageURL} from "@/app/_utils/s3Utils";
+import { s3ImageURL } from '@/app/_utils/s3Utils';
+import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 
 const Lobby = () => {
     const pathname = usePathname();
     const isLobbyView = pathname === '/lobby';
     const { lobbyState } = useGame();
     const router = useRouter();
+
+    // Bo3 set end detection
+    const winHistory = lobbyState?.winHistory || null;
+    const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
+    const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
+    // Show popup for concede, won games, or any timeout scenario
+    const showSetEndedPopup = isBo3Mode && (
+        setEndResult?.endedReason === Bo3SetEndedReason.Concede ||
+        setEndResult?.endedReason === Bo3SetEndedReason.WonTwoGames ||
+        setEndResult?.endedReason === Bo3SetEndedReason.OnePlayerLobbyTimeout ||
+        setEndResult?.endedReason === Bo3SetEndedReason.BothPlayersLobbyTimeout
+    );
+    const gameType = lobbyState?.gameType || MatchmakingType.PrivateLobby;
 
     useEffect(() => {
         if(lobbyState && lobbyState.gameOngoing){
@@ -53,19 +69,22 @@ const Lobby = () => {
     }
 
     return (
-        <Grid container sx={styles.containerStyle} spacing={2}>
-            <Grid size={4} sx={styles.setUpGridStyle}>
-                <SetUp/>
-            </Grid>
-            <Grid container size={8} direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ height: '100%' }}>
-                <Grid size={{ xs: 3, lg: 3 }} sx={styles.playersGridStyle}>
-                    <Players isLobbyView={isLobbyView} />
+        <>
+            {showSetEndedPopup && <LobbyConcededPopup gameType={gameType} />}
+            <Grid container sx={styles.containerStyle} spacing={2}>
+                <Grid size={4} sx={styles.setUpGridStyle}>
+                    <SetUp/>
                 </Grid>
-                <Grid size={{ xs: 9, lg: 9 }} sx={styles.deckGridStyle}>
-                    <Deck />
+                <Grid container size={8} direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ height: '100%' }}>
+                    <Grid size={{ xs: 3, lg: 3 }} sx={styles.playersGridStyle}>
+                        <Players isLobbyView={isLobbyView} />
+                    </Grid>
+                    <Grid size={{ xs: 9, lg: 9 }} sx={styles.deckGridStyle}>
+                        <Deck />
+                    </Grid>
                 </Grid>
             </Grid>
-        </Grid>
+        </>
     );
 };
 
