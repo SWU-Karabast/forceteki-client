@@ -105,9 +105,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const isBo3Option = (key: string) => 
         QueueFormatOptions[key]?.gamesToWinMode === GamesToWinMode.BestOfThree;
 
-    console.log('isBo3Allowed:', isBo3Allowed);
-    console.log('isBo3option', isBo3Option(getCurrentFormatOptionKey()));
-
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
     
