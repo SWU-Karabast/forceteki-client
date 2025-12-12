@@ -96,11 +96,16 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         return DefaultQueueFormatKey;
     };
 
-    const formatOptionKeys = Object.keys(QueueFormatOptions);
-
     // Helper to check if a format option is Bo3
     const isBo3Option = (key: string) => 
         QueueFormatOptions[key]?.gamesToWinMode === GamesToWinMode.BestOfThree;
+
+    // Sort format options so disabled Bo3 options appear at the end
+    const formatOptionKeys = Object.keys(QueueFormatOptions).sort((a, b) => {
+        const aDisabled = isBo3Option(a) && !isBo3Allowed;
+        const bDisabled = isBo3Option(b) && !isBo3Allowed;
+        return Number(aDisabled) - Number(bDisabled);
+    });
 
     // Timer ref for clearing the inline text after 5s
 
@@ -468,23 +473,16 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             handleChangeFormatOption(e.target.value)
                         }
                     >
-                        {formatOptionKeys
-                            .slice()
-                            .sort((a, b) => {
-                                const aDisabled = isBo3Option(a) && !isBo3Allowed;
-                                const bDisabled = isBo3Option(b) && !isBo3Allowed;
-                                return Number(aDisabled) - Number(bDisabled);
-                            })
-                            .map((key) => {
-                                const isBo3 = isBo3Option(key);
-                                const disabled = isBo3 && !isBo3Allowed;
-                                return (
-                                    <MenuItem key={key} value={key} disabled={disabled}>
-                                        {QueueFormatLabels[key] || key}
-                                        {disabled && ' (must be logged in)'}
-                                    </MenuItem>
-                                );
-                            })}
+                        {formatOptionKeys.map((key) => {
+                            const isBo3 = isBo3Option(key);
+                            const disabled = isBo3 && !isBo3Allowed;
+                            return (
+                                <MenuItem key={key} value={key} disabled={disabled}>
+                                    {QueueFormatLabels[key] || key}
+                                    {disabled && ' (must be logged in)'}
+                                </MenuItem>
+                            );
+                        })}
                     </StyledTextField>
                 </FormControl>
 

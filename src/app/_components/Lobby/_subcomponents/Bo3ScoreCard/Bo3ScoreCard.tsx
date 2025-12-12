@@ -33,6 +33,9 @@ const Bo3ScoreCard: React.FC<IBo3ScoreCardProps> = ({
         return user?.username || playerNames[playerId] || 'Opponent';
     };
 
+    // Get sorted player IDs (connected player first)
+    const sortedPlayerIds = Object.keys(winsPerPlayer).sort(sortPlayersConnectedFirst(connectedPlayer));
+
     // Get current deck name for display
     const currentDeckName = connectedUser?.deck?.name || null;
 
@@ -137,23 +140,21 @@ const Bo3ScoreCard: React.FC<IBo3ScoreCardProps> = ({
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {Object.keys(winsPerPlayer)
-                                    .sort(sortPlayersConnectedFirst(connectedPlayer))
-                                    .map((playerId) => {
-                                        const wins = winsPerPlayer[playerId] || 0;
-                                        const isCurrentPlayer = playerId === connectedPlayer;
-                                        const displayName = getPlayerName(playerId);
-                                        return (
-                                            <TableRow key={playerId}>
-                                                <TableCell sx={scoreTableStyles.bodyCell}>
-                                                    {displayName}{isCurrentPlayer && ' (You)'}
-                                                </TableCell>
-                                                <TableCell align="center" sx={scoreTableStyles.bodyCellWins}>
-                                                    {wins}
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
+                                {sortedPlayerIds.map((playerId) => {
+                                    const wins = winsPerPlayer[playerId] || 0;
+                                    const isCurrentPlayer = playerId === connectedPlayer;
+                                    const displayName = getPlayerName(playerId);
+                                    return (
+                                        <TableRow key={playerId}>
+                                            <TableCell sx={scoreTableStyles.bodyCell}>
+                                                {displayName}{isCurrentPlayer && ' (You)'}
+                                            </TableCell>
+                                            <TableCell align="center" sx={scoreTableStyles.bodyCellWins}>
+                                                {wins}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </TableContainer>
