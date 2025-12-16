@@ -42,6 +42,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'swumetastats.com';
             case DeckSource.MySWU:
                 return 'my-swu.com';
+            case DeckSource.SWUIndex:
+                return 'swuindex.com';
             default:
                 return source;
         }
