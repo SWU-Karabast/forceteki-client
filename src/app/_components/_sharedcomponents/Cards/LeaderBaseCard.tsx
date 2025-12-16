@@ -184,7 +184,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            cursor: clickDisabled() ? 'normal' : 'pointer',
+            cursor: clickDisabled() ? 'default' : 'pointer',
             position: 'relative',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
@@ -195,7 +195,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             width: '100%',
             maxHeight: '100%',
             aspectRatio: '1.39',
-            cursor: 'normal',
+            cursor: 'default',
             position: 'relative',
             border: '2px solid #FFFFFF55',
         },
@@ -393,7 +393,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     key={`captured-${capturedCard.uuid}`}
                     sx={{
                         ...styles.capturedCardIcon,
-                        cursor: capturedCard.selectable ? 'pointer' : 'normal',
+                        cursor: capturedCard.selectable ? 'pointer' : 'default',
                     }}
                     onClick={() => subcardClick(capturedCard)}
                     onMouseEnter={handlePreviewOpen}
