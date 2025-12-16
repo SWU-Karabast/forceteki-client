@@ -229,7 +229,7 @@ export async function GET(req: Request) {
             }
         
             deckIdentifier = slug;
-            deckSource = DeckSource.SWUIndex; // ensure this exists in your enum
+            deckSource = DeckSource.SWUIndex;
         
             const apiUrl = `https://swuindex.com/.netlify/functions/deck-json?slug=${encodeURIComponent(slug)}`;
         
