@@ -15,18 +15,23 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
     const { user } = useUser();
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
-    const previousOpponentRef = useRef<ILobbyUserProps | null>(null);
+    // Use undefined as initial value to distinguish "not initialized" from "no opponent (null)"
+    const previousOpponentIdRef = useRef<string | null | undefined>(undefined);
     const { playFoundOpponentSound } = useSoundHandler({ user });
     useEffect(() => {
-        // Check if opponent just joined (was null/undefined, now exists)
-        const hadOpponent = opponentUser?.id === previousOpponentRef.current;
-        if (!hadOpponent && opponentUser && connectedUser?.id === lobbyState.lobbyOwnerId) {
+        const currentOpponentId = opponentUser?.id ?? null;
+        const previousOpponentId = previousOpponentIdRef.current;
+
+        const isInitialized = previousOpponentId !== undefined;
+        const opponentJustJoined = previousOpponentId === null && currentOpponentId !== null;
+
+        if (isInitialized && opponentJustJoined && connectedUser?.id === lobbyState?.lobbyOwnerId) {
             playFoundOpponentSound();
         }
 
         // Update the ref for next render
-        previousOpponentRef.current = opponentUser?.id;
-    }, [opponentUser, playFoundOpponentSound]);
+        previousOpponentIdRef.current = currentOpponentId;
+    }, [opponentUser, playFoundOpponentSound, connectedUser?.id, lobbyState?.lobbyOwnerId]);
 
     // set connectedPlayer
     const playerLeader = connectedUser?.deck?.leader;
