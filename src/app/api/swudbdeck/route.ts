@@ -196,6 +196,55 @@ export async function GET(req: Request) {
                 console.error('My-SWU API error:', response.statusText);
                 throw new Error(`My-SWU API error: ${response.statusText}`);
             }
+        } else if (deckLink.includes('swuindex.com')) {
+            // SWUIndex deck links in the forms:
+            // https://swuindex.com/decks/${slug}
+            // https://swuindex.com/decks/${slug}.json
+            // https://swuindex.com/.netlify/functions/deck-json?slug=${slug}
+        
+            const withoutQuery = deckLink.split('?')[0];
+        
+            let slug = null;
+        
+            // Case 1: /decks/<slug> or /decks/<slug>.json
+            const pathMatch = withoutQuery.match(/\/decks\/([^\/]+?)(?:\.json)?\/?$/);
+            if (pathMatch?.[1]) {
+                slug = pathMatch[1];
+            }
+        
+            // Case 2: /.netlify/functions/deck-json?slug=<slug>
+            if (!slug) {
+                const url = new URL(deckLink);
+                if (url.pathname.includes('/.netlify/functions/deck-json')) {
+                    slug = url.searchParams.get('slug');
+                }
+            }
+        
+            if (!slug) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+        
+            deckIdentifier = slug;
+            deckSource = DeckSource.SWUIndex;
+        
+            const apiUrl = `https://swuindex.com/.netlify/functions/deck-json?slug=${encodeURIComponent(slug)}`;
+        
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return NextResponse.json(
+                        { error: 'Deck not found. Make sure the deck is set to Public on swuindex.com.' },
+                        { status: 403 }
+                    );
+                }
+        
+                console.error('SWUIndex API error:', response.statusText);
+                throw new Error(`SWUIndex API error: ${response.statusText}`);
+            }
         } else {
             console.error('Error: Deckbuilder not supported');
             return NextResponse.json({ error: 'Deckbuilder not supported' }, { status: 400 });
