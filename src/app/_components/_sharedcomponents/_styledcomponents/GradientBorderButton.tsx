@@ -22,7 +22,7 @@ const GradientBorderButton: React.FC<IGradientBorderButtonProps> = ({ fillColor 
                 },
                 '&:disabled': {
                     color: '#666666',
-                    cursor: 'normal',
+                    cursor: 'default',
                 },
                 cursor: 'pointer',
             }}
