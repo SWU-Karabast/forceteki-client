@@ -3,10 +3,19 @@ import { IServerCardData } from '@/app/_components/_sharedcomponents/Cards/CardT
 export interface IPlayersProps {
     isLobbyView?: boolean;
 }
-export interface ISetUpProps {
+
+export interface IDeckSelectionCardProps {
     readyStatus: boolean;
     owner: boolean;
 }
+
+export interface IBo3ScoreCardProps {
+    readyStatus: boolean;
+    owner: boolean;
+}
+
+// Alias for backwards compatibility
+export type ISetUpProps = IDeckSelectionCardProps;
 
 export interface ILobbyDeckData {
     leader: IServerCardData[];

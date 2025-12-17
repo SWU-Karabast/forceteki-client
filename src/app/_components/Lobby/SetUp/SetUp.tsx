@@ -5,10 +5,12 @@ import {
     Box, Divider,
 } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
-import SetUpCard from '@/app/_components/Lobby/_subcomponents/SetUpCard/SetUpCard';
+import DeckSelectionCard from '@/app/_components/Lobby/_subcomponents/DeckSelectionCard/DeckSelectionCard';
+import Bo3ScoreCard from '@/app/_components/Lobby/_subcomponents/Bo3ScoreCard/Bo3ScoreCard';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation'
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
+import { GamesToWinMode } from '@/app/_constants/constants';
 
 const SetUp: React.FC = ({
 }) => {
@@ -17,6 +19,16 @@ const SetUp: React.FC = ({
 
     // find the user
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+    
+    // Bo3 state from lobbyState
+    const winHistory = lobbyState?.winHistory || null;
+    const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
+    const currentGameNumber = winHistory?.currentGameNumber || 1;
+    
+    // Determine if we should show Bo3ScoreCard (Bo3 mode and game 2+)
+    const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
+    const showBo3ScoreCard = isBo3Mode && currentGameNumber > 1;
+    
     // setup chat mechanics
     const [chatMessage, setChatMessage] = useState('');
     
@@ -79,7 +91,17 @@ const SetUp: React.FC = ({
     return (
         <Box sx={styles.boxContainer}>
             <Typography sx={styles.lobbyTextStyle}>KARABAST</Typography>
-            <SetUpCard owner={lobbyState ? lobbyState.lobbyOwnerId === connectedPlayer : false} readyStatus={connectedUser ? connectedUser.ready : false}/>
+            {showBo3ScoreCard ? (
+                <Bo3ScoreCard 
+                    owner={lobbyState ? lobbyState.lobbyOwnerId === connectedPlayer : false} 
+                    readyStatus={connectedUser ? connectedUser.ready : false}
+                />
+            ) : (
+                <DeckSelectionCard 
+                    owner={lobbyState ? lobbyState.lobbyOwnerId === connectedPlayer : false} 
+                    readyStatus={connectedUser ? connectedUser.ready : false}
+                />
+            )}
             <Card sx={styles.mainCardStyle}>
                 <Chat
                     chatHistory={lobbyState ? lobbyState.gameChat?.messages : []}

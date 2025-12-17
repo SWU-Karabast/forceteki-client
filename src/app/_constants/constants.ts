@@ -1,9 +1,9 @@
 import { DeckSource } from '../_utils/fetchDeckData';
 
-export enum MatchType {
-    Custom = 'Custom',
-    Private = 'Private',
-    Quick = 'Quick',
+export enum MatchmakingType {
+    PublicLobby= 'publicLobby',
+    PrivateLobby = 'privateLobby',
+    Quick = 'quick',
 }
 
 export enum SwuGameFormat {
@@ -11,6 +11,40 @@ export enum SwuGameFormat {
     // NextSetPreview = 'nextSetPreview',
     Open = 'open'
 }
+
+export enum GamesToWinMode {
+    BestOfOne = 'bestOfOne',
+    BestOfThree = 'bestOfThree',
+}
+
+export enum RematchMode {
+    Regular = 'regular',
+    Reset = 'reset',
+    Bo1ConvertToBo3 = 'bo1ConvertToBo3',
+    NewBo3 = 'newBo3'
+}
+
+// Combined format + game mode for queue/lobby creation
+export interface IQueueFormat {
+    format: SwuGameFormat;
+    gamesToWinMode: GamesToWinMode;
+}
+
+export const QueueFormatOptions: Record<string, IQueueFormat> = {
+    premierBo1: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfOne },
+    premierBo3: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfThree },
+    openBo1: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfOne },
+    openBo3: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfThree },
+};
+
+export const QueueFormatLabels: Record<string, string> = {
+    premierBo1: 'Premier Best-of-One',
+    premierBo3: 'Premier Best-of-Three',
+    openBo1: 'Open Best-of-One',
+    openBo3: 'Open Best-of-Three',
+};
+
+export const DefaultQueueFormatKey = 'premierBo1';
 
 export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
@@ -70,3 +104,30 @@ export enum QuickUndoAvailableState {
     WaitingForConfirmation = 'waitingForConfirmation',
 }
 
+// Bo3 Set End Result types
+export enum Bo3SetEndedReason {
+    Concede = 'concede',
+    OnePlayerLobbyTimeout = 'onePlayerLobbyTimeout',
+    BothPlayersLobbyTimeout = 'bothPlayersLobbyTimeout',
+    WonTwoGames = 'wonTwoGames',
+}
+
+export interface IBo3ConcedeResult {
+    endedReason: Bo3SetEndedReason.Concede;
+    concedingPlayerId: string;
+}
+
+export interface IBo3OnePlayerTimeoutResult {
+    endedReason: Bo3SetEndedReason.OnePlayerLobbyTimeout;
+    timeoutPlayerId: string;
+}
+
+export interface IBo3BothPlayersTimeoutResult {
+    endedReason: Bo3SetEndedReason.BothPlayersLobbyTimeout;
+}
+
+export interface IBo3WonGamesResult {
+    endedReason: Bo3SetEndedReason.WonTwoGames;
+}
+
+export type IBo3SetEndResult = IBo3ConcedeResult | IBo3OnePlayerTimeoutResult | IBo3BothPlayersTimeoutResult | IBo3WonGamesResult;
