@@ -237,7 +237,7 @@ const DeckPage: React.FC = () => {
                 return styles.swuMetaStatsTag;
             case 'MYSWU':
                 return styles.mySwuTag;
-            case 'SWUIndex':
+            case 'SWUINDEX':
                 return styles.SWUIndexTag;
             default:
                 console.log(`Unknown deck source: ${deckSource}`);
