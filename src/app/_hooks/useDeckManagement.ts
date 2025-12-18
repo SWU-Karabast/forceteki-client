@@ -74,13 +74,11 @@ export const useDeckManagement = (): IDeckManagementState => {
     const blockBo3AnonLocal = process.env.NEXT_PUBLIC_FORCE_BLOCK_BO3_ANON_LOCAL === 'true';
     const isBo3Allowed = (isDev && !blockBo3AnonLocal) || !!user;
 
-    // Revert to Bo1 if user logs out while Bo3 is selected (only when restriction applies)
-    useEffect(() => {
-        if (!isBo3Allowed && gamesToWinMode === GamesToWinMode.BestOfThree) {
-            setGamesToWinMode(GamesToWinMode.BestOfOne);
-            localStorage.setItem('gamesToWinMode', GamesToWinMode.BestOfOne);
-        }
-    }, [isBo3Allowed, gamesToWinMode]);
+    // Return effective gamesToWinMode: if Bo3 is not allowed, return Bo1 without modifying stored value
+    // This preserves the user's preference during login race conditions
+    const effectiveGamesToWinMode = (!isBo3Allowed && gamesToWinMode === GamesToWinMode.BestOfThree)
+        ? GamesToWinMode.BestOfOne
+        : gamesToWinMode;
 
     // Sync deck preferences to localStorage
     useEffect(() => {
@@ -139,7 +137,7 @@ export const useDeckManagement = (): IDeckManagementState => {
         showSavedDecks,
         favoriteDeck,
         format,
-        gamesToWinMode,
+        gamesToWinMode: effectiveGamesToWinMode,
         saveDeck,
     };
 
