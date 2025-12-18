@@ -544,8 +544,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </FormControl>
 
                 {/* Beta Announcement */}
-                <Typography variant="body1" sx={{ color: 'yellow', textAlign: 'center', mb: '1rem' }}>
-                    30-card decks now available in Open format with private lobbies
+                <Typography variant="body1" sx={{ color: 'chartreuse', textAlign: 'center', mb: '1rem' }}>
+                    Best-of-Three format is now available in the dropdown above
                 </Typography>
 
                 {!privateGame && (
