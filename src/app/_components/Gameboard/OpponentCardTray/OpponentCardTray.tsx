@@ -1,5 +1,5 @@
 import React from 'react';
-import { CloseOutlined, SettingsOutlined, AccessAlarm } from '@mui/icons-material';
+import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
 import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import PlayerTimer from '../_subcomponents/OpponentTray/PlayerTimer';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
@@ -166,7 +167,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             width: '16rem',
         },
         timerBox: {
-            display: !warning && !danger ? 'none' : 'block',
+            display: 'block',
             borderRadius: '50%',
             animation: warning ? `${pulseYellowTimer} 3s infinite ease-in-out` : danger ? `${pulseRedTimer} 3s infinite ease-in-out` : 'transparent',
         },
@@ -226,7 +227,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 }}
             >
                 <Box sx={styles.timerBox}>
-                    <AccessAlarm sx={styles.timer}/>
+                    <PlayerTimer />
                 </Box>
                 <Box
                     onMouseEnter={handlePreviewOpen}
