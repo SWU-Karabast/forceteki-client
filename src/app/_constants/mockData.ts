@@ -110,12 +110,17 @@ export const articles: IArticle[] = [
 ];
 
 export const announcement: IAnnouncement = {
-    key:'letsEncryptOutage2025',
-    title: 'Outage in Upstream Service',
+    key:'callForVolunteers01',
+    title: 'Dev Volunteers Needed',
     content:`
-    A backend service that Karabast depends on is currently experiencing an outage that prevents the site from operating normally. We do not yet have an ETA on when it will be back online, but the Karabast dev team is monitoring the situation.<br/><br/> 
+    The Karabast dev team is entirely volunteer-based and we are looking for more help! As the SWU community has grown, so have the needs of the Karabast platform, and some existing volunteers have needed to step back for personal reasons.<br/><br/> 
     
-    Please follow in our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for status updates.`,
+    So, we are seeking additional developers to join our team so that we can efficiently bring <b>new features, bug fixes, and new cards</b> to the community! We are particularly seeking contributors who have any of the following skill sets, but all help is welcomed:<br/><br/>
+    - Senior-level backend experience with JavaScript / TypeScript<br/>
+    - Anyone with design experience, especially related to UI/UX<br/>
+    - Senior- or junior-level frontend experience with React<br/>
+    <br/>
+    If you're interested, please reach out in our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>!`,
     endDate: '2025-12-21', // The date should be year-month-day
-    image:'/Service-Outage.jpg'
+    image:'/karabastdevlogoedited.png'
 }
