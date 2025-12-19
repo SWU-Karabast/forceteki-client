@@ -111,7 +111,7 @@ export const articles: IArticle[] = [
 
 export const announcement: IAnnouncement = {
     key:'letsEncryptOutage2025',
-    title: 'Service Outage',
+    title: 'Outage in Upstream Service',
     content:`
     A backend service that Karabast depends on is currently experiencing an outage that prevents the site from operating normally. We do not yet have an ETA on when it will be back online, but the Karabast dev team is monitoring the situation.<br/><br/> 
     
