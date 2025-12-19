@@ -3,7 +3,9 @@ import CircularProgress, {
 } from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
 import React, { useMemo } from 'react';
+import { Stack } from '@mui/material';
 
 interface PlayerTimerProps extends CircularProgressProps {}
 
@@ -62,27 +64,42 @@ const PlayerTimer: React.FC<PlayerTimerProps> = (props) => {
     }, [turnTime, MAX_TURN_TIME]);
 
     return (
-        <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-            <CircularProgress variant='determinate' size={50} value={value} color={progressColor} {...props} />
-            <Box
-                sx={{
-                    top: 0,
-                    left: 0,
-                    bottom: 0,
-                    right: 0,
-                    position: 'absolute',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-            >
-                <Typography
-                    variant="caption"
-                    component="div"
-                    sx={{ color: 'white' }}
-                >{`${mainTime / 1000}s`}</Typography>
+        <Tooltip
+            arrow={true}
+            title={<Stack>
+                <Typography variant="body2" fontWeight='600'>
+                    Game Timer
+                </Typography>
+                <Typography variant="body2">
+                    Turn Time: {(turnTime / 1000).toFixed(0)}s
+                </Typography>
+                <Typography variant="body2">
+                    Main Time: {(mainTime / 1000).toFixed(0)}s
+                </Typography>
+            </Stack>}
+        >
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                <CircularProgress variant='determinate' size={50} value={value} color={progressColor} {...props} />
+                <Box
+                    sx={{
+                        top: 0,
+                        left: 0,
+                        bottom: 0,
+                        right: 0,
+                        position: 'absolute',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Typography
+                        variant="caption"
+                        component="div"
+                        sx={{ color: 'white' }}
+                    >{`${mainTime / 1000}s`}</Typography>
+                </Box>
             </Box>
-        </Box>
+        </Tooltip>
     );
 }
 
