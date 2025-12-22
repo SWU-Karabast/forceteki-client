@@ -38,7 +38,7 @@ const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, ...props }) => 
             maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME} 
             setTimeRemaining={isTurnTime ? setTurnTimeRemaining : setMainTimeRemaining}
             timeRemaining={isTurnTime ? turnTimeRemaining : mainTimeRemaining}
-            tooltipLabel={`${activePlayer ? 'Your' : 'Opponent'} ${isTurnTime ? 'turn time remaining' : 'main time remaining'}` }
+            tooltipLabel={`${activePlayer ? 'Your' : 'Opponent'} ${isTurnTime ? 'turn' : 'main'} time remaining` }
             {...props}
         >
 
