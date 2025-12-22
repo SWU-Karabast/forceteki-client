@@ -41,7 +41,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
         };
     }, [isRunning, maxTime, setTimeRemaining]);
 
-    const progressColor = timeRemaining > (maxTime / 3)
+    const progressColor = hasLowOpacity ||timeRemaining > (maxTime / 3)
         ? 'inherit'
         : timeRemaining > (maxTime / 6)
             ? 'warning'
