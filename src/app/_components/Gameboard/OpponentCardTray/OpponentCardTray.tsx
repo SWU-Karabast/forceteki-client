@@ -1,6 +1,6 @@
 import React from 'react';
 import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
-import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
+import { Box, Grid2 as Grid, Popover, PopoverOrigin, Typography } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
@@ -11,10 +11,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { useRouter } from 'next/navigation';
-import { keyframes } from '@mui/system';
+import { keyframes, Stack } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
-import PlayerTimer from '../_subcomponents/OpponentTray/PlayerTimer';
+import TurnTimer from '../_subcomponents/OpponentTray/TimerContainer';
+import { TimeRemainingStatus } from '../../_sharedcomponents/GameTimer/TimeRemaining';
+import MainTimer from '../_subcomponents/OpponentTray/PlayerTimer';
+import TimerContainer from '../_subcomponents/OpponentTray/TimerContainer';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
@@ -35,8 +38,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
-    const warning = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Warning';
-    const danger = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Danger';
+    const warning = gameState?.players[connectedPlayer]?.timeRemainingStatus === TimeRemainingStatus.Warning;
+    const danger = gameState?.players[connectedPlayer]?.timeRemainingStatus === TimeRemainingStatus.Danger;
     const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
 
     const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
@@ -175,7 +178,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             display: 'block',
             fontSize: '4rem',
             color: warning ? 'rgba(220, 185, 0, 1)' : danger ? 'rgba(255, 0, 0, 1)' : 'transparent',
-        }
+        },
     };
 
     return (
@@ -227,7 +230,11 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 }}
             >
                 <Box sx={styles.timerBox}>
-                    <PlayerTimer />
+                    <Stack direction='row' spacing={1.5} 
+                    >
+                        <TimerContainer player={gameState?.players[connectedPlayer] || null} label="You" />
+                        <TimerContainer player={gameState?.players[getOpponent(connectedPlayer)] || null} label="Opp." />
+                    </Stack>
                 </Box>
                 <Box
                     onMouseEnter={handlePreviewOpen}
