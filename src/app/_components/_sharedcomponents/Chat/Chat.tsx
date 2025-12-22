@@ -62,19 +62,13 @@ const Chat: React.FC<IChatProps> = ({
                     message: `You are muted for ${getMuteDisplayText(user.moderation)}`,
                     borderColor: 'yellow'
                 };
-            case isChatMuted && didCurrentUserMuteChat:
+            case didCurrentUserMuteChat:
                 return {
                     reason: ChatDisabledReason.UserDisabledChat,
                     message: 'You disabled chat',
                     borderColor: 'yellow'
                 };
-            case isChatMuted && !didCurrentUserMuteChat:
-                return {
-                    reason: ChatDisabledReason.OpponentDisabledChat,
-                    message: 'Your opponent disabled chat',
-                    borderColor: 'yellow'
-                };
-            case opponentChatDisabled: // this might be legacy code
+            case opponentChatDisabled:
                 return {
                     reason: ChatDisabledReason.OpponentDisabledChat,
                     message: 'The opponent has disabled chat',
@@ -92,22 +86,11 @@ const Chat: React.FC<IChatProps> = ({
         }
     };
 
-    const handleToggleOptions = () => {
-        setIsOptionsOpen(!isOptionsOpen);
-    };
-
-    const handleMuteChat = () => {
-        if (!isChatMuted) {
-            sendLobbyMessage(['muteChat']);
-        }
-    };
-
     const getPlayerColor = (playerId: string, connectedPlayer: string): string => {
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
 
     const isPrivateLobby = lobbyState?.gameType === 'Private';
-    const isChatMuted = lobbyState?.isMutedChat ?? false;
     const didCurrentUserMuteChat = lobbyState?.userWhoMutedChat === connectedPlayer;
 
     const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
@@ -437,7 +420,7 @@ const Chat: React.FC<IChatProps> = ({
             {/* Chat Header - Clickable to expand options */}
             {!isSpectator && (<Box
                 sx={styles.headerContainer}
-                onClick={!isSpectator ? handleToggleOptions : undefined}
+                onClick={!isSpectator ? () => setIsOptionsOpen(!isOptionsOpen) : undefined}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography sx={styles.headerTitle}>Chat options</Typography>
@@ -456,7 +439,7 @@ const Chat: React.FC<IChatProps> = ({
                 <Collapse in={isOptionsOpen}>
                     <Box sx={styles.optionsPanel}>
                         {shouldShowChatInput && (
-                            <Box sx={styles.optionItem} onClick={handleMuteChat}>
+                            <Box sx={styles.optionItem} onClick={() => sendLobbyMessage(['muteChat'])}>
                                 <Box sx={styles.optionLabel}>
                                     <CommentsDisabled sx={styles.optionIcon} />
                                     <span>Disable Chat</span>
