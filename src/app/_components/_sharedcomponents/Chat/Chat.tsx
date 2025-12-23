@@ -22,6 +22,9 @@ import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { useUser } from '@/app/_contexts/User.context';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
+import {v4 as uuidv4} from "uuid";
+import {PopupSource} from "@/app/_components/_sharedcomponents/Popup/Popup.types";
+import {usePopup} from "@/app/_contexts/Popup.context";
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -30,6 +33,7 @@ const Chat: React.FC<IChatProps> = ({
     handleChatSubmit,
 }) => {
     const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled, sendLobbyMessage } = useGame();
+    const { openPopup } = usePopup();
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
     const { user } = useUser();
@@ -108,6 +112,17 @@ const Chat: React.FC<IChatProps> = ({
         if (playerId === getOpponent(connectedPlayer)) return 'Player 2';
         return 'Unknown Player';
     };
+
+    const triggerDisableConfirmation = () =>{
+        const popupId = `${uuidv4()}`;
+        openPopup('confirmation', {
+            uuid: popupId,
+            source: PopupSource.User,
+            message: 'Are you sure you wish to disable chat for this game? This action is not reversable.',
+            title: 'Disable Chat Confirmation',
+            handleConfirmation: () => sendLobbyMessage(['muteChat']),
+        });
+    }
 
     const isOpponentMessage = (message: IChatMessageContent, connectedPlayerId: string): boolean => {
         // Check if it's a player chat message
@@ -439,7 +454,7 @@ const Chat: React.FC<IChatProps> = ({
                 <Collapse in={isOptionsOpen}>
                     <Box sx={styles.optionsPanel}>
                         {shouldShowChatInput && (
-                            <Box sx={styles.optionItem} onClick={() => sendLobbyMessage(['muteChat'])}>
+                            <Box sx={styles.optionItem} onClick={triggerDisableConfirmation}>
                                 <Box sx={styles.optionLabel}>
                                     <CommentsDisabled sx={styles.optionIcon} />
                                     <span>Disable Chat</span>
