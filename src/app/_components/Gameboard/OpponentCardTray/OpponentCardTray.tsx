@@ -188,12 +188,10 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.rightColumn,
                 }}
             >
-                <Stack direction='row' spacing={1.5}>
-                    <GameTimer 
-                        player={gameState?.players[connectedPlayer]} 
-                        opponent={gameState?.players[getOpponent(connectedPlayer)]} 
-                    />
-                </Stack>
+                <GameTimer 
+                    player={gameState?.players[connectedPlayer]} 
+                    opponent={gameState?.players[getOpponent(connectedPlayer)]} 
+                />
                 <Box
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
