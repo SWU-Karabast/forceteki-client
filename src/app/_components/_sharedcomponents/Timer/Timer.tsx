@@ -3,30 +3,30 @@ import CircularProgress, {
 } from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import React from 'react';
-import Tooltip from '@mui/material/Tooltip';
+import Tooltip, { TooltipProps } from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { Stack, useTheme } from '@mui/material';
 import { formatMilliseconds } from './timerUtils';
 
 const TIMER_STEP = 100; // shorter intervals provide a smoother progress animation
-interface GameTimerProps extends CircularProgressProps {
+interface TimerProps extends CircularProgressProps {
     children?: React.ReactNode;
     hasLowOpacity?: boolean;
     isRunning?: boolean;
     maxTime: number;
     setTimeRemaining: React.Dispatch<React.SetStateAction<number>>;
     timeRemaining: number;
-    tooltipLabel?: string;
+    tooltipTitle?: TooltipProps['title'];
 }
 
-const GameTimer: React.FC<GameTimerProps> = ({ 
+const Timer: React.FC<TimerProps> = ({ 
     children, 
     hasLowOpacity,
     isRunning = true, 
     maxTime, 
     setTimeRemaining,
     timeRemaining, 
-    tooltipLabel = 'Time Remaining', 
+    tooltipTitle,
     ...props }) => {
     const theme = useTheme();
 
@@ -50,11 +50,15 @@ const GameTimer: React.FC<GameTimerProps> = ({
     return (
         <Tooltip
             arrow={true}
-            title={<Stack>
-                <Typography variant="body2">
-                    {tooltipLabel}: {formatMilliseconds(timeRemaining)}
-                </Typography>
-            </Stack>}
+            title={
+                Boolean(tooltipTitle) 
+                    ? tooltipTitle 
+                    : (
+                        <Typography variant="body2">
+                            Time Remaining: {formatMilliseconds(timeRemaining)}
+                        </Typography>
+                    )
+            }
         >
             <Box sx={{ position: 'relative', display: 'inline-flex' }}>
                 <CircularProgress 
@@ -62,7 +66,7 @@ const GameTimer: React.FC<GameTimerProps> = ({
                     size={80} 
                     value={(timeRemaining / (maxTime / 100))} // Must be value between 0-100
                     color={progressColor}
-                    sx={{ opacity: progressColor === 'inherit' || hasLowOpacity ? 0.15 : 1 }} 
+                    sx={{ opacity: progressColor === 'inherit' || hasLowOpacity ? 0.3: 1 }} 
                     {...props} 
                 />
                 <Stack
@@ -74,10 +78,11 @@ const GameTimer: React.FC<GameTimerProps> = ({
                         bottom: 0,
                         right: 0,
                         position: 'absolute',
-                        backgroundColor: progressColor === 'inherit' 
-                            ? `${theme.palette.grey[800]}33` 
-                            : `${theme.palette[progressColor].main}55`, 
+                        background: progressColor === 'inherit'
+                            ? `linear-gradient(135deg, ${theme.palette.grey[700]} 0%, ${theme.palette.grey[700]}33 100%)`
+                            : `linear-gradient(135deg, ${theme.palette[progressColor].main} 0%, ${theme.palette[progressColor].main}33 100%)`,
                         borderRadius: '100%',
+                        outline: '1px solid rgba(255, 255, 255, 0.15)',
                     }}
                 >
                     {children || (
@@ -92,4 +97,4 @@ const GameTimer: React.FC<GameTimerProps> = ({
     );
 }
 
-export default GameTimer;
+export default Timer;

@@ -38,17 +38,55 @@ const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, ...props }) => 
             maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME} 
             setTimeRemaining={isTurnTime ? setTurnTimeRemaining : setMainTimeRemaining}
             timeRemaining={isTurnTime ? turnTimeRemaining : mainTimeRemaining}
-            tooltipLabel={`${activePlayer ? 'Your' : 'Opponent'} ${isTurnTime ? 'turn' : 'main'} time remaining` }
+            tooltipTitle={<TooltipContent 
+                turnTimeRemaining={turnTimeRemaining} 
+                activePlayer={activePlayer} 
+            />}
             {...props}
         >
 
-            {!isTurnTime && <MainTimerLabel activePlayer={activePlayer}
+            <MainTimerLabel activePlayer={activePlayer}
                 playerTimeRemaining={activePlayer ? mainTimeRemaining : player?.mainTimeRemaining} 
                 opponentTimeRemaining={activePlayer ? opponent?.mainTimeRemaining : mainTimeRemaining} 
             />
-            }
         </Timer>
     );
+}
+
+const TooltipContent = (
+    { turnTimeRemaining, activePlayer }: 
+    { turnTimeRemaining: number, activePlayer?: boolean }
+) => {
+    const playerLabel = activePlayer ? 'Your' : 'Opponent\'s';
+
+    return (
+        <Stack spacing={1}>     
+            <Stack> 
+                <Typography variant="body2" fontWeight={600}>
+                    Game Timer
+                </Typography>
+                <Typography variant="body2">
+                    Once turn time reaches zero, main time will be used.
+                </Typography>
+            </Stack> 
+
+            <Stack width='fit-content'>
+                <Typography variant="body2">
+                    Your Main Time
+                </Typography>
+                <Divider />
+                <Typography variant="body2">
+                    Opp. Main Time
+                </Typography>
+            </Stack>
+
+            <Typography variant="body2">
+                {playerLabel} turn time remaining: {formatMilliseconds(turnTimeRemaining)}
+            </Typography>
+
+
+        </Stack>
+    )
 }
 
 const MainTimerLabel = ({ 
@@ -64,19 +102,21 @@ const MainTimerLabel = ({
         <Stack spacing={0}>
             <Typography
                 variant="body1"
-                sx={{ color: 'white', marginBottom: '2px', opacity: activePlayer ? 1 : 0.3 }}
+                sx={{ color: 'white', marginBottom: 0, opacity: activePlayer ? 1 : 0.3, cursor: 'pointer' }}
             >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography> 
 
-            <div style={{ height: '1px', width: '100%', background: 'white', opacity: 0.3 }} />
+            <Divider />
             
             <Typography
                 variant="body1"
-                sx={{ color: 'white', marginBottom: 0, opacity: !activePlayer ? 1 : 0.3 }}
-                gutterBottom={false}
-
+                sx={{ color: 'white', marginBottom: 0, opacity: !activePlayer ? 1 : 0.3, cursor: 'pointer' }}
             >{`${formatMilliseconds(opponentTimeRemaining)}`}</Typography> 
+
         </Stack>
     )
 }
+
+const Divider = () => <div style={{ height: '1px', width: '100%', background: 'white', opacity: 0.3, marginTop: '2px' }} />
+
 
 export default GameTimer;
