@@ -1,13 +1,12 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Box,
     TextField,
     IconButton,
     InputAdornment,
-    Divider,
     Typography, Collapse,
 } from '@mui/material';
-import {CommentsDisabled, ExpandLess, ExpandMore, Send} from '@mui/icons-material';
+import { CommentsDisabled, ExpandLess, ExpandMore, Send } from '@mui/icons-material';
 import { 
     IChatProps, 
     IChatEntry, 
@@ -22,9 +21,6 @@ import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { useUser } from '@/app/_contexts/User.context';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
-import {v4 as uuidv4} from "uuid";
-import {PopupSource} from "@/app/_components/_sharedcomponents/Popup/Popup.types";
-import {usePopup} from "@/app/_contexts/Popup.context";
 import {
     LobbyConfirmationPopupModule
 } from "@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup";
