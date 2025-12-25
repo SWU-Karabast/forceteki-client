@@ -19,7 +19,6 @@ export const perCardButtonStyle = {
     backgroundColor: '#1E2D32',
     padding: '.5rem 1rem',
     fontSize: '.75rem',
-
     border: '2px solid transparent',
     background:
     'linear-gradient(#1E2D32, #1E2D32) padding-box, linear-gradient(to top, #038FC3, #595A5B) border-box',

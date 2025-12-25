@@ -5,7 +5,7 @@ import {
     DropdownPopup,
     PilePopup,
     SelectCardsPopup,
-    PopupSource, LeaveGamePopup, BasicConfirmationPopup
+    PopupSource, LeaveGamePopup
 } from '../_components/_sharedcomponents/Popup/Popup.types';
 
 export type PopupData =
@@ -13,8 +13,7 @@ export type PopupData =
   | SelectCardsPopup
   | PilePopup
   | DropdownPopup
-  | LeaveGamePopup
-  | BasicConfirmationPopup
+  | LeaveGamePopup;
 
 export type PopupType = PopupData['type'];
 

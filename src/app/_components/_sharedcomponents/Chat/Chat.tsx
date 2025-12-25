@@ -25,6 +25,9 @@ import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes
 import {v4 as uuidv4} from "uuid";
 import {PopupSource} from "@/app/_components/_sharedcomponents/Popup/Popup.types";
 import {usePopup} from "@/app/_contexts/Popup.context";
+import {
+    LobbyConfirmationPopupModule
+} from "@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup";
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -33,7 +36,7 @@ const Chat: React.FC<IChatProps> = ({
     handleChatSubmit,
 }) => {
     const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled, sendLobbyMessage } = useGame();
-    const { openPopup } = usePopup();
+    const [showConfirmation, setShowConfirmation] = useState(false);
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
     const { user } = useUser();
@@ -114,15 +117,19 @@ const Chat: React.FC<IChatProps> = ({
     };
 
     const triggerDisableConfirmation = () =>{
-        const popupId = `${uuidv4()}`;
-        openPopup('confirmation', {
-            uuid: popupId,
-            source: PopupSource.User,
-            message: 'Are you sure you wish to disable chat for this game? This action is not reversable.',
-            title: 'Disable Chat Confirmation',
-            handleConfirmation: () => sendLobbyMessage(['muteChat']),
-        });
+        setShowConfirmation(true);
+        setIsOptionsOpen(false);
     }
+
+    const handleConfirmDisableChat = () => {
+        sendLobbyMessage(['muteChat']);
+        setShowConfirmation(false);
+    };
+
+    const handleCancelDisableChat = () => {
+        setShowConfirmation(false);
+    };
+
 
     const isOpponentMessage = (message: IChatMessageContent, connectedPlayerId: string): boolean => {
         // Check if it's a player chat message
@@ -438,7 +445,7 @@ const Chat: React.FC<IChatProps> = ({
                 onClick={!isSpectator ? () => setIsOptionsOpen(!isOptionsOpen) : undefined}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography sx={styles.headerTitle}>Chat options</Typography>
+                    <Typography sx={styles.headerTitle}>Chat Options</Typography>
                 </Box>
                 {!isSpectator && (
                     isOptionsOpen ? (
@@ -519,6 +526,7 @@ const Chat: React.FC<IChatProps> = ({
                     </Typography>
                 )}
             </Box>
+            <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
         </>
     );
 };

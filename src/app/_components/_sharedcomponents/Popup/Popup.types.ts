@@ -28,14 +28,6 @@ export type DefaultPopup = {
     source: PopupSource;
 };
 
-export type BasicConfirmationPopup = {
-    uuid: string;
-    type: 'confirmation';
-    title: string;
-    message: string;
-    handleConfirmation: () => void;
-    source: PopupSource;
-}
 export type SelectCardsPopup = {
     type: 'select';
     uuid: string;
