@@ -10,7 +10,8 @@ export enum ChatDisabledReason {
     NotLoggedIn = 'notLoggedIn',
     AnonymousOpponent = 'anonymousOpponent',
     UserMuted = 'userMuted',
-    OpponentDisabledChat = 'opponentDisabledChat'
+    OpponentDisabledChat = 'opponentDisabledChat',
+    UserDisabledChat = 'userDisabledChat'
 }
 
 export interface IChatDisabledInfo {
