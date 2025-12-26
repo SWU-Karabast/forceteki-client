@@ -119,7 +119,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
             } 
         };
     }
-    console.log(cardback);
+
     const styles = {
         containerStyle: {
             ...debugBorder('yellow'),
