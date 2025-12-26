@@ -2,7 +2,6 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 
-
 export default function DeckLayout({
     children,
 }: {

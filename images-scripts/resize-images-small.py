@@ -4,8 +4,8 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 # === CONFIGURATION ===
-INPUT_DIR = "downloaded_images/SEC"  # Adjust per set
-OUTPUT_DIR = "SEC/standard/small"
+INPUT_DIR = "downloaded_images/LAW"  # Adjust per set
+OUTPUT_DIR = "LAW/standard/small"
 MAX_DIMENSION = 200  # Maximum width or height
 WEBP_QUALITY = 90
 

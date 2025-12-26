@@ -22,7 +22,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, FormatLabels, SupportedDeckSources } from '@/app/_constants/constants';
+import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, QueueFormatOptions, QueueFormatLabels, DefaultQueueFormatKey } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -36,6 +36,7 @@ interface IDeckPreferences {
     showSavedDecks: boolean;
     favoriteDeck: string;
     format: SwuGameFormat;
+    gamesToWinMode: GamesToWinMode;
     saveDeck: boolean;
 }
 
@@ -43,6 +44,7 @@ interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
     setFavoriteDeck: (value: string) => void;
     setFormat: (value: SwuGameFormat) => void;
+    setGamesToWinMode: (value: GamesToWinMode) => void;
     setSaveDeck: (value: boolean) => void;
 }
 
@@ -59,6 +61,7 @@ interface ICreateGameFormProps {
     clearErrors: () => void;
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
+    isBo3Allowed: boolean;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
@@ -73,24 +76,45 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     setError,
     clearErrors,
     setIsJsonDeck,
-    setModalOpen
+    setModalOpen,
+    isBo3Allowed
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
     
-    const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
-    const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
+    const { showSavedDecks, favoriteDeck, format, gamesToWinMode, saveDeck } = deckPreferences;
+    const { setShowSavedDecks, setFavoriteDeck, setFormat, setGamesToWinMode, setSaveDeck } = deckPreferencesHandlers;
 
     // Common State
     const [privateGame, setPrivateGame] = useState<boolean>(false);
     const [thirtyCardMode, setThirtyCardMode] = useState<boolean>(false);
-    const formatOptions = Object.values(SwuGameFormat);
+    
+    // Get the current format option key from format and gamesToWinMode
+    const getCurrentFormatOptionKey = (): string => {
+        for (const [key, value] of Object.entries(QueueFormatOptions)) {
+            if (value.format === format && value.gamesToWinMode === gamesToWinMode) {
+                return key;
+            }
+        }
+        return DefaultQueueFormatKey;
+    };
+
+    const formatOptionKeys = Object.keys(QueueFormatOptions);
+
+    // Helper to check if a format option is Bo3
+    const isBo3Option = (key: string) => 
+        QueueFormatOptions[key]?.gamesToWinMode === GamesToWinMode.BestOfThree;
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
-    const handleChangeFormat = (format: SwuGameFormat) => {
-        setFormat(format);
-    }
+    
+    const handleChangeFormatOption = (optionKey: string) => {
+        const option = QueueFormatOptions[optionKey];
+        if (option) {
+            setFormat(option.format);
+            setGamesToWinMode(option.gamesToWinMode);
+        }
+    };
 
     useEffect(() => {
         handleJsonDeck(deckLink);
@@ -187,6 +211,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 format: format,
                 lobbyName: lobbyName,
                 allow30CardsInMainBoard: thirtyCardMode,
+                gamesToWinMode: gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -208,7 +233,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         'error');
                     setModalOpen(true);
                 } else if(response.status === 400) {
-                    if (result.message?.includes('Invalid game format')) {
+                    // TODO: better error handling between BE and FE
+                    if (result.message?.includes('Invalid game format') || result.message?.includes('You must be logged in')) {
                         setError(null,result.message,'Create Game Error','error');
                     } else {
                         setError('Couldn\'t import. Deck is invalid.',errors,'Deck Validation Error','error');
@@ -461,17 +487,29 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
                     <StyledTextField
                         select
-                        value={format}
+                        value={getCurrentFormatOptionKey()}
                         required
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleChangeFormat(e.target.value as SwuGameFormat)
+                            handleChangeFormatOption(e.target.value)
                         }
                     >
-                        {formatOptions.map((fmt) => (
-                            <MenuItem key={fmt} value={fmt}>
-                                {FormatLabels[fmt] || fmt}
-                            </MenuItem>
-                        ))}
+                        {formatOptionKeys
+                            .slice()
+                            .sort((a, b) => {
+                                const aDisabled = isBo3Option(a) && !isBo3Allowed;
+                                const bDisabled = isBo3Option(b) && !isBo3Allowed;
+                                return Number(aDisabled) - Number(bDisabled);
+                            })
+                            .map((key) => {
+                                const isBo3 = isBo3Option(key);
+                                const disabled = isBo3 && !isBo3Allowed;
+                                return (
+                                    <MenuItem key={key} value={key} disabled={disabled}>
+                                        {QueueFormatLabels[key] || key}
+                                        {disabled && ' (must be logged in)'}
+                                    </MenuItem>
+                                );
+                            })}
                     </StyledTextField>
                 </FormControl>
                 {/* Privacy Selection */}
@@ -506,8 +544,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </FormControl>
 
                 {/* Beta Announcement */}
-                <Typography variant="body1" sx={{ color: 'yellow', textAlign: 'center', mb: '1rem' }}>
-                    30-card decks now available in Open format with private lobbies
+                <Typography variant="body1" sx={{ color: 'chartreuse', textAlign: 'center', mb: '1rem' }}>
+                    Best-of-Three format is now available in the dropdown above
                 </Typography>
 
                 {!privateGame && (

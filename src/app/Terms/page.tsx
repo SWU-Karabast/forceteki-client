@@ -171,7 +171,7 @@ const TermsOfService: React.FC = () => {
                                                     const afterColon = it.substring(colonIndex);
                                                     return (
                                                         <ListItem key={i} component="li" sx={styles.li}>
-                                                            <ListItemText 
+                                                            <ListItemText
                                                                 primary={
                                                                     <>
                                                                         <Typography component="span" sx={{ fontWeight: 'bold' }}>
@@ -179,7 +179,7 @@ const TermsOfService: React.FC = () => {
                                                                         </Typography>
                                                                         {afterColon}
                                                                     </>
-                                                                } 
+                                                                }
                                                             />
                                                         </ListItem>
                                                     );

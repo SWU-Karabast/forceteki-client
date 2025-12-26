@@ -4,6 +4,7 @@ import { GitHub } from '@mui/icons-material';
 import { FaDiscord } from 'react-icons/fa6';
 import NextLinkMui from './_subcomponents/NextLinkMui/NextLinkMui';
 import { IControlHubProps } from './ControlHubTypes';
+import { useUser } from '@/app/_contexts/User.context';
 
 const ControlHub: React.FC<IControlHubProps> = ({
     sidebarOpen,
@@ -13,7 +14,8 @@ const ControlHub: React.FC<IControlHubProps> = ({
     logout,
 }) => {
     const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
-    const isDev = process.env.NODE_ENV === 'development';
+    const { isMod } = useUser();
+
     const styles = {
         wrapperContainer:{
             position: 'absolute',
@@ -96,6 +98,22 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/Terms" sx={styles.profileLink}>
                         Terms
                     </NextLinkMui>
+                    {user && isMod && (
+                        <>
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ borderColor: '#ffffff4D', mx: 1 }}
+                            />
+                            <NextLinkMui href="/mod" sx={{
+                                ...styles.profileLink,
+                                color: '#9DD9D2',
+                                '&:hover': { color: '#7fb9b2' }
+                            }}>
+                                Mod Page
+                            </NextLinkMui>
+                        </>
+                    )}
                     {(user) ? (
                         <>
                             <Divider

@@ -1,16 +1,14 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useGame } from '@/app/_contexts/Game.context';
-import EndGameOptionsQuickMatch
-    from '@/app/_components/_sharedcomponents/Preferences/_subComponents/EndGameOptionsQuickMatch';
-import EndGameOptionsCustom from '../_subComponents/EndGameOptionsCustom';
+import EndGameOptions from '@/app/_components/_sharedcomponents/Preferences/_subComponents/EndGameOptions';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
-import { MatchType } from '@/app/_constants/constants';
+import { MatchmakingType } from '@/app/_constants/constants';
 
 function EndGameTab() {
     // handle change based on what the match is.
     const { lobbyState } = useGame();
-    const isQuickMatch = lobbyState && lobbyState.gameType ? lobbyState.gameType === MatchType.Quick : false;
+    const gameType = lobbyState?.gameType || MatchmakingType.PrivateLobby;
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
 
     const handleOpenBugReport = () => {
@@ -22,11 +20,10 @@ function EndGameTab() {
     };
 
     return <>
-        {
-            isQuickMatch
-                ? <EndGameOptionsQuickMatch handleOpenBugReport={handleOpenBugReport} />
-                : <EndGameOptionsCustom handleOpenBugReport={handleOpenBugReport} />
-        }
+        <EndGameOptions
+            handleOpenBugReport={handleOpenBugReport}
+            gameType={gameType}
+        />
         <BugReportDialog
             open={bugReportOpen}
             onClose={handleCloseBugReport}

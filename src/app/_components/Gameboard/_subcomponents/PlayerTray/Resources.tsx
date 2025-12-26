@@ -9,7 +9,6 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
-import { AspectRatio } from '@mui/icons-material';
 
 /**
  * Determines if resources should use column style based on screen size and orientation
@@ -119,6 +118,7 @@ const Resources: React.FC<IResourcesProps> = ({
             url('border-res-lt.svg') no-repeat left top,
             url('border-res-lb.svg') no-repeat left bottom`,
             mixBlendMode: 'soft-light',
+            opacity: 0.3,
             width: '100%',
             height: '100%',
             position: 'absolute',
@@ -130,6 +130,7 @@ const Resources: React.FC<IResourcesProps> = ({
             url('border-res-rt.svg') no-repeat right top,
             url('border-res-rb.svg') no-repeat right bottom`,
             mixBlendMode: 'soft-light',
+            opacity: 0.3,
             width: '100%',
             height: '100%',
             position: 'absolute',
@@ -145,6 +146,7 @@ const Resources: React.FC<IResourcesProps> = ({
             ref={containerRef}
             sx={styles.cardStyle}
             onClick={handleResourceToggle}
+            elevation={0}
         >
             <Box sx={styles.resourceBorderRight} />
             <Box sx={styles.resourceBorderLeft} />

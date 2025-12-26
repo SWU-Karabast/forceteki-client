@@ -86,6 +86,17 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: 'Best of Three Format Available!',
+        content: `
+        <p>Best of three matches are now available! Logged-in players can now compete in a best of three series to determine the winner. Just choose "Premier Best-of-Three" or "Open Best-of-Three" from the format dropdown. Anonymous accounts can participate in best-of-three private lobbies only.</p>
+    
+        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always seeking new contributors.</p><p></p>
+	  `,
+        date: '12/18/25',
+        image: '/bo3-news.png',
+        imageAlt: 'News Announcement',
+    },
+    {
         title: 'Secrets of Power + Intro Battle: Hoth in Premier',
         content: `
         <p>The Secrets of Power and Intro Battle: Hoth sets are now legal in Premier format! We have closed down Next Set Preview format until the next preview season begins. We wish everyone luck with practicing for the new season!</p>
@@ -95,28 +106,21 @@ export const articles: IArticle[] = [
         date: '11/3/25',
         image: s3ImageURL('ui/sec-banner.webp'),
         imageAlt: 'News Announcement',
-    },
-    {
-        title: 'Undo Button in Private Lobbies - Beta Test',
-        content: `
-        <p>We are doing a beta test of the Undo button! Create a private lobby and enable the "Undo" option in the lobby settings to test. See the <a target="_blank" href="https://discord.com/channels/1220057752961814568/1225597332301680640/1422673270649655316" style="color:lightblue;">official announcement</a> in our Discord for full details. Please help us test so we can turn it on for all games soon!</p>
-    
-        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always open to new contributors.</p><p></p>
-	  `,
-        date: '10/3/25',
-        image: '/undo-announcement.webp',
-        imageAlt: 'News Announcement',
     }
 ];
 
 export const announcement: IAnnouncement = {
-    key:'cloudflareOutage',
-    title: 'Cloudflare Outage Affecting Karabast',
+    key:'callForVolunteers01',
+    title: 'Dev Volunteers Needed',
     content:`
-    There is currently a global outage with Cloudflare, a major internet infrastructure provider. Karabast is not affected directly, but many deckbuilder sites such as SWUDB are currently down.
-    As a result, games cannot be played using deck links from affected deckbuilder sites. This includes decks that are saved to your profile.
-    <br/><br/>
-    For more details, see <a target="_blank" href="https://www.techradar.com/pro/live/a-cloudflare-outage-is-taking-down-parts-of-the-internet" style="color:lightblue;">news updates</a> about the outage.`,
-    endDate: '2025-11-20', // The date should be year-month-day
-    image:'/cloudflareOutage.png'
+    The Karabast dev team is entirely volunteer-based and we are looking for more help! As the SWU community has grown, so have the needs of the Karabast platform, and some existing volunteers have needed to step back for personal reasons.<br/><br/> 
+    
+    So, we are seeking additional developers to join our team so that we can efficiently bring <b>new features, bug fixes, and new cards</b> to the community! We are particularly seeking contributors who have any of the following skill sets, but all help is welcomed:<br/><br/>
+    - Senior-level backend experience with JavaScript / TypeScript<br/>
+    - Anyone with design experience, especially related to UI/UX<br/>
+    - Senior- or junior-level frontend experience with React<br/>
+    <br/>
+    If you're interested, please reach out in our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>!`,
+    endDate: '2025-12-21', // The date should be year-month-day
+    image:'/karabastdevlogoedited.png'
 }

@@ -271,11 +271,6 @@ const Chat: React.FC<IChatProps> = ({
     // ------------------------STYLES------------------------//
 
     const styles = {
-        divider: {
-            backgroundColor: '#fff',
-            mt: '.5vh',
-            mb: '0.5vh',
-        },
         chatBox: {
             p: '0.5em',
             minHeight: '100px',
@@ -356,7 +351,6 @@ const Chat: React.FC<IChatProps> = ({
 
     return (
         <>
-            <Divider sx={styles.divider} />
             <Box sx={styles.chatBox}>
                 {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
                     return formatMessage(chatEntry.message, index);
