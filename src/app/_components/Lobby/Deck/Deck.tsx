@@ -6,10 +6,17 @@ import { useGame } from '@/app/_contexts/Game.context';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 import { DeckValidationFailureReason, IDeckValidationFailures } from '@/app/_validators/DeckValidation/DeckValidationTypes';
+import { GamesToWinMode } from '@/app/_constants/constants';
 
 const Deck: React.FC = () => {
     const { connectedPlayer, lobbyState, sendLobbyMessage } = useGame();
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
+
+    // Bo3 state - check if sideboarding should be disabled (Game 1 of Bo3)
+    const winHistory = lobbyState?.winHistory || null;
+    const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
+    const currentGameNumber = winHistory?.currentGameNumber || 1;
+    const isBo3Game1 = gamesToWinMode === GamesToWinMode.BestOfThree && currentGameNumber === 1;
 
     const notImplementedList = connectedUser?.unimplementedCards ?? [];
     const isCardNotImplemented = (cardId: string | undefined) =>
@@ -110,7 +117,29 @@ const Deck: React.FC = () => {
             fontSize: '1.6em',
             color: 'white',
             mt: '0.3rem'
-        }
+        },
+        sideboardOverlayContainer: {
+            position: 'relative',
+        },
+        sideboardOverlay: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1,
+        },
+        sideboardOverlayText: {
+            color: 'white',
+            fontSize: '1.2rem',
+            fontWeight: '500',
+            textAlign: 'center',
+            padding: '1rem',
+        },
     };
 
     return (
@@ -132,8 +161,8 @@ const Deck: React.FC = () => {
                                 key={card.id}
                                 card={{ ...card, unimplemented: isCardNotImplemented(card.id) }}
                                 cardStyle={CardStyle.Lobby}
-                                disabled={connectedUser.ready}
-                                onClick={() => sendLobbyMessage(['updateDeck','Deck', card.id])}
+                                disabled={connectedUser.ready || isBo3Game1}
+                                onClick={isBo3Game1 ? undefined : () => sendLobbyMessage(['updateDeck','Deck', card.id])}
                             />
                         </Box>
                     ))}
@@ -159,19 +188,27 @@ const Deck: React.FC = () => {
                                 )}
                             </Box>
                         </Box>
-                        {/* <Bo */}
-                        <Box sx={styles.mainContainerStyle}>
-                            {sortedUsersSideboard.map((card:ICardData) => (
-                                <Box key={card.id} sx={styles.cardWrapper}>
-                                    <GameCard
-                                        key={card.id}
-                                        card={{ ...card, unimplemented: isCardNotImplemented(card.id) }}
-                                        cardStyle={CardStyle.Lobby}
-                                        disabled={connectedUser.ready}
-                                        onClick={() => sendLobbyMessage(['updateDeck','Sideboard', card.id])}
-                                    />
+                        <Box sx={styles.sideboardOverlayContainer}>
+                            {isBo3Game1 && (
+                                <Box sx={styles.sideboardOverlay}>
+                                    <Typography sx={styles.sideboardOverlayText}>
+                                        Sideboarding is restricted for Game 1
+                                    </Typography>
                                 </Box>
-                            ))}
+                            )}
+                            <Box sx={styles.mainContainerStyle}>
+                                {sortedUsersSideboard.map((card:ICardData) => (
+                                    <Box key={card.id} sx={styles.cardWrapper}>
+                                        <GameCard
+                                            key={card.id}
+                                            card={{ ...card, unimplemented: isCardNotImplemented(card.id) }}
+                                            cardStyle={CardStyle.Lobby}
+                                            disabled={connectedUser.ready || isBo3Game1}
+                                            onClick={isBo3Game1 ? undefined : () => sendLobbyMessage(['updateDeck','Sideboard', card.id])}
+                                        />
+                                    </Box>
+                                ))}
+                            </Box>
                         </Box>
                     </>
                 )}

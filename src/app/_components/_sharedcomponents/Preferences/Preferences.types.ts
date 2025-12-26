@@ -68,7 +68,7 @@ export interface IRegisteredCosmeticOption {
     type: RegisteredCosmeticType;
     path: string;
     darkened?: boolean;
-};
+}
 
 export interface IRegisteredCosmetics {
     cardbacks: IRegisteredCosmeticOption[];

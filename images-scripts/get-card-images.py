@@ -3,7 +3,7 @@ import requests
 
 # === CONFIGURATION ===
 BASE_URL = "https://swudb.com/images/cards/{set_code}/{card_number}.png"
-SET_CODE = "SEC"  # Change this manually when switching sets
+SET_CODE = "LAW"  # Change this manually when switching sets
 OUTPUT_DIR = f"downloaded_images/{SET_CODE}"
 MAX_ATTEMPTS = 300  # Safety limit (adjust if needed)
 LEADER_ATTEMPTS = 30
