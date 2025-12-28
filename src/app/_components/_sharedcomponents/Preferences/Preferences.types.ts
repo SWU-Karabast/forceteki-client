@@ -73,7 +73,7 @@ export interface IRegisteredCosmeticOption {
 export interface IRegisteredCosmetics {
     cardbacks: IRegisteredCosmeticOption[];
     backgrounds: IRegisteredCosmeticOption[];
-    //playmats: IRegisteredCosmeticOption[];
+    // playmats: IRegisteredCosmeticOption[];
 }
 
 // constants
