@@ -5,18 +5,26 @@ import {
     TableBody,
     TableRow,
     TableCell,
+    TableSortLabel,
     Typography,
     Box, Popover, PopoverOrigin,
     Tooltip
 } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, IMatchTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { useTheme } from '@mui/material/styles';
 
 interface AnimatedStatsTableProps {
     data: IMatchTableStats[];
     animationDuration?: number; // in ms
     staggerDelay?: number; // delay between row animations in ms
 }
+
+// https://stackoverflow.com/questions/44480644/string-union-to-string-array
+const STATS_COLUMN_HEADERS = ['Opponent', 'Wins', 'Losses', 'Win %'] as const
+type StatsColumn = (typeof STATS_COLUMN_HEADERS)[number]
+
+type Order = 'asc' | 'desc';
 
 const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     data = [],
@@ -27,6 +35,9 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     const [animatedData, setAnimatedData] = useState<IMatchTableStats[]>([]);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const [orderBy, setOrderBy] = React.useState<StatsColumn | undefined>();
+    const [order, setOrder] = useState<Order>('asc')
+
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
@@ -40,6 +51,30 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     const animateCounter = (start: number, end: number, progress: number) => {
         return Math.round(start + (end - start) * progress);
     };
+
+    useEffect(() => {
+        // if we're not ordering by anything, then we might as well
+        // move along now
+        if (!orderBy) {
+            return
+        }
+        const sortedData = [...data].sort((a, b) => {
+            const direction = order === 'asc' ? 1 : -1;
+            switch (orderBy) {
+                case 'Wins':
+                    return (a.wins - b.wins) * direction
+                case 'Losses':
+                    return (a.losses - b.losses) * direction
+                case 'Win %':
+                    return (a.winPercentage - b.winPercentage) * direction
+                case 'Opponent':
+                    return a.leaderId.localeCompare(b.leaderId) * direction
+            }
+            return 0
+        })
+
+        setAnimatedData(sortedData);
+    }, [data, order, orderBy])
 
     // Reset and start animations when data changes
     useEffect(() => {
@@ -226,16 +261,42 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             width: '21rem',
         },
     };
+    function Row({ children }: React.PropsWithChildren) {
+        return <TableCell sx={{ borderBottom:'none' }}>
+            <Typography>{children}</Typography>
+        </TableCell>
+    }
 
     return (
         <Box sx={styles.tableContainer}>
             <Table stickyHeader>
                 <TableHead sx={styles.tableHead}>
                     <TableRow>
-                        <TableCell><Typography sx={{ color: '#fff' }}>Opponent</Typography></TableCell>
-                        <TableCell><Typography sx={{ color: '#fff' }}>Wins</Typography></TableCell>
-                        <TableCell><Typography sx={{ color: '#fff' }}>Losses</Typography></TableCell>
-                        <TableCell><Typography sx={{ color: '#fff' }}>Win %</Typography></TableCell>
+                        {STATS_COLUMN_HEADERS.map(v => {
+                            const active = orderBy === v;
+                            return <TableCell 
+                                key={v}
+                                sortDirection={active ? order : false}
+                            >
+                                <Typography>
+                                    <TableSortLabel
+                                        active={active}
+                                        direction={order}
+                                        onClick={() => {
+                                            if (orderBy !== v) {
+                                                setOrder('asc')
+                                            } else {
+                                                const newOrder = order == 'asc' ? 'desc' : 'asc'
+                                                setOrder(newOrder)
+                                            }
+                                            setOrderBy(v)
+                                        }}
+                                    >
+                                        {v}
+                                    </TableSortLabel>
+                                </Typography>
+                            </TableCell>
+                        })}
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -294,15 +355,9 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                                     </Box>
                                 </Box>
                             </TableCell>
-                            <TableCell sx={{ borderBottom:'none' }}>
-                                <Typography sx={{ color: '#fff' }}>{row.wins}</Typography>
-                            </TableCell>
-                            <TableCell sx={{ borderBottom:'none' }}>
-                                <Typography sx={{ color: '#fff' }}>{row.losses}</Typography>
-                            </TableCell>
-                            <TableCell sx={{ borderBottom:'none' }}>
-                                <Typography sx={{ color: '#fff' }}>{row.winPercentage}%</Typography>
-                            </TableCell>
+                            <Row>{row.wins}</Row>
+                            <Row>{row.losses}</Row>
+                            <Row>{row.winPercentage}</Row>
                         </TableRow>
                     ))}
                 </TableBody>
