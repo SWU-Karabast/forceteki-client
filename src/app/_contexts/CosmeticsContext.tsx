@@ -44,7 +44,8 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
                 return cosmetics.cardbacks.find((cb) => cb.title === 'Default')!;
             case RegisteredCosmeticType.Background:
                 return cosmetics.backgrounds.find((bg) => bg.title === 'Default')!;
-            /*case RegisteredCosmeticType.Playmat:
+
+            /* case RegisteredCosmeticType.Playmat:
                 return { id: 'none', title: 'None', type: RegisteredCosmeticType.Playmat, path: '' };*/
             default:
                 throw new Error('Invalid cosmetic type');
@@ -62,7 +63,8 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         return cosmetics.backgrounds.find((bg) => bg.id === id) || getCosmeticDefault(RegisteredCosmeticType.Background);
     }
-    /*const getPlaymat = (id?: string) => {
+
+    /* const getPlaymat = (id?: string) => {
         if (!id) {
             return getCosmeticDefault(RegisteredCosmeticType.Playmat);
         }
@@ -80,6 +82,7 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
                 case RegisteredCosmeticType.Background:
                     acc.backgrounds.push(cosmetic);
                     break;
+
                 /* case RegisteredCosmeticType.Playmat:
                     acc.playmats.push(cosmetic);
                     break; */
