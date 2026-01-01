@@ -748,6 +748,72 @@ export const unlinkSwuStatsAsync = async(
     }
 };
 
+/**
+ * SWU Stats deck from the API
+ */
+export interface ISwuStatsDeckItem {
+    id: number;
+    name: string;
+    description: string;
+    isFavorite: boolean;
+    createdAt: string;
+    updatedAt: string;
+    deckLink: string;
+}
+
+/**
+ * Response from fetching SWU Stats decks
+ */
+export interface ISwuStatsDecksResult {
+    decks: ISwuStatsDeckItem[];
+    pagination: {
+        total: number;
+        limit: number;
+        offset: number;
+        has_more: boolean;
+    };
+}
+
+/**
+ * Fetches the user's decks from SWU Stats if their account is linked
+ * @param favoritesOnly If true, only returns favorite decks
+ * @returns Promise that resolves to the decks data or null if not linked
+ */
+export const fetchSwuStatsDecks = async (
+    favoritesOnly: boolean = false
+): Promise<ISwuStatsDecksResult | null> => {
+    try {
+        const params = new URLSearchParams();
+        if (favoritesOnly) {
+            params.set('favorites', 'true');
+        }
+        
+        const response = await fetch(
+            `/api/swustats/decks?${params.toString()}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            }
+        );
+
+        if (!response.ok) {
+            // If 404 or 401, the user doesn't have SWU Stats linked
+            if (response.status === 404 || response.status === 401) {
+                return null;
+            }
+            throw new Error(`Failed to fetch SWU Stats decks: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching SWU Stats decks:', error);
+        return null;
+    }
+};
+
 
 
 export const shouldShowAnnouncement = (announcement: IAnnouncement): boolean =>{

@@ -46,6 +46,10 @@ const HomePagePlayMode: React.FC = () => {
         savedDecks,
         fetchDecks,
         isBo3Allowed,
+        // SWU Stats integration
+        swuStatsDecks,
+        isSwuStatsLinked,
+        isLoadingSwuStatsDecks,
     } = useDeckManagement();
 
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
@@ -249,6 +253,9 @@ const HomePagePlayMode: React.FC = () => {
                                 setIsJsonDeck={setIsJsonDeck}
                                 setModalOpen={setModalOpen}
                                 isBo3Allowed={isBo3Allowed}
+                                swuStatsDecks={swuStatsDecks}
+                                isSwuStatsLinked={isSwuStatsLinked}
+                                isLoadingSwuStatsDecks={isLoadingSwuStatsDecks}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -266,6 +273,9 @@ const HomePagePlayMode: React.FC = () => {
                                 setIsJsonDeck={setIsJsonDeck}
                                 setModalOpen={setModalOpen}
                                 isBo3Allowed={isBo3Allowed}
+                                swuStatsDecks={swuStatsDecks}
+                                isSwuStatsLinked={isSwuStatsLinked}
+                                isLoadingSwuStatsDecks={isLoadingSwuStatsDecks}
                             />
                         </TabPanel>
                         {showTestGames &&
