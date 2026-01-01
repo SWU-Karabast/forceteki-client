@@ -15,6 +15,7 @@ import {
     FormControl,
     Radio,
     RadioGroup,
+    CircularProgress,
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -52,7 +53,11 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         deckLink,
         setDeckLink,
         savedDecks,
-        fetchDecks
+        fetchDecks,
+        // SWU Stats integration
+        swuStatsDecks,
+        isSwuStatsLinked,
+        isLoadingSwuStatsDecks,
     } = useDeckManagement();
     
     const { showSavedDecks, favoriteDeck, saveDeck } = deckPreferences;
@@ -120,9 +125,18 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         setDeckImportErrorsSeen(false);
         if(showSavedDecks) {
-            const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
-            if (selectedDeck?.deckLink) {
-                userDeck = selectedDeck?.deckLink
+            if (isSwuStatsLinked) {
+                // Use SWU Stats deck
+                const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
+                if (selectedSwuStatsDeck?.deckLink) {
+                    userDeck = selectedSwuStatsDeck.deckLink;
+                }
+            } else {
+                // Use saved deck from Karabast
+                const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
+                if (selectedDeck?.deckLink) {
+                    userDeck = selectedDeck?.deckLink
+                }
             }
         } else {
             userDeck = deckLink;
@@ -136,7 +150,8 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                 if(favoriteDeck && deckData && showSavedDecks) {
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
-                    deckData.isPresentInDb = !!user;
+                    // SWU Stats decks are not stored in our DB
+                    deckData.isPresentInDb = isSwuStatsLinked ? false : !!user;
                 } else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck;
                     deckData.isPresentInDb = false;
@@ -380,7 +395,85 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
             color: disableSettings ? '#c0c0c0' : '#fff',  // Lighter color when disabled
             fontSize: '1rem',
         },
+        // SWU Stats integration styles
+        deckSourceLabel: {
+            color: '#aaa',
+            fontSize: '0.85rem',
+        },
+        loadingContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+        }
     }
+
+    // Render SWU Stats decks dropdown
+    const renderSwuStatsDecksDropdown = () => {
+        if (isLoadingSwuStatsDecks) {
+            return (
+                <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                    <Typography sx={{ color: '#aaa' }}>Loading SWU Stats decks...</Typography>
+                </Box>
+            );
+        }
+
+        // Sort decks with favorites first
+        const sortedSwuStatsDecks = [...swuStatsDecks].sort((a, b) => {
+            if (a.isFavorite && !b.isFavorite) return -1;
+            if (!a.isFavorite && b.isFavorite) return 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        return (
+            <StyledTextField
+                select
+                value={favoriteDeck}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setFavoriteDeck(e.target.value as string)
+                }
+                placeholder="SWU Stats Decks"
+            >
+                {sortedSwuStatsDecks.length === 0 ? (
+                    <MenuItem value="" disabled>
+                        No decks found on SWU Stats
+                    </MenuItem>
+                ) : (
+                    sortedSwuStatsDecks.map((deck) => (
+                        <MenuItem key={deck.id} value={deck.id.toString()}>
+                            {deck.isFavorite ? '★ ' : ''}{deck.name}
+                        </MenuItem>
+                    ))
+                )}
+            </StyledTextField>
+        );
+    };
+
+    // Render Karabast saved decks dropdown
+    const renderKarabastDecksDropdown = () => (
+        <StyledTextField
+            select
+            value={favoriteDeck}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFavoriteDeck(e.target.value as string)
+            }
+            placeholder="Favorite Decks"
+        >
+            {savedDecks.length === 0 ? (
+                <MenuItem value="" disabled>
+                    No saved decks found
+                </MenuItem>
+            ) : (
+                savedDecks.map((deck) => (
+                    <MenuItem key={deck.deckID} value={deck.deckID}>
+                        {deck.favourite ? '★ ' : ''}{deck.name}
+                    </MenuItem>
+                ))
+            )}
+        </StyledTextField>
+    );
+
     return (
         <Card sx={styles.initiativeCardStyle}>
             {!opponentUser ? (
@@ -461,27 +554,28 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     </FormControl>
                     {showSavedDecks && (
                         <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
-                            <StyledTextField
-                                select
-                                value={favoriteDeck}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setFavoriteDeck(e.target.value as string)
-                                }
-                                placeholder="Favorite Decks"
-                            >
-                                {savedDecks.length === 0 ? (
-                                    <MenuItem value="" disabled>
-                                        No saved decks found
-                                    </MenuItem>
-                                ) : (
-                                    savedDecks.map((deck) => (
-                                        <MenuItem key={deck.deckID} value={deck.deckID}>
-                                            {deck.favourite ? '★ ' : ''}{deck.name}
-                                        </MenuItem>
-                                    ))
-                                )}
-                            </StyledTextField>
+                            <Typography variant="body1" sx={styles.labelTextStyle}>
+                                {isSwuStatsLinked ? 'SWU Stats Decks' : 'Favorite Decks'}
+                            </Typography>
+                            
+                            {isSwuStatsLinked 
+                                ? renderSwuStatsDecksDropdown()
+                                : renderKarabastDecksDropdown()
+                            }
+                            
+                            {isSwuStatsLinked && (
+                                <Typography sx={{ ...styles.deckSourceLabel, mt: '0.5rem' }}>
+                                    Manage decks on{' '}
+                                    <Link 
+                                        href="https://swustats.net" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        sx={{ color: 'lightblue' }}
+                                    >
+                                        swustats.net
+                                    </Link>
+                                </Typography>
+                            )}
                         </FormControl>
                     ) || (
                         <>
