@@ -8,11 +8,11 @@ import {
     TableSortLabel,
     Typography,
     Box, Popover, PopoverOrigin,
-    Tooltip
+    Tooltip,
+    SortDirection
 } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, IMatchTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { useTheme } from '@mui/material/styles';
 
 interface AnimatedStatsTableProps {
     data: IMatchTableStats[];
@@ -24,7 +24,12 @@ interface AnimatedStatsTableProps {
 const STATS_COLUMN_HEADERS = ['Opponent', 'Wins', 'Losses', 'Win %'] as const
 type StatsColumn = (typeof STATS_COLUMN_HEADERS)[number]
 
-type Order = 'asc' | 'desc';
+type Direction = 'asc' | 'desc';
+
+type OrderBy = {
+    column: StatsColumn
+    direction: Direction 
+}
 
 const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     data = [],
@@ -35,8 +40,7 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     const [animatedData, setAnimatedData] = useState<IMatchTableStats[]>([]);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const [orderBy, setOrderBy] = React.useState<StatsColumn | undefined>();
-    const [order, setOrder] = useState<Order>('asc')
+    const [orderBy, setOrderBy] = React.useState<OrderBy | undefined>();
 
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
@@ -53,14 +57,13 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     };
 
     useEffect(() => {
-        // if we're not ordering by anything, then we might as well
-        // move along now
+        // only run if there is something to order by. 
         if (!orderBy) {
             return
         }
         const sortedData = [...data].sort((a, b) => {
-            const direction = order === 'asc' ? 1 : -1;
-            switch (orderBy) {
+            const direction = orderBy.direction === 'asc' ? 1 : -1;
+            switch (orderBy.column) {
                 case 'Wins':
                     return (a.wins - b.wins) * direction
                 case 'Losses':
@@ -74,7 +77,7 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
         })
 
         setAnimatedData(sortedData);
-    }, [data, order, orderBy])
+    }, [data, orderBy])
 
     // Reset and start animations when data changes
     useEffect(() => {
@@ -273,23 +276,24 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                 <TableHead sx={styles.tableHead}>
                     <TableRow>
                         {STATS_COLUMN_HEADERS.map(v => {
-                            const active = orderBy === v;
+                            const active = orderBy?.column === v;
                             return <TableCell 
                                 key={v}
-                                sortDirection={active ? order : false}
+                                sortDirection={active ? orderBy.direction : false}
                             >
                                 <Typography>
                                     <TableSortLabel
                                         active={active}
-                                        direction={order}
+                                        direction={orderBy?.direction}
                                         onClick={() => {
-                                            if (orderBy !== v) {
-                                                setOrder('asc')
-                                            } else {
-                                                const newOrder = order == 'asc' ? 'desc' : 'asc'
-                                                setOrder(newOrder)
-                                            }
-                                            setOrderBy(v)
+                                            // if there was no orderBy set, then just set it to 'desc'
+                                            // and we'll "toggle" it to 'asc'
+                                            const previousDirection = orderBy?.direction ?? 'desc'
+
+                                            setOrderBy({
+                                                column: v,
+                                                direction: previousDirection === 'asc' ? 'desc' : 'asc'
+                                            })
                                         }}
                                     >
                                         {v}
