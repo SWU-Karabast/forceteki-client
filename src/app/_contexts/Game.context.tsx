@@ -26,6 +26,7 @@ interface IGameContextType {
     gameState: any;
     lobbyState: any;
     bugReportState: any;
+    playerReportState: any;
     statsSubmitNotification: IStatsNotification | null;
     sendMessage: (message: string, args?: any[]) => void;
     sendGameMessage: (args: any[]) => void;
@@ -50,6 +51,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const lastGameIdRef = useRef<string | null>(null);
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [bugReportState, setBugReportState] = useState<any>(null);
+    const [playerReportState, setPlayerReportState] = useState<any>(null);
     const [statsSubmitNotification, setStatsSubmitNotification] = useState<IStatsNotification | null>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
@@ -280,6 +282,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setBugReportState(result);
         });
 
+        newSocket.on('playerReportResult', (result: any) => {
+            setPlayerReportState(result);
+        });
+
         newSocket.on('statsSubmitNotification', (notification: IStatsNotification) => {
             setStatsSubmitNotification(notification);
         });
@@ -372,6 +378,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 gameState,
                 lobbyState,
                 bugReportState,
+                playerReportState,
                 statsSubmitNotification,
                 sendGameMessage,
                 sendMessage,

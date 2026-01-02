@@ -13,10 +13,11 @@ import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType, R
 
 interface IProps {
     handleOpenBugReport: () => void;
+    handleOpenPersonReport: () => void;
     gameType: MatchmakingType;
 }
 
-function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
+function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType }: IProps) {
     const router = useRouter();
     const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
@@ -348,17 +349,30 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
 
                 {/* Report Bug - Bo3 mode only (in Actions section) */}
                 {isBo3Mode && !isSpectator && (
-                    <Box sx={styles.contentContainer}>
-                        <PreferenceButton
-                            variant={'standard'}
-                            text={'Report Bug'}
-                            buttonFnc={handleOpenBugReport}
-                            sx={{ minWidth: '140px' }}
-                        />
-                        <Typography sx={styles.typeographyStyle}>
-                            Report a bug to the developer team
-                        </Typography>
-                    </Box>
+                    <>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report Bug'}
+                                buttonFnc={handleOpenBugReport}
+                                sx={{ minWidth: '140px' }}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                Report a bug to the developer team
+                            </Typography>
+                        </Box>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report opponent'}
+                                buttonFnc={handleOpenPersonReport}
+                                sx={{ minWidth: '140px' }}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                Report opponent to the developer team
+                            </Typography>
+                        </Box>
+                    </>
                 )}
             </Box>
 
@@ -462,6 +476,17 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
                             />
                             <Typography sx={styles.typeographyStyle}>
                                 Report a bug to the developer team
+                            </Typography>
+                        </Box>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report opponent'}
+                                buttonFnc={handleOpenPersonReport}
+                                sx={{ minWidth: '140px' }}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                Report opponent to the developer team
                             </Typography>
                         </Box>
                     </Box>

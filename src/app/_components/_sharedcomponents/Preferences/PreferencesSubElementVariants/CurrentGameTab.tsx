@@ -12,6 +12,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 import { GamesToWinMode, Bo3SetEndedReason, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
+import PlayerReportDialog from "@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog";
 
 enum PhaseName {
     Action = 'action',
@@ -27,6 +28,7 @@ function CurrentGameTab() {
     const currentPlayerName = currentPlayer?.name;
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
+    const [playerReportOpen, setPlayerReportOpen] = useState<boolean>(false);
 
     const isPrivateLobby = lobbyState?.gameType === MatchmakingType.PrivateLobby;
 
@@ -87,9 +89,22 @@ function CurrentGameTab() {
         sendGameMessage(['resetActionTimer']);
     };
 
+    // Handler for opening the bug report dialog
+    const handleOpenPlayerReport = () => {
+        setPlayerReportOpen(true);
+
+        // reset the action timer when opening the bug report dialog to give people breathing room to type
+        sendGameMessage(['resetActionTimer']);
+    };
+
     // Handler for closing the bug report dialog
     const handleCloseBugReport = () => {
         setBugReportOpen(false);
+    };
+
+    // Handler for closing the bug report dialog
+    const handleClosePlayerReport = () => {
+        setPlayerReportOpen(false);
     };
 
     // Handler for spectators to leave the game
@@ -217,11 +232,27 @@ function CurrentGameTab() {
                         Report a bug to the developer team
                     </Typography>
                 </Box>
+                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                    <PreferenceButton
+                        variant={'standard'}
+                        text={'Report Opponent'}
+                        buttonFnc={handleOpenPlayerReport}
+                        sx={{ minWidth: '140px' }}
+                    />
+                    <Typography sx={styles.typeographyStyle}>
+                        Report opponent to the developer team
+                    </Typography>
+                </Box>
             </Box>
             {/* Bug Report Dialog */}
             <BugReportDialog
                 open={bugReportOpen}
                 onClose={handleCloseBugReport}
+            />
+            {/* Player Report Dialog */}
+            <PlayerReportDialog
+                open={playerReportOpen}
+                onClose={handleClosePlayerReport}
             />
         </>
     );

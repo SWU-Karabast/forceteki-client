@@ -6,7 +6,7 @@ import {
     InputAdornment,
     Typography, Collapse,
 } from '@mui/material';
-import { CommentsDisabled, ExpandLess, ExpandMore, Send } from '@mui/icons-material';
+import { CommentsDisabled, ExpandLess, ExpandMore, Send, ReportProblem } from '@mui/icons-material';
 import { 
     IChatProps, 
     IChatEntry, 
@@ -24,6 +24,7 @@ import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes
 import {
     LobbyConfirmationPopupModule
 } from "@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup";
+import PlayerReportDialog from "@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog";
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -33,6 +34,7 @@ const Chat: React.FC<IChatProps> = ({
 }) => {
     const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled, sendLobbyMessage } = useGame();
     const [showConfirmation, setShowConfirmation] = useState(false);
+    const [playerReportOpen, setPlayerReportOpen] = useState(false);
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
     const { user } = useUser();
@@ -95,9 +97,9 @@ const Chat: React.FC<IChatProps> = ({
 
     const isPrivateLobby = lobbyState?.gameType === 'Private';
     const didCurrentUserMuteChat = lobbyState?.userWhoMutedChat === connectedPlayer;
-
-    const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
-    const opponentChatDisabled = hasChatDisabled(getOpponent(connectedPlayer));
+    const opponentId = getOpponent(connectedPlayer);
+    const isAnonymousOpponent = isAnonymousPlayer(opponentId);
+    const opponentChatDisabled = hasChatDisabled(opponentId);
     const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
     const shouldShowChatInput = !chatDisabledInfo || chatDisabledInfo.reason === ChatDisabledReason.None;
@@ -124,6 +126,14 @@ const Chat: React.FC<IChatProps> = ({
 
     const handleCancelDisableChat = () => {
         setShowConfirmation(false);
+    };
+
+    const handleOpenPersonReport = () => {
+        setPlayerReportOpen(true);
+    };
+
+    const handleClosePersonReport = () => {
+        setPlayerReportOpen(false);
     };
 
 
@@ -457,22 +467,60 @@ const Chat: React.FC<IChatProps> = ({
                 <Collapse in={isOptionsOpen}>
                     <Box sx={styles.optionsPanel}>
                         {shouldShowChatInput && (
-                            <Box sx={styles.optionItem} onClick={triggerDisableConfirmation}>
-                                <Box sx={styles.optionLabel}>
-                                    <CommentsDisabled sx={styles.optionIcon} />
-                                    <span>Disable Chat</span>
+                            <>
+                                <Box sx={styles.optionItem} onClick={triggerDisableConfirmation}>
+                                    <Box sx={styles.optionLabel}>
+                                        <CommentsDisabled sx={styles.optionIcon} />
+                                        <span>Disable Chat</span>
+                                    </Box>
                                 </Box>
-                            </Box>
+                                {!lobbyState?.gameOngoing && (
+                                    opponentId ? (
+                                        <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
+                                            <Box sx={styles.optionLabel}>
+                                                <ReportProblem sx={styles.optionIcon} />
+                                                <span>Report Opponent</span>
+                                            </Box>
+                                        </Box>
+                                    ) : (
+                                        <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
+                                            <Box sx={styles.optionLabel}>
+                                                <ReportProblem sx={styles.optionIcon} />
+                                                <span style={{ color: '#888' }}>No opponent to report</span>
+                                            </Box>
+                                        </Box>
+                                    )
+                                )}
+                            </>
                         )}
                         {!shouldShowChatInput && (
-                            <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
-                                <Box sx={styles.optionLabel}>
-                                    <CommentsDisabled sx={styles.optionIcon} />
-                                    <span style={{ color: '#888' }}>
-                                        Chat is disabled
-                                    </span>
+                            <>
+                                <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
+                                    <Box sx={styles.optionLabel}>
+                                        <CommentsDisabled sx={styles.optionIcon} />
+                                        <span style={{ color: '#888' }}>
+                                            Chat is disabled
+                                        </span>
+                                    </Box>
                                 </Box>
-                            </Box>
+                                {!lobbyState?.gameOngoing && (
+                                    opponentId ? (
+                                        <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
+                                            <Box sx={styles.optionLabel}>
+                                                <ReportProblem sx={styles.optionIcon} />
+                                                <span>Report Opponent</span>
+                                            </Box>
+                                        </Box>
+                                    ) : (
+                                        <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
+                                            <Box sx={styles.optionLabel}>
+                                                <ReportProblem sx={styles.optionIcon} />
+                                                <span style={{ color: '#888' }}>No opponent to report</span>
+                                            </Box>
+                                        </Box>
+                                    )
+                                )}
+                            </>
                         )}
                     </Box>
                 </Collapse>
@@ -523,7 +571,9 @@ const Chat: React.FC<IChatProps> = ({
                 )}
             </Box>
             <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
+            <PlayerReportDialog open={playerReportOpen} onClose={handleClosePersonReport}/>
         </>
+
     );
 };
 

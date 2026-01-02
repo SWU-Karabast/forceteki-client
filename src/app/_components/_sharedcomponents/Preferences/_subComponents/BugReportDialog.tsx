@@ -173,7 +173,7 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
             };
             
             // Send the bug report to the server
-            sendLobbyMessage(['reportBug', bugReportMessage]);
+            sendLobbyMessage(['submitReport', 'bug', bugReportMessage]);
         } catch (err) {
             setError('An error occurred while submitting the bug report');
             console.error('Error submitting bug report:', err);
