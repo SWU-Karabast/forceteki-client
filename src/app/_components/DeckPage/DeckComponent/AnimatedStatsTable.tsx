@@ -72,7 +72,6 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                 case 'Opponent':
                     return a.leaderId.localeCompare(b.leaderId) * direction
             }
-            return 0
         })
 
         setAnimatedData(sortedData);
