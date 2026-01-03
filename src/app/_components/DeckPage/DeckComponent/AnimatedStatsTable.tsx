@@ -361,7 +361,7 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                             </TableCell>
                             <Row>{row.wins}</Row>
                             <Row>{row.losses}</Row>
-                            <Row>{row.winPercentage}</Row>
+                            <Row>{row.winPercentage}%</Row>
                         </TableRow>
                     ))}
                 </TableBody>
