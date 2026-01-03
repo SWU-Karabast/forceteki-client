@@ -8,8 +8,7 @@ import {
     TableSortLabel,
     Typography,
     Box, Popover, PopoverOrigin,
-    Tooltip,
-    SortDirection
+    Tooltip
 } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, IMatchTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
