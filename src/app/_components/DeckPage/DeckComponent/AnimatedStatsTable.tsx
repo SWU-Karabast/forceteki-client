@@ -70,7 +70,20 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                 case 'Win %':
                     return (a.winPercentage - b.winPercentage) * direction
                 case 'Opponent':
-                    return a.leaderId.localeCompare(b.leaderId) * direction
+                    // both are undefined, they're equal
+                    if (!a.leaderMelee && !b.leaderMelee) {
+                        return 0
+                    }
+                    // a is undefined, should come after b
+                    if (!a.leaderMelee) {
+                        return 1
+                    }
+                    // b is undefined, should come after a
+                    if (!b.leaderMelee) {
+                        return -1
+                    }
+                    // both are defined, safe to compare
+                    return a.leaderMelee.localeCompare(b.leaderMelee) * direction
             }
         })
 
