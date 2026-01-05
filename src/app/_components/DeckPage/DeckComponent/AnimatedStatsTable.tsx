@@ -273,10 +273,10 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             <Table stickyHeader>
                 <TableHead sx={styles.tableHead}>
                     <TableRow>
-                        {STATS_COLUMN_HEADERS.map(v => {
-                            const active = orderBy?.column === v;
+                        {STATS_COLUMN_HEADERS.map(columnHeader => {
+                            const active = orderBy?.column === columnHeader;
                             return <TableCell 
-                                key={v}
+                                key={columnHeader}
                                 sortDirection={active ? orderBy.direction : false}
                             >
                                 <Typography>
@@ -289,12 +289,12 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                                             const previousDirection = orderBy?.direction ?? 'desc'
 
                                             setOrderBy({
-                                                column: v,
+                                                column: columnHeader,
                                                 direction: previousDirection === 'asc' ? 'desc' : 'asc'
                                             })
                                         }}
                                     >
-                                        {v}
+                                        {columnHeader}
                                     </TableSortLabel>
                                 </Typography>
                             </TableCell>
