@@ -73,7 +73,7 @@ export interface IRegisteredCosmeticOption {
 export interface IRegisteredCosmetics {
     cardbacks: IRegisteredCosmeticOption[];
     backgrounds: IRegisteredCosmeticOption[];
-    //playmats: IRegisteredCosmeticOption[];
+    // playmats: IRegisteredCosmeticOption[];
 }
 
 // constants
@@ -87,10 +87,12 @@ export enum StatsSource {
     Karabast = 'Karabast',
     SwuStats = 'SWUStats'
 }
+
 export enum PlayerReportType {
-    OffensiveUsername = 'offensive username',
-    ChatHarrasment = 'chat harrasment',
-    AbusingMechanics = 'abusing mechanics',
+    OffensiveUsername = 'offensiveUsername',
+    ChatHarrasment = 'chatHarrasment',
+    AbusingMechanics = 'abusingMechanics',
+    Other = 'other',
 }
 
 export interface IReportTypeConfig {

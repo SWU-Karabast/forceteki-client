@@ -17,13 +17,13 @@ import {
     IPlayerReportDialogProps,
     IReportTypeConfig,
     PlayerReportType
-} from "@/app/_components/_sharedcomponents/Preferences/Preferences.types";
+} from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 const REPORT_TYPES: IReportTypeConfig[] = [
     {
         type: PlayerReportType.AbusingMechanics,
-        label: 'Mechanic Abuse',
-        description: 'Exploiting game mechanics like the rollback feature',
+        label: 'Abusing Karabast Features',
+        description: 'Exploiting Karabast features such as undo or the turn timer',
     },
     {
         type: PlayerReportType.ChatHarrasment,
@@ -33,7 +33,12 @@ const REPORT_TYPES: IReportTypeConfig[] = [
     {
         type: PlayerReportType.OffensiveUsername,
         label: 'Offensive Username',
-        description: 'Opponents username contains harmful communication',
+        description: 'Opponent\'s username violates our community guidelines',
+    },
+    {
+        type: PlayerReportType.Other,
+        label: 'Other',
+        description: 'For issues not covered by the categories above'
     }
 ];
 
@@ -41,10 +46,10 @@ const MIN_DESCRIPTION_LENGTH = 10;
 const MAX_DESCRIPTION_LENGTH = 1000;
 
 const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
-                                                                   open,
-                                                                   onClose,
-                                                               }) => {
-    const { sendLobbyMessage, isAnonymousPlayer, playerReportState, isSpectator, getOpponent, hasChatDisabled, connectedPlayer  } = useGame();
+    open,
+    onClose,
+}) => {
+    const { sendLobbyMessage, isAnonymousPlayer, playerReportState, isSpectator, getOpponent, hasChatDisabled, connectedPlayer } = useGame();
 
     const [selectedReportType, setSelectedReportType] = useState<PlayerReportType | null>(null);
     const [description, setDescription] = useState('');
@@ -56,7 +61,7 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
         isAnonymousPlayer(getOpponent(connectedPlayer)) ||
         isAnonymousPlayer(connectedPlayer);
 
-    const requiresDescription = selectedReportType === PlayerReportType.AbusingMechanics;
+    const requiresDescription = selectedReportType === PlayerReportType.AbusingMechanics || selectedReportType === PlayerReportType.Other;
     const isDescriptionValid = !requiresDescription || description.trim().length >= MIN_DESCRIPTION_LENGTH;
     const showDescriptionError = requiresDescription && description.length > 0 && description.length < MIN_DESCRIPTION_LENGTH;
     // Reset form when popup opens
@@ -104,12 +109,11 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
         setError('');
 
         try {
-
-            if(disableChat || isChatDisabled) {
+            if(disableChat && !isChatDisabled) {
                 sendLobbyMessage(['muteChat']);
             }
             // Send the player report to the server
-            sendLobbyMessage(['submitReport','player', description, selectedReportType]);
+            sendLobbyMessage(['submitReport','playerReport', description, selectedReportType]);
         } catch (err) {
             setError('An error occurred while submitting the report');
             console.error('Error submitting player report:', err);
@@ -125,20 +129,6 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
             setError('');
             setSuccess(false);
         }, 300);
-    };
-
-    const getDescriptionHelperText = () => {
-        const charCount = `${description.length}/${MAX_DESCRIPTION_LENGTH} characters`;
-
-        if (requiresDescription) {
-            if (showDescriptionError) {
-                return `${charCount} (minimum ${MIN_DESCRIPTION_LENGTH} required)`;
-            }
-            return charCount;
-        }
-
-        // Other report types - description is optional
-        return `${charCount} (optional)`;
     };
 
     /* STYLES */
@@ -295,6 +285,7 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
             </DialogTitle>
             <DialogContent sx={reportDialogStyles.dialogContent}>
                 {isSpectator ? (
+
                     /* Spectator warning */
                     <Alert severity="info" sx={{ my: 1, ...reportDialogStyles.alerts.info }}>
                         Player reporting is disabled for spectators. Feel free to report at our{' '}
@@ -353,7 +344,7 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
                                 </Typography>
 
                                 <TextField
-                                    label="Description"
+                                    label={requiresDescription ? 'Description (required)' : 'Description (optional)'}
                                     multiline
                                     rows={4}
                                     fullWidth
@@ -390,9 +381,9 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
                                         variant="caption"
                                         sx={reportDialogStyles.helperText}
                                     >{isChatDisabled
-                                        ? 'Chat is already disabled for this game'
-                                        : 'This will disable chat for the rest of this game'
-                                    }
+                                            ? 'Chat is already disabled for this game'
+                                            : 'This will disable chat for the rest of this game'
+                                        }
                                     </Typography>
                                 </Box>
                             </>

@@ -23,8 +23,8 @@ import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
 import {
     LobbyConfirmationPopupModule
-} from "@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup";
-import PlayerReportDialog from "@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog";
+} from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
+import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -474,22 +474,20 @@ const Chat: React.FC<IChatProps> = ({
                                         <span>Disable Chat</span>
                                     </Box>
                                 </Box>
-                                {!lobbyState?.gameOngoing && (
-                                    opponentId ? (
-                                        <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
-                                            <Box sx={styles.optionLabel}>
-                                                <ReportProblem sx={styles.optionIcon} />
-                                                <span>Report Opponent</span>
-                                            </Box>
+                                {opponentId ? (
+                                    <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
+                                        <Box sx={styles.optionLabel}>
+                                            <ReportProblem sx={styles.optionIcon} />
+                                            <span>Report Opponent</span>
                                         </Box>
-                                    ) : (
-                                        <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
-                                            <Box sx={styles.optionLabel}>
-                                                <ReportProblem sx={styles.optionIcon} />
-                                                <span style={{ color: '#888' }}>No opponent to report</span>
-                                            </Box>
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
+                                        <Box sx={styles.optionLabel}>
+                                            <ReportProblem sx={styles.optionIcon} />
+                                            <span style={{ color: '#888' }}>No opponent to report</span>
                                         </Box>
-                                    )
+                                    </Box>
                                 )}
                             </>
                         )}
@@ -503,22 +501,20 @@ const Chat: React.FC<IChatProps> = ({
                                         </span>
                                     </Box>
                                 </Box>
-                                {!lobbyState?.gameOngoing && (
-                                    opponentId ? (
-                                        <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
-                                            <Box sx={styles.optionLabel}>
-                                                <ReportProblem sx={styles.optionIcon} />
-                                                <span>Report Opponent</span>
-                                            </Box>
+                                {opponentId ? (
+                                    <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
+                                        <Box sx={styles.optionLabel}>
+                                            <ReportProblem sx={styles.optionIcon} />
+                                            <span>Report Opponent</span>
                                         </Box>
-                                    ) : (
-                                        <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
-                                            <Box sx={styles.optionLabel}>
-                                                <ReportProblem sx={styles.optionIcon} />
-                                                <span style={{ color: '#888' }}>No opponent to report</span>
-                                            </Box>
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
+                                        <Box sx={styles.optionLabel}>
+                                            <ReportProblem sx={styles.optionIcon} />
+                                            <span style={{ color: '#888' }}>No opponent to report</span>
                                         </Box>
-                                    )
+                                    </Box>
                                 )}
                             </>
                         )}
