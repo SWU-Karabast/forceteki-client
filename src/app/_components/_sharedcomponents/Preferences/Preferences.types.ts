@@ -87,3 +87,21 @@ export enum StatsSource {
     Karabast = 'Karabast',
     SwuStats = 'SWUStats'
 }
+
+export enum PlayerReportType {
+    OffensiveUsername = 'offensiveUsername',
+    ChatHarrasment = 'chatHarrasment',
+    AbusingMechanics = 'abusingMechanics',
+    Other = 'other',
+}
+
+export interface IReportTypeConfig {
+    type: PlayerReportType;
+    label: string;
+    description: string;
+}
+
+export interface IPlayerReportDialogProps {
+    open: boolean;
+    onClose: () => void;
+}
