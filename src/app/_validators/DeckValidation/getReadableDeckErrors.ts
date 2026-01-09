@@ -73,6 +73,7 @@ export function getReadableDeckErrors(
     if (illegalInFormatList.length > 0) {
         illegalInFormatList.forEach(({ name, id }) => {
             messages.push(
+                // TODO THIS PR: add a formatting utility so that we don't write "illegal in nextSetPreview format"
                 `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${format} format.`
             );
         });
