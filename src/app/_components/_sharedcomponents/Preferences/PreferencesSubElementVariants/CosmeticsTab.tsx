@@ -15,8 +15,8 @@ function CosmeticsTab() {
     const { cosmetics, fetchCosmetics, isContributor } = useCosmetics();
     const [selectedCardback, setSelectedCardback] = useState<string|null>(null);
     const [selectedBackground, setSelectedBackground] = useState<string|null>(null);
-    //const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
-    //const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
+    // const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
+    // const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
     const [expandedAccordion, setExpandedAccordion] = useState<string>('cardbacks'); // Default to cardbacks expanded
 
 
@@ -26,7 +26,8 @@ function CosmeticsTab() {
             if (cosmetics) {
                 setSelectedCardback(cosmetics.cardback ?? 'Default');
                 setSelectedBackground(cosmetics.background ?? 'Default');
-                /*setSelectedPlaymat(cosmetics.playmat ?? 'none');
+
+                /* setSelectedPlaymat(cosmetics.playmat ?? 'none');
                 setDisablePlaymats(cosmetics.disablePlaymats ?? false);*/
             }
             fetchCosmetics();
@@ -61,7 +62,7 @@ function CosmeticsTab() {
         }
     }
 
-    /*const onPlaymatClick = async (id: string) => {
+    /* const onPlaymatClick = async (id: string) => {
         try {
             const updatedCosmetics = {
                 ...user?.preferences.cosmetics,
@@ -80,7 +81,7 @@ function CosmeticsTab() {
         }
     }*/
 
-    /*const onDisablePlaymatsChange = async (checked: boolean) => {
+    /* const onDisablePlaymatsChange = async (checked: boolean) => {
         try {
             const updatedCosmetics = {
                 ...user?.preferences.cosmetics,
@@ -129,7 +130,7 @@ function CosmeticsTab() {
         });
     };
     // Create playmats list with 'None' option
-    /*const getPlaymatOptions = () => {
+    /* const getPlaymatOptions = () => {
         const noneOption: IRegisteredCosmeticOption = {
             id: 'none',
             title: 'None',
@@ -285,7 +286,7 @@ function CosmeticsTab() {
                     </AccordionDetails>
                 </Accordion>
             </Box>
-            {/*<Box sx={styles.accordionContainer}>
+            {/* <Box sx={styles.accordionContainer}>
                 <Accordion
                     sx={styles.accordionStyle}
                     expanded={expandedAccordion === 'playmats'}
@@ -333,7 +334,7 @@ function CosmeticsTab() {
                     </AccordionDetails>
                 </Accordion>
             </Box>*/}
-            {/*<Box sx={{
+            {/* <Box sx={{
                 ...styles.accordionContainer,
                 backgroundColor: 'rgba(59, 66, 82, 0.07)',
                 border: '1px solid #4C566A',
