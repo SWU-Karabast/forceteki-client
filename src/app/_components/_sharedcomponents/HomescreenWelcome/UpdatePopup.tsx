@@ -92,37 +92,33 @@ const WhatsNewPopup: React.FC<WhatsNewPopupProps> = ({ open, onClose }) => {
         >
             <DialogContent>
                 <Typography variant="h4" sx={styles.title} id="whats-new-dialog-title">
-                    ✨ Deck Management
+                    ✨ SWU Stats Deck Integration
                 </Typography>
 
                 <Box component="ul" sx={styles.whatsNewList}>
                     <li>
                         <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                            <strong>Decks Anywhere</strong> – Build, save, and favorite decks in the new <em>Decks</em> tab. When logged in all of your
-                            creations are saved to the server, so they automatically appear on any device where you log in.
+                            <strong>Manage your decks in one place!</strong> – Link your SWU Stats account in Preferences, and your SWU Stats decks will automatically appear when creating games!
                         </Typography>
                     </li>
                     <li>
                         <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                            <strong>Player Stats</strong> – Track your wins, losses, and match‑up win‑rates! A new statistics panel lives in the bottom-left of the
-                            deck screen and updates automatically after every game.
+                            <strong>Favorite Decks First</strong> – Your favorite decks from SWU Stats are marked with ★ and appear at the top of the list for quick access.
                         </Typography>
                     </li>
                     <li>
                         <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                            <strong>SWUSTATS</strong> – Track your wins, losses, card statistics on SWUStats! By linking your Karabast account to your SWUStats account in the Preferences page.
+                            <strong>Seamless Switching</strong> – When SWU Stats is linked, your decks are pulled directly from SWU Stats. When not linked, you'll see your Karabast saved decks instead.
                         </Typography>
                     </li>
-                </Box>
-
-                <Box sx={styles.screenshotWrapper}>
-                    <Image
-                        src="/statsExample.png"
-                        alt="Highlighted Stats Panel"
-                        width={200}
-                        height={240}
-                        style={{ borderRadius: '8px', width: '12em', height: '14em', marginRight:'100px' }}
-                    />
+                    <li>
+                        <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
+                            <strong>Easy Management</strong> – Manage your SWU Stats decks directly on{' '}
+                            <a href="https://swustats.net" target="_blank" rel="noopener noreferrer" style={{ color: '#3590D2' }}>
+                                swustats.net
+                            </a>
+                        </Typography>
+                    </li>
                 </Box>
             </DialogContent>
             <DialogActions sx={styles.actions}>
