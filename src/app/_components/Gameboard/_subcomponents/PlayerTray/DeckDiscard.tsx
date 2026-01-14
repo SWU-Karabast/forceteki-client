@@ -70,6 +70,9 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     const topDiscardCardUrl = topDiscardCard && typeof topDiscardCard === 'object' ? `url(${s3CardImageURL(topDiscardCard)})` : 'none';
     const selectableDiscardCard = gameState.players[trayPlayer].cardPiles.discard.some((item: { selectable: boolean }) => item.selectable === true);
 
+    const topDeckCard = gameState?.players[trayPlayer]?.topCardOfDeck;
+    const topDeckCardUrl = topDeckCard && typeof topDeckCard === 'object' ? `url(${s3CardImageURL(topDeckCard)})` : 'none';
+
     const handleDiscardToggle = () => {
         const playerName = connectedPlayer != trayPlayer ? 'Your Opponent\'s' : 'Your';
         const existingPopup = popups.find(popup => popup.uuid === `${trayPlayer}-discard`);
@@ -92,8 +95,11 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     }
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
+    const [deckAnchorElement, setDeckAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const deckHoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement) && Boolean(topDiscardCard);
+    const deckOpen = Boolean(deckAnchorElement) && Boolean(topDeckCard) && topDeckCardUrl !== 'none';
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -105,6 +111,18 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     const handlePreviewClose = () => {
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
+    };
+
+    const handleDeckPreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        const target = event.currentTarget;
+        deckHoverTimeout.current = window.setTimeout(() => {
+            setDeckAnchorElement(target);
+        }, 200);
+    };
+ 
+    const handleDeckPreviewClose = () => {
+        clearTimeout(deckHoverTimeout.current);
+        setDeckAnchorElement(null);
     };
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
@@ -179,14 +197,19 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
             }
         },
         deck: {
+            deckTopCardPreview: {
+                borderRadius: '.38em',
+                backgroundImage: topDeckCardUrl,
+                backgroundSize: 'cover',
+                backgroundRepeat: 'no-repeat',
+                aspectRatio: '1 / 1.4',
+                width: '16rem',
+            },
             deckCardStyle: {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
-                backgroundSize: '100%',
-                borderWidth:'2px',
-                borderColor:'black',
-                borderStyle:'solid',
-                backgroundImage: cardback ? `url(${getCardback(cardback).path})` : 'url(\'/card-back.png\')',
+                backgroundSize: (topDeckCard && topDeckCardUrl !== 'none') ? 'cover' : '100%',
+                backgroundImage: (topDeckCard && topDeckCardUrl !== 'none') ? topDeckCardUrl : (cardback ? `url(${getCardback(cardback).path})` : 'url(\'/card-back.png\')'),
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',
                 alignItems: 'center',
@@ -206,6 +229,10 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
                 borderRadius: '5px',
                 '&:hover': {
                     cursor: 'pointer',
+                    ...(topDeckCard && topDeckCardUrl !== 'none' && {
+                        scale: '1.1',
+                        transition: 'all ease-in-out 0.15s',
+                    }),
                 },
             },
 
@@ -250,9 +277,26 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
             >
                 <Box sx={{ ...styles.discard.discardTopCardPreview }} />
             </Popover>
-            <Box ref={deckRef} sx={styles.deck.deckCardStyle}>
+            <Box 
+                ref={deckRef} 
+                sx={styles.deck.deckCardStyle}
+                onMouseEnter={(topDeckCard && topDeckCardUrl !== 'none') ? handleDeckPreviewOpen : undefined}
+                onMouseLeave={(topDeckCard && topDeckCardUrl !== 'none') ? handleDeckPreviewClose : undefined}
+            >
                 {deckComponent}
             </Box>
+            <Popover
+                id="deck-mouse-over-popover"
+                sx={{ pointerEvents: 'none' }}
+                open={deckOpen}
+                anchorEl={deckAnchorElement}
+                onClose={handleDeckPreviewClose}
+                disableRestoreFocus
+                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                {...popoverConfig()}
+            >
+                <Box sx={{ ...styles.deck.deckTopCardPreview }} />
+            </Popover>
         </Box>
     );
 };
