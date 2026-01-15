@@ -72,6 +72,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
 
     const topDeckCard = gameState?.players[trayPlayer]?.topCardOfDeck;
     const topDeckCardUrl = topDeckCard && typeof topDeckCard === 'object' ? `url(${s3CardImageURL(topDeckCard)})` : 'none';
+    const canSeeTopCard = topDeckCard && topDeckCardUrl !== 'none';
 
     const handleDiscardToggle = () => {
         const playerName = connectedPlayer != trayPlayer ? 'Your Opponent\'s' : 'Your';
@@ -99,7 +100,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const deckHoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement) && Boolean(topDiscardCard);
-    const deckOpen = Boolean(deckAnchorElement) && Boolean(topDeckCard) && topDeckCardUrl !== 'none';
+    const deckOpen = Boolean(deckAnchorElement) && canSeeTopCard;
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -208,8 +209,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
             deckCardStyle: {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
-                backgroundSize: (topDeckCard && topDeckCardUrl !== 'none') ? 'cover' : '100%',
-                backgroundImage: (topDeckCard && topDeckCardUrl !== 'none') ? topDeckCardUrl : (cardback ? `url(${getCardback(cardback).path})` : 'url(\'/card-back.png\')'),
+                backgroundSize: canSeeTopCard ? 'cover' : '100%',
+                backgroundImage: canSeeTopCard ? topDeckCardUrl : (cardback ? `url(${getCardback(cardback).path})` : 'url(\'/card-back.png\')'),
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',
                 alignItems: 'center',
@@ -229,7 +230,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
                 borderRadius: '5px',
                 '&:hover': {
                     cursor: 'pointer',
-                    ...(topDeckCard && topDeckCardUrl !== 'none' && {
+                    ...(canSeeTopCard && {
                         scale: '1.1',
                         transition: 'all ease-in-out 0.15s',
                     }),
@@ -280,8 +281,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
             <Box 
                 ref={deckRef} 
                 sx={styles.deck.deckCardStyle}
-                onMouseEnter={(topDeckCard && topDeckCardUrl !== 'none') ? handleDeckPreviewOpen : undefined}
-                onMouseLeave={(topDeckCard && topDeckCardUrl !== 'none') ? handleDeckPreviewClose : undefined}
+                onMouseEnter={canSeeTopCard ? handleDeckPreviewOpen : undefined}
+                onMouseLeave={canSeeTopCard ? handleDeckPreviewClose : undefined}
             >
                 {deckComponent}
             </Box>
