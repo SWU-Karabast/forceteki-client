@@ -3,14 +3,14 @@ import {
 } from '@mui/material/CircularProgress';
 import React from 'react';
 import Timer from '@/app/_components/_sharedcomponents/Timer/Timer';
-import { MAX_MAIN_TIME, MAX_TURN_TIME } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
+import { MAX_MAIN_TIME, MAX_TURN_TIME, secondsToMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
 import { Stack, Typography } from '@mui/material';
 import { formatMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
 
 type PlayerState = {
     isActionPhaseActivePlayer?: boolean
-    mainTimeRemaining: number,
-    turnTimeRemaining: number,
+    mainTimeRemainingSeconds: number,
+    turnTimeRemainingSeconds: number,
 } | undefined;
 
 interface GameTimerProps extends CircularProgressProps {
@@ -21,14 +21,20 @@ interface GameTimerProps extends CircularProgressProps {
 const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, ...props }) => {
     const activePlayer = player?.isActionPhaseActivePlayer;
 
-    const initialTurnTime = activePlayer ? player?.turnTimeRemaining : opponent?.turnTimeRemaining; 
-    const [turnTimeRemaining, setTurnTimeRemaining] = React.useState(
+    const opponentTurnTimeRemainingMs = secondsToMilliseconds(opponent?.turnTimeRemainingSeconds || 0);
+    const playerTurnTimeRemainingMs = secondsToMilliseconds(player?.turnTimeRemainingSeconds || 0);
+    const initialTurnTime = activePlayer ? playerTurnTimeRemainingMs : opponentTurnTimeRemainingMs; 
+
+    const [turnTimeRemainingMs, setTurnTimeRemainingMs] = React.useState(
         initialTurnTime || MAX_TURN_TIME
     );
-    const isTurnTime = turnTimeRemaining > 0;
+    const isTurnTime = turnTimeRemainingMs > 0;
 
-    const initialMainTime = activePlayer ? player?.mainTimeRemaining : opponent?.mainTimeRemaining;
-    const [mainTimeRemaining, setMainTimeRemaining] = React.useState(
+    const opponentMainTimeRemainingMs = secondsToMilliseconds(opponent?.mainTimeRemainingSeconds || 0);
+    const playerMainTimeRemainingMs = secondsToMilliseconds(player?.mainTimeRemainingSeconds || 0);
+    const initialMainTime = activePlayer ? playerMainTimeRemainingMs : opponentMainTimeRemainingMs;
+
+    const [mainTimeRemainingMs, setMainTimeRemainingMs] = React.useState(
         initialMainTime || MAX_MAIN_TIME
     );
 
@@ -36,26 +42,26 @@ const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, ...props }) => 
         <Timer 
             hasLowOpacity={!activePlayer}
             maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME} 
-            setTimeRemaining={isTurnTime ? setTurnTimeRemaining : setMainTimeRemaining}
-            timeRemaining={isTurnTime ? turnTimeRemaining : mainTimeRemaining}
+            setTimeRemaining={isTurnTime ? setTurnTimeRemainingMs : setMainTimeRemainingMs}
+            timeRemaining={isTurnTime ? turnTimeRemainingMs : mainTimeRemainingMs}
             tooltipTitle={<TooltipContent 
-                turnTimeRemaining={turnTimeRemaining} 
+                turnTimeRemainingSeconds={turnTimeRemainingMs} 
                 activePlayer={activePlayer} 
             />}
             {...props}
         >
 
             <MainTimerLabel activePlayer={activePlayer}
-                playerTimeRemaining={activePlayer ? mainTimeRemaining : player?.mainTimeRemaining} 
-                opponentTimeRemaining={activePlayer ? opponent?.mainTimeRemaining : mainTimeRemaining} 
+                playerTimeRemaining={activePlayer ? mainTimeRemainingMs : playerMainTimeRemainingMs} 
+                opponentTimeRemaining={activePlayer ? opponentMainTimeRemainingMs : mainTimeRemainingMs} 
             />
         </Timer>
     );
 }
 
 const TooltipContent = (
-    { turnTimeRemaining, activePlayer }: 
-    { turnTimeRemaining: number, activePlayer?: boolean }
+    { turnTimeRemainingSeconds, activePlayer }: 
+    { turnTimeRemainingSeconds: number, activePlayer?: boolean }
 ) => {
     const playerLabel = activePlayer ? 'Your' : 'Opponent\'s';
 
@@ -81,7 +87,7 @@ const TooltipContent = (
             </Stack>
 
             <Typography variant="body2">
-                {playerLabel} turn time remaining: {formatMilliseconds(turnTimeRemaining)}
+                {playerLabel} turn time remaining: {formatMilliseconds(turnTimeRemainingSeconds)}
             </Typography>
 
 

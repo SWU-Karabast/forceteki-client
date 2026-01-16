@@ -5,5 +5,8 @@ export const formatMilliseconds = (ms: number): string => {
     return `${minutes.toString()}:${seconds.toString().padStart(2, '0')}`;
 }
 
-export const MAX_TURN_TIME = 7_000; // 60 seconds in ms
+export const millisecondsToSeconds = (ms: number) => ms / 1000;
+export const secondsToMilliseconds = (s: number) => s * 1000;
+
+export const MAX_TURN_TIME = 60_000; // 60 seconds in ms
 export const MAX_MAIN_TIME = 150_000; // 150 seconds in ms
