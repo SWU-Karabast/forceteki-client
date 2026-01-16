@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
-import { Card, CardContent, Box, Typography, useMediaQuery } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { Card, CardContent, Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { debugBorder } from '@/app/_utils/debug';
@@ -11,17 +10,13 @@ import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.typ
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 /**
- * Determines if resources should use column style based on screen size and orientation
+ * Resources will always stack horizontally due to vertical space constraints with Credits component
  */
 const useResourceLayout = () => {
-    const theme = useTheme();
     const { isPortrait } = useScreenOrientation();
     
-    // use desktopHD (1600px) as breakpoint for going 'narrow'
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down('desktopHD'));
-    // Never use column style in portrait mode, regardless of screen size
-    // In landscape, use column style only on smaller screens
-    const shouldUseColumnStyle = !isPortrait && isSmallScreen;
+    // Always use horizontal layout to save vertical space
+    const shouldUseColumnStyle = false;
     
     return { shouldUseColumnStyle, isPortrait };
 };
@@ -71,7 +66,7 @@ const Resources: React.FC<IResourcesProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             transition: 'background-color 0.3s ease',
-            padding: '1.5rem .8rem',
+            padding: '1rem .6rem', // Reduced padding for tighter borders
             overflow: 'visible',
             cursor: 'pointer',
             border: selectableResource ? '2px solid var(--selection-green)' : 'none',

@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import { ChatBubbleOutline } from '@mui/icons-material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
+import Credits from '../_subcomponents/PlayerTray/Credits';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import CardActionTray from '../_subcomponents/PlayerTray/CardActionTray';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
@@ -23,13 +24,19 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
         leftColumnStyle: {
             ...debugBorder('red'),
             display: 'flex',
-            flexDirection: isPortrait ? 'column-reverse' : 'row',
+            flexDirection: 'row', // Horizontal layout for main container
             alignItems: 'center',
             justifyContent: 'flex-start',
             padding: isPortrait ? '0.5rem' : '1.0rem',
             gap: '1rem',
             height: '100%',
             boxSizing: 'border-box',
+        },
+        creditsResourcesStack: {
+            display: 'flex',
+            flexDirection: 'column', // Credits above Resources
+            alignItems: 'center',
+            gap: '0.5rem', // Smaller gap between Credits and Resources
         },
         centerColumnStyle: {
             ...debugBorder('green'),
@@ -98,7 +105,10 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                 }}
             >
                 <DeckDiscard trayPlayer={trayPlayer} cardback={connectedUserCardback} />
-                <Resources trayPlayer={trayPlayer} />
+                <Box sx={styles.creditsResourcesStack}>
+                    <Credits trayPlayer={trayPlayer} />
+                    <Resources trayPlayer={trayPlayer} />
+                </Box>
             </Grid>
 
             {/* Middle column: expands to fill space */}
