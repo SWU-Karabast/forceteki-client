@@ -17,7 +17,7 @@ const Credits: React.FC<ICreditsProps> = ({
     // ------------------------STYLES------------------------//
     const styles = {
         cardStyle: {
-            width: '120px', // Fixed width to align with Resources
+            width: '100%', // Fill parent container width
             height: 'auto', // Auto height instead of maxHeight
             minHeight: 'fit-content',
             background: 'transparent',
@@ -66,26 +66,26 @@ const Credits: React.FC<ICreditsProps> = ({
         creditBorderLeft: {
             background: `
             url('border-res-lt.svg') no-repeat left top`,
-            backgroundSize: 'auto 100%', // Scale border to fit component height
+            backgroundSize: 'auto 100%',
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',
             height: '100%',
             position: 'absolute',
             pointerEvents: 'none', 
-            zIndex: 2, // above the pseudo-element
+            zIndex: 2,
         },
         creditBorderRight: {
             background: `
             url('border-res-rt.svg') no-repeat right top`,
-            backgroundSize: 'auto 100%', // Scale border to fit component height,
+            backgroundSize: 'auto 100%',
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',
             height: '100%',
             position: 'absolute',
             pointerEvents: 'none',
-            zIndex: 2, // above the pseudo-element
+            zIndex: 2,
         },
     };
 

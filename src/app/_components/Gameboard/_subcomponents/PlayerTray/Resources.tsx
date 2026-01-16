@@ -57,7 +57,7 @@ const Resources: React.FC<IResourcesProps> = ({
     // ------------------------STYLES------------------------//
     const styles = {
         cardStyle: {
-            width: '120px', // Fixed width to align with Credits
+            width: '100%', // Fill parent container width
             height: 'auto', // Auto height instead of maxHeight
             minHeight: 'fit-content',
             background: selectableResource ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
@@ -112,26 +112,26 @@ const Resources: React.FC<IResourcesProps> = ({
         resourceBorderLeft: {
             background: `
             url('border-res-lb.svg') no-repeat left bottom`,
-            backgroundSize: 'auto 100%', // Scale border to fit component height
+            backgroundSize: 'auto 100%',
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',
             height: '100%',
             position: 'absolute',
             pointerEvents: 'none', 
-            zIndex: 2, // above the pseudo-element
+            zIndex: 2,
         },
         resourceBorderRight: {
             background: `
             url('border-res-rb.svg') no-repeat right bottom`,
-            backgroundSize: 'auto 100%', // Scale border to fit component height
+            backgroundSize: 'auto 100%',
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',
             height: '100%',
             position: 'absolute',
             pointerEvents: 'none',
-            zIndex: 2, // above the pseudo-element
+            zIndex: 2,
         },
     };
 

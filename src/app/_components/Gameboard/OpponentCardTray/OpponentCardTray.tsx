@@ -112,7 +112,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         creditsResourcesStack: {
             display: 'flex',
             flexDirection: 'column', // Credits above Resources
-            alignItems: 'center',
+            alignItems: 'stretch', // Make children fill container width
             gap: '0.5rem', // Smaller gap between Credits and Resources
         },
         centerColumn: {
