@@ -1,5 +1,5 @@
 import React from 'react';
-import { CloseOutlined, SettingsOutlined, AccessAlarm } from '@mui/icons-material';
+import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
 import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
@@ -11,9 +11,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { useRouter } from 'next/navigation';
-import { keyframes } from '@mui/system';
+import { Stack } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
@@ -34,8 +35,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
-    const warning = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Warning';
-    const danger = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Danger';
     const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
 
     const hasLastPlayedCard = !!gameState.clientUIProperties?.lastPlayedCard
@@ -68,32 +67,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             }
         };
     }
-
-    const pulseYellowTimer = keyframes`
-      0% {
-        background: transparent;
-      }
-      50% {
-        background: rgba(220, 185, 0, 0.3);
-        box-shadow: 0 0 16px rgba(220, 185, 0, 0.7);
-      }
-      100% {
-        background: transparent;
-      }
-    `;
-
-    const pulseRedTimer = keyframes`
-      0% {
-        background: transparent;
-      }
-      50% {
-        background: rgba(255, 0, 0, 0.3);
-        box-shadow: 0 0 16px rgba(255, 0, 0, 0.7);
-      }
-      100% {
-        background: transparent;
-      }
-    `;
 
     // ---------------Styles------------------- //
     const styles = {
@@ -177,16 +150,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             aspectRatio: '1 / 1.4',
             width: '16rem',
         },
-        timerBox: {
-            display: !warning && !danger ? 'none' : 'block',
-            borderRadius: '50%',
-            animation: warning ? `${pulseYellowTimer} 3s infinite ease-in-out` : danger ? `${pulseRedTimer} 3s infinite ease-in-out` : 'transparent',
-        },
-        timer: {
-            display: 'block',
-            fontSize: '4rem',
-            color: warning ? 'rgba(220, 185, 0, 1)' : danger ? 'rgba(255, 0, 0, 1)' : 'transparent',
-        }
     };
 
     return (
@@ -237,9 +200,10 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.rightColumn,
                 }}
             >
-                <Box sx={styles.timerBox}>
-                    <AccessAlarm sx={styles.timer}/>
-                </Box>
+                <GameTimer 
+                    player={gameState?.players[connectedPlayer]} 
+                    opponent={gameState?.players[getOpponent(connectedPlayer)]} 
+                />
                 <Box
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
