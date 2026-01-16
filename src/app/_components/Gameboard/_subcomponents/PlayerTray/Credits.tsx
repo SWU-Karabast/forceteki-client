@@ -17,8 +17,9 @@ const Credits: React.FC<ICreditsProps> = ({
     // ------------------------STYLES------------------------//
     const styles = {
         cardStyle: {
-            width: isPortrait ? 'auto' : '30%',
-            maxHeight: '100%',
+            width: '120px', // Fixed width to align with Resources
+            height: 'auto', // Auto height instead of maxHeight
+            minHeight: 'fit-content',
             background: 'transparent',
             display: 'flex',
             position: 'relative',
@@ -26,7 +27,7 @@ const Credits: React.FC<ICreditsProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             transition: 'background-color 0.3s ease',
-            padding: '1rem .6rem', // Reduced padding for tighter borders
+            padding: '0.5rem 0.4rem', // Further reduced padding
             overflow: 'visible',
             cursor: 'pointer',
             border: 'none',
@@ -64,8 +65,8 @@ const Credits: React.FC<ICreditsProps> = ({
         },
         creditBorderLeft: {
             background: `
-            url('border-res-lt.svg') no-repeat left top,
-            url('border-res-lb.svg') no-repeat left bottom`,
+            url('border-res-lt.svg') no-repeat left top`,
+            backgroundSize: 'auto 100%', // Scale border to fit component height
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',
@@ -76,8 +77,8 @@ const Credits: React.FC<ICreditsProps> = ({
         },
         creditBorderRight: {
             background: `
-            url('border-res-rt.svg') no-repeat right top,
-            url('border-res-rb.svg') no-repeat right bottom`,
+            url('border-res-rt.svg') no-repeat right top`,
+            backgroundSize: 'auto 100%', // Scale border to fit component height,
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',

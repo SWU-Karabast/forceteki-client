@@ -57,8 +57,9 @@ const Resources: React.FC<IResourcesProps> = ({
     // ------------------------STYLES------------------------//
     const styles = {
         cardStyle: {
-            width: isPortrait ? 'auto' : '30%',
-            maxHeight: '100%',
+            width: '120px', // Fixed width to align with Credits
+            height: 'auto', // Auto height instead of maxHeight
+            minHeight: 'fit-content',
             background: selectableResource ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
             display: 'flex',
             position: 'relative',
@@ -66,7 +67,7 @@ const Resources: React.FC<IResourcesProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             transition: 'background-color 0.3s ease',
-            padding: '1rem .6rem', // Reduced padding for tighter borders
+            padding: '0.5rem 0.4rem', // Further reduced padding
             overflow: 'visible',
             cursor: 'pointer',
             border: selectableResource ? '2px solid var(--selection-green)' : 'none',
@@ -110,8 +111,8 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         resourceBorderLeft: {
             background: `
-            url('border-res-lt.svg') no-repeat left top,
             url('border-res-lb.svg') no-repeat left bottom`,
+            backgroundSize: 'auto 100%', // Scale border to fit component height
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',
@@ -122,8 +123,8 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         resourceBorderRight: {
             background: `
-            url('border-res-rt.svg') no-repeat right top,
             url('border-res-rb.svg') no-repeat right bottom`,
+            backgroundSize: 'auto 100%', // Scale border to fit component height
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',
