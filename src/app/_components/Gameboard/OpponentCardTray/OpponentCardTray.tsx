@@ -100,7 +100,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const styles = {
         leftColumn: {
             ...debugBorder('red'),
-            flexDirection: 'row', // Horizontal layout for main container
+            flexDirection: isPortrait ? 'column' : 'row', // Responsive layout
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',

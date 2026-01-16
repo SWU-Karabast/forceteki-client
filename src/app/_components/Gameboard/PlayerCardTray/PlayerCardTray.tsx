@@ -24,7 +24,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
         leftColumnStyle: {
             ...debugBorder('red'),
             display: 'flex',
-            flexDirection: 'row', // Horizontal layout for main container
+            flexDirection: isPortrait ? 'column-reverse' : 'row', // Responsive layout
             alignItems: 'center',
             justifyContent: 'flex-start',
             padding: isPortrait ? '0.5rem' : '1.0rem',

@@ -13,6 +13,7 @@ const Credits: React.FC<ICreditsProps> = ({
     const { isPortrait } = useScreenOrientation();
 
     const creditTokenCount = gameState.players[trayPlayer].credits.count;
+    const selectableCredit = gameState.players[trayPlayer].credits.selectable;
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -20,7 +21,7 @@ const Credits: React.FC<ICreditsProps> = ({
             width: '100%', // Fill parent container width
             height: 'auto', // Auto height instead of maxHeight
             minHeight: 'fit-content',
-            background: 'transparent',
+            background: selectableCredit ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
             display: 'flex',
             position: 'relative',
             borderRadius: '5px',
@@ -30,8 +31,8 @@ const Credits: React.FC<ICreditsProps> = ({
             padding: '0.5rem 0.4rem', // Further reduced padding
             overflow: 'visible',
             cursor: 'pointer',
-            border: 'none',
-            ...debugBorder('orange'),
+            border: selectableCredit ? '2px solid var(--selection-green)' : 'none',
+            ...(!selectableCredit && debugBorder('orange')),
             '&:hover': {
                 background:
                     trayPlayer === connectedPlayer
