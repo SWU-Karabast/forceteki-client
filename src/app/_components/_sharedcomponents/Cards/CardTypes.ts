@@ -68,6 +68,7 @@ export interface ICardData {
     displayText?: string;
     clonedCardId?: ICardSetId;
     clonedCardName?: string;
+    blockedFromPlayReason?: string;
 }
 
 export interface IServerCardData {
