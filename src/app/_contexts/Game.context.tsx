@@ -274,7 +274,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 const retransmitNeeded = handleMessageDelta(delta);
                 if (retransmitNeeded) {
                     // Request retransmit for missing messages
-                    newSocket.emit('game', 'getGameStateMessages', retransmitNeeded.startIndex, retransmitNeeded.endIndex);
+                    newSocket.emit('game', 'retransmitGameMessages', retransmitNeeded.startIndex, retransmitNeeded.endIndex);
                 }
             }
             
@@ -286,7 +286,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             handleGameStatePopups(gameState, connectedPlayerId, isSpectatorMode);
         });
 
-        newSocket.on('gameStateMessages', (retransmit: IMessageRetransmit) => {
+        newSocket.on('retransmitGameMessages', (retransmit: IMessageRetransmit) => {
             handleMessageRetransmit(retransmit);
             if (process.env.NODE_ENV === 'development') {
                 console.log('Message retransmit received:', retransmit);
