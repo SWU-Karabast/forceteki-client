@@ -21,9 +21,12 @@ import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/use
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
+import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
+import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 
 interface IGameContextType {
     gameState: any;
+    gameMessages: IChatEntry[];
     lobbyState: any;
     bugReportState: any;
     playerReportState: any;
@@ -63,6 +66,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
     const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
+    const { messages: gameMessages, handleMessageDelta, handleMessageRetransmit, resetMessages } = useGameMessages();
 
     // Initialize sound handler with user preferences
     const { playSound } = useSoundHandler({
@@ -256,7 +260,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
             if (gameState?.id && gameState.id !== lastGameIdRef.current) {
                 clearPopups();
+                resetMessages();
                 lastGameIdRef.current = gameState.id;
+            }
+            
+            // Handle message delta if present in gameState
+            if (gameState.newMessages !== undefined && gameState.messageOffset !== undefined && gameState.totalMessages !== undefined) {
+                const delta: IMessageDelta = {
+                    newMessages: gameState.newMessages,
+                    messageOffset: gameState.messageOffset,
+                    totalMessages: gameState.totalMessages,
+                };
+                const retransmitNeeded = handleMessageDelta(delta);
+                if (retransmitNeeded) {
+                    // Request retransmit for missing messages
+                    newSocket.emit('game', 'getGameStateMessages', retransmitNeeded.startIndex, retransmitNeeded.endIndex);
+                }
             }
             
             setGameState(gameState);
@@ -265,6 +284,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 console.log(`Game state received (${byteSize} bytes):`, gameState);
             }
             handleGameStatePopups(gameState, connectedPlayerId, isSpectatorMode);
+        });
+
+        newSocket.on('gameStateMessages', (retransmit: IMessageRetransmit) => {
+            handleMessageRetransmit(retransmit);
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Message retransmit received:', retransmit);
+            }
         });
 
         newSocket.on('lobbystate', (lobbyState: any) => {
@@ -360,6 +386,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const resetStates = () => {
         setLobbyState(null);
         setGameState(null);
+        resetMessages();
     }
 
     const getConnectedPlayerPrompt = () => {
@@ -376,6 +403,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         <GameContext.Provider
             value={{
                 gameState,
+                gameMessages,
                 lobbyState,
                 bugReportState,
                 playerReportState,
