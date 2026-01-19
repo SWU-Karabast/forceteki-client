@@ -6,6 +6,7 @@ import {
     CircularProgress,
     FormControl,
     FormControlLabel,
+    IconButton,
     MenuItem,
     Typography,
     Radio,
@@ -14,6 +15,7 @@ import {
     Divider,
     Tooltip,
 } from '@mui/material';
+import { Sync as SyncIcon } from '@mui/icons-material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
@@ -67,6 +69,8 @@ interface ICreateGameFormProps {
     // SWU Stats integration props
     swuStatsDecks?: ISwuStatsDeckItem[];
     isSwuStatsLinked?: boolean;
+    useSwuStatsDecks?: boolean;
+    toggleDeckSource?: () => void;
     isLoadingSwuStatsDecks?: boolean;
 }
 
@@ -87,6 +91,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     // SWU Stats integration
     swuStatsDecks = [],
     isSwuStatsLinked = false,
+    useSwuStatsDecks = false,
+    toggleDeckSource,
     isLoadingSwuStatsDecks = false
 }) => {
     const router = useRouter();
@@ -153,7 +159,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         let deckType = 'url';
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         if(showSavedDecks) {
-            if (isSwuStatsLinked) {
+            if (useSwuStatsDecks && isSwuStatsLinked) {
                 // Use SWU Stats deck
                 const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
                 userDeck = selectedSwuStatsDeck?.deckLink || '';
@@ -176,7 +182,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
                     // SWU Stats decks are not stored in our DB
-                    deckData.isPresentInDb = isSwuStatsLinked ? false : !!user;
+                    deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
                 }else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck
                     deckData.isPresentInDb = false;
@@ -451,19 +457,38 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </FormControl>
                 {showSavedDecks && (
                     <>
-                        {/* Deck Dropdown */}
+                        {/* Deck Dropdown with Cycle Button */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>
-                                {isSwuStatsLinked ? 'SWU Stats Decks' : 'Favorite Decks'}
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: '0.5rem' }}>
+                                <Typography variant="body1" sx={styles.labelTextStyle}>
+                                    {useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Decks' : 'Favorite Decks'}
+                                </Typography>
+                                
+                                {isSwuStatsLinked && toggleDeckSource && (
+                                    <Tooltip title={`Switch to ${useSwuStatsDecks ? 'Karabast' : 'SWU Stats'} decks`}>
+                                        <IconButton
+                                            onClick={toggleDeckSource}
+                                            size="small"
+                                            sx={{
+                                                color: useSwuStatsDecks ? '#4CAF50' : '#fff',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            <SyncIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
+                            </Box>
                             
-                            {isSwuStatsLinked 
+                            {useSwuStatsDecks && isSwuStatsLinked 
                                 ? renderSwuStatsDecksDropdown()
                                 : renderKarabastDecksDropdown()
                             }
                             
                             <Box sx={styles.manageDecksContainer}>
-                                {!isSwuStatsLinked && (
+                                {(!useSwuStatsDecks || !isSwuStatsLinked) && (
                                     <Button
                                         onClick={handleDeckManagement}
                                         sx={styles.manageDecks}
@@ -471,7 +496,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                         Manage&nbsp;Decks
                                     </Button>
                                 )}
-                                {isSwuStatsLinked && (
+                                {useSwuStatsDecks && isSwuStatsLinked && (
                                     <Typography sx={{ ...styles.deckSourceLabel, mt: '0.5rem' }}>
                                         Manage decks on{' '}
                                         <Link 

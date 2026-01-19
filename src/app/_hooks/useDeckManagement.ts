@@ -38,6 +38,8 @@ export interface IDeckManagementState {
     // SWU Stats integration
     swuStatsDecks: ISwuStatsDeckItem[];
     isSwuStatsLinked: boolean;
+    useSwuStatsDecks: boolean;
+    toggleDeckSource: () => void;
     isLoadingSwuStatsDecks: boolean;
 }
 
@@ -82,6 +84,35 @@ export const useDeckManagement = (): IDeckManagementState => {
     const [swuStatsDecks, setSwuStatsDecks] = useState<ISwuStatsDeckItem[]>([]);
     const [isSwuStatsLinked, setIsSwuStatsLinked] = useState<boolean>(false);
     const [isLoadingSwuStatsDecks, setIsLoadingSwuStatsDecks] = useState<boolean>(false);
+    
+    // Toggle state for switching between SWU Stats and Karabast decks
+    // When SWU Stats is linked, default to using SWU Stats decks
+    const [useSwuStatsDecks, setUseSwuStatsDecks] = useState<boolean>(false);
+
+    // When SWU Stats link status changes, update the toggle accordingly
+    useEffect(() => {
+        const stored = localStorage.getItem('useSwuStatsDecks');
+        
+        if (isSwuStatsLinked) {
+            // If SWU Stats is linked, default to true unless explicitly set to false
+            if (stored === null) {
+                // First time linking - default to true
+                setUseSwuStatsDecks(true);
+                localStorage.setItem('useSwuStatsDecks', 'true');
+            } else {
+                // Use stored preference
+                setUseSwuStatsDecks(stored === 'true');
+            }
+        } else {
+            // If SWU Stats is not linked, must use Karabast
+            setUseSwuStatsDecks(false);
+        }
+    }, [isSwuStatsLinked]);
+
+    // Sync useSwuStatsDecks to localStorage when manually changed
+    const syncUseSwuStatsDecksToStorage = useCallback((value: boolean) => {
+        localStorage.setItem('useSwuStatsDecks', value.toString());
+    }, []);
 
     // Bo3 is only allowed for logged-in users, but in dev mode we allow it unless explicitly blocked
     const isDev = process.env.NODE_ENV === 'development';
@@ -243,6 +274,18 @@ export const useDeckManagement = (): IDeckManagementState => {
 
     const handleSetDeckLink = useCallback((value: string) => setDeckLink(value), []);
 
+    const toggleDeckSource = useCallback(() => {
+        if (!isSwuStatsLinked) return; // Can't toggle if SWU Stats is not linked
+        
+        const newValue = !useSwuStatsDecks;
+        setUseSwuStatsDecks(newValue);
+        syncUseSwuStatsDecksToStorage(newValue);
+        
+        // Clear the selected deck when switching sources
+        setFavoriteDeck('');
+        localStorage.setItem('selectedDeck', '');
+    }, [isSwuStatsLinked, useSwuStatsDecks, syncUseSwuStatsDecksToStorage]);
+
     const deckPreferences: IDeckPreferences = {
         showSavedDecks,
         favoriteDeck,
@@ -271,6 +314,8 @@ export const useDeckManagement = (): IDeckManagementState => {
         // SWU Stats integration
         swuStatsDecks,
         isSwuStatsLinked,
+        useSwuStatsDecks,
+        toggleDeckSource,
         isLoadingSwuStatsDecks,
     };
 };

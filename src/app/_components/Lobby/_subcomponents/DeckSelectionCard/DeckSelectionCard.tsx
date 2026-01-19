@@ -13,11 +13,12 @@ import {
     FormControlLabel,
     Divider,
     FormControl,
+    IconButton,
     Radio,
     RadioGroup,
     CircularProgress,
 } from '@mui/material';
-import { Info } from '@mui/icons-material';
+import { Info, Sync as SyncIcon } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
@@ -57,6 +58,8 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         // SWU Stats integration
         swuStatsDecks,
         isSwuStatsLinked,
+        useSwuStatsDecks,
+        toggleDeckSource,
         isLoadingSwuStatsDecks,
     } = useDeckManagement();
     
@@ -125,7 +128,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         setDeckImportErrorsSeen(false);
         if(showSavedDecks) {
-            if (isSwuStatsLinked) {
+            if (useSwuStatsDecks && isSwuStatsLinked) {
                 // Use SWU Stats deck
                 const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
                 if (selectedSwuStatsDeck?.deckLink) {
@@ -151,7 +154,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
                     // SWU Stats decks are not stored in our DB
-                    deckData.isPresentInDb = isSwuStatsLinked ? false : !!user;
+                    deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
                 } else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck;
                     deckData.isPresentInDb = false;
@@ -554,16 +557,39 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     </FormControl>
                     {showSavedDecks && (
                         <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>
-                                {isSwuStatsLinked ? 'SWU Stats Decks' : 'Favorite Decks'}
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: '0.5rem' }}>
+                                <Typography variant="body1" sx={styles.labelTextStyle}>
+                                    {useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Decks' : 'Favorite Decks'}
+                                </Typography>
+                                
+                                {isSwuStatsLinked && (
+                                    <Tooltip title={`Switch to ${useSwuStatsDecks ? 'Karabast' : 'SWU Stats'} decks`}>
+                                        <IconButton
+                                            onClick={toggleDeckSource}
+                                            disabled={disableSettings}
+                                            size="small"
+                                            sx={{
+                                                color: useSwuStatsDecks ? '#4CAF50' : '#fff',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                                },
+                                                '&:disabled': {
+                                                    color: 'rgba(255, 255, 255, 0.3)',
+                                                },
+                                            }}
+                                        >
+                                            <SyncIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
+                            </Box>
                             
-                            {isSwuStatsLinked 
+                            {useSwuStatsDecks && isSwuStatsLinked 
                                 ? renderSwuStatsDecksDropdown()
                                 : renderKarabastDecksDropdown()
                             }
                             
-                            {isSwuStatsLinked && (
+                            {useSwuStatsDecks && isSwuStatsLinked && (
                                 <Typography sx={{ ...styles.deckSourceLabel, mt: '0.5rem' }}>
                                     Manage decks on{' '}
                                     <Link 

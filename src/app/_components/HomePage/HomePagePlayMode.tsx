@@ -49,6 +49,8 @@ const HomePagePlayMode: React.FC = () => {
         // SWU Stats integration
         swuStatsDecks,
         isSwuStatsLinked,
+        useSwuStatsDecks,
+        toggleDeckSource,
         isLoadingSwuStatsDecks,
     } = useDeckManagement();
 
@@ -255,6 +257,8 @@ const HomePagePlayMode: React.FC = () => {
                                 isBo3Allowed={isBo3Allowed}
                                 swuStatsDecks={swuStatsDecks}
                                 isSwuStatsLinked={isSwuStatsLinked}
+                                useSwuStatsDecks={useSwuStatsDecks}
+                                toggleDeckSource={toggleDeckSource}
                                 isLoadingSwuStatsDecks={isLoadingSwuStatsDecks}
                             />
                         </TabPanel>}
@@ -275,6 +279,8 @@ const HomePagePlayMode: React.FC = () => {
                                 isBo3Allowed={isBo3Allowed}
                                 swuStatsDecks={swuStatsDecks}
                                 isSwuStatsLinked={isSwuStatsLinked}
+                                useSwuStatsDecks={useSwuStatsDecks}
+                                toggleDeckSource={toggleDeckSource}
                                 isLoadingSwuStatsDecks={isLoadingSwuStatsDecks}
                             />
                         </TabPanel>
