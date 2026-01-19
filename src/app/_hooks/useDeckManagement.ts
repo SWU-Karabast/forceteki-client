@@ -56,6 +56,15 @@ export const useDeckManagement = (): IDeckManagementState => {
         return localStorage.getItem('selectedDeck') || '';
     });
 
+    // Separate favorite decks for each source
+    const [favoriteSavedDeck, setFavoriteSavedDeck] = useState<string>(() => {
+        return localStorage.getItem('selectedSavedDeck') || '';
+    });
+
+    const [favoriteSwuStatsDeck, setFavoriteSwuStatsDeck] = useState<string>(() => {
+        return localStorage.getItem('selectedSwuStatsDeck') || '';
+    });
+
     const [format, setFormat] = useState<SwuGameFormat>(() => {
         const stored = localStorage.getItem('format');
 
@@ -268,27 +277,36 @@ export const useDeckManagement = (): IDeckManagementState => {
     }, []);
 
     const handleFavoriteDeckChange = useCallback((value: string) => {
-        setFavoriteDeck(value);
-        localStorage.setItem('selectedDeck', value);
-    }, []);
+        if (useSwuStatsDecks) {
+            setFavoriteSwuStatsDeck(value);
+            localStorage.setItem('selectedSwuStatsDeck', value);
+        } else {
+            setFavoriteSavedDeck(value);
+            localStorage.setItem('selectedSavedDeck', value);
+        }
+    }, [useSwuStatsDecks]);
+
+    // Helper to get the current favorite deck based on source
+    const getCurrentFavoriteDeck = useCallback((): string => {
+        return useSwuStatsDecks ? favoriteSwuStatsDeck : favoriteSavedDeck;
+    }, [useSwuStatsDecks, favoriteSwuStatsDeck, favoriteSavedDeck]);
 
     const handleSetDeckLink = useCallback((value: string) => setDeckLink(value), []);
 
     const toggleDeckSource = useCallback(() => {
         if (!isSwuStatsLinked) return; // Can't toggle if SWU Stats is not linked
         
-        const newValue = !useSwuStatsDecks;
-        setUseSwuStatsDecks(newValue);
-        syncUseSwuStatsDecksToStorage(newValue);
-        
-        // Clear the selected deck when switching sources
-        setFavoriteDeck('');
-        localStorage.setItem('selectedDeck', '');
-    }, [isSwuStatsLinked, useSwuStatsDecks, syncUseSwuStatsDecksToStorage]);
+        setUseSwuStatsDecks(prev => {
+            const newValue = !prev;
+            syncUseSwuStatsDecksToStorage(newValue);
+            return newValue;
+        });
+        // Don't clear the deck - each source maintains its own favorite
+    }, [isSwuStatsLinked, syncUseSwuStatsDecksToStorage]);
 
     const deckPreferences: IDeckPreferences = {
         showSavedDecks,
-        favoriteDeck,
+        favoriteDeck: getCurrentFavoriteDeck(),
         format,
         gamesToWinMode: effectiveGamesToWinMode,
         saveDeck,

@@ -363,13 +363,18 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         const sortedSwuStatsDecks = [...swuStatsDecks].sort((a, b) => {
             if (a.isFavorite && !b.isFavorite) return -1;
             if (!a.isFavorite && b.isFavorite) return 1;
-            return a.name.localeCompare(b.name);
+            return (a.name || '').localeCompare(b.name || '');
         });
+
+        // Validate that favoriteDeck exists in the list, if not use empty string
+        const validatedValue = sortedSwuStatsDecks.some(deck => deck.id.toString() === favoriteDeck) 
+            ? favoriteDeck 
+            : '';
 
         return (
             <StyledTextField
                 select
-                value={favoriteDeck}
+                value={validatedValue}
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setFavoriteDeck(e.target.value as string)
                 }
@@ -392,10 +397,16 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     };
 
     // Render Karabast saved decks dropdown
-    const renderKarabastDecksDropdown = () => (
+    const renderKarabastDecksDropdown = () => {
+        // Validate that favoriteDeck exists in the list, if not use empty string
+        const validatedValue = savedDecks.some(deck => deck.deckID === favoriteDeck)
+            ? favoriteDeck
+            : '';
+
+        return (
         <StyledTextField
             select
-            value={favoriteDeck}
+            value={validatedValue}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setFavoriteDeck(e.target.value as string)
             }
@@ -414,7 +425,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 ))
             )}
         </StyledTextField>
-    );
+        );
+    };
 
     return (
         <Box >
