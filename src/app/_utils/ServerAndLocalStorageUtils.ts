@@ -776,10 +776,12 @@ export interface ISwuStatsDecksResult {
 
 /**
  * Fetches the user's decks from SWU Stats if their account is linked
+ * @param user The current user
  * @param favoritesOnly If true, only returns favorite decks
  * @returns Promise that resolves to the decks data or null if not linked
  */
 export const fetchSwuStatsDecks = async (
+    user: IUser,
     favoritesOnly: boolean = false
 ): Promise<ISwuStatsDecksResult | null> => {
     try {
@@ -789,7 +791,7 @@ export const fetchSwuStatsDecks = async (
         }
         
         const response = await fetch(
-            `/api/swustats/decks?${params.toString()}`,
+            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/swustats/decks?${params.toString()}`,
             {
                 method: 'GET',
                 headers: {
@@ -807,7 +809,11 @@ export const fetchSwuStatsDecks = async (
             throw new Error(`Failed to fetch SWU Stats decks: ${response.status}`);
         }
 
-        return await response.json();
+        const result = await response.json();
+        return {
+            decks: result.decks,
+            pagination: result.pagination
+        };
     } catch (error) {
         console.error('Error fetching SWU Stats decks:', error);
         return null;

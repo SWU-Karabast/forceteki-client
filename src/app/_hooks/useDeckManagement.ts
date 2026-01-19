@@ -211,7 +211,7 @@ export const useDeckManagement = (): IDeckManagementState => {
 
                 if (linked) {
                     setIsLoadingSwuStatsDecks(true);
-                    const result = await fetchSwuStatsDecks(false);
+                    const result = await fetchSwuStatsDecks(user, false);
                     if (result?.decks) {
                         setSwuStatsDecks(result.decks);
                     }
