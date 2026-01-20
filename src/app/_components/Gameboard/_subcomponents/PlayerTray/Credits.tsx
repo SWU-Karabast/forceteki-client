@@ -8,12 +8,13 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 const Credits: React.FC<ICreditsProps> = ({
     trayPlayer
 }) => {
-    const { gameState, connectedPlayer } = useGame();
+    const { sendGameMessage, gameState, connectedPlayer } = useGame();
     const containerRef = useRef<HTMLDivElement>(null);
     const { isPortrait } = useScreenOrientation();
 
     const creditTokenCount = gameState.players[trayPlayer].credits.count;
-    const selectableCredit = gameState.players[trayPlayer].credits.selectable;
+    const selectableCredit = gameState.players[trayPlayer].credits.selectionState?.selectable || false;
+    const creditTokenUuids = gameState.players[trayPlayer].credits.uuids;
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -91,8 +92,11 @@ const Credits: React.FC<ICreditsProps> = ({
     };
 
     const handleCreditsClick = () => {
-        // TODO: Implement credit token interaction if needed
-        console.log('Credits clicked');
+        if (selectableCredit && creditTokenUuids.length > 0) {
+            // Send message with the first credit token UUID
+            const creditTokenUuid = creditTokenUuids[0];
+            sendGameMessage(['cardClicked', creditTokenUuid]);
+        }
     };
 
     return (
