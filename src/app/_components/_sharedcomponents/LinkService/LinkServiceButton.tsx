@@ -8,17 +8,25 @@ import {
     DialogActions
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { unlinkSwuStatsAsync } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { getSwuStatsAuthUrl } from '@/app/_utils/swuStatsUtils';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { IUser } from '@/app/_contexts/UserTypes';
 
 type Props = {
+    serviceName: string;
     linked: boolean;
     onLinkChange: (linkStatus: boolean) => void;
+    getAuthUrl: () => Promise<string>;
+    unlinkService: (user: IUser | null) => Promise<boolean>;
 };
 
-export default function LinkSwuStatsButton({ linked, onLinkChange }: Props) {
+function LinkServiceButton({
+    serviceName,
+    linked,
+    onLinkChange,
+    getAuthUrl,
+    unlinkService
+}: Props) {
     const theme = useTheme();
     const { user } = useUser();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -27,27 +35,28 @@ export default function LinkSwuStatsButton({ linked, onLinkChange }: Props) {
         if (linked) {
             setShowConfirmDialog(true);
         } else {
-            window.location.href = await getSwuStatsAuthUrl();
+            window.location.href = await getAuthUrl();
         }
     };
 
     const handleConfirmUnlink = async () => {
         try {
-            await unlinkSwuStatsAsync(user);
+            await unlinkService(user);
+            onLinkChange(false);
         } catch (error) {
             if (error instanceof Error) {
                 alert(error.message);
             }
-            console.log(error);
+            console.error(`Failed to unlink ${serviceName}:`, error);
         } finally {
             setShowConfirmDialog(false);
-            onLinkChange(false)
         }
     };
 
     const handleCancelUnlink = () => {
         setShowConfirmDialog(false);
     };
+
     const styles = {
         dialogContainer: {
             background: 'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
@@ -69,8 +78,7 @@ export default function LinkSwuStatsButton({ linked, onLinkChange }: Props) {
                 boxShadow: '0 6px 14px rgba(0,0,0,0.25)',
             }
         }
-    }
-
+    };
 
     return (
         <>
@@ -79,7 +87,7 @@ export default function LinkSwuStatsButton({ linked, onLinkChange }: Props) {
                 onClick={handleClick}
                 sx={styles.linkButton}
             >
-                {linked ? '⛓️‍💥 Unlink SWUstats' : '🔗 Link SWUstats'}
+                {linked ? `⛓️‍💥 Unlink ${serviceName}` : `🔗 Link ${serviceName}`}
             </Button>
 
             <Dialog
@@ -88,11 +96,11 @@ export default function LinkSwuStatsButton({ linked, onLinkChange }: Props) {
                 PaperProps={{ sx: styles.dialogContainer }}
             >
                 <DialogTitle id="confirm-unlink-dialog-title">
-                    Confirm Unlink SWUstats
+                    Confirm Unlink {serviceName}
                 </DialogTitle>
                 <DialogContent>
-                    <DialogContentText sx={{ color:'inherit' }} id="confirm-unlink-dialog-description">
-                        Are you sure you want to unlink your SWUstats account?
+                    <DialogContentText sx={{ color: 'inherit' }} id="confirm-unlink-dialog-description">
+                        Are you sure you want to unlink your {serviceName} account?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
@@ -100,16 +108,16 @@ export default function LinkSwuStatsButton({ linked, onLinkChange }: Props) {
                         buttonFnc={handleCancelUnlink}
                         variant={'standard'}
                         text={'Cancel'}
-                    >
-                    </PreferenceButton>
+                    />
                     <PreferenceButton
                         buttonFnc={handleConfirmUnlink}
                         variant={'concede'}
                         text={'Unlink'}
-                    >
-                    </PreferenceButton>
+                    />
                 </DialogActions>
             </Dialog>
         </>
     );
 }
+
+export default LinkServiceButton;
