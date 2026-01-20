@@ -15,6 +15,7 @@ const Credits: React.FC<ICreditsProps> = ({
     const creditTokenCount = gameState.players[trayPlayer].credits.count;
     const selectableCredit = gameState.players[trayPlayer].credits.selectionState?.selectable || false;
     const creditTokenUuids = gameState.players[trayPlayer].credits.uuids;
+    const creditsAreBlanked = gameState.players[trayPlayer].credits.isBlanked || false;
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -31,7 +32,7 @@ const Credits: React.FC<ICreditsProps> = ({
             transition: 'background-color 0.3s ease',
             padding: '0.5rem 0.4rem', // Further reduced padding
             overflow: 'visible',
-            cursor: 'pointer',
+            cursor: selectableCredit ? 'pointer' : 'default',
             border: selectableCredit ? '2px solid var(--selection-green)' : 'none',
             ...(!selectableCredit && debugBorder('orange')),
             '&:hover': {
@@ -49,6 +50,7 @@ const Credits: React.FC<ICreditsProps> = ({
             margin: '0 0.5rem 0 0',
             borderRadius: '2px',
             alignSelf: 'center',
+            position: 'relative', // Add relative positioning for absolute child
         },
         boxStyle: {
             ...debugBorder('green'),
@@ -89,6 +91,17 @@ const Credits: React.FC<ICreditsProps> = ({
             pointerEvents: 'none',
             zIndex: 2,
         },
+        creditBlankIcon: {
+            position: 'absolute',
+            right: '50%',
+            top: '50%',
+            width: '80%',
+            aspectRatio: '1 / 1',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundImage: 'url(/BlankIcon.png)',
+            zIndex: 3,
+        },
     };
 
     const handleCreditsClick = () => {
@@ -111,7 +124,11 @@ const Credits: React.FC<ICreditsProps> = ({
 
             <CardContent sx={{ display: 'flex' }}>
                 <Box sx={styles.boxStyle}>
-                    <Box sx={styles.iconStyle} />
+                    <Box sx={styles.iconStyle}>
+                        {creditsAreBlanked && (
+                            <Box sx={styles.creditBlankIcon}/>
+                        )}
+                    </Box>
                     <Typography sx={styles.creditCountText}>
                         {creditTokenCount}
                     </Typography>
