@@ -7,6 +7,11 @@ import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import BreakpointOverlay from './BreakpointOverlay';
+import {
+    IProcessedUnits, ITokenStack,
+    processUnitsWithTokenStacking
+} from '@/app/_components/Gameboard/_subcomponents/tokenStackUtils';
+import TokenStack from './tokenStack';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -98,6 +103,10 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     const playerUnits = attachCapturedCards(playerUnitsWithUpgrades, allCapturedCards);
     const opponentUnits = attachCapturedCards(opponentUnitsWithUpgrades, allCapturedCards);
 
+    // Process units to separate regular units from token stacks
+    const processedPlayerUnits = processUnitsWithTokenStacking(playerUnits);
+    const processedOpponentUnits = processUnitsWithTokenStacking(opponentUnits);
+
     // Portrait mode grid configuration -- far less here as we are dealing with
     // one set of breakpoints (we don't have landscape ones.. yet)
     const portraitGridTemplateColumns = {
@@ -173,26 +182,73 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     };
 
 
+    /**
+     * Render all units for a player (regular units + token stacks)
+     * Order: ready tokens first, then exhausted tokens, then regular units
+     */
+    const renderPlayerUnits = (processed: IProcessedUnits) => {
+        const elements: React.ReactNode[] = [];
+
+        // Render ready token stacks first
+        processed.readyTokenStacks.forEach((stack) => {
+            elements.push(renderTokenStack(stack));
+        });
+
+        // Render exhausted token stacks
+        processed.exhaustedTokenStacks.forEach((stack) => {
+            elements.push(renderTokenStack(stack));
+        });
+
+        // Render regular units
+        processed.regularUnits.forEach((card) => {
+            elements.push(renderUnit(card));
+        });
+
+        return elements;
+    };
+
+    /**
+     * Render a single unit card
+     */
+    const renderUnit = (card: ICardData) => (
+        <Box key={card.uuid}>
+            <GameCard
+                key={card.uuid}
+                card={card}
+                subcards={card.subcards}
+                capturedCards={card.capturedCards}
+                cardStyle={CardStyle.InPlay}
+            />
+        </Box>
+    );
+
+    /**
+     * Render a token stack
+     */
+    const renderTokenStack = (stack: ITokenStack) => (
+        <Box key={stack.stackKey}>
+            <TokenStack
+                stack={stack}
+                cardStyle={CardStyle.InPlay}
+            />
+        </Box>
+    );
+
+
     return (
         <Box sx={styles.mainBoxStyle}>
             <Grid direction="column" sx={styles.containerStyle}>
-                {/* Opponent's Ground Units */}
+                {/* Opponent's Units */}
                 <Box sx={styles.opponentGridStyle}>
-                    {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
-                        </Box>
-                    ))}
+                    {renderPlayerUnits(processedOpponentUnits)}
                 </Box>
-                {/* Enforce some minimum spacing between the two player's grids */}
+
+                {/* Spacing between the two player's grids */}
                 <Box sx={{ flex: '1 1 10px', minHeight: '10px', width: '100%' }} />
-                {/* Player's Ground Units */}
+
+                {/* Player's Units */}
                 <Box sx={styles.playerGridStyle}>
-                    {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} >
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
-                        </Box>
-                    ))}
+                    {renderPlayerUnits(processedPlayerUnits)}
                 </Box>
             </Grid>
             {/* Show BreakpointOverlay when enabled in environment variables */}
