@@ -9,25 +9,13 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
-/**
- * Resources will always stack horizontally due to vertical space constraints with Credits component
- */
-const useResourceLayout = () => {
-    const { isPortrait } = useScreenOrientation();
-    
-    // Always use horizontal layout to save vertical space
-    const shouldUseColumnStyle = false;
-    
-    return { shouldUseColumnStyle, isPortrait };
-};
-
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
 }) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
     const containerRef = useRef<HTMLDivElement>(null);
-    const { shouldUseColumnStyle, isPortrait } = useResourceLayout();
+    const { isPortrait } = useScreenOrientation();
 
     const availableResources = gameState.players[trayPlayer].availableResources;
     const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
@@ -81,11 +69,10 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         
         imageStyle: {
-            width: shouldUseColumnStyle ? 'clamp(0.8em, 0.4rem + 0.7vw, 1.2em)' :
-                'clamp(1.0em, 0.55rem + 0.6vw, 1.4em)',
+            width: 'clamp(1.0em, 0.55rem + 0.6vw, 1.4em)',
             height: 'auto',
             aspectRatio: '1 / 1.4',
-            margin: isPortrait || !shouldUseColumnStyle ? '0 0.5rem 0 0' : '0',
+            margin: '0 0.5rem 0 0',
             alignSelf: isPortrait ? 'auto' : 'center',
         },
         boxStyle: {
@@ -93,7 +80,7 @@ const Resources: React.FC<IResourcesProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            flexDirection: isPortrait ? 'row' : shouldUseColumnStyle ? 'column' : 'row',
+            flexDirection: 'row',
             position: 'relative', 
             zIndex: 1, 
         },
