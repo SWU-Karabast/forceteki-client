@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Card, CardContent, Box, Typography } from '@mui/material';
+import Image from 'next/image';
 import { debugBorder } from '@/app/_utils/debug';
 import { ICreditsProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -44,13 +45,15 @@ const Credits: React.FC<ICreditsProps> = ({
         },
         
         iconStyle: {
-            width: 'clamp(1.0em, 0.55rem + 0.6vw, 1.4em)',
-            height: 'clamp(1.0em, 0.55rem + 0.6vw, 1.4em)',
-            backgroundColor: 'gold',
-            margin: '0 0.5rem 0 0',
-            borderRadius: '2px',
+            width: 'clamp(1.2em, 0.7rem + 0.7vw, 1.6em)',
+            top: '5%',
+            height: 'auto',
+            aspectRatio: '1 / 1.4',
             alignSelf: 'center',
             position: 'relative', // Add relative positioning for absolute child
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
         },
         boxStyle: {
             ...debugBorder('green'),
@@ -59,13 +62,19 @@ const Credits: React.FC<ICreditsProps> = ({
             alignItems: 'center',
             flexDirection: 'row', // Always horizontal
             position: 'relative', 
-            zIndex: 1, 
+            zIndex: 1,
+            gap: '0.5rem', // Add consistent spacing
         },
         creditCountText: {
             fontWeight: '600',
             fontSize: isPortrait ? 'clamp(1.1rem, 0.65rem + 1.0vw, 1.8rem)' :
                 'clamp(1.1rem, 0.50rem + 1.0vw, 1.8rem)',
             color: 'white',
+            lineHeight: 1,
+            margin: 0,
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
         },
         creditBorderLeft: {
             background: `
@@ -125,6 +134,13 @@ const Credits: React.FC<ICreditsProps> = ({
             <CardContent sx={{ display: 'flex' }}>
                 <Box sx={styles.boxStyle}>
                     <Box sx={styles.iconStyle}>
+                        <Image
+                            src="/CreditTokenIcon.png"
+                            alt="Credit Token Icon"
+                            style={{ width: '100%', height: 'auto' }}
+                            height={72}
+                            width={54}
+                        />
                         {creditsAreBlanked && (
                             <Box sx={styles.creditBlankIcon}/>
                         )}
