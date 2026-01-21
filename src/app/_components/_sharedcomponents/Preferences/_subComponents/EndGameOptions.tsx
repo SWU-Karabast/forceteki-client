@@ -22,6 +22,7 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
     const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent, isAnonymousPlayer } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
+    const [swuBaseStatsMessage, setSwuBaseStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [confirmConcedeBo3, setConfirmConcedeBo3] = useState<boolean>(false);
 
     const isQuickMatch = gameType === MatchmakingType.Quick;
@@ -58,6 +59,11 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                 });
             } else if (notification.source === StatsSource.SwuStats) {
                 setSwuStatsMessage({
+                    type: notification.type,
+                    message: notification.message
+                });
+            } else if (notification.source === StatsSource.SwuBase) {
+                setSwuBaseStatsMessage({
                     type: notification.type,
                     message: notification.message
                 });
@@ -241,7 +247,7 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
     }
 
     // Check if we have any stats messages to show
-    const hasStatsMessages = karabastStatsMessage || swuStatsMessage;
+    const hasStatsMessages = karabastStatsMessage || swuStatsMessage || swuBaseStatsMessage;
 
     // Check if maintenance mode is enabled
     const isMaintenanceMode = process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES === 'true';
@@ -537,7 +543,7 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                         <Typography sx={{
                             ...styles.typeographyStyle,
                             color: getNotificationColor(karabastStatsMessage.type),
-                            mb: swuStatsMessage ? '10px' : '0px'
+                            mb: swuStatsMessage || swuBaseStatsMessage ? '10px' : '0px'
                         }}>
                             <strong>Karabast:</strong> {karabastStatsMessage.message}
                         </Typography>
@@ -547,9 +553,19 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                         <Typography sx={{
                             ...styles.typeographyStyle,
                             color: getNotificationColor(swuStatsMessage.type),
-                            mb: '10px'
+                            mb: swuBaseStatsMessage ? '10px' : '0px'
                         }}>
                             <strong>SWUStats:</strong> {swuStatsMessage.message}
+                        </Typography>
+                    )}
+
+                    {swuBaseStatsMessage && (
+                        <Typography sx={{
+                            ...styles.typeographyStyle,
+                            color: getNotificationColor(swuBaseStatsMessage.type),
+                            mb: '10px'
+                        }}>
+                            <strong>SWUBase:</strong> {swuBaseStatsMessage.message}
                         </Typography>
                     )}
                 </Box>

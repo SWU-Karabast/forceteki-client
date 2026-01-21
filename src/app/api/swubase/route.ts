@@ -6,14 +6,12 @@ export const dynamic = 'force-dynamic';
 
 const CONFIG = {
     swuBase: {
-        linkActivationUrl: process.env.NODE_ENV === 'development'
+        linkActivationUrl: process.env.NODE_ENV === 'development' && process.env.SWUBASE_LOCAL_DEV === 'true'
             ? 'http://localhost:5173/api/integration/link-confirm'
             : 'https://swubase.com/api/integration/link-confirm',
         redirectUri: process.env.NODE_ENV === 'development'
             ? 'http://localhost:3000/api/swubase'
             : 'https://karabast.net/api/swubase',
-        clientId: process.env.NEXT_PUBLIC_SWUBASE_CLIENT_ID,
-        clientSecret: process.env.SWUBASE_CLIENT_SECRET,
     },
     redirects: {
         success: '/Preferences?swubase=success',
@@ -50,6 +48,7 @@ export async function GET(req: Request) {
 
 async function linkUserToSwuBase(userId: string, linkToken: string) {
     const response = await fetch(`${CONFIG.gameServerUrl}/api/link-swubase`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, linkToken: linkToken, internalApiKey: process.env.INTRASERVICE_SECRET }),
     });

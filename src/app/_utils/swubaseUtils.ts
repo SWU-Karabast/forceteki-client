@@ -4,7 +4,7 @@ export async function getSwubaseAuthUrl(userId: string): Promise<string> {
     const baseKarabastUrl = process.env.NODE_ENV === 'development'
         ? 'http://localhost:3000'
         : 'https://karabast.net';
-    const baseSwubaseUrl = process.env.NODE_ENV === 'development'
+    const baseSwubaseUrl = process.env.NODE_ENV === 'development' && process.env.SWUBASE_LOCAL_DEV === 'true'
         ? 'http://localhost:5173'
         : 'https://swubase.com';
 

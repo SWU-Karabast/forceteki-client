@@ -40,8 +40,8 @@ function EndGameTab() {
             onClose={handleCloseBugReport}
         />
         <PlayerReportDialog
-        open={playerReportOpen}
-        onClose={handleClosePersonReport}
+            open={playerReportOpen}
+            onClose={handleClosePersonReport}
         />
     </>
 }
