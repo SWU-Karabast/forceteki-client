@@ -4,6 +4,7 @@ import { IChatObject } from './ChatTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, CardType } from '../Cards/CardTypes';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import { useGame } from '@/app/_contexts/Game.context';
 
 interface IChatCardProps {
     chatObject: IChatObject;
@@ -12,6 +13,7 @@ interface IChatCardProps {
 }
 
 const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard }) => {
+    const { hoveredChatCard } = useGame();
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const open = Boolean(anchorElement);
@@ -44,11 +46,13 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
             id: chatObject.id
         }, CardStyle.Plain);
         setPreviewImage(`url(${imageUrl})`);
+        hoveredChatCard.hover(chatObject.uuid);
     };
     
     const handlePreviewClose = () => {
         setAnchorElement(null);
         setPreviewImage(null);
+        hoveredChatCard.clear();
     };
 
     const styles = {
