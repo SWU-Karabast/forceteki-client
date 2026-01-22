@@ -26,7 +26,7 @@ export const parseSetId = (fullCardId: string) => {
 };
 
 
-export const getBorderColor = (card: ICardData, player: string, promptType: string = '', style: CardStyle = CardStyle.Plain, isOpponentEffect = false) => {
+export const getBorderColor = (card: ICardData, player: string, promptType: string = '', style: CardStyle = CardStyle.Plain, isOpponentEffect = false, isHoveredInChat = false) => {
     if (!card) return '';
 
     if (style === CardStyle.Prompt) {
@@ -36,6 +36,10 @@ export const getBorderColor = (card: ICardData, player: string, promptType: stri
             return '';
         }
     }
+
+    if (isHoveredInChat) {
+        return 'var(--selection-yellow)';
+    } 
 
     if (card.zone === 'hand' && isOpponentEffect && card.selectable && !card.selected) {
         return 'var(--selection-purple)';
