@@ -487,7 +487,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'absolute',
             width: '35%',
             aspectRatio: '1 / 1',
-            top: '32%',
+            // Move down when blank icon is also visible (both icons would be at top: 32% otherwise)
+            top: card.isBlanked && cardStyle !== CardStyle.InPlay ? '60%' : '32%',
             left: '1%',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
