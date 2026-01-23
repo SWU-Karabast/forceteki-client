@@ -46,6 +46,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const controller = gameState?.players[card.controllerId];
 
+    const controllerHasForceToken = controller?.forceToken.active || false;
+    const forceTokenUuid = controller?.forceToken.uuid;
+    const forceTokenSelectable = controller?.forceToken.selectionState?.selectable || false;
+
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
@@ -81,6 +85,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             return;
         }
         defaultClickFunction();
+    }
+
+    const handleForceTokenClick = () => {
+        if (forceTokenSelectable) {
+            sendGameMessage(['cardClicked', forceTokenUuid]);
+        }
     }
 
     const notImplemented = (card: ICardData) => card?.hasOwnProperty('unimplemented') && card.unimplemented;
@@ -122,7 +132,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const isConnectedPlayer = card.controllerId === connectedPlayer;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getForceTokenIconStyle = (player: any) => {
+    const getForceTokenIconStyle = (player: any, isSelectable: boolean = false) => {
         const imageAspect = player.aspects.includes('villainy') ? 'Villainy' : 'Heroism';
         const opponentStr = player.id !== connectedPlayer ? 'Opponent' : '';
         const backgroundImage = `url(/ForceToken${imageAspect}${opponentStr}.png)`;
@@ -137,7 +147,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage,
             filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
-            zIndex: 2
+            zIndex: 2,
+            cursor: isSelectable ? 'pointer' : 'default',
+            border: isSelectable ? '2px solid var(--selection-green)' : 'none',
+            borderRadius: isSelectable ? '4px' : 'none',
+            backgroundColor: isSelectable ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
+            transition: 'border-color 0.3s ease, background-color 0.3s ease',
         };
     }
 
@@ -451,7 +466,13 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                             )}
                             <DamageCounterToken value={card.damage || 0} />
                         </Box>
-                        {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
+                        {
+                            controllerHasForceToken &&
+                            <Box
+                                sx={getForceTokenIconStyle(controller, forceTokenSelectable)}
+                                onClick={handleForceTokenClick}
+                            />
+                        }
                         {card.isDefender && <Box sx={styles.defendIcon}/>}
                         <Box sx={styles.baseBlankIcon}/>
                     </>

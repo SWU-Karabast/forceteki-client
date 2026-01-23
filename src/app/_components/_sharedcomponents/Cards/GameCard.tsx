@@ -23,7 +23,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     overlapEnabled = false,
     cardback = undefined,
 }) => {
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
     const { clearPopups } = usePopup();
     const { getCardback } = useCosmetics();
 
@@ -43,6 +43,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+    const isHoveredInChat = hoveredChatCard.id === card.uuid;
 
     const {
         aspectRatio,
@@ -202,7 +203,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const nonShieldUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
     const promptType = getConnectedPlayerPrompt()?.promptType;
-    const borderColor = getBorderColor(card, connectedPlayer, promptType, cardStyle, isOpponentEffect);
+    const borderColor = getBorderColor(card, connectedPlayer, promptType, cardStyle, isOpponentEffect, isHoveredInChat);
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
