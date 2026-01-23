@@ -2,6 +2,7 @@ import React from 'react';
 import { CloseOutlined, SettingsOutlined, AccessAlarm } from '@mui/icons-material';
 import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
+import Credits from '../_subcomponents/PlayerTray/Credits';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
@@ -99,7 +100,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const styles = {
         leftColumn: {
             ...debugBorder('red'),
-            flexDirection: isPortrait ? 'column' : 'row',
+            flexDirection: isPortrait ? 'column' : 'row', // Responsive layout
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
@@ -107,6 +108,12 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             gap: '1rem',
             height: '100%',
             boxSizing: 'border-box',
+        },
+        creditsResourcesStack: {
+            display: 'flex',
+            flexDirection: 'column', // Credits above Resources
+            alignItems: 'stretch', // Make children fill container width
+            gap: '0.5rem', // Smaller gap between Credits and Resources
         },
         centerColumn: {
             ...debugBorder('green'),
@@ -209,7 +216,10 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 }}
             >
                 <DeckDiscard trayPlayer={trayPlayer} cardback={opponentsCardback} />
-                <Resources trayPlayer={trayPlayer}/>
+                <Box sx={styles.creditsResourcesStack}>
+                    <Credits trayPlayer={trayPlayer} />
+                    <Resources trayPlayer={trayPlayer}/>
+                </Box>
             </Grid>
 
             {/* Center column (flexes to fill space) */}
