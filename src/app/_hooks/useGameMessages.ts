@@ -17,7 +17,6 @@ export interface IUseGameMessagesReturn {
     handleMessageDelta: (delta: IMessageDelta) => { startIndex: number; endIndex: number } | null;
     handleMessageRetransmit: (retransmit: IMessageRetransmit) => void;
     resetMessages: () => void;
-    getRetransmitRange: () => { startIndex: number; endIndex: number } | null;
 }
 
 /**
@@ -28,7 +27,17 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
     const [messages, setMessages] = useState<IChatEntry[]>([]);
     const messagesLengthRef = useRef<number>(0);
     const expectedTotalRef = useRef<number>(0);
-    const pendingRetransmitRef = useRef<{ startIndex: number; endIndex: number } | null>(null);
+
+    const appendMessages = useCallback((newMessages: IChatEntry[], startIndex: number) => {
+        setMessages((currentMessages) => {
+            const updatedMessages = [...currentMessages];
+            for (let i = 0; i < newMessages.length; i++) {
+                updatedMessages[startIndex + i] = newMessages[i];
+            }
+            messagesLengthRef.current = updatedMessages.length;
+            return updatedMessages;
+        });
+    }, []);
 
     /**
      * Handle incoming message delta from the server.
@@ -40,27 +49,19 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
         // Update expected total
         expectedTotalRef.current = totalMessages;
 
-        // Simple gap detection for append-only: if offset > current length, we have a gap
-        const currentLength = messagesLengthRef.current;
-        if (messageOffset > currentLength) {
-            const gapInfo = { startIndex: currentLength, endIndex: messageOffset - 1 };
-            pendingRetransmitRef.current = gapInfo;
-            return gapInfo;
+        // Capture length before appending
+        const lengthBeforeAppend = messagesLengthRef.current;
+
+        // Always append the new messages
+        appendMessages(newMessages, messageOffset);
+
+        // If messageOffset > lengthBeforeAppend, there's a gap - request retransmit
+        if (messageOffset > lengthBeforeAppend) {
+            return { startIndex: lengthBeforeAppend, endIndex: messageOffset - 1 };
         }
 
-        // No gap - append the new messages
-        setMessages((currentMessages) => {
-            const updatedMessages = [...currentMessages];
-            for (let i = 0; i < newMessages.length; i++) {
-                updatedMessages[messageOffset + i] = newMessages[i];
-            }
-            messagesLengthRef.current = updatedMessages.length;
-            return updatedMessages;
-        });
-
-        pendingRetransmitRef.current = null;
         return null;
-    }, []);
+    }, [appendMessages]);
 
     /**
      * Handle retransmitted messages from the server.
@@ -68,19 +69,8 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
      */
     const handleMessageRetransmit = useCallback((retransmit: IMessageRetransmit): void => {
         const { messages: retransmittedMessages, startIndex } = retransmit;
-
-        setMessages((currentMessages) => {
-            const updatedMessages = [...currentMessages];
-            for (let i = 0; i < retransmittedMessages.length; i++) {
-                updatedMessages[startIndex + i] = retransmittedMessages[i];
-            }
-            messagesLengthRef.current = updatedMessages.length;
-            return updatedMessages;
-        });
-
-        // Clear pending retransmit if this fills the gap
-        pendingRetransmitRef.current = null;
-    }, []);
+        appendMessages(retransmittedMessages, startIndex);
+    }, [appendMessages]);
 
     /**
      * Reset messages (e.g., when starting a new game).
@@ -89,14 +79,6 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
         setMessages([]);
         messagesLengthRef.current = 0;
         expectedTotalRef.current = 0;
-        pendingRetransmitRef.current = null;
-    }, []);
-
-    /**
-     * Get the current pending retransmit range if any.
-     */
-    const getRetransmitRange = useCallback((): { startIndex: number; endIndex: number } | null => {
-        return pendingRetransmitRef.current;
     }, []);
 
     return {
@@ -104,6 +86,5 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
         handleMessageDelta,
         handleMessageRetransmit,
         resetMessages,
-        getRetransmitRange,
     };
 };
