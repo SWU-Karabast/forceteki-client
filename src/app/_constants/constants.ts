@@ -9,7 +9,8 @@ export enum MatchmakingType {
 export enum SwuGameFormat {
     Premier = 'premier',
     // NextSetPreview = 'nextSetPreview',
-    Open = 'open'
+    Open = 'open',
+    Limited = 'limited'
 }
 
 export enum GamesToWinMode {
@@ -35,6 +36,8 @@ export const QueueFormatOptions: Record<string, IQueueFormat> = {
     premierBo3: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfThree },
     openBo1: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfOne },
     openBo3: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfThree },
+    limitedBo1: { format: SwuGameFormat.Limited, gamesToWinMode: GamesToWinMode.BestOfOne },
+    limitedBo3: { format: SwuGameFormat.Limited, gamesToWinMode: GamesToWinMode.BestOfThree },
 };
 
 export const QueueFormatLabels: Record<string, string> = {
@@ -42,6 +45,8 @@ export const QueueFormatLabels: Record<string, string> = {
     premierBo3: 'Premier Best-of-Three',
     openBo1: 'Open Best-of-One',
     openBo3: 'Open Best-of-Three',
+    limitedBo1: 'Limited Best-of-One',
+    limitedBo3: 'Limited Best-of-Three',
 };
 
 export const DefaultQueueFormatKey = 'premierBo1';
@@ -50,12 +55,14 @@ export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
     // [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
     [SwuGameFormat.Open]: 'Open',
+    [SwuGameFormat.Limited]: 'Limited',
 };
 
 export const FormatTagLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
     // [SwuGameFormat.NextSetPreview]: 'Next Set',
     [SwuGameFormat.Open]: 'Open',
+    [SwuGameFormat.Limited]: 'Limited',
 };
 
 export const SupportedDeckSources = Object.values(DeckSource)

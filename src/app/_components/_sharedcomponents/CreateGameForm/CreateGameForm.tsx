@@ -87,7 +87,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     // Common State
     const [privateGame, setPrivateGame] = useState<boolean>(false);
-    const [thirtyCardMode, setThirtyCardMode] = useState<boolean>(false);
     
     // Get the current format option key from format and gamesToWinMode
     const getCurrentFormatOptionKey = (): string => {
@@ -204,13 +203,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     saveDeckToLocalStorage(deckData, deckLink);
                 }
             }
+            // Limited format automatically enables 30-card mode
+            const allow30CardsInMainBoard = format === SwuGameFormat.Limited;
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
                 isPrivate: privateGame,
                 format: format,
                 lobbyName: lobbyName,
-                allow30CardsInMainBoard: thirtyCardMode,
+                allow30CardsInMainBoard,
                 gamesToWinMode: gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
@@ -562,26 +563,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 }
                                 placeholder="Game #"
                             />
-                        </FormControl>
-                    </>
-                )}
-
-                {privateGame && format === SwuGameFormat.Open && (
-                    <>
-                        <Typography variant="body1" sx={styles.labelTextStyle}>
-                            Mainboard Minimum Size
-                        </Typography>
-                        <FormControl fullWidth sx={styles.formControlStyle}>
-                            <StyledTextField
-                                select
-                                value={thirtyCardMode ? '30Card' : '50Card'}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setThirtyCardMode(e.target.value === '30Card')
-                                }
-                            >
-                                <MenuItem value="50Card">50 Cards</MenuItem>
-                                <MenuItem value="30Card">30 Cards</MenuItem>
-                            </StyledTextField>
                         </FormControl>
                     </>
                 )}

@@ -11,6 +11,7 @@ import { FormatLabels, FormatTagLabels, SwuGameFormat, GamesToWinMode } from '@/
 import PremierIcon from '/public/premier.svg';
 import OpenIcon from '/public/open.svg';
 import NextSetIcon from '/public/next_set.svg';
+import LimitedIcon from '/public/limited.svg';
 import Bo1Icon from '/public/bo1.svg';
 import Bo3Icon from '/public/bo3.svg';
 
@@ -161,6 +162,11 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     borderColor: '#ada2fd',
                     color: '#ada2fd',
                     boxShadow: '0 0 5px #ada2fd',
+                },
+                limited: {
+                    borderColor: '#ffd700',
+                    color: '#ffd700',
+                    boxShadow: '0 0 5px #ffd700',
                 }
             },
             gamesToWin: {
@@ -186,6 +192,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return styles.tags.format.open;
             // case SwuGameFormat.NextSetPreview:
             //     return styles.tags.format.nextSet;
+            case SwuGameFormat.Limited:
+                return styles.tags.format.limited;
             default:
                 return {};
         }
@@ -200,6 +208,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return <OpenIcon style={iconStyle} />;
             // case SwuGameFormat.NextSetPreview:
             //     return <NextSetIcon style={iconStyle} />;
+            case SwuGameFormat.Limited:
+                return <LimitedIcon style={iconStyle} />;
             default:
                 return null;
         }
