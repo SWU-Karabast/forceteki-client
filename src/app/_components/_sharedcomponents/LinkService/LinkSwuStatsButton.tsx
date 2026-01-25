@@ -1,5 +1,5 @@
 import { unlinkSwuStatsAsync } from '@/app/_utils/ServerAndLocalStorageUtils';
-import { getSwuStatsAuthUrl } from '@/app/_utils/swuStatsUtils';
+import { getSwuStatsAuthUrl } from '@/app/_utils/statsUtils';
 import LinkServiceButton from './LinkServiceButton';
 
 type Props = {

@@ -432,7 +432,15 @@ function GeneralTab() {
                                                 />
                                                 {swuBaseError && (
                                                     <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                                                        Failed to link to SWUBase account. If this keeps happening, please report the problem to the Karabast or SWUBase discord.
+                                                        Failed to link to SWUBase account. If this keeps happening, please report the problem to the
+                                                        <MuiLink
+                                                            href="https://discord.com/channels/1350860763539181599/1350875585575915582"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
+                                                        >
+                                                            SWUBase Discord
+                                                        </MuiLink>.
                                                     </Typography>
                                                 )}
                                             </>

@@ -6,9 +6,7 @@ export const dynamic = 'force-dynamic';
 
 const CONFIG = {
     swuBase: {
-        linkActivationUrl: process.env.NODE_ENV === 'development' && process.env.SWUBASE_LOCAL_DEV === 'true'
-            ? 'http://localhost:5173/api/integration/link-confirm'
-            : 'https://swubase.com/api/integration/link-confirm',
+        linkActivationUrl: 'https://swubase.com/api/integration/link-confirm',
         redirectUri: process.env.NODE_ENV === 'development'
             ? 'http://localhost:3000/api/swubase'
             : 'https://karabast.net/api/swubase',

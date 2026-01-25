@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { unlinkSwubaseAsync } from '@/app/_utils/ServerAndLocalStorageUtils';
-import { getSwubaseAuthUrl } from '@/app/_utils/swubaseUtils';
 import LinkServiceButton from './LinkServiceButton';
+import { getSwubaseAuthUrl } from '@/app/_utils/statsUtils';
 
 type Props = {
     linked: boolean;
