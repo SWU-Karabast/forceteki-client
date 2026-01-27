@@ -1,3 +1,4 @@
+import { FormatLabels, SwuGameFormat } from '@/app/_constants/constants';
 import {
     DecklistLocation,
     DeckValidationFailureReason,
@@ -20,7 +21,7 @@ function locationToMessage(location: DecklistLocation): string {
 
 export function getReadableDeckErrors(
     failures: IDeckValidationFailures,
-    format: string
+    format: SwuGameFormat
 ): string[] {
     const messages: string[] = [];
 
@@ -73,8 +74,7 @@ export function getReadableDeckErrors(
     if (illegalInFormatList.length > 0) {
         illegalInFormatList.forEach(({ name, id }) => {
             messages.push(
-                // TODO THIS PR: add a formatting utility so that we don't write "illegal in nextSetPreview format"
-                `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${format} format.`
+                `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${FormatLabels[format]} format.`
             );
         });
     }
