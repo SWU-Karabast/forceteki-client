@@ -137,7 +137,9 @@ const Chat: React.FC<IChatProps> = ({
     };
 
 
-    const isOpponentMessage = (message: IChatMessageContent, connectedPlayerId: string): boolean => {
+    const isOpponentMessage = (message: IChatMessageContent | undefined, connectedPlayerId: string): boolean => {
+        if (!message) return false;
+
         // Check if it's a player chat message
         if (Array.isArray(message) && message.length > 0) {
             const firstItem = message[0];
@@ -262,7 +264,17 @@ const Chat: React.FC<IChatProps> = ({
     };
 
 
-    const formatMessage = (message: IChatMessageContent, index: number) => {
+    const formatMessage = (message: IChatMessageContent | undefined, index: number) => {
+        if (!message) {
+            // Custom gray message for pending missing (shouldn't really happen in practice as retransmit is fast)
+            return (
+                <Box key={index} sx={styles.chatEntryBox}>
+                    <Typography sx={{ ...styles.messageText, color: '#888', fontStyle: 'italic' }}>
+                        Missing message...
+                    </Typography>
+                </Box>
+            );
+        }
         if ('alert' in message) {
             return formatSystemMessage(message.alert.message, index, true, message.alert.type);
         }
@@ -287,7 +299,7 @@ const Chat: React.FC<IChatProps> = ({
             const newMessages = chatHistory.slice(previousMessages.length);
             // Check if any new message is from opponent
             const hasOpponentMessage = newMessages.some(messageEntry => {
-                return isOpponentMessage(messageEntry.message, connectedPlayer);
+                return isOpponentMessage(messageEntry?.message, connectedPlayer);
             });
             if (hasOpponentMessage) {
                 playIncomingMessageSound();
@@ -523,7 +535,7 @@ const Chat: React.FC<IChatProps> = ({
             )}
             <Box sx={styles.chatBox}>
                 {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
-                    return formatMessage(chatEntry.message, index);
+                    return formatMessage(chatEntry?.message, index);
                 })}
                 <Box ref={chatEndRef} />
             </Box>

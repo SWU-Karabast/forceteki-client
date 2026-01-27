@@ -57,7 +57,7 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
 
         // If messageOffset > lengthBeforeAppend, there's a gap - request retransmit
         if (messageOffset > lengthBeforeAppend) {
-            return { startIndex: lengthBeforeAppend, endIndex: messageOffset - 1 };
+            return { startIndex: lengthBeforeAppend, endIndex: messageOffset };
         }
 
         return null;
@@ -68,6 +68,9 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
      * Writes messages to the correct array indices.
      */
     const handleMessageRetransmit = useCallback((retransmit: IMessageRetransmit): void => {
+        if (process.env.NODE_ENV === 'development') {
+            console.log('handleMessageRetransmit called with:', retransmit);
+        }
         const { messages: retransmittedMessages, startIndex } = retransmit;
         appendMessages(retransmittedMessages, startIndex);
     }, [appendMessages]);
