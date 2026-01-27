@@ -86,6 +86,21 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: 'A Lawless Time Preview Format with Mock Bases + Set Rotation',
+        content: `
+        <p>Next Set Preview format for A Lawless Time is now live! There are a couple important features attached to this:</p>
+
+        <p>- <b>Mock Bases:</b> Since we don't yet have the common bases for A Lawless Time other than Daimyo\'s Palace, we've created mock bases that simulate the intended gameplay experience. These mock bases can be used in Next Set Preview lobbies until the official bases are available.</p>
+
+        <p>- <b>Format Rotation:</b> Set 7 is the first format after set rotation. Next Set Preview format will enforce this rule and cards from sets 1 - 3 will not be legal. They can continue to be used alongside the set 7 preview cards in Open format.</p>
+    
+        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always open to new contributors.</p><p></p>
+	  `,
+        date: '1/27/26',
+        image: s3ImageURL('ui/law-banner.webp'),
+        imageAlt: 'News Announcement',
+    },
+    {
         title: 'Best of Three Format Available!',
         content: `
         <p>Best of three matches are now available! Logged-in players can now compete in a best of three series to determine the winner. Just choose "Premier Best-of-Three" or "Open Best-of-Three" from the format dropdown. Anonymous accounts can participate in best-of-three private lobbies only.</p>
@@ -94,17 +109,6 @@ export const articles: IArticle[] = [
 	  `,
         date: '12/18/25',
         image: '/bo3-news.png',
-        imageAlt: 'News Announcement',
-    },
-    {
-        title: 'Secrets of Power + Intro Battle: Hoth in Premier',
-        content: `
-        <p>The Secrets of Power and Intro Battle: Hoth sets are now legal in Premier format! We have closed down Next Set Preview format until the next preview season begins. We wish everyone luck with practicing for the new season!</p>
-    
-        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always open to new contributors.</p><p></p>
-	  `,
-        date: '11/3/25',
-        image: s3ImageURL('ui/sec-banner.webp'),
         imageAlt: 'News Announcement',
     }
 ];
