@@ -86,11 +86,9 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'A Lawless Time Preview Format with Mock Bases + Set Rotation',
+        title: 'A Lawless Time Preview Format with Set Rotation',
         content: `
-        <p>Next Set Preview format for A Lawless Time is now live! There are a couple important features attached to this:</p>
-
-        <p>- <b>Mock Bases:</b> Since we don't yet have the common bases for A Lawless Time other than Daimyo\'s Palace, we've created mock bases that simulate the intended gameplay experience. These mock bases can be used in Next Set Preview lobbies until the official bases are available.</p>
+        <p>Next Set Preview format for A Lawless Time is now live! There is an important feature attached to this:</p>
 
         <p>- <b>Format Rotation:</b> Set 7 is the first format after set rotation. Next Set Preview format will enforce this rule and cards from sets 1 - 3 will not be legal. They can continue to be used alongside the set 7 preview cards in Open format.</p>
     

@@ -84,10 +84,6 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         sendLobbyMessage(['updateSetting', 'requestUndo', checked]);
     };
 
-    const handleUseLawBase = () => {
-        sendLobbyMessage(['useLawBase'])
-    }
-
     useEffect(() => {
         fetchDecks();
     }, [fetchDecks]);
@@ -602,25 +598,6 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     modalType={errorState.modalType}
                 />
             )}
-            <Divider sx={{ mt: 1, borderColor: '#666', display: lobbyFormat != 'nextSetPreview' ? 'none' : 'block' }} />
-            <Box sx={{ display: lobbyFormat != 'nextSetPreview' ? 'none' : 'block' }}>
-                <Button 
-                    type="button" 
-                    onClick={handleUseLawBase} 
-                    variant="contained" 
-                    sx={{
-                        ...styles.submitButtonStyle,
-                        mt: '1em',
-                        ml: 0
-
-                    }}
-                >
-                    Switch to LAW &quot;Ignore Aspect Penalty&quot; Base
-                </Button>
-                <Typography sx={{ fontSize: '.9em', mt: 1 }}>
-                    Replaces your base with a mock LAW base of the same aspect like Daimyo&lsquo;s Palace.
-                </Typography>
-            </Box>
             {lobbyState.isPrivate && (
                 <>
                     <Divider sx={{ mt: 1, borderColor: '#666' }} />
