@@ -286,7 +286,6 @@ const GamesInProgress: React.FC = () => {
                 <StyledTextField
                     select
                     value={sortByFormat || null}
-                    required
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setSortByFormat(e.target.value as SwuGameFormat | null)
                     }
