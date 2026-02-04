@@ -17,13 +17,14 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     disabled = false,
     isLeader = false,
 }) => {
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, hoveredChatCard } = useGame();
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
+    const isHoveredInChat = hoveredChatCard.id === card?.uuid;
     const leaderCardFlipPreview = useLeaderCardFlipPreview({
         anchorElement,
         cardId: card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
@@ -125,7 +126,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     };
 
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
-    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
+    const borderColor = getBorderColor({
+        card,
+        player: connectedPlayer,
+        promptType: getConnectedPlayerPrompt()?.promptType,
+        isHoveredInChat
+    });
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
@@ -422,7 +428,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         sx={{
                             ...styles.capturedCardBackground,
                             backgroundImage: `url(${capturedCardBackground(capturedCard)})`,
-                            border: capturedCard.selectable ? `1.5px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none',
+                            border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
                         }}
                     />
                     <Typography sx={{
