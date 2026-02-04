@@ -40,6 +40,10 @@ export interface IResourcesProps {
     trayPlayer: string;
 }
 
+export interface ICreditsProps {
+    trayPlayer: string;
+}
+
 export interface IUnitsBoardProps {
     sidebarOpen: boolean;
     arena: string;
