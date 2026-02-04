@@ -190,8 +190,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return styles.tags.format.premier;
             case SwuGameFormat.Open:
                 return styles.tags.format.open;
-            // case SwuGameFormat.NextSetPreview:
-            //     return styles.tags.format.nextSet;
+            case SwuGameFormat.NextSetPreview:
+                return styles.tags.format.nextSet;
             case SwuGameFormat.Limited:
                 return styles.tags.format.limited;
             default:
@@ -206,8 +206,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return <PremierIcon style={iconStyle} />;
             case SwuGameFormat.Open:
                 return <OpenIcon style={iconStyle} />;
-            // case SwuGameFormat.NextSetPreview:
-            //     return <NextSetIcon style={iconStyle} />;
+            case SwuGameFormat.NextSetPreview:
+                return <NextSetIcon style={iconStyle} />;
             case SwuGameFormat.Limited:
                 return <LimitedIcon style={iconStyle} />;
             default:

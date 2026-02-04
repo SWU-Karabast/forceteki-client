@@ -494,8 +494,8 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 </FormControl>
 
                 {/* Beta Announcement */}
-                <Typography variant="body1" sx={{ color: 'chartreuse', textAlign: 'center', mb: '1rem' }}>
-                    Best-of-Three format is now available in the dropdown above
+                <Typography variant="body1" sx={{ color: 'orange', textAlign: 'center', mb: '1rem' }}>
+                    Next Set Preview format is now available!
                 </Typography>
 
                 {/* Submit Button */}

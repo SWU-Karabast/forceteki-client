@@ -18,13 +18,17 @@ const Credits: React.FC<ICreditsProps> = ({
     const creditTokenUuids = gameState.players[trayPlayer].credits.uuids;
     const creditsAreBlanked = gameState.players[trayPlayer].credits.isBlanked || false;
 
+    const selectionColor = trayPlayer === connectedPlayer
+        ? 'var(--selection-green)'
+        : 'var(--selection-red)';
+
     // ------------------------STYLES------------------------//
     const styles = {
         cardStyle: {
             width: '100%', // Fill parent container width
             height: 'auto', // Auto height instead of maxHeight
             minHeight: 'fit-content',
-            background: selectableCredit ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
+            background: selectableCredit ? (trayPlayer === connectedPlayer ? 'rgba(0, 255, 0, 0.08)' : 'rgba(255, 0, 0, 0.08)') : 'transparent',
             display: 'flex',
             position: 'relative',
             borderRadius: '5px',
@@ -34,7 +38,7 @@ const Credits: React.FC<ICreditsProps> = ({
             padding: '0.5rem 0.4rem', // Further reduced padding
             overflow: 'visible',
             cursor: selectableCredit ? 'pointer' : 'default',
-            border: selectableCredit ? '2px solid var(--selection-green)' : 'none',
+            border: selectableCredit ? `2px solid ${selectionColor}` : 'none',
             ...(!selectableCredit && debugBorder('orange')),
             '&:hover': {
                 background:

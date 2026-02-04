@@ -8,7 +8,7 @@ export enum MatchmakingType {
 
 export enum SwuGameFormat {
     Premier = 'premier',
-    // NextSetPreview = 'nextSetPreview',
+    NextSetPreview = 'nextSetPreview',
     Open = 'open',
     Limited = 'limited'
 }
@@ -34,6 +34,8 @@ export interface IQueueFormat {
 export const QueueFormatOptions: Record<string, IQueueFormat> = {
     premierBo1: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfOne },
     premierBo3: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfThree },
+    nextSetPreviewBo1: { format: SwuGameFormat.NextSetPreview, gamesToWinMode: GamesToWinMode.BestOfOne },
+    nextSetPreviewBo3: { format: SwuGameFormat.NextSetPreview, gamesToWinMode: GamesToWinMode.BestOfThree },
     openBo1: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfOne },
     openBo3: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfThree },
     limitedBo1: { format: SwuGameFormat.Limited, gamesToWinMode: GamesToWinMode.BestOfOne },
@@ -43,6 +45,8 @@ export const QueueFormatOptions: Record<string, IQueueFormat> = {
 export const QueueFormatLabels: Record<string, string> = {
     premierBo1: 'Premier Best-of-One',
     premierBo3: 'Premier Best-of-Three',
+    nextSetPreviewBo1: 'Next Set Preview Best-of-One',
+    nextSetPreviewBo3: 'Next Set Preview Best-of-Three',
     openBo1: 'Open Best-of-One',
     openBo3: 'Open Best-of-Three',
     limitedBo1: 'Limited Best-of-One',
@@ -53,14 +57,14 @@ export const DefaultQueueFormatKey = 'premierBo1';
 
 export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
-    // [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
+    [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
     [SwuGameFormat.Open]: 'Open',
     [SwuGameFormat.Limited]: 'Limited',
 };
 
 export const FormatTagLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
-    // [SwuGameFormat.NextSetPreview]: 'Next Set',
+    [SwuGameFormat.NextSetPreview]: 'Next Set',
     [SwuGameFormat.Open]: 'Open',
     [SwuGameFormat.Limited]: 'Limited',
 };
