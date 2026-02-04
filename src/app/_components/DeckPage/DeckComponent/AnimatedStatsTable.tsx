@@ -220,9 +220,6 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             flexDirection: 'column' as const,
             pr: '10px',
         },
-        tableHead: {
-            backgroundColor: '#333',
-        },
         leaderBaseHolder:{
             display:'flex',
             alignItems:'center',
@@ -284,16 +281,18 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     return (
         <Box sx={styles.tableContainer}>
             <Table stickyHeader>
-                <TableHead sx={styles.tableHead}>
+                <TableHead>
                     <TableRow>
                         {STATS_COLUMN_HEADERS.map(columnHeader => {
                             const active = orderBy?.column === columnHeader;
                             return <TableCell 
+                                sx={{ backgroundColor: 'transparent' }}
                                 key={columnHeader}
                                 sortDirection={active ? orderBy.direction : false}
                             >
                                 <Typography>
                                     <TableSortLabel
+                                        sx={{ '& > svg': { marginTop: '3px' } }}
                                         active={active}
                                         direction={orderBy?.direction}
                                         onClick={() => {
