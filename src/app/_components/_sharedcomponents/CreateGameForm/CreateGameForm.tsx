@@ -87,7 +87,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     // Common State
     const [privateGame, setPrivateGame] = useState<boolean>(false);
-    
+    const [thirtyCardMode, setThirtyCardMode] = useState<boolean>(false);
+
     // Get the current format option key from format and gamesToWinMode
     const getCurrentFormatOptionKey = (): string => {
         for (const [key, value] of Object.entries(QueueFormatOptions)) {
@@ -203,8 +204,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     saveDeckToLocalStorage(deckData, deckLink);
                 }
             }
-            // Limited format automatically enables 30-card mode
-            const allow30CardsInMainBoard = format === SwuGameFormat.Limited;
+            // Limited format automatically enables 30-card mode, or user can select it for Open format
+            const allow30CardsInMainBoard = format === SwuGameFormat.Limited || thirtyCardMode;
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
@@ -563,6 +564,26 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 }
                                 placeholder="Game #"
                             />
+                        </FormControl>
+                    </>
+                )}
+
+                {privateGame && format === SwuGameFormat.Open && (
+                    <>
+                        <Typography variant="body1" sx={styles.labelTextStyle}>
+                            Mainboard Minimum Size
+                        </Typography>
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            <StyledTextField
+                                select
+                                value={thirtyCardMode ? '30Card' : '50Card'}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                    setThirtyCardMode(e.target.value === '30Card')
+                                }
+                            >
+                                <MenuItem value="50Card">50 Cards</MenuItem>
+                                <MenuItem value="30Card">30 Cards</MenuItem>
+                            </StyledTextField>
                         </FormControl>
                     </>
                 )}
