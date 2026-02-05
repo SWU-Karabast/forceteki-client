@@ -59,7 +59,7 @@ const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, ...props }) => 
             // The player has returned! Calculate the elapsed time and adjust timers accordingly
             if(datePlayerLeftTab) {
                 const now = new Date();
-                // Rounds down to nearest millisecond
+                // Rounds down to nearest second
                 const timeAway = Math.floor((now.getTime() - datePlayerLeftTab.getTime()) / 1000) * 1000;
                 
                 isTurnTime 
