@@ -52,7 +52,8 @@ const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, ...props }) => 
     const isTabActive = usePageVisibility();
     const [datePlayerLeftTab, setDatePlayerLeftTab] = React.useState<Date | null>(null);
 
-    // Handles syncing timers when the user switches tabs and comes back by 
+    // Handles syncing timers when the user switches tabs and comes back
+    // Because timers are typically paused by the browser when a tab is inactive
     useEffect(() => {
         if (isTabActive) {
             // The player has returned! Calculate the elapsed time and adjust timers accordingly
