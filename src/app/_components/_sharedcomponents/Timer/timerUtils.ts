@@ -8,5 +8,5 @@ export const formatMilliseconds = (ms: number): string => {
 export const millisecondsToSeconds = (ms: number) => ms / 1000;
 export const secondsToMilliseconds = (s: number) => s * 1000;
 
-export const MAX_TURN_TIME = 60_000; // 60 seconds in ms
+export const MAX_TURN_TIME = 20_000; // 20 seconds in ms
 export const MAX_MAIN_TIME = 150_000; // 150 seconds in ms

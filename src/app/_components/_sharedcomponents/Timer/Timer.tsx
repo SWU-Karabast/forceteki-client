@@ -34,7 +34,7 @@ const Timer: React.FC<TimerProps> = ({
     React.useEffect(() => {
         const timer = setInterval(() => {
             if (isRunning) {
-                setTimeRemaining((prevTimeRemaining) => prevTimeRemaining > 0 ? prevTimeRemaining - TIMER_STEP : maxTime);
+                setTimeRemaining((prevTimeRemaining) => prevTimeRemaining > 0 ? prevTimeRemaining - TIMER_STEP : 0);
             }
         }, TIMER_STEP);
 
