@@ -5,6 +5,7 @@ import {
     TableBody,
     TableRow,
     TableCell,
+    TableSortLabel,
     Typography,
     Box, Popover, PopoverOrigin,
     Tooltip
@@ -18,6 +19,17 @@ interface AnimatedStatsTableProps {
     staggerDelay?: number; // delay between row animations in ms
 }
 
+// https://stackoverflow.com/questions/44480644/string-union-to-string-array
+const STATS_COLUMN_HEADERS = ['Opponent', 'Wins', 'Losses', 'Win %'] as const
+type StatsColumn = (typeof STATS_COLUMN_HEADERS)[number]
+
+type Direction = 'asc' | 'desc';
+
+type OrderBy = {
+    column: StatsColumn
+    direction: Direction 
+}
+
 const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     data = [],
     animationDuration = 2000,
@@ -27,6 +39,8 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     const [animatedData, setAnimatedData] = useState<IMatchTableStats[]>([]);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+    const [orderBy, setOrderBy] = React.useState<OrderBy | undefined>();
+
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
@@ -40,6 +54,41 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
     const animateCounter = (start: number, end: number, progress: number) => {
         return Math.round(start + (end - start) * progress);
     };
+
+    useEffect(() => {
+        // only run if there is something to order by. 
+        if (!orderBy) {
+            return
+        }
+        const sortedData = [...data].sort((a, b) => {
+            const direction = orderBy.direction === 'asc' ? 1 : -1;
+            switch (orderBy.column) {
+                case 'Wins':
+                    return (a.wins - b.wins) * direction
+                case 'Losses':
+                    return (a.losses - b.losses) * direction
+                case 'Win %':
+                    return (a.winPercentage - b.winPercentage) * direction
+                case 'Opponent':
+                    // both are undefined, they're equal
+                    if (!a.leaderMelee && !b.leaderMelee) {
+                        return 0
+                    }
+                    // a is undefined, should come after b
+                    if (!a.leaderMelee) {
+                        return 1
+                    }
+                    // b is undefined, should come after a
+                    if (!b.leaderMelee) {
+                        return -1
+                    }
+                    // both are defined, safe to compare
+                    return a.leaderMelee.localeCompare(b.leaderMelee) * direction
+            }
+        })
+
+        setAnimatedData(sortedData);
+    }, [data, orderBy])
 
     // Reset and start animations when data changes
     useEffect(() => {
@@ -171,9 +220,6 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             flexDirection: 'column' as const,
             pr: '10px',
         },
-        tableHead: {
-            backgroundColor: '#333',
-        },
         leaderBaseHolder:{
             display:'flex',
             alignItems:'center',
@@ -226,16 +272,45 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             width: '21rem',
         },
     };
+    function Row({ children }: React.PropsWithChildren) {
+        return <TableCell sx={{ borderBottom:'none' }}>
+            <Typography>{children}</Typography>
+        </TableCell>
+    }
 
     return (
         <Box sx={styles.tableContainer}>
             <Table stickyHeader>
-                <TableHead sx={styles.tableHead}>
+                <TableHead>
                     <TableRow>
-                        <TableCell><Typography sx={{ color: '#fff' }}>Opponent</Typography></TableCell>
-                        <TableCell><Typography sx={{ color: '#fff' }}>Wins</Typography></TableCell>
-                        <TableCell><Typography sx={{ color: '#fff' }}>Losses</Typography></TableCell>
-                        <TableCell><Typography sx={{ color: '#fff' }}>Win %</Typography></TableCell>
+                        {STATS_COLUMN_HEADERS.map(columnHeader => {
+                            const active = orderBy?.column === columnHeader;
+                            return <TableCell 
+                                sx={{ backgroundColor: 'transparent' }}
+                                key={columnHeader}
+                                sortDirection={active ? orderBy.direction : false}
+                            >
+                                <Typography>
+                                    <TableSortLabel
+                                        sx={{ '& > svg': { marginTop: '3px' } }}
+                                        active={active}
+                                        direction={orderBy?.direction}
+                                        onClick={() => {
+                                            // if there was no orderBy set, then just set it to 'desc'
+                                            // and we'll "toggle" it to 'asc'
+                                            const previousDirection = orderBy?.direction ?? 'desc'
+
+                                            setOrderBy({
+                                                column: columnHeader,
+                                                direction: previousDirection === 'asc' ? 'desc' : 'asc'
+                                            })
+                                        }}
+                                    >
+                                        {columnHeader}
+                                    </TableSortLabel>
+                                </Typography>
+                            </TableCell>
+                        })}
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -294,15 +369,9 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                                     </Box>
                                 </Box>
                             </TableCell>
-                            <TableCell sx={{ borderBottom:'none' }}>
-                                <Typography sx={{ color: '#fff' }}>{row.wins}</Typography>
-                            </TableCell>
-                            <TableCell sx={{ borderBottom:'none' }}>
-                                <Typography sx={{ color: '#fff' }}>{row.losses}</Typography>
-                            </TableCell>
-                            <TableCell sx={{ borderBottom:'none' }}>
-                                <Typography sx={{ color: '#fff' }}>{row.winPercentage}%</Typography>
-                            </TableCell>
+                            <Row>{row.wins}</Row>
+                            <Row>{row.losses}</Row>
+                            <Row>{row.winPercentage}%</Row>
                         </TableRow>
                     ))}
                 </TableBody>
