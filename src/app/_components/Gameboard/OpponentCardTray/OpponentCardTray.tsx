@@ -190,6 +190,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 <GameTimer 
                     player={gameState?.players[connectedPlayer]} 
                     opponent={gameState?.players[getOpponent(connectedPlayer)]} 
+                    phase={phase}
+                    messages={gameState.messages}
                 />
                 <Box
                     onMouseEnter={handlePreviewOpen}

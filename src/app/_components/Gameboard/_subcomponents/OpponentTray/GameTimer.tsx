@@ -17,58 +17,69 @@ type PlayerState = {
 interface GameTimerProps extends CircularProgressProps {
     player: PlayerState;
     opponent: PlayerState;
+    phase: 'setup' | 'action' | 'regroup';
+    messages: object[];
 }
 
-const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, ...props }) => {
+const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, phase, messages, ...props }) => {
     const activePlayer = player?.isActionPhaseActivePlayer;
-    
-    const opponentTurnTimeRemainingMs = secondsToMilliseconds(opponent?.turnTimeRemainingSeconds || 0);
-    const playerTurnTimeRemainingMs = secondsToMilliseconds(player?.turnTimeRemainingSeconds || 0);
 
     const [turnTimeRemainingMs, setTurnTimeRemainingMs] = React.useState(MAX_TURN_TIME);
     const isTurnTime = turnTimeRemainingMs > 0;
 
     const opponentMainTimeRemainingMs = secondsToMilliseconds(opponent?.mainTimeRemainingSeconds || 0);
     const playerMainTimeRemainingMs = secondsToMilliseconds(player?.mainTimeRemainingSeconds || 0);
-
     const [mainTimeRemainingMs, setMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
 
     useEffect(() => {
-        /* Sets up and syncs timers with the server's data when a game state update is received,
-        * examples of game state updates that should sync timers: 
-        * - on initial page load / page refresh
-        * - when an action is taken, we reset the turn timer
-        * - when the turn timer is out, we start using the main timer
+        /* Syncs timers with the server when a game state update is received
+         *
+         * Examples of game state updates that should sync timers: 
+         * - on initial page load / page refresh
+         * - when an action is taken, we reset the turn timer
+         * - when the turn timer is out, we start using the main timer
         * */
+        const isStartOfSetup = phase === 'setup' && messages.length === 0;
+        const opponentTurnTimeRemainingMs = secondsToMilliseconds(opponent?.turnTimeRemainingSeconds || 0);
+        const playerTurnTimeRemainingMs = secondsToMilliseconds(player?.turnTimeRemainingSeconds || 0);
+
         const newTurnTimeRemaining = activePlayer ? playerTurnTimeRemainingMs : opponentTurnTimeRemainingMs;
-        setTurnTimeRemainingMs(newTurnTimeRemaining);
+        setTurnTimeRemainingMs(isStartOfSetup ? MAX_TURN_TIME : newTurnTimeRemaining);
         
         setMainTimeRemainingMs(
             activePlayer ? playerMainTimeRemainingMs : opponentMainTimeRemainingMs
         );
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [player])
+    }, [
+        player?.turnTimeRemainingSeconds, 
+        player?.mainTimeRemainingSeconds, 
+        opponent?.turnTimeRemainingSeconds, 
+        opponent?.mainTimeRemainingSeconds, 
+        phase
+    ])
 
     const isTabActive = usePageVisibility();
-    const [datePlayerLeftTab, setDatePlayerLeftTab] = React.useState<Date | null>(null);
+    const [timeLeftTab, setTimeLeftTab] = React.useState<Date | null>(null);
 
     // Handles syncing timers when the user switches tabs and comes back
     // Because timers are typically paused by the browser when a tab is inactive
     useEffect(() => {
         if (isTabActive) {
             // The player has returned! Calculate the elapsed time and adjust timers accordingly
-            if(datePlayerLeftTab) {
+            if(timeLeftTab) {
                 const now = new Date();
                 // Rounds down to nearest second
-                const timeAway = Math.floor((now.getTime() - datePlayerLeftTab.getTime()) / 1000) * 1000;
+                const timeAway = Math.floor((now.getTime() - timeLeftTab.getTime()) / 1000) * 1000;
                 
-                isTurnTime 
-                    ? setTurnTimeRemainingMs(prev => prev - timeAway) 
-                    : setMainTimeRemainingMs(prev => prev - timeAway)
-                setDatePlayerLeftTab(null);
+                if(isTurnTime) {
+                    setTurnTimeRemainingMs(prev => prev - timeAway) 
+                } else {
+                    setMainTimeRemainingMs(prev => prev - timeAway);
+                }
+                setTimeLeftTab(null);
             }
         } else {
-            setDatePlayerLeftTab(new Date());
+            setTimeLeftTab(new Date());
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isTabActive]); // Executes whenever the tab visibility changes
@@ -80,6 +91,7 @@ const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, ...props }) => 
             maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME} 
             setTimeRemaining={isTurnTime ? setTurnTimeRemainingMs : setMainTimeRemainingMs}
             timeRemaining={isTurnTime ? turnTimeRemainingMs : mainTimeRemainingMs}
+            shouldAdjustBackgroundColor={activePlayer && !isTurnTime}
             tooltipTitle={<TooltipContent 
                 turnTimeRemainingSeconds={turnTimeRemainingMs} 
                 activePlayer={activePlayer} 
@@ -144,14 +156,25 @@ const MainTimerLabel = ({
         <Stack spacing={0}>
             <Typography
                 variant="body1"
-                sx={{ color: 'white', marginBottom: 0, opacity: activePlayer ? 1 : 0.3, cursor: 'pointer' }}
+                sx={{ 
+                    color: 'white',
+                    marginBottom: 0, 
+                    cursor: 'pointer',
+                    opacity: activePlayer ? 1 : 0.3, 
+                }}
             >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography> 
 
             <Divider />
             
             <Typography
                 variant="body1"
-                sx={{ color: 'white', marginBottom: 0, opacity: !activePlayer ? 1 : 0.3, cursor: 'pointer' }}
+                sx={{ 
+                    color: 'white',
+                    marginBottom: 0, 
+                    cursor: 'pointer',
+                    opacity: !activePlayer ? 1 : 0.3, 
+
+                }}
             >{`${formatMilliseconds(opponentTimeRemaining)}`}</Typography> 
 
         </Stack>

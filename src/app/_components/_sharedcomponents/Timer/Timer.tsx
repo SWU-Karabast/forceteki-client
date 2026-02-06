@@ -2,11 +2,11 @@ import CircularProgress, {
     CircularProgressProps,
 } from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
-import React from 'react';
+import React, { useMemo } from 'react';
 import Tooltip, { TooltipProps } from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material';
-import { formatMilliseconds } from './timerUtils';
+import { formatMilliseconds, getTimerColor } from './timerUtils';
 
 const TIMER_STEP = 100; // shorter intervals provide a smoother progress animation
 interface TimerProps extends CircularProgressProps {
@@ -15,6 +15,7 @@ interface TimerProps extends CircularProgressProps {
     isRunning?: boolean;
     maxTime: number;
     setTimeRemaining: React.Dispatch<React.SetStateAction<number>>;
+    shouldAdjustBackgroundColor?: boolean;
     timeRemaining: number;
     tooltipTitle?: TooltipProps['title'];
 }
@@ -25,6 +26,7 @@ const Timer: React.FC<TimerProps> = ({
     isRunning = true, 
     maxTime, 
     setTimeRemaining,
+    shouldAdjustBackgroundColor = false,
     timeRemaining, 
     tooltipTitle,
     ...props }) => {
@@ -43,11 +45,13 @@ const Timer: React.FC<TimerProps> = ({
         };
     }, [isRunning, maxTime, setTimeRemaining]);
 
-    const progressColor = timeRemaining > (maxTime / 3) || hasLowOpacity
-        ? 'inherit'
-        : timeRemaining > (maxTime / 6)
-            ? 'warning'
-            : 'error';
+    const { themeColor: timerColor } = useMemo(() => getTimerColor({
+        timeRemaining,
+        maxTime,
+        hasLowOpacity
+    }), [
+        timeRemaining, maxTime, hasLowOpacity
+    ])
 
     return (
         <Tooltip
@@ -67,8 +71,13 @@ const Timer: React.FC<TimerProps> = ({
                     variant='determinate' 
                     size={80} 
                     value={(timeRemaining / (maxTime / 100))} // Must be value between 0-100
-                    color={progressColor}
-                    sx={{ opacity: progressColor === 'inherit' || hasLowOpacity ? 0.45: 1 }} 
+                    color={timerColor}
+                    sx={{ opacity: timerColor === 'inherit' 
+                        ? 0.3
+                        : hasLowOpacity 
+                            ? 0.1
+                            : 1, 
+                    zIndex: 10 }} 
                     {...props} 
                 />
                 <Box
@@ -78,9 +87,9 @@ const Timer: React.FC<TimerProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: progressColor === 'inherit'
+                        background: timerColor === 'inherit' || !shouldAdjustBackgroundColor
                             ? `linear-gradient(135deg, ${theme.palette.grey[900]} 0%, ${theme.palette.grey[900]}55 100%)`
-                            : `linear-gradient(135deg, ${theme.palette[progressColor].main} 0%, ${theme.palette[progressColor].main}55 100%)`,
+                            : `linear-gradient(135deg, ${theme.palette[timerColor].main} 0%, ${theme.palette[timerColor].main}55 100%)`,
                         borderRadius: '50%',
                         outline: '1px solid rgba(255, 255, 255, 0.15)',
                     }}
@@ -88,7 +97,7 @@ const Timer: React.FC<TimerProps> = ({
                     {children || (
                         <Typography
                             variant="body1"
-                            sx={{ color: progressColor, opacity: hasLowOpacity ? 0.3 : 1 }}
+                            sx={{ color: timerColor, opacity: hasLowOpacity ? 0.3 : 1 }}
                         >
                             {formatMilliseconds(timeRemaining)}
                         </Typography>

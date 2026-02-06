@@ -5,6 +5,22 @@ export const formatMilliseconds = (ms: number): string => {
     return `${minutes.toString()}:${seconds.toString().padStart(2, '0')}`;
 }
 
+export const getTimerColor = ({
+    timeRemaining,
+    maxTime,
+    hasLowOpacity
+}: { 
+    timeRemaining: number, maxTime: number, hasLowOpacity?: boolean 
+}): {
+    color: 'white' | 'red' | 'orange';
+    themeColor: 'inherit' | 'warning' | 'error',
+} => {
+    if (hasLowOpacity) return { color: 'white', themeColor: 'inherit' };
+    if (timeRemaining > (maxTime / 3)) return { color: 'white', themeColor: 'inherit' };
+    if (timeRemaining > (maxTime / 6)) return { color: 'orange', themeColor: 'warning' };
+    return { color: 'red', themeColor: 'error' };
+}
+
 export const millisecondsToSeconds = (ms: number) => ms / 1000;
 export const secondsToMilliseconds = (s: number) => s * 1000;
 
