@@ -66,7 +66,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
     const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
-    const { messages: gameMessages, handleMessageDelta, handleMessageRetransmit, resetMessages } = useGameMessages();
+    const { messages: gameMessages, processMessageDeltas, processMessageRetransmit, resetMessages } = useGameMessages();
 
     // Initialize sound handler with user preferences
     const { playSound } = useSoundHandler({
@@ -271,13 +271,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     messageOffset: gameState.messageOffset,
                     totalMessages: gameState.totalMessages,
                 };
-                const retransmitNeeded = handleMessageDelta(delta);
-                if (retransmitNeeded) {
+                const messagesToRetransmit = processMessageDeltas(delta);
+                if (messagesToRetransmit) {
                     // Request retransmit for missing messages
                     if (process.env.NODE_ENV === 'development') {
-                        console.log('Requesting retransmit for messages:', retransmitNeeded.startIndex, 'to', retransmitNeeded.endIndex);
+                        console.log('Requesting retransmit for messages:', messagesToRetransmit.startIndex, 'to', messagesToRetransmit.endIndex);
                     }
-                    newSocket.emit('game', 'retransmitGameMessages', retransmitNeeded.startIndex, retransmitNeeded.endIndex);
+                    newSocket.emit('game', 'retransmitGameMessages', messagesToRetransmit.startIndex, messagesToRetransmit.endIndex);
                 }
             }
             
@@ -290,7 +290,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('retransmitResponse', (retransmit: IMessageRetransmit) => {
-            handleMessageRetransmit(retransmit);
+            processMessageRetransmit(retransmit);
             if (process.env.NODE_ENV === 'development') {
                 console.log('Message retransmit received:', retransmit);
             }

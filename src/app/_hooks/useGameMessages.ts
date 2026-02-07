@@ -14,8 +14,8 @@ export interface IMessageRetransmit {
 
 export interface IUseGameMessagesReturn {
     messages: IChatEntry[];
-    handleMessageDelta: (delta: IMessageDelta) => { startIndex: number; endIndex: number } | null;
-    handleMessageRetransmit: (retransmit: IMessageRetransmit) => void;
+    processMessageDeltas: (delta: IMessageDelta) => { startIndex: number; endIndex: number } | null;
+    processMessageRetransmit: (retransmit: IMessageRetransmit) => void;
     resetMessages: () => void;
 }
 
@@ -43,7 +43,7 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
      * Handle incoming message delta from the server.
      * Returns retransmit request info if there's a gap, otherwise null.
      */
-    const handleMessageDelta = useCallback((delta: IMessageDelta): { startIndex: number; endIndex: number } | null => {
+    const processMessageDeltas = useCallback((delta: IMessageDelta): { startIndex: number; endIndex: number } | null => {
         const { newMessages, messageOffset, totalMessages } = delta;
 
         // Update expected total
@@ -67,9 +67,9 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
      * Handle retransmitted messages from the server.
      * Writes messages to the correct array indices.
      */
-    const handleMessageRetransmit = useCallback((retransmit: IMessageRetransmit): void => {
+    const processMessageRetransmit = useCallback((retransmit: IMessageRetransmit): void => {
         if (process.env.NODE_ENV === 'development') {
-            console.log('handleMessageRetransmit called with:', retransmit);
+            console.log('processMessageRetransmit called with:', retransmit);
         }
         const { messages: retransmittedMessages, startIndex } = retransmit;
         appendMessages(retransmittedMessages, startIndex);
@@ -86,8 +86,8 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
 
     return {
         messages,
-        handleMessageDelta,
-        handleMessageRetransmit,
+        processMessageDeltas,
+        processMessageRetransmit,
         resetMessages,
     };
 };
