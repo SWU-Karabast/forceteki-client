@@ -270,7 +270,7 @@ const Chat: React.FC<IChatProps> = ({
             return (
                 <Box key={index} sx={styles.chatEntryBox}>
                     <Typography sx={{ ...styles.messageText, color: '#888', fontStyle: 'italic' }}>
-                        Missing message...
+                        Fetching missing message...
                     </Typography>
                 </Box>
             );
