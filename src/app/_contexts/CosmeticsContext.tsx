@@ -6,6 +6,7 @@ import {
     RegisteredCosmeticType
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 import { ServerApiService } from '../_services/ServerApiService';
+import { useUser } from './User.context';
 
 interface CosmeticsContextProps {
     cosmetics: IRegisteredCosmetics;
@@ -36,6 +37,7 @@ const CosmeticsContext = React.createContext<CosmeticsContextProps>({
 export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
+    const { user } = useUser();
     const [cosmetics, setCosmetics] = React.useState<IRegisteredCosmetics>(defaultCosmetics);
     const [isContributor, setIsContributor] = React.useState<boolean>(false);
     const getCosmeticDefault = (type: RegisteredCosmeticType): IRegisteredCosmeticOption => {
@@ -71,7 +73,8 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
         return cosmetics.playmats.find((pm) => pm.id === id) || getCosmeticDefault(RegisteredCosmeticType.Playmat);
     }*/
 
-    const fetchCosmeticsAsync = async () => {
+    const fetchCosmeticsAsync = React.useCallback(async () => {
+        if (!user) return;
         const data = await ServerApiService.getCosmeticsAsync();
         setIsContributor(data.isContributor);
         setCosmetics(data.cosmetics.reduce((acc: IRegisteredCosmetics, cosmetic) => {
@@ -89,11 +92,16 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
             }
             return acc;
         }, { cardbacks: [], backgrounds: [] }));
-    };
+    }, [user]);
 
     React.useEffect(() => {
-        fetchCosmeticsAsync();
-    }, []);
+        if (user) {
+            fetchCosmeticsAsync();
+        } else {
+            setCosmetics(defaultCosmetics);
+            setIsContributor(false);
+        }
+    }, [user, fetchCosmeticsAsync]);
 
     return (
         <CosmeticsContext.Provider value={{ cosmetics, setCosmetics,
