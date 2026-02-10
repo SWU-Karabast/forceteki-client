@@ -4,7 +4,7 @@ Web client for use with the forceteki engine.
 We have a [Discord server](https://discord.gg/N6ZgcZ3SfA) for updates, bug reports, and coordinating dev work.
 
 ### Contributing
-For details on how to get started adding cards, see the [wiki](https://github.com/SWU-Karabast/forceteki/wiki).
+For details on how to get started, see the [wiki](https://github.com/SWU-Karabast/forceteki/wiki). Client issues are tracked on this repo's [issues page](https://github.com/SWU-Karabast/forceteki-client/issues) — look for the `good first issue` label for beginner-friendly tasks.
 
 ## Development Quickstart
 Follow these instructions to get to the point of being able to run client and connect to a default game. These instruction assume you have a [server](https://github.com/SWU-Karabast/forceteki/wiki) running locally.
@@ -28,8 +28,8 @@ Once this is running you can go to http://localhost:3000 to get to the home page
 
 For testing on mobile devices connected to your local network:
 
-1. Copy the `.env.local.example` file to `.env.local`
-2. Edit `.env.local` and replace `your-local-ip` with your computer's IP address (e.g., 192.168.4.40)
-3. Restart the development server for the Front-End
-4. Update the Back-End with its instructions to to allow mobile local connections
-5. Connect to your-local-ip:3000 on the web browser of your mobile device
+1. Copy `.env.local.example` to `.env.local`
+2. Edit `.env.local` and replace `your-local-ip` with your computer's IP address (e.g., `192.168.4.40`)
+3. Restart the development server
+4. Follow the [backend mobile testing instructions](https://github.com/SWU-Karabast/forceteki#mobile-testing-and-custom-environment) to add your IP to the CORS allowed origins
+5. Connect to `your-local-ip:3000` on the web browser of your mobile device

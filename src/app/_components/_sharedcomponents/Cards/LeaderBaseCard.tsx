@@ -6,6 +6,7 @@ import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
 
@@ -40,6 +41,22 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     });
     const aspectRatio = isHoveringCapturedCard ? '1 / 1.4' : leaderCardFlipPreview.aspectRatio;
     const width = isHoveringCapturedCard ? '16rem' : leaderCardFlipPreview.width;
+
+    const [isTouchDevice, setIsTouchDevice] = React.useState(false);
+
+    const longPressHandlers = useLongPress({
+        onLongPress: (target) => {
+            const imageUrl = target.getAttribute('data-card-url');
+            if (!imageUrl) return;
+            setIsTouchDevice(true);
+            setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
+        },
+        onRelease: () => {
+            setAnchorElement(null);
+            setPreviewImage(null);
+        },
+    });
 
     if (!card) {
         return null
@@ -209,6 +226,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'relative',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
+            WebkitTouchCallout: 'none',
+            userSelect: 'none',
         },
         deployedPlaceholder: {
             backgroundColor: 'transparent',
@@ -458,6 +477,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 data-card-type={isLeader ? 'leader' : 'base'}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
+                {...longPressHandlers}
             >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
@@ -505,7 +525,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         ...styles.cardPreview,backgroundImage: previewImage
                     }} >
                     </Box>
-                    {isLeader && (
+                    {isLeader && !isTouchDevice && (
                         <Typography variant={'body1'} sx={styles.ctrlText}
                         >CTRL: View Flipside</Typography>
                     )}

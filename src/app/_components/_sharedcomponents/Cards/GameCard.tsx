@@ -8,6 +8,7 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
@@ -53,6 +54,22 @@ const GameCard: React.FC<IGameCardProps> = ({
         backCardStyle: CardStyle.PlainLeader,
         isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
         isDeployed: true,
+    });
+
+    const [isTouchDevice, setIsTouchDevice] = React.useState(false);
+
+    const longPressHandlers = useLongPress({
+        onLongPress: (target) => {
+            const imageUrl = target.getAttribute('data-card-url');
+            if (!imageUrl || cardInOpponentsHand) return;
+            setIsTouchDevice(true);
+            setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
+        },
+        onRelease: () => {
+            setAnchorElement(null);
+            setPreviewImage(null);
+        },
     });
 
     const isStolen = React.useMemo(() => {
@@ -264,6 +281,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            WebkitTouchCallout: 'none',
+            userSelect: 'none',
         },
         upgradeOverlay: {
             position: 'absolute',
@@ -602,10 +621,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                 sx={styles.card}
                 onClick={handleClick}
             >
-                <Box 
+                <Box
                     sx={styles.cardOverlay}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
+                    {...longPressHandlers}
                     data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
                     data-card-type={card.printedType}
                     data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
@@ -685,7 +705,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 {...popoverConfig()}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
-                {(card.printedType === 'leader') && (
+                {(card.printedType === 'leader') && !isTouchDevice && (
                     <Typography variant={'body1'} sx={styles.ctrlText}
                     >CTRL: View Flipside</Typography>
                 )}
