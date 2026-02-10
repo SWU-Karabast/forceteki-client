@@ -11,11 +11,13 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation'
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 import { GamesToWinMode } from '@/app/_constants/constants';
+import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
 
 const SetUp: React.FC = ({
 }) => {
     const router = useRouter();
     const { lobbyState, sendLobbyMessage, connectedPlayer, sendMessage } = useGame();
+    const { handleStateOnChange, resetTypingState } = useChatTypingState();
 
     // find the user
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
@@ -28,14 +30,20 @@ const SetUp: React.FC = ({
     // Determine if we should show Bo3ScoreCard (Bo3 mode and game 2+)
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
     const showBo3ScoreCard = isBo3Mode && currentGameNumber > 1;
-    
+
     // setup chat mechanics
     const [chatMessage, setChatMessage] = useState('');
+
+    const handleChatOnChange = (event: React.ChangeEvent<HTMLInputElement>) => { 
+        handleStateOnChange(event.target.value);
+        setChatMessage(event.target.value);
+    }
     
     const handleChatSubmit = () => {
         if (chatMessage.trim()) {
             sendLobbyMessage(['sendChatMessage',chatMessage]);
             setChatMessage('');
+            resetTypingState();
         }
     };
 
@@ -106,7 +114,7 @@ const SetUp: React.FC = ({
                 <Chat
                     chatHistory={lobbyState ? lobbyState.gameChat?.messages : []}
                     chatMessage={chatMessage}
-                    setChatMessage={setChatMessage}
+                    handleChatOnChange={handleChatOnChange}
                     handleChatSubmit={handleChatSubmit}
                 />
                 <Divider sx={styles.dividerStyle} />
