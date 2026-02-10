@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Autocomplete, Box, Divider, FilterOptionsState, TextField, Typography, MenuItem } from '@mui/material';
+import { Autocomplete, Box, Divider, FilterOptionsState, TextField, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { FormatLabels, GamesToWinMode, SwuGameFormat } from '@/app/_constants/constants';
