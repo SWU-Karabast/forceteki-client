@@ -74,10 +74,6 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
         }
     };
 
-    const handleLoginRedirect = () =>{
-        router.push('/auth');
-    }
-
     const styles = {
         cardPopover: {
             borderRadius: '.38em',
