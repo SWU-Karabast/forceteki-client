@@ -1,9 +1,8 @@
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Autocomplete, Box, Divider, FilterOptionsState, TextField, Typography, MenuItem } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { FormatLabels, GamesToWinMode, SwuGameFormat } from '@/app/_constants/constants';
-import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 
 interface GameCardData {
     id: string;
@@ -283,23 +282,22 @@ const GamesInProgress: React.FC = () => {
                 />
             </Box>
             <Box sx={styles.sortFilterRow}>
-                <StyledTextField
-                    select
+                <Autocomplete
+                    fullWidth
                     value={sortByFormat || null}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setSortByFormat(e.target.value as SwuGameFormat | null)
-                    }
-                    label="Filter by Format"
+                    options={Object.values(SwuGameFormat)}
+                    getOptionLabel={(option) => FormatLabels[option]}
+                    onChange={(_, newValue) => setSortByFormat(newValue as SwuGameFormat | null)}
                     sx={styles.filterByLeaderAutoComplete}
-                >
-                    {Object.values(SwuGameFormat).map((key) => {
-                        return (
-                            <MenuItem key={key} value={key}>
-                                {FormatLabels[key]}
-                            </MenuItem>
-                        );
-                    })}
-                </StyledTextField>
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Filter by Format"
+                            variant="outlined"
+                        />
+                    )}
+                    slotProps={styles.autocompleteSlotProps}
+                />
             </Box>
 
             <Divider sx={styles.divider} />
