@@ -14,7 +14,7 @@ const Home: React.FC = () => {
         },
         columnContainer: {
             height: '100vh',
-            padding: '1rem 0.75rem 3rem',
+            padding: { xs: '19.5rem 0.75rem 3rem', md: '1rem 0.75rem 3rem' }, // Increased top padding on mobile for lowered banner
         },
         column: {
             justifyContent: 'center',
@@ -37,14 +37,38 @@ const Home: React.FC = () => {
 
             <KarabastBanner />
 
-            <Grid container size={12} sx={styles.columnContainer}>
-                <Grid size={4} sx={styles.column}>
+            <Grid container size={12} sx={{
+                ...styles.columnContainer,
+                height: { xs: 'auto', md: '100vh' },
+                flexDirection: { xs: 'column', md: 'row' },
+                alignItems: { xs: 'center', md: 'flex-end' }, // Center on mobile, bottom on desktop
+            }}>
+                {/* Public Games - Order 2 on Mobile, 1 on Desktop */}
+                <Grid size={{ xs: 12, md: 4 }} order={{ xs: 2, md: 1 }} sx={{
+                    ...styles.column,
+                    height: { xs: 'auto', md: 'calc(100% - 10.5rem)' }, // Auto height on mobile
+                    marginBottom: { xs: 2, md: 0 },
+                    width: '100%',
+                }}>
                     <PublicGames />
                 </Grid>
-                <Grid size={4} sx={styles.column}>
+
+                {/* Play Mode - Order 1 on Mobile, 2 on Desktop */}
+                <Grid size={{ xs: 12, md: 4 }} order={{ xs: 1, md: 2 }} sx={{
+                    ...styles.column,
+                    height: { xs: 'auto', md: 'calc(100% - 10.5rem)' },
+                    marginBottom: { xs: 2, md: 0 },
+                    width: '100%',
+                }}>
                     <HomePagePlayMode />
                 </Grid>
-                <Grid size={4} sx={styles.column}>
+
+                {/* News - Order 3 on Mobile, 3 on Desktop */}
+                <Grid size={{ xs: 12, md: 4 }} order={{ xs: 3, md: 3 }} sx={{
+                    ...styles.column,
+                    height: { xs: 'auto', md: 'calc(100% - 10.5rem)' },
+                    width: '100%',
+                }}>
                     <NewsColumn />
                 </Grid>
             </Grid>

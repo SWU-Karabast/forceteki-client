@@ -5,7 +5,7 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 const KarabastBanner: React.FC = () => {
     const styles = {
         titleheader: { 
-            fontSize: '3.2rem', 
+            fontSize: { xs: '2.5rem', md: '3.2rem' }, 
             fontWeight: 400, 
             marginBottom: '5px' 
         },
@@ -25,8 +25,9 @@ const KarabastBanner: React.FC = () => {
         textBoxStyle: {
             position: 'absolute',
             top: 0,
-            margin: '2rem 0 0 1rem',
-            width: '20%',
+            left: 0,
+            margin: { xs: '12rem 0 0 1.5rem', md: '2rem 0 0 1.5rem' }, // Increased left margin to align with grid content
+            width: { xs: '80%', md: '20%' },
             zIndex: 10,
         },
         homeBanner: {
