@@ -74,6 +74,10 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
         }
     };
 
+    const handleLoginRedirect = () =>{
+        router.push('/auth');
+    }
+
     const styles = {
         cardPopover: {
             borderRadius: '.38em',
@@ -160,7 +164,11 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                     </Box>
                 </Box>
                 {!match.isPrivate && (
-                    <Button onClick={handleSpectate}>Spectate</Button>
+                    user ? (
+                        <Button onClick={handleSpectate}>Spectate</Button>
+                    ) : (
+                        <Button title="Login to Spectate" onClick={handleLoginRedirect}>Login</Button>
+                    )
                 )}
             </Box>
             <Popover
