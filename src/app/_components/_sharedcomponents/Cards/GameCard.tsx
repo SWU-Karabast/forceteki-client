@@ -200,7 +200,14 @@ const GameCard: React.FC<IGameCardProps> = ({
     const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
     const nonShieldUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
     const promptType = getConnectedPlayerPrompt()?.promptType;
-    const borderColor = getBorderColor(card, connectedPlayer, promptType, cardStyle, isOpponentEffect, isHoveredInChat);
+    const borderColor = getBorderColor({
+        card,
+        player:connectedPlayer,
+        promptType,
+        style: cardStyle,
+        isOpponentEffect,
+        isHoveredInChat
+    });
     const cardCounter = card.count || 0;
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
@@ -637,7 +644,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                     key={`${card.uuid}-shield-${index}`}
                                     sx={{
                                         ...(shieldCard.isBlanked ? styles.blankedShieldIcon : styles.shieldIcon),
-                                        border: shieldCard.selectable ? `2px solid ${getBorderColor(shieldCard, connectedPlayer)}` : 'none',
+                                        border: shieldCard.selectable ? `2px solid ${getBorderColor({ card: shieldCard, player: connectedPlayer })}` : 'none',
                                         cursor: shieldCard.selectable ? 'pointer' : 'normal'
                                     }}
                                     onClick={() => subcardClick(shieldCard)}
@@ -689,7 +696,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     key={subcard.uuid}
                     sx={{ ...styles.upgradeIcon,
                         backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
-                        border: subcard.selectable ? `2px solid ${getBorderColor(subcard, connectedPlayer)}` : 'none',
+                        border: subcard.selectable ? `2px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',
                         cursor: subcard.selectable ? 'pointer' : 'normal'
                     }}
                     onClick={() => subcardClick(subcard)}
@@ -727,7 +734,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 sx={{
                                     ...styles.upgradeIcon,
                                     backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
-                                    border: capturedCard.selectable ? `2px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none',
+                                    border: capturedCard.selectable ? `2px solid ${getBorderColor({ card:capturedCard, player:connectedPlayer })}` : 'none',
                                     cursor: capturedCard.selectable ? 'pointer' : 'normal'
                                 }}
                                 onClick={() => subcardClick(capturedCard)}
