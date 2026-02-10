@@ -48,7 +48,7 @@ export const useDeckManagement = (): IDeckManagementState => {
     const [format, setFormat] = useState<SwuGameFormat>(() => {
         const stored = localStorage.getItem('format');
 
-        if (stored !== SwuGameFormat.Premier && stored !== SwuGameFormat.Open) {
+        if (stored !== SwuGameFormat.Premier && stored !== SwuGameFormat.Open && stored !== SwuGameFormat.NextSetPreview) {
             return SwuGameFormat.Premier;
         }
 

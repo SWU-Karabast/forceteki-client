@@ -26,6 +26,7 @@ interface IGameContextType {
     gameState: any;
     lobbyState: any;
     bugReportState: any;
+    playerReportState: any;
     statsSubmitNotification: IStatsNotification | null;
     sendMessage: (message: string, args?: any[]) => void;
     sendGameMessage: (args: any[]) => void;
@@ -41,6 +42,11 @@ interface IGameContextType {
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
+    hoveredChatCard: {
+        id: string | null;
+        hover: (id: string) => void;
+        clear: () => void;
+    };
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -50,10 +56,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const lastGameIdRef = useRef<string | null>(null);
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [bugReportState, setBugReportState] = useState<any>(null);
+    const [playerReportState, setPlayerReportState] = useState<any>(null);
     const [statsSubmitNotification, setStatsSubmitNotification] = useState<IStatsNotification | null>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
+    const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
@@ -280,6 +288,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setBugReportState(result);
         });
 
+        newSocket.on('playerReportResult', (result: any) => {
+            setPlayerReportState(result);
+        });
+
         newSocket.on('statsSubmitNotification', (notification: IStatsNotification) => {
             setStatsSubmitNotification(notification);
         });
@@ -372,6 +384,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 gameState,
                 lobbyState,
                 bugReportState,
+                playerReportState,
                 statsSubmitNotification,
                 sendGameMessage,
                 sendMessage,
@@ -386,7 +399,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 lastQueueHeartbeat,
                 isAnonymousPlayer,
                 hasChatDisabled,
-                createNewSocket
+                createNewSocket,
+                hoveredChatCard: {
+                    id: hoveredChatCardId,
+                    hover: setHoveredCardId,
+                    clear: () => setHoveredCardId(null)
+                }
             }}
         >
             {children}

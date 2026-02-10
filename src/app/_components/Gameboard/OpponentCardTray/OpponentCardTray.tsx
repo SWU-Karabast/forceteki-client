@@ -2,6 +2,7 @@ import React from 'react';
 import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
 import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
+import Credits from '../_subcomponents/PlayerTray/Credits';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
@@ -36,7 +37,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const phase = gameState.phase;
     const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
 
-    const lastPlayedCardUrl = gameState.clientUIProperties?.lastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
+    const hasLastPlayedCard = !!gameState.clientUIProperties?.lastPlayedCard
+    const lastPlayedCardUrl = hasLastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -70,7 +72,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const styles = {
         leftColumn: {
             ...debugBorder('red'),
-            flexDirection: isPortrait ? 'column' : 'row',
+            flexDirection: isPortrait ? 'column' : 'row', // Responsive layout
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
@@ -78,6 +80,12 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             gap: '1rem',
             height: '100%',
             boxSizing: 'border-box',
+        },
+        creditsResourcesStack: {
+            display: 'flex',
+            flexDirection: 'column', // Credits above Resources
+            alignItems: 'stretch', // Make children fill container width
+            gap: '0.5rem', // Smaller gap between Credits and Resources
         },
         centerColumn: {
             ...debugBorder('green'),
@@ -104,12 +112,23 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
         },
         lastPlayed: {
             ...debugBorder('yellow'),
-            width: '4.6rem',
-            height: '6.5rem',
+            height: '100%',
+            width: 'auto',
+            maxWidth: '50%',
+            aspectRatio: '1 / 1.4',
             borderRadius: '5px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            '&:hover':  hasLastPlayedCard ? {
+                scale: '1.1',
+                transition: 'all ease-in-out 0.15s',
+            } : null,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            backgroundPosition: 'center',
             backgroundSize: 'cover',
             backgroundImage: lastPlayedCardUrl,
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backgroundRepeat: 'no-repeat',
         },
         menuStyles: {
             ...debugBorder('yellow'),
@@ -159,7 +178,10 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 }}
             >
                 <DeckDiscard trayPlayer={trayPlayer} cardback={opponentsCardback} />
-                <Resources trayPlayer={trayPlayer}/>
+                <Box sx={styles.creditsResourcesStack}>
+                    <Credits trayPlayer={trayPlayer} />
+                    <Resources trayPlayer={trayPlayer}/>
+                </Box>
             </Grid>
 
             {/* Center column (flexes to fill space) */}
@@ -201,7 +223,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 <Popover
                     id="mouse-over-popover"
                     sx={{ pointerEvents: 'none' }}
-                    open={open}
+                    open={hasLastPlayedCard && open}
                     anchorEl={anchorElement}
                     onClose={handlePreviewClose}
                     disableRestoreFocus
