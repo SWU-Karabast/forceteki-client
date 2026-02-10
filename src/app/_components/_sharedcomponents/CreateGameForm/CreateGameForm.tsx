@@ -3,8 +3,10 @@ import {
     Box,
     Button,
     Checkbox,
+    CircularProgress,
     FormControl,
     FormControlLabel,
+    IconButton,
     MenuItem,
     Typography,
     Radio,
@@ -13,6 +15,7 @@ import {
     Divider,
     Tooltip,
 } from '@mui/material';
+import { Sync as SyncIcon } from '@mui/icons-material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
@@ -28,7 +31,8 @@ import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes'
 import {
     getUserPayload,
     saveDeckToLocalStorage,
-    saveDeckToServer
+    saveDeckToServer,
+    ISwuStatsDeckItem
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 
@@ -62,6 +66,12 @@ interface ICreateGameFormProps {
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
     isBo3Allowed: boolean;
+    // SWU Stats integration props
+    swuStatsDecks?: ISwuStatsDeckItem[];
+    isSwuStatsLinked?: boolean;
+    useSwuStatsDecks?: boolean;
+    toggleDeckSource?: () => void;
+    isLoadingSwuStatsDecks?: boolean;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
@@ -77,7 +87,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     clearErrors,
     setIsJsonDeck,
     setModalOpen,
-    isBo3Allowed
+    isBo3Allowed,
+    // SWU Stats integration
+    swuStatsDecks = [],
+    isSwuStatsLinked = false,
+    useSwuStatsDecks = false,
+    toggleDeckSource,
+    isLoadingSwuStatsDecks = false
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -143,10 +159,14 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         let deckType = 'url';
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         if(showSavedDecks) {
-            const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
-            userDeck = '';
-            if (selectedDeck?.deckLink) {
-                userDeck = selectedDeck?.deckLink
+            if (useSwuStatsDecks && isSwuStatsLinked) {
+                // Use SWU Stats deck
+                const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
+                userDeck = selectedSwuStatsDeck?.deckLink || '';
+            } else {
+                // Use saved deck from Karabast
+                const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
+                userDeck = selectedDeck?.deckLink || '';
             }
         }else{
             userDeck = deckLink;
@@ -161,7 +181,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 if(favoriteDeck && deckData && showSavedDecks) {
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
-                    deckData.isPresentInDb = !!user;
+                    // SWU Stats decks are not stored in our DB
+                    deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
                 }else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck
                     deckData.isPresentInDb = false;
@@ -314,8 +335,99 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             display: 'flex',
             justifyContent: 'start',
             width: '100%',
+        },
+        deckSourceLabel: {
+            color: '#aaa',
+            fontSize: '0.85rem',
+        },
+        loadingContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
         }
     }
+
+    // Render SWU Stats decks dropdown
+    const renderSwuStatsDecksDropdown = () => {
+        if (isLoadingSwuStatsDecks) {
+            return (
+                <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                    <Typography sx={{ color: '#aaa' }}>Loading SWU Stats decks...</Typography>
+                </Box>
+            );
+        }
+
+        // Sort decks with favorites first
+        const sortedSwuStatsDecks = [...swuStatsDecks].sort((a, b) => {
+            if (a.isFavorite && !b.isFavorite) return -1;
+            if (!a.isFavorite && b.isFavorite) return 1;
+            return (a.name || '').localeCompare(b.name || '');
+        });
+
+        // Validate that favoriteDeck exists in the list, if not use empty string
+        const validatedValue = sortedSwuStatsDecks.some(deck => deck.id.toString() === favoriteDeck) 
+            ? favoriteDeck 
+            : '';
+
+        return (
+            <StyledTextField
+                select
+                value={validatedValue}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setFavoriteDeck(e.target.value as string)
+                }
+                disabled={userLoading || isLoadingSwuStatsDecks}
+                placeholder="SWU Stats Decks"
+            >
+                {sortedSwuStatsDecks.length === 0 ? (
+                    <MenuItem value="" disabled>
+                        No decks found on SWU Stats
+                    </MenuItem>
+                ) : (
+                    sortedSwuStatsDecks.map((deck) => (
+                        <MenuItem key={deck.id} value={deck.id.toString()}>
+                            {deck.isFavorite ? '★ ' : ''}{deck.name}
+                        </MenuItem>
+                    ))
+                )}
+            </StyledTextField>
+        );
+    };
+
+    // Render Karabast saved decks dropdown
+    const renderKarabastDecksDropdown = () => {
+        // Validate that favoriteDeck exists in the list, if not use empty string
+        const validatedValue = savedDecks.some(deck => deck.deckID === favoriteDeck)
+            ? favoriteDeck
+            : '';
+
+        return (
+        <StyledTextField
+            select
+            value={validatedValue}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFavoriteDeck(e.target.value as string)
+            }
+            disabled={userLoading}
+            placeholder="Favorite Decks"
+        >
+            {savedDecks.length === 0 ? (
+                <MenuItem value="" disabled>
+                    No saved decks found
+                </MenuItem>
+            ) : (
+                savedDecks.map((deck) => (
+                    <MenuItem key={deck.deckID} value={deck.deckID}>
+                        {deck.favourite ? '★ ' : ''}{deck.name}
+                    </MenuItem>
+                ))
+            )}
+        </StyledTextField>
+        );
+    };
+
     return (
         <Box >
             <Typography variant="h2">
@@ -357,37 +469,58 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </FormControl>
                 {showSavedDecks && (
                     <>
-                        {/* Favourite Decks Input */}
+                        {/* Deck Dropdown with Cycle Button */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
-                            <StyledTextField
-                                select
-                                value={favoriteDeck}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setFavoriteDeck(e.target.value as string)
-                                }
-                                disabled={userLoading}
-                                placeholder="Favorite Decks"
-                            >
-                                {savedDecks.length === 0 ? (
-                                    <MenuItem value="" disabled>
-                                        No saved decks found
-                                    </MenuItem>
-                                ) : (
-                                    savedDecks.map((deck) => (
-                                        <MenuItem key={deck.deckID} value={deck.deckID}>
-                                            {deck.favourite ? '★ ' : ''}{deck.name}
-                                        </MenuItem>
-                                    ))
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: '0.5rem' }}>
+                                <Typography variant="body1" sx={styles.labelTextStyle}>
+                                    {useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Decks' : 'Favorite Decks'}
+                                </Typography>
+                                
+                                {isSwuStatsLinked && toggleDeckSource && (
+                                    <Tooltip title={`Switch to ${useSwuStatsDecks ? 'Karabast' : 'SWU Stats'} decks`}>
+                                        <IconButton
+                                            onClick={toggleDeckSource}
+                                            size="small"
+                                            sx={{
+                                                color: useSwuStatsDecks ? '#4CAF50' : '#fff',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            <SyncIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
                                 )}
-                            </StyledTextField>
+                            </Box>
+                            
+                            {useSwuStatsDecks && isSwuStatsLinked 
+                                ? renderSwuStatsDecksDropdown()
+                                : renderKarabastDecksDropdown()
+                            }
+                            
                             <Box sx={styles.manageDecksContainer}>
-                                <Button
-                                    onClick={handleDeckManagement}
-                                    sx={styles.manageDecks}
-                                >
-                                    Manage&nbsp;Decks
-                                </Button>
+                                {(!useSwuStatsDecks || !isSwuStatsLinked) && (
+                                    <Button
+                                        onClick={handleDeckManagement}
+                                        sx={styles.manageDecks}
+                                    >
+                                        Manage&nbsp;Decks
+                                    </Button>
+                                )}
+                                {useSwuStatsDecks && isSwuStatsLinked && (
+                                    <Typography sx={{ ...styles.deckSourceLabel, mt: '0.5rem' }}>
+                                        Manage decks on{' '}
+                                        <Link 
+                                            href="https://swustats.net" 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            sx={{ color: 'lightblue' }}
+                                        >
+                                            swustats.net
+                                        </Link>
+                                    </Typography>
+                                )}
                             </Box>
                         </FormControl>
                         {errorState.summary && (
