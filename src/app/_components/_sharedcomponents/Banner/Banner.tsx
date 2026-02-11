@@ -26,9 +26,10 @@ const KarabastBanner: React.FC = () => {
             position: 'absolute',
             top: 0,
             left: 0,
-            margin: { xs: '12rem 0 0 1.5rem', md: '2rem 0 0 1.5rem' }, // Increased left margin to align with grid content
+            margin: { xs: '12rem 0 0 1.5rem', md: '2rem 0 0 1.5rem' },
             width: { xs: '80%', md: '20%' },
             zIndex: 10,
+            textShadow: '0 2px 8px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 0, 0, 0.5)',
         },
         homeBanner: {
             width: 'calc(100% - 240px)',

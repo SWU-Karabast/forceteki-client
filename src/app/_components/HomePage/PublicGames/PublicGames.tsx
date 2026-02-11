@@ -50,6 +50,9 @@ const PublicGames: React.FC = () => {
     const styles = {
         publicGamesWrapper: {
             height: '100%',
+            borderLeft: '2px solid rgba(0, 212, 255, 0.4)',
+            boxShadow: 'inset 3px 0 12px -4px rgba(0, 212, 255, 0.15)',
+            overflow: 'auto',
         },
         cardContent: {
             display: 'flex',
@@ -57,8 +60,16 @@ const PublicGames: React.FC = () => {
             justifyContent: 'center',
         },
         divider: {
-            backgroundColor: '#fff',
             my: '.7em',
+            background: 'linear-gradient(to right, rgba(0, 212, 255, 0.3), transparent)',
+            height: '1px',
+            border: 'none',
+        },
+        emptyState: {
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.35)',
+            fontStyle: 'italic',
+            py: '1.5rem',
         },
     };
 
@@ -69,7 +80,7 @@ const PublicGames: React.FC = () => {
                 <Typography variant="h3">Available Lobbies</Typography>
                 <Divider sx={styles.divider} />
                 {lobbies.length === 0 && (
-                    <Typography variant="body1" sx={{ textAlign: 'center' }}>No available lobbies at the moment.</Typography>
+                    <Typography variant="body1" sx={styles.emptyState}>No available lobbies at the moment.</Typography>
                 )}
                 {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />

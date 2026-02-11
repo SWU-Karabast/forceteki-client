@@ -88,8 +88,14 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             justifyContent: 'space-between',
             alignContent: 'center',
             alignItems: 'center',
-            mb: '1.25rem',
-            padding: '0.5rem 0',
+            mb: '0.25rem',
+            padding: '0.6rem 0.5rem',
+            borderRadius: '0.5rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+            transition: 'background-color 0.2s ease',
+            '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            },
         },
         matchType: {
             margin: 0,

@@ -87,8 +87,15 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            mb: '2.5rem',
+            mb: '0.5rem',
             pl: '10px',
+            padding: '0.6rem 0.5rem',
+            borderRadius: '0.5rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+            transition: 'background-color 0.2s ease',
+            '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            },
         },
         matchItems: {
             display: 'flex',

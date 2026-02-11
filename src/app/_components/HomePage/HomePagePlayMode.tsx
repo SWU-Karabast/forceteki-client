@@ -207,12 +207,25 @@ const HomePagePlayMode: React.FC = () => {
     const styles = {
         wrapper: {
             height: '100%',
+            borderLeft: '2px solid rgba(112, 251, 110, 0.4)',
+            boxShadow: 'inset 3px 0 12px -4px rgba(112, 251, 110, 0.15)',
         },
         tabStyles: {
             color: 'white',
             fontWeight: 'bold',
             typography: 'h3',
-        }
+        },
+        tabsContainer: {
+            borderBottom: 1,
+            borderColor: 'divider',
+            mb: '1rem',
+        },
+        tabs: {
+            '& .MuiTabs-indicator': {
+                backgroundColor: 'rgba(112, 251, 110, 0.7)',
+                height: '2px',
+            },
+        },
     };
 
     return (
@@ -226,8 +239,8 @@ const HomePagePlayMode: React.FC = () => {
                     </CardContent>
                     :
                     <CardContent>
-                        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
-                            <Tabs value={value} variant="fullWidth" onChange={handleChange}>
+                        <Box sx={styles.tabsContainer}>
+                            <Tabs value={value} variant="fullWidth" onChange={handleChange} sx={styles.tabs}>
                                 {showQuickMatch && <Tab sx={styles.tabStyles} label="Quick Match" />}
                                 <Tab sx={styles.tabStyles} label="Create Lobby" />
                                 {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}

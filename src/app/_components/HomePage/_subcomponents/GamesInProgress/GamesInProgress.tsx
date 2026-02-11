@@ -167,6 +167,9 @@ const GamesInProgress: React.FC = () => {
         divider: {
             mt: '.5vh',
             mb: '1vh',
+            background: 'linear-gradient(to right, rgba(0, 212, 255, 0.25), transparent)',
+            height: '1px',
+            border: 'none',
         },
         activeGamesNumber: {
             fontWeight: 400,

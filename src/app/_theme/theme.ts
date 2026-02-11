@@ -169,9 +169,11 @@ export const theme: Theme = createTheme({
                 {
                     props: { variant: 'black' },
                     style: {
-                        backgroundColor: 'rgb(0, 0, 0, 0.60)',
+                        backgroundColor: 'rgba(10, 14, 20, 0.75)',
                         padding: '1.5rem',
                         backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                     },
                 },
             ]
@@ -196,17 +198,22 @@ export const theme: Theme = createTheme({
         MuiButton: {
             styleOverrides: {
                 root: {
-                    backgroundColor: '#292929',
+                    background: 'linear-gradient(135deg, #2a2f3a 0%, #1a1f2a 100%)',
                     color: 'white',
                     fontWeight: '600',
                     fontSize: '1rem',
                     textTransform: 'none',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    transition: 'all 0.25s ease',
                     '&:hover': {
-                        backgroundColor: '#404040',
+                        background: 'linear-gradient(135deg, #353b48 0%, #252b38 100%)',
+                        borderColor: 'rgba(112, 251, 110, 0.3)',
+                        boxShadow: '0 0 12px rgba(112, 251, 110, 0.1)',
                     },
 
                     '&:disabled': {
-                        color: '#444'
+                        color: '#444',
+                        borderColor: 'rgba(255, 255, 255, 0.03)',
                     },
                 },
             },

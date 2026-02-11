@@ -11,6 +11,17 @@ import parse from 'html-react-parser';
 
 const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
     const styles = {
+        articleWrapper: {
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+            '&:last-child': {
+                borderBottom: 'none',
+            },
+        },
+        imageContainer: {
+            overflow: 'hidden',
+            borderRadius: '.5rem',
+            mt: '0.5rem',
+        },
         box: {
             display: 'flex',
             justifyContent: 'space-between',
@@ -20,38 +31,51 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
         divider: {
             mt: '.5vh',
             mb: '1vh',
+            background: 'linear-gradient(to right, rgba(255, 167, 38, 0.2), transparent)',
+            height: '1px',
+            border: 'none',
         },
         contentText: {
             color: '#fff',
         },
         newsImage: {
-            borderRadius: '.5rem',
             maxHeight: '15rem',
             cursor: article.link ? 'pointer' : 'default',
+            transition: 'transform 0.3s ease',
+            '&:hover': {
+                transform: article.link ? 'scale(1.02)' : 'none',
+            },
+        },
+        dateText: {
+            fontWeight: 400,
+            color: 'rgba(255, 255, 255, 0.45)',
+            fontSize: '0.9rem',
         },
     };
 
     return (
-        <>
-            <CardMedia
-                component="img"
-                height="auto"
-                image={article.image}
-                alt={article.imageAlt}
-                sx={styles.newsImage}
-                onClick={article.link ? () => window.open(article.link, '_blank') : undefined}
-            />
+        <Box sx={styles.articleWrapper}>
+            <Box sx={styles.imageContainer}>
+                <CardMedia
+                    component="img"
+                    height="auto"
+                    image={article.image}
+                    alt={article.imageAlt}
+                    sx={styles.newsImage}
+                    onClick={article.link ? () => window.open(article.link, '_blank') : undefined}
+                />
+            </Box>
             <CardContent>
                 <Box sx={styles.box}>
                     <Typography variant="h3">{article.title}</Typography>
-                    <Typography variant="h3" sx={{ fontWeight:400 }}>{article.date}</Typography>
+                    <Typography variant="h3" sx={styles.dateText}>{article.date}</Typography>
                 </Box>
                 <Divider sx={styles.divider} />
                 <Box sx={styles.contentText} className="news-content">
                     {parse(article.content)}
                 </Box>
             </CardContent>
-        </>
+        </Box>
     );
 };
 

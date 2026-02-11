@@ -12,12 +12,19 @@ const NewsColumn: React.FC = () => {;
             alignItems: 'center',
             height: '100%',
         },
-        notice: {
-            mb: '1.5rem',
-            overflow:'visible',
-        },
         boxNews: {
             height: '100%',
+            borderLeft: '2px solid rgba(255, 167, 38, 0.4)',
+            boxShadow: 'inset 3px 0 12px -4px rgba(255, 167, 38, 0.15)',
+            overflow: 'auto',
+        },
+        headerBox: {
+            p: '0.4rem',
+            borderBottom: '1px solid transparent',
+            backgroundImage: 'linear-gradient(to right, rgba(255, 167, 38, 0.3), transparent)',
+            backgroundSize: '100% 1px',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'bottom',
         },
     };
 
@@ -26,7 +33,7 @@ const NewsColumn: React.FC = () => {;
 
             <Card variant="black" sx={styles.boxNews}>
                 <Box>
-                    <Typography variant="h2" sx={{ p: '0.4rem', borderBottom: '1px solid #404040' }}>
+                    <Typography variant="h2" sx={styles.headerBox}>
                         News
                     </Typography>
                 </Box>
