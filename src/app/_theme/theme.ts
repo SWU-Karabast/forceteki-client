@@ -204,7 +204,7 @@ export const theme: Theme = createTheme({
                     fontSize: '1rem',
                     textTransform: 'none',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
-                    transition: 'all 0.25s ease',
+                    transition: 'background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease',
                     '&:hover': {
                         background: 'linear-gradient(135deg, #353b48 0%, #252b38 100%)',
                         borderColor: 'rgba(112, 251, 110, 0.3)',
