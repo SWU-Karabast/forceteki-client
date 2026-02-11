@@ -277,7 +277,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     if (process.env.NODE_ENV === 'development') {
                         console.log('Requesting retransmit for messages:', messagesToRetransmit.startIndex, 'to', messagesToRetransmit.endIndex);
                     }
-                    newSocket.emit('game', 'retransmitGameMessages', messagesToRetransmit.startIndex, messagesToRetransmit.endIndex);
+                    newSocket.emit('lobby', 'retransmitGameMessages', messagesToRetransmit.startIndex, messagesToRetransmit.endIndex);
                 }
             }
             
