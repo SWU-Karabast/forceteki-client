@@ -41,7 +41,7 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
         newsImage: {
             maxHeight: '15rem',
             cursor: article.link ? 'pointer' : 'default',
-            transition: 'transform 0.3s ease',
+            transition: 'transform 0.15s ease',
             '&:hover': {
                 transform: article.link ? 'scale(1.02)' : 'none',
             },
