@@ -43,6 +43,7 @@ const Home: React.FC = () => {
             // News content uses html-react-parser, so target raw HTML elements
             '& .news-content p, & .news-content li, & .news-content span': {
                 fontSize: { xs: '16px', md: 'inherit' },
+                lineHeight: { xs: '1.5', md: 'inherit' },
             },
         },
         column: {
