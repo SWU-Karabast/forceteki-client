@@ -70,8 +70,8 @@ const Home: React.FC = () => {
             <KarabastBanner />
 
             <Grid container size={12} sx={styles.columnContainer}>
-                {/* Public Games - Order 2 on Mobile, 1 on Desktop */}
-                <Grid size={{ xs: 12, md: 4 }} order={{ xs: 2, md: 1 }} sx={styles.column}>
+                {/* Public Games - Order 3 on Mobile, 1 on Desktop */}
+                <Grid size={{ xs: 12, md: 4 }} order={{ xs: 3, md: 1 }} sx={styles.column}>
                     <PublicGames />
                 </Grid>
 
@@ -80,8 +80,8 @@ const Home: React.FC = () => {
                     <HomePagePlayMode />
                 </Grid>
 
-                {/* News - Order 3 on Mobile, 3 on Desktop */}
-                <Grid size={{ xs: 12, md: 4 }} order={{ xs: 3, md: 3 }} sx={styles.column}>
+                {/* News - Order 2 on Mobile, 3 on Desktop */}
+                <Grid size={{ xs: 12, md: 4 }} order={{ xs: 2, md: 3 }} sx={styles.column}>
                     <NewsColumn />
                 </Grid>
             </Grid>
