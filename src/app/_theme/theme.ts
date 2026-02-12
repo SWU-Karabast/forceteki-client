@@ -136,6 +136,25 @@ export const theme: Theme = createTheme({
                 '::-webkit-scrollbar-button': {
                     height: '10px',
                 },
+                // Mobile font-size overrides for readability
+                [theme.breakpoints.down('md')]: {
+                    '.MuiTypography-h1': { fontSize: '26px' },
+                    '.MuiTypography-h2': { fontSize: '22px' },
+                    '.MuiTypography-h3': { fontSize: '18px' },
+                    '.MuiTypography-body1': { fontSize: '16px' },
+                    '.MuiTypography-body2': { fontSize: '14px' },
+                    '.MuiButton-root': { fontSize: '16px' },
+                    '.MuiTab-root': { fontSize: '16px' },
+                    // News content uses html-react-parser, so target raw HTML elements
+                    '.news-content p, .news-content li, .news-content span': {
+                        fontSize: '16px',
+                        lineHeight: '1.5',
+                    },
+                },
+                // Larger tab text for big screens
+                [theme.breakpoints.up('desktopHD')]: {
+                    '.MuiTab-root': { fontSize: '1.15rem' },
+                },
             }),
         },
         MuiContainer: {
@@ -198,7 +217,7 @@ export const theme: Theme = createTheme({
         MuiButton: {
             styleOverrides: {
                 root: {
-                    background: 'linear-gradient(135deg, #2a2f3a 0%, #1a1f2a 100%)',
+                    background: 'linear-gradient(160deg, #2a2f3a 0%, #232836 100%)',
                     color: 'white',
                     fontWeight: '600',
                     fontSize: '1rem',
@@ -206,7 +225,7 @@ export const theme: Theme = createTheme({
                     border: '1px solid rgba(255, 255, 255, 0.08)',
                     transition: 'background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease',
                     '&:hover': {
-                        background: 'linear-gradient(135deg, #353b48 0%, #252b38 100%)',
+                        background: 'linear-gradient(160deg, #353b48 0%, #2e3340 100%)',
                         borderColor: 'rgba(112, 251, 110, 0.3)',
                         boxShadow: '0 0 12px rgba(112, 251, 110, 0.1)',
                     },

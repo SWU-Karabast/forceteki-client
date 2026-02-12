@@ -14,17 +14,11 @@ const NewsColumn: React.FC = () => {;
         },
         boxNews: {
             height: '100%',
-            borderLeft: '2px solid rgba(255, 167, 38, 0.4)',
-            boxShadow: 'inset 3px 0 12px -4px rgba(255, 167, 38, 0.15)',
+            boxShadow: 'inset 2px 0 0 0 rgba(255, 215, 0, 1), inset 6px 0 12px -4px rgba(255, 215, 0, 0.4)',
             overflow: 'auto',
         },
         headerBox: {
             p: '0.4rem',
-            borderBottom: '1px solid transparent',
-            backgroundImage: 'linear-gradient(to right, rgba(255, 167, 38, 0.3), transparent)',
-            backgroundSize: '100% 1px',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'bottom',
         },
     };
 

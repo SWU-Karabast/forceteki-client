@@ -12,10 +12,9 @@ import parse from 'html-react-parser';
 const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
     const styles = {
         articleWrapper: {
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-            '&:last-child': {
-                borderBottom: 'none',
-            },
+        articleWrapper: {
+            
+        },
         },
         imageContainer: {
             overflow: 'hidden',
@@ -31,8 +30,8 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
         divider: {
             mt: '.5vh',
             mb: '1vh',
-            background: 'linear-gradient(to right, rgba(255, 167, 38, 0.2), transparent)',
-            height: '1px',
+            background: 'linear-gradient(to right, rgba(255, 215, 0, 1), rgba(255, 215, 0, 0.5))',
+            height: '3px',
             border: 'none',
         },
         contentText: {

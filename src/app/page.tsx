@@ -18,33 +18,6 @@ const Home: React.FC = () => {
             flexDirection: { xs: 'column', md: 'row' },
             alignItems: { xs: 'center', md: 'flex-end' },
             gap: { xs: '1rem', md: 0 },
-            // Mobile font-size overrides for homepage readability
-            '& .MuiTypography-h1': {
-                fontSize: { xs: '26px', md: 'inherit' },
-            },
-            '& .MuiTypography-h2': {
-                fontSize: { xs: '22px', md: 'inherit' },
-            },
-            '& .MuiTypography-h3': {
-                fontSize: { xs: '18px', md: 'inherit' },
-            },
-            '& .MuiTypography-body1': {
-                fontSize: { xs: '16px', md: 'inherit' },
-            },
-            '& .MuiTypography-body2': {
-                fontSize: { xs: '14px', md: 'inherit' },
-            },
-            '& .MuiButton-root': {
-                fontSize: { xs: '16px', md: 'inherit' },
-            },
-            '& .MuiTab-root': {
-                fontSize: { xs: '16px', md: 'inherit' },
-            },
-            // News content uses html-react-parser, so target raw HTML elements
-            '& .news-content p, & .news-content li, & .news-content span': {
-                fontSize: { xs: '16px', md: 'inherit' },
-                lineHeight: { xs: '1.5', md: 'inherit' },
-            },
         },
         column: {
             justifyContent: 'center',

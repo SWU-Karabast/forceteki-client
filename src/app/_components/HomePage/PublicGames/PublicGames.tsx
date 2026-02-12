@@ -50,8 +50,7 @@ const PublicGames: React.FC = () => {
     const styles = {
         publicGamesWrapper: {
             height: '100%',
-            borderLeft: '2px solid rgba(0, 212, 255, 0.4)',
-            boxShadow: 'inset 3px 0 12px -4px rgba(0, 212, 255, 0.15)',
+            boxShadow: 'inset 2px 0 0 0 rgba(46, 160, 80, 1), inset 6px 0 12px -4px rgba(46, 160, 80, 0.4)',
             overflow: 'auto',
         },
         cardContent: {
@@ -61,8 +60,8 @@ const PublicGames: React.FC = () => {
         },
         divider: {
             my: '.7em',
-            background: 'linear-gradient(to right, rgba(0, 212, 255, 0.3), transparent)',
-            height: '1px',
+            background: 'linear-gradient(to right, rgba(46, 160, 80, 0.9), rgba(46, 160, 80, 0.4))',
+            height: '3px',
             border: 'none',
         },
         emptyState: {

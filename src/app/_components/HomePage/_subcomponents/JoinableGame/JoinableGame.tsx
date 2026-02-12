@@ -89,9 +89,9 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             alignContent: 'center',
             alignItems: 'center',
             mb: '0.25rem',
-            padding: '0.6rem 0.5rem',
+            padding: { xs: '1rem 0.5rem', md: '0.6rem 0.5rem' },
             borderRadius: '0.5rem',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+
             transition: 'background-color 0.1s ease',
             '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.04)',
@@ -107,14 +107,15 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             paddingLeft: '10px',
         },
         parentBoxStyling: {
-            position: 'absolute',
-            left: '-15px',
-            top: '24px',
+            position: 'relative',
+            left: { xs: '-15px', sm: '-20px', md: '-15px' },
+            marginTop: { xs: '-3.5rem', sm: '-4.0rem', md: '-4.5rem' },
+            marginBottom: { xs: '-0.5rem', sm: '-0.25rem', md: '0rem' },
         },
         cardPreview: {
             borderRadius: '0.5rem',
             backgroundSize: 'cover',
-            width: 'clamp(3rem, 7vw, 10rem)',
+            width: 'clamp(4.5rem, 15vw, 10rem)',
             aspectRatio: '1.39',
             display: 'flex',
             justifyContent: 'center',

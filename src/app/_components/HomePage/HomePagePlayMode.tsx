@@ -207,13 +207,13 @@ const HomePagePlayMode: React.FC = () => {
     const styles = {
         wrapper: {
             height: '100%',
-            borderLeft: '2px solid rgba(112, 251, 110, 0.4)',
-            boxShadow: 'inset 3px 0 12px -4px rgba(112, 251, 110, 0.15)',
+            boxShadow: 'inset 2px 0 0 0 rgba(80, 140, 210, 1), inset 6px 0 12px -4px rgba(80, 140, 210, 0.4)',
         },
         tabStyles: {
             color: 'white',
             fontWeight: 'bold',
-            typography: 'h3',
+            typography: 'h2',
+            mb: 0,
         },
         tabsContainer: {
             borderBottom: 1,
@@ -222,7 +222,7 @@ const HomePagePlayMode: React.FC = () => {
         },
         tabs: {
             '& .MuiTabs-indicator': {
-                backgroundColor: 'rgba(112, 251, 110, 0.7)',
+                backgroundColor: 'rgba(80, 140, 210, 0.7)',
                 height: '2px',
             },
         },
