@@ -11,11 +11,6 @@ import parse from 'html-react-parser';
 
 const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
     const styles = {
-        articleWrapper: {
-        articleWrapper: {
-            
-        },
-        },
         imageContainer: {
             overflow: 'hidden',
             borderRadius: '.5rem',
@@ -53,7 +48,7 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
     };
 
     return (
-        <Box sx={styles.articleWrapper}>
+        <Box>
             <Box sx={styles.imageContainer}>
                 <CardMedia
                     component="img"
