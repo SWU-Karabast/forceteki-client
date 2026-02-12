@@ -80,6 +80,9 @@ const GameCard: React.FC<IGameCardProps> = ({
     }, [card.controllerId, card.ownerId])
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        // Skip hover preview on touch devices to avoid brief flash on tap
+        if (window.matchMedia('(pointer: coarse)').matches) return;
+
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
         if (!imageUrl) return;
@@ -305,7 +308,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
-            cursor: 'default'
+            cursor: 'default',
+            userSelect: 'none',
         },
         counterIcon:{
             position: 'absolute',
@@ -371,6 +375,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
+            userSelect: 'none',
         },
         shieldContainer: {
             position:'absolute',
@@ -545,6 +550,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
+            imageRendering: '-webkit-optimize-contrast',
+            backfaceVisibility: 'hidden',
             aspectRatio,
             width,
         },

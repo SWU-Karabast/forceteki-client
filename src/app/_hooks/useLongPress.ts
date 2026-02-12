@@ -51,5 +51,9 @@ export const useLongPress = ({
         }
     }, [moveThreshold]);
 
-    return { onTouchStart, onTouchEnd, onTouchMove };
+    const onContextMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
+        e.preventDefault();
+    }, []);
+
+    return { onTouchStart, onTouchEnd, onTouchMove, onContextMenu };
 };

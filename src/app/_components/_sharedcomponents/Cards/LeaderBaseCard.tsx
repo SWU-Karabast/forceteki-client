@@ -40,7 +40,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         } : undefined,
     });
     const aspectRatio = isHoveringCapturedCard ? '1 / 1.4' : leaderCardFlipPreview.aspectRatio;
-    const width = isHoveringCapturedCard ? '16rem' : leaderCardFlipPreview.width;
+    const width = isHoveringCapturedCard ? 'clamp(200px, 60vw, 16rem)' : leaderCardFlipPreview.width;
 
     const [isTouchDevice, setIsTouchDevice] = React.useState(false);
 
@@ -69,6 +69,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const forceTokenSelectable = controller?.forceToken.selectionState?.selectable || false;
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        // Skip hover preview on touch devices to avoid brief flash on tap
+        if (window.matchMedia('(pointer: coarse)').matches) return;
+
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
         if (!imageUrl) return;
@@ -306,7 +309,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundSize: '50% 100%, 50% 100%',
             backgroundRepeat: 'no-repeat',
             filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
-            textShadow: '2px 2px rgba(0, 0, 0, 0.20)'
+            textShadow: '2px 2px rgba(0, 0, 0, 0.20)',
+            userSelect: 'none',
         },
         nameplateBox: {
             position: 'absolute',
@@ -334,6 +338,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
+            imageRendering: '-webkit-optimize-contrast',
+            backfaceVisibility: 'hidden',
             aspectRatio: aspectRatio,
             width: width,
         },
