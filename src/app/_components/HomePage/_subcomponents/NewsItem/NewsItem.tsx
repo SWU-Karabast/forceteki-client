@@ -11,7 +11,6 @@ import parse from 'html-react-parser';
 
 const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
     const styles = {
-
         box: {
             display: 'flex',
             justifyContent: 'space-between',
