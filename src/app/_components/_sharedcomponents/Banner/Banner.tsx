@@ -5,12 +5,16 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 const KarabastBanner: React.FC = () => {
     const styles = {
         titleheader: { 
-            fontSize: { xs: '2.5rem', md: '3.2rem' }, 
+            fontSize: { xs: '4.0rem', md: '4.5rem' }, 
             fontWeight: 400, 
             marginBottom: '5px' 
         },
         subheader: { 
+            fontSize: { xs: '1.6rem', md: '1.6rem' },
             marginBottom: 0, 
+        },
+        description: {
+            fontSize: { xs: '1.5rem', md: '1.5rem' },
         },
         bannerContainerStyle: {
             position: 'absolute',
@@ -73,7 +77,7 @@ const KarabastBanner: React.FC = () => {
             <Box sx={styles.textBoxStyle}>
                 <Typography variant="h1" sx={styles.titleheader}>KARABAST</Typography>
                 <Typography variant="body1" sx={styles.subheader}>The Fan-Made, Open-Source</Typography>
-                <Typography variant="body1">Star Wars Unlimited Simulator</Typography>
+                <Typography variant="body1" sx={styles.description}>Star Wars Unlimited Simulator</Typography>
             </Box>
             <Box sx={styles.homeBanner}>
                 <Box sx={[styles.banner, styles.block1]} />

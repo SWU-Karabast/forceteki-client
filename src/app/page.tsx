@@ -14,7 +14,7 @@ const Home: React.FC = () => {
         },
         columnContainer: {
             height: { xs: 'auto', md: '100vh' },
-            padding: { xs: '15rem 0.75rem 4rem', md: '1rem 0.75rem 2.5rem' },
+            padding: { xs: '23rem 0.75rem 0rem', md: '1rem 0.75rem 2.5rem' },
             flexDirection: { xs: 'column', md: 'row' },
             alignItems: { xs: 'center', md: 'flex-end' },
             gap: { xs: '1rem', md: 0 },
@@ -27,13 +27,14 @@ const Home: React.FC = () => {
             width: '100%',
         },
         disclaimer: {
-            position: 'absolute',
-            bottom: 0,
+            position: { xs: 'relative', md: 'absolute' },
+            bottom: { xs: 'auto', md: 0 },
             width: '100%',
-            padding: '1rem',
+            padding: '0rem 1rem 1rem 1rem',
             textAlign: 'center',
-            fontSize: '0.75rem',
+            fontSize: { xs: '1.4rem', md: '0.75rem' },
             color: '#FFFFFF',
+            mt: { xs: '1.5rem', md: 0 },
         },
     };
 

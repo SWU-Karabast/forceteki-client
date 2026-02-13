@@ -75,8 +75,8 @@ const PublicGames: React.FC = () => {
     return (
         <Card variant="black" sx={styles.publicGamesWrapper}>
             <CardContent sx={styles.cardContent}>
-                <Typography variant="h2">Public Games</Typography>
-                <Typography variant="h3">Available Lobbies</Typography>
+                <Typography variant="h2" sx={{ fontSize: { xs: '2.1rem', md: '1.50rem' } }}>Public Games</Typography>
+                <Typography variant="h3" sx={{ fontSize: { xs: '1.8rem', md: '1.15rem' } }}>Available Lobbies</Typography>
                 <Divider sx={styles.divider} />
                 {lobbies.length === 0 && (
                     <Typography variant="body1" sx={styles.emptyState}>No available lobbies at the moment.</Typography>

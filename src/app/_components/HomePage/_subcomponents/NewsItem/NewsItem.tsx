@@ -43,7 +43,7 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
         dateText: {
             fontWeight: 400,
             color: 'rgba(255, 255, 255, 0.45)',
-            fontSize: '0.9rem',
+            fontSize: { xs: '1.5rem', md: '0.9rem' },
         },
     };
 
@@ -61,7 +61,7 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
             </Box>
             <CardContent>
                 <Box sx={styles.box}>
-                    <Typography variant="h3">{article.title}</Typography>
+                    <Typography variant="h3" sx={{ fontSize: { xs: '1.9rem', md: '1.15rem' } }}>{article.title}</Typography>
                     <Typography variant="h3" sx={styles.dateText}>{article.date}</Typography>
                 </Box>
                 <Divider sx={styles.divider} />

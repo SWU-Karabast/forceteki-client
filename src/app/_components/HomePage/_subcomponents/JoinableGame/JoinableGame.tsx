@@ -97,6 +97,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         matchType: {
             margin: 0,
             fontWeight: 'bold',
+            fontSize: { xs: '1.6em', md: '1.2rem' },
         },
         cardsContainer: {
             display: 'flex',
@@ -138,7 +139,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             lobbySetting: {
                 padding: '4px 10px',
                 borderRadius: '15px',
-                fontSize: '0.75rem',
+                fontSize: { xs: '1.5rem', md: '0.85rem' },
                 fontWeight: '500',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -316,7 +317,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                         </Box>
                     </Box>
                 </Box>
-                <Button variant="contained" onClick={() => joinLobby(lobby.id)}>Join</Button>
+                <Button variant="contained" sx={{ fontSize: { xs: '1.5rem', md: '1rem' } }} onClick={() => joinLobby(lobby.id)}>Join</Button>
             </Box>
             <Popover
                 id="mouse-over-popover"

@@ -208,11 +208,12 @@ const HomePagePlayMode: React.FC = () => {
         wrapper: {
             height: '100%',
             boxShadow: 'inset 2px 0 0 0 rgba(80, 140, 210, 1), inset 6px 0 12px -4px rgba(80, 140, 210, 0.4)',
+            pt: { xs: 0, md: '.5rem' },
         },
         tabStyles: {
             color: 'white',
             typography: 'h2',
-            fontSize: '1.3rem',
+            fontSize: { xs: '1.9rem', md: '1.3rem' },
             textTransform: 'none',
             mb: 0,
         },

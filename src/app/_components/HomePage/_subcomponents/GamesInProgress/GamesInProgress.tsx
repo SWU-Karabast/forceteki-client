@@ -235,8 +235,8 @@ const GamesInProgress: React.FC = () => {
     return (
         <>
             <Box sx={styles.headerBox}>
-                <Typography variant="h3">Games in Progress</Typography>
-                <Typography variant="h3" sx={styles.activeGamesNumber}>{gamesData?.numberOfOngoingGames || 0}</Typography>
+                <Typography variant="h3" sx={{ fontSize: { xs: '1.8rem', md: '1.15rem' } }}>Games in Progress</Typography>
+                <Typography variant="h3" sx={{ ...styles.activeGamesNumber, fontSize: { xs: '1.8rem', md: '1.15rem' } }}>{gamesData?.numberOfOngoingGames || 0}</Typography>
             </Box>
             <Box sx={styles.sortFilterRow}>
                 <Autocomplete
