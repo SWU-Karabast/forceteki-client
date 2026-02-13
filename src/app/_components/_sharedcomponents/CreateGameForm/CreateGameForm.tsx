@@ -266,6 +266,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         labelTextStyle: {
             mb: '.5em',
             color: 'white',
+            fontSize: { xs: '1.5rem', md: '1rem' },
         },
         labelTextStyleSecondary: {
             color: '#aaaaaa',
@@ -282,12 +283,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         },
         checkboxAndRadioGroupTextStyle: {
             color: '#fff',
-            fontSize: '1em',
+            fontSize: { xs: '1.5rem', md: '1rem' },
         },
         submitButtonStyle: {
             display: 'block',
             ml: 'auto',
             mr: 'auto',
+            fontSize: { xs: '1.5rem', md: '1rem' },
         },
         errorMessageStyle: {
             color: 'var(--initiative-red);',
@@ -304,11 +306,28 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             color: 'white',
             textDecorationColor: 'white',
         },
-        manageDecks:{
+        manageDecks: {
             mt: '1rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            background: 'linear-gradient(160deg, #2a2f3a 0%, #232836 100%)',
+            color: 'white',
+            fontWeight: '600',
+            fontSize: { xs: '1.5rem', md: '1rem' },
+            textTransform: 'none',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            transition: 'background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease',
+            '&:hover': {
+                background: 'linear-gradient(160deg, #353b48 0%, #2e3340 100%)',
+                borderColor: 'rgba(112, 251, 110, 0.3)',
+                boxShadow: '0 0 12px rgba(112, 251, 110, 0.1)',
+            },
+
+            '&:disabled': {
+                color: '#444',
+                borderColor: 'rgba(255, 255, 255, 0.03)',
+            },
         },
         manageDecksContainer:{
             display: 'flex',
@@ -368,14 +387,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 }
                                 disabled={userLoading}
                                 placeholder="Favorite Decks"
+                                SelectProps={{ sx: { fontSize: { xs: '1.5rem', md: '1rem' } } }}
                             >
                                 {savedDecks.length === 0 ? (
-                                    <MenuItem value="" disabled>
+                                    <MenuItem value="" disabled sx={{ fontSize: { xs: '1.5rem', md: '1rem' } }}>
                                         No saved decks found
                                     </MenuItem>
                                 ) : (
                                     savedDecks.map((deck) => (
-                                        <MenuItem key={deck.deckID} value={deck.deckID}>
+                                        <MenuItem key={deck.deckID} value={deck.deckID} sx={{ fontSize: { xs: '1.5rem', md: '1rem' } }}>
                                             {deck.favourite ? '★ ' : ''}{deck.name}
                                         </MenuItem>
                                     ))
@@ -405,7 +425,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     <>
                         {/* Deck Link Input */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Box sx={styles.labelTextStyle}>
+                            <Typography sx={styles.labelTextStyle} component="div">
                                 Deck link (
                                 <Tooltip
                                     arrow={true}
@@ -422,7 +442,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 )
                                 <br />
                                 OR paste deck JSON directly
-                            </Box>
+                            </Typography>
                             <StyledTextField
                                 type="text"
                                 value={deckLink}
@@ -431,6 +451,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                     setDeckLink(e.target.value);
                                     handleJsonDeck(e.target.value);
                                 }}
+                                inputProps={{ sx: { fontSize: { xs: '1.5rem', md: '1rem' } } }}
                             />
                         </FormControl>
                         {errorState.summary && (
@@ -492,6 +513,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             handleChangeFormatOption(e.target.value)
                         }
+                        SelectProps={{ sx: { fontSize: { xs: '1.5rem', md: '1rem' } } }}
                     >
                         {formatOptionKeys
                             .slice()
@@ -504,7 +526,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 const isBo3 = isBo3Option(key);
                                 const disabled = isBo3 && !isBo3Allowed;
                                 return (
-                                    <MenuItem key={key} value={key} disabled={disabled}>
+                                    <MenuItem key={key} value={key} disabled={disabled} sx={{ fontSize: { xs: '1.5rem', md: '1rem' } }}>
                                         {QueueFormatLabels[key] || key}
                                         {disabled && ' (must be logged in)'}
                                     </MenuItem>
@@ -544,7 +566,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </FormControl>
 
                 {/* Beta Announcement */}
-                <Typography variant="body1" sx={{ color: 'orange', textAlign: 'center', mb: '1rem' }}>
+                <Typography variant="body1" sx={{ color: 'orange', textAlign: 'center', mb: '1rem', fontSize: { xs: '1.5rem', md: '1rem' } }}>
                     Next Set Preview format is now available!
                 </Typography>
 
@@ -561,6 +583,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                     setLobbyName(e.target.value)
                                 }
                                 placeholder="Game #"
+                                inputProps={{ sx: { fontSize: { xs: '1.5rem', md: '1rem' } } }}
                             />
                         </FormControl>
                     </>
@@ -578,9 +601,10 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                     setThirtyCardMode(e.target.value === '30Card')
                                 }
+                                SelectProps={{ sx: { fontSize: { xs: '1.5rem', md: '1rem' } } }}
                             >
-                                <MenuItem value="50Card">50 Cards</MenuItem>
-                                <MenuItem value="30Card">30 Cards</MenuItem>
+                                <MenuItem value="50Card" sx={{ fontSize: { xs: '1.5rem', md: '1rem' } }}>50 Cards</MenuItem>
+                                <MenuItem value="30Card" sx={{ fontSize: { xs: '1.5rem', md: '1rem' } }}>30 Cards</MenuItem>
                             </StyledTextField>
                         </FormControl>
                     </>
