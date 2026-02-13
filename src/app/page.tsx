@@ -14,7 +14,7 @@ const Home: React.FC = () => {
         },
         columnContainer: {
             height: { xs: 'auto', md: '100vh' },
-            padding: { xs: '19.5rem 0.75rem 3rem', md: '1rem 0.75rem 3rem' },
+            padding: { xs: '15rem 0.75rem 4rem', md: '1rem 0.75rem 2.5rem' },
             flexDirection: { xs: 'column', md: 'row' },
             alignItems: { xs: 'center', md: 'flex-end' },
             gap: { xs: '1rem', md: 0 },

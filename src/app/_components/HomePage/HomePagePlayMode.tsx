@@ -211,8 +211,9 @@ const HomePagePlayMode: React.FC = () => {
         },
         tabStyles: {
             color: 'white',
-            fontWeight: 'bold',
+            typography: 'h2',
             fontSize: '1.3rem',
+            textTransform: 'none',
             mb: 0,
         },
         tabsContainer: {

@@ -304,11 +304,28 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             color: 'white',
             textDecorationColor: 'white',
         },
-        manageDecks:{
+        manageDecks: {
             mt: '1rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            background: 'linear-gradient(160deg, #2a2f3a 0%, #232836 100%)',
+            color: 'white',
+            fontWeight: '600',
+            fontSize: '1rem',
+            textTransform: 'none',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            transition: 'background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease',
+            '&:hover': {
+                background: 'linear-gradient(160deg, #353b48 0%, #2e3340 100%)',
+                borderColor: 'rgba(112, 251, 110, 0.3)',
+                boxShadow: '0 0 12px rgba(112, 251, 110, 0.1)',
+            },
+
+            '&:disabled': {
+                color: '#444',
+                borderColor: 'rgba(255, 255, 255, 0.03)',
+            },
         },
         manageDecksContainer:{
             display: 'flex',
