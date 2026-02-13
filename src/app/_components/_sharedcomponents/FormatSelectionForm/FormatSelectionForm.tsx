@@ -60,6 +60,8 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
         cursor: 'pointer',
         '&:hover': { color: '#6BA3BE' },
     } as const;
+    const selectProps = { sx: { fontSize: { xs: '1.5rem', md: '1rem' } } } as const;
+    const menuItemSx = { fontSize: { xs: '1.5rem', md: '1rem' } } as const;
 
     return <>
         <FormControl fullWidth sx={formControlStyle}>
@@ -78,11 +80,12 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setFormat(e.target.value as SwuGameFormat)
                 }
+                SelectProps={selectProps}
             >
                 {
                     formatConfigs
                         .map((config) => {
-                            return <MenuItem key={config.format} value={config.format}>
+                            return <MenuItem key={config.format} value={config.format} sx={menuItemSx}>
                                 {FormatLabels[config.format]}
                             </MenuItem>
                         })
@@ -106,10 +109,11 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
                     onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setCardPool(e.target.value as CardPool)
                     }
+                    SelectProps={selectProps}
                 >
                     {
                         cardPools.map((pool) => (
-                            <MenuItem key={pool} value={pool}>
+                            <MenuItem key={pool} value={pool} sx={menuItemSx}>
                                 {CardPoolLabels[pool]}
                             </MenuItem>
                         ))
@@ -126,13 +130,14 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setGamesToWinMode(e.target.value as GamesToWinMode)
                 }
+                SelectProps={selectProps}
             >
                 {
                     gamesToWinModes
                         .map((key) => {
                             const isBo3 = key === GamesToWinMode.BestOfThree;
                             const disabled = isBo3 && !isBo3Allowed;
-                            return <MenuItem key={key} value={key} disabled={disabled}>
+                            return <MenuItem key={key} value={key} disabled={disabled} sx={menuItemSx}>
                                 {GamesToWinModeLabels[key]}
                                 {disabled && ' (must be logged in)'}
                             </MenuItem>
