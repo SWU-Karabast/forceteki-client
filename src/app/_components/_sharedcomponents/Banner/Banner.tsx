@@ -26,7 +26,7 @@ const KarabastBanner: React.FC = () => {
             position: 'absolute',
             top: 0,
             left: 0,
-            margin: { xs: '1rem 0 0 1.5rem' },
+            margin: { xs: '10px 0 0 1.5rem' },
             width: { xs: '80%', md: '20%' },
             zIndex: 10,
             textShadow: '0 2px 8px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 0, 0, 0.5)',

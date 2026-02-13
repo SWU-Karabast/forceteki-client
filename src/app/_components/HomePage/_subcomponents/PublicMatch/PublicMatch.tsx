@@ -93,9 +93,6 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
             borderRadius: '0.5rem',
             borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
             transition: 'background-color 0.1s ease',
-            '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            },
         },
         matchItems: {
             display: 'flex',

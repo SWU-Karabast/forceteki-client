@@ -95,6 +95,24 @@ export const theme: Theme = createTheme({
                     '--font-size-lg': '17px',
                     '--font-size-xl': '18px',
                 },
+                html: {
+                    fontSize: 'var(--font-size-md)', // Default to medium
+                    [theme.breakpoints.down('sm')]: {
+                        fontSize: 'var(--font-size-xs)',
+                    },
+                    [theme.breakpoints.between('sm', 'md')]: {
+                        fontSize: 'var(--font-size-sm)',
+                    },
+                    [theme.breakpoints.between('md', 'lg')]: {
+                        fontSize: 'var(--font-size-md)',
+                    },
+                    [theme.breakpoints.between('lg', 'xl')]: {
+                        fontSize: 'var(--font-size-lg)',
+                    },
+                    [theme.breakpoints.up('xl')]: {
+                        fontSize: 'var(--font-size-xl)',
+                    },
+                },
 
                 body: {
                     backgroundSize: 'cover',
@@ -191,6 +209,24 @@ export const theme: Theme = createTheme({
             },
         },
 
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#292929',
+                    color: 'white',
+                    fontWeight: '600',
+                    fontSize: '1rem',
+                    textTransform: 'none',
+                    '&:hover': {
+                        backgroundColor: '#404040',
+                    },
+
+                    '&:disabled': {
+                        color: '#444'
+                    },
+                },
+            },
+        },
         MuiSelect: {
             defaultProps: {
                 size: 'small',

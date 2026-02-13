@@ -93,9 +93,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             borderRadius: '0.5rem',
 
             transition: 'background-color 0.1s ease',
-            '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            },
         },
         matchType: {
             margin: 0,
@@ -108,8 +105,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         },
         parentBoxStyling: {
             position: 'relative',
-            left: { xs: '-15px', sm: '-20px', md: '-15px' },
-            marginTop: { xs: '-3.5rem', sm: '-4.0rem', md: '-4.5rem' },
+            left: { xs: '-7px', sm: '-20px', md: '-15px' },
+            marginTop: { xs: '-2.0rem', sm: '-4.0rem', md: '-4.5rem' },
             marginBottom: { xs: '-0.5rem', sm: '-0.25rem', md: '0rem' },
         },
         cardPreview: {
@@ -134,7 +131,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         },
         lobbyInfo: {
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             gap: '1rem',
         },
         tags: {
@@ -146,8 +143,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                marginTop: '8px',
-                marginBottom: '12px',
                 backgroundColor: 'rgba(0, 0, 0, 0.6)',
                 border: '1px solid',
                 boxShadow: '0 0 5px',
@@ -299,7 +294,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     )}
                     <Box>
                         <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
-                        <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
                             <Box
                                 sx={{
                                     ...styles.tags.lobbySetting,
@@ -321,7 +316,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                         </Box>
                     </Box>
                 </Box>
-                <Button onClick={() => joinLobby(lobby.id)}>Join</Button>
+                <Button variant="contained" onClick={() => joinLobby(lobby.id)}>Join</Button>
             </Box>
             <Popover
                 id="mouse-over-popover"
