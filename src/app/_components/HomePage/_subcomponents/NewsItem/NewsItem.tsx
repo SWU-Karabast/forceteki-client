@@ -11,11 +11,7 @@ import parse from 'html-react-parser';
 
 const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
     const styles = {
-        imageContainer: {
-            overflow: 'hidden',
-            borderRadius: '.5rem',
-            mt: '0.5rem',
-        },
+
         box: {
             display: 'flex',
             justifyContent: 'space-between',
@@ -35,10 +31,8 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
         newsImage: {
             maxHeight: '15rem',
             cursor: article.link ? 'pointer' : 'default',
-            transition: 'transform 0.15s ease',
-            '&:hover': {
-                transform: article.link ? 'scale(1.02)' : 'none',
-            },
+            borderRadius: '.5rem',
+            mt: '0.5rem',
         },
         dateText: {
             fontWeight: 400,
@@ -49,16 +43,14 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
 
     return (
         <Box>
-            <Box sx={styles.imageContainer}>
-                <CardMedia
-                    component="img"
-                    height="auto"
-                    image={article.image}
-                    alt={article.imageAlt}
-                    sx={styles.newsImage}
-                    onClick={article.link ? () => window.open(article.link, '_blank') : undefined}
-                />
-            </Box>
+            <CardMedia
+                component="img"
+                height="auto"
+                image={article.image}
+                alt={article.imageAlt}
+                sx={styles.newsImage}
+                onClick={article.link ? () => window.open(article.link, '_blank') : undefined}
+            />
             <CardContent>
                 <Box sx={styles.box}>
                     <Typography variant="h3" sx={{ fontSize: { xs: '1.9rem', md: '1.15rem' } }}>{article.title}</Typography>
