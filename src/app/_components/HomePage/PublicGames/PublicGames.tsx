@@ -50,6 +50,8 @@ const PublicGames: React.FC = () => {
     const styles = {
         publicGamesWrapper: {
             height: '100%',
+            boxShadow: 'inset 2px 0 0 0 rgba(46, 160, 80, 1), inset 6px 0 12px -4px rgba(46, 160, 80, 0.4)',
+            overflow: 'auto',
         },
         cardContent: {
             display: 'flex',
@@ -57,19 +59,27 @@ const PublicGames: React.FC = () => {
             justifyContent: 'center',
         },
         divider: {
-            backgroundColor: '#fff',
             my: '.7em',
+            background: 'linear-gradient(to right, rgba(46, 160, 80, 0.9), rgba(46, 160, 80, 0.4))',
+            height: '3px',
+            border: 'none',
+        },
+        emptyState: {
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.35)',
+            fontStyle: 'italic',
+            py: '1.5rem',
         },
     };
 
     return (
         <Card variant="black" sx={styles.publicGamesWrapper}>
             <CardContent sx={styles.cardContent}>
-                <Typography variant="h2">Public Games</Typography>
-                <Typography variant="h3">Available Lobbies</Typography>
+                <Typography variant="h2" sx={{ fontSize: { xs: '2.1rem', md: '1.50rem' } }}>Public Games</Typography>
+                <Typography variant="h3" sx={{ fontSize: { xs: '1.8rem', md: '1.15rem' } }}>Available Lobbies</Typography>
                 <Divider sx={styles.divider} />
                 {lobbies.length === 0 && (
-                    <Typography variant="body1" sx={{ textAlign: 'center' }}>No available lobbies at the moment.</Typography>
+                    <Typography variant="body1" sx={styles.emptyState}>No available lobbies at the moment.</Typography>
                 )}
                 {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />

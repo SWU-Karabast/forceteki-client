@@ -113,6 +113,7 @@ export const theme: Theme = createTheme({
                         fontSize: 'var(--font-size-xl)',
                     },
                 },
+
                 body: {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
@@ -135,6 +136,18 @@ export const theme: Theme = createTheme({
                 },
                 '::-webkit-scrollbar-button': {
                     height: '10px',
+                },
+                // Mobile font-size overrides for readability
+
+                    // News content uses html-react-parser, so target raw HTML elements
+                '.news-content p, .news-content li, .news-content span': {
+                    fontSize: '16px',
+                    lineHeight: '1.5',
+                },
+
+                // Larger tab text for big screens
+                [theme.breakpoints.up('desktopHD')]: {
+                    '.MuiTab-root': { fontSize: '1.15rem' },
                 },
             }),
         },
@@ -169,9 +182,11 @@ export const theme: Theme = createTheme({
                 {
                     props: { variant: 'black' },
                     style: {
-                        backgroundColor: 'rgb(0, 0, 0, 0.60)',
+                        backgroundColor: 'rgba(10, 14, 20, 0.75)',
                         padding: '1.5rem',
                         backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                     },
                 },
             ]
@@ -193,21 +208,13 @@ export const theme: Theme = createTheme({
                 },
             },
         },
+
         MuiButton: {
             styleOverrides: {
                 root: {
-                    backgroundColor: '#292929',
-                    color: 'white',
                     fontWeight: '600',
                     fontSize: '1rem',
                     textTransform: 'none',
-                    '&:hover': {
-                        backgroundColor: '#404040',
-                    },
-
-                    '&:disabled': {
-                        color: '#444'
-                    },
                 },
             },
         },

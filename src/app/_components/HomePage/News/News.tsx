@@ -12,12 +12,13 @@ const NewsColumn: React.FC = () => {;
             alignItems: 'center',
             height: '100%',
         },
-        notice: {
-            mb: '1.5rem',
-            overflow:'visible',
-        },
         boxNews: {
             height: '100%',
+            boxShadow: 'inset 2px 0 0 0 rgba(255, 215, 0, 1), inset 6px 0 12px -4px rgba(255, 215, 0, 0.4)',
+            overflow: 'auto',
+        },
+        headerBox: {
+            p: '0.4rem',
         },
     };
 
@@ -26,7 +27,7 @@ const NewsColumn: React.FC = () => {;
 
             <Card variant="black" sx={styles.boxNews}>
                 <Box>
-                    <Typography variant="h2" sx={{ p: '0.4rem', borderBottom: '1px solid #404040' }}>
+                    <Typography variant="h2" sx={{ fontSize: { xs: '2.0rem', md: '1.50rem' } }}>
                         News
                     </Typography>
                 </Box>

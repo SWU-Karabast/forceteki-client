@@ -20,19 +20,28 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
         divider: {
             mt: '.5vh',
             mb: '1vh',
+            background: 'linear-gradient(to right, rgba(255, 215, 0, 1), rgba(255, 215, 0, 0.5))',
+            height: '3px',
+            border: 'none',
         },
         contentText: {
             color: '#fff',
         },
         newsImage: {
-            borderRadius: '.5rem',
             maxHeight: '15rem',
             cursor: article.link ? 'pointer' : 'default',
+            borderRadius: '.5rem',
+            mt: '0.5rem',
+        },
+        dateText: {
+            fontWeight: 400,
+            color: 'rgba(255, 255, 255, 0.45)',
+            fontSize: { xs: '1.5rem', md: '0.9rem' },
         },
     };
 
     return (
-        <>
+        <Box>
             <CardMedia
                 component="img"
                 height="auto"
@@ -43,15 +52,15 @@ const NewsItem: React.FC<INewsItemProps> = ({ article }) => {
             />
             <CardContent>
                 <Box sx={styles.box}>
-                    <Typography variant="h3">{article.title}</Typography>
-                    <Typography variant="h3" sx={{ fontWeight:400 }}>{article.date}</Typography>
+                    <Typography variant="h3" sx={{ fontSize: { xs: '1.9rem', md: '1.15rem' } }}>{article.title}</Typography>
+                    <Typography variant="h3" sx={styles.dateText}>{article.date}</Typography>
                 </Box>
                 <Divider sx={styles.divider} />
                 <Box sx={styles.contentText} className="news-content">
                     {parse(article.content)}
                 </Box>
             </CardContent>
-        </>
+        </Box>
     );
 };
 

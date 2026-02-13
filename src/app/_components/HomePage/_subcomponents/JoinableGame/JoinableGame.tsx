@@ -88,12 +88,16 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             justifyContent: 'space-between',
             alignContent: 'center',
             alignItems: 'center',
-            mb: '1.25rem',
-            padding: '0.5rem 0',
+            mb: '0.25rem',
+            padding: { xs: '1rem 0.5rem', md: '0.6rem 0.5rem' },
+            borderRadius: '0.5rem',
+
+            transition: 'background-color 0.1s ease',
         },
         matchType: {
             margin: 0,
             fontWeight: 'bold',
+            fontSize: { xs: '1.6em', md: '1.2rem' },
         },
         cardsContainer: {
             display: 'flex',
@@ -101,14 +105,15 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             paddingLeft: '10px',
         },
         parentBoxStyling: {
-            position: 'absolute',
-            left: '-15px',
-            top: '24px',
+            position: 'relative',
+            left: { xs: '-7px', sm: '-20px', md: '-15px' },
+            marginTop: { xs: '-2.0rem', sm: '-4.0rem', md: '-4.5rem' },
+            marginBottom: { xs: '-0.5rem', sm: '-0.25rem', md: '0rem' },
         },
         cardPreview: {
             borderRadius: '0.5rem',
             backgroundSize: 'cover',
-            width: 'clamp(3rem, 7vw, 10rem)',
+            width: 'clamp(4.5rem, 15vw, 10rem)',
             aspectRatio: '1.39',
             display: 'flex',
             justifyContent: 'center',
@@ -127,20 +132,18 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         },
         lobbyInfo: {
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             gap: '1rem',
         },
         tags: {
             lobbySetting: {
                 padding: '4px 10px',
                 borderRadius: '15px',
-                fontSize: '0.75rem',
+                fontSize: { xs: '1.5rem', md: '0.85rem' },
                 fontWeight: '500',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                marginTop: '8px',
-                marginBottom: '12px',
                 backgroundColor: 'rgba(0, 0, 0, 0.6)',
                 border: '1px solid',
                 boxShadow: '0 0 5px',
@@ -292,7 +295,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     )}
                     <Box>
                         <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
-                        <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
                             <Box
                                 sx={{
                                     ...styles.tags.lobbySetting,
@@ -314,7 +317,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                         </Box>
                     </Box>
                 </Box>
-                <Button onClick={() => joinLobby(lobby.id)}>Join</Button>
+                <Button variant="contained" sx={{ fontSize: { xs: '1.5rem', md: '1rem' } }} onClick={() => joinLobby(lobby.id)}>Join</Button>
             </Box>
             <Popover
                 id="mouse-over-popover"
