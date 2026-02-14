@@ -29,10 +29,10 @@ import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
     chatMessage,
-    setChatMessage,
+    handleChatOnChange,
     handleChatSubmit,
 }) => {
-    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled, sendLobbyMessage } = useGame();
+    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled, sendLobbyMessage, userTypingState } = useGame();
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [playerReportOpen, setPlayerReportOpen] = useState(false);
     const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -401,7 +401,6 @@ const Chat: React.FC<IChatProps> = ({
             width: '100%',
             backgroundColor: '#28282800',
             px: { xs: '0.2em', md: '0.5em' },
-            mb: 2,
             minHeight: { xs: '1.5rem', md: '2.6rem' },
         },
         textField: {
@@ -440,7 +439,15 @@ const Chat: React.FC<IChatProps> = ({
             color: '#fff',
             lineHeight: { xs: '0.75rem', md: '1rem' },
             userSelect: 'none',
-        })
+        }),
+        typingState: {
+            container: {
+                px: { xs: '0.2em', md: '0.5em' }
+            },
+            typography: {
+                fontSize: '0.8rem'
+            }
+        }
     };
 
     return (
@@ -528,6 +535,11 @@ const Chat: React.FC<IChatProps> = ({
                 <Box ref={chatEndRef} />
             </Box>
 
+            {userTypingState?.isTyping && (
+                <Box sx={styles.typingState.container}>
+                    <Typography sx={styles.typingState.typography}>{userTypingState.username} is typing...</Typography>
+                </Box>
+            )}
 
             <Box sx={styles.inputContainer}>
                 {/* Show chat input based on game state and user permissions */}
@@ -537,9 +549,7 @@ const Chat: React.FC<IChatProps> = ({
                         placeholder="Chat"
                         autoComplete="off"
                         value={chatMessage}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setChatMessage(e.target.value)
-                        }
+                        onChange={handleChatOnChange}
                         onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
                             if (e.key === 'Enter') {
                                 handleChatSubmit();
