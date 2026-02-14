@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
-import { Card, CardContent, Box, Typography, useMediaQuery } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { Card, CardContent, Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { debugBorder } from '@/app/_utils/debug';
@@ -10,29 +9,13 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
-/**
- * Determines if resources should use column style based on screen size and orientation
- */
-const useResourceLayout = () => {
-    const theme = useTheme();
-    const { isPortrait } = useScreenOrientation();
-    
-    // use desktopHD (1600px) as breakpoint for going 'narrow'
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down('desktopHD'));
-    // Never use column style in portrait mode, regardless of screen size
-    // In landscape, use column style only on smaller screens
-    const shouldUseColumnStyle = !isPortrait && isSmallScreen;
-    
-    return { shouldUseColumnStyle, isPortrait };
-};
-
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
 }) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
     const containerRef = useRef<HTMLDivElement>(null);
-    const { shouldUseColumnStyle, isPortrait } = useResourceLayout();
+    const { isPortrait } = useScreenOrientation();
 
     const availableResources = gameState.players[trayPlayer].availableResources;
     const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
@@ -62,8 +45,9 @@ const Resources: React.FC<IResourcesProps> = ({
     // ------------------------STYLES------------------------//
     const styles = {
         cardStyle: {
-            width: isPortrait ? 'auto' : '30%',
-            maxHeight: '100%',
+            width: '100%', // Fill parent container width
+            height: 'auto', // Auto height instead of maxHeight
+            minHeight: 'fit-content',
             background: selectableResource ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
             display: 'flex',
             position: 'relative',
@@ -71,7 +55,7 @@ const Resources: React.FC<IResourcesProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             transition: 'background-color 0.3s ease',
-            padding: '1.5rem .8rem',
+            padding: '0.5rem 0.4rem', // Further reduced padding
             overflow: 'visible',
             cursor: 'pointer',
             border: selectableResource ? '2px solid var(--selection-green)' : 'none',
@@ -85,11 +69,10 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         
         imageStyle: {
-            width: shouldUseColumnStyle ? 'clamp(0.8em, 0.4rem + 0.7vw, 1.2em)' :
-                'clamp(1.0em, 0.55rem + 0.6vw, 1.4em)',
+            width: 'clamp(1.0em, 0.55rem + 0.6vw, 1.4em)',
             height: 'auto',
             aspectRatio: '1 / 1.4',
-            margin: isPortrait || !shouldUseColumnStyle ? '0 0.5rem 0 0' : '0',
+            margin: '0 0.5rem 0 0',
             alignSelf: isPortrait ? 'auto' : 'center',
         },
         boxStyle: {
@@ -97,7 +80,7 @@ const Resources: React.FC<IResourcesProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            flexDirection: isPortrait ? 'row' : shouldUseColumnStyle ? 'column' : 'row',
+            flexDirection: 'row',
             position: 'relative', 
             zIndex: 1, 
         },
@@ -115,27 +98,27 @@ const Resources: React.FC<IResourcesProps> = ({
         },
         resourceBorderLeft: {
             background: `
-            url('border-res-lt.svg') no-repeat left top,
             url('border-res-lb.svg') no-repeat left bottom`,
+            backgroundSize: 'auto 100%',
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',
             height: '100%',
             position: 'absolute',
             pointerEvents: 'none', 
-            zIndex: 2, // above the pseudo-element
+            zIndex: 2,
         },
         resourceBorderRight: {
             background: `
-            url('border-res-rt.svg') no-repeat right top,
             url('border-res-rb.svg') no-repeat right bottom`,
+            backgroundSize: 'auto 100%',
             mixBlendMode: 'soft-light',
             opacity: 0.3,
             width: '100%',
             height: '100%',
             position: 'absolute',
             pointerEvents: 'none',
-            zIndex: 2, // above the pseudo-element
+            zIndex: 2,
         },
     };
 

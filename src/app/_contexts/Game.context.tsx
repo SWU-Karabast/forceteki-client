@@ -45,6 +45,11 @@ interface IGameContextType {
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
+    hoveredChatCard: {
+        id: string | null;
+        hover: (id: string) => void;
+        clear: () => void;
+    };
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -59,6 +64,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
+    const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
@@ -424,7 +430,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 lastQueueHeartbeat,
                 isAnonymousPlayer,
                 hasChatDisabled,
-                createNewSocket
+                createNewSocket,
+                hoveredChatCard: {
+                    id: hoveredChatCardId,
+                    hover: setHoveredCardId,
+                    clear: () => setHoveredCardId(null)
+                }
             }}
         >
             {children}

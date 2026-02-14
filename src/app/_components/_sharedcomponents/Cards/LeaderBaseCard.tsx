@@ -6,6 +6,7 @@ import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
 
@@ -17,13 +18,14 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     disabled = false,
     isLeader = false,
 }) => {
-    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState } = useGame();
+    const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, hoveredChatCard } = useGame();
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
+    const isHoveredInChat = hoveredChatCard.id === card?.uuid;
     const leaderCardFlipPreview = useLeaderCardFlipPreview({
         anchorElement,
         cardId: card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
@@ -38,7 +40,23 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         } : undefined,
     });
     const aspectRatio = isHoveringCapturedCard ? '1 / 1.4' : leaderCardFlipPreview.aspectRatio;
-    const width = isHoveringCapturedCard ? '16rem' : leaderCardFlipPreview.width;
+    const width = isHoveringCapturedCard ? 'clamp(200px, 60vw, 16rem)' : leaderCardFlipPreview.width;
+
+    const [isTouchDevice, setIsTouchDevice] = React.useState(false);
+
+    const longPressHandlers = useLongPress({
+        onLongPress: (target) => {
+            const imageUrl = target.getAttribute('data-card-url');
+            if (!imageUrl) return;
+            setIsTouchDevice(true);
+            setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
+        },
+        onRelease: () => {
+            setAnchorElement(null);
+            setPreviewImage(null);
+        },
+    });
 
     if (!card) {
         return null
@@ -46,7 +64,14 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const controller = gameState?.players[card.controllerId];
 
+    const controllerHasForceToken = controller?.forceToken.active || false;
+    const forceTokenUuid = controller?.forceToken.uuid;
+    const forceTokenSelectable = controller?.forceToken.selectionState?.selectable || false;
+
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        // Skip hover preview on touch devices to avoid brief flash on tap
+        if (window.matchMedia('(pointer: coarse)').matches) return;
+
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
         if (!imageUrl) return;
@@ -83,6 +108,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         defaultClickFunction();
     }
 
+    const handleForceTokenClick = () => {
+        if (forceTokenSelectable) {
+            sendGameMessage(['cardClicked', forceTokenUuid]);
+        }
+    }
+
     const notImplemented = (card: ICardData) => card?.hasOwnProperty('unimplemented') && card.unimplemented;
 
     const getBackgroundColor = (card: ICardData) => {
@@ -115,14 +146,19 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     };
 
     const isDeployed = card.hasOwnProperty('zone') && card.zone !== 'base';
-    const borderColor = getBorderColor(card, connectedPlayer, getConnectedPlayerPrompt()?.promptType);
+    const borderColor = getBorderColor({
+        card,
+        player: connectedPlayer,
+        promptType: getConnectedPlayerPrompt()?.promptType,
+        isHoveredInChat
+    });
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
     const isConnectedPlayer = card.controllerId === connectedPlayer;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getForceTokenIconStyle = (player: any) => {
+    const getForceTokenIconStyle = (player: any, isSelectable: boolean = false) => {
         const imageAspect = player.aspects.includes('villainy') ? 'Villainy' : 'Heroism';
         const opponentStr = player.id !== connectedPlayer ? 'Opponent' : '';
         const backgroundImage = `url(/ForceToken${imageAspect}${opponentStr}.png)`;
@@ -137,7 +173,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage,
             filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
-            zIndex: 2
+            zIndex: 2,
+            cursor: isSelectable ? 'pointer' : 'default',
+            border: isSelectable ? '2px solid var(--selection-green)' : 'none',
+            borderRadius: isSelectable ? '4px' : 'none',
+            backgroundColor: isSelectable ? 'rgba(114, 249, 121, 0.08)' : 'transparent',
+            transition: 'border-color 0.3s ease, background-color 0.3s ease',
         };
     }
 
@@ -188,6 +229,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'relative',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
+            WebkitTouchCallout: 'none',
+            userSelect: 'none',
         },
         deployedPlaceholder: {
             backgroundColor: 'transparent',
@@ -266,7 +309,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundSize: '50% 100%, 50% 100%',
             backgroundRepeat: 'no-repeat',
             filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
-            textShadow: '2px 2px rgba(0, 0, 0, 0.20)'
+            textShadow: '2px 2px rgba(0, 0, 0, 0.20)',
+            userSelect: 'none',
         },
         nameplateBox: {
             position: 'absolute',
@@ -294,6 +338,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
+            imageRendering: '-webkit-optimize-contrast',
+            backfaceVisibility: 'hidden',
             aspectRatio: aspectRatio,
             width: width,
         },
@@ -407,7 +453,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         sx={{
                             ...styles.capturedCardBackground,
                             backgroundImage: `url(${capturedCardBackground(capturedCard)})`,
-                            border: capturedCard.selectable ? `1.5px solid ${getBorderColor(capturedCard, connectedPlayer)}` : 'none',
+                            border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
                         }}
                     />
                     <Typography sx={{
@@ -437,6 +483,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 data-card-type={isLeader ? 'leader' : 'base'}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
+                {...longPressHandlers}
             >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
@@ -451,7 +498,13 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                             )}
                             <DamageCounterToken value={card.damage || 0} />
                         </Box>
-                        {controller?.hasForceToken && <Box sx={getForceTokenIconStyle(controller)}/>}
+                        {
+                            controllerHasForceToken &&
+                            <Box
+                                sx={getForceTokenIconStyle(controller, forceTokenSelectable)}
+                                onClick={handleForceTokenClick}
+                            />
+                        }
                         {card.isDefender && <Box sx={styles.defendIcon}/>}
                         <Box sx={styles.baseBlankIcon}/>
                     </>
@@ -478,7 +531,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         ...styles.cardPreview,backgroundImage: previewImage
                     }} >
                     </Box>
-                    {isLeader && (
+                    {isLeader && !isTouchDevice && (
                         <Typography variant={'body1'} sx={styles.ctrlText}
                         >CTRL: View Flipside</Typography>
                     )}
