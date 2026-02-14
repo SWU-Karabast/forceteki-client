@@ -113,7 +113,6 @@ export const theme: Theme = createTheme({
                         fontSize: 'var(--font-size-xl)',
                     },
                 },
-
                 body: {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
@@ -121,7 +120,6 @@ export const theme: Theme = createTheme({
                     maxWidth: '100%',
                     height: '100%',
                     margin: '0',
-
                 },
                 b: {
                     fontWeight: 600,
@@ -137,7 +135,6 @@ export const theme: Theme = createTheme({
                 '::-webkit-scrollbar-button': {
                     height: '10px',
                 },
-                // Mobile font-size overrides for readability
             }),
         },
         MuiContainer: {
@@ -199,9 +196,18 @@ export const theme: Theme = createTheme({
         MuiButton: {
             styleOverrides: {
                 root: {
+                    backgroundColor: '#292929',
+                    color: 'white',
                     fontWeight: '600',
                     fontSize: '1rem',
                     textTransform: 'none',
+                    '&:hover': {
+                        backgroundColor: '#404040',
+                    },
+
+                    '&:disabled': {
+                        color: '#444'
+                    },
                 },
             },
         },
