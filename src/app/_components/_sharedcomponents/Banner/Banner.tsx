@@ -5,16 +5,16 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 const KarabastBanner: React.FC = () => {
     const styles = {
         titleheader: { 
-            fontSize: { xs: '4.0rem', md: '4.5rem' }, 
+            fontSize: { xs: '4.0rem', md: '3.2em' }, 
             fontWeight: 400, 
             marginBottom: '5px' 
         },
         subheader: { 
-            fontSize: { xs: '1.6rem', md: '1.6rem' },
+            fontSize: { xs: '1.6rem', md: '1em' },
             marginBottom: 0, 
         },
         description: {
-            fontSize: { xs: '1.5rem', md: '1.5rem' },
+            fontSize: { xs: '1.5rem', md: '1em' },
         },
         bannerContainerStyle: {
             position: 'absolute',
