@@ -5,16 +5,20 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 const KarabastBanner: React.FC = () => {
     const styles = {
         titleheader: { 
-            fontSize: '3.2rem', 
+            fontSize: { xs: '4.0rem', md: '3.2em' }, 
             fontWeight: 400, 
             marginBottom: '5px' 
         },
         subheader: { 
+            fontSize: { xs: '1.6rem', md: '1em' },
             marginBottom: 0, 
+        },
+        description: {
+            fontSize: { xs: '1.5rem', md: '1em' },
         },
         bannerContainerStyle: {
             position: 'absolute',
-            height: '316px',
+            height: { xs: '450px', md: '316px' },
             width: '100%',
             display: 'flex',
             alignItems: 'center',
@@ -25,12 +29,14 @@ const KarabastBanner: React.FC = () => {
         textBoxStyle: {
             position: 'absolute',
             top: 0,
-            margin: '2rem 0 0 1rem',
-            width: '20%',
+            left: 0,
+            margin: { xs: '10px 0 0 1.5rem' },
+            width: { xs: '80%', md: '20%' },
             zIndex: 10,
+            textShadow: '0 2px 8px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 0, 0, 0.5)',
         },
         homeBanner: {
-            width: 'calc(100% - 240px)',
+            width: { xs: '100%', md: 'calc(100% - 240px)' },
             minWidth: '400px',
             height: '100%',
             position: 'absolute',
@@ -43,28 +49,26 @@ const KarabastBanner: React.FC = () => {
         banner: {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            clipPath: 'polygon(150px 0, 100% 0, calc(100% - 150px) 326px, 0% 326px)',
+            clipPath: {
+                xs: 'polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0% 100%)',
+                md: 'polygon(150px 0, 100% 0, calc(100% - 150px) 100%, 0% 100%)',
+            },
             flex: 1,
         },
         block1: {
             backgroundImage: `url(${s3ImageURL('ui/banner-sec-andor.webp')})`,
-            marginRight: '-152px',
-            '@media (max-width:800px)': { marginRight: 0 },
+            marginRight: { xs: '-7px', md: '-152px' },
         },
         block2: {
             backgroundImage: `url(${s3ImageURL('ui/banner-sec-padme.webp')})`,
-            '@media (max-width:1200px)': { marginLeft: '-2px' },
-            '@media (max-width:800px)': { display: 'none' },
         },
         block3: {
             backgroundImage: `url(${s3ImageURL('ui/banner-sec-palp.webp')})`,
-            marginLeft: '-152px',
-            '@media (max-width:1200px)': { display: 'none' },
+            marginLeft: { xs: '-7px', md: '-152px' },
         },
         block4: {
             backgroundImage: `url(${s3ImageURL('ui/banner-sec-yularen.webp')})`,
-            marginLeft: '-152px',
-            '@media (max-width:1600px)': { display: 'none' },
+            marginLeft: { xs: '-7px', md: '-152px' },
         },
     };
 
@@ -73,7 +77,7 @@ const KarabastBanner: React.FC = () => {
             <Box sx={styles.textBoxStyle}>
                 <Typography variant="h1" sx={styles.titleheader}>KARABAST</Typography>
                 <Typography variant="body1" sx={styles.subheader}>The Fan-Made, Open-Source</Typography>
-                <Typography variant="body1">Star Wars Unlimited Simulator</Typography>
+                <Typography variant="body1" sx={styles.description}>Star Wars Unlimited Simulator</Typography>
             </Box>
             <Box sx={styles.homeBanner}>
                 <Box sx={[styles.banner, styles.block1]} />
