@@ -70,7 +70,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         // Skip hover preview on touch devices to avoid brief flash on tap
-        if (window.matchMedia('(pointer: coarse)').matches) return;
+        if (window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(any-pointer: fine)').matches) return;
 
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
