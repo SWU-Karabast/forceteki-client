@@ -34,7 +34,6 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
             for (let i = 0; i < newMessages.length; i++) {
                 updatedMessages[startIndex + i] = newMessages[i];
             }
-            messagesLengthRef.current = updatedMessages.length;
             return updatedMessages;
         });
     }, []);
@@ -51,6 +50,10 @@ export const useGameMessages = (): IUseGameMessagesReturn => {
 
         // Capture length before appending
         const lengthBeforeAppend = messagesLengthRef.current;
+
+        // Update ref synchronously to prevent race condition with back-to-back deltas when queueing up 
+        // the appendMessages subtasks inside React
+        messagesLengthRef.current = Math.max(messagesLengthRef.current, messageOffset + newMessages.length);
 
         // Always append the new messages
         appendMessages(newMessages, messageOffset);
