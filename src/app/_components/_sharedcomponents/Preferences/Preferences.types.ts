@@ -85,7 +85,8 @@ export enum StatsSaveStatus {
 
 export enum StatsSource {
     Karabast = 'Karabast',
-    SwuStats = 'SWUStats'
+    SwuStats = 'SWUStats',
+    SwuBase = 'SWUBase'
 }
 
 export enum PlayerReportType {

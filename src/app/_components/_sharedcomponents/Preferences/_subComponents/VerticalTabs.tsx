@@ -176,7 +176,7 @@ function VerticalTabs({
             width: '80%',
             pl:9,
             gap: '20px',
-            maxHeight: variant === 'gameBoard' ? 'calc(80vh - 1rem)' : 'calc(80vh - 1.9rem)',
+            maxHeight: variant === 'gameBoard' ? 'calc(80vh - 1rem)' : 'calc(100vh - 14rem - 60px)',
             overflowY: 'auto',
             '::-webkit-scrollbar': {
                 width: '0.2vw',
