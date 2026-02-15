@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Autocomplete, Box, Divider, FilterOptionsState, TextField, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { FormatLabels, GamesToWinMode, SwuGameFormat } from '@/app/_constants/constants';
 
 interface GameCardData {
     id: string;
@@ -10,6 +11,8 @@ interface GameCardData {
     player1Base: ICardData;
     player2Leader: ICardData;
     player2Base: ICardData;
+    format: SwuGameFormat;
+    gamesToWinMode: GamesToWinMode;
 }
 
 interface OngoingGamesData {
@@ -105,6 +108,7 @@ const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
     const [sortByLeader, setSortByLeader] = useState<string | null>(null);
     const [leaderData, setLeaderData] = useState<LeaderNameData[] | null>(null);
+    const [sortByFormat, setSortByFormat] = useState<SwuGameFormat | null>(null);
 
     useEffect(() => {
         let count = 0;
@@ -138,6 +142,11 @@ const GamesInProgress: React.FC = () => {
         const leaderIds = [match.player1Leader.id, match.player2Leader.id];
         return leaderIds.some(id => leaderData.some(leader => leader.id === id && leader.id === sortByLeader));
     };
+
+    const filterByFormat = (match: GameCardData): boolean => {
+        if (!sortByFormat) return true;
+        return match.format === sortByFormat;
+    }
 
     const filterByActiveLeader = (options: LeaderNameData[], state: FilterOptionsState<LeaderNameData>) => {
         // Show all options when typing, but only those with ongoingGamesCount > 0 in dropdown
@@ -272,10 +281,30 @@ const GamesInProgress: React.FC = () => {
                     slotProps={styles.autocompleteSlotProps}
                 />
             </Box>
+            <Box sx={styles.sortFilterRow}>
+                <Autocomplete
+                    fullWidth
+                    value={sortByFormat || null}
+                    options={Object.values(SwuGameFormat)}
+                    getOptionLabel={(option) => FormatLabels[option]}
+                    onChange={(_, newValue) => setSortByFormat(newValue as SwuGameFormat | null)}
+                    sx={styles.filterByLeaderAutoComplete}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Filter by Format"
+                            variant="outlined"
+                        />
+                    )}
+                    slotProps={styles.autocompleteSlotProps}
+                />
+            </Box>
+
             <Divider sx={styles.divider} />
             <Box>
                 {gamesData?.ongoingGames
                     .filter((match) => filterByLeader(match))
+                    .filter((match) => filterByFormat(match))
                     .map((match, index) => (
                         <PublicMatch key={index} match={match} />
                     ))}
