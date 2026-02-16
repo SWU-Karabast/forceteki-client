@@ -19,12 +19,17 @@ interface IProps {
 
 function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType }: IProps) {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent } = useGame();
+    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent, isAnonymousPlayer } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [confirmConcedeBo3, setConfirmConcedeBo3] = useState<boolean>(false);
 
     const isQuickMatch = gameType === MatchmakingType.Quick;
+
+    const opponentId = getOpponent(connectedPlayer);
+    const isAnonymousOpponent = isAnonymousPlayer(opponentId);
+    const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
+    const canReportBug = !isAnonymousPlayer(connectedPlayer);
 
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest || null;
@@ -350,28 +355,32 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                 {/* Report Bug - Bo3 mode only (in Actions section) */}
                 {isBo3Mode && !isSpectator && (
                     <>
-                        <Box sx={styles.contentContainer}>
-                            <PreferenceButton
-                                variant={'standard'}
-                                text={'Report Bug'}
-                                buttonFnc={handleOpenBugReport}
-                                sx={{ minWidth: '140px' }}
-                            />
-                            <Typography sx={styles.typeographyStyle}>
-                                Report a bug to the developer team
-                            </Typography>
-                        </Box>
-                        <Box sx={styles.contentContainer}>
-                            <PreferenceButton
-                                variant={'standard'}
-                                text={'Report opponent'}
-                                buttonFnc={handleOpenPersonReport}
-                                sx={{ minWidth: '140px' }}
-                            />
-                            <Typography sx={styles.typeographyStyle}>
-                                Report opponent to the developer team
-                            </Typography>
-                        </Box>
+                        {canReportBug && (
+                            <Box sx={styles.contentContainer}>
+                                <PreferenceButton
+                                    variant={'standard'}
+                                    text={'Report Bug'}
+                                    buttonFnc={handleOpenBugReport}
+                                    sx={{ minWidth: '140px' }}
+                                />
+                                <Typography sx={styles.typeographyStyle}>
+                                    Report a bug to the developer team
+                                </Typography>
+                            </Box> 
+                        )}
+                        {canReportOpponent && (
+                            <Box sx={styles.contentContainer}>
+                                <PreferenceButton
+                                    variant={'standard'}
+                                    text={'Report opponent'}
+                                    buttonFnc={handleOpenPlayerReport}
+                                    sx={{ minWidth: '140px' }}
+                                />
+                                <Typography sx={styles.typeographyStyle}>
+                                    Report opponent to the developer team
+                                </Typography>
+                            </Box> 
+                        )}
                     </>
                 )}
             </Box>

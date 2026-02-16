@@ -12,7 +12,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 import { GamesToWinMode, Bo3SetEndedReason, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
-import PlayerReportDialog from "@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog";
+import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 
 enum PhaseName {
     Action = 'action',
@@ -21,7 +21,7 @@ enum PhaseName {
 }
 
 function CurrentGameTab() {
-    const { sendGameMessage, getOpponent, connectedPlayer, gameState, isSpectator, lobbyState } = useGame();
+    const { sendGameMessage, getOpponent, connectedPlayer, gameState, isSpectator, lobbyState, isAnonymousPlayer } = useGame();
     const isDev = process.env.NODE_ENV === 'development';
     const router = useRouter();
     const currentPlayer = gameState.players[connectedPlayer];
@@ -31,6 +31,10 @@ function CurrentGameTab() {
     const [playerReportOpen, setPlayerReportOpen] = useState<boolean>(false);
 
     const isPrivateLobby = lobbyState?.gameType === MatchmakingType.PrivateLobby;
+    const opponentId = getOpponent(connectedPlayer);
+    const isAnonymousOpponent = isAnonymousPlayer(opponentId);
+    const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
+    const canReportBug = !isAnonymousPlayer(connectedPlayer);
 
     // Bo3 state from lobbyState
     const winHistory = lobbyState?.winHistory || null;
@@ -221,7 +225,7 @@ function CurrentGameTab() {
                         Discord
                     </MuiLink>. Thanks!
                 </Typography>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                {canReportBug && (<Box sx={{ ...styles.contentContainer, mb:'20px' }}>
                     <PreferenceButton
                         variant={'standard'}
                         text={'Report Bug'}
@@ -232,17 +236,20 @@ function CurrentGameTab() {
                         Report a bug to the developer team
                     </Typography>
                 </Box>
-                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                    <PreferenceButton
-                        variant={'standard'}
-                        text={'Report Opponent'}
-                        buttonFnc={handleOpenPlayerReport}
-                        sx={{ minWidth: '140px' }}
-                    />
-                    <Typography sx={styles.typeographyStyle}>
-                        Report opponent to the developer team
-                    </Typography>
-                </Box>
+                )}
+                {canReportOpponent && (
+                    <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                        <PreferenceButton
+                            variant={'standard'}
+                            text={'Report Opponent'}
+                            buttonFnc={handleOpenPlayerReport}
+                            sx={{ minWidth: '140px' }}
+                        />
+                        <Typography sx={styles.typeographyStyle}>
+                            Report opponent to the developer team
+                        </Typography>
+                    </Box>
+                )}
             </Box>
             {/* Bug Report Dialog */}
             <BugReportDialog
