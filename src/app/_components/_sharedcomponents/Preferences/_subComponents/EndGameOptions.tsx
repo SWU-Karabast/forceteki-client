@@ -373,7 +373,7 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 <PreferenceButton
                                     variant={'standard'}
                                     text={'Report opponent'}
-                                    buttonFnc={handleOpenPlayerReport}
+                                    buttonFnc={handleOpenPersonReport}
                                     sx={{ minWidth: '140px' }}
                                 />
                                 <Typography sx={styles.typeographyStyle}>
