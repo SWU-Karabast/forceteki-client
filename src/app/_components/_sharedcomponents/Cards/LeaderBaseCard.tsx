@@ -165,10 +165,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
         return {
             position: 'absolute',
-            width: '3rem',
+            width: 'clamp(1.5rem, 30%, 2.5rem)',
             aspectRatio: '1 / 1',
             top:'32%',
-            right: '-20px',
+            right: '-13%',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage,
