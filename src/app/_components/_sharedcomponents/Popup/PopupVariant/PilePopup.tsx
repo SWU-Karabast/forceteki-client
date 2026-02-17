@@ -1,5 +1,5 @@
 import { usePopup } from '@/app/_contexts/Popup.context';
-import { Box, Button, Grid2, IconButton, Typography } from '@mui/material';
+import { Box, Button, IconButton, Typography } from '@mui/material';
 import { useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import GameCard from '../../Cards/GameCard';

@@ -4,12 +4,15 @@ import Image from 'next/image';
 import { debugBorder } from '@/app/_utils/debug';
 import { ICreditsProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const Credits: React.FC<ICreditsProps> = ({
     trayPlayer
 }) => {
     const { sendGameMessage, gameState, connectedPlayer } = useGame();
+    const { togglePopup, popups } = usePopup();
     const containerRef = useRef<HTMLDivElement>(null);
     const { isPortrait } = useScreenOrientation();
 
@@ -118,10 +121,26 @@ const Credits: React.FC<ICreditsProps> = ({
     };
 
     const handleCreditsClick = () => {
-        if (selectableCredit && creditTokenUuids.length > 0) {
-            // Send message with the first credit token UUID
-            const creditTokenUuid = creditTokenUuids[0];
-            sendGameMessage(['cardClicked', creditTokenUuid]);
+        // // Send message with the first credit token UUID
+        // const creditTokenUuid = creditTokenUuids[0];
+        // sendGameMessage(['cardClicked', creditTokenUuid]);
+        const playerName = connectedPlayer != trayPlayer ? 'Your Opponent\'s' : 'Your';
+        const existingPopup = popups.find(popup => popup.uuid === `${trayPlayer}-resources`);
+
+        if (existingPopup && existingPopup.source === PopupSource.PromptState) {
+            // TODO: allow game propt to be toggled
+            // const { type, ...restData } = existingPopup
+            // togglePopup(type, {
+            //     ...restData
+            // });
+        } else {
+            togglePopup('pile', {
+                uuid: `${trayPlayer}-credits`,
+                title: `${playerName} Credits`,
+                cards: gameState?.players[trayPlayer]?.credits,
+                source: PopupSource.User,
+                buttons: null
+            })
         }
     };
 
