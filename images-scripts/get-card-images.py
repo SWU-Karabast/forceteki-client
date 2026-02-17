@@ -1,24 +1,20 @@
+import argparse
 import os
 import requests
 
 # === CONFIGURATION ===
 BASE_URL = "https://swudb.com/images/cards/{set_code}/{card_number}.png"
-SET_CODE = "LAW"  # Change this manually when switching sets
-OUTPUT_DIR = f"downloaded_images/{SET_CODE}"
 MAX_ATTEMPTS = 300  # Safety limit (adjust if needed)
 LEADER_ATTEMPTS = 30
 OVERWRITE = False
 
-# Ensure output directory exists
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-def download_image(card_number):
+def download_image(card_number, set_code, output_dir):
     """Downloads an image with a given card number."""
-    url = BASE_URL.format(set_code=SET_CODE, card_number=str(card_number).zfill(3))
-    save_path = os.path.join(OUTPUT_DIR, f"{str(card_number).zfill(3)}.png")
-    leader_url = BASE_URL.format(set_code=SET_CODE, card_number=f"{str(card_number).zfill(3)}-portrait")
-    leader_url_alt = BASE_URL.format(set_code=SET_CODE, card_number=f"{str(card_number).zfill(3)}-back")
-    leader_save_path = os.path.join(OUTPUT_DIR, f"{str(card_number).zfill(3)}-base.png")
+    url = BASE_URL.format(set_code=set_code, card_number=str(card_number).zfill(3))
+    save_path = os.path.join(output_dir, f"{str(card_number).zfill(3)}.png")
+    leader_url = BASE_URL.format(set_code=set_code, card_number=f"{str(card_number).zfill(3)}-portrait")
+    leader_url_alt = BASE_URL.format(set_code=set_code, card_number=f"{str(card_number).zfill(3)}-back")
+    leader_save_path = os.path.join(output_dir, f"{str(card_number).zfill(3)}-base.png")
 
     # Check if the file already exists
     if os.path.exists(save_path) and not OVERWRITE:
@@ -66,11 +62,16 @@ def download_image(card_number):
     except requests.RequestException as e:
         print(f"⚠️ Error downloading {url}: {e}")
 
-def collect_set_images():
+def collect_set_images(set_code, output_dir):
     """Iterates through card numbers until an image fails to download."""
+    os.makedirs(output_dir, exist_ok=True)
     for card_number in range(1, MAX_ATTEMPTS):
-        download_image(card_number)
+        download_image(card_number, set_code, output_dir)
 
-# Run the script
 if __name__ == "__main__":
-    collect_set_images()
+    parser = argparse.ArgumentParser(description="Download card images from swudb.com.")
+    parser.add_argument("set_code", help="Set code (e.g. LAW, SOR)")
+    args = parser.parse_args()
+
+    output_dir = f"downloaded_images/{args.set_code}"
+    collect_set_images(args.set_code, output_dir)
