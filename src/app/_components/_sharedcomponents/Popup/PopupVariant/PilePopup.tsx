@@ -1,5 +1,5 @@
 import { usePopup } from '@/app/_contexts/Popup.context';
-import { Box, Button, Grid2, IconButton, Typography } from '@mui/material';
+import { Box, Button, IconButton, Typography } from '@mui/material';
 import { useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import GameCard from '../../Cards/GameCard';
@@ -15,6 +15,7 @@ import {
 } from '../Popup.styles';
 import { PilePopup, PopupButton } from '../Popup.types';
 import { useGame } from '@/app/_contexts/Game.context';
+import { CardStyle } from '../../Cards/CardTypes';
 
 interface ButtonProps {
     data: PilePopup;
@@ -33,6 +34,8 @@ export const gridContainerStyle = {
     gap: '10px',
     width: '100%',
     justifyContent: 'center',
+    // Padding prevents card selection glow (box-shadow: 0 0 7px 3px) from being clipped
+    padding: '10px',
 };
 
 export const PilePopupModal = ({ data }: ButtonProps) => {
@@ -50,7 +53,7 @@ export const PilePopupModal = ({ data }: ButtonProps) => {
                 >
                     {data.cards.map((card, index) => (
                         <Box key={index}>
-                            <GameCard card={card} />
+                            <GameCard card={card} cardStyle={CardStyle.Plain} />
                         </Box>
                     ))}
                 </Box>
