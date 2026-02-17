@@ -39,7 +39,6 @@ export const PopupProvider: React.FC<{ children: React.ReactNode }> = ({
     const [popups, setPopups] = useState<PopupData[]>([]);
 
     const openPopup = useCallback(<T extends PopupType>(type: T, data: PopupDataMap[T]) => {
-        console.log('Opening popup:', type, data);
         setPopups((prev) => {
             const existingIndex = prev.findIndex((popup) => popup.uuid === data.uuid);
             if (existingIndex !== -1) {
