@@ -97,15 +97,22 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     };
 
     // Helper to check if a format option is Bo3
-    const isBo3Option = (key: string) => 
+    const isBo3Option = (key: string) =>
         QueueFormatOptions[key]?.gamesToWinMode === GamesToWinMode.BestOfThree;
 
+    // Helper to check if a format option is Limited (excluded from quick queue - lobby only)
+    const isLimitedOption = (key: string) =>
+        QueueFormatOptions[key]?.format === SwuGameFormat.Limited;
+
+    // Filter out Limited format (Limited is only available in lobbies, not quick queue)
     // Sort format options so disabled Bo3 options appear at the end
-    const formatOptionKeys = Object.keys(QueueFormatOptions).sort((a, b) => {
-        const aDisabled = isBo3Option(a) && !isBo3Allowed;
-        const bDisabled = isBo3Option(b) && !isBo3Allowed;
-        return Number(aDisabled) - Number(bDisabled);
-    });
+    const formatOptionKeys = Object.keys(QueueFormatOptions)
+        .filter((key) => !isLimitedOption(key))
+        .sort((a, b) => {
+            const aDisabled = isBo3Option(a) && !isBo3Allowed;
+            const bDisabled = isBo3Option(b) && !isBo3Allowed;
+            return Number(aDisabled) - Number(bDisabled);
+        });
 
     // Timer ref for clearing the inline text after 5s
 

@@ -80,6 +80,9 @@ const PublicGames: React.FC = () => {
                 {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Open).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Limited).map((lobby) => (
+                    <JoinableGame key={lobby.id} lobby={lobby} />
+                ))}
                 <GamesInProgress />
             </CardContent>
         </Card>
