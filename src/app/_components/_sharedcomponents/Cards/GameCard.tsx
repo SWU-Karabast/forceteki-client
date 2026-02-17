@@ -103,6 +103,13 @@ const GameCard: React.FC<IGameCardProps> = ({
         setPreviewImage(null);
     };
 
+    // Tap-anywhere-to-close fallback for touch devices
+    React.useEffect(() => {
+        if (!open || !isTouchDevice) return;
+        const onTouchStart = () => handlePreviewClose();
+        document.addEventListener('touchstart', onTouchStart);
+        return () => document.removeEventListener('touchstart', onTouchStart);
+    }, [open, isTouchDevice]);
 
     const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
         if (cardInPlayersHand) {
@@ -729,6 +736,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     onClick={() => subcardClick(subcard)}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
+                    {...longPressHandlers}
                     data-card-url={s3CardImageURL(
                         { ...subcard, setId: subcard.clonedCardId ?? subcard.setId },
                         CardStyle.Plain,
@@ -767,6 +775,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 onClick={() => subcardClick(capturedCard)}
                                 onMouseEnter={handlePreviewOpen}
                                 onMouseLeave={handlePreviewClose}
+                                {...longPressHandlers}
                                 data-card-url={s3CardImageURL(
                                     { ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId },
                                     CardStyle.Plain,

@@ -58,6 +58,18 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
     });
 
+    // Tap-anywhere-to-close fallback for touch devices
+    React.useEffect(() => {
+        if (!open || !isTouchDevice) return;
+        const onTouchStart = () => {
+            clearTimeout(hoverTimeout.current);
+            setAnchorElement(null);
+            setPreviewImage(null);
+        };
+        document.addEventListener('touchstart', onTouchStart);
+        return () => document.removeEventListener('touchstart', onTouchStart);
+    }, [open, isTouchDevice]);
+
     if (!card) {
         return null
     }
@@ -444,6 +456,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     onClick={() => subcardClick(capturedCard)}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
+                    {...longPressHandlers}
                     data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.setId })}
                     data-card-type={capturedCard.printedType}
                     data-card-id={capturedCard.setId ? capturedCard.setId.set + '_' + capturedCard.setId.number : capturedCard.id}
