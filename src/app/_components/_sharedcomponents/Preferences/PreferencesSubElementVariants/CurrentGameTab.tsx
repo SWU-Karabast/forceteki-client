@@ -225,31 +225,38 @@ function CurrentGameTab() {
                         Discord
                     </MuiLink>. Thanks!
                 </Typography>
-                {canReportBug && (<Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
                     <PreferenceButton
                         variant={'standard'}
                         text={'Report Bug'}
                         buttonFnc={handleOpenBugReport}
                         sx={{ minWidth: '140px' }}
+                        disabled={!canReportBug}
                     />
                     <Typography sx={styles.typeographyStyle}>
-                        Report a bug to the developer team
+                        { canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports' }
                     </Typography>
                 </Box>
-                )}
-                {canReportOpponent && (
-                    <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
-                        <PreferenceButton
-                            variant={'standard'}
-                            text={'Report Opponent'}
-                            buttonFnc={handleOpenPlayerReport}
-                            sx={{ minWidth: '140px' }}
-                        />
-                        <Typography sx={styles.typeographyStyle}>
-                            Report opponent to the developer team
-                        </Typography>
-                    </Box>
-                )}
+            
+
+                <Box sx={{ ...styles.contentContainer, mb:'20px' }}>
+                    <PreferenceButton
+                        variant={'standard'}
+                        text={'Report Opponent'}
+                        buttonFnc={handleOpenPlayerReport}
+                        sx={{ minWidth: '140px' }}
+                        disabled ={!canReportOpponent}
+                    />
+                    <Typography sx={styles.typeographyStyle}>
+                        {isAnonymousPlayer(connectedPlayer)
+                            ? 'Please log in to submit reports'
+                            : isAnonymousOpponent
+                                ? 'Cannot submit reports for anonymous opponents'
+                                : 'Report opponent to the developer team'
+                        }
+                    </Typography>
+                </Box>
+
             </Box>
             {/* Bug Report Dialog */}
             <BugReportDialog

@@ -355,32 +355,35 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                 {/* Report Bug - Bo3 mode only (in Actions section) */}
                 {isBo3Mode && !isSpectator && (
                     <>
-                        {canReportBug && (
-                            <Box sx={styles.contentContainer}>
-                                <PreferenceButton
-                                    variant={'standard'}
-                                    text={'Report Bug'}
-                                    buttonFnc={handleOpenBugReport}
-                                    sx={{ minWidth: '140px' }}
-                                />
-                                <Typography sx={styles.typeographyStyle}>
-                                    Report a bug to the developer team
-                                </Typography>
-                            </Box> 
-                        )}
-                        {canReportOpponent && (
-                            <Box sx={styles.contentContainer}>
-                                <PreferenceButton
-                                    variant={'standard'}
-                                    text={'Report opponent'}
-                                    buttonFnc={handleOpenPersonReport}
-                                    sx={{ minWidth: '140px' }}
-                                />
-                                <Typography sx={styles.typeographyStyle}>
-                                    Report opponent to the developer team
-                                </Typography>
-                            </Box> 
-                        )}
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report Bug'}
+                                buttonFnc={handleOpenBugReport}
+                                sx={{ minWidth: '140px' }}
+                                disabled={!canReportBug}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                {canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
+                            </Typography>
+                        </Box>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report opponent'}
+                                buttonFnc={handleOpenPersonReport}
+                                sx={{ minWidth: '140px' }}
+                                disabled={!canReportOpponent}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                {isAnonymousPlayer(connectedPlayer)
+                                    ? 'Please log in to submit reports'
+                                    : isAnonymousOpponent
+                                        ? 'Cannot submit reports for anonymous opponents'
+                                        : 'Report opponent to the developer team'
+                                }
+                            </Typography>
+                        </Box>
                     </>
                 )}
             </Box>
@@ -482,9 +485,10 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report Bug'}
                                 buttonFnc={handleOpenBugReport}
                                 sx={{ minWidth: '140px' }}
+                                disabled={!canReportBug}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                Report a bug to the developer team
+                                {canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
                             </Typography>
                         </Box>
                         <Box sx={styles.contentContainer}>
@@ -493,9 +497,15 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report opponent'}
                                 buttonFnc={handleOpenPersonReport}
                                 sx={{ minWidth: '140px' }}
+                                disabled={!canReportOpponent}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                Report opponent to the developer team
+                                {isAnonymousPlayer(connectedPlayer)
+                                    ? 'Please log in to submit reports'
+                                    : isAnonymousOpponent
+                                        ? 'Cannot submit reports for anonymous opponents'
+                                        : 'Report opponent to the developer team'
+                                }
                             </Typography>
                         </Box>
                     </Box>
