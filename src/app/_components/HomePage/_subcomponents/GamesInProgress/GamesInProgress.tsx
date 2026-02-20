@@ -27,6 +27,12 @@ interface LeaderNameData {
     ongoingGamesCount?: number;
 }
 
+interface FormatOptionData {
+    value: SwuGameFormat;
+    label: string;
+    ongoingGamesCount: number;
+}
+
 const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void, setLeaderData: (leaders: LeaderNameData[] | null) => void) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/ongoing-games`);
@@ -104,24 +110,53 @@ const getOptionLabel = (option: LeaderNameData): string => {
     return `${option.name}${subtitle}`;
 }
 
+const buildFormatOptions = (games: OngoingGamesData | null): FormatOptionData[] => {
+    const formatCount = new Map<SwuGameFormat, number>();
+    if (games) {
+        for (const game of games.ongoingGames) {
+            if (game.format) {
+                formatCount.set(game.format, (formatCount.get(game.format) ?? 0) + 1);
+            }
+        }
+    }
+    return Object.values(SwuGameFormat).map((fmt) => ({
+        value: fmt,
+        label: FormatLabels[fmt],
+        ongoingGamesCount: formatCount.get(fmt) ?? 0,
+    }));
+};
+
 const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
     const [sortByLeader, setSortByLeader] = useState<string | null>(null);
     const [leaderData, setLeaderData] = useState<LeaderNameData[] | null>(null);
     const [sortByFormat, setSortByFormat] = useState<SwuGameFormat | null>(null);
+    const [formatOptions, setFormatOptions] = useState<FormatOptionData[]>(() => buildFormatOptions(null));
 
     useEffect(() => {
         let count = 0;
         let intervalId: NodeJS.Timeout;
 
         const fetchData = () => {
-            fetchOngoingGames(setGamesData, setLeaderData);
+            fetchOngoingGames(
+                (games) => {
+                    setGamesData(games);
+                    setFormatOptions(buildFormatOptions(games));
+                },
+                setLeaderData
+            );
             count++;
 
             if (count === 6) {
                 clearInterval(intervalId);
                 intervalId = setInterval(() => {
-                    fetchOngoingGames(setGamesData, setLeaderData);
+                    fetchOngoingGames(
+                        (games) => {
+                            setGamesData(games);
+                            setFormatOptions(buildFormatOptions(games));
+                        },
+                        setLeaderData
+                    );
                     count++;
                     if (count === 15) {
                         clearInterval(intervalId);
@@ -284,19 +319,38 @@ const GamesInProgress: React.FC = () => {
             <Box sx={styles.sortFilterRow}>
                 <Autocomplete
                     fullWidth
-                    value={sortByFormat || null}
-                    options={Object.values(SwuGameFormat)}
-                    getOptionLabel={(option) => FormatLabels[option]}
-                    onChange={(_, newValue) => setSortByFormat(newValue as SwuGameFormat | null)}
+                    value={formatOptions.find((o) => o.value === sortByFormat) || null}
+                    options={formatOptions}
+                    getOptionLabel={(option) => option.label}
+                    filterOptions={(options, state) => {
+                        if (!state.inputValue) {
+                            return options.filter((o) => o.ongoingGamesCount > 0);
+                        }
+                        return options.filter((o) =>
+                            o.label.toLowerCase().includes(state.inputValue.toLowerCase())
+                        );
+                    }}
+                    renderOption={(props, option) => {
+                        const { key, ...optionProps } = props;
+                        return (
+                            <li key={key} {...optionProps}>
+                                <Box sx={{ flexGrow: 1 }}>{option.label}</Box>
+                                <Box sx={styles.leaderActiveGamesCount}>{option.ongoingGamesCount}</Box>
+                            </li>
+                        );
+                    }}
+                    onChange={(_, newValue) => setSortByFormat(newValue ? newValue.value : null)}
+                    isOptionEqualToValue={(option, value) => option.value === value.value}
                     sx={styles.filterByLeaderAutoComplete}
+                    slotProps={styles.autocompleteSlotProps}
                     renderInput={(params) => (
                         <TextField
                             {...params}
                             label="Filter by Format"
                             variant="outlined"
+                            slotProps={styles.filterByLeaderSlotProps}
                         />
                     )}
-                    slotProps={styles.autocompleteSlotProps}
                 />
             </Box>
 
