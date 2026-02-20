@@ -47,6 +47,6 @@ export interface IGameChat {
 export interface IChatProps {
     chatHistory: IChatEntry[];
     chatMessage: string;
-    setChatMessage: (message: string) => void;
+    handleChatOnChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleChatSubmit: () => void;
 }
