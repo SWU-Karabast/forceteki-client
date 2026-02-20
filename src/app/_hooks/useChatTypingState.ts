@@ -1,22 +1,26 @@
 import { useRef } from 'react';
 import { useGame } from '../_contexts/Game.context';
 
-type TypingState = 'Unchanged' | 'StartedTyping' | 'StoppedTyping'
+enum TypingState {
+    Unchanged,
+    StartedTyping,
+    StoppedTyping
+}
 
 export const useChatTypingState = () => {
-    const { sendMessage } = useGame();
+    const { sendLobbyMessage } = useGame();
      
     const chatInputRef = useRef('');
 
-    const handleStateOnChange = (inputValue: string) => {
+    const handleTypingStateOnChange = (inputValue: string) => {
         const typingState = getTypingState(chatInputRef.current, inputValue);
 
         switch (typingState) {
-            case 'StartedTyping':
-                sendMessage('typingstate', [true]);
+            case TypingState.StartedTyping:
+                sendLobbyMessage(['typingstate',true]);
                 break;
-            case 'StoppedTyping':
-                sendMessage('typingstate', [false]);
+            case TypingState.StoppedTyping:
+                sendLobbyMessage(['typingstate',false]);
                 break;
             
             default:
@@ -27,18 +31,18 @@ export const useChatTypingState = () => {
     }
     
     const resetTypingState = () => {
-        chatInputRef.current = ''
-        sendMessage('typingstate', [false]);
+        chatInputRef.current = '';
+        sendLobbyMessage(['typingstate',false]);
     };
 
-    const getTypingState = (prev: string, next: string): TypingState => {
-        if (!prev && next) return 'StartedTyping';
-        if (prev && !next) return 'StoppedTyping';
-        return 'Unchanged';
+    const getTypingState = (prevInputValue: string, currentInputValue: string): TypingState => {
+        if (!prevInputValue && currentInputValue) return TypingState.StartedTyping;
+        if (prevInputValue && !currentInputValue) return TypingState.StoppedTyping;
+        return TypingState.Unchanged;
     }
 
     return {
-        handleStateOnChange,
+        handleTypingStateOnChange,
         resetTypingState
     };
 }

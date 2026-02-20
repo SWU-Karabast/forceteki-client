@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Card,
     Typography,
@@ -17,7 +17,7 @@ const SetUp: React.FC = ({
 }) => {
     const router = useRouter();
     const { lobbyState, sendLobbyMessage, connectedPlayer, sendMessage } = useGame();
-    const { handleStateOnChange, resetTypingState } = useChatTypingState();
+    const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
 
     // find the user
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
@@ -35,7 +35,7 @@ const SetUp: React.FC = ({
     const [chatMessage, setChatMessage] = useState('');
 
     const handleChatOnChange = (event: React.ChangeEvent<HTMLInputElement>) => { 
-        handleStateOnChange(event.target.value);
+        handleTypingStateOnChange(event.target.value);
         setChatMessage(event.target.value);
     }
     

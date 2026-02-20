@@ -21,7 +21,6 @@ import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/use
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
-import { UserTypingState } from '../_components/_sharedcomponents/Chat/ChatTypes';
 
 interface IGameContextType {
     gameState: any;
@@ -48,7 +47,6 @@ interface IGameContextType {
         hover: (id: string) => void;
         clear: () => void;
     };
-    userTypingState?: UserTypingState
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -64,7 +62,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
-    const [userTypingState, setUserTypingState] = useState<UserTypingState | undefined>();
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
@@ -299,10 +296,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setStatsSubmitNotification(notification);
         });
 
-        newSocket.on('typingstate', (typingState: UserTypingState) => {
-            setUserTypingState(typingState);
-        });
-
         if (socket) {
             socket.disconnect();
         }
@@ -412,7 +405,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     hover: setHoveredCardId,
                     clear: () => setHoveredCardId(null)
                 },
-                userTypingState
             }}
         >
             {children}

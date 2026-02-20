@@ -25,6 +25,7 @@ import {
     LobbyConfirmationPopupModule
 } from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
 import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
+import { ILobbyUserProps } from '../../Lobby/LobbyTypes';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -32,7 +33,7 @@ const Chat: React.FC<IChatProps> = ({
     handleChatOnChange,
     handleChatSubmit,
 }) => {
-    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled, sendLobbyMessage, userTypingState } = useGame();
+    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled, sendLobbyMessage } = useGame();
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [playerReportOpen, setPlayerReportOpen] = useState(false);
     const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -98,11 +99,13 @@ const Chat: React.FC<IChatProps> = ({
     const isPrivateLobby = lobbyState?.gameType === 'Private';
     const didCurrentUserMuteChat = lobbyState?.userWhoMutedChat === connectedPlayer;
     const opponentId = getOpponent(connectedPlayer);
+    const oppenent = lobbyState?.users.find((u: ILobbyUserProps) => u.id === opponentId);
     const isAnonymousOpponent = isAnonymousPlayer(opponentId);
     const opponentChatDisabled = hasChatDisabled(opponentId);
     const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
     const shouldShowChatInput = !chatDisabledInfo || chatDisabledInfo.reason === ChatDisabledReason.None;
+    const opponentIsTyping = lobbyState?.gameChat.typingState[opponentId];
 
     const getSpectatorDisplayName = (
         playerId: string,
@@ -535,9 +538,9 @@ const Chat: React.FC<IChatProps> = ({
                 <Box ref={chatEndRef} />
             </Box>
 
-            {userTypingState?.isTyping && (
+            {opponentIsTyping && (
                 <Box sx={styles.typingState.container}>
-                    <Typography sx={styles.typingState.typography}>{userTypingState.username} is typing...</Typography>
+                    <Typography sx={styles.typingState.typography}>{oppenent.username} is typing...</Typography>
                 </Box>
             )}
 

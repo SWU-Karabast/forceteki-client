@@ -50,8 +50,3 @@ export interface IChatProps {
     handleChatOnChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleChatSubmit: () => void;
 }
-
-export interface UserTypingState {
-    username: string;
-    isTyping: boolean;
-}
