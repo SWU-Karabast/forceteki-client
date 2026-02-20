@@ -82,7 +82,6 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
         menuButton: '/click1.mp3',
         perCardMenuButton: '/click1.mp3',
         yourTurn: '/click2.mp3',
-        typingstate: null
     }), []);
 
     const getAudioObject = (src: string): HTMLAudioElement | null => {
