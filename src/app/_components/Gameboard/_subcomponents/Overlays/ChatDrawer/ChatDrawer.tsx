@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { QuickUndoAvailableState } from '@/app/_constants/constants';
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
-    const { gameState, sendGameMessage, connectedPlayer, isSpectator } = useGame();
+    const { gameState, gameMessages, sendGameMessage, connectedPlayer, isSpectator } = useGame();
     const [chatMessage, setChatMessage] = useState('')
     const [isUndoHovered, setIsUndoHovered] = useState(false);
     const isDev = process.env.NODE_ENV === 'development';
@@ -219,7 +219,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
 
             {/* Use the ChatComponent here */}
             <Chat
-                chatHistory={gameState.messages}
+                chatHistory={gameMessages}
                 chatMessage={chatMessage}
                 setChatMessage={setChatMessage}
                 handleChatSubmit={handleGameChat}
