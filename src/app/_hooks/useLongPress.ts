@@ -52,7 +52,9 @@ export const useLongPress = ({
     }, [moveThreshold]);
 
     const onContextMenu = useCallback((e: React.MouseEvent<HTMLElement>) => {
-        e.preventDefault();
+        if (window.matchMedia('(pointer: coarse)').matches) {
+            e.preventDefault();
+        }
     }, []);
 
     return { onTouchStart, onTouchEnd, onTouchMove, onContextMenu };

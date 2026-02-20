@@ -12,7 +12,7 @@ import { QuickUndoAvailableState } from '@/app/_constants/constants';
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
-    const { gameState, sendGameMessage, connectedPlayer, isSpectator } = useGame();
+    const { gameState, gameMessages, sendGameMessage, connectedPlayer, isSpectator } = useGame();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
     const [chatMessage, setChatMessage] = useState('')
     const [isUndoHovered, setIsUndoHovered] = useState(false);
@@ -227,7 +227,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
 
             {/* Use the ChatComponent here */}
             <Chat
-                chatHistory={gameState.messages}
+                chatHistory={gameMessages}
                 chatMessage={chatMessage}
                 handleChatOnChange={handleChatOnChange}
                 handleChatSubmit={handleGameChat}

@@ -1,26 +1,73 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { Card, CardContent, Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { debugBorder } from '@/app/_utils/debug';
 import { ICreditsProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const Credits: React.FC<ICreditsProps> = ({
     trayPlayer
 }) => {
-    const { sendGameMessage, gameState, connectedPlayer } = useGame();
+    const { gameState, connectedPlayer } = useGame();
+    const { togglePopup, openPopup, popups } = usePopup();
     const containerRef = useRef<HTMLDivElement>(null);
     const { isPortrait } = useScreenOrientation();
 
-    const creditTokenCount = gameState.players[trayPlayer].credits.count;
-    const selectableCredit = gameState.players[trayPlayer].credits.selectionState?.selectable || false;
-    const creditTokenUuids = gameState.players[trayPlayer].credits.uuids;
-    const creditsAreBlanked = gameState.players[trayPlayer].credits.isBlanked || false;
+    const credits = useMemo(
+        () => gameState.players[trayPlayer].cardPiles.credits || [],
+        [gameState.players, trayPlayer]
+    );
+    const creditTokenCount = credits.length;
+    const someCreditTokenSelectable = credits.some((item: { selectable: boolean }) => item.selectable === true);
+    const someCreditIsBlanked = credits.some((item: { isBlanked: boolean }) => item.isBlanked === true);
+    const selectedCreditsCount = credits.filter((item: { selected: boolean }) => item.selected === true).length;
+    const someCreditTokenSelected = selectedCreditsCount > 0;
 
     const selectionColor = trayPlayer === connectedPlayer
         ? 'var(--selection-green)'
         : 'var(--selection-red)';
+
+    const popupUuid = `${trayPlayer}-credits`;
+    const isPopupOpen = popups.some(popup => popup.uuid === popupUuid);
+
+    // Update popup data when credits change while popup is open
+    useEffect(() => {
+        if (isPopupOpen) {
+            const playerName = connectedPlayer !== trayPlayer ? 'Your Opponent\'s' : 'Your';
+            openPopup('pile', {
+                uuid: popupUuid,
+                title: `${playerName} Credits`,
+                cards: credits,
+                source: PopupSource.User,
+                buttons: null
+            });
+        }
+    }, [credits, isPopupOpen, connectedPlayer, trayPlayer, popupUuid, openPopup]);
+
+    // Determine border and glow styles based on selection state
+    const getBorderStyle = () => {
+        if (someCreditTokenSelected) {
+            return {
+                border: '4px solid var(--selection-blue)',
+                boxShadow: '0 0 7px 3px var(--selection-blue)',
+            };
+        }
+        if (someCreditTokenSelectable) {
+            return {
+                border: `2px solid ${selectionColor}`,
+                boxShadow: 'none',
+            };
+        }
+        return {
+            border: 'none',
+            boxShadow: 'none',
+        };
+    };
+
+    const borderStyle = getBorderStyle();
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -28,18 +75,21 @@ const Credits: React.FC<ICreditsProps> = ({
             width: '100%', // Fill parent container width
             height: 'auto', // Auto height instead of maxHeight
             minHeight: 'fit-content',
-            background: selectableCredit ? (trayPlayer === connectedPlayer ? 'rgba(0, 255, 0, 0.08)' : 'rgba(255, 0, 0, 0.08)') : 'transparent',
+            background: someCreditTokenSelected
+                ? 'rgba(0, 0, 255, 0.08)'
+                : someCreditTokenSelectable
+                    ? (trayPlayer === connectedPlayer ? 'rgba(0, 255, 0, 0.08)' : 'rgba(255, 0, 0, 0.08)')
+                    : 'transparent',
             display: 'flex',
             position: 'relative',
             borderRadius: '5px',
             justifyContent: 'center',
             alignItems: 'center',
-            transition: 'background-color 0.3s ease',
             padding: '0.5rem 0.4rem', // Further reduced padding
             overflow: 'visible',
-            cursor: selectableCredit ? 'pointer' : 'default',
-            border: selectableCredit ? `2px solid ${selectionColor}` : 'none',
-            ...(!selectableCredit && debugBorder('orange')),
+            cursor: someCreditTokenSelectable ? 'pointer' : 'default',
+            ...borderStyle,
+            ...(!(someCreditTokenSelectable || someCreditTokenSelected) && debugBorder('orange')),
             '&:hover': {
                 background:
                     trayPlayer === connectedPlayer
@@ -47,7 +97,25 @@ const Credits: React.FC<ICreditsProps> = ({
                         : 'rgba(0, 0, 0, 0.4)',
             },
         },
-        
+        selectionBadge: {
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            transform: 'translate(50%, -50%)',
+            backgroundColor: 'var(--selection-blue)',
+            color: '#1a1a2e',
+            borderRadius: '12px',
+            minWidth: '22px',
+            height: '22px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+            padding: '2px 8px',
+            zIndex: 10,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+        },
         iconStyle: {
             width: 'clamp(1.2em, 0.7rem + 0.7vw, 1.6em)',
             top: '5%',
@@ -118,10 +186,19 @@ const Credits: React.FC<ICreditsProps> = ({
     };
 
     const handleCreditsClick = () => {
-        if (selectableCredit && creditTokenUuids.length > 0) {
-            // Send message with the first credit token UUID
-            const creditTokenUuid = creditTokenUuids[0];
-            sendGameMessage(['cardClicked', creditTokenUuid]);
+        const playerName = connectedPlayer !== trayPlayer ? 'Your Opponent\'s' : 'Your';
+        const existingPopup = popups.find(popup => popup.uuid === popupUuid);
+
+        if (existingPopup && existingPopup.source === PopupSource.PromptState) {
+            // TODO: allow game prompt to be toggled
+        } else {
+            togglePopup('pile', {
+                uuid: popupUuid,
+                title: `${playerName} Credits`,
+                cards: credits,
+                source: PopupSource.User,
+                buttons: null
+            });
         }
     };
 
@@ -132,6 +209,11 @@ const Credits: React.FC<ICreditsProps> = ({
             onClick={handleCreditsClick}
             elevation={0}
         >
+            {someCreditTokenSelected && (
+                <Box sx={styles.selectionBadge}>
+                    {selectedCreditsCount}
+                </Box>
+            )}
             <Box sx={styles.creditBorderRight} />
             <Box sx={styles.creditBorderLeft} />
 
@@ -145,7 +227,7 @@ const Credits: React.FC<ICreditsProps> = ({
                             height={72}
                             width={54}
                         />
-                        {creditsAreBlanked && (
+                        {someCreditIsBlanked && (
                             <Box sx={styles.creditBlankIcon}/>
                         )}
                     </Box>
