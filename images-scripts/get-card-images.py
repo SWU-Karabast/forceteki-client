@@ -5,7 +5,7 @@ import requests
 BASE_URL = "https://swudb.com/images/cards/{set_code}/{card_number}.png"
 SET_CODE = "LAW"  # Change this manually when switching sets
 OUTPUT_DIR = f"downloaded_images/{SET_CODE}"
-MAX_ATTEMPTS = 300  # Safety limit (adjust if needed)
+MAX_ATTEMPTS = 265  # Safety limit (adjust if needed)
 LEADER_ATTEMPTS = 30
 OVERWRITE = False
 

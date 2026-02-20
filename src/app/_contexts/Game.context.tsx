@@ -435,7 +435,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,
                     clear: () => setHoveredCardId(null)
-                },
+                }
             }}
         >
             {children}

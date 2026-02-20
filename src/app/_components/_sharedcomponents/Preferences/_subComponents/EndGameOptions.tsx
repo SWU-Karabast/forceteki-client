@@ -19,12 +19,17 @@ interface IProps {
 
 function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType }: IProps) {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent } = useGame();
+    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent, isAnonymousPlayer } = useGame();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [confirmConcedeBo3, setConfirmConcedeBo3] = useState<boolean>(false);
 
     const isQuickMatch = gameType === MatchmakingType.Quick;
+
+    const opponentId = getOpponent(connectedPlayer);
+    const isAnonymousOpponent = isAnonymousPlayer(opponentId);
+    const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
+    const canReportBug = !isAnonymousPlayer(connectedPlayer);
 
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest || null;
@@ -356,9 +361,10 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report Bug'}
                                 buttonFnc={handleOpenBugReport}
                                 sx={{ minWidth: '140px' }}
+                                disabled={!canReportBug}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                Report a bug to the developer team
+                                {canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
                             </Typography>
                         </Box>
                         <Box sx={styles.contentContainer}>
@@ -367,9 +373,15 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report opponent'}
                                 buttonFnc={handleOpenPersonReport}
                                 sx={{ minWidth: '140px' }}
+                                disabled={!canReportOpponent}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                Report opponent to the developer team
+                                {isAnonymousPlayer(connectedPlayer)
+                                    ? 'Please log in to submit reports'
+                                    : isAnonymousOpponent
+                                        ? 'Cannot submit reports for anonymous opponents'
+                                        : 'Report opponent to the developer team'
+                                }
                             </Typography>
                         </Box>
                     </>
@@ -473,9 +485,10 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report Bug'}
                                 buttonFnc={handleOpenBugReport}
                                 sx={{ minWidth: '140px' }}
+                                disabled={!canReportBug}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                Report a bug to the developer team
+                                {canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
                             </Typography>
                         </Box>
                         <Box sx={styles.contentContainer}>
@@ -484,9 +497,15 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report opponent'}
                                 buttonFnc={handleOpenPersonReport}
                                 sx={{ minWidth: '140px' }}
+                                disabled={!canReportOpponent}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                Report opponent to the developer team
+                                {isAnonymousPlayer(connectedPlayer)
+                                    ? 'Please log in to submit reports'
+                                    : isAnonymousOpponent
+                                        ? 'Cannot submit reports for anonymous opponents'
+                                        : 'Report opponent to the developer team'
+                                }
                             </Typography>
                         </Box>
                     </Box>
