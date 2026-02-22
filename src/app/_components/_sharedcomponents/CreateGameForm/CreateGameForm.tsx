@@ -88,7 +88,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     // Common State
     const [privateGame, setPrivateGame] = useState<boolean>(false);
     const [thirtyCardMode, setThirtyCardMode] = useState<boolean>(false);
-    
+
     // Get the current format option key from format and gamesToWinMode
     const getCurrentFormatOptionKey = (): string => {
         for (const [key, value] of Object.entries(QueueFormatOptions)) {
@@ -204,13 +204,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     saveDeckToLocalStorage(deckData, deckLink);
                 }
             }
+            // Limited format automatically enables 30-card mode, or user can select it for Open format
+            const allow30CardsInMainBoard = format === SwuGameFormat.Limited || thirtyCardMode;
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
                 isPrivate: privateGame,
                 format: format,
                 lobbyName: lobbyName,
-                allow30CardsInMainBoard: thirtyCardMode,
+                allow30CardsInMainBoard,
                 gamesToWinMode: gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,

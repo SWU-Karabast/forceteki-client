@@ -40,3 +40,6 @@ yarn.lock
 # repo-specific files
 images-scripts/**/*.png
 images-scripts/**/*.webp
+
+# agentic tools
+.claude/
