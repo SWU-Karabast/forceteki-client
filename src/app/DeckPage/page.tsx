@@ -239,6 +239,8 @@ const DeckPage: React.FC = () => {
                 return styles.mySwuTag;
             case 'SWUINDEX':
                 return styles.SWUIndexTag;
+            case 'PROTECTTHEPOD':
+                return styles.protectThePodTag;
             default:
                 console.log(`Unknown deck source: ${deckSource}`);
                 return styles.unknownTag;
@@ -466,6 +468,15 @@ const DeckPage: React.FC = () => {
                 color: '#000000',
             },
             boxShadow: '0 0 5px #A6A516',
+        },
+        protectThePodTag: {
+            borderColor: '#00ff88',
+            color: '#00ff88',
+            '&:hover': {
+                backgroundColor: '#00ff88',
+                color: '#000000',
+            },
+            boxShadow: '0 0 5px #00ff88',
         },
         unknownTag: {
             color: 'white',
