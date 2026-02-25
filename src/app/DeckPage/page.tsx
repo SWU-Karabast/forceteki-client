@@ -470,13 +470,13 @@ const DeckPage: React.FC = () => {
             boxShadow: '0 0 5px #A6A516',
         },
         protectThePodTag: {
-            borderColor: '#9B59B6',
-            color: '#9B59B6',
+            borderColor: '#8E44AD',
+            color: '#8E44AD',
             '&:hover': {
-                backgroundColor: '#9B59B6',
+                backgroundColor: '#8E44AD',
                 color: '#000000',
             },
-            boxShadow: '0 0 5px #9B59B6',
+            boxShadow: '0 0 5px #8E44AD',
         },
         unknownTag: {
             color: 'white',
