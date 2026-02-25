@@ -246,19 +246,9 @@ export async function GET(req: Request) {
                 throw new Error(`SWUIndex API error: ${response.statusText}`);
             }
         } else if (deckLink.includes('protectthepod.com')) {
-            // Protect the Pod deck links in the forms:
-            // https://protectthepod.com/sealed_pool/{shareId}
-            // https://protectthepod.com/draft_pool/{shareId}
-            // https://protectthepod.com/pool/{shareId}/deck
-            // https://protectthepod.com/pool/{shareId}/deck/play
-            // https://protectthepod.com/formats/pack-wars/{shareId}
-            // https://protectthepod.com/formats/pack-blitz/{shareId}
-            // https://protectthepod.com/formats/rotisserie/{shareId}
-
+            // Protect the Pod deck links: https://protectthepod.com/pool/{shareId}/deck/play
             const url = new URL(deckLink);
-            const pathMatch = url.pathname.match(
-                /(?:sealed_pool|draft_pool|pool|formats\/(?:pack-wars|pack-blitz|rotisserie))\/([a-zA-Z0-9_-]+)/
-            );
+            const pathMatch = url.pathname.match(/\/pool\/([a-zA-Z0-9_-]+)/);
 
             if (!pathMatch || !pathMatch[1]) {
                 console.error('Error: Invalid deckLink format');
