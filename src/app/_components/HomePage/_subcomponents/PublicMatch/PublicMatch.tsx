@@ -160,7 +160,14 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                     </Box>
                 </Box>
                 {!match.isPrivate && (
-                    <Button onClick={handleSpectate}>Spectate</Button>
+                    <span title={!user ? "Log in to Spectate" : ""}>
+                        <Button
+                            onClick={handleSpectate}
+                            disabled={!user}
+                        >
+                            Spectate
+                        </Button>
+                    </span>
                 )}
             </Box>
             <Popover

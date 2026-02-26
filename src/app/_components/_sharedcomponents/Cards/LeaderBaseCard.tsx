@@ -6,6 +6,7 @@ import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
+import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
 
@@ -39,7 +40,35 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         } : undefined,
     });
     const aspectRatio = isHoveringCapturedCard ? '1 / 1.4' : leaderCardFlipPreview.aspectRatio;
-    const width = isHoveringCapturedCard ? '16rem' : leaderCardFlipPreview.width;
+    const width = isHoveringCapturedCard ? 'clamp(200px, 60vw, 16rem)' : leaderCardFlipPreview.width;
+
+    const [isTouchDevice, setIsTouchDevice] = React.useState(false);
+
+    const longPressHandlers = useLongPress({
+        onLongPress: (target) => {
+            const imageUrl = target.getAttribute('data-card-url');
+            if (!imageUrl) return;
+            setIsTouchDevice(true);
+            setAnchorElement(target);
+            setPreviewImage(`url(${imageUrl})`);
+        },
+        onRelease: () => {
+            setAnchorElement(null);
+            setPreviewImage(null);
+        },
+    });
+
+    // Tap-anywhere-to-close fallback for touch devices
+    React.useEffect(() => {
+        if (!open || !isTouchDevice) return;
+        const onTouchStart = () => {
+            clearTimeout(hoverTimeout.current);
+            setAnchorElement(null);
+            setPreviewImage(null);
+        };
+        document.addEventListener('touchstart', onTouchStart);
+        return () => document.removeEventListener('touchstart', onTouchStart);
+    }, [open, isTouchDevice]);
 
     if (!card) {
         return null
@@ -52,6 +81,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const forceTokenSelectable = controller?.forceToken.selectionState?.selectable || false;
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
+        // Skip hover preview on touch devices to avoid brief flash on tap
+        if (window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(any-pointer: fine)').matches) return;
+
         const target = event.currentTarget;
         const imageUrl = target.getAttribute('data-card-url');
         if (!imageUrl) return;
@@ -145,10 +177,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
         return {
             position: 'absolute',
-            width: '3rem',
+            width: 'clamp(1.5rem, 30%, 2.5rem)',
             aspectRatio: '1 / 1',
             top:'32%',
-            right: '-20px',
+            right: '-13%',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage,
@@ -209,6 +241,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'relative',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
+            WebkitTouchCallout: 'none',
+            userSelect: 'none',
         },
         deployedPlaceholder: {
             backgroundColor: 'transparent',
@@ -287,7 +321,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundSize: '50% 100%, 50% 100%',
             backgroundRepeat: 'no-repeat',
             filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
-            textShadow: '2px 2px rgba(0, 0, 0, 0.20)'
+            textShadow: '2px 2px rgba(0, 0, 0, 0.20)',
+            userSelect: 'none',
         },
         nameplateBox: {
             position: 'absolute',
@@ -315,6 +350,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             borderRadius: '.38em',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
+            imageRendering: '-webkit-optimize-contrast',
+            backfaceVisibility: 'hidden',
             aspectRatio: aspectRatio,
             width: width,
         },
@@ -419,6 +456,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     onClick={() => subcardClick(capturedCard)}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
+                    {...longPressHandlers}
                     data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.setId })}
                     data-card-type={capturedCard.printedType}
                     data-card-id={capturedCard.setId ? capturedCard.setId.set + '_' + capturedCard.setId.number : capturedCard.id}
@@ -458,6 +496,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 data-card-type={isLeader ? 'leader' : 'base'}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
+                {...longPressHandlers}
             >
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
@@ -505,7 +544,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         ...styles.cardPreview,backgroundImage: previewImage
                     }} >
                     </Box>
-                    {isLeader && (
+                    {isLeader && !isTouchDevice && (
                         <Typography variant={'body1'} sx={styles.ctrlText}
                         >CTRL: View Flipside</Typography>
                     )}
