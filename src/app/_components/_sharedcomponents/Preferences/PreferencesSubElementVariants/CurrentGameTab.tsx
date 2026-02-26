@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { Divider } from '@mui/material';
+import { Divider, Tooltip } from '@mui/material';
 import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_subComponents/Bo3ScoreDisplay';
@@ -29,8 +29,11 @@ function CurrentGameTab() {
     const [confirmConcede, setConfirmConcede] = useState<boolean>(false);
     const [bugReportOpen, setBugReportOpen] = useState<boolean>(false);
     const [playerReportOpen, setPlayerReportOpen] = useState<boolean>(false);
+    const [showSpectateLinkTooltip, setShowSpectateLinkTooltip] = useState<boolean>(false);
 
     const isPrivateLobby = lobbyState?.gameType === MatchmakingType.PrivateLobby;
+    const allowSpectators = lobbyState?.settings?.allowSpectators ?? false;
+    const spectateLink = lobbyState?.spectateLink;
     const opponentId = getOpponent(connectedPlayer);
     const isAnonymousOpponent = isAnonymousPlayer(opponentId);
     const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
@@ -116,6 +119,17 @@ function CurrentGameTab() {
         router.push('/');
     };
 
+    // Handler for copying spectate link
+    const handleCopySpectateLink = () => {
+        if (!spectateLink) return;
+        navigator.clipboard.writeText(spectateLink)
+            .then(() => {
+                setShowSpectateLinkTooltip(true);
+                setTimeout(() => setShowSpectateLinkTooltip(false), 1000);
+            })
+            .catch(err => console.error('Failed to copy spectate link', err));
+    };
+
     const styles = {
         typographyContainer: {
             mb: '0.5rem',
@@ -163,6 +177,33 @@ function CurrentGameTab() {
                         />
                         <Typography sx={styles.typeographyStyle}>
                             Yield current game. This game will count as a loss.
+                        </Typography>
+                    </Box>
+                </Box>
+            )}
+            {/* Spectate Link Section - only show for non-spectators when spectation is allowed */}
+            {!isSpectator && allowSpectators && spectateLink && (
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Invite Spectators</Typography>
+                    <Divider sx={{ mb: '20px' }}/>
+                    <Box sx={styles.contentContainer}>
+                        <Tooltip
+                            open={showSpectateLinkTooltip}
+                            title="Copied!"
+                            arrow
+                            placement="top"
+                        >
+                            <Box>
+                                <PreferenceButton 
+                                    variant={'standard'}
+                                    text={'Copy Spectate Link'}
+                                    buttonFnc={handleCopySpectateLink}
+                                    sx={{ minWidth: '140px' }}
+                                />
+                            </Box>
+                        </Tooltip>
+                        <Typography sx={styles.typeographyStyle}>
+                            Share this link with others to let them spectate the game.
                         </Typography>
                     </Box>
                 </Box>
