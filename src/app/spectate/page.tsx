@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import { useUser } from '@/app/_contexts/User.context';
 import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
@@ -100,13 +100,13 @@ const SpectatePage = () => {
                         <Typography variant="body1" sx={styles.errorText}>
                             {error}
                         </Typography>
-                        <Typography 
-                            variant="body2" 
-                            sx={{ color: '#888', marginTop: '1rem', cursor: 'pointer', textDecoration: 'underline' }}
+                        <Button
+                            variant="outlined"
+                            sx={{ marginTop: '1rem' }}
                             onClick={() => router.push('/')}
                         >
                             Return to Home
-                        </Typography>
+                        </Button>
                     </>
                 )}
             </Box>

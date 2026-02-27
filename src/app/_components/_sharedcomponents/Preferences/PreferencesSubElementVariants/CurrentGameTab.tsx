@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { Divider, Tooltip } from '@mui/material';
+import { Divider, TextField, Tooltip } from '@mui/material';
 import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_subComponents/Bo3ScoreDisplay';
@@ -148,7 +148,24 @@ function CurrentGameTab() {
             display:'flex',
             flexDirection:'row',
             alignItems: 'center'
-        }
+        },
+        spectateLinkContainer: {
+            display: 'flex',
+            alignItems: 'stretch',
+            mt: '1rem',
+        },
+        spectateTextFieldStyle: {
+            backgroundColor: '#fff2',
+            '& .MuiOutlinedInput-root': {
+                height: '100%',
+            },
+            '& .MuiInputBase-input': {
+                color: '#fff',
+            },
+            '& .MuiInputBase-input.Mui-disabled': {
+                WebkitTextFillColor: '#aaaaaa',
+            },
+        },
     }
 
     return (
@@ -181,12 +198,21 @@ function CurrentGameTab() {
                     </Box>
                 </Box>
             )}
-            {/* Spectate Link Section - only show for non-spectators when spectation is allowed */}
-            {!isSpectator && allowSpectators && spectateLink && (
+            {/* Spectate Link Section - only show for non-spectators */}
+            {!isSpectator && (
                 <Box sx={styles.functionContainer}>
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Invite Spectators</Typography>
                     <Divider sx={{ mb: '20px' }}/>
-                    <Box sx={styles.contentContainer}>
+                    <Typography sx={styles.typeographyStyle}>
+                        Share this link with others to let them spectate the game.
+                    </Typography>
+                    <Box sx={styles.spectateLinkContainer}>
+                        <TextField
+                            sx={styles.spectateTextFieldStyle}
+                            value={spectateLink ?? 'No spectation link'}
+                            disabled={!allowSpectators || !spectateLink}
+                            slotProps={{ htmlInput: { readOnly: true } }}
+                        />
                         <Tooltip
                             open={showSpectateLinkTooltip}
                             title="Copied!"
@@ -198,13 +224,10 @@ function CurrentGameTab() {
                                     variant={'standard'}
                                     text={'Copy Spectate Link'}
                                     buttonFnc={handleCopySpectateLink}
-                                    sx={{ minWidth: '140px' }}
+                                    disabled={!allowSpectators || !spectateLink}
                                 />
                             </Box>
                         </Tooltip>
-                        <Typography sx={styles.typeographyStyle}>
-                            Share this link with others to let them spectate the game.
-                        </Typography>
                     </Box>
                 </Box>
             )}
