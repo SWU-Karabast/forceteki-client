@@ -206,13 +206,16 @@ function CurrentGameTab() {
                 <Box sx={styles.functionContainer}>
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Invite Spectators</Typography>
                     <Divider sx={{ mb: '20px' }}/>
-                    <Typography sx={styles.typeographyStyle}>
-                        Share this link with others to let them spectate the game.
+                    <Typography sx={allowSpectators ? styles.typeographyStyle : { ...styles.typeographyStyle, color: '#cc4444', fontStyle: 'italic' }}>
+                        {allowSpectators
+                            ? 'Share this link with others to let them spectate the game.'
+                            : 'Spectation disabled. This setting can be changed from the pre-game lobby screen.'
+                        }
                     </Typography>
                     <Box sx={styles.spectateLinkContainer}>
                         <TextField
                             sx={styles.spectateTextFieldStyle}
-                            value={spectateLink ?? 'No spectation link'}
+                            value={(allowSpectators && spectateLink) ? spectateLink : 'No spectation link'}
                             disabled={!allowSpectators || !spectateLink}
                             slotProps={{ htmlInput: { readOnly: true } }}
                         />
