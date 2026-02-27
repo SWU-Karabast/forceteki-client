@@ -158,9 +158,12 @@ function CurrentGameTab() {
             backgroundColor: '#fff2',
             '& .MuiOutlinedInput-root': {
                 height: '100%',
+                borderTopRightRadius: 0,
+                borderBottomRightRadius: 0,
             },
             '& .MuiInputBase-input': {
                 color: '#fff',
+                paddingRight: '1rem',
             },
             '& .MuiInputBase-input.Mui-disabled': {
                 WebkitTextFillColor: '#aaaaaa',
@@ -219,10 +222,10 @@ function CurrentGameTab() {
                             arrow
                             placement="top"
                         >
-                            <Box>
+                            <Box sx={{ ml: '-10px' }}>
                                 <PreferenceButton 
                                     variant={'standard'}
-                                    text={'Copy Spectate Link'}
+                                    text={'Copy'}
                                     buttonFnc={handleCopySpectateLink}
                                     disabled={!allowSpectators || !spectateLink}
                                 />
