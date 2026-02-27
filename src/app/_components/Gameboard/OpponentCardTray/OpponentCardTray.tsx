@@ -17,7 +17,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
-    const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
+    const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded } = useGame();
     const { openPopup } = usePopup();
     const { isPortrait } = useScreenOrientation();
     const router = useRouter();
@@ -209,12 +209,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.rightColumn,
                 }}
             >
-                <GameTimer 
-                    player={gameState?.players[connectedPlayer]} 
-                    opponent={gameState?.players[getOpponent(connectedPlayer)]} 
-                    phase={phase}
-                    messages={gameState.messages}
-                />
+                {!gameIsEnded() && <GameTimer />}
                 <Box
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}

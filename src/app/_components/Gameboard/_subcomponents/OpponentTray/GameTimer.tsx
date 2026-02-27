@@ -1,34 +1,21 @@
-import {
-    CircularProgressProps,
-} from '@mui/material/CircularProgress';
 import React, { useEffect } from 'react';
 import Timer from '@/app/_components/_sharedcomponents/Timer/Timer';
 import { MAX_MAIN_TIME, MAX_TURN_TIME, secondsToMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
 import { Stack, Typography } from '@mui/material';
 import { formatMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
-import { usePageVisibility } from '@/app/_hooks/usePageVisibility';
+import { useGame } from '@/app/_contexts/Game.context';
 
-type PlayerState = {
-    isActionPhaseActivePlayer?: boolean
-    mainTimeRemainingSeconds: number,
-    turnTimeRemainingSeconds: number,
-} | undefined;
-
-interface GameTimerProps extends CircularProgressProps {
-    player: PlayerState;
-    opponent: PlayerState;
-    phase: 'setup' | 'action' | 'regroup';
-    messages: object[];
-}
-
-const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, phase, messages, ...props }) => {
-    const activePlayer = player?.isActionPhaseActivePlayer;
+const GameTimer: React.FC = ({ ...props }) => {
+    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const playerState = gameState?.players[connectedPlayer];
+    const opponentState = gameState?.players[getOpponent(connectedPlayer)];
+    const playerIsActivePlayer = playerState?.isActionPhaseActivePlayer || !playerState.promptState.menuTitle.toLowerCase().includes('waiting');
 
     const [turnTimeRemainingMs, setTurnTimeRemainingMs] = React.useState(MAX_TURN_TIME);
     const isTurnTime = turnTimeRemainingMs > 0;
 
-    const opponentMainTimeRemainingMs = secondsToMilliseconds(opponent?.mainTimeRemainingSeconds || 0);
-    const playerMainTimeRemainingMs = secondsToMilliseconds(player?.mainTimeRemainingSeconds || 0);
+    const opponentMainTimeRemainingMs = secondsToMilliseconds(opponentState?.mainTimeRemainingSeconds || 0);
+    const playerMainTimeRemainingMs = secondsToMilliseconds(playerState?.mainTimeRemainingSeconds || 0);
     const [mainTimeRemainingMs, setMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
 
     useEffect(() => {
@@ -39,69 +26,35 @@ const GameTimer: React.FC<GameTimerProps> = ({ player, opponent, phase, messages
          * - when an action is taken, we reset the turn timer
          * - when the turn timer is out, we start using the main timer
         * */
-        const isStartOfSetup = phase === 'setup' && messages.length === 0;
-        const opponentTurnTimeRemainingMs = secondsToMilliseconds(opponent?.turnTimeRemainingSeconds || 0);
-        const playerTurnTimeRemainingMs = secondsToMilliseconds(player?.turnTimeRemainingSeconds || 0);
+        const opponentTurnTimeRemainingMs = secondsToMilliseconds(opponentState?.turnTimeRemainingSeconds || 0);
+        const playerTurnTimeRemainingMs = secondsToMilliseconds(playerState?.turnTimeRemainingSeconds || 0);
 
-        const newTurnTimeRemaining = activePlayer ? playerTurnTimeRemainingMs : opponentTurnTimeRemainingMs;
-        setTurnTimeRemainingMs(isStartOfSetup ? MAX_TURN_TIME : newTurnTimeRemaining);
+        const newTurnTimeRemaining = playerIsActivePlayer ? playerTurnTimeRemainingMs : opponentTurnTimeRemainingMs;
+
+        setTurnTimeRemainingMs(newTurnTimeRemaining);
         
         setMainTimeRemainingMs(
-            activePlayer ? playerMainTimeRemainingMs : opponentMainTimeRemainingMs
+            playerIsActivePlayer ? playerMainTimeRemainingMs : opponentMainTimeRemainingMs
         );
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        player?.turnTimeRemainingSeconds, 
-        player?.mainTimeRemainingSeconds, 
-        opponent?.turnTimeRemainingSeconds, 
-        opponent?.mainTimeRemainingSeconds, 
-        phase
-    ])
-
-    const isTabActive = usePageVisibility();
-    const [timeLeftTab, setTimeLeftTab] = React.useState<Date | null>(null);
-
-    // Handles syncing timers when the user switches tabs and comes back
-    // Because timers are typically paused by the browser when a tab is inactive
-    useEffect(() => {
-        if (isTabActive) {
-            // The player has returned! Calculate the elapsed time and adjust timers accordingly
-            if(timeLeftTab) {
-                const now = new Date();
-                // Rounds down to nearest second
-                const timeAway = Math.floor((now.getTime() - timeLeftTab.getTime()) / 1000) * 1000;
-                
-                if(isTurnTime) {
-                    setTurnTimeRemainingMs(prev => prev - timeAway) 
-                } else {
-                    setMainTimeRemainingMs(prev => prev - timeAway);
-                }
-                setTimeLeftTab(null);
-            }
-        } else {
-            setTimeLeftTab(new Date());
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isTabActive]); // Executes whenever the tab visibility changes
-
+    }, [playerIsActivePlayer, opponentState?.turnTimeRemainingSeconds, opponentMainTimeRemainingMs, playerState?.turnTimeRemainingSeconds, playerMainTimeRemainingMs])
 
     return (
         <Timer 
-            hasLowOpacity={!activePlayer}
+            hasLowOpacity={!playerIsActivePlayer}
             maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME} 
             setTimeRemaining={isTurnTime ? setTurnTimeRemainingMs : setMainTimeRemainingMs}
             timeRemaining={isTurnTime ? turnTimeRemainingMs : mainTimeRemainingMs}
-            shouldAdjustBackgroundColor={activePlayer && !isTurnTime}
+            shouldAdjustBackgroundColor={playerIsActivePlayer && !isTurnTime}
             tooltipTitle={<TooltipContent 
                 turnTimeRemainingSeconds={turnTimeRemainingMs} 
-                activePlayer={activePlayer} 
+                activePlayer={playerIsActivePlayer} 
             />}
             {...props}
         >
 
-            <MainTimerLabel activePlayer={activePlayer}
-                playerTimeRemaining={activePlayer ? mainTimeRemainingMs : playerMainTimeRemainingMs} 
-                opponentTimeRemaining={activePlayer ? opponentMainTimeRemainingMs : mainTimeRemainingMs} 
+            <MainTimerLabel activePlayer={playerIsActivePlayer} isTurnTime={isTurnTime} 
+                playerTimeRemaining={playerIsActivePlayer ? mainTimeRemainingMs : playerMainTimeRemainingMs} 
+                opponentTimeRemaining={playerIsActivePlayer ? opponentMainTimeRemainingMs : mainTimeRemainingMs} 
             />
         </Timer>
     );
@@ -146,11 +99,13 @@ const TooltipContent = (
 const MainTimerLabel = ({ 
     activePlayer, 
     playerTimeRemaining = MAX_MAIN_TIME, 
-    opponentTimeRemaining = MAX_MAIN_TIME 
+    opponentTimeRemaining = MAX_MAIN_TIME,
+    isTurnTime = true, 
 }: { 
     activePlayer?: boolean, 
     playerTimeRemaining?: number, 
-    opponentTimeRemaining?: number 
+    opponentTimeRemaining?: number,
+    isTurnTime?: boolean
 }) => {
     return (
         <Stack spacing={0}>
@@ -160,7 +115,7 @@ const MainTimerLabel = ({
                     color: 'white',
                     marginBottom: 0, 
                     cursor: 'pointer',
-                    opacity: activePlayer ? 1 : 0.3, 
+                    opacity: activePlayer && !isTurnTime ? 1 : 0.3, 
                 }}
             >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography> 
 
@@ -172,7 +127,7 @@ const MainTimerLabel = ({
                     color: 'white',
                     marginBottom: 0, 
                     cursor: 'pointer',
-                    opacity: !activePlayer ? 1 : 0.3, 
+                    opacity: !activePlayer && !isTurnTime ? 1 : 0.3, 
 
                 }}
             >{`${formatMilliseconds(opponentTimeRemaining)}`}</Typography> 
