@@ -71,6 +71,11 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     const currentGameNumber = winHistory?.currentGameNumber || 1;
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
 
+    // Lobby settings
+    const allow30CardsInMainBoard = lobbyState?.allow30CardsInMainBoard || false;
+    const requestUndo = lobbyState?.settings.requestUndo || false;
+    const allowSpectators = lobbyState?.settings.allowSpectators || false;
+
     // For deck error display
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
     const [displayError, setDisplayError] = useState(false);
@@ -614,7 +619,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                             <FormControl fullWidth sx={styles.disabledDropdownStyle}>
                                 <StyledTextField
                                     select
-                                    value={lobbyState.allow30CardsInMainBoard ? '30Card' : '50Card'}
+                                    value={allow30CardsInMainBoard ? '30Card' : '50Card'}
                                     onChange={() => {}}
                                     disabled={true}
                                 >
@@ -628,7 +633,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                         control={
                             <Checkbox
                                 sx={styles.settingsCheckboxStyle}
-                                checked={lobbyState.settings.requestUndo}
+                                checked={requestUndo}
                                 disabled={!owner || readyStatus || opponentReady}
                                 onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
                                     handleChangeUndoSetting(checked)
@@ -659,7 +664,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                         control={
                             <Checkbox
                                 sx={styles.settingsCheckboxStyle}
-                                checked={lobbyState.settings.allowSpectators}
+                                checked={allowSpectators}
                                 disabled={!owner || readyStatus || opponentReady}
                                 onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
                                     handleChangeAllowSpectators(checked)
