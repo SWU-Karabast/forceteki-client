@@ -13,6 +13,8 @@ import { useRouter } from 'next/navigation';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 import { Play } from 'next/font/google';
+import { BackgroundsDarkenBox } from '../_theme/theme-helper';
+import { RichText } from '../_components/_sharedcomponents/RichText';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
@@ -228,7 +230,7 @@ const GameBoard = () => {
 
             <Box sx={styles.centralPromptContainer}>
                 <Box sx={styles.promptStyle}>
-                    {menuTitle}
+                    {menuTitle && <RichText text={menuTitle} />}
                     <Box sx={styles.promptShadow}/>
                 </Box>
             </Box>
