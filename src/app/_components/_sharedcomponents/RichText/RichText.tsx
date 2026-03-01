@@ -68,42 +68,43 @@ export interface RichTextProps {
     sx?: SxProps<Theme>;
 
     /**
-     * Provide a completely custom set of replacement rules.
-     * When supplied, `additionalRules` is ignored.
+     * MUI component used as the wrapper element. Defaults to `Box`.
+     * Pass `Typography` when the component needs to participate in MUI
+     * typography style inheritance from its ancestors.
      */
-    replacementRules?: TextReplacementRule[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    component?: React.ElementType<any>;
 
     /**
-     * Extra rules to merge with the default rule set.
-     * Has no effect when `replacementRules` is provided explicitly.
+     * Provide a completely custom set of replacement rules. When not supplied, 
+     * ${@link defaultReplacementRules} are used.
      */
-    additionalRules?: TextReplacementRule[];
+    replacementRules?: TextReplacementRule[];
 }
 
 /**
  * Renders a string with inline token replacements (icons, styled text, etc.).
  *
  * Uses all `defaultReplacementRules` by default (aspect icons, etc.).
- * Pass `replacementRules` to override completely, or `additionalRules` to
- * extend the defaults without losing them.
+ * Pass `replacementRules` to override completely.
  *
  * @example
- * // Renders "Pay :vigilance:" with the Vigilance icon inline.
- * <RichText text="Pay :vigilance:" />
+ * // Renders "Disclose :vigilance:" with the Vigilance icon inline.
+ * <RichText text="Disclose :vigilance:" />
  */
 const RichText: React.FC<RichTextProps> = ({
     text,
     sx,
     replacementRules,
-    additionalRules = [],
+    component: Wrapper = Box,
 }) => {
-    const rules = replacementRules ?? [...defaultReplacementRules, ...additionalRules];
+    const rules = replacementRules ?? defaultReplacementRules;
     const nodes = parseText(text, rules);
 
     return (
-        <Box component="span" sx={sx}>
+        <Wrapper component="span" sx={sx}>
             {nodes}
-        </Box>
+        </Wrapper>
     );
 };
 

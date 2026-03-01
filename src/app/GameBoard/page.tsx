@@ -253,7 +253,7 @@ const GameBoard = () => {
 
             <Box sx={styles.centralPromptContainer}>
                 <Box sx={styles.promptStyle}>
-                    {menuTitle && <RichText text={menuTitle} />}
+                    {menuTitle && <RichText text={menuTitle}/>}
                     <Box sx={styles.promptShadow}/>
                 </Box>
             </Box>
