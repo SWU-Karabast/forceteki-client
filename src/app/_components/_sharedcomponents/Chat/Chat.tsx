@@ -54,7 +54,7 @@ const Chat: React.FC<IChatProps> = ({
         }
 
         switch (true) {
-            case !user:
+            case !user && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
                 return {
                     reason: ChatDisabledReason.NotLoggedIn,
                     message: 'Log in to enable chat',
@@ -79,7 +79,7 @@ const Chat: React.FC<IChatProps> = ({
                     message: 'The opponent has disabled chat',
                     borderColor: 'yellow'
                 };
-            case isAnonymousOpponent:
+            case isAnonymousOpponent && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
                 return {
                     reason: ChatDisabledReason.AnonymousOpponent,
                     message: 'Chat disabled when playing against an anonymous opponent',
@@ -103,6 +103,7 @@ const Chat: React.FC<IChatProps> = ({
     const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
     const shouldShowChatInput = !chatDisabledInfo || chatDisabledInfo.reason === ChatDisabledReason.None;
+    const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
 
     const getSpectatorDisplayName = (
         playerId: string,
@@ -486,18 +487,11 @@ const Chat: React.FC<IChatProps> = ({
                                         <span>Disable Chat</span>
                                     </Box>
                                 </Box>
-                                {opponentId ? (
+                                {canReportOpponent && (
                                     <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
                                         <Box sx={styles.optionLabel}>
                                             <ReportProblem sx={styles.optionIcon} />
                                             <span>Report Opponent</span>
-                                        </Box>
-                                    </Box>
-                                ) : (
-                                    <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
-                                        <Box sx={styles.optionLabel}>
-                                            <ReportProblem sx={styles.optionIcon} />
-                                            <span style={{ color: '#888' }}>No opponent to report</span>
                                         </Box>
                                     </Box>
                                 )}
@@ -513,18 +507,11 @@ const Chat: React.FC<IChatProps> = ({
                                         </span>
                                     </Box>
                                 </Box>
-                                {opponentId ? (
+                                {canReportOpponent && (
                                     <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
                                         <Box sx={styles.optionLabel}>
                                             <ReportProblem sx={styles.optionIcon} />
                                             <span>Report Opponent</span>
-                                        </Box>
-                                    </Box>
-                                ) : (
-                                    <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
-                                        <Box sx={styles.optionLabel}>
-                                            <ReportProblem sx={styles.optionIcon} />
-                                            <span style={{ color: '#888' }}>No opponent to report</span>
                                         </Box>
                                     </Box>
                                 )}
