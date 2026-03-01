@@ -5,7 +5,7 @@ import React from 'react';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * A single replacement rule.
+ * A single text replacement rule.
  *
  * - `pattern` – a RegExp whose *source* is incorporated into a combined regex
  *   at parse time. Do **not** include the `g` flag; it is added automatically.
