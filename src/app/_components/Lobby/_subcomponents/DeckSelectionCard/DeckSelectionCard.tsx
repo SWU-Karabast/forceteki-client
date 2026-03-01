@@ -71,6 +71,11 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     const currentGameNumber = winHistory?.currentGameNumber || 1;
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
 
+    // Lobby settings
+    const allow30CardsInMainBoard = lobbyState?.allow30CardsInMainBoard || false;
+    const requestUndo = lobbyState?.settings.requestUndo || false;
+    const allowSpectators = lobbyState?.settings.allowSpectators || false;
+
     // For deck error display
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
     const [displayError, setDisplayError] = useState(false);
@@ -82,6 +87,10 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     // ------------------------Additional functions------------------------//
     const handleChangeUndoSetting = async (checked: boolean) => {
         sendLobbyMessage(['updateSetting', 'requestUndo', checked]);
+    };
+
+    const handleChangeAllowSpectators = (checked: boolean) => {
+        sendLobbyMessage(['updateSetting', 'allowSpectators', checked]);
     };
 
     useEffect(() => {
@@ -252,8 +261,6 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
             })
             .catch(err => console.error('Failed to copy link', err));
     };
-
-
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -612,7 +619,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                             <FormControl fullWidth sx={styles.disabledDropdownStyle}>
                                 <StyledTextField
                                     select
-                                    value={lobbyState.allow30CardsInMainBoard ? '30Card' : '50Card'}
+                                    value={allow30CardsInMainBoard ? '30Card' : '50Card'}
                                     onChange={() => {}}
                                     disabled={true}
                                 >
@@ -626,7 +633,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                         control={
                             <Checkbox
                                 sx={styles.settingsCheckboxStyle}
-                                checked={lobbyState.settings.requestUndo}
+                                checked={requestUndo}
                                 disabled={!owner || readyStatus || opponentReady}
                                 onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
                                     handleChangeUndoSetting(checked)
@@ -639,6 +646,37 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                                     Undo Requests
                                 </span>
                                 <Tooltip title="Uses the same rules for Undo as public games. Limited number of free undos, then requires opponent approval. If this is disabled, there are no limits on undo.">
+                                    <Info 
+                                        sx={{ 
+                                            fontSize: '14px',
+                                            color: '#1976d2',
+                                            backgroundColor: '#fff',
+                                            borderRadius: '50%',
+                                            cursor: 'help',
+                                            opacity: disableSettings ? 0.5 : 1
+                                        }} 
+                                    />
+                                </Tooltip>
+                            </Box>
+                        }
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                sx={styles.settingsCheckboxStyle}
+                                checked={allowSpectators}
+                                disabled={!owner || readyStatus || opponentReady}
+                                onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
+                                    handleChangeAllowSpectators(checked)
+                                }
+                            />
+                        }
+                        label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 1 }}>
+                                <span style={{ ...styles.settingsCheckboxAndRadioGroupTextStyle }}>
+                                    Allow Spectators
+                                </span>
+                                <Tooltip title="When enabled, allows other players to spectate your game using a shareable link. Find the link in the settings menu when the game starts.">
                                     <Info 
                                         sx={{ 
                                             fontSize: '14px',

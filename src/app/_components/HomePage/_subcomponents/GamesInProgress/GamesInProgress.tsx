@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Autocomplete, Box, Divider, FilterOptionsState, TextField, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { FormatLabels, GamesToWinMode, SwuGameFormat } from '@/app/_constants/constants';
 
 interface GameCardData {
     id: string;
@@ -10,6 +11,8 @@ interface GameCardData {
     player1Base: ICardData;
     player2Leader: ICardData;
     player2Base: ICardData;
+    format: SwuGameFormat;
+    gamesToWinMode: GamesToWinMode;
 }
 
 interface OngoingGamesData {
@@ -22,6 +25,12 @@ interface LeaderNameData {
     subtitle?: string;
     id: string;
     ongoingGamesCount?: number;
+}
+
+interface FormatOptionData {
+    value: SwuGameFormat;
+    label: string;
+    ongoingGamesCount: number;
 }
 
 const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void, setLeaderData: (leaders: LeaderNameData[] | null) => void) => {
@@ -101,10 +110,12 @@ const getOptionLabel = (option: LeaderNameData): string => {
     return `${option.name}${subtitle}`;
 }
 
+
 const GamesInProgress: React.FC = () => {
     const [gamesData, setGamesData] = useState<OngoingGamesData | null>(null);
     const [sortByLeader, setSortByLeader] = useState<string | null>(null);
     const [leaderData, setLeaderData] = useState<LeaderNameData[] | null>(null);
+    const [sortByFormat, setSortByFormat] = useState<SwuGameFormat | null>(null);
 
     useEffect(() => {
         let count = 0;
@@ -138,6 +149,52 @@ const GamesInProgress: React.FC = () => {
         const leaderIds = [match.player1Leader.id, match.player2Leader.id];
         return leaderIds.some(id => leaderData.some(leader => leader.id === id && leader.id === sortByLeader));
     };
+
+    const filterByFormat = (match: GameCardData): boolean => {
+        if (!sortByFormat) return true;
+        return match.format === sortByFormat;
+    };
+
+    // Leader counts: only games that also match the active format filter
+    const leaderDataWithFilteredCounts = useMemo(() => {
+        if (!leaderData) return leaderData;
+        const games = sortByFormat
+            ? (gamesData?.ongoingGames ?? []).filter((g) => g.format === sortByFormat)
+            : (gamesData?.ongoingGames ?? []);
+        const leaderCount = new Map<string, number>();
+        for (const game of games) {
+            if (game.player1Leader.id) {
+                leaderCount.set(game.player1Leader.id, (leaderCount.get(game.player1Leader.id) ?? 0) + 1);
+            }
+            if (game.player2Leader.id && game.player2Leader.id !== game.player1Leader.id) {
+                leaderCount.set(game.player2Leader.id, (leaderCount.get(game.player2Leader.id) ?? 0) + 1);
+            }
+        }
+        return leaderData.map((leader) => ({
+            ...leader,
+            ongoingGamesCount: leaderCount.get(leader.id) ?? 0,
+        }));
+    }, [leaderData, gamesData, sortByFormat]);
+
+    // Format counts: only games that also involve the active leader filter
+    const formatOptions = useMemo((): FormatOptionData[] => {
+        const games = sortByLeader
+            ? (gamesData?.ongoingGames ?? []).filter(
+                (g) => g.player1Leader.id === sortByLeader || g.player2Leader.id === sortByLeader
+            )
+            : (gamesData?.ongoingGames ?? []);
+        const formatCount = new Map<SwuGameFormat, number>();
+        for (const game of games) {
+            if (game.format) {
+                formatCount.set(game.format, (formatCount.get(game.format) ?? 0) + 1);
+            }
+        }
+        return Object.values(SwuGameFormat).map((fmt) => ({
+            value: fmt,
+            label: FormatLabels[fmt],
+            ongoingGamesCount: formatCount.get(fmt) ?? 0,
+        }));
+    }, [gamesData, sortByLeader]);
 
     const filterByActiveLeader = (options: LeaderNameData[], state: FilterOptionsState<LeaderNameData>) => {
         // Show all options when typing, but only those with ongoingGamesCount > 0 in dropdown
@@ -238,7 +295,7 @@ const GamesInProgress: React.FC = () => {
             <Box sx={styles.sortFilterRow}>
                 <Autocomplete
                     fullWidth
-                    options={leaderData || []}
+                    options={leaderDataWithFilteredCounts || []}
                     getOptionLabel={(option) => getOptionLabel(option)}
                     filterOptions={filterByActiveLeader}
                     renderOption={(props, option) => {
@@ -256,7 +313,7 @@ const GamesInProgress: React.FC = () => {
                             </li>
                         );
                     }}
-                    value={leaderData?.find(l => l.id === sortByLeader) || null}
+                    value={leaderDataWithFilteredCounts?.find(l => l.id === sortByLeader) || null}
                     onChange={(_, newValue) => setSortByLeader(newValue ? newValue.id : null)}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     sx={styles.filterByLeaderAutoComplete}
@@ -272,10 +329,49 @@ const GamesInProgress: React.FC = () => {
                     slotProps={styles.autocompleteSlotProps}
                 />
             </Box>
+            <Box sx={styles.sortFilterRow}>
+                <Autocomplete
+                    fullWidth
+                    value={formatOptions.find((o) => o.value === sortByFormat) || null}
+                    options={formatOptions}
+                    getOptionLabel={(option) => option.label}
+                    filterOptions={(options, state) => {
+                        if (!state.inputValue) {
+                            return options.filter((o) => o.ongoingGamesCount > 0);
+                        }
+                        return options.filter((o) =>
+                            o.label.toLowerCase().includes(state.inputValue.toLowerCase())
+                        );
+                    }}
+                    renderOption={(props, option) => {
+                        const { key, ...optionProps } = props;
+                        return (
+                            <li key={key} {...optionProps}>
+                                <Box sx={{ flexGrow: 1 }}>{option.label}</Box>
+                                <Box sx={styles.leaderActiveGamesCount}>{option.ongoingGamesCount}</Box>
+                            </li>
+                        );
+                    }}
+                    onChange={(_, newValue) => setSortByFormat(newValue ? newValue.value : null)}
+                    isOptionEqualToValue={(option, value) => option.value === value.value}
+                    sx={styles.filterByLeaderAutoComplete}
+                    slotProps={styles.autocompleteSlotProps}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Filter by Format"
+                            variant="outlined"
+                            slotProps={styles.filterByLeaderSlotProps}
+                        />
+                    )}
+                />
+            </Box>
+
             <Divider sx={styles.divider} />
             <Box>
                 {gamesData?.ongoingGames
                     .filter((match) => filterByLeader(match))
+                    .filter((match) => filterByFormat(match))
                     .map((match, index) => (
                         <PublicMatch key={index} match={match} />
                     ))}

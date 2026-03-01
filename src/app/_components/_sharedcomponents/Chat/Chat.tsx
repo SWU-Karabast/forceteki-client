@@ -54,7 +54,7 @@ const Chat: React.FC<IChatProps> = ({
         }
 
         switch (true) {
-            case !user:
+            case !user && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
                 return {
                     reason: ChatDisabledReason.NotLoggedIn,
                     message: 'Log in to enable chat',
@@ -79,7 +79,7 @@ const Chat: React.FC<IChatProps> = ({
                     message: 'The opponent has disabled chat',
                     borderColor: 'yellow'
                 };
-            case isAnonymousOpponent:
+            case isAnonymousOpponent && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
                 return {
                     reason: ChatDisabledReason.AnonymousOpponent,
                     message: 'Chat disabled when playing against an anonymous opponent',
@@ -103,6 +103,7 @@ const Chat: React.FC<IChatProps> = ({
     const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
     const shouldShowChatInput = !chatDisabledInfo || chatDisabledInfo.reason === ChatDisabledReason.None;
+    const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
 
     const getSpectatorDisplayName = (
         playerId: string,
@@ -137,7 +138,9 @@ const Chat: React.FC<IChatProps> = ({
     };
 
 
-    const isOpponentMessage = (message: IChatMessageContent, connectedPlayerId: string): boolean => {
+    const isOpponentMessage = (message: IChatMessageContent | undefined, connectedPlayerId: string): boolean => {
+        if (!message) return false;
+
         // Check if it's a player chat message
         if (Array.isArray(message) && message.length > 0) {
             const firstItem = message[0];
@@ -262,7 +265,17 @@ const Chat: React.FC<IChatProps> = ({
     };
 
 
-    const formatMessage = (message: IChatMessageContent, index: number) => {
+    const formatMessage = (message: IChatMessageContent | undefined, index: number) => {
+        if (!message) {
+            // Custom gray message for pending missing (shouldn't really happen in practice as retransmit is fast)
+            return (
+                <Box key={index} sx={styles.chatEntryBox}>
+                    <Typography sx={{ ...styles.messageText, color: '#888', fontStyle: 'italic' }}>
+                        Fetching missing message...
+                    </Typography>
+                </Box>
+            );
+        }
         if ('alert' in message) {
             return formatSystemMessage(message.alert.message, index, true, message.alert.type);
         }
@@ -287,7 +300,7 @@ const Chat: React.FC<IChatProps> = ({
             const newMessages = chatHistory.slice(previousMessages.length);
             // Check if any new message is from opponent
             const hasOpponentMessage = newMessages.some(messageEntry => {
-                return isOpponentMessage(messageEntry.message, connectedPlayer);
+                return isOpponentMessage(messageEntry?.message, connectedPlayer);
             });
             if (hasOpponentMessage) {
                 playIncomingMessageSound();
@@ -474,18 +487,11 @@ const Chat: React.FC<IChatProps> = ({
                                         <span>Disable Chat</span>
                                     </Box>
                                 </Box>
-                                {opponentId ? (
+                                {canReportOpponent && (
                                     <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
                                         <Box sx={styles.optionLabel}>
                                             <ReportProblem sx={styles.optionIcon} />
                                             <span>Report Opponent</span>
-                                        </Box>
-                                    </Box>
-                                ) : (
-                                    <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
-                                        <Box sx={styles.optionLabel}>
-                                            <ReportProblem sx={styles.optionIcon} />
-                                            <span style={{ color: '#888' }}>No opponent to report</span>
                                         </Box>
                                     </Box>
                                 )}
@@ -501,18 +507,11 @@ const Chat: React.FC<IChatProps> = ({
                                         </span>
                                     </Box>
                                 </Box>
-                                {opponentId ? (
+                                {canReportOpponent && (
                                     <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
                                         <Box sx={styles.optionLabel}>
                                             <ReportProblem sx={styles.optionIcon} />
                                             <span>Report Opponent</span>
-                                        </Box>
-                                    </Box>
-                                ) : (
-                                    <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
-                                        <Box sx={styles.optionLabel}>
-                                            <ReportProblem sx={styles.optionIcon} />
-                                            <span style={{ color: '#888' }}>No opponent to report</span>
                                         </Box>
                                     </Box>
                                 )}
@@ -523,7 +522,7 @@ const Chat: React.FC<IChatProps> = ({
             )}
             <Box sx={styles.chatBox}>
                 {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
-                    return formatMessage(chatEntry.message, index);
+                    return formatMessage(chatEntry?.message, index);
                 })}
                 <Box ref={chatEndRef} />
             </Box>

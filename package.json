@@ -22,7 +22,7 @@
 		"@svgr/webpack": "^8.1.0",
 		"html-react-parser": "^5.1.18",
 		"jsonwebtoken": "^9.0.2",
-		"next": "14.2.26",
+		"next": "14.2.35",
 		"next-auth": "^4.24.10",
 		"react": "^18",
 		"react-dom": "^18",
