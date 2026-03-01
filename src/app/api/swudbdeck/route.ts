@@ -245,6 +245,43 @@ export async function GET(req: Request) {
                 console.error('SWUIndex API error:', response.statusText);
                 throw new Error(`SWUIndex API error: ${response.statusText}`);
             }
+        } else if (deckLink.includes('protectthepod.com')) {
+            // Protect the Pod deck links: https://protectthepod.com/pool/{shareId}/deck/play
+            const url = new URL(deckLink);
+            const pathMatch = url.pathname.match(/\/pool\/([a-zA-Z0-9_-]+)/);
+
+            if (!pathMatch || !pathMatch[1]) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format. Share a pool or deck builder link from protectthepod.com.' },
+                    { status: 400 }
+                );
+            }
+
+            const shareId = pathMatch[1];
+            deckIdentifier = shareId;
+            deckSource = DeckSource.ProtectThePod;
+
+            const apiUrl = `https://protectthepod.com/api/pools/${encodeURIComponent(shareId)}/deck.json`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if (response.status === 400) {
+                    return NextResponse.json(
+                        { error: 'No deck has been built for this pool yet. Build a deck on protectthepod.com first, then share the link.' },
+                        { status: 404 }
+                    );
+                }
+                if (response.status === 404) {
+                    return NextResponse.json(
+                        { error: 'Pool not found on protectthepod.com.' },
+                        { status: 404 }
+                    );
+                }
+
+                console.error('Protect the Pod API error:', response.statusText);
+                throw new Error(`Protect the Pod API error: ${response.statusText}`);
+            }
         } else {
             console.error('Error: Deckbuilder not supported');
             return NextResponse.json({ error: 'Deckbuilder not supported' }, { status: 400 });
