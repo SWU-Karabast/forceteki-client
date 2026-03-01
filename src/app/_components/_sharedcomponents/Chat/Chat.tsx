@@ -54,7 +54,7 @@ const Chat: React.FC<IChatProps> = ({
         }
 
         switch (true) {
-            case !user:
+            case !user && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
                 return {
                     reason: ChatDisabledReason.NotLoggedIn,
                     message: 'Log in to enable chat',
@@ -79,7 +79,7 @@ const Chat: React.FC<IChatProps> = ({
                     message: 'The opponent has disabled chat',
                     borderColor: 'yellow'
                 };
-            case isAnonymousOpponent:
+            case isAnonymousOpponent && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
                 return {
                     reason: ChatDisabledReason.AnonymousOpponent,
                     message: 'Chat disabled when playing against an anonymous opponent',
