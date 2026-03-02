@@ -19,7 +19,6 @@ export enum DeckSource {
     SWUBase = 'SWUBase',
     SWUMetaStats = 'SWUMetaStats',
     MySWU = 'MySWU',
-    SWUIndex = 'SWUIndex',
     ProtectThePod = 'ProtectThePod',
 }
 
@@ -83,8 +82,6 @@ export const determineDeckSource = (deckLink: string): DeckSource => {
         return DeckSource.SWUMetaStats;
     } else if (deckLink.includes('my-swu.com')) {
         return DeckSource.MySWU;
-    } else if (deckLink.includes('swuindex.com')) {
-        return DeckSource.SWUIndex;
     } else if (deckLink.includes('protectthepod.com')) {
         return DeckSource.ProtectThePod;
     }

@@ -220,7 +220,6 @@ export const parseInputAsDeckData = (input: string): {
         input.includes('swubase.com') ||
         input.includes('swumetastats.com') ||
         input.includes('my-swu.com') ||
-        input.includes('swuindex.com') ||
         input.includes('protectthepod.com')
     ) {
         return { type: 'url', data: null };
