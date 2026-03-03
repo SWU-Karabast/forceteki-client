@@ -94,6 +94,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         matchType: {
             margin: 0,
             fontWeight: 'bold',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
         },
         cardsContainer: {
             display: 'flex',

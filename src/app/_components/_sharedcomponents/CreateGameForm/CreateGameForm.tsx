@@ -236,7 +236,10 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     // TODO: better error handling between BE and FE
                     if (result.message?.includes('Invalid game format') || result.message?.includes('You must be logged in')) {
                         setError(null,result.message,'Create Game Error','error');
-                    } else {
+                    } else if (result.message?.includes('Lobby name contains inappropriate words')) {
+                        setError(null,result.message,'Cannot Create Lobby','error');
+                    }
+                    else {
                         setError('Couldn\'t import. Deck is invalid.',errors,'Deck Validation Error','error');
                     }
                     setModalOpen(true);
@@ -557,6 +560,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             <StyledTextField
                                 type="text"
                                 value={lobbyName}
+                                inputProps={{ maxLength: 100 }}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                     setLobbyName(e.target.value)
                                 }
