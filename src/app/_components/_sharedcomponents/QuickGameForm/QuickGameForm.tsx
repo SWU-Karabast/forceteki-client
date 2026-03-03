@@ -21,7 +21,7 @@ import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatOptions, QueueFormatLabels, DefaultQueueFormatKey } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatOptions, DefaultQueueFormatKey, FormatLabels, GamesToWinModeLabels } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -99,6 +99,12 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     // Helper to check if a format option is Bo3
     const isBo3Option = (key: string) => 
         QueueFormatOptions[key]?.gamesToWinMode === GamesToWinMode.BestOfThree;
+
+    const formatOptionsLabel = (key: string) => {
+        const option = QueueFormatOptions[key];
+        if (!option) { return undefined }
+        return `${FormatLabels[option.format]} ${GamesToWinModeLabels[option.gamesToWinMode]}`;
+    }
 
     // Sort format options so disabled Bo3 options appear at the end
     const formatOptionKeys = Object.keys(QueueFormatOptions).sort((a, b) => {
@@ -478,7 +484,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             const disabled = isBo3 && !isBo3Allowed;
                             return (
                                 <MenuItem key={key} value={key} disabled={disabled}>
-                                    {QueueFormatLabels[key] || key}
+                                    {formatOptionsLabel(key) || key}
                                     {disabled && ' (must be logged in)'}
                                 </MenuItem>
                             );

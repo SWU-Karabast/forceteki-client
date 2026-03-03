@@ -22,7 +22,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, QueueFormatOptions, QueueFormatLabels, DefaultQueueFormatKey } from '@/app/_constants/constants';
+import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, DefaultQueueFormatKey, FormatLabels, GamesToWinModeLabels, LobbyFormatOptions } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -91,7 +91,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     
     // Get the current format option key from format and gamesToWinMode
     const getCurrentFormatOptionKey = (): string => {
-        for (const [key, value] of Object.entries(QueueFormatOptions)) {
+        for (const [key, value] of Object.entries(LobbyFormatOptions)) {
             if (value.format === format && value.gamesToWinMode === gamesToWinMode) {
                 return key;
             }
@@ -99,17 +99,23 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         return DefaultQueueFormatKey;
     };
 
-    const formatOptionKeys = Object.keys(QueueFormatOptions);
+    const formatOptionKeys = Object.keys(LobbyFormatOptions);
 
     // Helper to check if a format option is Bo3
     const isBo3Option = (key: string) => 
-        QueueFormatOptions[key]?.gamesToWinMode === GamesToWinMode.BestOfThree;
+        LobbyFormatOptions[key]?.gamesToWinMode === GamesToWinMode.BestOfThree;
+
+    const formatOptionsLabel = (key: string) => {
+        const option = LobbyFormatOptions[key];
+        if (!option) { return undefined }
+        return `${FormatLabels[option.format]} ${GamesToWinModeLabels[option.gamesToWinMode]}`;
+    }
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
     
     const handleChangeFormatOption = (optionKey: string) => {
-        const option = QueueFormatOptions[optionKey];
+        const option = LobbyFormatOptions[optionKey];
         if (option) {
             setFormat(option.format);
             setGamesToWinMode(option.gamesToWinMode);
@@ -505,7 +511,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 const disabled = isBo3 && !isBo3Allowed;
                                 return (
                                     <MenuItem key={key} value={key} disabled={disabled}>
-                                        {QueueFormatLabels[key] || key}
+                                        {formatOptionsLabel(key) || key}
                                         {disabled && ' (must be logged in)'}
                                     </MenuItem>
                                 );
