@@ -1,4 +1,7 @@
-import { IRegisteredCosmeticOption } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import {
+    IFindUserResponse, IModActionResponse,
+    IRegisteredCosmeticOption
+} from '../_components/_sharedcomponents/Preferences/Preferences.types';
 
 
 /**
@@ -144,5 +147,62 @@ export class ServerApiService {
         });
 
         return response.success;
+    }
+
+    public static async findUserAsync(searchQuery: string): Promise<IFindUserResponse> {
+        return await this.fetchWithErrorHandling<IFindUserResponse>(
+            `${this.baseUrl}/api/mod/find-user`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ searchQuery }),
+            }
+        );
+    }
+
+    public static async submitModActionAsync(
+        playerId: string,
+        actionType: string,
+        note: string,
+        durationDays?: number,
+    ): Promise<{ success: boolean; message: string; modAction: IModActionResponse }> {
+        return await this.fetchWithErrorHandling<{
+            success: boolean;
+            message: string;
+            modAction: IModActionResponse;
+        }>(
+            `${this.baseUrl}/api/mod/submit-action`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ playerId, actionType, note, durationDays }),
+            }
+        );
+    }
+
+    public static async cancelModActionAsync(
+        playerId: string,
+        modActionId: string,
+    ): Promise<{ success: boolean; message: string }> {
+        return await this.fetchWithErrorHandling<{
+            success: boolean;
+            message: string;
+        }>(
+            `${this.baseUrl}/api/mod/cancel-action`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ playerId, modActionId }),
+            }
+        );
+    }
+
+    public static async getModActionsForPlayerAsync(
+        playerId: string,
+    ): Promise<IFindUserResponse> {
+        return await this.fetchWithErrorHandling<IFindUserResponse>(
+            `${this.baseUrl}/api/mod/find-user`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ searchQuery: playerId }),
+            }
+        );
     }
 }
