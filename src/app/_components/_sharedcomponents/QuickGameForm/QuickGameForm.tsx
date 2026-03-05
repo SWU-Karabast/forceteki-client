@@ -3,8 +3,10 @@ import {
     Box,
     Button,
     Checkbox,
+    CircularProgress,
     FormControl,
     FormControlLabel,
+    IconButton,
     Link,
     MenuItem,
     Radio,
@@ -12,6 +14,7 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
+import { Sync as SyncIcon } from '@mui/icons-material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
@@ -27,7 +30,8 @@ import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes'
 import {
     getUserPayload,
     saveDeckToLocalStorage,
-    saveDeckToServer
+    saveDeckToServer,
+    ISwuStatsDeckItem
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 
@@ -61,6 +65,12 @@ interface IQuickGameFormProps {
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
     isBo3Allowed: boolean;
+    // SWU Stats integration props
+    swuStatsDecks: ISwuStatsDeckItem[];
+    isSwuStatsLinked: boolean;
+    useSwuStatsDecks: boolean;
+    toggleDeckSource: () => void;
+    isLoadingSwuStatsDecks: boolean;
 }
 
 const QuickGameForm: React.FC<IQuickGameFormProps> = ({
@@ -76,7 +86,13 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     clearErrors,
     setIsJsonDeck,
     setModalOpen,
-    isBo3Allowed
+    isBo3Allowed,
+    // SWU Stats integration
+    swuStatsDecks,
+    isSwuStatsLinked,
+    useSwuStatsDecks,
+    toggleDeckSource,
+    isLoadingSwuStatsDecks
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -141,13 +157,22 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     // Handle Create Game Submission
     const handleJoinGameQueueActual = async () => {
         setQueueState(true);
-        // Get the deck link - either from selected favorite or direct input
+        // Get the deck link - either from selected favorite, SWU Stats deck, or direct input
         let userDeck = '';
         let deckType = 'url';
         if(showSavedDecks) {
-            const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
-            if (selectedDeck?.deckLink) {
-                userDeck = selectedDeck.deckLink;
+            if (useSwuStatsDecks && isSwuStatsLinked) {
+                // Use SWU Stats deck
+                const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
+                if (selectedSwuStatsDeck?.deckLink) {
+                    userDeck = selectedSwuStatsDeck.deckLink;
+                }
+            } else {
+                // Use saved deck from Karabast
+                const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
+                if (selectedDeck?.deckLink) {
+                    userDeck = selectedDeck.deckLink;
+                }
             }
         } else {
             userDeck = deckLink;
@@ -161,9 +186,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 if(favoriteDeck && deckData && showSavedDecks) {
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
-                    deckData.isPresentInDb = !!user;
+                    // SWU Stats decks are not stored in our DB
+                    deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
                 }else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck
+
                     deckData.isPresentInDb = false;
                 }
             }else if(parsedInput.type === 'json') {
@@ -316,8 +343,87 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             display: 'flex',
             justifyContent: 'start',
             width: '100%',
+        },
+        deckSourceLabel: {
+            color: '#aaa',
+            fontSize: '0.85rem',
+        },
+        loadingContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
         }
     }
+
+    // Render SWU Stats decks dropdown
+    const renderSwuStatsDecksDropdown = () => {
+        if (isLoadingSwuStatsDecks) {
+            return (
+                <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                    <Typography sx={{ color: '#aaa' }}>Loading SWU Stats decks...</Typography>
+                </Box>
+            );
+        }
+
+        // Sort decks with favorites first
+        const sortedSwuStatsDecks = [...swuStatsDecks].sort((a, b) => {
+            if (a.isFavorite && !b.isFavorite) return -1;
+            if (!a.isFavorite && b.isFavorite) return 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        return (
+            <StyledTextField
+                select
+                value={favoriteDeck}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setFavoriteDeck(e.target.value as string)
+                }
+                disabled={userLoading || isLoadingSwuStatsDecks}
+                placeholder="SWU Stats Decks"
+            >
+                {sortedSwuStatsDecks.length === 0 ? (
+                    <MenuItem value="" disabled>
+                        No decks found on SWU Stats
+                    </MenuItem>
+                ) : (
+                    sortedSwuStatsDecks.map((deck) => (
+                        <MenuItem key={deck.id} value={deck.id.toString()}>
+                            {deck.isFavorite ? '★ ' : ''}{deck.name}
+                        </MenuItem>
+                    ))
+                )}
+            </StyledTextField>
+        );
+    };
+
+    // Render Karabast saved decks dropdown
+    const renderKarabastDecksDropdown = () => (
+        <StyledTextField
+            select
+            value={favoriteDeck}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFavoriteDeck(e.target.value as string)
+            }
+            disabled={userLoading}
+            placeholder="Favorite Decks"
+        >
+            {savedDecks.length === 0 ? (
+                <MenuItem value="" disabled>
+                    No saved decks found
+                </MenuItem>
+            ) : (
+                savedDecks.map((deck) => (
+                    <MenuItem key={deck.deckID} value={deck.deckID}>
+                        {deck.favourite ? '★ ' : ''}{deck.name}
+                    </MenuItem>
+                ))
+            )}
+        </StyledTextField>
+    );
+
     return (
         <Box >
             <Typography variant="h2">
@@ -355,36 +461,57 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 </FormControl>
                 {showSavedDecks && (
                     <FormControl fullWidth sx={styles.formControlStyle}>
-                        {/* Favourite Decks Input */}
-                        <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
-                        <StyledTextField
-                            select
-                            value={favoriteDeck}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setFavoriteDeck(e.target.value as string)
-                            }
-                            disabled={userLoading}
-                            placeholder="Favorite Decks"
-                        >
-                            {savedDecks.length === 0 ? (
-                                <MenuItem value="" disabled>
-                                    No saved decks found
-                                </MenuItem>
-                            ) : (
-                                savedDecks.map((deck) => (
-                                    <MenuItem key={deck.deckID} value={deck.deckID}>
-                                        {deck.favourite ? '★ ' : ''}{deck.name}
-                                    </MenuItem>
-                                ))
+                        {/* Deck Dropdown with Cycle Button */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: '0.5rem' }}>
+                            <Typography variant="body1" sx={styles.labelTextStyle}>
+                                {useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Decks' : 'Favorite Decks'}
+                            </Typography>
+                            
+                            {isSwuStatsLinked && (
+                                <Tooltip title={`Switch to ${useSwuStatsDecks ? 'Karabast' : 'SWU Stats'} decks`}>
+                                    <IconButton
+                                        onClick={toggleDeckSource}
+                                        size="small"
+                                        sx={{
+                                            color: useSwuStatsDecks ? '#4CAF50' : '#fff',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                            },
+                                        }}
+                                    >
+                                        <SyncIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
                             )}
-                        </StyledTextField>
+                        </Box>
+                        
+                        {useSwuStatsDecks && isSwuStatsLinked 
+                            ? renderSwuStatsDecksDropdown()
+                            : renderKarabastDecksDropdown()
+                        }
+                        
                         <Box sx={styles.manageDecksContainer}>
-                            <Button
-                                onClick={handleDeckManagement}
-                                sx={styles.manageDecks}
-                            >
-                                Manage&nbsp;Decks
-                            </Button>
+                            {(!useSwuStatsDecks || !isSwuStatsLinked) && (
+                                <Button
+                                    onClick={handleDeckManagement}
+                                    sx={styles.manageDecks}
+                                >
+                                    Manage&nbsp;Decks
+                                </Button>
+                            )}
+                            {useSwuStatsDecks && isSwuStatsLinked && (
+                                <Typography sx={{ ...styles.deckSourceLabel, mt: '0.5rem' }}>
+                                    Manage decks on{' '}
+                                    <Link 
+                                        href="https://swustats.net" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        sx={{ color: 'lightblue' }}
+                                    >
+                                        swustats.net
+                                    </Link>
+                                </Typography>
+                            )}
                         </Box>
                     </FormControl>
                 ) || (

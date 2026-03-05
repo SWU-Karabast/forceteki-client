@@ -71,7 +71,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         moderation: serverUser.moderation,
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
                     });
-                    update({ userId: serverUser.id });
+                    await update({ userId: serverUser.id });
                     // Fetch mod status
                     const modStatus = await import('@/app/_services/ServerApiService').then(m => m.ServerApiService.userIsModAsync());
                     setIsMod(await modStatus);
