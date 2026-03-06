@@ -7,6 +7,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_subComponents/Bo3ScoreDisplay';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType, RematchMode } from '@/app/_constants/constants';
@@ -20,6 +21,7 @@ interface IProps {
 function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType }: IProps) {
     const router = useRouter();
     const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent, isAnonymousPlayer } = useGame();
+    const { user } = useUser();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [confirmConcedeBo3, setConfirmConcedeBo3] = useState<boolean>(false);
@@ -30,6 +32,8 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
     const isAnonymousOpponent = isAnonymousPlayer(opponentId);
     const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
     const canReportBug = !isAnonymousPlayer(connectedPlayer);
+    const isReportingDisabled = !!user?.reportingDisabled;
+    const reportingDisabledText = 'Reporting has been disabled for your account';
 
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest || null;
@@ -361,10 +365,10 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report Bug'}
                                 buttonFnc={handleOpenBugReport}
                                 sx={{ minWidth: '140px' }}
-                                disabled={!canReportBug}
+                                disabled={!canReportBug || isReportingDisabled}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                {canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
+                                {isReportingDisabled ? reportingDisabledText : canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
                             </Typography>
                         </Box>
                         <Box sx={styles.contentContainer}>
@@ -373,14 +377,15 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report opponent'}
                                 buttonFnc={handleOpenPersonReport}
                                 sx={{ minWidth: '140px' }}
-                                disabled={!canReportOpponent}
+                                disabled={!canReportOpponent || isReportingDisabled}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                {isAnonymousPlayer(connectedPlayer)
-                                    ? 'Please log in to submit reports'
-                                    : isAnonymousOpponent
-                                        ? 'Cannot submit reports for anonymous opponents'
-                                        : 'Report opponent to the developer team'
+                                {isReportingDisabled ? reportingDisabledText
+                                    : isAnonymousPlayer(connectedPlayer)
+                                        ? 'Please log in to submit reports'
+                                        : isAnonymousOpponent
+                                            ? 'Cannot submit reports for anonymous opponents'
+                                            : 'Report opponent to the developer team'
                                 }
                             </Typography>
                         </Box>
@@ -485,10 +490,10 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report Bug'}
                                 buttonFnc={handleOpenBugReport}
                                 sx={{ minWidth: '140px' }}
-                                disabled={!canReportBug}
+                                disabled={!canReportBug || isReportingDisabled}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                {canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
+                                {isReportingDisabled ? reportingDisabledText : canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
                             </Typography>
                         </Box>
                         <Box sx={styles.contentContainer}>
@@ -497,14 +502,15 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report opponent'}
                                 buttonFnc={handleOpenPersonReport}
                                 sx={{ minWidth: '140px' }}
-                                disabled={!canReportOpponent}
+                                disabled={!canReportOpponent || isReportingDisabled}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                {isAnonymousPlayer(connectedPlayer)
-                                    ? 'Please log in to submit reports'
-                                    : isAnonymousOpponent
-                                        ? 'Cannot submit reports for anonymous opponents'
-                                        : 'Report opponent to the developer team'
+                                {isReportingDisabled ? reportingDisabledText
+                                    : isAnonymousPlayer(connectedPlayer)
+                                        ? 'Please log in to submit reports'
+                                        : isAnonymousOpponent
+                                            ? 'Cannot submit reports for anonymous opponents'
+                                            : 'Report opponent to the developer team'
                                 }
                             </Typography>
                         </Box>
