@@ -19,8 +19,6 @@ import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
-    Switch,
-    FormControlLabel
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Image from 'next/image';
@@ -75,7 +73,6 @@ const ModPageClient = () => {
     const [cosmeticType, setCosmeticType] = useState<RegisteredCosmeticType>(RegisteredCosmeticType.Cardback);
     const [cosmeticTitle, setCosmeticTitle] = useState('');
     const [cosmeticId, setCosmeticId] = useState(() => uuidv4());
-    const [isDarkened, setIsDarkened] = useState(true);
 
     // Validation rules for different cosmetic types
     const validationRules: ValidationRules = {
@@ -300,7 +297,6 @@ const ModPageClient = () => {
             formData.append('cosmeticId', uuidv4());
             formData.append('cosmeticTitle', cosmeticTitle);
             formData.append('cosmeticType', cosmeticType);
-            formData.append('isDarkened', String(isDarkened));
 
             const response = await fetch('/api/admin/cosmetics/upload-file', {
                 method: 'POST',
@@ -335,7 +331,6 @@ const ModPageClient = () => {
         setCosmeticType(RegisteredCosmeticType.Cardback);
         setCosmeticTitle('');
         setCosmeticId(uuidv4());
-        setIsDarkened(true);
         setUploadError(null);
         setUploadSuccess(false);
     };
@@ -718,40 +713,6 @@ const ModPageClient = () => {
                             fullWidth
                         />
                     </FormControl>
-                    {/* Show darkened toggle for background and playmat types */}
-                    {(cosmeticType === 'background') && (
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={isDarkened}
-                                    onChange={(e) => setIsDarkened(e.target.checked)}
-                                    disabled={uploadLoading}
-                                    sx={{
-                                        '& .MuiSwitch-switchBase.Mui-checked': {
-                                            color: '#1976d2',
-                                        },
-                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                            backgroundColor: '#1976d2',
-                                        },
-                                    }}
-                                />
-                            }
-                            label={
-                                <Box>
-                                    <Typography variant="body2" color="white">
-                                        Apply darkening effect
-                                    </Typography>
-                                    <Typography variant="caption" color="white">
-                                        {cosmeticType === 'background'
-                                            ? 'Darkens the background for better text readability in-game'
-                                            : 'Darkens the playmat to reduce visual distraction during gameplay'
-                                        }
-                                    </Typography>
-                                </Box>
-                            }
-                            sx={{ alignItems: 'flex-start', mb: 2 }}
-                        />
-                    )}
 
                     <Box>
                         <input
@@ -814,19 +775,6 @@ const ModPageClient = () => {
                                         zIndex: 1
                                     }}
                                 />
-                                {(cosmeticType === 'background') && isDarkened && (
-                                    <Box sx={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        width: '100%',
-                                        height: '100%',
-                                        backgroundColor: 'rgba(10, 10, 10, 0.57)',
-                                        borderRadius: '8px',
-                                        pointerEvents: 'none',
-                                        zIndex: 2
-                                    }} />
-                                )}
                             </Box>
                         </Box>
                     )}

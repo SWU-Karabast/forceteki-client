@@ -67,7 +67,6 @@ export interface IRegisteredCosmeticOption {
     title: string;
     type: RegisteredCosmeticType;
     path: string;
-    darkened?: boolean;
 }
 
 export interface IRegisteredCosmetics {
