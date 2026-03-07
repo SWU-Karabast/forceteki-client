@@ -198,7 +198,7 @@ function GeneralTab() {
         }
     }, [user]);
 
-    const isSubmitDisabled = !usernameChangeable || !canSubmitClientSide || username.trim() === (user?.username || '').trim();
+    const isSubmitDisabled = !!user?.mustRequestUsernameChange || !usernameChangeable || !canSubmitClientSide || username.trim() === (user?.username || '').trim();
 
 
     const styles = {
@@ -327,33 +327,50 @@ function GeneralTab() {
                                         Change Username
                                     </Button>
                                 </Box>
-                                <Box sx={styles.messageContainer}>
-                                    {userErrorSummary && !successfulUsernameChange ? (
-                                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                                            {userErrorSummary}
-                                            {deckErrorDetails && (
-                                                <Link
-                                                    sx={styles.errorMessageLink}
-                                                    onClick={() => setErrorModalOpen(true)}
-                                                >Details
-                                                </Link>
-                                            )}
-                                        </Typography>
-                                    ) : successfulUsernameChange ? (
-                                        <Typography variant={'body2'} sx={styles.successMessageStyle}>
-                                            Username successfully changed!
-                                        </Typography>
-                                    ) : userUsernameInfo ? (
-                                        <Typography variant={'body2'} sx={styles.userUsernameInfoStyle}>
-                                            {userUsernameInfo}
-                                        </Typography>
-                                    ) : null}
-                                </Box>
+                                {!user?.mustRequestUsernameChange && (
+                                    <>
+                                        <Box sx={styles.messageContainer}>
+                                            {userErrorSummary && !successfulUsernameChange ? (
+                                                <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                                    {userErrorSummary}
+                                                    {deckErrorDetails && (
+                                                        <Link
+                                                            sx={styles.errorMessageLink}
+                                                            onClick={() => setErrorModalOpen(true)}
+                                                        >Details
+                                                        </Link>
+                                                    )}
+                                                </Typography>
+                                            ) : successfulUsernameChange ? (
+                                                <Typography variant={'body2'} sx={styles.successMessageStyle}>
+                                                    Username successfully changed!
+                                                </Typography>
+                                            ) : userUsernameInfo ? (
+                                                <Typography variant={'body2'} sx={styles.userUsernameInfoStyle}>
+                                                    {userUsernameInfo}
+                                                </Typography>
+                                            ) : null}
+                                        </Box>
 
-                                <Typography variant="body2" sx={{ mt: 2, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
-                                    You can change your username as many times as you want during the <strong>first week after account creation</strong>.
-                                    After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
-                                </Typography>
+                                        <Typography variant="body2" sx={{ mt: 2, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                            You can change your username as many times as you want during the <strong>first week after account creation</strong>.
+                                            After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
+                                        </Typography>
+                                    </>
+                                )}
+                                {user?.mustRequestUsernameChange && (
+                                    <Typography variant="body2" sx={{ mt: 1, color: '#F87171', fontSize: '0.95rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                        Your account has been restricted from changing your username. To request a new username, please open a ticket on our{' '}
+                                        <Link
+                                            href="https://discord.com/channels/1220057752961814568/1417680409151410226/1418301240525193348"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            sx={{ color: 'inherit', textDecoration: 'underline' }}
+                                        >
+                                            discord player ticketing channel
+                                        </Link>.
+                                    </Typography>
+                                )}
                             </Box>
                             <Typography variant={'h3'} sx={{ mt: user ? '2rem' : '1rem' }}>Player ID</Typography>
                             <Box sx={{ ...styles.boxStyle }}>

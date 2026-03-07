@@ -247,6 +247,58 @@ export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean
     }
 }
 
+export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-must-request-username-change-seen`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+export const setReportingDisabledSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-reporting-disabled-seen`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean, user: IUser): Promise<void> => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/deck/${deckId}/favorite`, {

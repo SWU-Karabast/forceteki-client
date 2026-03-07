@@ -488,10 +488,16 @@ const Chat: React.FC<IChatProps> = ({
                                     </Box>
                                 </Box>
                                 {canReportOpponent && (
-                                    <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
+                                    <Box
+                                        sx={{
+                                            ...styles.optionItem,
+                                            ...(user?.reportingDisabled ? { opacity: 0.5, cursor: 'default', '&:hover': {} } : {})
+                                        }}
+                                        onClick={user?.reportingDisabled ? undefined : handleOpenPersonReport}
+                                    >
                                         <Box sx={styles.optionLabel}>
                                             <ReportProblem sx={styles.optionIcon} />
-                                            <span>Report Opponent</span>
+                                            <span>{user?.reportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</span>
                                         </Box>
                                     </Box>
                                 )}
@@ -508,10 +514,16 @@ const Chat: React.FC<IChatProps> = ({
                                     </Box>
                                 </Box>
                                 {canReportOpponent && (
-                                    <Box sx={styles.optionItem} onClick={handleOpenPersonReport}>
+                                    <Box
+                                        sx={{
+                                            ...styles.optionItem,
+                                            ...(user?.reportingDisabled ? { opacity: 0.5, cursor: 'default', '&:hover': {} } : {})
+                                        }}
+                                        onClick={user?.reportingDisabled ? undefined : handleOpenPersonReport}
+                                    >
                                         <Box sx={styles.optionLabel}>
                                             <ReportProblem sx={styles.optionIcon} />
-                                            <span>Report Opponent</span>
+                                            <span>{user?.reportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</span>
                                         </Box>
                                     </Box>
                                 )}
