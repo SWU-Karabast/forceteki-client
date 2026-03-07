@@ -546,10 +546,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     </RadioGroup>
                 </FormControl>
 
-                {/* Beta Announcement */}
-                <Typography variant="body1" sx={{ color: 'orange', textAlign: 'center', mb: '1rem' }}>
+                {/* <Typography variant="body1" sx={{ color: 'orange', textAlign: 'center', mb: '1rem' }}>
                     Next Set Preview format is now available!
-                </Typography>
+                </Typography> */}
 
                 {!privateGame && (
                     <>
