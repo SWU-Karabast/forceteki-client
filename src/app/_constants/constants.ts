@@ -1,5 +1,7 @@
 import { DeckSource } from '../_utils/fetchDeckData';
 
+export const ENABLE_NEXT_SET_PREVIEW = false;
+
 export enum MatchmakingType {
     PublicLobby= 'publicLobby',
     PrivateLobby = 'privateLobby',
@@ -30,7 +32,7 @@ export interface IQueueFormat {
     gamesToWinMode: GamesToWinMode;
 }
 
-export const QueueFormatOptions: Record<string, IQueueFormat> = {
+const AllQueueFormatOptions: Record<string, IQueueFormat> = {
     premierBo1: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfOne },
     premierBo3: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfThree },
     nextSetPreviewBo1: { format: SwuGameFormat.NextSetPreview, gamesToWinMode: GamesToWinMode.BestOfOne },
@@ -39,7 +41,7 @@ export const QueueFormatOptions: Record<string, IQueueFormat> = {
     openBo3: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfThree },
 };
 
-export const QueueFormatLabels: Record<string, string> = {
+const AllQueueFormatLabels: Record<string, string> = {
     premierBo1: 'Premier Best-of-One',
     premierBo3: 'Premier Best-of-Three',
     nextSetPreviewBo1: 'Next Set Preview Best-of-One',
@@ -47,6 +49,17 @@ export const QueueFormatLabels: Record<string, string> = {
     openBo1: 'Open Best-of-One',
     openBo3: 'Open Best-of-Three',
 };
+
+const filterNextSetPreview = (options: Record<string, IQueueFormat>) =>
+    Object.fromEntries(Object.entries(options).filter(([, v]) => v.format !== SwuGameFormat.NextSetPreview));
+
+export const QueueFormatOptions: Record<string, IQueueFormat> = ENABLE_NEXT_SET_PREVIEW
+    ? AllQueueFormatOptions
+    : filterNextSetPreview(AllQueueFormatOptions);
+
+export const QueueFormatLabels: Record<string, string> = ENABLE_NEXT_SET_PREVIEW
+    ? AllQueueFormatLabels
+    : Object.fromEntries(Object.entries(AllQueueFormatLabels).filter(([key]) => key in QueueFormatOptions));
 
 export const DefaultQueueFormatKey = 'premierBo1';
 
