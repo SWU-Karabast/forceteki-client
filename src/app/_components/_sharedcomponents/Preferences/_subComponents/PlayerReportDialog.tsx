@@ -392,7 +392,7 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
                 )}
             </DialogContent>
             <DialogActions sx={reportDialogStyles.dialogActions}>
-                {success ? (
+                {(success || isSpectator) ? (
                     <PreferenceButton
                         buttonFnc={handleClose}
                         variant="standard"
