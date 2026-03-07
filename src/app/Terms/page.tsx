@@ -22,7 +22,8 @@ const tosBlocks = [
         'The Site reserves the right to mute, suspend, or otherwise restrict accounts that violate the rules below, at its sole discretion, for any duration deemed appropriate.',
         'Users must not use slurs or vulgarity in text chat or in usernames.',
         'Harassment or abusive behavior towards other users in text chat is prohibited.',
-        'Impersonation of other users, moderators, or administrators is prohibited.'
+        'Impersonation of other users, moderators, or administrators is prohibited.',
+        'Abusive language or profanity in submitted bug reports or player reports is prohibited.'
     ] },
     { type: 'heading', text: 'Decks' },
     { type: 'ol', items: [
