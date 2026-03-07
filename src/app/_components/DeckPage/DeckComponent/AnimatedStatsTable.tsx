@@ -277,6 +277,17 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
             <Typography>{children}</Typography>
         </TableCell>
     }
+    function GetCommonBaseTooltip(baseId: string) {
+        if (baseId.startsWith('30hp')) {
+            return 'Basic 30 HP Base';
+        } else if (baseId.startsWith('28hp')) {
+            return 'Basic 28 HP Force Base';
+        } else if (baseId.startsWith('27hp')) {
+            return 'Basic 27 HP Aspect Penalty Base';
+        }
+
+        return null;
+    }
 
     return (
         <Box sx={styles.tableContainer}>
@@ -319,10 +330,10 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                             <TableCell sx={{ borderBottom: 'none' }}>
                                 <Box sx={styles.leaderBaseHolder}>
                                     <Box sx={styles.CardSetContainerStyle}>
-                                        {row.baseId?.startsWith('30hp') || row.baseId?.startsWith('28hp') ? (
+                                        {row.baseId?.startsWith('30hp') || row.baseId?.startsWith('28hp') || row.baseId?.startsWith('27hp') ? (
                                             <Box>
                                                 <Box sx={{ ...styles.parentBoxStyling, left: '55px', top: '10px', zIndex:'1' }}>
-                                                    <Tooltip title={row.baseId?.startsWith('30') ? 'Basic 30hp Base' : 'Basic 28hp Force Base'}>
+                                                    <Tooltip title={GetCommonBaseTooltip(row.baseId)}>
                                                         <Box
                                                             sx={{ ...styles.boxBasicBaseStyling, backgroundImage: `url(/${row.baseId}.png)` }}
                                                         />
