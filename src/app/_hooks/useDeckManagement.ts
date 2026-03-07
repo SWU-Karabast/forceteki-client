@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SwuGameFormat, GamesToWinMode, DefaultQueueFormatKey, QueueFormatOptions } from '@/app/_constants/constants';
+import { ENABLE_NEXT_SET_PREVIEW, SwuGameFormat, GamesToWinMode, DefaultQueueFormatKey, QueueFormatOptions } from '@/app/_constants/constants';
 import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
@@ -48,7 +48,9 @@ export const useDeckManagement = (): IDeckManagementState => {
     const [format, setFormat] = useState<SwuGameFormat>(() => {
         const stored = localStorage.getItem('format');
 
-        if (stored !== SwuGameFormat.Premier && stored !== SwuGameFormat.Open && stored !== SwuGameFormat.NextSetPreview) {
+        const validFormats: string[] = [SwuGameFormat.Premier, SwuGameFormat.Open];
+        if (ENABLE_NEXT_SET_PREVIEW) validFormats.push(SwuGameFormat.NextSetPreview);
+        if (!validFormats.includes(stored ?? '')) {
             return SwuGameFormat.Premier;
         }
 
