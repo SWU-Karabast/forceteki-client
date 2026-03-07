@@ -9,7 +9,8 @@ export enum MatchmakingType {
 export enum SwuGameFormat {
     Premier = 'premier',
     NextSetPreview = 'nextSetPreview',
-    Open = 'open'
+    Open = 'open',
+    Eternal = 'eternal',
 }
 
 export enum GamesToWinMode {
@@ -35,31 +36,35 @@ export const QueueFormatOptions: Record<string, IQueueFormat> = {
     premierBo3: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfThree },
     nextSetPreviewBo1: { format: SwuGameFormat.NextSetPreview, gamesToWinMode: GamesToWinMode.BestOfOne },
     nextSetPreviewBo3: { format: SwuGameFormat.NextSetPreview, gamesToWinMode: GamesToWinMode.BestOfThree },
+    eternalBo1: { format: SwuGameFormat.Eternal, gamesToWinMode: GamesToWinMode.BestOfOne },
+    eternalBo3: { format: SwuGameFormat.Eternal, gamesToWinMode: GamesToWinMode.BestOfThree },
+};
+
+export const LobbyFormatOptions: Record<string, IQueueFormat> = {
+    ...QueueFormatOptions,
     openBo1: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfOne },
     openBo3: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfThree },
 };
 
-export const QueueFormatLabels: Record<string, string> = {
-    premierBo1: 'Premier Best-of-One',
-    premierBo3: 'Premier Best-of-Three',
-    nextSetPreviewBo1: 'Next Set Preview Best-of-One',
-    nextSetPreviewBo3: 'Next Set Preview Best-of-Three',
-    openBo1: 'Open Best-of-One',
-    openBo3: 'Open Best-of-Three',
-};
-
 export const DefaultQueueFormatKey = 'premierBo1';
+
+export const GamesToWinModeLabels: Record<GamesToWinMode, string> = {
+    [GamesToWinMode.BestOfOne]: 'Best-of-One',
+    [GamesToWinMode.BestOfThree]: 'Best-of-Three',
+}
 
 export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
     [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
     [SwuGameFormat.Open]: 'Open',
+    [SwuGameFormat.Eternal]: 'Eternal',
 };
 
 export const FormatTagLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
     [SwuGameFormat.NextSetPreview]: 'Next Set',
     [SwuGameFormat.Open]: 'Open',
+    [SwuGameFormat.Eternal]: 'Eternal',
 };
 
 export const SupportedDeckSources = Object.values(DeckSource)
