@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
+import { IUserContextType, IPreferences, IModerationAction, ModerationFieldState } from './UserTypes';
 import { v4 as uuid } from 'uuid';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 
@@ -24,6 +24,8 @@ const UserContext = createContext<IUserContextType>({
     updateUsername: () => {},
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
+    updateMustRequestUsernameChangeSeen: () => {},
+    updateReportingDisabledSeen: () => {},
     updateUserPreferences: () => {},
     updateModerationSeenStatus: () => {},
     updateUndoPopupSeenDate: () => {}
@@ -68,6 +70,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         authenticated: true,
                         preferences: serverUser.preferences,
                         needsUsernameChange: serverUser.needsUsernameChange,
+                        mustRequestUsernameChange: serverUser.mustRequestUsernameChange,
+                        reportingDisabled: serverUser.reportingDisabled,
                         moderation: serverUser.moderation,
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
                     });
@@ -124,6 +128,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         if (user === 'Order66') {
             setUser({
                 needsUsernameChange: false,
+                mustRequestUsernameChange: null,
+                reportingDisabled: null,
                 showWelcomeMessage: false,
                 id: 'exe66',
                 username: 'Order66',
@@ -133,6 +139,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         } else if (user === 'ThisIsTheWay') {
             setUser({
                 needsUsernameChange: false,
+                mustRequestUsernameChange: null,
+                reportingDisabled: null,
                 showWelcomeMessage: false,
                 id: 'th3w4y',
                 username: 'ThisIsTheWay',
@@ -178,6 +186,26 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             return {
                 ...prevUser,
                 needsUsernameChange: false
+            }
+        })
+    }
+
+    const updateMustRequestUsernameChangeSeen = () => {
+        setUser((prevUser) => {
+            if(!prevUser) return null;
+            return {
+                ...prevUser,
+                mustRequestUsernameChange: ModerationFieldState.EnabledAndSeen
+            }
+        })
+    }
+
+    const updateReportingDisabledSeen = () => {
+        setUser((prevUser) => {
+            if(!prevUser) return null;
+            return {
+                ...prevUser,
+                reportingDisabled: ModerationFieldState.EnabledAndSeen
             }
         })
     }
@@ -235,6 +263,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             updateWelcomeMessage,
             updateUndoPopupSeenDate,
             updateNeedsUsernameChange,
+            updateMustRequestUsernameChangeSeen,
+            updateReportingDisabledSeen,
             updateUserPreferences,
             updateModerationSeenStatus
         }}>
