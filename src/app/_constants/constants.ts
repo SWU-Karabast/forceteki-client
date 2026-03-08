@@ -13,6 +13,8 @@ export enum SwuGameFormat {
     Eternal = 'eternal',
 }
 
+export const NewGameFormatAvailable: SwuGameFormat | undefined = SwuGameFormat.Eternal;
+
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
     BestOfThree = 'bestOfThree',

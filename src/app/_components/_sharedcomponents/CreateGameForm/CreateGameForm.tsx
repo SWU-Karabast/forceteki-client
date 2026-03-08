@@ -21,7 +21,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, LobbyFormats, IQueueFormat, DefaultFormat } from '@/app/_constants/constants';
+import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, LobbyFormats, IQueueFormat, DefaultFormat, FormatLabels, NewGameFormatAvailable } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -31,6 +31,8 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
+import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
+import NextSetPreviewAnnouncement from '../../NextSetPreviewAnnouncement/NextSetPreviewAnnouncement';
 
 interface IDeckPreferences {
     showSavedDecks: boolean;
@@ -518,9 +520,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </FormControl>
 
                 {/* Beta Announcement */}
-                <Typography variant="body1" sx={{ color: 'orange', textAlign: 'center', mb: '1rem' }}>
-                    Next Set Preview format is now available!
-                </Typography>
+                { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} />}
+                { false && <NextSetPreviewAnnouncement /> }
 
                 {!privateGame && (
                     <>
