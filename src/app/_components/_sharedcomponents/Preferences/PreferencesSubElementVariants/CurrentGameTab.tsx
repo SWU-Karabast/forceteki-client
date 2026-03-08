@@ -9,6 +9,7 @@ import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_subComponents/Bo3ScoreDisplay';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
 import { useRouter } from 'next/navigation';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 import { GamesToWinMode, Bo3SetEndedReason, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
@@ -22,6 +23,7 @@ enum PhaseName {
 
 function CurrentGameTab() {
     const { sendGameMessage, getOpponent, connectedPlayer, gameState, isSpectator, lobbyState, isAnonymousPlayer } = useGame();
+    const { user } = useUser();
     const isDev = process.env.NODE_ENV === 'development';
     const router = useRouter();
     const currentPlayer = gameState.players[connectedPlayer];
@@ -38,6 +40,8 @@ function CurrentGameTab() {
     const isAnonymousOpponent = isAnonymousPlayer(opponentId);
     const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
     const canReportBug = !isAnonymousPlayer(connectedPlayer);
+    const isReportingDisabled = !!user?.reportingDisabled;
+    const reportingDisabledText = 'Reporting has been disabled for your account';
 
     // Bo3 state from lobbyState
     const winHistory = lobbyState?.winHistory || null;
@@ -301,10 +305,10 @@ function CurrentGameTab() {
                         text={'Report Bug'}
                         buttonFnc={handleOpenBugReport}
                         sx={{ minWidth: '140px' }}
-                        disabled={!canReportBug}
+                        disabled={!canReportBug || isReportingDisabled}
                     />
                     <Typography sx={styles.typeographyStyle}>
-                        { canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports' }
+                        {isReportingDisabled ? reportingDisabledText : canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
                     </Typography>
                 </Box>
             
@@ -315,14 +319,15 @@ function CurrentGameTab() {
                         text={'Report Opponent'}
                         buttonFnc={handleOpenPlayerReport}
                         sx={{ minWidth: '140px' }}
-                        disabled ={!canReportOpponent}
+                        disabled ={!canReportOpponent || isReportingDisabled}
                     />
                     <Typography sx={styles.typeographyStyle}>
-                        {isAnonymousPlayer(connectedPlayer)
-                            ? 'Please log in to submit reports'
-                            : isAnonymousOpponent
-                                ? 'Cannot submit reports for anonymous opponents'
-                                : 'Report opponent to the developer team'
+                        {isReportingDisabled ? reportingDisabledText
+                            : isAnonymousPlayer(connectedPlayer)
+                                ? 'Please log in to submit reports'
+                                : isAnonymousOpponent
+                                    ? 'Cannot submit reports for anonymous opponents'
+                                    : 'Report opponent to the developer team'
                         }
                     </Typography>
                 </Box>
