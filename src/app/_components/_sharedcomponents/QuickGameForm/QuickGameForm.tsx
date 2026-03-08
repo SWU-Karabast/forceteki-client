@@ -193,7 +193,6 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 format: queueFormat.format,
                 gamesToWinMode: queueFormat.gamesToWinMode,
             };
-            console.log('Payload: ', JSON.stringify(payload));
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
                     method: 'POST',
