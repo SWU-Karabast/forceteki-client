@@ -99,7 +99,7 @@ const Chat: React.FC<IChatProps> = ({
     const isPrivateLobby = lobbyState?.gameType === 'Private';
     const didCurrentUserMuteChat = lobbyState?.userWhoMutedChat === connectedPlayer;
     const opponentId = getOpponent(connectedPlayer);
-    const oppenent = lobbyState?.users.find((u: ILobbyUserProps) => u.id === opponentId);
+    const opponent = lobbyState?.users.find((u: ILobbyUserProps) => u.id === opponentId);
     const isAnonymousOpponent = isAnonymousPlayer(opponentId);
     const opponentChatDisabled = hasChatDisabled(opponentId);
     const chatDisabledInfo = getChatDisabledInfo();
@@ -539,7 +539,7 @@ const Chat: React.FC<IChatProps> = ({
 
             {opponentIsTyping && (
                 <Box sx={styles.typingState.container}>
-                    <Typography sx={styles.typingState.typography}>{oppenent.username} is typing...</Typography>
+                    <Typography sx={styles.typingState.typography}>{opponent?.username} is typing...</Typography>
                 </Box>
             )}
 
