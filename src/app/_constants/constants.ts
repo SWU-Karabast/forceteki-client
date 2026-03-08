@@ -31,22 +31,23 @@ export interface IQueueFormat {
     gamesToWinMode: GamesToWinMode;
 }
 
-export const QueueFormatOptions: Record<string, IQueueFormat> = {
-    premierBo1: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfOne },
-    premierBo3: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfThree },
-    nextSetPreviewBo1: { format: SwuGameFormat.NextSetPreview, gamesToWinMode: GamesToWinMode.BestOfOne },
-    nextSetPreviewBo3: { format: SwuGameFormat.NextSetPreview, gamesToWinMode: GamesToWinMode.BestOfThree },
-    eternalBo1: { format: SwuGameFormat.Eternal, gamesToWinMode: GamesToWinMode.BestOfOne },
-    eternalBo3: { format: SwuGameFormat.Eternal, gamesToWinMode: GamesToWinMode.BestOfThree },
-};
+export const DefaultFormat: IQueueFormat = {
+    format: SwuGameFormat.Premier,
+    gamesToWinMode: GamesToWinMode.BestOfOne,
+}
 
-export const LobbyFormatOptions: Record<string, IQueueFormat> = {
-    ...QueueFormatOptions,
-    openBo1: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfOne },
-    openBo3: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfThree },
-};
+export const LobbyFormats: SwuGameFormat[] = [
+    SwuGameFormat.Premier,
+    SwuGameFormat.NextSetPreview,
+    SwuGameFormat.Eternal,
+    SwuGameFormat.Open,
+];
 
-export const DefaultQueueFormatKey = 'premierBo1';
+export const QueueFormats: SwuGameFormat[] = [
+    SwuGameFormat.Premier,
+    SwuGameFormat.NextSetPreview,
+    SwuGameFormat.Eternal,
+];
 
 export const GamesToWinModeLabels: Record<GamesToWinMode, string> = {
     [GamesToWinMode.BestOfOne]: 'Best-of-One',
