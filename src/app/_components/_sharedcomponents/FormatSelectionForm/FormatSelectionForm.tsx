@@ -53,7 +53,7 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
             </StyledTextField>
         </FormControl>
         <FormControl fullWidth sx={formControlStyle}>
-            <Typography variant="body1" sx={labelTextStyle}>Match type</Typography>
+            <Typography variant="body1" sx={labelTextStyle}>Match Type</Typography>
             <StyledTextField
                 select
                 value={gamesToWinMode}
