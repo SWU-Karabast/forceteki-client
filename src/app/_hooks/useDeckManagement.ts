@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ENABLE_NEXT_SET_PREVIEW, SwuGameFormat, GamesToWinMode, DefaultQueueFormatKey, QueueFormatOptions } from '@/app/_constants/constants';
+import { ENABLE_NEXT_SET_PREVIEW, SwuGameFormat, GamesToWinMode, DefaultFormat } from '@/app/_constants/constants';
 import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
@@ -48,23 +48,23 @@ export const useDeckManagement = (): IDeckManagementState => {
     const [format, setFormat] = useState<SwuGameFormat>(() => {
         const stored = localStorage.getItem('format');
 
-        const validFormats: string[] = [SwuGameFormat.Premier, SwuGameFormat.Open];
+        const validFormats: string[] = [SwuGameFormat.Premier, SwuGameFormat.Open, SwuGameFormat.Eternal];
         if (ENABLE_NEXT_SET_PREVIEW) validFormats.push(SwuGameFormat.NextSetPreview);
         if (!validFormats.includes(stored ?? '')) {
-            return SwuGameFormat.Premier;
+            return DefaultFormat.format;
         }
 
-        return (stored as SwuGameFormat) || SwuGameFormat.Premier;
+        return (stored as SwuGameFormat) || DefaultFormat.format;
     });
 
     const [gamesToWinMode, setGamesToWinMode] = useState<GamesToWinMode>(() => {
         const stored = localStorage.getItem('gamesToWinMode');
 
-        if (stored !== GamesToWinMode.BestOfOne && stored !== GamesToWinMode.BestOfThree) {
-            return GamesToWinMode.BestOfOne;
+        if (!Object.values(GamesToWinMode).some((value) => stored === value)) {
+            return DefaultFormat.gamesToWinMode;
         }
 
-        return (stored as GamesToWinMode) || GamesToWinMode.BestOfOne;
+        return (stored as GamesToWinMode) || DefaultFormat.gamesToWinMode;
     });
 
     const [deckLink, setDeckLink] = useState<string>('');

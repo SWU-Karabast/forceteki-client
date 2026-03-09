@@ -11,8 +11,11 @@ export enum MatchmakingType {
 export enum SwuGameFormat {
     Premier = 'premier',
     NextSetPreview = 'nextSetPreview',
-    Open = 'open'
+    Open = 'open',
+    Eternal = 'eternal',
 }
+
+export const NewGameFormatAvailable: SwuGameFormat | undefined = SwuGameFormat.Eternal;
 
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
@@ -32,47 +35,49 @@ export interface IQueueFormat {
     gamesToWinMode: GamesToWinMode;
 }
 
-const AllQueueFormatOptions: Record<string, IQueueFormat> = {
-    premierBo1: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfOne },
-    premierBo3: { format: SwuGameFormat.Premier, gamesToWinMode: GamesToWinMode.BestOfThree },
-    nextSetPreviewBo1: { format: SwuGameFormat.NextSetPreview, gamesToWinMode: GamesToWinMode.BestOfOne },
-    nextSetPreviewBo3: { format: SwuGameFormat.NextSetPreview, gamesToWinMode: GamesToWinMode.BestOfThree },
-    openBo1: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfOne },
-    openBo3: { format: SwuGameFormat.Open, gamesToWinMode: GamesToWinMode.BestOfThree },
-};
+export const DefaultFormat: IQueueFormat = {
+    format: SwuGameFormat.Premier,
+    gamesToWinMode: GamesToWinMode.BestOfOne,
+}
 
-const AllQueueFormatLabels: Record<string, string> = {
-    premierBo1: 'Premier Best-of-One',
-    premierBo3: 'Premier Best-of-Three',
-    nextSetPreviewBo1: 'Next Set Preview Best-of-One',
-    nextSetPreviewBo3: 'Next Set Preview Best-of-Three',
-    openBo1: 'Open Best-of-One',
-    openBo3: 'Open Best-of-Three',
-};
+const AllLobbyFormats: SwuGameFormat[] = [
+    SwuGameFormat.Premier,
+    SwuGameFormat.NextSetPreview,
+    SwuGameFormat.Eternal,
+    SwuGameFormat.Open,
+];
 
-const filterNextSetPreview = (options: Record<string, IQueueFormat>) =>
-    Object.fromEntries(Object.entries(options).filter(([, v]) => v.format !== SwuGameFormat.NextSetPreview));
+const AllQueueFormats: SwuGameFormat[] = [
+    SwuGameFormat.Premier,
+    SwuGameFormat.NextSetPreview,
+    SwuGameFormat.Eternal,
+];
 
-export const QueueFormatOptions: Record<string, IQueueFormat> = ENABLE_NEXT_SET_PREVIEW
-    ? AllQueueFormatOptions
-    : filterNextSetPreview(AllQueueFormatOptions);
+export const LobbyFormats: SwuGameFormat[] = ENABLE_NEXT_SET_PREVIEW
+    ? AllLobbyFormats
+    : AllLobbyFormats.filter((fmt) => fmt !== SwuGameFormat.NextSetPreview);
 
-export const QueueFormatLabels: Record<string, string> = ENABLE_NEXT_SET_PREVIEW
-    ? AllQueueFormatLabels
-    : Object.fromEntries(Object.entries(AllQueueFormatLabels).filter(([key]) => key in QueueFormatOptions));
+export const QueueFormats: SwuGameFormat[] = ENABLE_NEXT_SET_PREVIEW
+    ? AllQueueFormats
+    : AllQueueFormats.filter((fmt) => fmt !== SwuGameFormat.NextSetPreview);
 
-export const DefaultQueueFormatKey = 'premierBo1';
+export const GamesToWinModeLabels: Record<GamesToWinMode, string> = {
+    [GamesToWinMode.BestOfOne]: 'Best-of-One',
+    [GamesToWinMode.BestOfThree]: 'Best-of-Three',
+}
 
 export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
     [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
     [SwuGameFormat.Open]: 'Open',
+    [SwuGameFormat.Eternal]: 'Eternal',
 };
 
 export const FormatTagLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
     [SwuGameFormat.NextSetPreview]: 'Next Set',
     [SwuGameFormat.Open]: 'Open',
+    [SwuGameFormat.Eternal]: 'Eternal',
 };
 
 export const SupportedDeckSources = Object.values(DeckSource)

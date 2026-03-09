@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
 import {
     Box,
     Button,
@@ -20,8 +20,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatOptions, QueueFormatLabels, DefaultQueueFormatKey } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormats, IQueueFormat, DefaultFormat, FormatLabels, NewGameFormatAvailable } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -30,6 +29,9 @@ import {
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
+import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
+import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
+import NextSetPreviewAnnouncement from '../../NextSetPreviewAnnouncement/NextSetPreviewAnnouncement';
 
 interface IDeckPreferences {
     showSavedDecks: boolean;
@@ -81,45 +83,29 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
     
-    const { showSavedDecks, favoriteDeck, format, gamesToWinMode, saveDeck } = deckPreferences;
+    const { showSavedDecks, favoriteDeck, saveDeck } = deckPreferences;
     const { setShowSavedDecks, setFavoriteDeck, setFormat, setGamesToWinMode, setSaveDeck } = deckPreferencesHandlers;
+
+    const formats = QueueFormats;
+    const gamesToWinModes = Object.values(GamesToWinMode) as GamesToWinMode[]
+    const queueFormat: IQueueFormat = useMemo(() => {
+        const valueOrDefault = <TValue,>(value: TValue, values: TValue[], defaultValue: TValue) => {
+            return values.includes(value) ? value : defaultValue;
+        }
+        return {
+            format: valueOrDefault(deckPreferences.format, formats, DefaultFormat.format),
+            gamesToWinMode: valueOrDefault(deckPreferences.gamesToWinMode, gamesToWinModes, DefaultFormat.gamesToWinMode),
+        }
+    }, [deckPreferences.format, deckPreferences.gamesToWinMode, formats, gamesToWinModes]);
+
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
-
-    // Get the current format option key from format and gamesToWinMode
-    const getCurrentFormatOptionKey = (): string => {
-        for (const [key, value] of Object.entries(QueueFormatOptions)) {
-            if (value.format === format && value.gamesToWinMode === gamesToWinMode) {
-                return key;
-            }
-        }
-        return DefaultQueueFormatKey;
-    };
-
-    // Helper to check if a format option is Bo3
-    const isBo3Option = (key: string) => 
-        QueueFormatOptions[key]?.gamesToWinMode === GamesToWinMode.BestOfThree;
-
-    // Sort format options so disabled Bo3 options appear at the end
-    const formatOptionKeys = Object.keys(QueueFormatOptions).sort((a, b) => {
-        const aDisabled = isBo3Option(a) && !isBo3Allowed;
-        const bDisabled = isBo3Option(b) && !isBo3Allowed;
-        return Number(aDisabled) - Number(bDisabled);
-    });
 
     // Timer ref for clearing the inline text after 5s
 
     useEffect(() => {
         handleJsonDeck(deckLink);
     }, [deckLink]);
-
-    const handleChangeFormatOption = (optionKey: string) => {
-        const option = QueueFormatOptions[optionKey];
-        if (option) {
-            setFormat(option.format);
-            setGamesToWinMode(option.gamesToWinMode);
-        }
-    };
 
     const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
         setShowSavedDecks(useSavedDecks);
@@ -206,8 +192,8 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
-                format: format,
-                gamesToWinMode: gamesToWinMode,
+                format: queueFormat.format,
+                gamesToWinMode: queueFormat.gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
@@ -257,6 +243,8 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     const handleJoinGameQueue = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setFormat(queueFormat.format);
+        setGamesToWinMode(queueFormat.gamesToWinMode)
         handleFormSubmissionWithUndoCheck(handleJoinGameQueueActual);
     };
 
@@ -463,32 +451,20 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     </Typography>
                 )}
 
-                <FormControl fullWidth sx={styles.formControlStyle}>
-                    <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
-                    <StyledTextField
-                        select
-                        value={getCurrentFormatOptionKey()}
-                        required
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleChangeFormatOption(e.target.value)
-                        }
-                    >
-                        {formatOptionKeys.map((key) => {
-                            const isBo3 = isBo3Option(key);
-                            const disabled = isBo3 && !isBo3Allowed;
-                            return (
-                                <MenuItem key={key} value={key} disabled={disabled}>
-                                    {QueueFormatLabels[key] || key}
-                                    {disabled && ' (must be logged in)'}
-                                </MenuItem>
-                            );
-                        })}
-                    </StyledTextField>
-                </FormControl>
+                <FormatSelectionForm
+                    format={queueFormat.format}
+                    gamesToWinMode={queueFormat.gamesToWinMode}
+                    setFormat={setFormat}
+                    setGamesToWinMode={setGamesToWinMode}
+                    formats={formats}
+                    gamesToWinModes={gamesToWinModes}
+                    isBo3Allowed={isBo3Allowed}
+                    styles={styles}
+                />
 
-                {/* <Typography variant="body1" sx={{ color: 'orange', textAlign: 'center', mb: '1rem' }}>
-                    Next Set Preview format is now available!
-                </Typography> */}
+                {/* Beta Announcement */}
+                { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} />}
+                { false && <NextSetPreviewAnnouncement /> }
 
                 {/* Submit Button */}
                 <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,
@@ -501,14 +477,6 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     {queueState ? 'Queueing...' : 'Join Queue'}
                 </Button>
             </form>
-            <ErrorModal
-                open={errorState.modalOpen}
-                onClose={() => setModalOpen(false) }
-                title={errorState.title}
-                errors={errorState.details}
-                format={format}
-                modalType={errorState.modalType}
-            />
         </Box>
     );
 };
