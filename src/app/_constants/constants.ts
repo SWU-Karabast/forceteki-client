@@ -1,5 +1,7 @@
 import { DeckSource } from '../_utils/fetchDeckData';
 
+export const ENABLE_NEXT_SET_PREVIEW = false;
+
 export enum MatchmakingType {
     PublicLobby= 'publicLobby',
     PrivateLobby = 'privateLobby',
@@ -38,18 +40,26 @@ export const DefaultFormat: IQueueFormat = {
     gamesToWinMode: GamesToWinMode.BestOfOne,
 }
 
-export const LobbyFormats: SwuGameFormat[] = [
+const AllLobbyFormats: SwuGameFormat[] = [
     SwuGameFormat.Premier,
     SwuGameFormat.NextSetPreview,
     SwuGameFormat.Eternal,
     SwuGameFormat.Open,
 ];
 
-export const QueueFormats: SwuGameFormat[] = [
+const AllQueueFormats: SwuGameFormat[] = [
     SwuGameFormat.Premier,
     SwuGameFormat.NextSetPreview,
     SwuGameFormat.Eternal,
 ];
+
+export const LobbyFormats: SwuGameFormat[] = ENABLE_NEXT_SET_PREVIEW
+    ? AllLobbyFormats
+    : AllLobbyFormats.filter((fmt) => fmt !== SwuGameFormat.NextSetPreview);
+
+export const QueueFormats: SwuGameFormat[] = ENABLE_NEXT_SET_PREVIEW
+    ? AllQueueFormats
+    : AllQueueFormats.filter((fmt) => fmt !== SwuGameFormat.NextSetPreview);
 
 export const GamesToWinModeLabels: Record<GamesToWinMode, string> = {
     [GamesToWinMode.BestOfOne]: 'Best-of-One',
