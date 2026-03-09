@@ -34,7 +34,7 @@ export interface DeckJSON {
 const ALLOWED_ROOT_KEYS = ['metadata', 'leader', 'base', 'deck', 'sideboard', 'deckID', 'deckSource'];
 const ALLOWED_METADATA_KEYS = ['name', 'author'];
 const ALLOWED_CARD_KEYS = ['id', 'count'];
-const CARD_ID_REGEX = /^[A-Z]{3}_\d{3}$/;
+const CARD_ID_REGEX = /^[A-Z0-9]{3,4}_\d{3}$/;
 const MAX_JSON_SIZE = 5000;
 
 /**
