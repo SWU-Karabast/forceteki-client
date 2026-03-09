@@ -29,6 +29,7 @@ import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePo
 import { announcement } from '@/app/_constants/mockData';
 import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/UndoTutorialPopup';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
+import { ErrorModal } from '../_sharedcomponents/Error/ErrorModal';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -303,6 +304,14 @@ const HomePagePlayMode: React.FC = () => {
                                 isBo3Allowed={isBo3Allowed}
                             />
                         </TabPanel>
+                        <ErrorModal
+                            open={errorState.modalOpen}
+                            onClose={() => setModalOpen(false) }
+                            title={errorState.title}
+                            errors={errorState.details}
+                            format={deckPreferences.format}
+                            modalType={errorState.modalType}
+                        />
                         {showTestGames &&
                         <TabPanel index={showQuickMatch ? 2 : 1} value={value}>
                             <Box>
