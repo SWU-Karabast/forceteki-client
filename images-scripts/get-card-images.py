@@ -3,10 +3,10 @@ import requests
 
 # === CONFIGURATION ===
 BASE_URL = "https://swudb.com/images/cards/{set_code}/{card_number}.png"
-SET_CODE = "LAW"  # Change this manually when switching sets
+SET_CODE = "TS26"  # Change this manually when switching sets
 OUTPUT_DIR = f"downloaded_images/{SET_CODE}"
-MAX_ATTEMPTS = 265  # Safety limit (adjust if needed)
-LEADER_ATTEMPTS = 30
+MAX_ATTEMPTS = 100  # Safety limit (adjust if needed)
+LEADER_ATTEMPTS = 8
 OVERWRITE = False
 
 # Ensure output directory exists
@@ -14,10 +14,13 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def download_image(card_number):
     """Downloads an image with a given card number."""
-    url = BASE_URL.format(set_code=SET_CODE, card_number=str(card_number).zfill(3))
+
+    # IMPORTANT NOTE: need to run two passes, one like this and one with all of the .zfill(2) removed (but KEEP the .zfill(3))
+
+    url = BASE_URL.format(set_code=SET_CODE, card_number=str(card_number).zfill(2))
     save_path = os.path.join(OUTPUT_DIR, f"{str(card_number).zfill(3)}.png")
-    leader_url = BASE_URL.format(set_code=SET_CODE, card_number=f"{str(card_number).zfill(3)}-portrait")
-    leader_url_alt = BASE_URL.format(set_code=SET_CODE, card_number=f"{str(card_number).zfill(3)}-back")
+    leader_url = BASE_URL.format(set_code=SET_CODE, card_number=f"{str(card_number).zfill(2)}-back")
+    leader_url_alt = BASE_URL.format(set_code=SET_CODE, card_number=f"{str(card_number).zfill(2)}")
     leader_save_path = os.path.join(OUTPUT_DIR, f"{str(card_number).zfill(3)}-base.png")
 
     # Check if the file already exists
