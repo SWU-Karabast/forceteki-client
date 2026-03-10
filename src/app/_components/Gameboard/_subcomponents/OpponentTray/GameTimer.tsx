@@ -112,25 +112,25 @@ const MainTimerLabel = ({
             <Typography
                 variant="body1"
                 sx={{ 
-                    color: 'white',
+                    color: 'var(--initiative-red)',
                     marginBottom: 0, 
                     cursor: 'pointer',
-                    opacity: activePlayer && !isTurnTime ? 1 : 0.3, 
-                }}
-            >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography> 
-
-            <Divider />
-            
-            <Typography
-                variant="body1"
-                sx={{ 
-                    color: 'white',
-                    marginBottom: 0, 
-                    cursor: 'pointer',
-                    opacity: !activePlayer && !isTurnTime ? 1 : 0.3, 
+                    opacity: !activePlayer && !isTurnTime ? 1 : 0.5, 
 
                 }}
             >{`${formatMilliseconds(opponentTimeRemaining)}`}</Typography> 
+            <Divider />
+            <Typography
+                variant="body1"
+                sx={{ 
+                    color: 'var(--initiative-blue)',
+                    marginBottom: 0, 
+                    cursor: 'pointer',
+                    opacity: activePlayer && !isTurnTime ? 1 : 0.5, 
+                }}
+            >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography> 
+
+            
 
         </Stack>
     )
