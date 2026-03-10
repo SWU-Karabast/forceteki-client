@@ -26,6 +26,7 @@ import {
 } from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
 import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import { ILobbyUserProps } from '../../Lobby/LobbyTypes';
+import { MatchmakingType } from '@/app/_constants/constants';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -96,7 +97,7 @@ const Chat: React.FC<IChatProps> = ({
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
 
-    const isPrivateLobby = lobbyState?.gameType === 'Private';
+    const isPrivateLobby = lobbyState?.gameType === MatchmakingType.PrivateLobby;
     const didCurrentUserMuteChat = lobbyState?.userWhoMutedChat === connectedPlayer;
     const opponentId = getOpponent(connectedPlayer);
     const opponent = lobbyState?.users.find((u: ILobbyUserProps) => u.id === opponentId);
