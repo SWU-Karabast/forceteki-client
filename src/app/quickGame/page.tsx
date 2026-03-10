@@ -8,7 +8,6 @@ import SearchingForGame from '@/app/_components/QuickGame/SearchingForGame/Searc
 import { useRouter } from 'next/navigation';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 import { useUser } from '../_contexts/User.context';
-import { QuickGameDarkenBox } from '../_theme/theme-helper';
 
 const QuickGame: React.FC = () => {
     const router = useRouter();
@@ -35,10 +34,9 @@ const QuickGame: React.FC = () => {
         containerStyle: {
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: `url(${background?.path})`,
+            backgroundImage: `url(${background?.path}?v=2)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            '&::before': {},
         },
         disclaimer: {
             position: 'absolute',
@@ -81,12 +79,6 @@ const QuickGame: React.FC = () => {
         },
     };
 
-    if(background?.darkened) {
-        styles.containerStyle = {
-            ...styles.containerStyle,
-            '&::before': QuickGameDarkenBox,
-        };
-    }
     return (
         <Grid container sx={styles.containerStyle}>
             <Grid size={12} height={'100%'}>
