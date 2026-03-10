@@ -67,7 +67,6 @@ export interface IRegisteredCosmeticOption {
     title: string;
     type: RegisteredCosmeticType;
     path: string;
-    darkened?: boolean;
 }
 
 export interface IRegisteredCosmetics {
@@ -85,7 +84,8 @@ export enum StatsSaveStatus {
 
 export enum StatsSource {
     Karabast = 'Karabast',
-    SwuStats = 'SWUStats'
+    SwuStats = 'SWUStats',
+    SwuBase = 'SWUBase'
 }
 
 export enum PlayerReportType {

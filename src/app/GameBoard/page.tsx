@@ -12,7 +12,6 @@ import PreferencesComponent from '@/app/_components/_sharedcomponents/Preference
 import { useRouter } from 'next/navigation';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
-import { BackgroundsDarkenBox } from '../_theme/theme-helper';
 import { Play } from 'next/font/google';
 
 const GameBoard = () => {
@@ -108,12 +107,11 @@ const GameBoard = () => {
             transition: 'padding-right 0.3s ease-in-out',
             height: '100dvh',
             position: 'relative',
-            backgroundImage: `url(${background.path})`,
+            backgroundImage: `url(${background.path}?v=2)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
             flexDirection: 'column',
-            '&::before': { }
         },
         centralPromptContainer: {
             position: 'absolute',
@@ -163,7 +161,6 @@ const GameBoard = () => {
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
-            '&::before': { }
         },
         opponentPlaymat: {
             position: 'absolute',
@@ -178,30 +175,8 @@ const GameBoard = () => {
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
-            '&::before': { }
         }
     };
-
-    if(background.darkened) {
-        styles.mainBoxStyle = {
-            ...styles.mainBoxStyle,
-            '&::before': BackgroundsDarkenBox,
-        };
-    }
-
-    /* if(myPlaymat?.darkened) {
-        styles.playerPlaymat = {
-            ...styles.playerPlaymat,
-            '&::before': PlaymatDarkenBox,
-        };
-    }
-
-    if(theirPlaymat?.darkened) {
-        styles.opponentPlaymat = {
-            ...styles.opponentPlaymat,
-            '&::before': PlaymatDarkenBox,
-        };
-    }*/
 
     return (
         <Grid container sx={{ height: '100dvh', overflow: 'hidden' }}>

@@ -8,20 +8,28 @@ import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/
 import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
+import UsernameChangeRestrictedPopup
+    from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRestrictedPopup';
+import ReportingDisabledPopup
+    from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/ReportingDisabledPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 import { 
     setModerationSeenAsync, 
+    setMustRequestUsernameChangeSeenAsync,
+    setReportingDisabledSeenAsync,
     hasUserSeenUndoPopup, 
     markUndoPopupAsSeen,
     markAnnouncementAsSeen, 
     shouldShowAnnouncement 
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
+import { ModerationFieldState } from '@/app/_contexts/UserTypes';
 import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
 import { announcement } from '@/app/_constants/mockData';
 import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/UndoTutorialPopup';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
+import { ErrorModal } from '../_sharedcomponents/Error/ErrorModal';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -31,11 +39,13 @@ const HomePagePlayMode: React.FC = () => {
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
     const [showNewFeaturePopup, setShowNewFeaturePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
+    const [showUsernameRestrictedPopup, setShowUsernameRestrictedPopup] = useState<boolean>(false);
+    const [showReportingDisabledPopup, setShowReportingDisabledPopup] = useState<boolean>(false);
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
     const [showUndoTutorialPopup, setShowUndoTutorialPopup] = useState<boolean>(false);
     const [pendingFormSubmission, setPendingFormSubmission] = useState<(() => void) | null>(null);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
-    const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate } = useUser();
+    const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate, updateMustRequestUsernameChangeSeen, updateReportingDisabledSeen } = useUser();
 
     // Use shared deck management hook
     const {
@@ -117,6 +127,26 @@ const HomePagePlayMode: React.FC = () => {
         clearErrors();
     }
 
+    const handleCloseUsernameRestrictedPopup = async () => {
+        setShowUsernameRestrictedPopup(false);
+        updateMustRequestUsernameChangeSeen();
+        try {
+            await setMustRequestUsernameChangeSeenAsync(user);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handleCloseReportingDisabledPopup = async () => {
+        setShowReportingDisabledPopup(false);
+        updateReportingDisabledSeen();
+        try {
+            await setReportingDisabledSeenAsync(user);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const handleCloseMutedPopup = async() => {
         setShowMutedPopup(false);
         const updatedModeration = { ...user?.moderation, hasSeen: true };
@@ -162,6 +192,12 @@ const HomePagePlayMode: React.FC = () => {
                 setShowWelcomePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
+            if (!user.needsUsernameChange && user.mustRequestUsernameChange === ModerationFieldState.Enabled) {
+                setShowUsernameRestrictedPopup(true);
+            }
+            if (!user.needsUsernameChange && user.reportingDisabled === ModerationFieldState.Enabled) {
+                setShowReportingDisabledPopup(true);
+            }
             if(user.moderation){
                 setModerationDays(user.moderation.daysRemaining);
                 if(!user.moderation.hasSeen && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
@@ -268,6 +304,14 @@ const HomePagePlayMode: React.FC = () => {
                                 isBo3Allowed={isBo3Allowed}
                             />
                         </TabPanel>
+                        <ErrorModal
+                            open={errorState.modalOpen}
+                            onClose={() => setModalOpen(false) }
+                            title={errorState.title}
+                            errors={errorState.details}
+                            format={deckPreferences.format}
+                            modalType={errorState.modalType}
+                        />
                         {showTestGames &&
                         <TabPanel index={showQuickMatch ? 2 : 1} value={value}>
                             <Box>
@@ -292,6 +336,8 @@ const HomePagePlayMode: React.FC = () => {
             <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
             <NewFeaturePopup open={showNewFeaturePopup} onClose={closeNewFeaturePopup} />
             <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
+            <UsernameChangeRestrictedPopup open={showUsernameRestrictedPopup} onClose={handleCloseUsernameRestrictedPopup} />
+            <ReportingDisabledPopup open={showReportingDisabledPopup} onClose={handleCloseReportingDisabledPopup} />
             <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
             <UndoTutorialPopup open={showUndoTutorialPopup} onClose={handleUndoTutorialClose} />
         </>
