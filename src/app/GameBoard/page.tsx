@@ -107,7 +107,7 @@ const GameBoard = () => {
             transition: 'padding-right 0.3s ease-in-out',
             height: '100dvh',
             position: 'relative',
-            backgroundImage: `url(${background.path})`,
+            backgroundImage: `url(${background.path}?v=2)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
