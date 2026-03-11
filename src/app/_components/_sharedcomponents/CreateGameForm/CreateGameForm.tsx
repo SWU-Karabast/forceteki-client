@@ -21,7 +21,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, LobbyFormats, IQueueFormat, DefaultFormat, FormatLabels, NewGameFormatAvailable } from '@/app/_constants/constants';
+import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, LobbyFormatConfigs, IQueueFormat, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -32,12 +32,13 @@ import {
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
 import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
-import NextSetPreviewAnnouncement from '../../NextSetPreviewAnnouncement/NextSetPreviewAnnouncement';
+import { NewGameFormatAvailable } from '@/app/_constants/constants';
 
 interface IDeckPreferences {
     showSavedDecks: boolean;
     favoriteDeck: string;
     format: SwuGameFormat;
+    cardPool: CardPool;
     gamesToWinMode: GamesToWinMode;
     saveDeck: boolean;
 }
@@ -46,6 +47,7 @@ interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
     setFavoriteDeck: (value: string) => void;
     setFormat: (value: SwuGameFormat) => void;
+    setCardPool: (value: CardPool) => void;
     setGamesToWinMode: (value: GamesToWinMode) => void;
     setSaveDeck: (value: boolean) => void;
 }
@@ -85,23 +87,25 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const { user, isLoading: userLoading } = useUser();
     
     const { showSavedDecks, favoriteDeck, saveDeck } = deckPreferences;
-    const { setShowSavedDecks, setFavoriteDeck, setFormat, setGamesToWinMode, setSaveDeck } = deckPreferencesHandlers;
+    const { setShowSavedDecks, setFavoriteDeck, setFormat, setCardPool, setGamesToWinMode, setSaveDeck } = deckPreferencesHandlers;
 
-    const formats = LobbyFormats;
-    const gamesToWinModes = Object.values(GamesToWinMode) as GamesToWinMode[]
+    const formatConfigs = LobbyFormatConfigs;
+    const formats = getFormatsFromConfig(formatConfigs);
     const lobbyFormat: IQueueFormat = useMemo(() => {
         const valueOrDefault = <TValue,>(value: TValue, values: TValue[], defaultValue: TValue) => {
             return values.includes(value) ? value : defaultValue;
         }
+        const fmt = valueOrDefault(deckPreferences.format, formats, DefaultFormat.format);
+        const config = getFormatConfig(formatConfigs, fmt);
         return {
-            format: valueOrDefault(deckPreferences.format, formats, DefaultFormat.format),
-            gamesToWinMode: valueOrDefault(deckPreferences.gamesToWinMode, gamesToWinModes, DefaultFormat.gamesToWinMode),
+            format: fmt,
+            cardPool: valueOrDefault(deckPreferences.cardPool, config?.cardPools ?? [CardPool.Current], DefaultFormat.cardPool),
+            gamesToWinMode: valueOrDefault(deckPreferences.gamesToWinMode, config?.gamesToWinModes ?? [GamesToWinMode.BestOfOne], DefaultFormat.gamesToWinMode),
         }
-    }, [deckPreferences.format, deckPreferences.gamesToWinMode, formats, gamesToWinModes]);
+    }, [deckPreferences.format, deckPreferences.cardPool, deckPreferences.gamesToWinMode, formats, formatConfigs]);
 
     // Common State
     const [privateGame, setPrivateGame] = useState<boolean>(false);
-    const [thirtyCardMode, setThirtyCardMode] = useState<boolean>(false);
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
@@ -200,7 +204,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 isPrivate: privateGame,
                 format: lobbyFormat.format,
                 lobbyName: lobbyName,
-                allow30CardsInMainBoard: thirtyCardMode,
+                cardPool: lobbyFormat.cardPool,
                 gamesToWinMode: lobbyFormat.gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
@@ -250,6 +254,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setFormat(lobbyFormat.format);
+        setCardPool(lobbyFormat.cardPool);
         setGamesToWinMode(lobbyFormat.gamesToWinMode);
         handleFormSubmissionWithUndoCheck(handleCreateGameSubmitActual);
     };
@@ -480,11 +485,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 {/* Format Selection */}
                 <FormatSelectionForm
                     format={lobbyFormat.format}
+                    cardPool={lobbyFormat.cardPool}
                     gamesToWinMode={lobbyFormat.gamesToWinMode}
                     setFormat={setFormat}
+                    setCardPool={setCardPool}
                     setGamesToWinMode={setGamesToWinMode}
-                    formats={formats}
-                    gamesToWinModes={gamesToWinModes}
+                    formatConfigs={formatConfigs}
                     isBo3Allowed={isBo3Allowed}
                     styles={styles}
                 />
@@ -521,7 +527,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
                 {/* Beta Announcement */}
                 { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} />}
-                { false && <NextSetPreviewAnnouncement /> }
 
                 {!privateGame && (
                     <>
@@ -538,26 +543,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 }
                                 placeholder="Game #"
                             />
-                        </FormControl>
-                    </>
-                )}
-
-                {privateGame && lobbyFormat.format === SwuGameFormat.Open && (
-                    <>
-                        <Typography variant="body1" sx={styles.labelTextStyle}>
-                            Mainboard Minimum Size
-                        </Typography>
-                        <FormControl fullWidth sx={styles.formControlStyle}>
-                            <StyledTextField
-                                select
-                                value={thirtyCardMode ? '30Card' : '50Card'}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setThirtyCardMode(e.target.value === '30Card')
-                                }
-                            >
-                                <MenuItem value="50Card">50 Cards</MenuItem>
-                                <MenuItem value="30Card">30 Cards</MenuItem>
-                            </StyledTextField>
                         </FormControl>
                     </>
                 )}

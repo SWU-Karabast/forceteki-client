@@ -72,7 +72,6 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
 
     // Lobby settings
-    const allow30CardsInMainBoard = lobbyState?.allow30CardsInMainBoard || false;
     const requestUndo = lobbyState?.settings.requestUndo || false;
     const allowSpectators = lobbyState?.settings.allowSpectators || false;
 
@@ -611,24 +610,6 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     <Typography variant="h5" sx={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', mt: 1, mb: 0.5 }}>
                         Game Settings
                     </Typography>
-                    {lobbyFormat === SwuGameFormat.Open && (
-                        <>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>
-                                Mainboard Minimum Size
-                            </Typography>
-                            <FormControl fullWidth sx={styles.disabledDropdownStyle}>
-                                <StyledTextField
-                                    select
-                                    value={allow30CardsInMainBoard ? '30Card' : '50Card'}
-                                    onChange={() => {}}
-                                    disabled={true}
-                                >
-                                    <MenuItem value="50Card">50 Cards</MenuItem>
-                                    <MenuItem value="30Card">30 Cards</MenuItem>
-                                </StyledTextField>
-                            </FormControl>
-                        </>
-                    )}
                     <FormControlLabel
                         control={
                             <Checkbox
