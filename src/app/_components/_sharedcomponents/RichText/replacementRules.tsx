@@ -33,12 +33,12 @@ const aspectIconStyle: React.CSSProperties = {
 
 /** Maps colon-delimited token name → public asset path. */
 const ASPECT_ICONS: Record<string, string> = {
-    vigilance: '/aspect-icons/aspect-vigilance.png',
-    command:   '/aspect-icons/aspect-command.png',
-    aggression:'/aspect-icons/aspect-aggression.png',
-    cunning:   '/aspect-icons/aspect-cunning.png',
-    villainy:  '/aspect-icons/aspect-villainy.png',
-    heroism:   '/aspect-icons/aspect-heroism.png',
+    vigilance: '/aspect-icons/aspect-vigilance.webp',
+    command:   '/aspect-icons/aspect-command.webp',
+    aggression:'/aspect-icons/aspect-aggression.webp',
+    cunning:   '/aspect-icons/aspect-cunning.webp',
+    villainy:  '/aspect-icons/aspect-villainy.webp',
+    heroism:   '/aspect-icons/aspect-heroism.webp',
 };
 
 /**
