@@ -5,77 +5,95 @@ import { Stack, Typography } from '@mui/material';
 import { formatMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
 import { useGame } from '@/app/_contexts/Game.context';
 
+const TIMER_STEP = 100;
+
 const GameTimer: React.FC = ({ ...props }) => {
     const { gameState, connectedPlayer, getOpponent } = useGame();
     const playerState = gameState?.players[connectedPlayer];
     const opponentState = gameState?.players[getOpponent(connectedPlayer)];
-    const playerIsActivePlayer = playerState?.isActionPhaseActivePlayer || !playerState.promptState.menuTitle.toLowerCase().includes('waiting');
 
+    const playerIsActive = playerState?.timerIsRunning ?? false;
+    const opponentIsActive = opponentState?.timerIsRunning ?? false;
+
+    // Per-player turn time state derived from server values
+    const playerIsTurnTime = (playerState?.turnTimeRemainingSeconds ?? 0) > 0;
+    const opponentIsTurnTime = (opponentState?.turnTimeRemainingSeconds ?? 0) > 0;
+
+    // Circular timer countdown state (tracks connected player's timer, falls back to opponent)
     const [turnTimeRemainingMs, setTurnTimeRemainingMs] = React.useState(MAX_TURN_TIME);
     const isTurnTime = turnTimeRemainingMs > 0;
+    const [playerMainTimeRemainingMs, setPlayerMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
 
-    const opponentMainTimeRemainingMs = secondsToMilliseconds(opponentState?.mainTimeRemainingSeconds || 0);
-    const playerMainTimeRemainingMs = secondsToMilliseconds(playerState?.mainTimeRemainingSeconds || 0);
-    const [mainTimeRemainingMs, setMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
+    // Opponent main time countdown state (independent of the circular <Timer> widget)
+    const [opponentMainTimeRemainingMs, setOpponentMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
 
+    // Sync both timers from server state
     useEffect(() => {
-        /* Syncs timers with the server when a game state update is received
-         *
-         * Examples of game state updates that should sync timers: 
-         * - on initial page load / page refresh
-         * - when an action is taken, we reset the turn timer
-         * - when the turn timer is out, we start using the main timer
-        * */
         const opponentTurnTimeRemainingMs = secondsToMilliseconds(opponentState?.turnTimeRemainingSeconds || 0);
         const playerTurnTimeRemainingMs = secondsToMilliseconds(playerState?.turnTimeRemainingSeconds || 0);
 
-        const newTurnTimeRemaining = playerIsActivePlayer ? playerTurnTimeRemainingMs : opponentTurnTimeRemainingMs;
+        // Prefer the connected player's turn timer; fall back to opponent's if only they are active
+        setTurnTimeRemainingMs(playerIsActive ? playerTurnTimeRemainingMs : opponentTurnTimeRemainingMs);
+        setPlayerMainTimeRemainingMs(secondsToMilliseconds(playerState?.mainTimeRemainingSeconds || 0));
+        setOpponentMainTimeRemainingMs(secondsToMilliseconds(opponentState?.mainTimeRemainingSeconds || 0));
+    }, [playerIsActive, opponentState?.turnTimeRemainingSeconds, opponentState?.mainTimeRemainingSeconds, playerState?.turnTimeRemainingSeconds, playerState?.mainTimeRemainingSeconds])
 
-        setTurnTimeRemainingMs(newTurnTimeRemaining);
-        
-        setMainTimeRemainingMs(
-            playerIsActivePlayer ? playerMainTimeRemainingMs : opponentMainTimeRemainingMs
-        );
-    }, [playerIsActivePlayer, opponentState?.turnTimeRemainingSeconds, opponentMainTimeRemainingMs, playerState?.turnTimeRemainingSeconds, playerMainTimeRemainingMs])
+    // Client-side countdown for opponent main time (independent of the <Timer> component's interval)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (opponentIsActive && !opponentIsTurnTime) {
+                setOpponentMainTimeRemainingMs((prev) => prev > 0 ? prev - TIMER_STEP : 0);
+            }
+        }, TIMER_STEP);
+        return () => clearInterval(interval);
+    }, [opponentIsActive, opponentIsTurnTime]);
+
+    // Color changes and background only react to the connected player's timer state
+    const hasLowOpacity = !playerIsActive;
+    const shouldAdjustBackgroundColor = playerIsActive && !isTurnTime;
 
     return (
-        <Timer 
-            hasLowOpacity={!playerIsActivePlayer}
-            maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME} 
-            setTimeRemaining={isTurnTime ? setTurnTimeRemainingMs : setMainTimeRemainingMs}
-            timeRemaining={isTurnTime ? turnTimeRemainingMs : mainTimeRemainingMs}
-            shouldAdjustBackgroundColor={playerIsActivePlayer && !isTurnTime}
-            tooltipTitle={<TooltipContent 
-                turnTimeRemainingSeconds={turnTimeRemainingMs} 
-                activePlayer={playerIsActivePlayer} 
+        <Timer
+            hasLowOpacity={hasLowOpacity}
+            isRunning={isTurnTime ? (playerIsActive || opponentIsActive) : playerIsActive}
+            maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME}
+            setTimeRemaining={isTurnTime ? setTurnTimeRemainingMs : setPlayerMainTimeRemainingMs}
+            timeRemaining={isTurnTime ? turnTimeRemainingMs : playerMainTimeRemainingMs}
+            shouldAdjustBackgroundColor={shouldAdjustBackgroundColor}
+            tooltipTitle={<TooltipContent
+                turnTimeRemainingSeconds={turnTimeRemainingMs}
+                playerIsActive={playerIsActive}
             />}
             {...props}
         >
-
-            <MainTimerLabel activePlayer={playerIsActivePlayer} isTurnTime={isTurnTime} 
-                playerTimeRemaining={playerIsActivePlayer ? mainTimeRemainingMs : playerMainTimeRemainingMs} 
-                opponentTimeRemaining={playerIsActivePlayer ? opponentMainTimeRemainingMs : mainTimeRemainingMs} 
+            <MainTimerLabel
+                playerIsActive={playerIsActive}
+                opponentIsActive={opponentIsActive}
+                playerIsTurnTime={playerIsTurnTime}
+                opponentIsTurnTime={opponentIsTurnTime}
+                playerTimeRemaining={playerMainTimeRemainingMs}
+                opponentTimeRemaining={opponentMainTimeRemainingMs}
             />
         </Timer>
     );
 }
 
 const TooltipContent = (
-    { turnTimeRemainingSeconds, activePlayer }: 
-    { turnTimeRemainingSeconds: number, activePlayer?: boolean }
+    { turnTimeRemainingSeconds, playerIsActive }:
+    { turnTimeRemainingSeconds: number, playerIsActive?: boolean }
 ) => {
-    const playerLabel = activePlayer ? 'Your' : 'Opponent\'s';
+    const playerLabel = playerIsActive ? 'Your' : 'Opponent\'s';
 
     return (
-        <Stack spacing={1}>     
-            <Stack> 
+        <Stack spacing={1}>
+            <Stack>
                 <Typography variant="body2" fontWeight={600}>
                     Game Timer
                 </Typography>
                 <Typography variant="body2">
                     Once turn time reaches zero, main time will be used.
                 </Typography>
-            </Stack> 
+            </Stack>
 
             <Stack width='fit-content'>
                 <Typography variant="body2">
@@ -90,48 +108,46 @@ const TooltipContent = (
             <Typography variant="body2">
                 {playerLabel} turn time remaining: {formatMilliseconds(turnTimeRemainingSeconds)}
             </Typography>
-
-
         </Stack>
     )
 }
 
-const MainTimerLabel = ({ 
-    activePlayer, 
-    playerTimeRemaining = MAX_MAIN_TIME, 
+const MainTimerLabel = ({
+    playerIsActive,
+    opponentIsActive,
+    playerIsTurnTime,
+    opponentIsTurnTime,
+    playerTimeRemaining = MAX_MAIN_TIME,
     opponentTimeRemaining = MAX_MAIN_TIME,
-    isTurnTime = true, 
-}: { 
-    activePlayer?: boolean, 
-    playerTimeRemaining?: number, 
+}: {
+    playerIsActive?: boolean,
+    opponentIsActive?: boolean,
+    playerIsTurnTime?: boolean,
+    opponentIsTurnTime?: boolean,
+    playerTimeRemaining?: number,
     opponentTimeRemaining?: number,
-    isTurnTime?: boolean
 }) => {
     return (
         <Stack spacing={0}>
             <Typography
                 variant="body1"
-                sx={{ 
+                sx={{
                     color: 'var(--initiative-red)',
-                    marginBottom: 0, 
+                    marginBottom: 0,
                     cursor: 'pointer',
-                    opacity: !activePlayer && !isTurnTime ? 1 : 0.5, 
-
+                    opacity: opponentIsActive && !opponentIsTurnTime ? 1 : 0.5,
                 }}
-            >{`${formatMilliseconds(opponentTimeRemaining)}`}</Typography> 
+            >{`${formatMilliseconds(opponentTimeRemaining)}`}</Typography>
             <Divider />
             <Typography
                 variant="body1"
-                sx={{ 
+                sx={{
                     color: 'var(--initiative-blue)',
-                    marginBottom: 0, 
+                    marginBottom: 0,
                     cursor: 'pointer',
-                    opacity: activePlayer && !isTurnTime ? 1 : 0.5, 
+                    opacity: playerIsActive && !playerIsTurnTime ? 1 : 0.5,
                 }}
-            >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography> 
-
-            
-
+            >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography>
         </Stack>
     )
 }
