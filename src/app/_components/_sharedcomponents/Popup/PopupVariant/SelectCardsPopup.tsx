@@ -14,7 +14,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import { CardStyle } from '../../Cards/CardTypes';
 import GameCard from '../../Cards/GameCard';
-import { RichText } from '../../RichText';
+import RichText from '../../RichText/RichText';
 
 interface ButtonProps {
     data: SelectCardsPopup;

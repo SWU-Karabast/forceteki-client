@@ -20,7 +20,7 @@ import {
     titleStyle,
 } from '../Popup.styles';
 import { DropdownPopup } from '../Popup.types';
-import { RichText } from '../../RichText';
+import RichText from '../../RichText/RichText';
 
 interface ButtonProps {
     data: DropdownPopup;

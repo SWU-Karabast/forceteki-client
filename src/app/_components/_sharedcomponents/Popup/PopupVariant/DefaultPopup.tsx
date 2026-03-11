@@ -12,7 +12,7 @@ import {
     titleStyle,
 } from '../Popup.styles';
 import { DefaultPopup, PopupButton } from '../Popup.types';
-import { RichText } from '../../RichText';
+import RichText from '../../RichText/RichText';
 
 interface ButtonProps {
     data: DefaultPopup;

@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 import { Play } from 'next/font/google';
-import { RichText } from '../_components/_sharedcomponents/RichText';
+import RichText from '../_components/_sharedcomponents/RichText/RichText';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
