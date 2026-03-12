@@ -86,16 +86,14 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'A Lawless Time Preview Format with Set Rotation',
+        title: 'A Lawless Time Premier Format',
         content: `
-        <p>Next Set Preview format for A Lawless Time is now live! There is an important feature attached to this:</p>
-
-        <p>- <b>Format Rotation:</b> Set 7 is the first format after set rotation. Next Set Preview format will enforce this rule and cards from sets 1 - 3 will not be legal. They can continue to be used alongside the set 7 preview cards in Open format.</p>
+        <p>Set 7, A Lawless Time, is now legal in Premier! Year 1 sets can still be played in Open format.</p>
     
         <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always open to new contributors.</p><p></p>
 	  `,
-        date: '1/27/26',
-        image: s3ImageURL('ui/law-banner.webp'),
+        date: '3/7/26',
+        image: s3ImageURL('ui/law-news-banner.webp'),
         imageAlt: 'News Announcement',
     },
     {
