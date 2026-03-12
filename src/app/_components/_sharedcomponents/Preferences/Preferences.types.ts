@@ -140,3 +140,9 @@ export interface IFindUserResponse {
     players: IPlayerSearchResult[];
     modActions: IModActionResponse[];
 }
+
+export enum DurationUnit {
+    Days = 'Days',
+    Weeks = 'Weeks',
+    Permanent = 'Permanent',
+}

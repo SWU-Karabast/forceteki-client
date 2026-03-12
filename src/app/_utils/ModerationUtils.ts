@@ -1,4 +1,12 @@
 import { IModerationAction, IUser } from '@/app/_contexts/UserTypes';
+import React, {useState} from "react";
+import {
+    DurationUnit,
+    IModActionResponse,
+    IPlayerSearchResult, ModActionType
+} from "@/app/_components/_sharedcomponents/Preferences/Preferences.types";
+
+const PERMANENT_DURATION_DAYS = 36500;
 
 export const getMuteDisplayText = (moderation?: IModerationAction): string | null => {
     if (!moderation?.endDate) return '';
@@ -12,6 +20,10 @@ export const getMuteDisplayText = (moderation?: IModerationAction): string | nul
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (days >= PERMANENT_DURATION_DAYS/2) {
+        return null;
+    }
 
     if (days > 0) {
         return `${days} more day${days !== 1 ? 's' : ''}`;
@@ -29,3 +41,45 @@ export const checkIfModerationExpired = (moderation: IModerationAction, updateMo
         updateModerationSeenStatus(null);
     }
 }
+
+export const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+export const formatDuration = (durationDays?: number): string => {
+    if (!durationDays) return '';
+    if (durationDays >= PERMANENT_DURATION_DAYS/2) return 'Permanent';
+    if (durationDays % 7 === 0 && durationDays >= 7) return `${durationDays / 7} week${durationDays / 7 !== 1 ? 's' : ''}`;
+    return `${durationDays} day${durationDays !== 1 ? 's' : ''}`;
+};
+
+export const getActionLabel = (action: IModActionResponse): string => {
+    const date = formatDate(action.createdAt);
+    switch (action.actionType) {
+        case ModActionType.Mute:
+            return `${date} Muted (${formatDuration(action.durationDays)})`;
+        case ModActionType.Warning:
+            return `${date} Warning`;
+        case ModActionType.Rename:
+            return `${date} Renamed`;
+        default:
+            return `${date} ${action.actionType}`;
+    }
+};
+
+export const getActionStatus = (action: IModActionResponse): { label: string; color: string } => {
+    if (action.cancelledAt) {
+        return { label: 'Cancelled', color: '#9E9E9E' };
+    }
+    if (action.actionType === ModActionType.Mute) {
+        if (!action.startedAt) {
+            return { label: 'Pending', color: '#ffd54f' };
+        }
+        if (action.expiresAt && new Date(action.expiresAt) <= new Date()) {
+            return { label: 'Expired', color: '#9E9E9E' };
+        }
+        return { label: 'Active', color: '#ef5350' };
+    }
+    return { label: '', color: '#9E9E9E' };
+};

@@ -13,51 +13,14 @@ import { ServerApiService } from '@/app/_services/ServerApiService';
 import {
     IModActionResponse,
     IPlayerSearchResult,
-    ModActionType
+    ModActionType,
+    DurationUnit
 } from "@/app/_components/_sharedcomponents/Preferences/Preferences.types";
 import ConfirmationDialog from "@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog";
+import {formatDate, getActionLabel, getActionStatus} from "@/app/_utils/ModerationUtils";
 
+const PERMANENT_DURATION_DAYS = 36500;
 
-// ==================== Helpers ====================
-const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
-
-const getActionLabel = (action: IModActionResponse): string => {
-    const date = formatDate(action.createdAt);
-    switch (action.actionType) {
-        case ModActionType.Mute:
-            return `${date} Muted (${action.durationDays} days)`;
-        case ModActionType.Warning:
-            return `${date} Warning`;
-        case ModActionType.Rename:
-            return `${date} Renamed`;
-        default:
-            return `${date} ${action.actionType}`;
-    }
-};
-
-const getActionStatus = (action: IModActionResponse): { label: string; color: string } => {
-    if (action.cancelledAt) {
-        return { label: 'Cancelled', color: '#9E9E9E' };
-    }
-    if (action.actionType === ModActionType.Mute) {
-        if (!action.startedAt) {
-            return { label: 'Pending', color: '#ffd54f' };
-        }
-        if (action.expiresAt && new Date(action.expiresAt) <= new Date()) {
-            return { label: 'Expired', color: '#9E9E9E' };
-        }
-        return { label: 'Active', color: '#ef5350' };
-    }
-    if (action.actionType === ModActionType.Rename) {
-        return { label: 'Active', color: '#ef5350' };
-    }
-    return { label: '', color: '#9E9E9E' };
-};
-
-// ==================== Component ====================
 const UserManagementTab: React.FC = () => {
     // Search state
     const [searchQuery, setSearchQuery] = useState('');
@@ -71,7 +34,8 @@ const UserManagementTab: React.FC = () => {
 
     // Action form state
     const [actionType, setActionType] = useState<ModActionType>(ModActionType.Mute);
-    const [durationDays, setDurationDays] = useState<string>('');
+    const [durationValue, setDurationValue] = useState<string>('');
+    const [durationUnit, setDurationUnit] = useState<DurationUnit>(DurationUnit.Days);
     const [note, setNote] = useState('');
 
     // Action history expanded state
@@ -132,15 +96,25 @@ const UserManagementTab: React.FC = () => {
         }
     };
 
+    const getDurationInDays = (): number => {
+        if (durationUnit === DurationUnit.Permanent) return PERMANENT_DURATION_DAYS;
+        const value = parseInt(durationValue);
+        if (!value || value <= 0) return 0;
+        return durationUnit === DurationUnit.Weeks ? value * 7 : value;
+    };
+
     const handleSubmitAction = () => {
         if (!selectedPlayer) return;
 
-        const durationNum = actionType === ModActionType.Mute ? parseInt(durationDays) : undefined;
-        if (actionType === ModActionType.Mute && (!durationNum || durationNum <= 0)) return;
-        if (!note.trim()) return;
+        const durationDays = getDurationInDays();
+        if (actionType === ModActionType.Mute && !durationDays) return;
+
+        const durationDisplay = durationUnit === DurationUnit.Permanent
+            ? 'permanently'
+            : `for ${durationValue} ${durationUnit.toLowerCase()}`;
 
         const actionMessages: Record<ModActionType, string> = {
-            [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} for ${durationNum} days. Are you sure?`,
+            [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} ${durationDisplay}. Are you sure?`,
             [ModActionType.Warning]: `This will issue a warning to player ${selectedPlayer.username}. Are you sure?`,
             [ModActionType.Rename]: `This will force player ${selectedPlayer.username} to rename. Are you sure?`,
         };
@@ -154,17 +128,18 @@ const UserManagementTab: React.FC = () => {
                 setConfirmDialog((prev) => ({ ...prev, open: false }));
                 setSubmitLoading(true);
                 try {
+                    // Refresh mod actions
                     const result = await ServerApiService.submitModActionAsync(
                         selectedPlayer.id,
                         actionType,
                         note.trim(),
-                        durationNum,
+                        actionType === ModActionType.Mute ? durationDays : undefined,
                     );
-                    // Refresh mod actions
                     const refreshed = await ServerApiService.getModActionsForPlayerAsync(selectedPlayer.id);
                     setModActions(refreshed.modActions || []);
                     setNote('');
-                    setDurationDays('');
+                    setDurationValue('');
+                    setDurationUnit(DurationUnit.Days);
                     setSuccessMessage(result.message);
                 } catch (error) {
                     setSearchError(error instanceof Error ? error.message : 'Failed to submit action');
@@ -206,7 +181,7 @@ const UserManagementTab: React.FC = () => {
     };
 
     const canSubmit = selectedPlayer
-        && (actionType !== ModActionType.Mute || (parseInt(durationDays) > 0));
+        && (actionType !== ModActionType.Mute || getDurationInDays() > 0);
 
     // ==================== Styles ====================
     const styles = {
@@ -468,15 +443,37 @@ const UserManagementTab: React.FC = () => {
 
                                 {/* Duration - only for Mute */}
                                 {actionType === ModActionType.Mute && (
-                                    <StyledTextField
-                                        label="Days"
-                                        type="number"
-                                        value={durationDays}
-                                        onChange={(e) => setDurationDays(e.target.value)}
-                                        size="small"
-                                        sx={{ width: '80px' }}
-                                        inputProps={{ min: 1 }}
-                                    />
+                                    <>
+                                        <StyledTextField
+                                            select
+                                            label="Duration"
+                                            value={durationUnit}
+                                            onChange={(e) => {
+                                                setDurationUnit(e.target.value as DurationUnit);
+                                                if (e.target.value === DurationUnit.Permanent) {
+                                                    setDurationValue('');
+                                                }
+                                            }}
+                                            size="small"
+                                            sx={{ minWidth: '30px', maxWidth:'150px' }}
+                                        >
+                                            <MenuItem value={DurationUnit.Days}>Days</MenuItem>
+                                            <MenuItem value={DurationUnit.Weeks}>Weeks</MenuItem>
+                                            <MenuItem value={DurationUnit.Permanent}>Permanent</MenuItem>
+                                        </StyledTextField>
+
+                                        {durationUnit !== DurationUnit.Permanent && (
+                                            <StyledTextField
+                                                label={durationUnit === DurationUnit.Weeks ? 'Weeks' : 'Days'}
+                                                type="number"
+                                                value={durationValue}
+                                                onChange={(e) => setDurationValue(e.target.value)}
+                                                size="small"
+                                                sx={{ width: '300px' }}
+                                                inputProps={{ min: 1 }}
+                                            />
+                                        )}
+                                    </>
                                 )}
 
                                 <PreferenceButton
@@ -583,7 +580,7 @@ const UserManagementTab: React.FC = () => {
                                                         </Box>
                                                         {action.startedAt && (
                                                             <Box>
-                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem' }}>
+                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
                                                                     Started
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
@@ -593,7 +590,7 @@ const UserManagementTab: React.FC = () => {
                                                         )}
                                                         {action.expiresAt && (
                                                             <Box>
-                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem' }}>
+                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
                                                                     Expires
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
@@ -603,7 +600,7 @@ const UserManagementTab: React.FC = () => {
                                                         )}
                                                         {action.cancelledAt && (
                                                             <Box>
-                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem' }}>
+                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
                                                                     Cancelled
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
