@@ -100,6 +100,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'my-swu.com';
             case DeckSource.ProtectThePod:
                 return 'protectthepod.com';
+            case DeckSource.SWUForge:
+                return 'swuforge.com';
             default:
                 return source;
         }

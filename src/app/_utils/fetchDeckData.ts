@@ -20,6 +20,7 @@ export enum DeckSource {
     SWUMetaStats = 'SWUMetaStats',
     MySWU = 'MySWU',
     ProtectThePod = 'ProtectThePod',
+    SWUForge = 'SWUForge',
 }
 
 export interface IDeckData {
@@ -84,6 +85,8 @@ export const determineDeckSource = (deckLink: string): DeckSource => {
         return DeckSource.MySWU;
     } else if (deckLink.includes('protectthepod.com')) {
         return DeckSource.ProtectThePod;
+    } else if (deckLink.includes('swuforge.com')) {
+        return DeckSource.SWUForge;
     }
 
     // Default fallback
