@@ -16,16 +16,14 @@ import {
     FormControl,
     InputLabel,
     Select,
-    Switch,
-    FormControlLabel
 } from '@mui/material';
 import Image from 'next/image';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { v4 as uuidv4 } from 'uuid';
-import { ServerApiService } from '@/app/_services/ServerApiService';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
+import {ServerApiService} from "@/app/_services/ServerApiService";
 
 interface ImageDimensions {
     width: number;
@@ -35,6 +33,7 @@ interface ImageDimensions {
 interface ValidationRules {
     cardback: { width: number; height: number };
     background: { width: number; height: number };
+    // playmat: { width: number; height: number };
 }
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -69,11 +68,12 @@ const CosmeticsManagerTab: React.FC = () => {
     const [cosmeticType, setCosmeticType] = useState<RegisteredCosmeticType>(RegisteredCosmeticType.Cardback);
     const [cosmeticTitle, setCosmeticTitle] = useState('');
     const [cosmeticId, setCosmeticId] = useState(() => uuidv4());
-    const [isDarkened, setIsDarkened] = useState(true);
 
+    // Validation rules for different cosmetic types
     const validationRules: ValidationRules = {
         cardback: { width: 718, height: 1000 },
         background: { width: 1920, height: 1080 },
+        // playmat: { width: 2680, height: 1200 }
     };
 
     const allCosmetics = React.useMemo(() => [
@@ -85,6 +85,7 @@ const CosmeticsManagerTab: React.FC = () => {
         getCosmetics();
     }, []);
 
+    // Apply filters whenever filter criteria change
     useEffect(() => {
         let results = allCosmetics;
 
@@ -119,6 +120,7 @@ const CosmeticsManagerTab: React.FC = () => {
             setAvailableTypes(types);
         }
     }, [allCosmetics]);
+
 
     const getCosmetics = async () => {
         try {
@@ -175,104 +177,141 @@ const CosmeticsManagerTab: React.FC = () => {
 
                 const scaledWidth = imgWidth * scale;
                 const scaledHeight = imgHeight * scale;
+
                 const offsetX = (scaledWidth - targetWidth) / 2;
                 const offsetY = (scaledHeight - targetHeight) / 2;
 
                 canvas.width = targetWidth;
                 canvas.height = targetHeight;
 
-                ctx?.drawImage(img, -offsetX, -offsetY, scaledWidth, scaledHeight);
+                ctx?.drawImage(
+                    img,
+                    -offsetX, -offsetY,
+                    scaledWidth, scaledHeight
+                );
+
+                const isWebPInput = file.type === 'image/webp';
+                const outputType = isWebPInput ? 'image/webp' : 'image/webp';
+                const quality = isWebPInput ? 0.95 : 0.85;
+
+                const originalName = file.name.split('.').slice(0, -1).join('.');
+                const newFileName = isWebPInput ? file.name : `${originalName}.webp`;
 
                 canvas.toBlob((blob) => {
                     if (blob) {
-                        resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' }));
+                        const newFile = new File([blob], newFileName, {
+                            type: outputType,
+                            lastModified: Date.now()
+                        });
+                        resolve(newFile);
                     } else {
-                        reject(new Error('Failed to create blob'));
+                        reject(new Error('Failed to convert canvas to blob'));
                     }
-                }, 'image/webp', 0.85);
+                }, outputType, quality);
             };
 
-            img.onerror = reject;
+            img.onerror = () => reject(new Error('Failed to load image'));
             img.src = URL.createObjectURL(file);
         });
     };
 
+    const needsProcessing = (): boolean => {
+        if (!imageDimensions) return false;
+
+        const rules = validationRules[cosmeticType];
+        const tolerance = 30;
+
+        const widthDiff = imageDimensions.width - rules.width;
+        const heightDiff = imageDimensions.height - rules.height;
+
+        return (widthDiff > 0 || heightDiff > 0) ||
+            (Math.abs(widthDiff) <= tolerance && Math.abs(heightDiff) <= tolerance);
+    };
+
+    const validateImage = (): string | null => {
+        if (!imageDimensions) return 'Image dimensions not available';
+
+        const rules = validationRules[cosmeticType];
+        const tolerance = 30;
+
+        if (imageDimensions.width === rules.width && imageDimensions.height === rules.height) {
+            return null;
+        }
+
+        const widthDiff = imageDimensions.width - rules.width;
+        const heightDiff = imageDimensions.height - rules.height;
+
+        if (widthDiff >= 0 && heightDiff >= 0) {
+            return null;
+        }
+
+        if (Math.abs(widthDiff) <= tolerance && Math.abs(heightDiff) <= tolerance) {
+            return null;
+        }
+
+        return `${cosmeticType} images must be ${rules.width}x${rules.height}px (±${tolerance}px tolerance). Your image is ${imageDimensions.width}x${imageDimensions.height}px.`;
+    };
+
     const handleUpload = async () => {
-        if (!selectedFile || !cosmeticTitle.trim()) return;
+        if (!selectedFile || !cosmeticTitle.trim() || !cosmeticId.trim()) {
+            setUploadError('Please fill in all fields and select an image');
+            return;
+        }
+
+        const validationError = validateImage();
+        if (validationError) {
+            setUploadError(validationError);
+            return;
+        }
 
         setUploadLoading(true);
         setUploadError(null);
 
         try {
-            const rules = validationRules[cosmeticType as keyof ValidationRules];
-            const processedFile = await scaleAndCropImage(selectedFile, rules.width, rules.height);
+            let fileToUpload = selectedFile;
+
+            const shouldConvertToWebP = selectedFile.type === 'image/png' || selectedFile.type === 'image/jpeg';
+            if (needsProcessing() || shouldConvertToWebP) {
+                const rules = validationRules[cosmeticType];
+                const targetWidth = imageDimensions?.width && !needsProcessing() ? imageDimensions.width : rules.width;
+                const targetHeight = imageDimensions?.height && !needsProcessing() ? imageDimensions.height : rules.height;
+
+                fileToUpload = await scaleAndCropImage(selectedFile, targetWidth, targetHeight);
+
+                const processedUrl = URL.createObjectURL(fileToUpload);
+                setImagePreview(processedUrl);
+                setImageDimensions({ width: targetWidth, height: targetHeight });
+            }
 
             const formData = new FormData();
-            formData.append('file', processedFile);
-            formData.append('cosmeticId', cosmeticId);
+            formData.append('file', fileToUpload);
+            formData.append('cosmeticId', uuidv4());
+            formData.append('cosmeticTitle', cosmeticTitle);
             formData.append('cosmeticType', cosmeticType);
 
-            const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/s3bucket`, {
+            const response = await fetch('/api/admin/cosmetics/upload-file', {
                 method: 'POST',
-                credentials: 'include',
                 body: formData,
             });
 
-            if (!uploadResponse.ok) {
-                throw new Error('Failed to upload image');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to upload cosmetic');
             }
 
-            const { url } = await uploadResponse.json();
-
-            const newCosmetic: IRegisteredCosmeticOption = {
-                id: cosmeticId,
-                title: cosmeticTitle.trim(),
-                type: cosmeticType,
-                path: url,
-                ...(cosmeticType === RegisteredCosmeticType.Background ? { darkened: isDarkened } : {}),
-            };
-
-            await ServerApiService.saveCosmeticAsync(newCosmetic);
             setUploadSuccess(true);
-            fetchCosmetics();
+
+            await fetchCosmetics();
 
             setTimeout(() => {
                 resetUploadForm();
                 setUploadDialogOpen(false);
-            }, 1000);
+            }, 2000);
         } catch (error) {
-            console.error('Error uploading cosmetic:', error);
+            console.error('Upload error:', error);
             setUploadError(error instanceof Error ? error.message : 'Upload failed');
         } finally {
             setUploadLoading(false);
-        }
-    };
-
-    const handleDeleteSingleCosmetic = async (id: string) => {
-        try {
-            await ServerApiService.deleteCosmeticAsync(id);
-            fetchCosmetics();
-        } catch (error) {
-            console.error('Error deleting cosmetic:', error);
-        }
-    };
-
-    const handleDevCleanupAction = async (action: 'all' | 'reset') => {
-        setCleanupLoading(true);
-        setCleanupError(null);
-        try {
-            if (action === 'all') {
-                await ServerApiService.clearAllCosmeticsAsync();
-            } else {
-                await ServerApiService.resetCosmeticsToDefaultAsync();
-            }
-            setCleanupSuccess(true);
-            fetchCosmetics();
-        } catch (error) {
-            console.error('Cleanup error:', error);
-            setCleanupError(error instanceof Error ? error.message : 'Cleanup failed');
-        } finally {
-            setCleanupLoading(false);
         }
     };
 
@@ -280,11 +319,57 @@ const CosmeticsManagerTab: React.FC = () => {
         setSelectedFile(null);
         setImagePreview(null);
         setImageDimensions(null);
+        setCosmeticType(RegisteredCosmeticType.Cardback);
         setCosmeticTitle('');
         setCosmeticId(uuidv4());
         setUploadError(null);
         setUploadSuccess(false);
-        setIsDarkened(true);
+    };
+
+    const handleDevCleanupAction = async (action: 'all' | 'reset') => {
+        if(!isDev) {
+            return;
+        }
+        setCleanupLoading(true);
+        setCleanupError(null);
+        setCleanupSuccess(false);
+
+        let response;
+        switch(action) {
+            case 'all':
+                response = await ServerApiService.clearAllCosmeticsAsync();
+                break;
+            case 'reset':
+                response = await ServerApiService.resetCosmeticsToDefaultAsync();
+                break;
+        }
+
+        if (!response) {
+            throw new Error('Cleanup operation failed');
+        }
+        setFilteredCosmetics([]);
+        setCosmetics({ cardbacks: [], backgrounds: [] })
+        setCleanupSuccess(true);
+        await fetchCosmetics();
+
+        setTimeout(() => {
+            setCleanupDialogOpen(false);
+            setCleanupSuccess(false);
+        }, 2000);
+        setCleanupLoading(false);
+    };
+
+    const handleDeleteSingleCosmetic = async (cosmeticId: string) => {
+        if (!confirm(`Are you sure you want to delete the cosmetic "${cosmeticId}"? This action cannot be undone.`)) {
+            return;
+        }
+        const response = await ServerApiService.deleteCosmeticAsync(cosmeticId);
+        if (!response.success) {
+            alert('Failed to delete cosmetic');
+            console.error('Delete error:', response.message);
+        }
+
+        await fetchCosmetics();
     };
 
     // ======================== STYLES ========================
@@ -439,7 +524,7 @@ const CosmeticsManagerTab: React.FC = () => {
                 Showing {filteredCosmetics.length} of {allCosmetics.length} cosmetics
             </Typography>
 
-            {/* Cosmetics grid */}
+            {/* Main cosmetics area */}
             <Box sx={styles.cardOuter}>
                 <Card sx={styles.cardStyle}>
                     <Box sx={styles.mainContainerStyle}>
@@ -490,68 +575,44 @@ const CosmeticsManagerTab: React.FC = () => {
                 maxWidth="md"
                 fullWidth
                 PaperProps={{
-                    sx: { backgroundColor: '#2D2D2D', minHeight: '600px' }
+                    sx: { backgroundColor: '#2D2D2D' }
                 }}
             >
                 <DialogTitle>Upload New Cosmetic</DialogTitle>
                 <DialogContent sx={styles.dialogContent}>
                     {uploadError && (
-                        <Alert severity="error" sx={{ mb: 2 }}>{uploadError}</Alert>
+                        <Alert severity="error">{uploadError}</Alert>
                     )}
                     {uploadSuccess && (
-                        <Alert severity="success" sx={{ mb: 2 }}>Cosmetic uploaded successfully!</Alert>
+                        <Alert severity="success">Cosmetic uploaded successfully!</Alert>
                     )}
 
-                    <StyledTextField
-                        label="Cosmetic Title"
-                        value={cosmeticTitle}
-                        onChange={(e) => setCosmeticTitle(e.target.value)}
-                        disabled={uploadLoading}
-                    />
-
-                    <FormControl fullWidth>
-                        <InputLabel>Cosmetic Type</InputLabel>
+                    <FormControl fullWidth sx={{ mt: 2 }}>
+                        <InputLabel sx={{ color: 'white', '&.Mui-focused': { color: 'white' } }}>
+                            Cosmetic Type
+                        </InputLabel>
                         <Select
                             value={cosmeticType}
                             onChange={(e) => setCosmeticType(e.target.value as RegisteredCosmeticType)}
-                            label="Cosmetic Type"
                             disabled={uploadLoading}
+                            label="Cosmetic Type"
                         >
-                            <MenuItem value={RegisteredCosmeticType.Cardback}>Cardback</MenuItem>
-                            <MenuItem value={RegisteredCosmeticType.Background}>Background</MenuItem>
+                            <MenuItem value="cardback">Cardback (718x1000)</MenuItem>
+                            <MenuItem value="background">Background (1920x1080px)</MenuItem>
+                            {/* <MenuItem value="playmat">Playmat (2680x1200px)</MenuItem>*/}
                         </Select>
                     </FormControl>
-
-                    {(cosmeticType === RegisteredCosmeticType.Background) && (
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={isDarkened}
-                                    onChange={(e) => setIsDarkened(e.target.checked)}
-                                    disabled={uploadLoading}
-                                    sx={{
-                                        '& .MuiSwitch-switchBase.Mui-checked': {
-                                            color: '#2F7DB6',
-                                        },
-                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                                            backgroundColor: '#2F7DB6',
-                                        },
-                                    }}
-                                />
-                            }
-                            label={
-                                <Box>
-                                    <Typography variant="body2" color="white">
-                                        Apply darkening effect
-                                    </Typography>
-                                    <Typography variant="caption" color="white">
-                                        Darkens the background for better text readability in-game
-                                    </Typography>
-                                </Box>
-                            }
-                            sx={{ alignItems: 'flex-start', mb: 2 }}
+                    <FormControl fullWidth sx={{ mt: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                            Title
+                        </Typography>
+                        <StyledTextField
+                            value={cosmeticTitle}
+                            onChange={(e) => setCosmeticTitle(e.target.value)}
+                            disabled={uploadLoading}
+                            fullWidth
                         />
-                    )}
+                    </FormControl>
 
                     <Box>
                         <input
@@ -559,7 +620,7 @@ const CosmeticsManagerTab: React.FC = () => {
                             accept="image/*"
                             onChange={handleFileSelect}
                             disabled={uploadLoading}
-                            style={{ marginBottom: '1rem', color: 'white' }}
+                            style={{ marginBottom: '1rem', color:'white' }}
                         />
                         <Typography variant="caption" color="white" sx={{ display: 'block', mb: 1 }}>
                             PNG and JPEG files will be automatically converted to WebP format for better compression.
@@ -579,6 +640,24 @@ const CosmeticsManagerTab: React.FC = () => {
                                 borderRadius: '8px',
                                 overflow: 'hidden'
                             }}>
+                                {/* cosmeticType === 'playmat' && (
+                                    <Image
+                                        src="/default-background.webp"
+                                        alt="Background"
+                                        width={300}
+                                        height={300}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                            borderRadius: '8px',
+                                            zIndex: 0
+                                        }}
+                                    />
+                                )*/}
                                 <Image
                                     src={imagePreview}
                                     alt="Preview"
@@ -596,19 +675,6 @@ const CosmeticsManagerTab: React.FC = () => {
                                         zIndex: 1
                                     }}
                                 />
-                                {(cosmeticType === 'background') && isDarkened && (
-                                    <Box sx={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        width: '100%',
-                                        height: '100%',
-                                        backgroundColor: 'rgba(10, 10, 10, 0.57)',
-                                        borderRadius: '8px',
-                                        pointerEvents: 'none',
-                                        zIndex: 2
-                                    }} />
-                                )}
                             </Box>
                         </Box>
                     )}

@@ -1,9 +1,6 @@
 import { IModerationAction, IUser } from '@/app/_contexts/UserTypes';
-import React, {useState} from "react";
 import {
-    DurationUnit,
-    IModActionResponse,
-    IPlayerSearchResult, ModActionType
+    IModActionResponse, ModActionType
 } from "@/app/_components/_sharedcomponents/Preferences/Preferences.types";
 
 const PERMANENT_DURATION_DAYS = 36500;
