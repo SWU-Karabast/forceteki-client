@@ -233,6 +233,32 @@ export async function GET(req: Request) {
                 console.error('Protect the Pod API error:', response.statusText);
                 throw new Error(`Protect the Pod API error: ${response.statusText}`);
             }
+        } else if (deckLink.includes('swuforge.com')) {
+            // Deck Links in the form: https://swuforge.com/decks/${deckId}
+            const match = deckLink.match(/\/decks\/([^\/]+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if (deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.SWUForge;
+
+            if (!deckId) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            const apiUrl = `https://swuforge.com/api/decks/${deckId}/json`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck exists on swuforge.com.' }, { status: 404 });
+                }
+
+                console.error('SWUForge API error:', response.statusText);
+                throw new Error(`SWUForge API error: ${response.statusText}`);
+            }
         } else {
             console.error('Error: Deckbuilder not supported');
             return NextResponse.json({ error: 'Deckbuilder not supported' }, { status: 400 });
