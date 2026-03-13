@@ -75,7 +75,7 @@ const UserManagementTab: React.FC = () => {
                 setSelectedPlayer(result.players[0]);
             }
         } catch (error) {
-            setSearchError(error instanceof Error ? error.message : 'Failed to find user');
+            setSearchError('Failed to find user');
         } finally {
             setSearchLoading(false);
         }
@@ -289,6 +289,12 @@ const UserManagementTab: React.FC = () => {
                 backgroundColor: 'rgba(47, 125, 182, 0.15)',
             },
         },
+        alertMessage: {
+            mb: 2,
+            bgcolor: "rgba(0, 0, 0, 0.2)",
+            color: 'red',
+            fontSize: '0.775rem',
+        }
     };
 
     // ==================== Render ====================
@@ -296,7 +302,7 @@ const UserManagementTab: React.FC = () => {
         <Box>
             {/* Messages */}
             {searchError && (
-                <Alert severity="error" sx={{ mb: 2 }} onClose={() => setSearchError(null)}>
+                <Alert severity="error" sx={styles.alertMessage} onClose={() => setSearchError(null)}>
                     {searchError}
                 </Alert>
             )}
