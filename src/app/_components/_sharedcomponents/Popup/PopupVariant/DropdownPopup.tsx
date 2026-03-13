@@ -20,6 +20,7 @@ import {
     titleStyle,
 } from '../Popup.styles';
 import { DropdownPopup } from '../Popup.types';
+import RichText from '../../RichText/RichText';
 
 interface ButtonProps {
     data: DropdownPopup;
@@ -45,7 +46,7 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
         return (
             <>
                 {data.description && (
-                    <Typography sx={textStyle}>{data.description}</Typography>
+                    <RichText text={data.description} sx={textStyle} component={Typography}/>
                 )}
 
                 <Autocomplete 
@@ -83,7 +84,7 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
     return (
         <Box sx={containerStyle}>
             <Box sx={headerStyle(isMinimized)}>
-                <Typography sx={titleStyle}>{data.title}</Typography>
+                <RichText text={data.title} sx={titleStyle} component={Typography}/>
                 <IconButton
                     sx={minimizeButtonStyle}
                     aria-label="minimize"
