@@ -84,16 +84,8 @@ const pulseRedBorder = keyframes`
 `;
 
 const mockDelayDrain = keyframes`
-  0% {
-    border-color: rgba(57, 255, 20, 0.9);
-    box-shadow: 0 0 12px rgba(57, 255, 20, 0.8), inset 0 0 4px rgba(57, 255, 20, 0.3);
-    background-position: 100% center;
-  }
-  100% {
-    border-color: rgba(57, 255, 20, 0.1);
-    box-shadow: 0 0 2px rgba(57, 255, 20, 0.1);
-    background-position: 0% center;
-  }
+  0%   { clip-path: inset(0 0% 0 0 round 1rem); }
+  100% { clip-path: inset(0 100% 0 0 round 1rem); }
 `;
 
 const createStyles = (isPortrait: boolean) => ({
@@ -257,14 +249,21 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
     const styles = createStyles(isPortrait);
     
     const actionTrayStyles = (button: IButtonsProps, disabled = false, isMockDelay = false, delayMs = 1000) => {
-        if (isMockDelay && (button.arg === 'pass' || button.arg === 'passAbility')) {
+        if (isMockDelay) {
             return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #0a2e0a) padding-box,
-            linear-gradient(to right, rgba(57,255,20,0.9) 0%, rgba(57,255,20,0.1) 100%) border-box`,
-                backgroundSize: '200% 100%',
-                '&:not(:disabled)': {
+                background: `linear-gradient(rgb(29, 29, 29), #3d3a0a) padding-box,
+                    linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
+                border: '1px solid rgba(204, 172, 0, 0.5)',
+                position: 'relative',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: '-6px',
+                    borderRadius: 'inherit',
+                    border: '2px solid rgba(57,255,20,0.85)',
+                    boxShadow: '0 0 16px 6px rgba(57,255,20,0.7), 0 0 40px 12px rgba(57,255,20,0.35), 0 0 70px 20px rgba(57,255,20,0.15)',
                     animation: `${mockDelayDrain} ${delayMs}ms linear forwards`,
-                    border: '2px solid rgba(57, 255, 20, 0.9)',
+                    pointerEvents: 'none',
                 },
             };
         }
