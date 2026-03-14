@@ -83,6 +83,19 @@ const pulseRedBorder = keyframes`
   }
 `;
 
+const mockDelayDrain = keyframes`
+  0% {
+    border-color: rgba(57, 255, 20, 0.9);
+    box-shadow: 0 0 12px rgba(57, 255, 20, 0.8), inset 0 0 4px rgba(57, 255, 20, 0.3);
+    background-position: 100% center;
+  }
+  100% {
+    border-color: rgba(57, 255, 20, 0.1);
+    box-shadow: 0 0 2px rgba(57, 255, 20, 0.1);
+    background-position: 0% center;
+  }
+`;
+
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
         ...debugBorder('yellow'),
@@ -155,11 +168,14 @@ const CardActionTray: React.FC = () => {
     const playerState = gameState.players[connectedPlayer];
 
     const styles = createStyles(isPortrait);
+    const isMockDelay = playerState.promptState.promptType === 'discloseMockDelay';
+    const mockDelayMs = playerState.promptState.delayMs ?? 1000;
 
     const showTrayButtons = () => {
         if ( playerState.promptState.promptType === 'actionWindow' ||
              playerState.promptState.promptType === 'resource' ||
              playerState.promptState.promptType === 'distributeAmongTargets' ||
+             playerState.promptState.promptType === 'discloseMockDelay' ||
              (hasSelectedCards(gameState, ['groundArena','spaceArena']) && playerState.promptState.buttons?.length == 2) ||
              !!playerState.promptState.selectCardMode === true ) {
             return true;
@@ -217,6 +233,8 @@ const CardActionTray: React.FC = () => {
                   button={button}
                   sendGameMessage={sendGameMessage}
                   disabled={buttonDisabled(button)}
+                  isMockDelay={isMockDelay}
+                  delayMs={mockDelayMs}
               />
           ))}
             </Box>
@@ -229,14 +247,28 @@ interface IPromptButtonProps {
     button: IButtonsProps;
     sendGameMessage: (args: [string, string, string]) => void;
     disabled?: boolean;
+    isMockDelay?: boolean;
+    delayMs?: number;
 }
 
 
-const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled }) => {
+const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled, isMockDelay = false, delayMs = 1000 }) => {
     const { isPortrait } = useScreenOrientation();
     const styles = createStyles(isPortrait);
     
-    const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
+    const actionTrayStyles = (button: IButtonsProps, disabled = false, isMockDelay = false, delayMs = 1000) => {
+        if (isMockDelay && (button.arg === 'pass' || button.arg === 'passAbility')) {
+            return disabled ? {} : {
+                background: `linear-gradient(rgb(29, 29, 29), #0a2e0a) padding-box,
+            linear-gradient(to right, rgba(57,255,20,0.9) 0%, rgba(57,255,20,0.1) 100%) border-box`,
+                backgroundSize: '200% 100%',
+                '&:not(:disabled)': {
+                    animation: `${mockDelayDrain} ${delayMs}ms linear forwards`,
+                    border: '2px solid rgba(57, 255, 20, 0.9)',
+                },
+            };
+        }
+
         if (button.arg === 'claimInitiative' || button.text === 'Draw') {
             return disabled ? {} : {
                 background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
@@ -313,7 +345,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
     return (
         <Button
             variant="contained"
-            sx={{ ...styles.promptButton, ...actionTrayStyles(button, button.disabled) }}
+            sx={{ ...styles.promptButton, ...actionTrayStyles(button, button.disabled, isMockDelay, delayMs) }}
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
             disabled={disabled}
         >
