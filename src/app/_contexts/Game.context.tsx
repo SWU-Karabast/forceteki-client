@@ -145,6 +145,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
+            else if (promptType === 'discloseMockDelay') {
+                return openPopup('discloseMockDelay', {
+                    uuid: promptUuid,
+                    title: promptTitle ?? menuTitle,
+                    delayMs: promptState.delayMs ?? 1000,
+                    buttons: buttons,
+                    source: PopupSource.PromptState
+                });
+            }
             else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
                 return openPopup('default', {
                     uuid: promptUuid,
