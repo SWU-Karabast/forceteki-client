@@ -20,7 +20,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IQueueFormat, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -32,15 +32,7 @@ import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
 import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
 import { NewGameFormatAvailable } from '@/app/_constants/constants';
-
-interface IDeckPreferences {
-    showSavedDecks: boolean;
-    favoriteDeck: string;
-    format: SwuGameFormat;
-    cardPool: CardPool;
-    gamesToWinMode: GamesToWinMode;
-    saveDeck: boolean;
-}
+import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
 interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
@@ -90,18 +82,18 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     const formatConfigs = QueueFormatConfigs;
     const formats = getFormatsFromConfig(formatConfigs);
-    const queueFormat: IQueueFormat = useMemo(() => {
+    const queueConfig: IMatchConfiguration = useMemo(() => {
         const valueOrDefault = <TValue,>(value: TValue, values: TValue[], defaultValue: TValue) => {
             return values.includes(value) ? value : defaultValue;
         }
-        const fmt = valueOrDefault(deckPreferences.format, formats, DefaultFormat.format);
+        const fmt = valueOrDefault(deckPreferences.matchConfig.format, formats, DefaultFormat.format);
         const config = getFormatConfig(formatConfigs, fmt);
         return {
             format: fmt,
-            cardPool: valueOrDefault(deckPreferences.cardPool, config?.cardPools ?? [CardPool.Current], DefaultFormat.cardPool),
-            gamesToWinMode: valueOrDefault(deckPreferences.gamesToWinMode, config?.gamesToWinModes ?? [GamesToWinMode.BestOfOne], DefaultFormat.gamesToWinMode),
+            cardPool: valueOrDefault(deckPreferences.matchConfig.cardPool, config?.cardPools ?? [CardPool.Current], DefaultFormat.cardPool),
+            gamesToWinMode: valueOrDefault(deckPreferences.matchConfig.gamesToWinMode, config?.gamesToWinModes ?? [GamesToWinMode.BestOfOne], DefaultFormat.gamesToWinMode),
         }
-    }, [deckPreferences.format, deckPreferences.cardPool, deckPreferences.gamesToWinMode, formats, formatConfigs]);
+    }, [deckPreferences.matchConfig.format, deckPreferences.matchConfig.cardPool, deckPreferences.matchConfig.gamesToWinMode, formats, formatConfigs]);
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
@@ -197,9 +189,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
-                format: queueFormat.format,
-                cardPool: queueFormat.cardPool,
-                gamesToWinMode: queueFormat.gamesToWinMode,
+                format: queueConfig.format,
+                cardPool: queueConfig.cardPool,
+                gamesToWinMode: queueConfig.gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
@@ -249,9 +241,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     const handleJoinGameQueue = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setFormat(queueFormat.format);
-        setCardPool(queueFormat.cardPool);
-        setGamesToWinMode(queueFormat.gamesToWinMode)
+        setFormat(queueConfig.format);
+        setCardPool(queueConfig.cardPool);
+        setGamesToWinMode(queueConfig.gamesToWinMode)
         handleFormSubmissionWithUndoCheck(handleJoinGameQueueActual);
     };
 
@@ -459,9 +451,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 )}
 
                 <FormatSelectionForm
-                    format={queueFormat.format}
-                    cardPool={queueFormat.cardPool}
-                    gamesToWinMode={queueFormat.gamesToWinMode}
+                    format={queueConfig.format}
+                    cardPool={queueConfig.cardPool}
+                    gamesToWinMode={queueConfig.gamesToWinMode}
                     setFormat={setFormat}
                     setCardPool={setCardPool}
                     setGamesToWinMode={setGamesToWinMode}

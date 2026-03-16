@@ -309,7 +309,7 @@ const HomePagePlayMode: React.FC = () => {
                             onClose={() => setModalOpen(false) }
                             title={errorState.title}
                             errors={errorState.details}
-                            format={deckPreferences.format}
+                            matchConfig={deckPreferences.matchConfig}
                             modalType={errorState.modalType}
                         />
                         {showTestGames &&

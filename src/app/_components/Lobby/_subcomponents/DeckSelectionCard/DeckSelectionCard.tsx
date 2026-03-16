@@ -34,7 +34,7 @@ import {
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
+import { GamesToWinMode, IMatchConfiguration, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 
@@ -63,7 +63,12 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
-    const lobbyFormat = lobbyState ? lobbyState.gameFormat : null;
+    
+    const matchConfig: IMatchConfiguration = {
+        format: lobbyState?.settings.format || deckPreferences.matchConfig.format,
+        cardPool: lobbyState?.settings.cardPool || deckPreferences.matchConfig.cardPool,
+        gamesToWinMode: lobbyState?.settings.gamesToWinMode || deckPreferences.matchConfig.gamesToWinMode,
+    }
 
     // Bo3 state from lobbyState
     const winHistory = lobbyState?.winHistory || null;
@@ -600,7 +605,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                         setDeckImportErrorsSeen(true);
                     }}
                     errors={errorState.details}
-                    format={lobbyFormat}
+                    matchConfig={matchConfig}
                     modalType={errorState.modalType}
                 />
             )}

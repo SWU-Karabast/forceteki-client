@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SwuGameFormat, GamesToWinMode, DefaultFormat, CardPool } from '@/app/_constants/constants';
+import { SwuGameFormat, GamesToWinMode, DefaultFormat, CardPool, IMatchConfiguration } from '@/app/_constants/constants';
 import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
@@ -8,9 +8,7 @@ import { useSession } from 'next-auth/react';
 export interface IDeckPreferences {
     showSavedDecks: boolean;
     favoriteDeck: string;
-    format: SwuGameFormat;
-    cardPool: CardPool;
-    gamesToWinMode: GamesToWinMode;
+    matchConfig: IMatchConfiguration;
     saveDeck: boolean;
 }
 
@@ -153,10 +151,12 @@ export const useDeckManagement = (): IDeckManagementState => {
     const deckPreferences: IDeckPreferences = {
         showSavedDecks,
         favoriteDeck,
-        format,
-        cardPool,
-        gamesToWinMode: effectiveGamesToWinMode,
         saveDeck,
+        matchConfig: {
+            format,
+            cardPool,
+            gamesToWinMode: effectiveGamesToWinMode,
+        }
     };
 
     const deckPreferencesHandlers: IDeckPreferencesHandlers = {

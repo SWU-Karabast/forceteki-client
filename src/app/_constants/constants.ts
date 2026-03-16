@@ -33,14 +33,13 @@ export enum RematchMode {
     NewBo3 = 'newBo3'
 }
 
-// Combined format + game mode for queue/lobby creation
-export interface IQueueFormat {
+export interface IMatchConfiguration {
     format: SwuGameFormat;
     cardPool: CardPool;
     gamesToWinMode: GamesToWinMode;
 }
 
-export const DefaultFormat: IQueueFormat = {
+export const DefaultFormat: IMatchConfiguration = {
     format: SwuGameFormat.Premier,
     cardPool: CardPool.Current,
     gamesToWinMode: GamesToWinMode.BestOfOne,
@@ -57,7 +56,7 @@ export const LobbyFormatConfigs: IFormatModeConfig[] = [
     { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Open, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.NextSet, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
 ];
 
 export const QueueFormatConfigs: IFormatModeConfig[] = [
