@@ -78,12 +78,12 @@ export function getReadableDeckErrors(
         // This error can get very long if the player has a deck from entirely the wrong card pool, so we summarize if there are a lot of offending cards
         if (illegalInFormatList.length > 10) {
             messages.push(
-                `Deck contains ${illegalInFormatList.length} cards that are illegal in ${formatString} format with ${cardPoolString}.`
+                `Deck contains ${illegalInFormatList.length} cards that are illegal in ${formatString} with ${cardPoolString}.`
             );
         } else {
             illegalInFormatList.forEach(({ name, id }) => {
                 messages.push(
-                    `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${formatString} format with ${cardPoolString}.`
+                    `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${formatString} with ${cardPoolString}.`
                 );
             });
         }
