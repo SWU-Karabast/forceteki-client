@@ -8,9 +8,9 @@ export enum MatchmakingType {
 
 export enum SwuGameFormat {
     Premier = 'premier',
-    Open = 'open',
     Eternal = 'eternal',
     Limited = 'limited',
+    Open = 'open',
 }
 
 export enum CardPool {
