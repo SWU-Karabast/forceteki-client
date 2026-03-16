@@ -65,9 +65,9 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
     
     const matchConfig: IMatchConfiguration = {
-        format: lobbyState?.settings.format || deckPreferences.matchConfig.format,
-        cardPool: lobbyState?.settings.cardPool || deckPreferences.matchConfig.cardPool,
-        gamesToWinMode: lobbyState?.settings.gamesToWinMode || deckPreferences.matchConfig.gamesToWinMode,
+        format: lobbyState?.gameFormat || deckPreferences.matchConfig.format,
+        cardPool: lobbyState?.cardPool || deckPreferences.matchConfig.cardPool,
+        gamesToWinMode: lobbyState?.winHistory.gamesToWinMode || deckPreferences.matchConfig.gamesToWinMode,
     }
 
     // Bo3 state from lobbyState
