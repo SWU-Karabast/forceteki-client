@@ -68,10 +68,9 @@ export const aspectReplacementRules: TextReplacementRule[] = Object.entries(ASPE
 
 const resourceIconStyle: React.CSSProperties = {
     display: 'inline-block',
-    height: '1.15em',
+    height: '1.4em',
     width: 'auto',
     verticalAlign: 'middle',
-    marginInline: '0.15em',
 };
 
 const MAX_RESOURCE_ICON = 12;
