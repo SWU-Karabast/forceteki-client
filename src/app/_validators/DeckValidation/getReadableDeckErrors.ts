@@ -26,7 +26,7 @@ export function getReadableDeckErrors(
 ): string[] {
     const messages: string[] = [];
     const formatString = format ? FormatLabels[format] : 'the selected format';
-    const cardPoolString = cardPool ? `${CardPoolLabels[cardPool]} card pool` : 'the selected card pool';
+    const cardPoolString = cardPool ? `"${CardPoolLabels[cardPool]}" card pool` : 'the selected card pool';
 
     // Simple booleans (e.g., InvalidDeckData, TooManyLeaders)
     if (failures[DeckValidationFailureReason.InvalidDeckData]) {
@@ -78,8 +78,13 @@ export function getReadableDeckErrors(
         // This error can get very long if the player has a deck from entirely the wrong card pool, so we summarize if there are a lot of offending cards
         if (illegalInFormatList.length > 10) {
             messages.push(
-                `Deck contains ${illegalInFormatList.length} cards that are illegal in ${formatString} with ${cardPoolString}.`
+                `Deck contains ${illegalInFormatList.length} cards that are illegal in ${formatString} with ${cardPoolString}, including the following:`
             );
+
+            // Add a truncated list of offending cards for more context (up to 10)
+            illegalInFormatList.slice(0, 10).forEach(({ name, id }) => {
+                messages.push(`- "${name}" (set: ${id.toUpperCase()})`);
+            });
         } else {
             illegalInFormatList.forEach(({ name, id }) => {
                 messages.push(
