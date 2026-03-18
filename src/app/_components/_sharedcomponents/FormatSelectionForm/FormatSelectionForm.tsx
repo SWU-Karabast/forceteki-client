@@ -53,7 +53,9 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
     } as const;
 
     const learnMoreStyle = {
-        color: '#4F8A9E',
+        color: 'lightblue',
+        textDecoration: 'underline',
+        textDecorationStyle: 'dotted',
         fontSize: '0.7rem',
         cursor: 'pointer',
         '&:hover': { color: '#6BA3BE' },
