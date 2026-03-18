@@ -38,6 +38,12 @@ export const savePreferencesGeneric = async (
                         ...user.preferences.cosmetics,
                         ...partialPreferences.cosmetics
                     }
+                }),
+                ...(partialPreferences.gameOptions && {
+                    gameOptions: {
+                        ...user.preferences.gameOptions,
+                        ...partialPreferences.gameOptions
+                    }
                 })
             }
             updateUserPreferences(updatedUserPreferences);
@@ -57,6 +63,12 @@ export const savePreferencesGeneric = async (
                     cosmetics: {
                         ...currentLocalPreferences.cosmetics,
                         ...partialPreferences.cosmetics
+                    }
+                }),
+                ...(partialPreferences.gameOptions && {
+                    gameOptions: {
+                        ...currentLocalPreferences.gameOptions,
+                        ...partialPreferences.gameOptions
                     }
                 })
             };
@@ -104,5 +116,8 @@ const getDefaultPreferences = (): IPreferences => ({
         background: undefined,
         // playmat: undefined,
         // disablePlaymats: false,
+    },
+    gameOptions: {
+        muteChat: false,
     }
 });
