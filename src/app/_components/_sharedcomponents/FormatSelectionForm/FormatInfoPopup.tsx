@@ -23,12 +23,12 @@ const formatDescriptions: Record<SwuGameFormat, { summary: string; deckRules: st
     [SwuGameFormat.Premier]: {
         summary: 'The standard competitive format with a rotating card pool.',
         deckRules: '50-card minimum main deck, 10-card sideboard.',
-        notes: 'Includes a suspended cards list. Sets rotate out over time. Sideboard rules are not enforced in the "Next Set" card pool.',
+        notes: 'Includes a suspended cards list. Sets rotate out over time. Sideboard size rules are not enforced with the "Next Set" card pool.',
     },
     [SwuGameFormat.Eternal]: {
         summary: 'The competitive format with an ever-growing card pool — sets never rotate out.',
         deckRules: '50-card minimum main deck, 10-card sideboard.',
-        notes: 'Includes a suspended cards list. Sideboard rules are not enforced in the "Next Set" card pool.',
+        notes: 'Includes a suspended cards list. Sideboard size rules are not enforced with the "Next Set" card pool.',
     },
     [SwuGameFormat.Limited]: {
         summary: 'Simulates draft or sealed gameplay with a restricted card pool.',
@@ -50,7 +50,7 @@ const cardPoolDescriptions: Record<CardPool, { summary: string; constructed: str
     },
     [CardPool.NextSet]: {
         summary: 'Preview what the card pool will look like when the next set drops.',
-        constructed: 'Simulates the legal card pool after the next set releases, including any rotation that would apply. Sideboard rules are not enforced.',
+        constructed: 'Simulates the legal card pool after the next set releases, including any rotation that would apply. Sideboard size rules are not enforced.',
         limited: 'Uses the next unreleased set as the card pool.',
     },
     [CardPool.Unlimited]: {
