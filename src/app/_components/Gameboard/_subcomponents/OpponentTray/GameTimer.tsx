@@ -23,8 +23,6 @@ const GameTimer: React.FC = ({ ...props }) => {
     const [turnTimeRemainingMs, setTurnTimeRemainingMs] = React.useState(MAX_TURN_TIME);
     const isTurnTime = turnTimeRemainingMs > 0;
     const [playerMainTimeRemainingMs, setPlayerMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
-
-    // Opponent main time countdown state (independent of the circular <Timer> widget)
     const [opponentMainTimeRemainingMs, setOpponentMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
 
     // Sync both timers from server state
@@ -38,28 +36,28 @@ const GameTimer: React.FC = ({ ...props }) => {
         setOpponentMainTimeRemainingMs(secondsToMilliseconds(opponentState?.mainTimeRemainingSeconds || 0));
     }, [playerIsActive, opponentState?.turnTimeRemainingSeconds, opponentState?.mainTimeRemainingSeconds, playerState?.turnTimeRemainingSeconds, playerState?.mainTimeRemainingSeconds])
 
-    // Client-side countdown for opponent main time (independent of the <Timer> component's interval)
+    // When opponent is on main time and player is inactive, the circle handles the countdown.
+    // Only run the manual countdown when the player is also active (circle is showing player's time).
     useEffect(() => {
         const interval = setInterval(() => {
-            if (opponentIsActive && !opponentIsTurnTime) {
+            if (opponentIsActive && !opponentIsTurnTime && playerIsActive) {
                 setOpponentMainTimeRemainingMs((prev) => prev > 0 ? prev - TIMER_STEP : 0);
             }
         }, TIMER_STEP);
         return () => clearInterval(interval);
-    }, [opponentIsActive, opponentIsTurnTime]);
+    }, [opponentIsActive, opponentIsTurnTime, playerIsActive]);
 
-    // Color changes and background only react to the connected player's timer state
-    const hasLowOpacity = !playerIsActive;
-    const shouldAdjustBackgroundColor = playerIsActive && !isTurnTime;
+    const activeTurn = playerIsActive ? 'player' : opponentIsActive ? 'opponent' : undefined;
+    // Show opponent's main time in the circle when they are active on main time and player is not active
+    const showOpponentMainTime = !playerIsActive && opponentIsActive && !isTurnTime;
 
     return (
         <Timer
-            hasLowOpacity={hasLowOpacity}
-            isRunning={isTurnTime ? (playerIsActive || opponentIsActive) : playerIsActive}
+            activeTurn={activeTurn}
+            isRunning={isTurnTime ? (playerIsActive || opponentIsActive) : (playerIsActive || showOpponentMainTime)}
             maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME}
-            setTimeRemaining={isTurnTime ? setTurnTimeRemainingMs : setPlayerMainTimeRemainingMs}
-            timeRemaining={isTurnTime ? turnTimeRemainingMs : playerMainTimeRemainingMs}
-            shouldAdjustBackgroundColor={shouldAdjustBackgroundColor}
+            setTimeRemaining={isTurnTime ? setTurnTimeRemainingMs : showOpponentMainTime ? setOpponentMainTimeRemainingMs : setPlayerMainTimeRemainingMs}
+            timeRemaining={isTurnTime ? turnTimeRemainingMs : showOpponentMainTime ? opponentMainTimeRemainingMs : playerMainTimeRemainingMs}
             tooltipTitle={<TooltipContent
                 turnTimeRemainingSeconds={turnTimeRemainingMs}
                 playerIsActive={playerIsActive}
@@ -135,7 +133,7 @@ const MainTimerLabel = ({
                     color: 'var(--initiative-red)',
                     marginBottom: 0,
                     cursor: 'pointer',
-                    opacity: opponentIsActive && !opponentIsTurnTime ? 1 : 0.5,
+                    opacity: opponentIsActive && !opponentIsTurnTime ? 1 : 0.65,
                 }}
             >{`${formatMilliseconds(opponentTimeRemaining)}`}</Typography>
             <Divider />
@@ -145,7 +143,7 @@ const MainTimerLabel = ({
                     color: 'var(--initiative-blue)',
                     marginBottom: 0,
                     cursor: 'pointer',
-                    opacity: playerIsActive && !playerIsTurnTime ? 1 : 0.5,
+                    opacity: playerIsActive && !playerIsTurnTime ? 1 : 0.65,
                 }}
             >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography>
         </Stack>

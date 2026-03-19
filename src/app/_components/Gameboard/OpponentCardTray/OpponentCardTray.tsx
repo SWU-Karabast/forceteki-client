@@ -209,7 +209,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.rightColumn,
                 }}
             >
-                {!gameIsEnded() && !lobbyState.isPrivate && <GameTimer />}
+                {!gameIsEnded() && !lobbyState?.isPrivate && <GameTimer />}
                 <Box
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}

@@ -8,17 +8,23 @@ export const formatMilliseconds = (ms: number): string => {
 export const getTimerColor = ({
     timeRemaining,
     maxTime,
-    hasLowOpacity
-}: { 
-    timeRemaining: number, maxTime: number, hasLowOpacity?: boolean 
+    activeTurn,
+}: {
+    timeRemaining: number, maxTime: number, activeTurn?: 'player' | 'opponent', 
 }): {
-    color: 'white' | 'red' | 'orange';
-    themeColor: 'inherit' | 'warning' | 'error',
+    timerColor: string;
+    cssColor?: string;
+    timerOpacity: number;
+    timerWarning?: boolean;
 } => {
-    if (hasLowOpacity) return { color: 'white', themeColor: 'inherit' };
-    if (timeRemaining > (maxTime / 3)) return { color: 'white', themeColor: 'inherit' };
-    if (timeRemaining > (maxTime / 6)) return { color: 'orange', themeColor: 'warning' };
-    return { color: 'red', themeColor: 'error' };
+    if (activeTurn === 'opponent') return { timerColor: 'var(--initiative-red)', timerOpacity: 0.5 };
+    if (timeRemaining < (maxTime / 4)) return { timerColor: 'var(--selection-yellow)', timerOpacity: 1, timerWarning: true };
+    const cssColor = activeTurn === 'player'
+        ? 'var(--initiative-blue)'
+        : activeTurn === 'opponent'
+            ? 'var(--initiative-red)'
+            : undefined;
+    return { timerColor: cssColor ?? 'white', cssColor, timerOpacity: .5 };
 }
 
 export const millisecondsToSeconds = (ms: number) => ms / 1000;
