@@ -12,6 +12,7 @@ interface TimerProps extends CircularProgressProps {
     activeTurn?: 'player' | 'opponent';
     children?: React.ReactNode;
     isRunning?: boolean;
+    isTurnTime?: boolean;
     maxTime: number;
     setTimeRemaining: React.Dispatch<React.SetStateAction<number>>;
     timeRemaining: number;
@@ -22,6 +23,7 @@ const Timer: React.FC<TimerProps> = ({
     activeTurn,
     children,
     isRunning = true,
+    isTurnTime = false,
     maxTime,
     setTimeRemaining,
     timeRemaining,
@@ -79,7 +81,7 @@ const Timer: React.FC<TimerProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: timerWarning
+                        background: timerWarning && !isTurnTime
                             ? 'radial-gradient(circle,rgba(0, 0, 0, 0.1) 24%, rgba(207, 0, 0, 1) 100%)'
                             : 'transparent',
                         borderRadius: '50%',

@@ -54,6 +54,7 @@ const GameTimer: React.FC = ({ ...props }) => {
     return (
         <Timer
             activeTurn={activeTurn}
+            isTurnTime={isTurnTime}
             isRunning={isTurnTime ? (playerIsActive || opponentIsActive) : (playerIsActive || showOpponentMainTime)}
             maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME}
             setTimeRemaining={isTurnTime ? setTurnTimeRemainingMs : showOpponentMainTime ? setOpponentMainTimeRemainingMs : setPlayerMainTimeRemainingMs}
