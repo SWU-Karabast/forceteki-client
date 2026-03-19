@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ENABLE_NEXT_SET_PREVIEW, SwuGameFormat, GamesToWinMode, DefaultFormat } from '@/app/_constants/constants';
+import { SwuGameFormat, GamesToWinMode, DefaultFormat, CardPool, IMatchConfiguration } from '@/app/_constants/constants';
 import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
@@ -8,8 +8,7 @@ import { useSession } from 'next-auth/react';
 export interface IDeckPreferences {
     showSavedDecks: boolean;
     favoriteDeck: string;
-    format: SwuGameFormat;
-    gamesToWinMode: GamesToWinMode;
+    matchConfig: IMatchConfiguration;
     saveDeck: boolean;
 }
 
@@ -17,6 +16,7 @@ export interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
     setFavoriteDeck: (value: string) => void;
     setFormat: (value: SwuGameFormat) => void;
+    setCardPool: (value: CardPool) => void;
     setGamesToWinMode: (value: GamesToWinMode) => void;
     setSaveDeck: (value: boolean) => void;
 }
@@ -48,13 +48,22 @@ export const useDeckManagement = (): IDeckManagementState => {
     const [format, setFormat] = useState<SwuGameFormat>(() => {
         const stored = localStorage.getItem('format');
 
-        const validFormats: string[] = [SwuGameFormat.Premier, SwuGameFormat.Open, SwuGameFormat.Eternal];
-        if (ENABLE_NEXT_SET_PREVIEW) validFormats.push(SwuGameFormat.NextSetPreview);
+        const validFormats: string[] = Object.values(SwuGameFormat);
         if (!validFormats.includes(stored ?? '')) {
             return DefaultFormat.format;
         }
 
         return (stored as SwuGameFormat) || DefaultFormat.format;
+    });
+
+    const [cardPool, setCardPool] = useState<CardPool>(() => {
+        const stored = localStorage.getItem('cardPool');
+
+        if (!Object.values(CardPool).some((value) => stored === value)) {
+            return DefaultFormat.cardPool;
+        }
+
+        return (stored as CardPool) || DefaultFormat.cardPool;
     });
 
     const [gamesToWinMode, setGamesToWinMode] = useState<GamesToWinMode>(() => {
@@ -86,6 +95,10 @@ export const useDeckManagement = (): IDeckManagementState => {
     useEffect(() => {
         localStorage.setItem('format', format);
     }, [format]);
+
+    useEffect(() => {
+        localStorage.setItem('cardPool', cardPool);
+    }, [cardPool]);
 
     useEffect(() => {
         localStorage.setItem('gamesToWinMode', gamesToWinMode);
@@ -138,15 +151,19 @@ export const useDeckManagement = (): IDeckManagementState => {
     const deckPreferences: IDeckPreferences = {
         showSavedDecks,
         favoriteDeck,
-        format,
-        gamesToWinMode: effectiveGamesToWinMode,
         saveDeck,
+        matchConfig: {
+            format,
+            cardPool,
+            gamesToWinMode: effectiveGamesToWinMode,
+        }
     };
 
     const deckPreferencesHandlers: IDeckPreferencesHandlers = {
         setShowSavedDecks: handleShowSavedDecksChange,
         setFavoriteDeck: handleFavoriteDeckChange,
         setFormat: useCallback((value: SwuGameFormat) => setFormat(value), []),
+        setCardPool: useCallback((value: CardPool) => setCardPool(value), []),
         setGamesToWinMode: useCallback((value: GamesToWinMode) => setGamesToWinMode(value), []),
         setSaveDeck: useCallback((value: boolean) => setSaveDeck(value), []),
     };
