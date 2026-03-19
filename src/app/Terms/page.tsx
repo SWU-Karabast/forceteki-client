@@ -23,7 +23,7 @@ const tosBlocks = [
         'Users must not use slurs or vulgarity in text chat or in usernames.',
         'Harassment or abusive behavior towards other users in text chat is prohibited.',
         'Impersonation of other users, moderators, or administrators is prohibited.',
-        'Abusive language or profanity in submitted bug reports or player reports is prohibited.'
+        'Abuse of the player and bug reporting system in any form is prohibited and may result in the removal of reporting privileges. Examples of abuse include, but are not limited to, using profane or harassing language in reports and submitting a high number of repeated reports in a short period of time.'
     ] },
     { type: 'heading', text: 'Decks' },
     { type: 'ol', items: [
