@@ -12,7 +12,7 @@ const NewFormatAvailableAnnouncement: React.FC<INewFormatAvailableAnnouncementPr
     const isAvailableInLobby = LobbyFormatConfigs.some((config) => config.format === format);
     const isOnlyInLobby = isAvailableInLobby && !isAvailableInQueue;
 
-    return <Typography variant="body1" sx={{ color: 'orchid', textAlign: 'center', mb: '1rem' }}>
+    return <Typography variant="body1" sx={{ color: 'orange', textAlign: 'center', mb: '1rem' }}>
         {FormatLabels[format]} format is now available{isOnlyInLobby ? ' in Lobbies' : ''}!
     </Typography>
 }
