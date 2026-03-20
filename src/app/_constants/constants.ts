@@ -1,7 +1,5 @@
 import { DeckSource } from '../_utils/fetchDeckData';
 
-export const ENABLE_NEXT_SET_PREVIEW = false;
-
 export enum MatchmakingType {
     PublicLobby= 'publicLobby',
     PrivateLobby = 'privateLobby',
@@ -10,12 +8,18 @@ export enum MatchmakingType {
 
 export enum SwuGameFormat {
     Premier = 'premier',
-    NextSetPreview = 'nextSetPreview',
-    Open = 'open',
     Eternal = 'eternal',
+    Limited = 'limited',
+    Open = 'open',
 }
 
-export const NewGameFormatAvailable: SwuGameFormat | undefined = SwuGameFormat.Eternal;
+export enum CardPool {
+    Current = 'current',
+    NextSet = 'nextSet',
+    Unlimited = 'unlimited',
+}
+
+export const NewGameFormatAvailable: SwuGameFormat | undefined = SwuGameFormat.Limited;
 
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
@@ -29,55 +33,68 @@ export enum RematchMode {
     NewBo3 = 'newBo3'
 }
 
-// Combined format + game mode for queue/lobby creation
-export interface IQueueFormat {
+export interface IMatchConfiguration {
     format: SwuGameFormat;
+    cardPool: CardPool;
     gamesToWinMode: GamesToWinMode;
 }
 
-export const DefaultFormat: IQueueFormat = {
+export const DefaultFormat: IMatchConfiguration = {
     format: SwuGameFormat.Premier,
+    cardPool: CardPool.Current,
     gamesToWinMode: GamesToWinMode.BestOfOne,
 }
 
-const AllLobbyFormats: SwuGameFormat[] = [
-    SwuGameFormat.Premier,
-    SwuGameFormat.NextSetPreview,
-    SwuGameFormat.Eternal,
-    SwuGameFormat.Open,
+// Per-format config describing what card pools and match types are allowed
+export interface IFormatModeConfig {
+    format: SwuGameFormat;
+    cardPools: CardPool[];
+    gamesToWinModes: GamesToWinMode[];
+}
+
+export const LobbyFormatConfigs: IFormatModeConfig[] = [
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Open, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
 ];
 
-const AllQueueFormats: SwuGameFormat[] = [
-    SwuGameFormat.Premier,
-    SwuGameFormat.NextSetPreview,
-    SwuGameFormat.Eternal,
+export const QueueFormatConfigs: IFormatModeConfig[] = [
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
 ];
 
-export const LobbyFormats: SwuGameFormat[] = ENABLE_NEXT_SET_PREVIEW
-    ? AllLobbyFormats
-    : AllLobbyFormats.filter((fmt) => fmt !== SwuGameFormat.NextSetPreview);
+// Helper to get the list of formats from a config array
+export const getFormatsFromConfig = (configs: IFormatModeConfig[]): SwuGameFormat[] =>
+    configs.map((c) => c.format);
 
-export const QueueFormats: SwuGameFormat[] = ENABLE_NEXT_SET_PREVIEW
-    ? AllQueueFormats
-    : AllQueueFormats.filter((fmt) => fmt !== SwuGameFormat.NextSetPreview);
+// Helper to look up config for a specific format
+export const getFormatConfig = (configs: IFormatModeConfig[], format: SwuGameFormat): IFormatModeConfig | undefined =>
+    configs.find((c) => c.format === format);
 
 export const GamesToWinModeLabels: Record<GamesToWinMode, string> = {
     [GamesToWinMode.BestOfOne]: 'Best-of-One',
     [GamesToWinMode.BestOfThree]: 'Best-of-Three',
 }
 
+export const CardPoolLabels: Record<CardPool, string> = {
+    [CardPool.Current]: 'Current',
+    [CardPool.NextSet]: 'Next Set',
+    [CardPool.Unlimited]: 'Unlimited',
+}
+
 export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
-    [SwuGameFormat.NextSetPreview]: 'Next Set Preview',
     [SwuGameFormat.Open]: 'Open',
     [SwuGameFormat.Eternal]: 'Eternal',
+    [SwuGameFormat.Limited]: 'Limited',
 };
 
 export const FormatTagLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Premier]: 'Premier',
-    [SwuGameFormat.NextSetPreview]: 'Next Set',
     [SwuGameFormat.Open]: 'Open',
     [SwuGameFormat.Eternal]: 'Eternal',
+    [SwuGameFormat.Limited]: 'Limited',
 };
 
 export const SupportedDeckSources = Object.values(DeckSource)
