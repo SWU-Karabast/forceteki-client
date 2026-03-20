@@ -60,7 +60,7 @@ const HomePagePlayMode: React.FC = () => {
         swuStatsDecks,
         isSwuStatsLinked,
         useSwuStatsDecks,
-        toggleDeckSource,
+        setSwuStatsDeckSource,
         isLoadingSwuStatsDecks,
         swuStatsDecksError,
     } = useDeckManagement();
@@ -295,7 +295,7 @@ const HomePagePlayMode: React.FC = () => {
                                 swuStatsDecks={swuStatsDecks}
                                 isSwuStatsLinked={isSwuStatsLinked}
                                 useSwuStatsDecks={useSwuStatsDecks}
-                                toggleDeckSource={toggleDeckSource}
+                                setSwuStatsDeckSource={setSwuStatsDeckSource}
                                 isLoadingSwuStatsDecks={isLoadingSwuStatsDecks}
                                 swuStatsDecksError={swuStatsDecksError}
                             />
@@ -318,7 +318,7 @@ const HomePagePlayMode: React.FC = () => {
                                 swuStatsDecks={swuStatsDecks}
                                 isSwuStatsLinked={isSwuStatsLinked}
                                 useSwuStatsDecks={useSwuStatsDecks}
-                                toggleDeckSource={toggleDeckSource}
+                                setSwuStatsDeckSource={setSwuStatsDeckSource}
                                 isLoadingSwuStatsDecks={isLoadingSwuStatsDecks}
                                 swuStatsDecksError={swuStatsDecksError}
                             />

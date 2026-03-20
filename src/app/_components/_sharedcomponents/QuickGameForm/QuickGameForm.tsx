@@ -6,7 +6,6 @@ import {
     CircularProgress,
     FormControl,
     FormControlLabel,
-    IconButton,
     Link,
     MenuItem,
     Radio,
@@ -14,7 +13,6 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import { Sync as SyncIcon } from '@mui/icons-material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
@@ -65,7 +63,7 @@ interface IQuickGameFormProps {
     swuStatsDecks: ISwuStatsDeckItem[];
     isSwuStatsLinked: boolean;
     useSwuStatsDecks: boolean;
-    toggleDeckSource: () => void;
+    setSwuStatsDeckSource: (value: boolean) => void;
     isLoadingSwuStatsDecks: boolean;
     swuStatsDecksError: boolean;
 }
@@ -88,7 +86,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     swuStatsDecks,
     isSwuStatsLinked,
     useSwuStatsDecks,
-    toggleDeckSource,
+    setSwuStatsDeckSource,
     isLoadingSwuStatsDecks,
     swuStatsDecksError
 }) => {
@@ -122,8 +120,17 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         handleJsonDeck(deckLink);
     }, [deckLink]);
 
-    const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
-        setShowSavedDecks(useSavedDecks);
+    const handleChangeDeckSelectionType = (value: string) => {
+        if (value === 'SWU Stats Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource(true);
+        } else if (value === 'Saved Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource(false);
+        } else {
+            setShowSavedDecks(false);
+            setSwuStatsDeckSource(false);
+        }
         clearErrors();
     }
 
@@ -430,12 +437,23 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 <FormControl component="fieldset" sx={styles.formControlStyle}>
                     <RadioGroup
                         row
-                        value={showSavedDecks ? 'Saved Deck' : 'New Deck'}
+                        value={showSavedDecks ? (useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Deck' : 'Saved Deck') : 'New Deck'}
                         onChange={(
                             e: ChangeEvent<HTMLInputElement>,
                             value: string
-                        ) => handleChangeDeckSelectionType(value === 'Saved Deck')}
+                        ) => handleChangeDeckSelectionType(value)}
                     >
+                        {isSwuStatsLinked && (
+                            <FormControlLabel
+                                value="SWU Stats Deck"
+                                control={<Radio sx={styles.checkboxStyle} />}
+                                label={
+                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                        SWU Stats Deck
+                                    </Typography>
+                                }
+                            />
+                        )}
                         <FormControlLabel
                             value="Saved Deck"
                             control={<Radio sx={styles.checkboxStyle} />}
@@ -456,62 +474,37 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                         />
                     </RadioGroup>
                 </FormControl>
-                {showSavedDecks && (
+                {showSavedDecks && !useSwuStatsDecks && (
                     <FormControl fullWidth sx={styles.formControlStyle}>
-                        {/* Deck Dropdown with Cycle Button */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: '0.5rem' }}>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>
-                                {useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Decks' : 'Favorite Decks'}
-                            </Typography>
-                            
-                            {isSwuStatsLinked && (
-                                <Tooltip title={`Switch to ${useSwuStatsDecks ? 'Karabast' : 'SWU Stats'} decks`}>
-                                    <IconButton
-                                        onClick={toggleDeckSource}
-                                        size="small"
-                                        sx={{
-                                            color: useSwuStatsDecks ? '#4CAF50' : '#fff',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                            },
-                                        }}
-                                    >
-                                        <SyncIcon fontSize="small" />
-                                    </IconButton>
-                                </Tooltip>
-                            )}
-                        </Box>
-                        
-                        {useSwuStatsDecks && isSwuStatsLinked 
-                            ? renderSwuStatsDecksDropdown()
-                            : renderKarabastDecksDropdown()
-                        }
+                        {renderKarabastDecksDropdown()}
                         
                         <Box sx={styles.manageDecksContainer}>
-                            {(!useSwuStatsDecks || !isSwuStatsLinked) && (
-                                <Button
-                                    onClick={handleDeckManagement}
-                                    sx={styles.manageDecks}
-                                >
-                                    Manage&nbsp;Decks
-                                </Button>
-                            )}
-                            {useSwuStatsDecks && isSwuStatsLinked && (
-                                <Typography sx={{ ...styles.deckSourceLabel, mt: '0.5rem' }}>
-                                    Manage decks on{' '}
-                                    <Link 
-                                        href="https://swustats.net" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        sx={{ color: 'lightblue' }}
-                                    >
-                                        swustats.net
-                                    </Link>
-                                </Typography>
-                            )}
+                            <Button
+                                onClick={handleDeckManagement}
+                                sx={styles.manageDecks}
+                            >
+                                Manage&nbsp;Decks
+                            </Button>
                         </Box>
                     </FormControl>
-                ) || (
+                )}
+                {showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && (
+                    <FormControl fullWidth sx={styles.formControlStyle}>
+                        {renderSwuStatsDecksDropdown()}
+                        
+                        <Box sx={styles.manageDecksContainer}>
+                            <Button
+                                href="https://swustats.net"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={styles.manageDecks}
+                            >
+                                Manage&nbsp;Decks&nbsp;on&nbsp;SWU&nbsp;Stats
+                            </Button>
+                        </Box>
+                    </FormControl>
+                )}
+                {!showSavedDecks && (
                     <>
                         {/* Deck Link Input */}
                         <FormControl fullWidth sx={styles.formControlStyle}>

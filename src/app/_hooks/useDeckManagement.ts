@@ -39,7 +39,7 @@ export interface IDeckManagementState {
     swuStatsDecks: ISwuStatsDeckItem[];
     isSwuStatsLinked: boolean;
     useSwuStatsDecks: boolean;
-    toggleDeckSource: () => void;
+    setSwuStatsDeckSource: (value: boolean) => void;
     isLoadingSwuStatsDecks: boolean;
     swuStatsDecksError: boolean;
 }
@@ -315,15 +315,10 @@ export const useDeckManagement = (): IDeckManagementState => {
 
     const handleSetDeckLink = useCallback((value: string) => setDeckLink(value), []);
 
-    const toggleDeckSource = useCallback(() => {
-        if (!isSwuStatsLinked) return; // Can't toggle if SWU Stats is not linked
-        
-        setUseSwuStatsDecks(prev => {
-            const newValue = !prev;
-            syncUseSwuStatsDecksToStorage(newValue);
-            return newValue;
-        });
-        // Don't clear the deck - each source maintains its own favorite
+    const setSwuStatsDeckSource = useCallback((value: boolean) => {
+        if (!isSwuStatsLinked && value) return; // Can't enable if SWU Stats is not linked
+        setUseSwuStatsDecks(value);
+        syncUseSwuStatsDecksToStorage(value);
     }, [isSwuStatsLinked, syncUseSwuStatsDecksToStorage]);
 
     const deckPreferences: IDeckPreferences = {
@@ -359,7 +354,7 @@ export const useDeckManagement = (): IDeckManagementState => {
         swuStatsDecks,
         isSwuStatsLinked,
         useSwuStatsDecks,
-        toggleDeckSource,
+        setSwuStatsDeckSource,
         isLoadingSwuStatsDecks,
         swuStatsDecksError,
     };

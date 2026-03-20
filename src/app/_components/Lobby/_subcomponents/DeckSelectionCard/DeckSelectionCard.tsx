@@ -13,12 +13,11 @@ import {
     FormControlLabel,
     Divider,
     FormControl,
-    IconButton,
     Radio,
     RadioGroup,
     CircularProgress,
 } from '@mui/material';
-import { Info, Sync as SyncIcon } from '@mui/icons-material';
+import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
@@ -59,7 +58,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         swuStatsDecks,
         isSwuStatsLinked,
         useSwuStatsDecks,
-        toggleDeckSource,
+        setSwuStatsDeckSource,
         isLoadingSwuStatsDecks,
         swuStatsDecksError,
     } = useDeckManagement();
@@ -122,8 +121,17 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         clearErrorsFunc();
     }
 
-    const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
-        setShowSavedDecks(useSavedDecks);
+    const handleChangeDeckSelectionType = (value: string) => {
+        if (value === 'SWU Stats Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource(true);
+        } else if (value === 'Saved Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource(false);
+        } else {
+            setShowSavedDecks(false);
+            setSwuStatsDeckSource(false);
+        }
         clearErrorsFunc();
     }
 
@@ -549,12 +557,23 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     <FormControl component="fieldset" sx={styles.formControlStyle}>
                         <RadioGroup
                             row
-                            value={showSavedDecks ? 'Saved Deck' : 'New Deck'}
+                            value={showSavedDecks ? (useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Deck' : 'Saved Deck') : 'New Deck'}
                             onChange={(
                                 e: ChangeEvent<HTMLInputElement>,
                                 value: string
-                            ) => handleChangeDeckSelectionType(value === 'Saved Deck')}
+                            ) => handleChangeDeckSelectionType(value)}
                         >
+                            {isSwuStatsLinked && (
+                                <FormControlLabel
+                                    value="SWU Stats Deck"
+                                    control={<Radio sx={styles.checkboxStyle} />}
+                                    label={
+                                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                            SWU Stats Deck
+                                        </Typography>
+                                    }
+                                />
+                            )}
                             <FormControlLabel
                                 value="Saved Deck"
                                 control={<Radio sx={styles.checkboxStyle} />}
@@ -575,55 +594,25 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                             />
                         </RadioGroup>
                     </FormControl>
-                    {showSavedDecks && (
+                    {showSavedDecks && !useSwuStatsDecks && (
                         <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: '0.5rem' }}>
-                                <Typography variant="body1" sx={styles.labelTextStyle}>
-                                    {useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Decks' : 'Favorite Decks'}
-                                </Typography>
-                                
-                                {isSwuStatsLinked && (
-                                    <Tooltip title={`Switch to ${useSwuStatsDecks ? 'Karabast' : 'SWU Stats'} decks`}>
-                                        <IconButton
-                                            onClick={toggleDeckSource}
-                                            disabled={disableSettings}
-                                            size="small"
-                                            sx={{
-                                                color: useSwuStatsDecks ? '#4CAF50' : '#fff',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                },
-                                                '&:disabled': {
-                                                    color: 'rgba(255, 255, 255, 0.3)',
-                                                },
-                                            }}
-                                        >
-                                            <SyncIcon fontSize="small" />
-                                        </IconButton>
-                                    </Tooltip>
-                                )}
-                            </Box>
-                            
-                            {useSwuStatsDecks && isSwuStatsLinked 
-                                ? renderSwuStatsDecksDropdown()
-                                : renderKarabastDecksDropdown()
-                            }
-                            
-                            {useSwuStatsDecks && isSwuStatsLinked && (
-                                <Typography sx={{ ...styles.deckSourceLabel, mt: '0.5rem' }}>
-                                    Manage decks on{' '}
-                                    <Link 
-                                        href="https://swustats.net" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        sx={{ color: 'lightblue' }}
-                                    >
-                                        swustats.net
-                                    </Link>
-                                </Typography>
-                            )}
+                            {renderKarabastDecksDropdown()}
                         </FormControl>
-                    ) || (
+                    )}
+                    {showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && (
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            {renderSwuStatsDecksDropdown()}
+                            
+                            <Button
+                                href="https://swustats.net"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Manage&nbsp;Decks&nbsp;on&nbsp;SWU&nbsp;Stats
+                            </Button>
+                        </FormControl>
+                    )}
+                    {!showSavedDecks && (
                         <>
                             {/* Deck Link Input */}
                             <FormControl fullWidth sx={styles.formControlStyle}>
