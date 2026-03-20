@@ -865,21 +865,14 @@ export interface ISwuStatsDecksResult {
 /**
  * Fetches the user's decks from SWU Stats if their account is linked
  * @param user The current user
- * @param favoritesOnly If true, only returns favorite decks
  * @returns Promise that resolves to the decks data or null if not linked
  */
 export const fetchSwuStatsDecks = async (
     user: IUser,
-    favoritesOnly: boolean = false
 ): Promise<ISwuStatsDecksResult | null> => {
     try {
-        const params = new URLSearchParams();
-        if (favoritesOnly) {
-            params.set('favorites', 'true');
-        }
-        
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/swustats/decks?${params.toString()}`,
+            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/swustats/decks`,
             {
                 method: 'GET',
                 headers: {
