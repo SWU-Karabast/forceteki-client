@@ -52,7 +52,7 @@ const Navbar = () => {
                 </Typography>
             )}
             {(pathname === '/Unimplemented' || pathname.includes('/DeckPage') || pathname === '/mod') && (
-                <Typography sx={navbarStyles.lobbyTextStyle} onClick={handleExit}>KARABAST</Typography>
+                <Typography sx={navbarStyles.lobbyTextStyle} onClick={handleExit}>MEESABAST</Typography>
             )
             }
             <ControlHub

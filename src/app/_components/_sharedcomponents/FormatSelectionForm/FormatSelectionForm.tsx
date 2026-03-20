@@ -65,7 +65,7 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
         <FormControl fullWidth sx={formControlStyle}>
             <Box sx={labelRowStyle}>
                 <Typography variant="body1" sx={labelTextStyle}>
-                    Format
+                    Fight Style
                 </Typography>
                 <Link component="button" type="button" underline="hover" sx={learnMoreStyle} onClick={() => setFormatInfoOpen(true)}>
                     About Formats
@@ -118,7 +118,7 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
             </FormControl>
         )}
         <FormControl fullWidth sx={formControlStyle}>
-            <Typography variant="body1" sx={labelTextStyle}>Match Type</Typography>
+            <Typography variant="body1" sx={labelTextStyle}>How Many Bonks</Typography>
             <StyledTextField
                 select
                 value={gamesToWinMode}
