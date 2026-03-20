@@ -62,6 +62,7 @@ const HomePagePlayMode: React.FC = () => {
         useSwuStatsDecks,
         toggleDeckSource,
         isLoadingSwuStatsDecks,
+        swuStatsDecksError,
     } = useDeckManagement();
 
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
@@ -296,6 +297,7 @@ const HomePagePlayMode: React.FC = () => {
                                 useSwuStatsDecks={useSwuStatsDecks}
                                 toggleDeckSource={toggleDeckSource}
                                 isLoadingSwuStatsDecks={isLoadingSwuStatsDecks}
+                                swuStatsDecksError={swuStatsDecksError}
                             />
                         </TabPanel>}
                         <TabPanel index={showQuickMatch ? 1 : 0} value={value}>
@@ -318,6 +320,7 @@ const HomePagePlayMode: React.FC = () => {
                                 useSwuStatsDecks={useSwuStatsDecks}
                                 toggleDeckSource={toggleDeckSource}
                                 isLoadingSwuStatsDecks={isLoadingSwuStatsDecks}
+                                swuStatsDecksError={swuStatsDecksError}
                             />
                         </TabPanel>
                         <ErrorModal

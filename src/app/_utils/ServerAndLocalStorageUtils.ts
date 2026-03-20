@@ -859,6 +859,7 @@ export interface ISwuStatsDecksResult {
         offset: number;
         has_more: boolean;
     };
+    error?: boolean;
 }
 
 /**
@@ -903,7 +904,7 @@ export const fetchSwuStatsDecks = async (
         };
     } catch (error) {
         console.error('Error fetching SWU Stats decks:', error);
-        return null;
+        return { decks: [], pagination: { total: 0, limit: 0, offset: 0, has_more: false }, error: true };
     }
 };
 export const unlinkSwubaseAsync = async(

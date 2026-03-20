@@ -68,6 +68,7 @@ interface ICreateGameFormProps {
     useSwuStatsDecks?: boolean;
     toggleDeckSource?: () => void;
     isLoadingSwuStatsDecks?: boolean;
+    swuStatsDecksError?: boolean;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
@@ -89,7 +90,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     isSwuStatsLinked = false,
     useSwuStatsDecks = false,
     toggleDeckSource,
-    isLoadingSwuStatsDecks = false
+    isLoadingSwuStatsDecks = false,
+    swuStatsDecksError = false
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
@@ -363,6 +365,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             ? favoriteDeck 
             : '';
 
+        const emptyMessage = swuStatsDecksError ? 'Error retrieving SWU Stats decks' : 'No decks found on SWU Stats';
+
         return (
             <StyledTextField
                 select
@@ -372,10 +376,16 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 }
                 disabled={userLoading || isLoadingSwuStatsDecks}
                 placeholder="SWU Stats Decks"
+                SelectProps={{
+                    displayEmpty: true,
+                    renderValue: sortedSwuStatsDecks.length === 0
+                        ? () => <span style={{ color: swuStatsDecksError ? 'var(--initiative-red)' : '#aaa' }}>{emptyMessage}</span>
+                        : undefined,
+                }}
             >
                 {sortedSwuStatsDecks.length === 0 ? (
                     <MenuItem value="" disabled>
-                        No decks found on SWU Stats
+                        {emptyMessage}
                     </MenuItem>
                 ) : (
                     sortedSwuStatsDecks.map((deck) => (
@@ -396,27 +406,27 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             : '';
 
         return (
-        <StyledTextField
-            select
-            value={validatedValue}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setFavoriteDeck(e.target.value as string)
-            }
-            disabled={userLoading}
-            placeholder="Favorite Decks"
-        >
-            {savedDecks.length === 0 ? (
-                <MenuItem value="" disabled>
-                    No saved decks found
-                </MenuItem>
-            ) : (
-                savedDecks.map((deck) => (
-                    <MenuItem key={deck.deckID} value={deck.deckID}>
-                        {deck.favourite ? '★ ' : ''}{deck.name}
+            <StyledTextField
+                select
+                value={validatedValue}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setFavoriteDeck(e.target.value as string)
+                }
+                disabled={userLoading}
+                placeholder="Favorite Decks"
+            >
+                {savedDecks.length === 0 ? (
+                    <MenuItem value="" disabled>
+                        No saved decks found
                     </MenuItem>
-                ))
-            )}
-        </StyledTextField>
+                ) : (
+                    savedDecks.map((deck) => (
+                        <MenuItem key={deck.deckID} value={deck.deckID}>
+                            {deck.favourite ? '★ ' : ''}{deck.name}
+                        </MenuItem>
+                    ))
+                )}
+            </StyledTextField>
         );
     };
 

@@ -61,6 +61,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         useSwuStatsDecks,
         toggleDeckSource,
         isLoadingSwuStatsDecks,
+        swuStatsDecksError,
     } = useDeckManagement();
     
     const { showSavedDecks, favoriteDeck, saveDeck } = deckPreferences;
@@ -440,6 +441,8 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
             return a.name.localeCompare(b.name);
         });
 
+        const emptyMessage = swuStatsDecksError ? 'Error retrieving SWU Stats decks' : 'No decks found on SWU Stats';
+
         return (
             <StyledTextField
                 select
@@ -448,10 +451,16 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     setFavoriteDeck(e.target.value as string)
                 }
                 placeholder="SWU Stats Decks"
+                SelectProps={{
+                    displayEmpty: true,
+                    renderValue: sortedSwuStatsDecks.length === 0
+                        ? () => <span style={{ color: swuStatsDecksError ? 'var(--initiative-red)' : '#aaa' }}>{emptyMessage}</span>
+                        : undefined,
+                }}
             >
                 {sortedSwuStatsDecks.length === 0 ? (
                     <MenuItem value="" disabled>
-                        No decks found on SWU Stats
+                        {emptyMessage}
                     </MenuItem>
                 ) : (
                     sortedSwuStatsDecks.map((deck) => (

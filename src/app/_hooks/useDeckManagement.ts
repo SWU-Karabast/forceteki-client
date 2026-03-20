@@ -41,6 +41,7 @@ export interface IDeckManagementState {
     useSwuStatsDecks: boolean;
     toggleDeckSource: () => void;
     isLoadingSwuStatsDecks: boolean;
+    swuStatsDecksError: boolean;
 }
 
 export const useDeckManagement = (): IDeckManagementState => {
@@ -104,6 +105,7 @@ export const useDeckManagement = (): IDeckManagementState => {
     const [swuStatsDecks, setSwuStatsDecks] = useState<ISwuStatsDeckItem[]>([]);
     const [isSwuStatsLinked, setIsSwuStatsLinked] = useState<boolean>(false);
     const [isLoadingSwuStatsDecks, setIsLoadingSwuStatsDecks] = useState<boolean>(false);
+    const [swuStatsDecksError, setSwuStatsDecksError] = useState<boolean>(false);
     
     // Toggle state for switching between SWU Stats and Karabast decks
     // When SWU Stats is linked, default to using SWU Stats decks
@@ -235,8 +237,12 @@ export const useDeckManagement = (): IDeckManagementState => {
 
                 if (linked) {
                     setIsLoadingSwuStatsDecks(true);
+                    setSwuStatsDecksError(false);
                     const result = await fetchSwuStatsDecks(user, false);
-                    if (result?.decks) {
+                    if (result?.error) {
+                        setSwuStatsDecksError(true);
+                        setSwuStatsDecks([]);
+                    } else if (result?.decks) {
                         setSwuStatsDecks(result.decks);
                     }
                     setIsLoadingSwuStatsDecks(false);
@@ -247,6 +253,7 @@ export const useDeckManagement = (): IDeckManagementState => {
                 console.error('Error checking SWU Stats status:', error);
                 setIsSwuStatsLinked(false);
                 setSwuStatsDecks([]);
+                setSwuStatsDecksError(true);
                 setIsLoadingSwuStatsDecks(false);
             }
         };
@@ -354,5 +361,6 @@ export const useDeckManagement = (): IDeckManagementState => {
         useSwuStatsDecks,
         toggleDeckSource,
         isLoadingSwuStatsDecks,
+        swuStatsDecksError,
     };
 };
