@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SwuGameFormat, GamesToWinMode, DefaultFormat, CardPool, IMatchConfiguration } from '@/app/_constants/constants';
 import { StoredDeck, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { retrieveDecksForUser } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { 
+    retrieveDecksForUser, 
+    fetchSwuStatsDecks, 
+    checkSwuStatsLinkStatus,
+    ISwuStatsDeckItem 
+} from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
 
@@ -30,6 +35,13 @@ export interface IDeckManagementState {
     setSavedDecks: (decks: StoredDeck[]) => void;
     fetchDecks: () => Promise<void>;
     isBo3Allowed: boolean;
+    // SWU Stats integration
+    swuStatsDecks: ISwuStatsDeckItem[];
+    isSwuStatsLinked: boolean;
+    useSwuStatsDecks: boolean;
+    setSwuStatsDeckSource: (value: boolean) => void;
+    isLoadingSwuStatsDecks: boolean;
+    swuStatsDecksError: boolean;
 }
 
 export const useDeckManagement = (): IDeckManagementState => {
@@ -43,6 +55,15 @@ export const useDeckManagement = (): IDeckManagementState => {
 
     const [favoriteDeck, setFavoriteDeck] = useState<string>(() => {
         return localStorage.getItem('selectedDeck') || '';
+    });
+
+    // Separate favorite decks for each source
+    const [favoriteSavedDeck, setFavoriteSavedDeck] = useState<string>(() => {
+        return localStorage.getItem('selectedSavedDeck') || '';
+    });
+
+    const [favoriteSwuStatsDeck, setFavoriteSwuStatsDeck] = useState<string>(() => {
+        return localStorage.getItem('selectedSwuStatsDeck') || '';
     });
 
     const [format, setFormat] = useState<SwuGameFormat>(() => {
@@ -80,6 +101,41 @@ export const useDeckManagement = (): IDeckManagementState => {
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
 
+    // SWU Stats integration state
+    const [swuStatsDecks, setSwuStatsDecks] = useState<ISwuStatsDeckItem[]>([]);
+    const [isSwuStatsLinked, setIsSwuStatsLinked] = useState<boolean>(false);
+    const [isLoadingSwuStatsDecks, setIsLoadingSwuStatsDecks] = useState<boolean>(false);
+    const [swuStatsDecksError, setSwuStatsDecksError] = useState<boolean>(false);
+    
+    // Toggle state for switching between SWU Stats and Karabast decks
+    // When SWU Stats is linked, default to using SWU Stats decks
+    const [useSwuStatsDecks, setUseSwuStatsDecks] = useState<boolean>(false);
+
+    // When SWU Stats link status changes, update the toggle accordingly
+    useEffect(() => {
+        const stored = localStorage.getItem('useSwuStatsDecks');
+        
+        if (isSwuStatsLinked) {
+            // If SWU Stats is linked, default to true unless explicitly set to false
+            if (stored === null) {
+                // First time linking - default to true
+                setUseSwuStatsDecks(true);
+                localStorage.setItem('useSwuStatsDecks', 'true');
+            } else {
+                // Use stored preference
+                setUseSwuStatsDecks(stored === 'true');
+            }
+        } else {
+            // If SWU Stats is not linked, must use Karabast
+            setUseSwuStatsDecks(false);
+        }
+    }, [isSwuStatsLinked]);
+
+    // Sync useSwuStatsDecks to localStorage when manually changed
+    const syncUseSwuStatsDecksToStorage = useCallback((value: boolean) => {
+        localStorage.setItem('useSwuStatsDecks', value.toString());
+    }, []);
+
     // Bo3 is only allowed for logged-in users, but in dev mode we allow it unless explicitly blocked
     const isDev = process.env.NODE_ENV === 'development';
     const blockBo3AnonLocal = process.env.NEXT_PUBLIC_FORCE_BLOCK_BO3_ANON_LOCAL === 'true';
@@ -103,6 +159,107 @@ export const useDeckManagement = (): IDeckManagementState => {
     useEffect(() => {
         localStorage.setItem('gamesToWinMode', gamesToWinMode);
     }, [gamesToWinMode]);
+
+    // Check SWU Stats link status and fetch decks when user changes
+    useEffect(() => {
+        const checkAndFetchSwuStatsDecks = async () => {
+            if (!user) {
+                setIsSwuStatsLinked(false);
+                setSwuStatsDecks([]);
+                return;
+            }
+
+            // Mock SWU Stats data for dev user "ThisIsTheWay"
+            if (process.env.NODE_ENV === 'development' && user.id === 'th3w4y') {
+                console.log('[DEV] Using mock SWU Stats data for ThisIsTheWay');
+                setIsSwuStatsLinked(true);
+                setIsLoadingSwuStatsDecks(true);
+                
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                const mockSwuStatsDecks: ISwuStatsDeckItem[] = [
+                    {
+                        id: 1001,
+                        name: 'Sabine Aggro',
+                        description: 'Fast aggressive Sabine deck',
+                        isFavorite: true,
+                        createdAt: '2025-01-15 10:00:00',
+                        updatedAt: '2025-01-20 14:30:00',
+                        deckLink: 'https://swustats.net/TCGEngine/Decks/Deck.php?gameName=1001',
+                    },
+                    {
+                        id: 1002,
+                        name: 'Boba Control',
+                        description: 'Bounty hunter control deck',
+                        isFavorite: true,
+                        createdAt: '2025-01-10 09:00:00',
+                        updatedAt: '2025-01-18 11:00:00',
+                        deckLink: 'https://swustats.net/TCGEngine/Decks/Deck.php?gameName=1002',
+                    },
+                    {
+                        id: 1003,
+                        name: 'Vader Ramp',
+                        description: 'Big units Vader deck',
+                        isFavorite: false,
+                        createdAt: '2025-01-05 08:00:00',
+                        updatedAt: '2025-01-12 16:00:00',
+                        deckLink: 'https://swustats.net/TCGEngine/Decks/Deck.php?gameName=1003',
+                    },
+                    {
+                        id: 1004,
+                        name: 'Luke Skywalker Midrange',
+                        description: 'Balanced Luke deck',
+                        isFavorite: false,
+                        createdAt: '2025-01-02 12:00:00',
+                        updatedAt: '2025-01-08 09:30:00',
+                        deckLink: 'https://swustats.net/TCGEngine/Decks/Deck.php?gameName=1004',
+                    },
+                    {
+                        id: 1005,
+                        name: 'Han Solo Smugglers',
+                        description: 'Cunning smuggler synergy',
+                        isFavorite: false,
+                        createdAt: '2024-12-28 15:00:00',
+                        updatedAt: '2025-01-03 10:00:00',
+                        deckLink: 'https://swustats.net/TCGEngine/Decks/Deck.php?gameName=1005',
+                    },
+                ];
+                
+                setSwuStatsDecks(mockSwuStatsDecks);
+                setIsLoadingSwuStatsDecks(false);
+                return;
+            }
+
+            try {
+                const linked = await checkSwuStatsLinkStatus(user);
+                setIsSwuStatsLinked(linked);
+
+                if (linked) {
+                    setIsLoadingSwuStatsDecks(true);
+                    setSwuStatsDecksError(false);
+                    const result = await fetchSwuStatsDecks(user);
+                    if (result?.error) {
+                        setSwuStatsDecksError(true);
+                        setSwuStatsDecks([]);
+                    } else if (result?.decks) {
+                        setSwuStatsDecks(result.decks);
+                    }
+                    setIsLoadingSwuStatsDecks(false);
+                } else {
+                    setSwuStatsDecks([]);
+                }
+            } catch (error) {
+                console.error('Error checking SWU Stats status:', error);
+                setIsSwuStatsLinked(false);
+                setSwuStatsDecks([]);
+                setSwuStatsDecksError(true);
+                setIsLoadingSwuStatsDecks(false);
+            }
+        };
+
+        checkAndFetchSwuStatsDecks();
+    }, [user]);
 
     const handleInitializeDeckSelection = useCallback((firstDeck: string, allDecks: StoredDeck[] | DisplayDeck[]) => {
         let selectDeck = localStorage.getItem('selectedDeck') || '';
@@ -142,15 +299,31 @@ export const useDeckManagement = (): IDeckManagementState => {
     }, []);
 
     const handleFavoriteDeckChange = useCallback((value: string) => {
-        setFavoriteDeck(value);
-        localStorage.setItem('selectedDeck', value);
-    }, []);
+        if (useSwuStatsDecks) {
+            setFavoriteSwuStatsDeck(value);
+            localStorage.setItem('selectedSwuStatsDeck', value);
+        } else {
+            setFavoriteSavedDeck(value);
+            localStorage.setItem('selectedSavedDeck', value);
+        }
+    }, [useSwuStatsDecks]);
+
+    // Helper to get the current favorite deck based on source
+    const getCurrentFavoriteDeck = useCallback((): string => {
+        return useSwuStatsDecks ? favoriteSwuStatsDeck : favoriteSavedDeck;
+    }, [useSwuStatsDecks, favoriteSwuStatsDeck, favoriteSavedDeck]);
 
     const handleSetDeckLink = useCallback((value: string) => setDeckLink(value), []);
 
+    const setSwuStatsDeckSource = useCallback((value: boolean) => {
+        if (!isSwuStatsLinked && value) return; // Can't enable if SWU Stats is not linked
+        setUseSwuStatsDecks(value);
+        syncUseSwuStatsDecksToStorage(value);
+    }, [isSwuStatsLinked, syncUseSwuStatsDecksToStorage]);
+
     const deckPreferences: IDeckPreferences = {
         showSavedDecks,
-        favoriteDeck,
+        favoriteDeck: getCurrentFavoriteDeck(),
         saveDeck,
         matchConfig: {
             format,
@@ -177,5 +350,12 @@ export const useDeckManagement = (): IDeckManagementState => {
         setSavedDecks,
         fetchDecks,
         isBo3Allowed,
+        // SWU Stats integration
+        swuStatsDecks,
+        isSwuStatsLinked,
+        useSwuStatsDecks,
+        setSwuStatsDeckSource,
+        isLoadingSwuStatsDecks,
+        swuStatsDecksError,
     };
 };
