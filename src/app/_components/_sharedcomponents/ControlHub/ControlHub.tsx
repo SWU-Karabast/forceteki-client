@@ -87,16 +87,16 @@ const ControlHub: React.FC<IControlHubProps> = ({
             <Box sx={styles.defaultMainContainer}>
                 <Box sx={styles.profileBox}>
                     <NextLinkMui href="/Unimplemented" sx={styles.profileLink}>
-                        Unimplemented
+                        Mesa no build dis yet
                     </NextLinkMui>
                     <NextLinkMui href="/DeckPage" sx={styles.profileLink}>
-                        Decks
+                        Da Deckie-Decks
                     </NextLinkMui>
                     <NextLinkMui href="/Preferences" sx={styles.profileLink}>
-                        Preferences
+                        Mesa Likes
                     </NextLinkMui>
                     <NextLinkMui href="/Terms" sx={styles.profileLink}>
-                        Terms
+                        Big Boom Boom Rules
                     </NextLinkMui>
                     {user && isMod && (
                         <>
@@ -122,7 +122,7 @@ const ControlHub: React.FC<IControlHubProps> = ({
                                 sx={{ borderColor: '#ffffff4D', mx: 1 }}
                             />
                             <NextLinkMui href="/" onClick={logout} sx={styles.profileLink}>
-                                Log Out
+                                Run Away Now
                             </NextLinkMui>
                         </>
                     ) : (!hideLogin) ? (

@@ -62,8 +62,8 @@ export const QueueFormats: SwuGameFormat[] = ENABLE_NEXT_SET_PREVIEW
     : AllQueueFormats.filter((fmt) => fmt !== SwuGameFormat.NextSetPreview);
 
 export const GamesToWinModeLabels: Record<GamesToWinMode, string> = {
-    [GamesToWinMode.BestOfOne]: 'Best-of-One',
-    [GamesToWinMode.BestOfThree]: 'Best-of-Three',
+    [GamesToWinMode.BestOfOne]: 'One Big Bonk',
+    [GamesToWinMode.BestOfThree]: 'Three Big Bonks',
 }
 
 export const FormatLabels: Record<SwuGameFormat, string> = {

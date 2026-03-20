@@ -314,7 +314,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     return (
         <Box >
             <Typography variant="h2">
-                Create New Lobby
+                MAKE-A ROOMIE
             </Typography>
             {/* <Typography variant="h3" sx={styles.labelTextStyle}>
                 Deck Selection
@@ -335,7 +335,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             control={<Radio sx={styles.checkboxStyle} />}
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Saved Deck
+                                    Old Deckie
                                 </Typography>
                             }
                         />
@@ -344,7 +344,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             control={<Radio sx={styles.checkboxStyle} />}
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    New Deck
+                                    Freshie Deckie
                                 </Typography>
                             }
                         />
@@ -381,7 +381,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                     onClick={handleDeckManagement}
                                     sx={styles.manageDecks}
                                 >
-                                    Manage&nbsp;Decks
+                                    Boss My Deckies
                                 </Button>
                             </Box>
                         </FormControl>
@@ -564,7 +564,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
                 {/* Submit Button */}
                 <Button type="submit" variant="contained" sx={styles.submitButtonStyle}>
-                    Create Game
+                    Mesa Ready!
                 </Button>
             </form>
         </Box>

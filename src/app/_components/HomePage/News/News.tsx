@@ -27,7 +27,7 @@ const NewsColumn: React.FC = () => {;
             <Card variant="black" sx={styles.boxNews}>
                 <Box>
                     <Typography variant="h2" sx={{ p: '0.4rem', borderBottom: '1px solid #404040' }}>
-                        News
+                        Big Gungan Newsies
                     </Typography>
                 </Box>
                 <Box>

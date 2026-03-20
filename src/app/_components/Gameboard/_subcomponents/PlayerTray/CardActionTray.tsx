@@ -310,6 +310,16 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
         return {};
     }
 
+    const getGunganText = (originalText: string) => {
+        const lower = originalText.toLowerCase();
+        if (lower === 'attack') return 'Bonk';
+        if (lower === 'pass') return 'Mesa Pass';
+        if (lower === 'claim initiative') return 'Me Take Da Lead!';
+        if (lower === 'resource') return 'Shiny Thing';
+        if (lower === 'mulligan') return 'Redo!';
+        return originalText;
+    };
+
     return (
         <Button
             variant="contained"
@@ -318,7 +328,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
             disabled={disabled}
         >
             <Box sx={styles.promptButtonText}>
-                {button.text}
+                {getGunganText(button.text)}
             </Box>
         </Button>
     );

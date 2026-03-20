@@ -33,7 +33,7 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
 
     return <>
         <FormControl fullWidth sx={formControlStyle}>
-            <Typography variant="body1" sx={labelTextStyle}>Format</Typography>
+            <Typography variant="body1" sx={labelTextStyle}>Fight Style</Typography>
             <StyledTextField
                 select
                 value={format}
@@ -53,7 +53,7 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
             </StyledTextField>
         </FormControl>
         <FormControl fullWidth sx={formControlStyle}>
-            <Typography variant="body1" sx={labelTextStyle}>Match Type</Typography>
+            <Typography variant="body1" sx={labelTextStyle}>How Many Bonks</Typography>
             <StyledTextField
                 select
                 value={gamesToWinMode}

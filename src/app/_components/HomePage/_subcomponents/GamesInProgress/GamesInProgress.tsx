@@ -212,7 +212,7 @@ const GamesInProgress: React.FC = () => {
     const noGamesText: () => string = () => {
         if (!leaderData) return 'Loading leaders...';
         if (gamesData?.numberOfOngoingGames === 0) return 'No games found...';
-        return 'No leader(s) found with that name...';
+        return 'No mesa peoples here right now...';
     }
 
     const styles = {
@@ -291,7 +291,7 @@ const GamesInProgress: React.FC = () => {
     return (
         <>
             <Box sx={styles.headerBox}>
-                <Typography variant="h3">Games in Progress</Typography>
+                <Typography variant="h3">Big Fights Happenin Now</Typography>
                 <Typography variant="h3" sx={styles.activeGamesNumber}>{gamesData?.numberOfOngoingGames || 0}</Typography>
             </Box>
             <Box sx={styles.sortFilterRow}>
@@ -323,7 +323,7 @@ const GamesInProgress: React.FC = () => {
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label="Filter by Leader (Type to Search)"
+                            label="Picka da Boss Man"
                             variant="outlined"
                             slotProps={styles.filterByLeaderSlotProps}
                         />
@@ -361,7 +361,7 @@ const GamesInProgress: React.FC = () => {
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label="Filter by Format"
+                            label="Picka da Fight Style"
                             variant="outlined"
                             slotProps={styles.filterByLeaderSlotProps}
                         />
