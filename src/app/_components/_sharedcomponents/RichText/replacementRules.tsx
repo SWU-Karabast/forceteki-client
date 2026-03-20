@@ -63,10 +63,49 @@ export const aspectReplacementRules: TextReplacementRule[] = Object.entries(ASPE
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Resource icon replacements  ({resource:0}, {resource:1}, …)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const resourceIconStyle: React.CSSProperties = {
+    display: 'inline-block',
+    height: '1.4em',
+    width: 'auto',
+    verticalAlign: 'middle',
+};
+
+const MAX_RESOURCE_ICON = 12;
+
+/**
+ * Replacement rule for resource cost tokens.
+ * `{resource:n}` where n is 0–12 renders the corresponding icon;
+ * numbers beyond 12 are replaced with the text "N Resources".
+ */
+export const resourceReplacementRule: TextReplacementRule = {
+    pattern: /\{resource:(\d+)\}/,
+    render: (match: string, key: number) => {
+        const n = Number(match.replace(/\{resource:(\d+)\}/, '$1'));
+        if (n <= MAX_RESOURCE_ICON) {
+            return (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                    key={key}
+                    src={`/resource-icons/resource-${n}.webp`}
+                    alt={`${n} resource${n !== 1 ? 's' : ''}`}
+                    title={`${n} Resource${n !== 1 ? 's' : ''}`}
+                    style={resourceIconStyle}
+                />
+            );
+        }
+        return <span key={key}>{n} Resources</span>;
+    },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Default rule set
 // Add new rule sets here to enable them globally by default.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const defaultReplacementRules: TextReplacementRule[] = [
     ...aspectReplacementRules,
+    resourceReplacementRule,
 ];
