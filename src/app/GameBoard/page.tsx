@@ -12,8 +12,8 @@ import PreferencesComponent from '@/app/_components/_sharedcomponents/Preference
 import { useRouter } from 'next/navigation';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
-import { BackgroundsDarkenBox } from '../_theme/theme-helper';
 import { Play } from 'next/font/google';
+import RichText from '../_components/_sharedcomponents/RichText/RichText';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
@@ -76,8 +76,8 @@ const GameBoard = () => {
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
     const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
     const isBo3SetComplete = isBo3Mode && !!setEndResult;
-    
-    const gameEndedTitle = isBo3Mode 
+
+    const gameEndedTitle = isBo3Mode
         ? (isBo3SetComplete ? 'Best-of-Three Set Ended' : `Game ${currentGameNumber} ended`)
         : 'Game ended';
 
@@ -106,14 +106,13 @@ const GameBoard = () => {
             pr: sidebarOpen ? 'min(20%, 280px)' : '0',
             width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
-            height: '100vh',
+            height: '100dvh',
             position: 'relative',
-            backgroundImage: `url(${background.path})`,
+            backgroundImage: `url(${background.path}?v=2)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
             flexDirection: 'column',
-            '&::before': { }
         },
         centralPromptContainer: {
             position: 'absolute',
@@ -155,7 +154,7 @@ const GameBoard = () => {
             bottom: 0, // Touch bottom edge
             left: '2rem', // Add left margin to constrain width
             right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
-            height: '47vh', // Reduced height for middle spacing
+            height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
@@ -163,14 +162,13 @@ const GameBoard = () => {
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
-            '&::before': { }
         },
         opponentPlaymat: {
             position: 'absolute',
             top: 0, // Touch top edge
             left: '2rem', // Add left margin to constrain width
             right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
-            height: '47vh', // Reduced height for middle spacing
+            height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
@@ -178,33 +176,11 @@ const GameBoard = () => {
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
-            '&::before': { }
         }
     };
 
-    if(background.darkened) {
-        styles.mainBoxStyle = {
-            ...styles.mainBoxStyle,
-            '&::before': BackgroundsDarkenBox,
-        };
-    }
-
-    /* if(myPlaymat?.darkened) {
-        styles.playerPlaymat = {
-            ...styles.playerPlaymat,
-            '&::before': PlaymatDarkenBox,
-        };
-    }
-
-    if(theirPlaymat?.darkened) {
-        styles.opponentPlaymat = {
-            ...styles.opponentPlaymat,
-            '&::before': PlaymatDarkenBox,
-        };
-    }*/
-
     return (
-        <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>
+        <Grid container sx={{ height: '100dvh', overflow: 'hidden' }}>
             <Box component="main" sx={styles.mainBoxStyle} data-testid="gameboard-main-box">
                 {/* Opponent Playmat - top half
                 {theirPlaymat && (
@@ -228,16 +204,16 @@ const GameBoard = () => {
                         }}
                     />
                 )} */}
-                <Box sx={{ height: '15vh' }}>
+                <Box sx={{ height: '15dvh' }}>
                     <OpponentCardTray
                         trayPlayer={getOpponent(connectedPlayer)}
                         preferenceToggle={handlePreferenceToggle}
                     />
                 </Box>
-                <Box sx={{ height: '67vh', position: 'relative', zIndex: 2 }}>
+                <Box sx={{ height: '67dvh', position: 'relative', zIndex: 2 }}>
                     <Board sidebarOpen={sidebarOpen} />
                 </Box>
-                <Box sx={{ height: '18vh' }}>
+                <Box sx={{ height: '18dvh' }}>
                     <PlayerCardTray
                         trayPlayer={connectedPlayer}
                         toggleSidebar={toggleSidebar}
@@ -253,7 +229,7 @@ const GameBoard = () => {
 
             <Box sx={styles.centralPromptContainer}>
                 <Box sx={styles.promptStyle}>
-                    {menuTitle}
+                    {menuTitle && <RichText text={menuTitle}/>}
                     <Box sx={styles.promptShadow}/>
                 </Box>
             </Box>

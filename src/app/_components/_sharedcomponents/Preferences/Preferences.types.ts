@@ -67,13 +67,12 @@ export interface IRegisteredCosmeticOption {
     title: string;
     type: RegisteredCosmeticType;
     path: string;
-    darkened?: boolean;
 }
 
 export interface IRegisteredCosmetics {
     cardbacks: IRegisteredCosmeticOption[];
     backgrounds: IRegisteredCosmeticOption[];
-    //playmats: IRegisteredCosmeticOption[];
+    // playmats: IRegisteredCosmeticOption[];
 }
 
 // constants
@@ -85,5 +84,24 @@ export enum StatsSaveStatus {
 
 export enum StatsSource {
     Karabast = 'Karabast',
-    SwuStats = 'SWUStats'
+    SwuStats = 'SWUStats',
+    SwuBase = 'SWUBase'
+}
+
+export enum PlayerReportType {
+    OffensiveUsername = 'offensiveUsername',
+    ChatHarrasment = 'chatHarrasment',
+    AbusingMechanics = 'abusingMechanics',
+    Other = 'other',
+}
+
+export interface IReportTypeConfig {
+    type: PlayerReportType;
+    label: string;
+    description: string;
+}
+
+export interface IPlayerReportDialogProps {
+    open: boolean;
+    onClose: () => void;
 }

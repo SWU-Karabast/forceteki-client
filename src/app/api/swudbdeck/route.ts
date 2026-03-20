@@ -196,54 +196,68 @@ export async function GET(req: Request) {
                 console.error('My-SWU API error:', response.statusText);
                 throw new Error(`My-SWU API error: ${response.statusText}`);
             }
-        } else if (deckLink.includes('swuindex.com')) {
-            // SWUIndex deck links in the forms:
-            // https://swuindex.com/decks/${slug}
-            // https://swuindex.com/decks/${slug}.json
-            // https://swuindex.com/.netlify/functions/deck-json?slug=${slug}
-        
-            const withoutQuery = deckLink.split('?')[0];
-        
-            let slug = null;
-        
-            // Case 1: /decks/<slug> or /decks/<slug>.json
-            const pathMatch = withoutQuery.match(/\/decks\/([^\/]+?)(?:\.json)?\/?$/);
-            if (pathMatch?.[1]) {
-                slug = pathMatch[1];
+        } else if (deckLink.includes('protectthepod.com')) {
+            // Protect the Pod deck links: https://protectthepod.com/pool/{shareId}/deck/play
+            const url = new URL(deckLink);
+            const pathMatch = url.pathname.match(/\/pool\/([a-zA-Z0-9_-]+)/);
+
+            if (!pathMatch || !pathMatch[1]) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format. Share a pool or deck builder link from protectthepod.com.' },
+                    { status: 400 }
+                );
             }
-        
-            // Case 2: /.netlify/functions/deck-json?slug=<slug>
-            if (!slug) {
-                const url = new URL(deckLink);
-                if (url.pathname.includes('/.netlify/functions/deck-json')) {
-                    slug = url.searchParams.get('slug');
+
+            const shareId = pathMatch[1];
+            deckIdentifier = shareId;
+            deckSource = DeckSource.ProtectThePod;
+
+            const apiUrl = `https://protectthepod.com/api/pools/${encodeURIComponent(shareId)}/deck.json`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if (response.status === 400) {
+                    return NextResponse.json(
+                        { error: 'No deck has been built for this pool yet. Build a deck on protectthepod.com first, then share the link.' },
+                        { status: 404 }
+                    );
                 }
+                if (response.status === 404) {
+                    return NextResponse.json(
+                        { error: 'Pool not found on protectthepod.com.' },
+                        { status: 404 }
+                    );
+                }
+
+                console.error('Protect the Pod API error:', response.statusText);
+                throw new Error(`Protect the Pod API error: ${response.statusText}`);
             }
-        
-            if (!slug) {
+        } else if (deckLink.includes('swuforge.com')) {
+            // Deck Links in the form: https://swuforge.com/decks/${deckId}
+            const match = deckLink.match(/\/decks\/([^\/]+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if (deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.SWUForge;
+
+            if (!deckId) {
                 console.error('Error: Invalid deckLink format');
                 return NextResponse.json(
                     { error: 'Invalid deckLink format' },
                     { status: 400 }
                 );
             }
-        
-            deckIdentifier = slug;
-            deckSource = DeckSource.SWUIndex;
-        
-            const apiUrl = `https://swuindex.com/.netlify/functions/deck-json?slug=${encodeURIComponent(slug)}`;
-        
+
+            const apiUrl = `https://swuforge.com/api/decks/${deckId}/json`;
+
             response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
             if (!response.ok) {
                 if (response.status === 404) {
-                    return NextResponse.json(
-                        { error: 'Deck not found. Make sure the deck is set to Public on swuindex.com.' },
-                        { status: 403 }
-                    );
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck exists on swuforge.com.' }, { status: 404 });
                 }
-        
-                console.error('SWUIndex API error:', response.statusText);
-                throw new Error(`SWUIndex API error: ${response.statusText}`);
+
+                console.error('SWUForge API error:', response.statusText);
+                throw new Error(`SWUForge API error: ${response.statusText}`);
             }
         } else {
             console.error('Error: Deckbuilder not supported');

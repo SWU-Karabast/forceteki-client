@@ -74,10 +74,13 @@ const PublicGames: React.FC = () => {
                 {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
-                {/* {lobbies.filter((lobby) => lobby.format === SwuGameFormat.NextSetPreview).map((lobby) => (
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Eternal).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
-                ))} */}
+                ))}
                 {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Open).map((lobby) => (
+                    <JoinableGame key={lobby.id} lobby={lobby} />
+                ))}
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Limited).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
                 <GamesInProgress />

@@ -6,6 +6,10 @@ export const theme: Theme = createTheme({
             default: '#000000',
         },
         divider: '#353739', // Added this line to set the divider color
+        text: {
+            primary: '#fff',
+            secondary: '#fff'
+        }
     },
     breakpoints: {
         values: {

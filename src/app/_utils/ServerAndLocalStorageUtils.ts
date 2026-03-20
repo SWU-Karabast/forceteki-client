@@ -247,6 +247,58 @@ export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean
     }
 }
 
+export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-must-request-username-change-seen`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+export const setReportingDisabledSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-reporting-disabled-seen`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean, user: IUser): Promise<void> => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/deck/${deckId}/favorite`, {
@@ -580,6 +632,41 @@ export const checkSwuStatsLinkStatus = async (
 };
 
 /**
+ * Checks if the user has linked their SWUBase account
+ * @param user The current user
+ * @returns Promise that resolves to boolean indicating if SWUBase is linked
+ */
+export const checkSwubaseLinkStatus = async (
+    user: IUser
+): Promise<boolean> => {
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/swubaseLink`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            }
+        );
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                return false;
+            }
+            throw new Error('Failed to check SWUBase link status');
+        }
+
+        const result = await response.json();
+        return result.linked;
+    } catch (error) {
+        console.error('Error checking SWUBase link status:', error);
+        throw error;
+    }
+};
+
+/**
  * Saves sound preferences to the server
  * @param user The current user
  * @param preferences
@@ -817,6 +904,34 @@ export const fetchSwuStatsDecks = async (
     } catch (error) {
         console.error('Error fetching SWU Stats decks:', error);
         return null;
+    }
+};
+export const unlinkSwubaseAsync = async(
+    user: IUser | null,
+): Promise<boolean> => {
+    // TODO: check - verify endpoint
+    try {
+        const payload = {
+            user
+        };
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/unlink-swubase`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to unlink swubase');
+        }
+        return result.success;
+    } catch (error) {
+        console.error('Error unlinking swubase:', error);
+        throw error;
     }
 };
 

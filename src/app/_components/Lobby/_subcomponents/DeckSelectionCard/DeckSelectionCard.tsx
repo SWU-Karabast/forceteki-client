@@ -36,7 +36,7 @@ import {
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
+import { GamesToWinMode, IMatchConfiguration, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 
@@ -71,13 +71,22 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
-    const lobbyFormat = lobbyState ? lobbyState.gameFormat : null;
+    
+    const matchConfig: IMatchConfiguration = {
+        format: lobbyState?.gameFormat || deckPreferences.matchConfig.format,
+        cardPool: lobbyState?.cardPool || deckPreferences.matchConfig.cardPool,
+        gamesToWinMode: lobbyState?.winHistory.gamesToWinMode || deckPreferences.matchConfig.gamesToWinMode,
+    }
 
     // Bo3 state from lobbyState
     const winHistory = lobbyState?.winHistory || null;
     const gamesToWinMode = winHistory?.gamesToWinMode || GamesToWinMode.BestOfOne;
     const currentGameNumber = winHistory?.currentGameNumber || 1;
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
+
+    // Lobby settings
+    const requestUndo = lobbyState?.settings.requestUndo || false;
+    const allowSpectators = lobbyState?.settings.allowSpectators || false;
 
     // For deck error display
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
@@ -90,6 +99,10 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     // ------------------------Additional functions------------------------//
     const handleChangeUndoSetting = async (checked: boolean) => {
         sendLobbyMessage(['updateSetting', 'requestUndo', checked]);
+    };
+
+    const handleChangeAllowSpectators = (checked: boolean) => {
+        sendLobbyMessage(['updateSetting', 'allowSpectators', checked]);
     };
 
     useEffect(() => {
@@ -270,8 +283,6 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
             })
             .catch(err => console.error('Failed to copy link', err));
     };
-
-
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -714,7 +725,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                         setDeckImportErrorsSeen(true);
                     }}
                     errors={errorState.details}
-                    format={lobbyFormat}
+                    matchConfig={matchConfig}
                     modalType={errorState.modalType}
                 />
             )}
@@ -724,29 +735,11 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     <Typography variant="h5" sx={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', mt: 1, mb: 0.5 }}>
                         Game Settings
                     </Typography>
-                    {lobbyFormat === SwuGameFormat.Open && (
-                        <>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>
-                                Mainboard Minimum Size
-                            </Typography>
-                            <FormControl fullWidth sx={styles.disabledDropdownStyle}>
-                                <StyledTextField
-                                    select
-                                    value={lobbyState.allow30CardsInMainBoard ? '30Card' : '50Card'}
-                                    onChange={() => {}}
-                                    disabled={true}
-                                >
-                                    <MenuItem value="50Card">50 Cards</MenuItem>
-                                    <MenuItem value="30Card">30 Cards</MenuItem>
-                                </StyledTextField>
-                            </FormControl>
-                        </>
-                    )}
                     <FormControlLabel
                         control={
                             <Checkbox
                                 sx={styles.settingsCheckboxStyle}
-                                checked={lobbyState.settings.requestUndo}
+                                checked={requestUndo}
                                 disabled={!owner || readyStatus || opponentReady}
                                 onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
                                     handleChangeUndoSetting(checked)
@@ -759,6 +752,37 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                                     Undo Requests
                                 </span>
                                 <Tooltip title="Uses the same rules for Undo as public games. Limited number of free undos, then requires opponent approval. If this is disabled, there are no limits on undo.">
+                                    <Info 
+                                        sx={{ 
+                                            fontSize: '14px',
+                                            color: '#1976d2',
+                                            backgroundColor: '#fff',
+                                            borderRadius: '50%',
+                                            cursor: 'help',
+                                            opacity: disableSettings ? 0.5 : 1
+                                        }} 
+                                    />
+                                </Tooltip>
+                            </Box>
+                        }
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                sx={styles.settingsCheckboxStyle}
+                                checked={allowSpectators}
+                                disabled={!owner || readyStatus || opponentReady}
+                                onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
+                                    handleChangeAllowSpectators(checked)
+                                }
+                            />
+                        }
+                        label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', lineHeight: 1 }}>
+                                <span style={{ ...styles.settingsCheckboxAndRadioGroupTextStyle }}>
+                                    Allow Spectators
+                                </span>
+                                <Tooltip title="When enabled, allows other players to spectate your game using a shareable link. Find the link in the settings menu when the game starts.">
                                     <Info 
                                         sx={{ 
                                             fontSize: '14px',

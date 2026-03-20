@@ -1,8 +1,13 @@
 import { ICardData, CardStyle, IServerCardData, ISetCode, IPreviewCard } from './CardTypes'
 
-export interface ICardUtils {
-    getBorderColor: (card: ICardData, player: string, promptType?: string) => string;
-}
+type BorderColorOptions = {
+    card: ICardData;
+    player: string;
+    promptType?: string; 
+    style?: CardStyle; 
+    isOpponentEffect?: boolean;
+    isHoveredInChat?:boolean;
+} 
 
 // Type guard to check if the card is ICardData
 export const isGameCard = (card: ICardData | IServerCardData | ISetCode | IPreviewCard): card is ICardData => {
@@ -26,7 +31,16 @@ export const parseSetId = (fullCardId: string) => {
 };
 
 
-export const getBorderColor = (card: ICardData, player: string, promptType: string = '', style: CardStyle = CardStyle.Plain, isOpponentEffect = false) => {
+export const getBorderColor = (options:BorderColorOptions) => {
+    const {
+        card,
+        player,
+        promptType = '',
+        style = CardStyle.Plain,
+        isOpponentEffect = false,
+        isHoveredInChat = false,
+    } = options;
+
     if (!card) return '';
 
     if (style === CardStyle.Prompt) {
@@ -36,6 +50,10 @@ export const getBorderColor = (card: ICardData, player: string, promptType: stri
             return '';
         }
     }
+
+    if (isHoveredInChat) {
+        return 'var(--selection-yellow)';
+    } 
 
     if (card.zone === 'hand' && isOpponentEffect && card.selectable && !card.selected) {
         return 'var(--selection-purple)';

@@ -7,23 +7,34 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_subComponents/Bo3ScoreDisplay';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType, RematchMode } from '@/app/_constants/constants';
 
 interface IProps {
     handleOpenBugReport: () => void;
+    handleOpenPersonReport: () => void;
     gameType: MatchmakingType;
 }
 
-function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
+function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType }: IProps) {
     const router = useRouter();
-    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent } = useGame();
+    const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent, isAnonymousPlayer } = useGame();
+    const { user } = useUser();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
+    const [swuBaseStatsMessage, setSwuBaseStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [confirmConcedeBo3, setConfirmConcedeBo3] = useState<boolean>(false);
 
     const isQuickMatch = gameType === MatchmakingType.Quick;
+
+    const opponentId = getOpponent(connectedPlayer);
+    const isAnonymousOpponent = isAnonymousPlayer(opponentId);
+    const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
+    const canReportBug = !isAnonymousPlayer(connectedPlayer);
+    const isReportingDisabled = !!user?.reportingDisabled;
+    const reportingDisabledText = 'Reporting has been disabled for your account';
 
     // Use the rematchRequest property from lobbyState
     const rematchRequest = lobbyState?.rematchRequest || null;
@@ -52,6 +63,11 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
                 });
             } else if (notification.source === StatsSource.SwuStats) {
                 setSwuStatsMessage({
+                    type: notification.type,
+                    message: notification.message
+                });
+            } else if (notification.source === StatsSource.SwuBase) {
+                setSwuBaseStatsMessage({
                     type: notification.type,
                     message: notification.message
                 });
@@ -235,7 +251,7 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
     }
 
     // Check if we have any stats messages to show
-    const hasStatsMessages = karabastStatsMessage || swuStatsMessage;
+    const hasStatsMessages = karabastStatsMessage || swuStatsMessage || swuBaseStatsMessage;
 
     // Check if maintenance mode is enabled
     const isMaintenanceMode = process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES === 'true';
@@ -348,17 +364,38 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
 
                 {/* Report Bug - Bo3 mode only (in Actions section) */}
                 {isBo3Mode && !isSpectator && (
-                    <Box sx={styles.contentContainer}>
-                        <PreferenceButton
-                            variant={'standard'}
-                            text={'Report Bug'}
-                            buttonFnc={handleOpenBugReport}
-                            sx={{ minWidth: '140px' }}
-                        />
-                        <Typography sx={styles.typeographyStyle}>
-                            Report a bug to the developer team
-                        </Typography>
-                    </Box>
+                    <>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report Bug'}
+                                buttonFnc={handleOpenBugReport}
+                                sx={{ minWidth: '140px' }}
+                                disabled={!canReportBug || isReportingDisabled}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                {isReportingDisabled ? reportingDisabledText : canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
+                            </Typography>
+                        </Box>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report opponent'}
+                                buttonFnc={handleOpenPersonReport}
+                                sx={{ minWidth: '140px' }}
+                                disabled={!canReportOpponent || isReportingDisabled}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                {isReportingDisabled ? reportingDisabledText
+                                    : isAnonymousPlayer(connectedPlayer)
+                                        ? 'Please log in to submit reports'
+                                        : isAnonymousOpponent
+                                            ? 'Cannot submit reports for anonymous opponents'
+                                            : 'Report opponent to the developer team'
+                                }
+                            </Typography>
+                        </Box>
+                    </>
                 )}
             </Box>
 
@@ -459,9 +496,28 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
                                 text={'Report Bug'}
                                 buttonFnc={handleOpenBugReport}
                                 sx={{ minWidth: '140px' }}
+                                disabled={!canReportBug || isReportingDisabled}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                Report a bug to the developer team
+                                {isReportingDisabled ? reportingDisabledText : canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
+                            </Typography>
+                        </Box>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report opponent'}
+                                buttonFnc={handleOpenPersonReport}
+                                sx={{ minWidth: '140px' }}
+                                disabled={!canReportOpponent || isReportingDisabled}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                {isReportingDisabled ? reportingDisabledText
+                                    : isAnonymousPlayer(connectedPlayer)
+                                        ? 'Please log in to submit reports'
+                                        : isAnonymousOpponent
+                                            ? 'Cannot submit reports for anonymous opponents'
+                                            : 'Report opponent to the developer team'
+                                }
                             </Typography>
                         </Box>
                     </Box>
@@ -493,7 +549,7 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
                         <Typography sx={{
                             ...styles.typeographyStyle,
                             color: getNotificationColor(karabastStatsMessage.type),
-                            mb: swuStatsMessage ? '10px' : '0px'
+                            mb: swuStatsMessage || swuBaseStatsMessage ? '10px' : '0px'
                         }}>
                             <strong>Karabast:</strong> {karabastStatsMessage.message}
                         </Typography>
@@ -503,9 +559,19 @@ function EndGameOptions({ handleOpenBugReport, gameType }: IProps) {
                         <Typography sx={{
                             ...styles.typeographyStyle,
                             color: getNotificationColor(swuStatsMessage.type),
-                            mb: '10px'
+                            mb: swuBaseStatsMessage ? '10px' : '0px'
                         }}>
                             <strong>SWUStats:</strong> {swuStatsMessage.message}
+                        </Typography>
+                    )}
+
+                    {swuBaseStatsMessage && (
+                        <Typography sx={{
+                            ...styles.typeographyStyle,
+                            color: getNotificationColor(swuBaseStatsMessage.type),
+                            mb: '10px'
+                        }}>
+                            <strong>SWUBase:</strong> {swuBaseStatsMessage.message}
                         </Typography>
                     )}
                 </Box>

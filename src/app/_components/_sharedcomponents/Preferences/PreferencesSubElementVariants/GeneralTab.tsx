@@ -6,19 +6,23 @@ import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
+    checkSwubaseLinkStatus,
     checkSwuStatsLinkStatus,
     getUsernameChangeInfoFromServer,
     setUsernameOnServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
-import LinkSwuStatsButton from '@/app/_components/_sharedcomponents/SwuStats/LinkSwuStatsButton';
 import MuiLink from '@mui/material/Link';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
+import LinkSwuStatsButton from '../../LinkService/LinkSwuStatsButton';
+import LinkSwubaseButton from '../../LinkService/LinkSwubaseButton';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
     const [isSWUStatsLinked, setIsSWUStatsLinked] = useState<boolean>(false);
     const [isSWUStatsInCheck, setIsSWUStatsInCheck] = useState<boolean>(false);
+    const [isSWUBaseLinked, setIsSWUBaseLinked] = useState<boolean>(false);
+    const [isSWUBaseInCheck, setIsSWUBaseInCheck] = useState<boolean>(false);
     const [username, setUsername] = useState<string>('');
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Username error');
@@ -35,6 +39,9 @@ function GeneralTab() {
 
     const [swuStatsError, setSwuStatsError] = useState<boolean>(false);
     const swuStatsErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const [swuBaseError, setSwuBaseError] = useState<boolean>(false);
+    const swuBaseErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const usersId = user?.id ? user.id : anonymousUserId ? anonymousUserId : '';
     const handleCopyLink = (userId: string) => {
@@ -110,8 +117,31 @@ function GeneralTab() {
         }
     };
 
-    const onLinkChange= (linkStatus: boolean) => {
+    const checkSwubaseLink = async () => {
+        if (user) {
+            setIsSWUBaseInCheck(true);
+            try {
+                const linked = await checkSwubaseLinkStatus(user);
+                setIsSWUBaseLinked(linked);
+            } catch (error) {
+                console.error('Failed to check SWUBase link status:', error);
+                setSwuBaseError(true);
+                setIsSWUBaseLinked(false);
+                setIsSWUBaseInCheck(false);
+            } finally {
+                setTimeout(() => {
+                    setIsSWUBaseInCheck(false);
+                }, 1000);
+            }
+        }
+    };
+
+    const onSwuStatsLinkChange= (linkStatus: boolean) => {
         setIsSWUStatsLinked(linkStatus);
+    }
+
+    const onSwubaseLinkChange= (linkStatus: boolean) => {
+        setIsSWUBaseLinked(linkStatus);
     }
 
     const getUsernameChangeInfo = async () => {
@@ -140,6 +170,16 @@ function GeneralTab() {
         } else {
             setSwuStatsError(false);
         }
+
+        const swubaseStatus = urlParams.get('swubase');
+        if (swubaseStatus === 'error') {
+            setSwuBaseError(true);
+            swuBaseErrorTimeoutRef.current = setTimeout(() => {
+                setSwuBaseError(false);
+            }, 5000);
+        } else {
+            setSwuBaseError(false);
+        }
     }, []);
 
     useEffect(() => {
@@ -147,6 +187,7 @@ function GeneralTab() {
         setUsername(currentUsername);
         getUsernameChangeInfo();
         checkSwuStatsLink();
+        checkSwubaseLink();
         const validationError = validateDiscordUsername(currentUsername);
         setUserErrorSummary(validationError); // Show initial validation state if any
         setCanSubmitClientSide(validationError === null && currentUsername.trim() !== '');
@@ -157,7 +198,7 @@ function GeneralTab() {
         }
     }, [user]);
 
-    const isSubmitDisabled = !usernameChangeable || !canSubmitClientSide || username.trim() === (user?.username || '').trim();
+    const isSubmitDisabled = !!user?.mustRequestUsernameChange || !usernameChangeable || !canSubmitClientSide || username.trim() === (user?.username || '').trim();
 
 
     const styles = {
@@ -229,6 +270,9 @@ function GeneralTab() {
         swuStatsContainer:{
             mb:'20px'
         },
+        swuBaseContainer:{
+            mb:'20px'
+        },
         muteNoticeContainer: {
             mt: '2rem',
             p: '1rem',
@@ -283,33 +327,50 @@ function GeneralTab() {
                                         Change Username
                                     </Button>
                                 </Box>
-                                <Box sx={styles.messageContainer}>
-                                    {userErrorSummary && !successfulUsernameChange ? (
-                                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                                            {userErrorSummary}
-                                            {deckErrorDetails && (
-                                                <Link
-                                                    sx={styles.errorMessageLink}
-                                                    onClick={() => setErrorModalOpen(true)}
-                                                >Details
-                                                </Link>
-                                            )}
-                                        </Typography>
-                                    ) : successfulUsernameChange ? (
-                                        <Typography variant={'body2'} sx={styles.successMessageStyle}>
-                                            Username successfully changed!
-                                        </Typography>
-                                    ) : userUsernameInfo ? (
-                                        <Typography variant={'body2'} sx={styles.userUsernameInfoStyle}>
-                                            {userUsernameInfo}
-                                        </Typography>
-                                    ) : null}
-                                </Box>
+                                {!user?.mustRequestUsernameChange && (
+                                    <>
+                                        <Box sx={styles.messageContainer}>
+                                            {userErrorSummary && !successfulUsernameChange ? (
+                                                <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                                    {userErrorSummary}
+                                                    {deckErrorDetails && (
+                                                        <Link
+                                                            sx={styles.errorMessageLink}
+                                                            onClick={() => setErrorModalOpen(true)}
+                                                        >Details
+                                                        </Link>
+                                                    )}
+                                                </Typography>
+                                            ) : successfulUsernameChange ? (
+                                                <Typography variant={'body2'} sx={styles.successMessageStyle}>
+                                                    Username successfully changed!
+                                                </Typography>
+                                            ) : userUsernameInfo ? (
+                                                <Typography variant={'body2'} sx={styles.userUsernameInfoStyle}>
+                                                    {userUsernameInfo}
+                                                </Typography>
+                                            ) : null}
+                                        </Box>
 
-                                <Typography variant="body2" sx={{ mt: 2, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
-                                    You can change your username as many times as you want during the <strong>first week after account creation</strong>.
-                                    After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
-                                </Typography>
+                                        <Typography variant="body2" sx={{ mt: 2, color: '#8C8C8C', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                            You can change your username as many times as you want during the <strong>first week after account creation</strong>.
+                                            After that, you&#39;re limited to <strong>one</strong> change every <strong>month</strong>.
+                                        </Typography>
+                                    </>
+                                )}
+                                {user?.mustRequestUsernameChange && (
+                                    <Typography variant="body2" sx={{ mt: 1, color: '#F87171', fontSize: '0.95rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                        Your account has been restricted from changing your username. To request a new username, please open a ticket on our{' '}
+                                        <Link
+                                            href="https://discord.com/channels/1220057752961814568/1417680409151410226/1418301240525193348"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            sx={{ color: 'inherit', textDecoration: 'underline' }}
+                                        >
+                                            discord player ticketing channel
+                                        </Link>.
+                                    </Typography>
+                                )}
                             </Box>
                             <Typography variant={'h3'} sx={{ mt: user ? '2rem' : '1rem' }}>Player ID</Typography>
                             <Box sx={{ ...styles.boxStyle }}>
@@ -343,7 +404,7 @@ function GeneralTab() {
                                             <>
                                                 <LinkSwuStatsButton
                                                     linked={isSWUStatsLinked}
-                                                    onLinkChange={onLinkChange}
+                                                    onLinkChange={onSwuStatsLinkChange}
                                                 />
                                                 {swuStatsError && (
                                                     <Typography variant={'body2'} sx={styles.errorMessageStyle}>
@@ -367,6 +428,46 @@ function GeneralTab() {
                                             : isSWUStatsLinked
                                                 ? 'Your stats will appear under Owner in your decks. '
                                                 : 'Linking your account will cause your stats to appear under Owner in your decks. '}
+                                    </Typography>
+
+                                    <Typography variant={'h3'} sx={{ mb: '1rem', mt: '3rem' }} >SWUBase Integration</Typography>
+                                    <Box sx={styles.swuBaseContainer}>
+                                        {isSWUBaseInCheck ? (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <CircularProgress size={20} sx={{ color: '#2F7DB6' }} />
+                                                <Typography variant="body2" sx={{ color: '#B0B0B0' }}>
+                                                    Checking SWUBase link status...
+                                                </Typography>
+                                            </Box>
+                                        ) : (
+                                            <>
+                                                <LinkSwubaseButton
+                                                    linked={isSWUBaseLinked}
+                                                    onLinkChange={onSwubaseLinkChange}
+                                                    userId={usersId}
+                                                />
+                                                {swuBaseError && (
+                                                    <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                                        Failed to link to SWUBase account. If this keeps happening, please report the problem to the
+                                                        <MuiLink
+                                                            href="https://discord.com/channels/1350860763539181599/1350875585575915582"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
+                                                        >
+                                                            SWUBase Discord
+                                                        </MuiLink>.
+                                                    </Typography>
+                                                )}
+                                            </>
+                                        )}
+                                    </Box>
+                                    <Typography variant="body2" sx={{ mt: 2, color: isSWUBaseLinked ? '#81c784' : '#ffd54f', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                        {isSWUBaseInCheck
+                                            ? ''
+                                            : isSWUBaseLinked
+                                                ? 'Your SWUBase account is linked. '
+                                                : 'Linking your account will allow you to track stats directly to SWUBase. '}
                                     </Typography>
                                 </>
                             )}

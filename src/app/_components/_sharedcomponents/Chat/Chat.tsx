@@ -6,7 +6,7 @@ import {
     InputAdornment,
     Typography, Collapse,
 } from '@mui/material';
-import { CommentsDisabled, ExpandLess, ExpandMore, Send } from '@mui/icons-material';
+import { CommentsDisabled, ExpandLess, ExpandMore, Send, ReportProblem } from '@mui/icons-material';
 import { 
     IChatProps, 
     IChatEntry, 
@@ -23,16 +23,20 @@ import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
 import {
     LobbyConfirmationPopupModule
-} from "@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup";
+} from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
+import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
+import { ILobbyUserProps } from '../../Lobby/LobbyTypes';
+import { MatchmakingType } from '@/app/_constants/constants';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
     chatMessage,
-    setChatMessage,
+    handleChatOnChange,
     handleChatSubmit,
 }) => {
     const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled, sendLobbyMessage } = useGame();
     const [showConfirmation, setShowConfirmation] = useState(false);
+    const [playerReportOpen, setPlayerReportOpen] = useState(false);
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
     const { user } = useUser();
@@ -52,7 +56,7 @@ const Chat: React.FC<IChatProps> = ({
         }
 
         switch (true) {
-            case !user:
+            case !user && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
                 return {
                     reason: ChatDisabledReason.NotLoggedIn,
                     message: 'Log in to enable chat',
@@ -77,7 +81,7 @@ const Chat: React.FC<IChatProps> = ({
                     message: 'The opponent has disabled chat',
                     borderColor: 'yellow'
                 };
-            case isAnonymousOpponent:
+            case isAnonymousOpponent && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
                 return {
                     reason: ChatDisabledReason.AnonymousOpponent,
                     message: 'Chat disabled when playing against an anonymous opponent',
@@ -93,14 +97,17 @@ const Chat: React.FC<IChatProps> = ({
         return playerId === connectedPlayer ? 'var(--initiative-blue)' : 'var(--initiative-red)';
     };
 
-    const isPrivateLobby = lobbyState?.gameType === 'Private';
+    const isPrivateLobby = lobbyState?.gameType === MatchmakingType.PrivateLobby;
     const didCurrentUserMuteChat = lobbyState?.userWhoMutedChat === connectedPlayer;
-
-    const isAnonymousOpponent = isAnonymousPlayer(getOpponent(connectedPlayer));
-    const opponentChatDisabled = hasChatDisabled(getOpponent(connectedPlayer));
+    const opponentId = getOpponent(connectedPlayer);
+    const opponent = lobbyState?.users.find((u: ILobbyUserProps) => u.id === opponentId);
+    const isAnonymousOpponent = isAnonymousPlayer(opponentId);
+    const opponentChatDisabled = hasChatDisabled(opponentId);
     const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
     const shouldShowChatInput = !chatDisabledInfo || chatDisabledInfo.reason === ChatDisabledReason.None;
+    const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
+    const opponentIsTyping = lobbyState?.gameChat.typingState[opponentId];
 
     const getSpectatorDisplayName = (
         playerId: string,
@@ -126,8 +133,18 @@ const Chat: React.FC<IChatProps> = ({
         setShowConfirmation(false);
     };
 
+    const handleOpenPersonReport = () => {
+        setPlayerReportOpen(true);
+    };
 
-    const isOpponentMessage = (message: IChatMessageContent, connectedPlayerId: string): boolean => {
+    const handleClosePersonReport = () => {
+        setPlayerReportOpen(false);
+    };
+
+
+    const isOpponentMessage = (message: IChatMessageContent | undefined, connectedPlayerId: string): boolean => {
+        if (!message) return false;
+
         // Check if it's a player chat message
         if (Array.isArray(message) && message.length > 0) {
             const firstItem = message[0];
@@ -252,7 +269,17 @@ const Chat: React.FC<IChatProps> = ({
     };
 
 
-    const formatMessage = (message: IChatMessageContent, index: number) => {
+    const formatMessage = (message: IChatMessageContent | undefined, index: number) => {
+        if (!message) {
+            // Custom gray message for pending missing (shouldn't really happen in practice as retransmit is fast)
+            return (
+                <Box key={index} sx={styles.chatEntryBox}>
+                    <Typography sx={{ ...styles.messageText, color: '#888', fontStyle: 'italic' }}>
+                        Fetching missing message...
+                    </Typography>
+                </Box>
+            );
+        }
         if ('alert' in message) {
             return formatSystemMessage(message.alert.message, index, true, message.alert.type);
         }
@@ -277,7 +304,7 @@ const Chat: React.FC<IChatProps> = ({
             const newMessages = chatHistory.slice(previousMessages.length);
             // Check if any new message is from opponent
             const hasOpponentMessage = newMessages.some(messageEntry => {
-                return isOpponentMessage(messageEntry.message, connectedPlayer);
+                return isOpponentMessage(messageEntry?.message, connectedPlayer);
             });
             if (hasOpponentMessage) {
                 playIncomingMessageSound();
@@ -391,7 +418,6 @@ const Chat: React.FC<IChatProps> = ({
             width: '100%',
             backgroundColor: '#28282800',
             px: { xs: '0.2em', md: '0.5em' },
-            mb: 2,
             minHeight: { xs: '1.5rem', md: '2.6rem' },
         },
         textField: {
@@ -430,7 +456,15 @@ const Chat: React.FC<IChatProps> = ({
             color: '#fff',
             lineHeight: { xs: '0.75rem', md: '1rem' },
             userSelect: 'none',
-        })
+        }),
+        typingState: {
+            container: {
+                px: { xs: '0.2em', md: '0.5em' }
+            },
+            typography: {
+                fontSize: '0.8rem'
+            }
+        }
     };
 
     return (
@@ -457,33 +491,70 @@ const Chat: React.FC<IChatProps> = ({
                 <Collapse in={isOptionsOpen}>
                     <Box sx={styles.optionsPanel}>
                         {shouldShowChatInput && (
-                            <Box sx={styles.optionItem} onClick={triggerDisableConfirmation}>
-                                <Box sx={styles.optionLabel}>
-                                    <CommentsDisabled sx={styles.optionIcon} />
-                                    <span>Disable Chat</span>
+                            <>
+                                <Box sx={styles.optionItem} onClick={triggerDisableConfirmation}>
+                                    <Box sx={styles.optionLabel}>
+                                        <CommentsDisabled sx={styles.optionIcon} />
+                                        <span>Disable Chat</span>
+                                    </Box>
                                 </Box>
-                            </Box>
+                                {canReportOpponent && (
+                                    <Box
+                                        sx={{
+                                            ...styles.optionItem,
+                                            ...(user?.reportingDisabled ? { opacity: 0.5, cursor: 'default', '&:hover': {} } : {})
+                                        }}
+                                        onClick={user?.reportingDisabled ? undefined : handleOpenPersonReport}
+                                    >
+                                        <Box sx={styles.optionLabel}>
+                                            <ReportProblem sx={styles.optionIcon} />
+                                            <span>{user?.reportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</span>
+                                        </Box>
+                                    </Box>
+                                )}
+                            </>
                         )}
                         {!shouldShowChatInput && (
-                            <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
-                                <Box sx={styles.optionLabel}>
-                                    <CommentsDisabled sx={styles.optionIcon} />
-                                    <span style={{ color: '#888' }}>
-                                        Chat is disabled
-                                    </span>
+                            <>
+                                <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
+                                    <Box sx={styles.optionLabel}>
+                                        <CommentsDisabled sx={styles.optionIcon} />
+                                        <span style={{ color: '#888' }}>
+                                            Chat is disabled
+                                        </span>
+                                    </Box>
                                 </Box>
-                            </Box>
+                                {canReportOpponent && (
+                                    <Box
+                                        sx={{
+                                            ...styles.optionItem,
+                                            ...(user?.reportingDisabled ? { opacity: 0.5, cursor: 'default', '&:hover': {} } : {})
+                                        }}
+                                        onClick={user?.reportingDisabled ? undefined : handleOpenPersonReport}
+                                    >
+                                        <Box sx={styles.optionLabel}>
+                                            <ReportProblem sx={styles.optionIcon} />
+                                            <span>{user?.reportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</span>
+                                        </Box>
+                                    </Box>
+                                )}
+                            </>
                         )}
                     </Box>
                 </Collapse>
             )}
             <Box sx={styles.chatBox}>
                 {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
-                    return formatMessage(chatEntry.message, index);
+                    return formatMessage(chatEntry?.message, index);
                 })}
                 <Box ref={chatEndRef} />
             </Box>
 
+            {opponentIsTyping && (
+                <Box sx={styles.typingState.container}>
+                    <Typography sx={styles.typingState.typography}>{opponent?.username} is typing...</Typography>
+                </Box>
+            )}
 
             <Box sx={styles.inputContainer}>
                 {/* Show chat input based on game state and user permissions */}
@@ -493,9 +564,7 @@ const Chat: React.FC<IChatProps> = ({
                         placeholder="Chat"
                         autoComplete="off"
                         value={chatMessage}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setChatMessage(e.target.value)
-                        }
+                        onChange={handleChatOnChange}
                         onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
                             if (e.key === 'Enter') {
                                 handleChatSubmit();
@@ -523,7 +592,9 @@ const Chat: React.FC<IChatProps> = ({
                 )}
             </Box>
             <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
+            <PlayerReportDialog open={playerReportOpen} onClose={handleClosePersonReport}/>
         </>
+
     );
 };
 
