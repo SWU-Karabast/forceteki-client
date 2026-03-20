@@ -3,6 +3,7 @@ import {
     Box,
     Button,
     Checkbox,
+    CircularProgress,
     FormControl,
     FormControlLabel,
     Link,
@@ -20,31 +21,26 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormats, IQueueFormat, DefaultFormat, FormatLabels, NewGameFormatAvailable } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
     getUserPayload,
     saveDeckToLocalStorage,
-    saveDeckToServer
+    saveDeckToServer,
+    ISwuStatsDeckItem
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
 import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
-import NextSetPreviewAnnouncement from '../../NextSetPreviewAnnouncement/NextSetPreviewAnnouncement';
-
-interface IDeckPreferences {
-    showSavedDecks: boolean;
-    favoriteDeck: string;
-    format: SwuGameFormat;
-    gamesToWinMode: GamesToWinMode;
-    saveDeck: boolean;
-}
+import { NewGameFormatAvailable } from '@/app/_constants/constants';
+import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
 interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
     setFavoriteDeck: (value: string) => void;
     setFormat: (value: SwuGameFormat) => void;
+    setCardPool: (value: CardPool) => void;
     setGamesToWinMode: (value: GamesToWinMode) => void;
     setSaveDeck: (value: boolean) => void;
 }
@@ -63,6 +59,13 @@ interface IQuickGameFormProps {
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
     isBo3Allowed: boolean;
+    // SWU Stats integration props
+    swuStatsDecks: ISwuStatsDeckItem[];
+    isSwuStatsLinked: boolean;
+    useSwuStatsDecks: boolean;
+    setSwuStatsDeckSource: (value: boolean) => void;
+    isLoadingSwuStatsDecks: boolean;
+    swuStatsDecksError: boolean;
 }
 
 const QuickGameForm: React.FC<IQuickGameFormProps> = ({
@@ -78,25 +81,35 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     clearErrors,
     setIsJsonDeck,
     setModalOpen,
-    isBo3Allowed
+    isBo3Allowed,
+    // SWU Stats integration
+    swuStatsDecks,
+    isSwuStatsLinked,
+    useSwuStatsDecks,
+    setSwuStatsDeckSource,
+    isLoadingSwuStatsDecks,
+    swuStatsDecksError
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
     
     const { showSavedDecks, favoriteDeck, saveDeck } = deckPreferences;
-    const { setShowSavedDecks, setFavoriteDeck, setFormat, setGamesToWinMode, setSaveDeck } = deckPreferencesHandlers;
+    const { setShowSavedDecks, setFavoriteDeck, setFormat, setCardPool, setGamesToWinMode, setSaveDeck } = deckPreferencesHandlers;
 
-    const formats = QueueFormats;
-    const gamesToWinModes = Object.values(GamesToWinMode) as GamesToWinMode[]
-    const queueFormat: IQueueFormat = useMemo(() => {
+    const formatConfigs = QueueFormatConfigs;
+    const formats = getFormatsFromConfig(formatConfigs);
+    const queueConfig: IMatchConfiguration = useMemo(() => {
         const valueOrDefault = <TValue,>(value: TValue, values: TValue[], defaultValue: TValue) => {
             return values.includes(value) ? value : defaultValue;
         }
+        const fmt = valueOrDefault(deckPreferences.matchConfig.format, formats, DefaultFormat.format);
+        const config = getFormatConfig(formatConfigs, fmt);
         return {
-            format: valueOrDefault(deckPreferences.format, formats, DefaultFormat.format),
-            gamesToWinMode: valueOrDefault(deckPreferences.gamesToWinMode, gamesToWinModes, DefaultFormat.gamesToWinMode),
+            format: fmt,
+            cardPool: valueOrDefault(deckPreferences.matchConfig.cardPool, config?.cardPools ?? [CardPool.Current], DefaultFormat.cardPool),
+            gamesToWinMode: valueOrDefault(deckPreferences.matchConfig.gamesToWinMode, config?.gamesToWinModes ?? [GamesToWinMode.BestOfOne], DefaultFormat.gamesToWinMode),
         }
-    }, [deckPreferences.format, deckPreferences.gamesToWinMode, formats, gamesToWinModes]);
+    }, [deckPreferences.matchConfig.format, deckPreferences.matchConfig.cardPool, deckPreferences.matchConfig.gamesToWinMode, formats, formatConfigs]);
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
@@ -107,8 +120,17 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         handleJsonDeck(deckLink);
     }, [deckLink]);
 
-    const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
-        setShowSavedDecks(useSavedDecks);
+    const handleChangeDeckSelectionType = (value: string) => {
+        if (value === 'SWU Stats Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource(true);
+        } else if (value === 'Saved Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource(false);
+        } else {
+            setShowSavedDecks(false);
+            setSwuStatsDeckSource(false);
+        }
         clearErrors();
     }
 
@@ -127,13 +149,22 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     // Handle Create Game Submission
     const handleJoinGameQueueActual = async () => {
         setQueueState(true);
-        // Get the deck link - either from selected favorite or direct input
+        // Get the deck link - either from selected favorite, SWU Stats deck, or direct input
         let userDeck = '';
         let deckType = 'url';
         if(showSavedDecks) {
-            const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
-            if (selectedDeck?.deckLink) {
-                userDeck = selectedDeck.deckLink;
+            if (useSwuStatsDecks && isSwuStatsLinked) {
+                // Use SWU Stats deck
+                const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
+                if (selectedSwuStatsDeck?.deckLink) {
+                    userDeck = selectedSwuStatsDeck.deckLink;
+                }
+            } else {
+                // Use saved deck from Karabast
+                const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
+                if (selectedDeck?.deckLink) {
+                    userDeck = selectedDeck.deckLink;
+                }
             }
         } else {
             userDeck = deckLink;
@@ -147,9 +178,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 if(favoriteDeck && deckData && showSavedDecks) {
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
-                    deckData.isPresentInDb = !!user;
+                    // SWU Stats decks are not stored in our DB
+                    deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
                 }else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck
+
                     deckData.isPresentInDb = false;
                 }
             }else if(parsedInput.type === 'json') {
@@ -192,8 +225,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
-                format: queueFormat.format,
-                gamesToWinMode: queueFormat.gamesToWinMode,
+                format: queueConfig.format,
+                cardPool: queueConfig.cardPool,
+                gamesToWinMode: queueConfig.gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
@@ -243,8 +277,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     const handleJoinGameQueue = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setFormat(queueFormat.format);
-        setGamesToWinMode(queueFormat.gamesToWinMode)
+        setFormat(queueConfig.format);
+        setCardPool(queueConfig.cardPool);
+        setGamesToWinMode(queueConfig.gamesToWinMode)
         handleFormSubmissionWithUndoCheck(handleJoinGameQueueActual);
     };
 
@@ -304,8 +339,95 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             display: 'flex',
             justifyContent: 'start',
             width: '100%',
+        },
+        deckSourceLabel: {
+            color: '#aaa',
+            fontSize: '0.85rem',
+        },
+        loadingContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
         }
     }
+
+    // Render SWU Stats decks dropdown
+    const renderSwuStatsDecksDropdown = () => {
+        if (isLoadingSwuStatsDecks) {
+            return (
+                <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                    <Typography sx={{ color: '#aaa' }}>Loading SWU Stats decks...</Typography>
+                </Box>
+            );
+        }
+
+        // Sort decks with favorites first
+        const sortedSwuStatsDecks = [...swuStatsDecks].sort((a, b) => {
+            if (a.isFavorite && !b.isFavorite) return -1;
+            if (!a.isFavorite && b.isFavorite) return 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        const emptyMessage = swuStatsDecksError ? 'Error retrieving SWU Stats decks' : 'No decks found on SWU Stats';
+
+        return (
+            <StyledTextField
+                select
+                value={favoriteDeck}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setFavoriteDeck(e.target.value as string)
+                }
+                disabled={userLoading || isLoadingSwuStatsDecks}
+                placeholder="SWU Stats Decks"
+                SelectProps={{
+                    displayEmpty: true,
+                    renderValue: sortedSwuStatsDecks.length === 0
+                        ? () => <span style={{ color: swuStatsDecksError ? 'var(--initiative-red)' : '#aaa' }}>{emptyMessage}</span>
+                        : undefined,
+                }}
+            >
+                {sortedSwuStatsDecks.length === 0 ? (
+                    <MenuItem value="" disabled>
+                        {emptyMessage}
+                    </MenuItem>
+                ) : (
+                    sortedSwuStatsDecks.map((deck) => (
+                        <MenuItem key={deck.id} value={deck.id.toString()}>
+                            {deck.isFavorite ? '★ ' : ''}{deck.name}
+                        </MenuItem>
+                    ))
+                )}
+            </StyledTextField>
+        );
+    };
+
+    // Render Karabast saved decks dropdown
+    const renderKarabastDecksDropdown = () => (
+        <StyledTextField
+            select
+            value={favoriteDeck}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFavoriteDeck(e.target.value as string)
+            }
+            disabled={userLoading}
+            placeholder="Favorite Decks"
+        >
+            {savedDecks.length === 0 ? (
+                <MenuItem value="" disabled>
+                    No saved decks found
+                </MenuItem>
+            ) : (
+                savedDecks.map((deck) => (
+                    <MenuItem key={deck.deckID} value={deck.deckID}>
+                        {deck.favourite ? '★ ' : ''}{deck.name}
+                    </MenuItem>
+                ))
+            )}
+        </StyledTextField>
+    );
+
     return (
         <Box >
             <Typography variant="h2">
@@ -315,12 +437,23 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 <FormControl component="fieldset" sx={styles.formControlStyle}>
                     <RadioGroup
                         row
-                        value={showSavedDecks ? 'Saved Deck' : 'New Deck'}
+                        value={showSavedDecks ? (useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Deck' : 'Saved Deck') : 'New Deck'}
                         onChange={(
                             e: ChangeEvent<HTMLInputElement>,
                             value: string
-                        ) => handleChangeDeckSelectionType(value === 'Saved Deck')}
+                        ) => handleChangeDeckSelectionType(value)}
                     >
+                        {isSwuStatsLinked && (
+                            <FormControlLabel
+                                value="SWU Stats Deck"
+                                control={<Radio sx={styles.checkboxStyle} />}
+                                label={
+                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                        SWU Stats Deck
+                                    </Typography>
+                                }
+                            />
+                        )}
                         <FormControlLabel
                             value="Saved Deck"
                             control={<Radio sx={styles.checkboxStyle} />}
@@ -341,31 +474,10 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                         />
                     </RadioGroup>
                 </FormControl>
-                {showSavedDecks && (
+                {showSavedDecks && !useSwuStatsDecks && (
                     <FormControl fullWidth sx={styles.formControlStyle}>
-                        {/* Favourite Decks Input */}
-                        <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
-                        <StyledTextField
-                            select
-                            value={favoriteDeck}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                setFavoriteDeck(e.target.value as string)
-                            }
-                            disabled={userLoading}
-                            placeholder="Favorite Decks"
-                        >
-                            {savedDecks.length === 0 ? (
-                                <MenuItem value="" disabled>
-                                    No saved decks found
-                                </MenuItem>
-                            ) : (
-                                savedDecks.map((deck) => (
-                                    <MenuItem key={deck.deckID} value={deck.deckID}>
-                                        {deck.favourite ? '★ ' : ''}{deck.name}
-                                    </MenuItem>
-                                ))
-                            )}
-                        </StyledTextField>
+                        {renderKarabastDecksDropdown()}
+                        
                         <Box sx={styles.manageDecksContainer}>
                             <Button
                                 onClick={handleDeckManagement}
@@ -375,7 +487,24 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             </Button>
                         </Box>
                     </FormControl>
-                ) || (
+                )}
+                {showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && (
+                    <FormControl fullWidth sx={styles.formControlStyle}>
+                        {renderSwuStatsDecksDropdown()}
+                        
+                        <Box sx={styles.manageDecksContainer}>
+                            <Button
+                                href="https://swustats.net"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={styles.manageDecks}
+                            >
+                                Manage&nbsp;Decks&nbsp;on&nbsp;SWU&nbsp;Stats
+                            </Button>
+                        </Box>
+                    </FormControl>
+                )}
+                {!showSavedDecks && (
                     <>
                         {/* Deck Link Input */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
@@ -452,19 +581,19 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 )}
 
                 <FormatSelectionForm
-                    format={queueFormat.format}
-                    gamesToWinMode={queueFormat.gamesToWinMode}
+                    format={queueConfig.format}
+                    cardPool={queueConfig.cardPool}
+                    gamesToWinMode={queueConfig.gamesToWinMode}
                     setFormat={setFormat}
+                    setCardPool={setCardPool}
                     setGamesToWinMode={setGamesToWinMode}
-                    formats={formats}
-                    gamesToWinModes={gamesToWinModes}
+                    formatConfigs={formatConfigs}
                     isBo3Allowed={isBo3Allowed}
                     styles={styles}
                 />
 
                 {/* Beta Announcement */}
                 { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} />}
-                { false && <NextSetPreviewAnnouncement /> }
 
                 {/* Submit Button */}
                 <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,

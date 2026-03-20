@@ -3,7 +3,7 @@ import { Card, CardContent, Typography, Divider } from '@mui/material';
 import JoinableGame from '../_subcomponents/JoinableGame/JoinableGame';
 import GamesInProgress from '../_subcomponents/GamesInProgress/GamesInProgress';
 import { ILobby } from '../HomePageTypes';
-import { ENABLE_NEXT_SET_PREVIEW, SwuGameFormat } from '@/app/_constants/constants';
+import { SwuGameFormat } from '@/app/_constants/constants';
 
 const fetchLobbies = async (setLobbies: (lobbies: ILobby[]) => void) => {
     try {
@@ -74,10 +74,13 @@ const PublicGames: React.FC = () => {
                 {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
-                {ENABLE_NEXT_SET_PREVIEW && lobbies.filter((lobby) => lobby.format === SwuGameFormat.NextSetPreview).map((lobby) => (
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Eternal).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
                 {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Open).map((lobby) => (
+                    <JoinableGame key={lobby.id} lobby={lobby} />
+                ))}
+                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Limited).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
                 <GamesInProgress />

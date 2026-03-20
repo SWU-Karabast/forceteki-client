@@ -15,6 +15,7 @@ import {
     FormControl,
     Radio,
     RadioGroup,
+    CircularProgress,
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -34,7 +35,7 @@ import {
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
+import { GamesToWinMode, IMatchConfiguration, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 
@@ -52,7 +53,14 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         deckLink,
         setDeckLink,
         savedDecks,
-        fetchDecks
+        fetchDecks,
+        // SWU Stats integration
+        swuStatsDecks,
+        isSwuStatsLinked,
+        useSwuStatsDecks,
+        setSwuStatsDeckSource,
+        isLoadingSwuStatsDecks,
+        swuStatsDecksError,
     } = useDeckManagement();
     
     const { showSavedDecks, favoriteDeck, saveDeck } = deckPreferences;
@@ -63,7 +71,12 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     
     const opponentUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id !== connectedPlayer) : null;
     const connectedUser = lobbyState ? lobbyState.users.find((u: ILobbyUserProps) => u.id === connectedPlayer) : null;
-    const lobbyFormat = lobbyState ? lobbyState.gameFormat : null;
+    
+    const matchConfig: IMatchConfiguration = {
+        format: lobbyState?.gameFormat || deckPreferences.matchConfig.format,
+        cardPool: lobbyState?.cardPool || deckPreferences.matchConfig.cardPool,
+        gamesToWinMode: lobbyState?.winHistory.gamesToWinMode || deckPreferences.matchConfig.gamesToWinMode,
+    }
 
     // Bo3 state from lobbyState
     const winHistory = lobbyState?.winHistory || null;
@@ -72,7 +85,6 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
 
     // Lobby settings
-    const allow30CardsInMainBoard = lobbyState?.allow30CardsInMainBoard || false;
     const requestUndo = lobbyState?.settings.requestUndo || false;
     const allowSpectators = lobbyState?.settings.allowSpectators || false;
 
@@ -109,8 +121,17 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         clearErrorsFunc();
     }
 
-    const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
-        setShowSavedDecks(useSavedDecks);
+    const handleChangeDeckSelectionType = (value: string) => {
+        if (value === 'SWU Stats Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource(true);
+        } else if (value === 'Saved Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource(false);
+        } else {
+            setShowSavedDecks(false);
+            setSwuStatsDeckSource(false);
+        }
         clearErrorsFunc();
     }
 
@@ -129,9 +150,18 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         setDeckImportErrorsSeen(false);
         if(showSavedDecks) {
-            const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
-            if (selectedDeck?.deckLink) {
-                userDeck = selectedDeck?.deckLink
+            if (useSwuStatsDecks && isSwuStatsLinked) {
+                // Use SWU Stats deck
+                const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
+                if (selectedSwuStatsDeck?.deckLink) {
+                    userDeck = selectedSwuStatsDeck.deckLink;
+                }
+            } else {
+                // Use saved deck from Karabast
+                const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
+                if (selectedDeck?.deckLink) {
+                    userDeck = selectedDeck?.deckLink
+                }
             }
         } else {
             userDeck = deckLink;
@@ -145,7 +175,8 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                 if(favoriteDeck && deckData && showSavedDecks) {
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
-                    deckData.isPresentInDb = !!user;
+                    // SWU Stats decks are not stored in our DB
+                    deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
                 } else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck;
                     deckData.isPresentInDb = false;
@@ -387,7 +418,93 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
             color: disableSettings ? '#c0c0c0' : '#fff',  // Lighter color when disabled
             fontSize: '1rem',
         },
+        // SWU Stats integration styles
+        deckSourceLabel: {
+            color: '#aaa',
+            fontSize: '0.85rem',
+        },
+        loadingContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+        }
     }
+
+    // Render SWU Stats decks dropdown
+    const renderSwuStatsDecksDropdown = () => {
+        if (isLoadingSwuStatsDecks) {
+            return (
+                <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                    <Typography sx={{ color: '#aaa' }}>Loading SWU Stats decks...</Typography>
+                </Box>
+            );
+        }
+
+        // Sort decks with favorites first
+        const sortedSwuStatsDecks = [...swuStatsDecks].sort((a, b) => {
+            if (a.isFavorite && !b.isFavorite) return -1;
+            if (!a.isFavorite && b.isFavorite) return 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        const emptyMessage = swuStatsDecksError ? 'Error retrieving SWU Stats decks' : 'No decks found on SWU Stats';
+
+        return (
+            <StyledTextField
+                select
+                value={favoriteDeck}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setFavoriteDeck(e.target.value as string)
+                }
+                placeholder="SWU Stats Decks"
+                SelectProps={{
+                    displayEmpty: true,
+                    renderValue: sortedSwuStatsDecks.length === 0
+                        ? () => <span style={{ color: swuStatsDecksError ? 'var(--initiative-red)' : '#aaa' }}>{emptyMessage}</span>
+                        : undefined,
+                }}
+            >
+                {sortedSwuStatsDecks.length === 0 ? (
+                    <MenuItem value="" disabled>
+                        {emptyMessage}
+                    </MenuItem>
+                ) : (
+                    sortedSwuStatsDecks.map((deck) => (
+                        <MenuItem key={deck.id} value={deck.id.toString()}>
+                            {deck.isFavorite ? '★ ' : ''}{deck.name}
+                        </MenuItem>
+                    ))
+                )}
+            </StyledTextField>
+        );
+    };
+
+    // Render Karabast saved decks dropdown
+    const renderKarabastDecksDropdown = () => (
+        <StyledTextField
+            select
+            value={favoriteDeck}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFavoriteDeck(e.target.value as string)
+            }
+            placeholder="Favorite Decks"
+        >
+            {savedDecks.length === 0 ? (
+                <MenuItem value="" disabled>
+                    No saved decks found
+                </MenuItem>
+            ) : (
+                savedDecks.map((deck) => (
+                    <MenuItem key={deck.deckID} value={deck.deckID}>
+                        {deck.favourite ? '★ ' : ''}{deck.name}
+                    </MenuItem>
+                ))
+            )}
+        </StyledTextField>
+    );
+
     return (
         <Card sx={styles.initiativeCardStyle}>
             {!opponentUser ? (
@@ -440,12 +557,23 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     <FormControl component="fieldset" sx={styles.formControlStyle}>
                         <RadioGroup
                             row
-                            value={showSavedDecks ? 'Saved Deck' : 'New Deck'}
+                            value={showSavedDecks ? (useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Deck' : 'Saved Deck') : 'New Deck'}
                             onChange={(
                                 e: ChangeEvent<HTMLInputElement>,
                                 value: string
-                            ) => handleChangeDeckSelectionType(value === 'Saved Deck')}
+                            ) => handleChangeDeckSelectionType(value)}
                         >
+                            {isSwuStatsLinked && (
+                                <FormControlLabel
+                                    value="SWU Stats Deck"
+                                    control={<Radio sx={styles.checkboxStyle} />}
+                                    label={
+                                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                            SWU Stats Deck
+                                        </Typography>
+                                    }
+                                />
+                            )}
                             <FormControlLabel
                                 value="Saved Deck"
                                 control={<Radio sx={styles.checkboxStyle} />}
@@ -466,31 +594,25 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                             />
                         </RadioGroup>
                     </FormControl>
-                    {showSavedDecks && (
+                    {showSavedDecks && !useSwuStatsDecks && (
                         <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
-                            <StyledTextField
-                                select
-                                value={favoriteDeck}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setFavoriteDeck(e.target.value as string)
-                                }
-                                placeholder="Favorite Decks"
-                            >
-                                {savedDecks.length === 0 ? (
-                                    <MenuItem value="" disabled>
-                                        No saved decks found
-                                    </MenuItem>
-                                ) : (
-                                    savedDecks.map((deck) => (
-                                        <MenuItem key={deck.deckID} value={deck.deckID}>
-                                            {deck.favourite ? '★ ' : ''}{deck.name}
-                                        </MenuItem>
-                                    ))
-                                )}
-                            </StyledTextField>
+                            {renderKarabastDecksDropdown()}
                         </FormControl>
-                    ) || (
+                    )}
+                    {showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && (
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            {renderSwuStatsDecksDropdown()}
+                            
+                            <Button
+                                href="https://swustats.net"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Manage&nbsp;Decks&nbsp;on&nbsp;SWU&nbsp;Stats
+                            </Button>
+                        </FormControl>
+                    )}
+                    {!showSavedDecks && (
                         <>
                             {/* Deck Link Input */}
                             <FormControl fullWidth sx={styles.formControlStyle}>
@@ -601,7 +723,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                         setDeckImportErrorsSeen(true);
                     }}
                     errors={errorState.details}
-                    format={lobbyFormat}
+                    matchConfig={matchConfig}
                     modalType={errorState.modalType}
                 />
             )}
@@ -611,24 +733,6 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     <Typography variant="h5" sx={{ fontSize: '1.2rem', fontWeight: '600', color: 'white', mt: 1, mb: 0.5 }}>
                         Game Settings
                     </Typography>
-                    {lobbyFormat === SwuGameFormat.Open && (
-                        <>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>
-                                Mainboard Minimum Size
-                            </Typography>
-                            <FormControl fullWidth sx={styles.disabledDropdownStyle}>
-                                <StyledTextField
-                                    select
-                                    value={allow30CardsInMainBoard ? '30Card' : '50Card'}
-                                    onChange={() => {}}
-                                    disabled={true}
-                                >
-                                    <MenuItem value="50Card">50 Cards</MenuItem>
-                                    <MenuItem value="30Card">30 Cards</MenuItem>
-                                </StyledTextField>
-                            </FormControl>
-                        </>
-                    )}
                     <FormControlLabel
                         control={
                             <Checkbox
