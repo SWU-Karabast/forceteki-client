@@ -27,6 +27,7 @@ import {
 import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import { ILobbyUserProps } from '../../Lobby/LobbyTypes';
 import { MatchmakingType } from '@/app/_constants/constants';
+import RichText from '../RichText/RichText';
 
 const Chat: React.FC<IChatProps> = ({
     chatHistory,
@@ -209,7 +210,9 @@ const Chat: React.FC<IChatProps> = ({
             );
         }
         if (typeof item === 'string' || typeof item === 'number') {
-            return item;
+            return (
+                <RichText key={`text-${itemIndex}`} text={item.toString()} />
+            );
         }
         return '[invalid]';
     };

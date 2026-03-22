@@ -10,7 +10,6 @@ import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { FormatLabels, FormatTagLabels, SwuGameFormat, GamesToWinMode } from '@/app/_constants/constants';
 import PremierIcon from '/public/premier.svg';
 import OpenIcon from '/public/open.svg';
-import NextSetIcon from '/public/next_set.svg';
 import Bo1Icon from '/public/bo1.svg';
 import Bo3Icon from '/public/bo3.svg';
 
@@ -159,10 +158,15 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     color: '#32e6da',
                     boxShadow: '0 0 5px #32e6da',
                 },
-                nextSet: {
+                eternal: {
                     borderColor: '#ada2fd',
                     color: '#ada2fd',
                     boxShadow: '0 0 5px #ada2fd',
+                },
+                limited: {
+                    borderColor: '#ffdd57',
+                    color: '#ffdd57',
+                    boxShadow: '0 0 5px #ffdd57',
                 }
             },
             gamesToWin: {
@@ -186,8 +190,10 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return styles.tags.format.premier;
             case SwuGameFormat.Open:
                 return styles.tags.format.open;
-            case SwuGameFormat.NextSetPreview:
-                return styles.tags.format.nextSet;
+            case SwuGameFormat.Eternal:
+                return styles.tags.format.eternal;
+            case SwuGameFormat.Limited:
+                return styles.tags.format.limited;
             default:
                 return {};
         }
@@ -200,8 +206,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return <PremierIcon style={iconStyle} />;
             case SwuGameFormat.Open:
                 return <OpenIcon style={iconStyle} />;
-            case SwuGameFormat.NextSetPreview:
-                return <NextSetIcon style={iconStyle} />;
             default:
                 return null;
         }
