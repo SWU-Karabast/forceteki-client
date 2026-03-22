@@ -105,3 +105,44 @@ export interface IPlayerReportDialogProps {
     open: boolean;
     onClose: () => void;
 }
+
+export enum ModActionType {
+    Mute = 'Mute',
+    Warning = 'Warning',
+    Rename = 'Rename',
+}
+
+export interface IModActionResponse {
+    id: string;
+    playerId: string;
+    actionType: ModActionType;
+    durationDays?: number;
+    note?: string;
+    moderatorId: string;
+    createdAt: string;
+    startedAt?: string;
+    expiresAt?: string;
+    cancelledAt?: string;
+    cancelledBy?: string;
+}
+
+export interface IPlayerSearchResult {
+    id: string;
+    username: string;
+    createdAt: string;
+    lastLogin: string;
+    isMuted: boolean;
+    needsRename: boolean;
+}
+
+export interface IFindUserResponse {
+    success: boolean;
+    players: IPlayerSearchResult[];
+    modActions: IModActionResponse[];
+}
+
+export enum DurationUnit {
+    Days = 'Days',
+    Weeks = 'Weeks',
+    Permanent = 'Permanent',
+}
