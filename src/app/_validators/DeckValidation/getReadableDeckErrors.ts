@@ -1,4 +1,4 @@
-import { FormatLabels, SwuGameFormat } from '@/app/_constants/constants';
+import { CardPool, CardPoolLabels, FormatLabels, SwuGameFormat } from '@/app/_constants/constants';
 import {
     DecklistLocation,
     DeckValidationFailureReason,
@@ -21,16 +21,19 @@ function locationToMessage(location: DecklistLocation): string {
 
 export function getReadableDeckErrors(
     failures: IDeckValidationFailures,
-    format: SwuGameFormat
+    format?: SwuGameFormat,
+    cardPool?: CardPool
 ): string[] {
     const messages: string[] = [];
+    const formatString = format ? FormatLabels[format] : 'the selected format';
+    const cardPoolString = cardPool ? `"${CardPoolLabels[cardPool]}" card pool` : 'the selected card pool';
 
     // Simple booleans (e.g., InvalidDeckData, TooManyLeaders)
     if (failures[DeckValidationFailureReason.InvalidDeckData]) {
         messages.push('Deck is invalid or missing required fields.');
     }
     if (failures[DeckValidationFailureReason.TooManyLeaders]) {
-        messages.push(`There are too many Leaders for ${format}.`);
+        messages.push(`There are too many Leaders for ${formatString}.`);
     }
     if(failures[DeckValidationFailureReason.DeckSetToPrivate]) {
         messages.push('The deck is set to private. Change the deck to unlisted or public.');
@@ -41,7 +44,7 @@ export function getReadableDeckErrors(
         const { minDecklistSize, actualDecklistSize } =
             failures[DeckValidationFailureReason.MinDecklistSizeNotMet]!;
         messages.push(
-            `Minimum count for main deck + sideboard is ${minDecklistSize}, this deck only has ${actualDecklistSize} cards.`
+            `Minimum count for main deck + sideboard is ${minDecklistSize} in ${formatString}, this deck only has ${actualDecklistSize} cards.`
         );
     }
 
@@ -49,7 +52,7 @@ export function getReadableDeckErrors(
         const { minBoardedSize, actualBoardedSize } =
             failures[DeckValidationFailureReason.MinMainboardSizeNotMet]!;
         messages.push(
-            `Your main deck must have at least ${minBoardedSize} cards, but currently has ${actualBoardedSize}.`
+            `Your main deck must have at least ${minBoardedSize} cards in ${formatString}, but currently has ${actualBoardedSize}.`
         );
     }
 
@@ -57,7 +60,7 @@ export function getReadableDeckErrors(
         const { maxSideboardSize, actualSideboardSize } =
             failures[DeckValidationFailureReason.MaxSideboardSizeExceeded]!;
         messages.push(
-            `Sideboard can have at most ${maxSideboardSize} cards, but the current sideboard has ${actualSideboardSize}.`
+            `Sideboard can have at most ${maxSideboardSize} cards in ${formatString}, but the current sideboard has ${actualSideboardSize}.`
         );
     }
 
@@ -72,11 +75,23 @@ export function getReadableDeckErrors(
     const illegalInFormatList =
         failures[DeckValidationFailureReason.IllegalInFormat] ?? [];
     if (illegalInFormatList.length > 0) {
-        illegalInFormatList.forEach(({ name, id }) => {
+        // This error can get very long if the player has a deck from entirely the wrong card pool, so we summarize if there are a lot of offending cards
+        if (illegalInFormatList.length > 10) {
             messages.push(
-                `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${FormatLabels[format]} format.`
+                `Deck contains ${illegalInFormatList.length} cards that are illegal in ${formatString} with ${cardPoolString}, including the following:`
             );
-        });
+
+            // Add a truncated list of offending cards for more context (up to 10)
+            illegalInFormatList.slice(0, 10).forEach(({ name, id }) => {
+                messages.push(`- "${name}" (set: ${id.toUpperCase()})`);
+            });
+        } else {
+            illegalInFormatList.forEach(({ name, id }) => {
+                messages.push(
+                    `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${formatString} with ${cardPoolString}.`
+                );
+            });
+        }
     }
 
     const tooManyCopiesList =

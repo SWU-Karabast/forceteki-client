@@ -155,7 +155,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                             sendGameMessage([button.command, button.arg, cardUuid, data.uuid]);
                         }}
                     >
-                        {button.text}
+                        <RichText text={button.text} />
                     </Button>
                 )}</Box>
         )

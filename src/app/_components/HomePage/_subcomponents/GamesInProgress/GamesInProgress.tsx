@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Autocomplete, Box, Divider, FilterOptionsState, TextField, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { ENABLE_NEXT_SET_PREVIEW, FormatLabels, GamesToWinMode, SwuGameFormat } from '@/app/_constants/constants';
+import { FormatLabels, GamesToWinMode, SwuGameFormat } from '@/app/_constants/constants';
 
 interface GameCardData {
     id: string;
@@ -190,7 +190,6 @@ const GamesInProgress: React.FC = () => {
             }
         }
         return Object.values(SwuGameFormat)
-            .filter((fmt) => ENABLE_NEXT_SET_PREVIEW || fmt !== SwuGameFormat.NextSetPreview)
             .map((fmt) => ({
                 value: fmt,
                 label: FormatLabels[fmt],
