@@ -101,6 +101,44 @@ export const resourceReplacementRule: TextReplacementRule = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Keyword replacements  ({keyword:raid}, {keyword:restore:2}, …)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const keywordBaseStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-barlow-semi-condensed), sans-serif',
+    fontWeight: 800,
+    color: 'white' // '#ff675f',
+};
+
+const keywordSmallStyle: React.CSSProperties = {
+    ...keywordBaseStyle,
+    fontSize: '0.85em',
+};
+
+/**
+ * Replacement rule for keyword tokens.
+ * `{keyword:name}` renders a stylized keyword name.
+ * `{keyword:name:amount}` renders a stylized keyword name followed by the amount.
+ */
+export const keywordReplacementRule: TextReplacementRule = {
+    pattern: /\{keyword:([a-z]+)(?::(\d+))?\}/,
+    render: (match: string, key: number) => {
+        const result = match.match(/\{keyword:([a-z]+)(?::(\d+))?\}/)!;
+        const name = result[1];
+        const amount = result[2];
+        const initial = name.charAt(0).toUpperCase();
+        const rest = name.slice(1).toUpperCase();
+        return (
+            <span key={key} style={keywordBaseStyle}>
+                {initial}
+                <span style={keywordSmallStyle}>{rest}</span>
+                {amount != null && ` ${amount}`}
+            </span>
+        );
+    },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Default rule set
 // Add new rule sets here to enable them globally by default.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -108,4 +146,5 @@ export const resourceReplacementRule: TextReplacementRule = {
 export const defaultReplacementRules: TextReplacementRule[] = [
     ...aspectReplacementRules,
     resourceReplacementRule,
+    keywordReplacementRule,
 ];

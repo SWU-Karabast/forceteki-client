@@ -2,7 +2,7 @@
 import type { Metadata } from 'next';
 import React from 'react';
 import ClientLayout from './ClientLayout';
-import { Barlow } from 'next/font/google';
+import { Barlow, Barlow_Semi_Condensed } from 'next/font/google';
 import './_utils/s3Utils';
 
 const barlow = Barlow({
@@ -11,13 +11,19 @@ const barlow = Barlow({
     variable: '--font-barlow',
 });
 
+const barlowSemiCondensed = Barlow_Semi_Condensed({
+    subsets: ['latin'],
+    weight: ['800'],
+    variable: '--font-barlow-semi-condensed',
+});
+
 export const metadata: Metadata = {
     title: 'Karabast',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en" className={barlow.variable}>
+        <html lang="en" className={`${barlow.variable} ${barlowSemiCondensed.variable}`}>
             <body>
                 <ClientLayout>{children}</ClientLayout>
             </body>
