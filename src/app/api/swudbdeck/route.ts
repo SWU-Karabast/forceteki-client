@@ -274,7 +274,7 @@ export async function GET(req: Request) {
                 );
             }
 
-            const apiUrl = `https://wvwxihpohprhejxonqlc.supabase.co/functions/v1/export-deck-json?id=${deckId}`;
+            const apiUrl = `https://exportdeck.kyberdecks.com/api/deck-export?id=${deckId}`;
 
             response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
             if (!response.ok) {
