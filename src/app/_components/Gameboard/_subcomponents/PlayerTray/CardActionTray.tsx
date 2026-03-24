@@ -88,6 +88,7 @@ const mockDelayDrain = keyframes`
   100% { clip-path: inset(0 100% 0 0 round 1rem); }
 `;
 
+
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
         ...debugBorder('yellow'),
@@ -255,13 +256,21 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
                     linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
                 border: '1px solid rgba(204, 172, 0, 0.5)',
                 position: 'relative',
+                // Single glowing border that drains right-to-left with the timer.
+                // filter: drop-shadow() is processed AFTER clip-path, so the glow
+                // only radiates from the still-visible portion of the border.
                 '&::before': {
                     content: '""',
                     position: 'absolute',
-                    inset: '-6px',
+                    inset: '-4px',
                     borderRadius: 'inherit',
-                    border: '2px solid rgba(57,255,20,0.85)',
-                    boxShadow: '0 0 16px 6px rgba(57,255,20,0.7), 0 0 40px 12px rgba(57,255,20,0.35), 0 0 70px 20px rgba(57,255,20,0.15)',
+                    border: '3px solid rgba(57, 255, 20, 0.95)',
+                    filter: [
+                        'drop-shadow(0 0 4px rgba(57,255,20,1))',
+                        'drop-shadow(0 0 10px rgba(57,255,20,0.9))',
+                        'drop-shadow(0 0 22px rgba(57,255,20,0.7))',
+                        'drop-shadow(0 0 45px rgba(57,255,20,0.45))',
+                    ].join(' '),
                     animation: `${mockDelayDrain} ${delayMs}ms linear forwards`,
                     pointerEvents: 'none',
                 },
