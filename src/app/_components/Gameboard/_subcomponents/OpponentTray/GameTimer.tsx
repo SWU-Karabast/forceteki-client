@@ -25,16 +25,50 @@ const GameTimer: React.FC = ({ ...props }) => {
     const [playerMainTimeRemainingMs, setPlayerMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
     const [opponentMainTimeRemainingMs, setOpponentMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
 
+    // Wall-clock expiry timestamps — updated on each server sync, used to correct drift on tab focus
+    const playerMainTimeExpiryRef = React.useRef<number | null>(null);
+    const opponentMainTimeExpiryRef = React.useRef<number | null>(null);
+
+    // Refs so the visibility handler (empty deps) can read current turn time state without stale closures
+    const playerIsTurnTimeRef = React.useRef(playerIsTurnTime);
+    const opponentIsTurnTimeRef = React.useRef(opponentIsTurnTime);
+    useEffect(() => {
+        playerIsTurnTimeRef.current = playerIsTurnTime;
+        opponentIsTurnTimeRef.current = opponentIsTurnTime;
+    }, [playerIsTurnTime, opponentIsTurnTime]);
+
     // Sync both timers from server state
     useEffect(() => {
         const opponentTurnTimeRemainingMs = secondsToMilliseconds(opponentState?.turnTimeRemainingSeconds || 0);
         const playerTurnTimeRemainingMs = secondsToMilliseconds(playerState?.turnTimeRemainingSeconds || 0);
+        const playerMs = secondsToMilliseconds(playerState?.mainTimeRemainingSeconds || 0);
+        const opponentMs = secondsToMilliseconds(opponentState?.mainTimeRemainingSeconds || 0);
 
         // Prefer the connected player's turn timer; fall back to opponent's if only they are active
         setTurnTimeRemainingMs(playerIsActive ? playerTurnTimeRemainingMs : opponentTurnTimeRemainingMs);
-        setPlayerMainTimeRemainingMs(secondsToMilliseconds(playerState?.mainTimeRemainingSeconds || 0));
-        setOpponentMainTimeRemainingMs(secondsToMilliseconds(opponentState?.mainTimeRemainingSeconds || 0));
-    }, [playerIsActive, opponentState?.turnTimeRemainingSeconds, opponentState?.mainTimeRemainingSeconds, playerState?.turnTimeRemainingSeconds, playerState?.mainTimeRemainingSeconds])
+        setPlayerMainTimeRemainingMs(playerMs);
+        setOpponentMainTimeRemainingMs(opponentMs);
+
+        // Only record expiry when actively consuming main time — null means skip correction on tab focus
+        playerMainTimeExpiryRef.current = playerIsActive && !playerIsTurnTime ? Date.now() + playerMs : null;
+        opponentMainTimeExpiryRef.current = opponentIsActive && !opponentIsTurnTime ? Date.now() + opponentMs : null;
+    }, [playerIsActive, opponentIsActive, playerIsTurnTime, opponentIsTurnTime, opponentState?.turnTimeRemainingSeconds, opponentState?.mainTimeRemainingSeconds, playerState?.turnTimeRemainingSeconds, playerState?.mainTimeRemainingSeconds])
+
+    // Correct main time drift caused by browser throttling setInterval in background tabs
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                if (playerMainTimeExpiryRef.current !== null && !playerIsTurnTimeRef.current) {
+                    setPlayerMainTimeRemainingMs(Math.max(0, playerMainTimeExpiryRef.current - Date.now()));
+                }
+                if (opponentMainTimeExpiryRef.current !== null && !opponentIsTurnTimeRef.current) {
+                    setOpponentMainTimeRemainingMs(Math.max(0, opponentMainTimeExpiryRef.current - Date.now()));
+                }
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [])
 
     // When opponent is on main time and player is inactive, the circle handles the countdown.
     // Only run the manual countdown when the player is also active (circle is showing player's time).
