@@ -16,6 +16,7 @@ import {
 import { PilePopup, PopupButton } from '../Popup.types';
 import { useGame } from '@/app/_contexts/Game.context';
 import { CardStyle } from '../../Cards/CardTypes';
+import RichText from '../../RichText/RichText';
 
 interface ButtonProps {
     data: PilePopup;
@@ -100,7 +101,10 @@ export const PilePopupModal = ({ data }: ButtonProps) => {
                     {isMinimized ? <BiPlus /> : <BiMinus />}
                 </IconButton>
             </Box>
-            <Typography sx={subtitleStyle} hidden={isMinimized}>{data.subtitle}</Typography>
+
+            { data.subtitle && !isMinimized &&
+                <RichText text={data.subtitle} sx={subtitleStyle} component={Typography} />
+            }
 
             {renderPopupContent()}
         </Box>
