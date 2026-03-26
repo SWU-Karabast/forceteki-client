@@ -431,7 +431,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     return (
         <Box >
             <Typography variant="h2">
-                Join Matchmaking Queue
+                Get in da Fight Line
             </Typography>
             <form onSubmit={handleJoinGameQueue}>
                 <FormControl component="fieldset" sx={styles.formControlStyle}>
@@ -459,7 +459,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             control={<Radio sx={styles.checkboxStyle} />}
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Saved Deck
+                                    Old Deckie
                                 </Typography>
                             }
                         />
@@ -468,7 +468,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             control={<Radio sx={styles.checkboxStyle} />}
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    New Deck
+                                    Freshie Deckie
                                 </Typography>
                             }
                         />
@@ -483,7 +483,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                                 onClick={handleDeckManagement}
                                 sx={styles.manageDecks}
                             >
-                                Manage&nbsp;Decks
+                                Boss My Deckies
                             </Button>
                         </Box>
                     </FormControl>
@@ -603,7 +603,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     },
                     mb: '1rem',
                 }}>
-                    {queueState ? 'Queueing...' : 'Join Queue'}
+                    {queueState ? 'Queueing...' : 'Mesa Ready!'}
                 </Button>
             </form>
         </Box>

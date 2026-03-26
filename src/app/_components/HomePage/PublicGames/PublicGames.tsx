@@ -65,11 +65,11 @@ const PublicGames: React.FC = () => {
     return (
         <Card variant="black" sx={styles.publicGamesWrapper}>
             <CardContent sx={styles.cardContent}>
-                <Typography variant="h2">Public Games</Typography>
-                <Typography variant="h3">Available Lobbies</Typography>
+                <Typography variant="h2">Gamesa for Everybody</Typography>
+                <Typography variant="h3">Waitin Roomsies</Typography>
                 <Divider sx={styles.divider} />
                 {lobbies.length === 0 && (
-                    <Typography variant="body1" sx={{ textAlign: 'center' }}>No available lobbies at the moment.</Typography>
+                    <Typography variant="body1" sx={{ textAlign: 'center' }}>No mesa peoples here right now.</Typography>
                 )}
                 {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />

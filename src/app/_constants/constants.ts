@@ -73,8 +73,8 @@ export const getFormatConfig = (configs: IFormatModeConfig[], format: SwuGameFor
     configs.find((c) => c.format === format);
 
 export const GamesToWinModeLabels: Record<GamesToWinMode, string> = {
-    [GamesToWinMode.BestOfOne]: 'Best-of-One',
-    [GamesToWinMode.BestOfThree]: 'Best-of-Three',
+    [GamesToWinMode.BestOfOne]: 'One Big Bonk',
+    [GamesToWinMode.BestOfThree]: 'Three Big Bonks',
 }
 
 export const CardPoolLabels: Record<CardPool, string> = {

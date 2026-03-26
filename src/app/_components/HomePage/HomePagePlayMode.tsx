@@ -271,8 +271,8 @@ const HomePagePlayMode: React.FC = () => {
                     <CardContent>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: '1rem' }}>
                             <Tabs value={value} variant="fullWidth" onChange={handleChange}>
-                                {showQuickMatch && <Tab sx={styles.tabStyles} label="Quick Match" />}
-                                <Tab sx={styles.tabStyles} label="Create Lobby" />
+                                {showQuickMatch && <Tab sx={styles.tabStyles} label="FASTIE SMASH" />}
+                                <Tab sx={styles.tabStyles} label="MAKE-A ROOMIE" />
                                 {showTestGames && <Tab sx={styles.tabStyles} label="Test" />}
                             </Tabs>
                         </Box>

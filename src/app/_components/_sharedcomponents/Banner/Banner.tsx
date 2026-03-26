@@ -71,8 +71,8 @@ const KarabastBanner: React.FC = () => {
     return (
         <Box sx={styles.bannerContainerStyle}>
             <Box sx={styles.textBoxStyle}>
-                <Typography variant="h1" sx={styles.titleheader}>KARABAST</Typography>
-                <Typography variant="body1" sx={styles.subheader}>The Fan-Made, Open-Source</Typography>
+                <Typography variant="h1" sx={styles.titleheader}>MEESABAST</Typography>
+                <Typography variant="body1" sx={styles.subheader}>Da Gungan-Made, Open-Source</Typography>
                 <Typography variant="body1">Star Wars Unlimited Simulator</Typography>
             </Box>
             <Box sx={styles.homeBanner}>
