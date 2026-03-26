@@ -12,6 +12,7 @@ import {
     titleStyle,
 } from '../Popup.styles';
 import { DefaultPopup, PopupButton } from '../Popup.types';
+import RichText from '../../RichText/RichText';
 
 interface ButtonProps {
     data: DefaultPopup;
@@ -28,7 +29,7 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
         return (
             <>
                 {data.description && (
-                    <Typography sx={textStyle}>{data.description}</Typography>
+                    <RichText text={data.description} sx={textStyle} component={Typography}/>
                 )}
                 <Box sx={{ ...footerStyle, flexDirection: triggerWindow ? 'column' : 'row' }}>
                     {data.buttons.map((button: PopupButton, index: number) => (
@@ -39,7 +40,7 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
                                 sendGameMessage([button.command, button.arg, button.uuid]);
                             }}
                         >
-                            {button.text}
+                            <RichText text={button.text} />
                         </GradientBorderButton>
                     ))}
                 </Box>
@@ -55,7 +56,7 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
     return (
         <Box sx={containerStyle}>
             <Box sx={headerStyle(isMinimized)}>
-                <Typography sx={titleStyle}>{data.title}</Typography>
+                <RichText text={data.title} sx={titleStyle} component={Typography}/>
                 <IconButton
                     sx={minimizeButtonStyle}
                     aria-label="minimize"

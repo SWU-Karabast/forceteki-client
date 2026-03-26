@@ -14,6 +14,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import { CardStyle } from '../../Cards/CardTypes';
 import GameCard from '../../Cards/GameCard';
+import RichText from '../../RichText/RichText';
 
 interface ButtonProps {
     data: SelectCardsPopup;
@@ -83,7 +84,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
         return (
             <>
                 {data.description && (
-                    <Typography sx={textStyle}>{data.description}</Typography>
+                    <RichText text={data.description} sx={textStyle} component={Typography}/>
                 )}
                 <Box sx={styles.selectableCardsContainer}>
                     {selectableCards.map((card) => {
@@ -154,7 +155,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                             sendGameMessage([button.command, button.arg, cardUuid, data.uuid]);
                         }}
                     >
-                        {button.text}
+                        <RichText text={button.text} />
                     </Button>
                 )}</Box>
         )
@@ -164,7 +165,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
     return (
         <Box sx={containerStyle}>
             <Box sx={headerStyle(isMinimized)}>
-                <Typography sx={titleStyle}>{data.title}</Typography>
+                <RichText text={data.title} sx={titleStyle} component={Typography}/>
                 <IconButton
                     sx={minimizeButtonStyle}
                     aria-label="minimize"

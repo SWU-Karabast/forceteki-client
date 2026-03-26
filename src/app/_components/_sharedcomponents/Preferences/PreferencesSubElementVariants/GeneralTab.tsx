@@ -472,7 +472,6 @@ function GeneralTab() {
                                             : isSWUStatsLinked
                                                 ? 'Your stats will appear under Owner in your decks. '
                                                 : 'Linking your account will cause your stats to appear under Owner in your decks. '}
-                                        <strong>Deck syncing is not available yet.</strong>
                                     </Typography>
 
                                     <Typography variant={'h3'} sx={{ mb: '1rem', mt: '3rem' }} >SWUBase Integration</Typography>
