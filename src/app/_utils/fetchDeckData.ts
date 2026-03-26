@@ -17,6 +17,7 @@ export enum DeckSource {
     SWUnlimitedDB = 'SWUnlimitedDB',
     SWUCardHub = 'SWUCardHub',
     SWUBase = 'SWUBase',
+    SwuForge = 'SwuForge',
     SWUMetaStats = 'SWUMetaStats',
     MySWU = 'MySWU',
     ProtectThePod = 'ProtectThePod',
@@ -78,6 +79,8 @@ export const determineDeckSource = (deckLink: string): DeckSource => {
         return DeckSource.SWUnlimitedDB;
     } else if (deckLink.includes('swubase.com')) {
         return DeckSource.SWUBase;
+    } else if (deckLink.includes('swuforge.com')) {
+        return DeckSource.SwuForge;
     } else if (deckLink.includes('swucardhub.fr')) {
         return DeckSource.SWUCardHub;
     } else if (deckLink.includes('swumetastats.com')) {

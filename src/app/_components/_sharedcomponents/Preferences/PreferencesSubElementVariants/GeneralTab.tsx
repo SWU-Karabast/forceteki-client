@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
     checkSwubaseLinkStatus,
+    checkSwuforgeLinkStatus,
     checkSwuStatsLinkStatus,
     getUsernameChangeInfoFromServer,
     setUsernameOnServer
@@ -16,6 +17,7 @@ import MuiLink from '@mui/material/Link';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import LinkSwuStatsButton from '../../LinkService/LinkSwuStatsButton';
 import LinkSwubaseButton from '../../LinkService/LinkSwubaseButton';
+import LinkSwuForgeButton from '../../LinkService/LinkSwuForgeButton';
 
 function GeneralTab() {
     const { user, updateUsername, anonymousUserId } = useUser();
@@ -23,6 +25,8 @@ function GeneralTab() {
     const [isSWUStatsInCheck, setIsSWUStatsInCheck] = useState<boolean>(false);
     const [isSWUBaseLinked, setIsSWUBaseLinked] = useState<boolean>(false);
     const [isSWUBaseInCheck, setIsSWUBaseInCheck] = useState<boolean>(false);
+    const [isSwuForgeLinked, setIsSwuForgeLinked] = useState<boolean>(false);
+    const [isSwuForgeInCheck, setIsSwuForgeInCheck] = useState<boolean>(false);
     const [username, setUsername] = useState<string>('');
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorTitle, setErrorTitle] = useState<string>('Username error');
@@ -42,6 +46,9 @@ function GeneralTab() {
 
     const [swuBaseError, setSwuBaseError] = useState<boolean>(false);
     const swuBaseErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const [swuForgeError, setSwuForgeError] = useState<boolean>(false);
+    const swuForgeErrorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const usersId = user?.id ? user.id : anonymousUserId ? anonymousUserId : '';
     const handleCopyLink = (userId: string) => {
@@ -144,6 +151,29 @@ function GeneralTab() {
         setIsSWUBaseLinked(linkStatus);
     }
 
+    const checkSwuforgeLink = async () => {
+        if (user) {
+            setIsSwuForgeInCheck(true);
+            try {
+                const linked = await checkSwuforgeLinkStatus(user);
+                setIsSwuForgeLinked(linked);
+            } catch (error) {
+                console.error('Failed to check SWU Forge link status:', error);
+                setSwuForgeError(true);
+                setIsSwuForgeLinked(false);
+                setIsSwuForgeInCheck(false);
+            } finally {
+                setTimeout(() => {
+                    setIsSwuForgeInCheck(false);
+                }, 1000);
+            }
+        }
+    };
+
+    const onSwuforgeLinkChange = (linkStatus: boolean) => {
+        setIsSwuForgeLinked(linkStatus);
+    }
+
     const getUsernameChangeInfo = async () => {
         if (user) {
             try {
@@ -180,6 +210,16 @@ function GeneralTab() {
         } else {
             setSwuBaseError(false);
         }
+
+        const swuforgeStatus = urlParams.get('swuforge');
+        if (swuforgeStatus === 'error') {
+            setSwuForgeError(true);
+            swuForgeErrorTimeoutRef.current = setTimeout(() => {
+                setSwuForgeError(false);
+            }, 5000);
+        } else {
+            setSwuForgeError(false);
+        }
     }, []);
 
     useEffect(() => {
@@ -188,6 +228,7 @@ function GeneralTab() {
         getUsernameChangeInfo();
         checkSwuStatsLink();
         checkSwubaseLink();
+        checkSwuforgeLink();
         const validationError = validateDiscordUsername(currentUsername);
         setUserErrorSummary(validationError); // Show initial validation state if any
         setCanSubmitClientSide(validationError === null && currentUsername.trim() !== '');
@@ -271,6 +312,9 @@ function GeneralTab() {
             mb:'20px'
         },
         swuBaseContainer:{
+            mb:'20px'
+        },
+        swuForgeContainer:{
             mb:'20px'
         },
         muteNoticeContainer: {
@@ -468,6 +512,46 @@ function GeneralTab() {
                                             : isSWUBaseLinked
                                                 ? 'Your SWUBase account is linked. '
                                                 : 'Linking your account will allow you to track stats directly to SWUBase. '}
+                                    </Typography>
+
+                                    <Typography variant={'h3'} sx={{ mb: '1rem', mt: '3rem' }} >SWU Forge Integration</Typography>
+                                    <Box sx={styles.swuForgeContainer}>
+                                        {isSwuForgeInCheck ? (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <CircularProgress size={20} sx={{ color: '#2F7DB6' }} />
+                                                <Typography variant="body2" sx={{ color: '#B0B0B0' }}>
+                                                    Checking SWU Forge link status...
+                                                </Typography>
+                                            </Box>
+                                        ) : (
+                                            <>
+                                                <LinkSwuForgeButton
+                                                    linked={isSwuForgeLinked}
+                                                    onLinkChange={onSwuforgeLinkChange}
+                                                    userId={usersId}
+                                                />
+                                                {swuForgeError && (
+                                                    <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                                        Failed to link to SWU Forge account. If this keeps happening, please report the problem to the
+                                                        <MuiLink
+                                                            href="https://discord.gg/swuforge"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            sx={{ ml:'4px', color: 'inherit', textDecoration: 'underline' }}
+                                                        >
+                                                            Discord
+                                                        </MuiLink>.
+                                                    </Typography>
+                                                )}
+                                            </>
+                                        )}
+                                    </Box>
+                                    <Typography variant="body2" sx={{ mt: 2, color: isSwuForgeLinked ? '#81c784' : '#ffd54f', fontSize: '0.85rem', maxWidth: 'calc(20rem + 130px)' }}>
+                                        {isSwuForgeInCheck
+                                            ? ''
+                                            : isSwuForgeLinked
+                                                ? 'Your SWU Forge account is linked. '
+                                                : 'Linking your account will allow you to track stats directly to SWU Forge. '}
                                     </Typography>
                                 </>
                             )}

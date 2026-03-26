@@ -117,6 +117,33 @@ export async function GET(req: Request) {
                 throw new Error(`SWUCardHub API error: ${response.statusText}`);
             }
         } 
+        else if (deckLink.includes('swuforge.com')) {
+            // Deck Links in the form: https://swuforge.com/decks/${deckId}
+            const match = deckLink.match(/\/decks\/([^\/]+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if(deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.SwuForge;
+
+            if (!deckId) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            const apiUrl = `https://swuforge.com/api/decks/${deckId}/json`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if(response.status === 404) {
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck link sharing is enabled on swuforge.com.' }, { status: 403 });
+                }
+
+                console.error('SWU Forge API error:', response.statusText);
+                throw new Error(`SWU Forge API error: ${response.statusText}`);
+            }
+        }
         else if (deckLink.includes('swubase.com')) {
             // Deck Links in the form: https://swubase.com/decks/${deckId}
             const match = deckLink.match(/\/decks\/([^\/]+)\/?$/);
