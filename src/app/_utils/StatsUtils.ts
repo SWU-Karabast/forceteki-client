@@ -32,3 +32,18 @@ export async function getSwubaseAuthUrl(userId: string): Promise<string> {
 
     return `https://swubase.com/settings/link/karabast?${params.toString()}`;
 }
+
+export async function getSwuforgeAuthUrl(userId: string): Promise<string> {
+    if (!process.env.SWUFORGE_CLIENT_ID) {
+        throw new Error('SWUFORGE_CLIENT_ID is not set');
+    }
+
+    const swuforgeUrl = process.env.SWUFORGE_URL || 'https://swuforge.com';
+    const params = new URLSearchParams({
+        client_id: process.env.SWUFORGE_CLIENT_ID,
+        redirect_uri: `${getBaseKarabastUrl()}/api/swuforge`,
+        state: userId,
+    });
+
+    return `${swuforgeUrl}/auth/forceteki/authorize?${params.toString()}`;
+}

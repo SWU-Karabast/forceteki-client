@@ -864,7 +864,68 @@ export const unlinkSwubaseAsync = async(
     }
 };
 
+/**
+ * Checks if the user has linked their SWU Forge account
+ * @param user The current user
+ * @returns Promise that resolves to boolean indicating if SWU Forge is linked
+ */
+export const checkSwuforgeLinkStatus = async (
+    user: IUser
+): Promise<boolean> => {
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/swuforgeLink`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            }
+        );
 
+        if (!response.ok) {
+            if (response.status === 401) {
+                return false;
+            }
+            throw new Error('Failed to check SWU Forge link status');
+        }
+
+        const result = await response.json();
+        return result.linked;
+    } catch (error) {
+        console.error('Error checking SWU Forge link status:', error);
+        throw error;
+    }
+};
+
+export const unlinkSwuforgeAsync = async(
+    user: IUser | null,
+): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        };
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/unlink-swuforge`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to unlink SWU Forge');
+        }
+        return result.success;
+    } catch (error) {
+        console.error('Error unlinking SWU Forge:', error);
+        throw error;
+    }
+};
 
 export const shouldShowAnnouncement = (announcement: IAnnouncement): boolean =>{
     try {
