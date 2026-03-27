@@ -16,6 +16,7 @@ import { useUser } from '@/app/_contexts/User.context';
 import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
 import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
 import CosmeticsTab from '../PreferencesSubElementVariants/CosmeticsTab';
+import GameOptionsTab from '../PreferencesSubElementVariants/GameOptionsTab';
 
 function tabProps(index: number) {
     return {
@@ -28,6 +29,7 @@ function tabProps(index: number) {
 enum TabType {
     CurrentGame = 'currentGame',
     KeyboardShortcuts = 'keyboardShortcuts',
+    GameOptions = 'gameOptions',
     Cosmetics = 'cosmetics',
     SoundOptions = 'soundOptions',
     EndGame = 'endGame',
@@ -109,6 +111,8 @@ function VerticalTabs({
                 return <CurrentGameTab/>;
             case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
+            case TabType.GameOptions:
+                return <GameOptionsTab/>;
             case TabType.Cosmetics:
                 return <CosmeticsTab />;
             case TabType.SoundOptions:
@@ -129,6 +133,8 @@ function VerticalTabs({
                 return 'Current Game';
             case TabType.KeyboardShortcuts:
                 return 'Keyboard Shortcuts';
+            case TabType.GameOptions:
+                return 'Game Options';
             case TabType.Cosmetics:
                 return 'Cosmetics';
             case TabType.SoundOptions:
