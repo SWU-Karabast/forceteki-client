@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useCallback, useState } from 'react';
 import {
     DefaultPopup,
+    DiscloseMockDelayPopup,
     DropdownPopup,
     PilePopup,
     SelectCardsPopup,
@@ -13,7 +14,8 @@ export type PopupData =
   | SelectCardsPopup
   | PilePopup
   | DropdownPopup
-  | LeaveGamePopup;
+  | LeaveGamePopup
+  | DiscloseMockDelayPopup;
 
 export type PopupType = PopupData['type'];
 
