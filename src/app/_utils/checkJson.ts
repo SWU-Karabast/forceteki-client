@@ -221,7 +221,8 @@ export const parseInputAsDeckData = (input: string): {
         input.includes('swumetastats.com') ||
         input.includes('my-swu.com') ||
         input.includes('protectthepod.com') ||
-        input.includes('swuforge.com')
+        input.includes('swuforge.com') ||
+        input.includes('kyberdecks.com')
     ) {
         return { type: 'url', data: null };
     }

@@ -119,6 +119,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'protectthepod.com';
             case DeckSource.SWUForge:
                 return 'swuforge.com';
+            case DeckSource.KyberDecks:
+                return 'kyberdecks.com';
             default:
                 return source;
         }
