@@ -47,22 +47,24 @@ const KarabastBanner: React.FC = () => {
             flex: 1,
         },
         block1: {
-            backgroundImage: `url(${s3ImageURL('ui/law-vader-banner.webp')})`,
+            backgroundImage: 'url(jarjar2.png)',
+            backgroundPosition: 'unset',
             marginRight: '-152px',
             '@media (max-width:800px)': { marginRight: 0 },
         },
         block2: {
-            backgroundImage: `url(${s3ImageURL('ui/law-leia-banner.webp')})`,
+            backgroundImage: 'url(jarjar4.png)',
             '@media (max-width:1200px)': { marginLeft: '-2px' },
             '@media (max-width:800px)': { display: 'none' },
         },
         block3: {
-            backgroundImage: `url(${s3ImageURL('ui/law-jabba-banner.webp')})`,
+            backgroundImage: 'url(jarjar1.png)',
+            backgroundPosition: 'unset',
             marginLeft: '-152px',
             '@media (max-width:1200px)': { display: 'none' },
         },
         block4: {
-            backgroundImage: `url(${s3ImageURL('ui/law-enfys-banner.webp')})`,
+            backgroundImage: 'url(jarjar3.png)',
             marginLeft: '-152px',
             '@media (max-width:1600px)': { display: 'none' },
         },
