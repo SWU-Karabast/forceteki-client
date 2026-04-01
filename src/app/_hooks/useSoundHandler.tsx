@@ -74,7 +74,7 @@ export const useSoundHandler = (options: SoundHandlerOptions = {}) => {
 
     // Sound configuration mapping - just to the source files
     const soundConfigs = useMemo<Record<SoundAction, string | null>>(() => ({
-        foundOpponent: '/HelloThere.mp3',
+        foundOpponent: '/meesa.mp3',
         incomingMessage: '/chatbeep.mp3',
         chat: null,
         statefulPromptResults: '/click1.mp3',

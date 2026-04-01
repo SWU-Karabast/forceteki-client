@@ -143,7 +143,7 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                             onClick={handleSpectate}
                             disabled={spectateDisabled}
                         >
-                            Spectate
+                            Lookie
                         </Button>
                     </span>
                 )}

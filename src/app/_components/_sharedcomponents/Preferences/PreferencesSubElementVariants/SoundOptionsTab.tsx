@@ -59,7 +59,7 @@ function SoundOptionsTab({ setHasNewChanges }: SoundOptionsTabProps) {
     const [volume, setVolume] = useState<number>(Math.round(getVolumeFromLocalStorage() * 100));
     const [originalPreferences, setOriginalPreferences] = useState<IPreferences['sound']>(undefined);
 
-    const tempAudio = new Audio('/HelloThere.mp3');
+    const tempAudio = new Audio('/meesa.mp3');
 
     const styles = {
         typographyContainer: {
