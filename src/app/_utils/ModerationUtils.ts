@@ -9,9 +9,11 @@ export const getMuteDisplayText = (moderation?: IModerationAction): string | nul
     if (!moderation?.endDate) return '';
     const timeDiff = new Date(moderation.endDate).getTime() - Date.now();
 
+    // A small time difference can occur if the user doesn't change screens immediately after the mod action finishes
+    // it used to stay permanent mute hence why 'until next refresh' was added
     if (timeDiff <= 0){
         console.log('timeDiff became negative or 0');
-        return null;
+        return 'until next refresh';
     }
 
     const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));

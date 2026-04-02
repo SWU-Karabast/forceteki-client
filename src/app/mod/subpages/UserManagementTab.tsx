@@ -135,12 +135,16 @@ const UserManagementTab: React.FC = () => {
                         note.trim(),
                         actionType === ModActionType.Mute ? durationDays : undefined,
                     );
+                    if(result.success){
+                        setSuccessMessage(result.message);
+                    }else{
+                        setSearchError(result.message);
+                    }
                     const refreshed = await ServerApiService.getModActionsForPlayerAsync(selectedPlayer.id);
                     setModActions(refreshed.modActions || []);
                     setNote('');
                     setDurationValue('');
                     setDurationUnit(DurationUnit.Days);
-                    setSuccessMessage(result.message);
                 } catch (error) {
                     setSearchError(error instanceof Error ? error.message : 'Failed to submit action');
                 } finally {

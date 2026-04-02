@@ -164,11 +164,10 @@ export class ServerApiService {
         actionType: string,
         note: string,
         durationDays?: number,
-    ): Promise<{ success: boolean; message: string; modAction: IModActionResponse }> {
+    ): Promise<{ success: boolean; message: string; }> {
         return await this.fetchWithErrorHandling<{
             success: boolean;
             message: string;
-            modAction: IModActionResponse;
         }>(
             `${this.baseUrl}/api/mod/submit-action`,
             {
