@@ -108,13 +108,21 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             alignItems: 'center',
             justifyContent: 'flex-end',
             padding: '1rem 2rem 1rem 0',
-            gap: '2rem',
+            gap: '1rem',
         },
         lastPlayed: {
             ...debugBorder('yellow'),
-            height: '100%',
-            width: 'auto',
-            maxWidth: '50%',
+            ...(isPortrait
+                ? {
+                    maxHeight: '100%',
+                    height: 'auto',
+                    width: '50%',
+                }
+                : {
+                    height: '100%',
+                    width: 'auto',
+                    maxWidth: '50%',
+                }),
             aspectRatio: '1 / 1.4',
             borderRadius: '5px',
             display: 'flex',
