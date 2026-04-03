@@ -169,6 +169,7 @@ const MainTimerLabel = ({
                     marginBottom: 0,
                     cursor: 'pointer',
                     opacity: opponentIsActive && !opponentIsTurnTime ? 1 : 0.65,
+                    fontWeight:600,
                 }}
             >{`${formatMilliseconds(opponentTimeRemaining)}`}</Typography>
             <Divider />
@@ -179,6 +180,7 @@ const MainTimerLabel = ({
                     marginBottom: 0,
                     cursor: 'pointer',
                     opacity: playerIsActive && !playerIsTurnTime ? 1 : 0.65,
+                    fontWeight:600,
                 }}
             >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography>
         </Stack>
