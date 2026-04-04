@@ -20,24 +20,24 @@ export default function DeckLayout({
             justifyContent: 'center',
         },
         overlayStyle:{
-            padding: '30px',
+            padding: { xs: '12px 8px', md: '30px' },
             zIndex: 10,
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
             border: '3px solid transparent',
             backdropFilter: 'blur(30px)',
-
-            borderRadius:'15px',
-            width: '95vw',
+            borderRadius: { xs: '0px', md: '15px' },
+            width: { xs: '100vw', md: '95vw' },
             justifySelf:'center',
             height: '81vh',
+            overflow: { xs: 'hidden', md: 'hidden' },
         },
         disclaimer: {
             position: 'absolute',
             bottom: 0,
             width: '100%',
-            padding: '1rem',
+            padding: {xs:'0', md: '1rem'},
             textAlign: 'center',
-            fontSize: '0.90rem',
+            fontSize: { xs: '0.9rem', md: '0.90rem' },
         },
     }
     return (
