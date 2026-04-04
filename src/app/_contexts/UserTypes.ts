@@ -10,13 +10,19 @@ export enum ChatDisabledReason {
     NotLoggedIn = 'notLoggedIn',
     AnonymousOpponent = 'anonymousOpponent',
     UserMuted = 'userMuted',
-    OpponentDisabledChat = 'opponentDisabledChat'
+    OpponentDisabledChat = 'opponentDisabledChat',
+    UserDisabledChat = 'userDisabledChat'
 }
 
 export interface IChatDisabledInfo {
     reason: ChatDisabledReason;
     message: string;
     borderColor: string;
+}
+
+export enum ModerationFieldState {
+    Enabled = 'enabled',
+    EnabledAndSeen = 'enabledAndSeen',
 }
 
 export enum ModerationType {
@@ -36,6 +42,8 @@ export interface IGetUser {
     showWelcomeMessage: boolean;
     preferences: IPreferences,
     needsUsernameChange: boolean;
+    mustRequestUsernameChange?: ModerationFieldState | null;
+    reportingDisabled?: ModerationFieldState | null;
     moderation?: IModerationAction | null,
     undoPopupSeenDate?: Date | null
 }
@@ -71,6 +79,8 @@ export interface IUserContextType {
     updateUsername: (username: string) => void;
     updateWelcomeMessage: () => void;
     updateNeedsUsernameChange: () => void;
+    updateMustRequestUsernameChangeSeen: () => void;
+    updateReportingDisabledSeen: () => void;
     updateUserPreferences: (preferences: IPreferences) => void;
     updateModerationSeenStatus: (moderation: IModerationAction | null) => void;
     updateUndoPopupSeenDate: () => void;

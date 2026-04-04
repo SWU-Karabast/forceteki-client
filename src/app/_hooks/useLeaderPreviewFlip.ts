@@ -59,14 +59,14 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
             if(anchorElement?.getAttribute('data-card-type') === 'base'){
                 return {
                     aspectRatio: '1.4 / 1',
-                    width: '24rem',
+                    width: 'clamp(280px, 80vw, 24rem)',
                 };
             }
 
             // Non-leader and non-base cards: always portrait mode.
             return {
                 aspectRatio: '1 / 1.4',
-                width: '16rem',
+                width: 'clamp(200px, 60vw, 16rem)',
             };
         }
         const isLeaderActive = isLeader && isDeployed;
@@ -74,7 +74,7 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
         const usePortraitMode = !hasDefinedStartingSide && ((isLeaderActive && !internalIsCtrl) || (!isLeaderActive && internalIsCtrl));
         return {
             aspectRatio: usePortraitMode ? '1 / 1.4' : '1.4 / 1',
-            width: usePortraitMode ? '15rem' : '24rem',
+            width: usePortraitMode ? 'clamp(200px, 60vw, 15rem)' : 'clamp(280px, 80vw, 24rem)',
         };
     }, [isLeader, isDeployed, internalIsCtrl, startingSide, anchorElement]);
 

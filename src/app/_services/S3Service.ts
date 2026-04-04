@@ -28,6 +28,7 @@ export class S3Service {
     private bucketName: string;
 
     constructor() {
+        console.log('Initializing S3Service');
         this.bucketName = 'karabast-customization';
 
         const s3ClientConfig: S3ClientConfig = {

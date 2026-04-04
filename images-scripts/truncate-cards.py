@@ -2,8 +2,8 @@ import os
 from PIL import Image
 
 # === CONFIGURATION ===
-INPUT_DIR = "SEC/standard/large"  # Folder with original processed images
-OUTPUT_DIR = "SEC/truncated/large"
+INPUT_DIR = "LAW/standard/large"  # Folder with original processed images
+OUTPUT_DIR = "LAW/truncated/large"
 TOP_CROP_HEIGHT = 255   # Keep the top 200px
 BOTTOM_CROP_HEIGHT = 32 # Keep the bottom 15px and move it up
 FINAL_SIZE = 180        # Target size (max width or height)

@@ -6,7 +6,7 @@ import { ICosmeticItem } from '@/app/_components/_sharedcomponents/Preferences/P
 function CosmeticItem(cosmeticItem: ICosmeticItem) {
     const styles = {
         sleeveStyle:{
-            backgroundImage: cosmeticItem.isNoneOption ? 'none' : `url(${cosmeticItem.path})`,
+            backgroundImage: cosmeticItem.isNoneOption ? 'none' : `url(${cosmeticItem.path}?v=2)`,
             backgroundRepeat: 'no-repeat',
             backgroundSize: 'contain',
             backgroundPosition: 'center',

@@ -13,7 +13,6 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
         const cosmeticId = formData.get('cosmeticId') as string;
         const cosmeticTitle = formData.get('cosmeticTitle') as string;
         const cosmeticType = formData.get('cosmeticType') as string;
-        const isDarkenedParam = formData.get('isDarkened') as string;
 
         if (!file || !cosmeticId || !cosmeticTitle || !cosmeticType) {
             return NextResponse.json(
@@ -21,11 +20,6 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
                 { status: 400 }
             );
         }
-
-        // Parse darkened parameter - default to true for backgrounds, false for others
-        const isDarkened = cosmeticType === 'background' ?
-            (isDarkenedParam ? isDarkenedParam === 'true' : true) :
-            false;
 
         // Validate cosmetic type
         if (!['cardback', 'background'].includes(cosmeticType)) {
@@ -68,7 +62,7 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
         // Check if cosmetic with this ID already exists
         try {
             const existingCosmetics = await ServerApiService.getCosmeticsAsync();
-            const existingCosmetic = existingCosmetics.find(c => c.id === cosmeticId);
+            const existingCosmetic = existingCosmetics.cosmetics.find(c => c.id === cosmeticId);
 
             if (existingCosmetic) {
                 return NextResponse.json(
@@ -96,7 +90,6 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
             title: cosmeticTitle,
             type: cosmeticType as RegisteredCosmeticType,
             path: s3Url,
-            darkened: isDarkened // Use the parsed darkened parameter
         };
 
         // Forward cookies from the original request to the server API call

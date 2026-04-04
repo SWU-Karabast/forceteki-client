@@ -8,15 +8,15 @@ import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, FormCon
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
-import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '../Preferences.types';
+import { IRegisteredCosmeticOption } from '../Preferences.types';
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
-    const { cosmetics, fetchCosmetics } = useCosmetics();
+    const { cosmetics, fetchCosmetics, isContributor } = useCosmetics();
     const [selectedCardback, setSelectedCardback] = useState<string|null>(null);
     const [selectedBackground, setSelectedBackground] = useState<string|null>(null);
-    //const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
-    //const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
+    // const [selectedPlaymat, setSelectedPlaymat] = useState<string|null>(null);
+    // const [disablePlaymats, setDisablePlaymats] = useState<boolean>(false);
     const [expandedAccordion, setExpandedAccordion] = useState<string>('cardbacks'); // Default to cardbacks expanded
 
 
@@ -26,7 +26,8 @@ function CosmeticsTab() {
             if (cosmetics) {
                 setSelectedCardback(cosmetics.cardback ?? 'Default');
                 setSelectedBackground(cosmetics.background ?? 'Default');
-                /*setSelectedPlaymat(cosmetics.playmat ?? 'none');
+
+                /* setSelectedPlaymat(cosmetics.playmat ?? 'none');
                 setDisablePlaymats(cosmetics.disablePlaymats ?? false);*/
             }
             fetchCosmetics();
@@ -61,7 +62,7 @@ function CosmeticsTab() {
         }
     }
 
-    /*const onPlaymatClick = async (id: string) => {
+    /* const onPlaymatClick = async (id: string) => {
         try {
             const updatedCosmetics = {
                 ...user?.preferences.cosmetics,
@@ -80,7 +81,7 @@ function CosmeticsTab() {
         }
     }*/
 
-    /*const onDisablePlaymatsChange = async (checked: boolean) => {
+    /* const onDisablePlaymatsChange = async (checked: boolean) => {
         try {
             const updatedCosmetics = {
                 ...user?.preferences.cosmetics,
@@ -103,6 +104,13 @@ function CosmeticsTab() {
         setExpandedAccordion(isExpanded ? panel : '');
     };
 
+    const filterSelectableCosmetics = (cosmeticsList: IRegisteredCosmeticOption[]): IRegisteredCosmeticOption[] => {
+        if (isContributor) {
+            return cosmeticsList;
+        }
+        return cosmeticsList.filter(cosmetic => cosmetic.title !== 'Karabast Developer');
+    };
+
     // Utility function to sort cosmetics by title, ignoring articles
     const sortCosmeticsByTitle = (cosmetics: IRegisteredCosmeticOption[]) => {
         return [...cosmetics].sort((a, b) => {
@@ -122,7 +130,7 @@ function CosmeticsTab() {
         });
     };
     // Create playmats list with 'None' option
-    /*const getPlaymatOptions = () => {
+    /* const getPlaymatOptions = () => {
         const noneOption: IRegisteredCosmeticOption = {
             id: 'none',
             title: 'None',
@@ -216,7 +224,7 @@ function CosmeticsTab() {
                     }}>
                         <Grid sx={styles.functionContainer}>
                             {
-                                cosmetics.cardbacks.length > 0 && sortCosmeticsByTitle(cosmetics.cardbacks).map((cardback) => (
+                                cosmetics.cardbacks.length > 0 && sortCosmeticsByTitle(filterSelectableCosmetics(cosmetics.cardbacks)).map((cardback) => (
                                     <CosmeticItem
                                         key={cardback.id}
                                         id={cardback.id}
@@ -263,7 +271,7 @@ function CosmeticsTab() {
                     }}>
                         <Grid sx={styles.functionContainer}>
                             {
-                                cosmetics.backgrounds.length > 0 && sortCosmeticsByTitle(cosmetics.backgrounds).map((background) => (
+                                cosmetics.backgrounds.length > 0 && sortCosmeticsByTitle(filterSelectableCosmetics(cosmetics.backgrounds)).map((background) => (
                                     <CosmeticItem
                                         key={background.id}
                                         id={background.id}
@@ -278,7 +286,7 @@ function CosmeticsTab() {
                     </AccordionDetails>
                 </Accordion>
             </Box>
-            {/*<Box sx={styles.accordionContainer}>
+            {/* <Box sx={styles.accordionContainer}>
                 <Accordion
                     sx={styles.accordionStyle}
                     expanded={expandedAccordion === 'playmats'}
@@ -326,7 +334,7 @@ function CosmeticsTab() {
                     </AccordionDetails>
                 </Accordion>
             </Box>*/}
-            {/*<Box sx={{
+            {/* <Box sx={{
                 ...styles.accordionContainer,
                 backgroundColor: 'rgba(59, 66, 82, 0.07)',
                 border: '1px solid #4C566A',

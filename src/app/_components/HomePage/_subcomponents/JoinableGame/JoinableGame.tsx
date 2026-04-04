@@ -7,10 +7,11 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { ILobbyCardData } from '../../HomePageTypes';
 import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
-import { FormatLabels, FormatTagLabels, SwuGameFormat } from '@/app/_constants/constants';
+import { FormatLabels, FormatTagLabels, SwuGameFormat, GamesToWinMode } from '@/app/_constants/constants';
 import PremierIcon from '/public/premier.svg';
 import OpenIcon from '/public/open.svg';
-import NextSetIcon from '/public/next_set.svg';
+import Bo1Icon from '/public/bo1.svg';
+import Bo3Icon from '/public/bo3.svg';
 
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
@@ -92,6 +93,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         matchType: {
             margin: 0,
             fontWeight: 'bold',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
         },
         cardsContainer: {
             display: 'flex',
@@ -155,10 +158,27 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     color: '#32e6da',
                     boxShadow: '0 0 5px #32e6da',
                 },
-                nextSet: {
+                eternal: {
                     borderColor: '#ada2fd',
                     color: '#ada2fd',
                     boxShadow: '0 0 5px #ada2fd',
+                },
+                limited: {
+                    borderColor: '#ffdd57',
+                    color: '#ffdd57',
+                    boxShadow: '0 0 5px #ffdd57',
+                }
+            },
+            gamesToWin: {
+                bo1: {
+                    borderColor: '#ffa726',
+                    color: '#ffa726',
+                    boxShadow: '0 0 5px #ffa726',
+                },
+                bo3: {
+                    borderColor: '#ff66b2',
+                    color: '#ff66b2',
+                    boxShadow: '0 0 5px #ff66b2',
                 }
             }
         }
@@ -170,8 +190,10 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return styles.tags.format.premier;
             case SwuGameFormat.Open:
                 return styles.tags.format.open;
-            // case SwuGameFormat.NextSetPreview:
-            //     return styles.tags.format.nextSet;
+            case SwuGameFormat.Eternal:
+                return styles.tags.format.eternal;
+            case SwuGameFormat.Limited:
+                return styles.tags.format.limited;
             default:
                 return {};
         }
@@ -184,10 +206,42 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return <PremierIcon style={iconStyle} />;
             case SwuGameFormat.Open:
                 return <OpenIcon style={iconStyle} />;
-            // case SwuGameFormat.NextSetPreview:
-            //     return <NextSetIcon style={iconStyle} />;
             default:
                 return null;
+        }
+    };
+
+    const getGamesToWinTagStyle = (mode: GamesToWinMode) => {
+        switch (mode) {
+            case GamesToWinMode.BestOfOne:
+                return styles.tags.gamesToWin.bo1;
+            case GamesToWinMode.BestOfThree:
+                return styles.tags.gamesToWin.bo3;
+            default:
+                return {};
+        }
+    };
+
+    const getGamesToWinIcon = (mode: GamesToWinMode) => {
+        const iconStyle = { height: '0.75rem', width: 'auto' };
+        switch (mode) {
+            case GamesToWinMode.BestOfOne:
+                return <Bo1Icon style={iconStyle} />;
+            case GamesToWinMode.BestOfThree:
+                return <Bo3Icon style={iconStyle} />;
+            default:
+                return null;
+        }
+    };
+
+    const getGamesToWinLabel = (mode: GamesToWinMode) => {
+        switch (mode) {
+            case GamesToWinMode.BestOfOne:
+                return 'Bo1';
+            case GamesToWinMode.BestOfThree:
+                return 'Bo3';
+            default:
+                return '';
         }
     };
 
@@ -244,14 +298,25 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     )}
                     <Box>
                         <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
-                        <Box
-                            sx={{
-                                ...styles.tags.lobbySetting,
-                                ...getGameFormatTagStyle(lobby.format),
-                            }}
-                        >
-                            {getFormatIcon(lobby.format)}
-                            { FormatTagLabels[lobby.format] || lobby.format.toUpperCase() }
+                        <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <Box
+                                sx={{
+                                    ...styles.tags.lobbySetting,
+                                    ...getGameFormatTagStyle(lobby.format),
+                                }}
+                            >
+                                {getFormatIcon(lobby.format)}
+                                { FormatTagLabels[lobby.format] || lobby.format.toUpperCase() }
+                            </Box>
+                            <Box
+                                sx={{
+                                    ...styles.tags.lobbySetting,
+                                    ...getGamesToWinTagStyle(lobby.gamesToWinMode),
+                                }}
+                            >
+                                {getGamesToWinIcon(lobby.gamesToWinMode)}
+                                {getGamesToWinLabel(lobby.gamesToWinMode)}
+                            </Box>
                         </Box>
                     </Box>
                 </Box>

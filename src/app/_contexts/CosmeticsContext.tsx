@@ -14,6 +14,7 @@ interface CosmeticsContextProps {
     getBackground: (id?: string) => IRegisteredCosmeticOption;
     // getPlaymat: (id?: string) => IRegisteredCosmeticOption;
     fetchCosmetics: () => void;
+    isContributor: boolean;
 }
 
 const defaultCosmetics: IRegisteredCosmetics = {
@@ -28,20 +29,23 @@ const CosmeticsContext = React.createContext<CosmeticsContextProps>({
     getCardback: () => ({ id: '', title: '', type: RegisteredCosmeticType.Cardback, path: '' }),
     getBackground: () => ({ id: '', title: '', type: RegisteredCosmeticType.Background, path: '' }),
     // getPlaymat: () => ({ id: '', title: '', type: RegisteredCosmeticType.Playmat, path: '' }),
-    fetchCosmetics: () => {}
+    fetchCosmetics: () => {},
+    isContributor: false
 });
 
 export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
     const [cosmetics, setCosmetics] = React.useState<IRegisteredCosmetics>(defaultCosmetics);
+    const [isContributor, setIsContributor] = React.useState<boolean>(false);
     const getCosmeticDefault = (type: RegisteredCosmeticType): IRegisteredCosmeticOption => {
         switch(type) {
             case RegisteredCosmeticType.Cardback:
                 return cosmetics.cardbacks.find((cb) => cb.title === 'Default')!;
             case RegisteredCosmeticType.Background:
                 return cosmetics.backgrounds.find((bg) => bg.title === 'Default')!;
-            /*case RegisteredCosmeticType.Playmat:
+
+            /* case RegisteredCosmeticType.Playmat:
                 return { id: 'none', title: 'None', type: RegisteredCosmeticType.Playmat, path: '' };*/
             default:
                 throw new Error('Invalid cosmetic type');
@@ -59,39 +63,41 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         return cosmetics.backgrounds.find((bg) => bg.id === id) || getCosmeticDefault(RegisteredCosmeticType.Background);
     }
-    /*const getPlaymat = (id?: string) => {
+
+    /* const getPlaymat = (id?: string) => {
         if (!id) {
             return getCosmeticDefault(RegisteredCosmeticType.Playmat);
         }
         return cosmetics.playmats.find((pm) => pm.id === id) || getCosmeticDefault(RegisteredCosmeticType.Playmat);
     }*/
 
-    const fetchCosmetics = async () => {
-        ServerApiService.getCosmeticsAsync().then((data) => {
-            setCosmetics(data.reduce((acc: IRegisteredCosmetics, cosmetic) => {
-                switch (cosmetic.type) {
-                    case RegisteredCosmeticType.Cardback:
-                        acc.cardbacks.push(cosmetic);
-                        break;
-                    case RegisteredCosmeticType.Background:
-                        acc.backgrounds.push(cosmetic);
-                        break;
-                    /* case RegisteredCosmeticType.Playmat:
-                        acc.playmats.push(cosmetic);
-                        break; */
-                }
-                return acc;
-            }, { cardbacks: [], backgrounds: [] }));
-        });
+    const fetchCosmeticsAsync = async () => {
+        const data = await ServerApiService.getCosmeticsAsync();
+        setIsContributor(data.isContributor);
+        setCosmetics(data.cosmetics.reduce((acc: IRegisteredCosmetics, cosmetic) => {
+            switch (cosmetic.type) {
+                case RegisteredCosmeticType.Cardback:
+                    acc.cardbacks.push(cosmetic);
+                    break;
+                case RegisteredCosmeticType.Background:
+                    acc.backgrounds.push(cosmetic);
+                    break;
+
+                /* case RegisteredCosmeticType.Playmat:
+                    acc.playmats.push(cosmetic);
+                    break; */
+            }
+            return acc;
+        }, { cardbacks: [], backgrounds: [] }));
     };
 
     React.useEffect(() => {
-        fetchCosmetics();
+        fetchCosmeticsAsync();
     }, []);
 
     return (
         <CosmeticsContext.Provider value={{ cosmetics, setCosmetics,
-            getCardback, getBackground, fetchCosmetics
+            getCardback, getBackground, fetchCosmetics: fetchCosmeticsAsync, isContributor
         }}>
             {children}
         </CosmeticsContext.Provider>

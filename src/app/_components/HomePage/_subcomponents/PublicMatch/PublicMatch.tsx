@@ -6,11 +6,10 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     const router = useRouter();
-    const { user, anonymousUserId } = useUser();
+    const { user } = useUser();
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -47,32 +46,11 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
         };
     };
 
-    const handleSpectate = async () => {
-        try {
-            // Register as a spectator with the server
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/spectate-game`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    gameId: match.id,
-                    user: getUserPayload(user),
-                }),
-                credentials:'include'
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                // Navigate to the game as a spectator
-                router.push('/GameBoard?spectator=true');
-            } else {
-                console.error('Failed to join as spectator:', data.message);
-            }
-        } catch (error) {
-            console.error('Error joining as spectator:', error);
-        }
+    const handleSpectate = () => {
+        router.push(`/spectate?lobbyId=${match.id}`);
     };
+
+    const spectateDisabled = !user && process.env.NODE_ENV !== 'development';
 
     const styles = {
         cardPopover: {
@@ -160,7 +138,14 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                     </Box>
                 </Box>
                 {!match.isPrivate && (
-                    <Button onClick={handleSpectate}>Spectate</Button>
+                    <span title={spectateDisabled ? 'Log in to Spectate' : ''}>
+                        <Button
+                            onClick={handleSpectate}
+                            disabled={spectateDisabled}
+                        >
+                            Spectate
+                        </Button>
+                    </span>
                 )}
             </Box>
             <Popover

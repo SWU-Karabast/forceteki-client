@@ -10,10 +10,10 @@ import { useGame } from '../_contexts/Game.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
-import { MatchType } from '@/app/_constants/constants';
+import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
-import { BackgroundsDarkenBox } from '../_theme/theme-helper';
 import { Play } from 'next/font/google';
+import RichText from '../_components/_sharedcomponents/RichText/RichText';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
@@ -25,15 +25,15 @@ const GameBoard = () => {
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer]?.user;
     const background = getBackground(isSpectator ? null : user?.cosmetics?.background ?? null);
-    //const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
-    //const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
-    //const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
+    // const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
+    // const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
+    // const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
     // const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
-    //const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
-    //const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+    // const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
+    // const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
-        if(lobbyState && !lobbyState.gameOngoing && lobbyState.gameType !== MatchType.Quick) {
+        if(lobbyState && !lobbyState.gameOngoing && (lobbyState.gameType !== MatchmakingType.Quick || lobbyState.winHistory.gamesToWinMode === GamesToWinMode.BestOfThree)) {
             router.push('/lobby');
         }
     }, [lobbyState, router]);
@@ -69,6 +69,18 @@ const GameBoard = () => {
         ? ['endGame','soundOptions']
         : ['currentGame','soundOptions'];
 
+    // Get game number from winHistory for Bo3 mode
+    const winHistory = lobbyState?.winHistory;
+    const isBo3Mode = winHistory?.gamesToWinMode === GamesToWinMode.BestOfThree;
+    const currentGameNumber = winHistory?.currentGameNumber || 1;
+    const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
+    const isBo3SetComplete = isBo3Mode && !!setEndResult;
+
+    const gameEndedTitle = isBo3Mode
+        ? (isBo3SetComplete ? 'Best-of-Three Set Ended' : `Game ${currentGameNumber} ended`)
+        : 'Game ended';
+
     // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {
         if (isSpectator && gameState?.players) {
@@ -94,14 +106,13 @@ const GameBoard = () => {
             pr: sidebarOpen ? 'min(20%, 280px)' : '0',
             width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
-            height: '100vh',
+            height: '100dvh',
             position: 'relative',
-            backgroundImage: `url(${background.path})`,
+            backgroundImage: `url(${background.path}?v=2)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
             flexDirection: 'column',
-            '&::before': { }
         },
         centralPromptContainer: {
             position: 'absolute',
@@ -143,7 +154,7 @@ const GameBoard = () => {
             bottom: 0, // Touch bottom edge
             left: '2rem', // Add left margin to constrain width
             right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
-            height: '47vh', // Reduced height for middle spacing
+            height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
@@ -151,14 +162,13 @@ const GameBoard = () => {
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
-            '&::before': { }
         },
         opponentPlaymat: {
             position: 'absolute',
             top: 0, // Touch top edge
             left: '2rem', // Add left margin to constrain width
             right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
-            height: '47vh', // Reduced height for middle spacing
+            height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
@@ -166,33 +176,11 @@ const GameBoard = () => {
             zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
-            '&::before': { }
         }
     };
 
-    if(background.darkened) {
-        styles.mainBoxStyle = {
-            ...styles.mainBoxStyle,
-            '&::before': BackgroundsDarkenBox,
-        };
-    }
-
-    /*if(myPlaymat?.darkened) {
-        styles.playerPlaymat = {
-            ...styles.playerPlaymat,
-            '&::before': PlaymatDarkenBox,
-        };
-    }
-
-    if(theirPlaymat?.darkened) {
-        styles.opponentPlaymat = {
-            ...styles.opponentPlaymat,
-            '&::before': PlaymatDarkenBox,
-        };
-    }*/
-
     return (
-        <Grid container sx={{ height: '100vh', overflow: 'hidden' }}>
+        <Grid container sx={{ height: '100dvh', overflow: 'hidden' }}>
             <Box component="main" sx={styles.mainBoxStyle} data-testid="gameboard-main-box">
                 {/* Opponent Playmat - top half
                 {theirPlaymat && (
@@ -216,16 +204,16 @@ const GameBoard = () => {
                         }}
                     />
                 )} */}
-                <Box sx={{ height: '15vh' }}>
+                <Box sx={{ height: '15dvh' }}>
                     <OpponentCardTray
                         trayPlayer={getOpponent(connectedPlayer)}
                         preferenceToggle={handlePreferenceToggle}
                     />
                 </Box>
-                <Box sx={{ height: '67vh', position: 'relative', zIndex: 2 }}>
+                <Box sx={{ height: '67dvh', position: 'relative', zIndex: 2 }}>
                     <Board sidebarOpen={sidebarOpen} />
                 </Box>
-                <Box sx={{ height: '18vh' }}>
+                <Box sx={{ height: '18dvh' }}>
                     <PlayerCardTray
                         trayPlayer={connectedPlayer}
                         toggleSidebar={toggleSidebar}
@@ -241,7 +229,7 @@ const GameBoard = () => {
 
             <Box sx={styles.centralPromptContainer}>
                 <Box sx={styles.promptStyle}>
-                    {menuTitle}
+                    {menuTitle && <RichText text={menuTitle}/>}
                     <Box sx={styles.promptShadow}/>
                 </Box>
             </Box>
@@ -252,7 +240,7 @@ const GameBoard = () => {
                 isPreferenceOpen={isPreferenceOpen}
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}
-                title={winners ? 'Game ended' : 'PREFERENCES'}
+                title={winners ? gameEndedTitle : 'PREFERENCES'}
                 subtitle={winners ? winners.length > 1 ? 'Game ended in a draw' : `Winner is ${getWinnerDisplayName(winners[0])}` : undefined}
             />}
         </Grid>

@@ -22,11 +22,15 @@ import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/use
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
+import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
+import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 
 interface IGameContextType {
     gameState: any;
+    gameMessages: IChatEntry[];
     lobbyState: any;
     bugReportState: any;
+    playerReportState: any;
     statsSubmitNotification: IStatsNotification | null;
     sendMessage: (message: string, args?: any[]) => void;
     sendGameMessage: (args: any[]) => void;
@@ -43,6 +47,11 @@ interface IGameContextType {
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
     requestGameLog: () => Promise<{ rawLog: string; swuPgn: string } | null>;
+    hoveredChatCard: {
+        id: string | null;
+        hover: (id: string) => void;
+        clear: () => void;
+    };
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -52,10 +61,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const lastGameIdRef = useRef<string | null>(null);
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [bugReportState, setBugReportState] = useState<any>(null);
+    const [playerReportState, setPlayerReportState] = useState<any>(null);
     const [statsSubmitNotification, setStatsSubmitNotification] = useState<IStatsNotification | null>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
+    const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
@@ -63,6 +74,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
     const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
+    const { messages: gameMessages, processMessageDeltas, processMessageRetransmit, resetMessages } = useGameMessages();
 
     // Initialize sound handler with user preferences
     const { playSound } = useSoundHandler({
@@ -110,7 +122,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             if (promptType === 'actionWindow') {
                 clearDistributionPrompt();
                 return;
-            } 
+            }
             else if (promptType === 'distributeAmongTargets') {
                 initDistributionPrompt(promptState.distributeAmongTargets);
                 return;
@@ -207,14 +219,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         if (status === 'loading') {
             return;
         }
-        if (status === 'authenticated' && !session?.jwtToken){
-            return;
-        }
 
-        if (status === 'authenticated' && !session?.jwtToken){
-            return;
-        }
-        if (user?.authenticated && !session?.jwtToken){
+        if (
+            process.env.NODE_ENV !== 'development' &&
+            (status === 'authenticated' || user?.authenticated) && !session?.jwtToken
+        ){
             return;
         }
 
@@ -248,7 +257,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             resetStates();
         });
 
-        newSocket.on('inactiveDisconnect', () => {            
+        newSocket.on('inactiveDisconnect', () => {
             alert('You have been disconnected due to inactivity');
             newSocket.disconnect();
         });
@@ -259,9 +268,27 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
             if (gameState?.id && gameState.id !== lastGameIdRef.current) {
                 clearPopups();
+                resetMessages();
                 lastGameIdRef.current = gameState.id;
             }
-            
+
+            // Handle message delta if present in gameState
+            if (gameState.newMessages !== undefined && gameState.messageOffset !== undefined && gameState.totalMessages !== undefined) {
+                const delta: IMessageDelta = {
+                    newMessages: gameState.newMessages,
+                    messageOffset: gameState.messageOffset,
+                    totalMessages: gameState.totalMessages,
+                };
+                const messagesToRetransmit = processMessageDeltas(delta);
+                if (messagesToRetransmit) {
+                    // Request retransmit for missing messages
+                    if (process.env.NODE_ENV === 'development') {
+                        console.log('Requesting retransmit for messages:', messagesToRetransmit.startIndex, 'to', messagesToRetransmit.endIndex);
+                    }
+                    newSocket.emit('lobby', 'retransmitGameMessages', messagesToRetransmit.startIndex, messagesToRetransmit.endIndex);
+                }
+            }
+
             setGameState(gameState);
             if (process.env.NODE_ENV === 'development') {
                 const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
@@ -270,19 +297,30 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             handleGameStatePopups(gameState, connectedPlayerId, isSpectatorMode);
         });
 
+        newSocket.on('retransmitResponse', (retransmit: IMessageRetransmit) => {
+            processMessageRetransmit(retransmit);
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Message retransmit received:', retransmit);
+            }
+        });
+
         newSocket.on('lobbystate', (lobbyState: any) => {
             setLobbyState(lobbyState);
             if (process.env.NODE_ENV === 'development') {
                 console.log('Lobby state received:', lobbyState);
             }
         })
-        
+
         newSocket.on('queueHeartbeat', () => {
             setLastQueueHeartbeat(Date.now());
         });
 
         newSocket.on('bugReportResult', (result: any) => {
             setBugReportState(result);
+        });
+
+        newSocket.on('playerReportResult', (result: any) => {
+            setPlayerReportState(result);
         });
 
         newSocket.on('statsSubmitNotification', (notification: IStatsNotification) => {
@@ -323,7 +361,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.warn('Error playing sound:', error);
         }
-        
+
         socket?.emit('game', ...args);
     };
 
@@ -375,6 +413,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const resetStates = () => {
         setLobbyState(null);
         setGameState(null);
+        resetMessages();
     }
 
     const getConnectedPlayerPrompt = () => {
@@ -391,8 +430,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         <GameContext.Provider
             value={{
                 gameState,
+                gameMessages,
                 lobbyState,
                 bugReportState,
+                playerReportState,
                 statsSubmitNotification,
                 sendGameMessage,
                 sendMessage,
@@ -408,7 +449,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 isAnonymousPlayer,
                 hasChatDisabled,
                 createNewSocket,
+<<<<<<< HEAD
                 requestGameLog
+=======
+                hoveredChatCard: {
+                    id: hoveredChatCardId,
+                    hover: setHoveredCardId,
+                    clear: () => setHoveredCardId(null)
+                }
+>>>>>>> main
             }}
         >
             {children}

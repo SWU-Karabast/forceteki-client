@@ -247,6 +247,58 @@ export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean
     }
 }
 
+export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-must-request-username-change-seen`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+export const setReportingDisabledSeenAsync = async(user: IUser | null): Promise<boolean> => {
+    try {
+        const payload = {
+            user
+        }
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-reporting-disabled-seen`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'include'
+            }
+        );
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message);
+        }
+        return result
+    }catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean, user: IUser): Promise<void> => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/deck/${deckId}/favorite`, {
@@ -580,6 +632,41 @@ export const checkSwuStatsLinkStatus = async (
 };
 
 /**
+ * Checks if the user has linked their SWUBase account
+ * @param user The current user
+ * @returns Promise that resolves to boolean indicating if SWUBase is linked
+ */
+export const checkSwubaseLinkStatus = async (
+    user: IUser
+): Promise<boolean> => {
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/swubaseLink`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            }
+        );
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                return false;
+            }
+            throw new Error('Failed to check SWUBase link status');
+        }
+
+        const result = await response.json();
+        return result.linked;
+    } catch (error) {
+        console.error('Error checking SWUBase link status:', error);
+        throw error;
+    }
+};
+
+/**
  * Saves sound preferences to the server
  * @param user The current user
  * @param preferences
@@ -744,6 +831,100 @@ export const unlinkSwuStatsAsync = async(
         return result.success;
     } catch (error) {
         console.error('Error unlinking swustats:', error);
+        throw error;
+    }
+};
+
+/**
+ * SWU Stats deck from the API
+ */
+export interface ISwuStatsDeckItem {
+    id: number;
+    name: string;
+    description: string;
+    isFavorite: boolean;
+    createdAt: string;
+    updatedAt: string;
+    deckLink: string;
+}
+
+/**
+ * Response from fetching SWU Stats decks
+ */
+export interface ISwuStatsDecksResult {
+    decks: ISwuStatsDeckItem[];
+    pagination: {
+        total: number;
+        limit: number;
+        offset: number;
+        has_more: boolean;
+    };
+    error?: boolean;
+}
+
+/**
+ * Fetches the user's decks from SWU Stats if their account is linked
+ * @param user The current user
+ * @returns Promise that resolves to the decks data or null if not linked
+ */
+export const fetchSwuStatsDecks = async (
+    user: IUser,
+): Promise<ISwuStatsDecksResult | null> => {
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/swustats/decks`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            }
+        );
+
+        if (!response.ok) {
+            // If 404 or 401, the user doesn't have SWU Stats linked
+            if (response.status === 404 || response.status === 401) {
+                return null;
+            }
+            throw new Error(`Failed to fetch SWU Stats decks: ${response.status}`);
+        }
+
+        const result = await response.json();
+        return {
+            decks: result.decks,
+            pagination: result.pagination
+        };
+    } catch (error) {
+        console.error('Error fetching SWU Stats decks:', error);
+        return { decks: [], pagination: { total: 0, limit: 0, offset: 0, has_more: false }, error: true };
+    }
+};
+export const unlinkSwubaseAsync = async(
+    user: IUser | null,
+): Promise<boolean> => {
+    // TODO: check - verify endpoint
+    try {
+        const payload = {
+            user
+        };
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/unlink-swubase`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to unlink swubase');
+        }
+        return result.success;
+    } catch (error) {
+        console.error('Error unlinking swubase:', error);
         throw error;
     }
 };

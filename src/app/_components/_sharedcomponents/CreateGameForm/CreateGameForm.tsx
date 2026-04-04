@@ -1,8 +1,9 @@
-import React, { useState, FormEvent, ChangeEvent, useEffect } from 'react';
+import React, { useState, FormEvent, ChangeEvent, useEffect, useMemo } from 'react';
 import {
     Box,
     Button,
     Checkbox,
+    CircularProgress,
     FormControl,
     FormControlLabel,
     MenuItem,
@@ -17,32 +18,31 @@ import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData } from '@/app/_utils/fetchDeckData';
-import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, FormatLabels, SupportedDeckSources } from '@/app/_constants/constants';
+import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, LobbyFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
     getUserPayload,
     saveDeckToLocalStorage,
-    saveDeckToServer
+    saveDeckToServer,
+    ISwuStatsDeckItem
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
-
-interface IDeckPreferences {
-    showSavedDecks: boolean;
-    favoriteDeck: string;
-    format: SwuGameFormat;
-    saveDeck: boolean;
-}
+import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
+import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
+import { NewGameFormatAvailable } from '@/app/_constants/constants';
+import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
 interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
     setFavoriteDeck: (value: string) => void;
     setFormat: (value: SwuGameFormat) => void;
+    setCardPool: (value: CardPool) => void;
+    setGamesToWinMode: (value: GamesToWinMode) => void;
     setSaveDeck: (value: boolean) => void;
 }
 
@@ -59,6 +59,14 @@ interface ICreateGameFormProps {
     clearErrors: () => void;
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
+    isBo3Allowed: boolean;
+    // SWU Stats integration props
+    swuStatsDecks?: ISwuStatsDeckItem[];
+    isSwuStatsLinked?: boolean;
+    useSwuStatsDecks?: boolean;
+    setSwuStatsDeckSource?: (value: boolean) => void;
+    isLoadingSwuStatsDecks?: boolean;
+    swuStatsDecksError?: boolean;
 }
 
 const CreateGameForm: React.FC<ICreateGameFormProps> = ({
@@ -73,24 +81,42 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     setError,
     clearErrors,
     setIsJsonDeck,
-    setModalOpen
+    setModalOpen,
+    isBo3Allowed,
+    // SWU Stats integration
+    swuStatsDecks = [],
+    isSwuStatsLinked = false,
+    useSwuStatsDecks = false,
+    setSwuStatsDeckSource,
+    isLoadingSwuStatsDecks = false,
+    swuStatsDecksError = false
 }) => {
     const router = useRouter();
     const { user, isLoading: userLoading } = useUser();
     
-    const { showSavedDecks, favoriteDeck, format, saveDeck } = deckPreferences;
-    const { setShowSavedDecks, setFavoriteDeck, setFormat, setSaveDeck } = deckPreferencesHandlers;
+    const { showSavedDecks, favoriteDeck, saveDeck } = deckPreferences;
+    const { setShowSavedDecks, setFavoriteDeck, setFormat, setCardPool, setGamesToWinMode, setSaveDeck } = deckPreferencesHandlers;
+
+    const formatConfigs = LobbyFormatConfigs;
+    const formats = getFormatsFromConfig(formatConfigs);
+    const lobbyConfig: IMatchConfiguration = useMemo(() => {
+        const valueOrDefault = <TValue,>(value: TValue, values: TValue[], defaultValue: TValue) => {
+            return values.includes(value) ? value : defaultValue;
+        }
+        const fmt = valueOrDefault(deckPreferences.matchConfig.format, formats, DefaultFormat.format);
+        const config = getFormatConfig(formatConfigs, fmt);
+        return {
+            format: fmt,
+            cardPool: valueOrDefault(deckPreferences.matchConfig.cardPool, config?.cardPools ?? [CardPool.Current], DefaultFormat.cardPool),
+            gamesToWinMode: valueOrDefault(deckPreferences.matchConfig.gamesToWinMode, config?.gamesToWinModes ?? [GamesToWinMode.BestOfOne], DefaultFormat.gamesToWinMode),
+        }
+    }, [deckPreferences.matchConfig.format, deckPreferences.matchConfig.cardPool, deckPreferences.matchConfig.gamesToWinMode, formats, formatConfigs]);
 
     // Common State
     const [privateGame, setPrivateGame] = useState<boolean>(false);
-    const [thirtyCardMode, setThirtyCardMode] = useState<boolean>(false);
-    const formatOptions = Object.values(SwuGameFormat);
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
-    const handleChangeFormat = (format: SwuGameFormat) => {
-        setFormat(format);
-    }
 
     useEffect(() => {
         handleJsonDeck(deckLink);
@@ -108,8 +134,17 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         setIsJsonDeck(false);
     }
 
-    const handleChangeDeckSelectionType = (useSavedDecks: boolean) => {
-        setShowSavedDecks(useSavedDecks);
+    const handleChangeDeckSelectionType = (value: string) => {
+        if (value === 'SWU Stats Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource?.(true);
+        } else if (value === 'Saved Deck') {
+            setShowSavedDecks(true);
+            setSwuStatsDeckSource?.(false);
+        } else {
+            setShowSavedDecks(false);
+            setSwuStatsDeckSource?.(false);
+        }
         clearErrors();
     }
 
@@ -119,10 +154,14 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         let deckType = 'url';
         // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
         if(showSavedDecks) {
-            const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
-            userDeck = '';
-            if (selectedDeck?.deckLink) {
-                userDeck = selectedDeck?.deckLink
+            if (useSwuStatsDecks && isSwuStatsLinked) {
+                // Use SWU Stats deck
+                const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
+                userDeck = selectedSwuStatsDeck?.deckLink || '';
+            } else {
+                // Use saved deck from Karabast
+                const selectedDeck = savedDecks.find(deck => deck.deckID === favoriteDeck);
+                userDeck = selectedDeck?.deckLink || '';
             }
         }else{
             userDeck = deckLink;
@@ -137,7 +176,8 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 if(favoriteDeck && deckData && showSavedDecks) {
                     deckData.deckID = favoriteDeck;
                     deckData.deckLink = userDeck;
-                    deckData.isPresentInDb = !!user;
+                    // SWU Stats decks are not stored in our DB
+                    deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
                 }else if(!showSavedDecks && userDeck && deckData) {
                     deckData.deckLink = userDeck
                     deckData.isPresentInDb = false;
@@ -184,9 +224,10 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 user: getUserPayload(user),
                 deck: deckData,
                 isPrivate: privateGame,
-                format: format,
+                format: lobbyConfig.format,
                 lobbyName: lobbyName,
-                allow30CardsInMainBoard: thirtyCardMode,
+                cardPool: lobbyConfig.cardPool,
+                gamesToWinMode: lobbyConfig.gamesToWinMode,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -208,9 +249,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         'error');
                     setModalOpen(true);
                 } else if(response.status === 400) {
-                    if (result.message?.includes('Invalid game format')) {
+                    // TODO: better error handling between BE and FE
+                    if (result.message?.includes('Invalid game format') || result.message?.includes('You must be logged in')) {
                         setError(null,result.message,'Create Game Error','error');
-                    } else {
+                    } else if (result.message?.includes('Lobby name contains inappropriate words')) {
+                        setError(null,result.message,'Cannot Create Lobby','error');
+                    }
+                    else {
                         setError('Couldn\'t import. Deck is invalid.',errors,'Deck Validation Error','error');
                     }
                     setModalOpen(true);
@@ -230,6 +275,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setFormat(lobbyConfig.format);
+        setCardPool(lobbyConfig.cardPool);
+        setGamesToWinMode(lobbyConfig.gamesToWinMode);
         handleFormSubmissionWithUndoCheck(handleCreateGameSubmitActual);
     };
 
@@ -288,8 +336,107 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             display: 'flex',
             justifyContent: 'start',
             width: '100%',
+        },
+        deckSourceLabel: {
+            color: '#aaa',
+            fontSize: '0.85rem',
+        },
+        loadingContainer: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
         }
     }
+
+    // Render SWU Stats decks dropdown
+    const renderSwuStatsDecksDropdown = () => {
+        if (isLoadingSwuStatsDecks) {
+            return (
+                <Box sx={styles.loadingContainer}>
+                    <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                    <Typography sx={{ color: '#aaa' }}>Loading SWU Stats decks...</Typography>
+                </Box>
+            );
+        }
+
+        // Sort decks with favorites first
+        const sortedSwuStatsDecks = [...swuStatsDecks].sort((a, b) => {
+            if (a.isFavorite && !b.isFavorite) return -1;
+            if (!a.isFavorite && b.isFavorite) return 1;
+            return (a.name || '').localeCompare(b.name || '');
+        });
+
+        // Validate that favoriteDeck exists in the list, if not use empty string
+        const validatedValue = sortedSwuStatsDecks.some(deck => deck.id.toString() === favoriteDeck) 
+            ? favoriteDeck 
+            : '';
+
+        const emptyMessage = swuStatsDecksError ? 'Error retrieving SWU Stats decks' : 'No decks found on SWU Stats';
+
+        return (
+            <StyledTextField
+                select
+                value={validatedValue}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setFavoriteDeck(e.target.value as string)
+                }
+                disabled={userLoading || isLoadingSwuStatsDecks}
+                placeholder="SWU Stats Decks"
+                SelectProps={{
+                    displayEmpty: true,
+                    renderValue: sortedSwuStatsDecks.length === 0
+                        ? () => <span style={{ color: swuStatsDecksError ? 'var(--initiative-red)' : '#aaa' }}>{emptyMessage}</span>
+                        : undefined,
+                }}
+            >
+                {sortedSwuStatsDecks.length === 0 ? (
+                    <MenuItem value="" disabled>
+                        {emptyMessage}
+                    </MenuItem>
+                ) : (
+                    sortedSwuStatsDecks.map((deck) => (
+                        <MenuItem key={deck.id} value={deck.id.toString()}>
+                            {deck.isFavorite ? '★ ' : ''}{deck.name}
+                        </MenuItem>
+                    ))
+                )}
+            </StyledTextField>
+        );
+    };
+
+    // Render Karabast saved decks dropdown
+    const renderKarabastDecksDropdown = () => {
+        // Validate that favoriteDeck exists in the list, if not use empty string
+        const validatedValue = savedDecks.some(deck => deck.deckID === favoriteDeck)
+            ? favoriteDeck
+            : '';
+
+        return (
+            <StyledTextField
+                select
+                value={validatedValue}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setFavoriteDeck(e.target.value as string)
+                }
+                disabled={userLoading}
+                placeholder="Favorite Decks"
+            >
+                {savedDecks.length === 0 ? (
+                    <MenuItem value="" disabled>
+                        No saved decks found
+                    </MenuItem>
+                ) : (
+                    savedDecks.map((deck) => (
+                        <MenuItem key={deck.deckID} value={deck.deckID}>
+                            {deck.favourite ? '★ ' : ''}{deck.name}
+                        </MenuItem>
+                    ))
+                )}
+            </StyledTextField>
+        );
+    };
+
     return (
         <Box >
             <Typography variant="h2">
@@ -303,12 +450,23 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 <FormControl component="fieldset" sx={styles.formControlStyle}>
                     <RadioGroup
                         row
-                        value={showSavedDecks ? 'Saved Deck' : 'New Deck'}
+                        value={showSavedDecks ? (useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Deck' : 'Saved Deck') : 'New Deck'}
                         onChange={(
                             e: ChangeEvent<HTMLInputElement>,
                             value: string
-                        ) => handleChangeDeckSelectionType(value === 'Saved Deck')}
+                        ) => handleChangeDeckSelectionType(value)}
                     >
+                        {isSwuStatsLinked && (
+                            <FormControlLabel
+                                value="SWU Stats Deck"
+                                control={<Radio sx={styles.checkboxStyle} />}
+                                label={
+                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                        SWU Stats Deck
+                                    </Typography>
+                                }
+                            />
+                        )}
                         <FormControlLabel
                             value="Saved Deck"
                             control={<Radio sx={styles.checkboxStyle} />}
@@ -329,32 +487,11 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                         />
                     </RadioGroup>
                 </FormControl>
-                {showSavedDecks && (
+                {showSavedDecks && !useSwuStatsDecks && (
                     <>
-                        {/* Favourite Decks Input */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Typography variant="body1" sx={styles.labelTextStyle}>Favorite Decks</Typography>
-                            <StyledTextField
-                                select
-                                value={favoriteDeck}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setFavoriteDeck(e.target.value as string)
-                                }
-                                disabled={userLoading}
-                                placeholder="Favorite Decks"
-                            >
-                                {savedDecks.length === 0 ? (
-                                    <MenuItem value="" disabled>
-                                        No saved decks found
-                                    </MenuItem>
-                                ) : (
-                                    savedDecks.map((deck) => (
-                                        <MenuItem key={deck.deckID} value={deck.deckID}>
-                                            {deck.favourite ? '★ ' : ''}{deck.name}
-                                        </MenuItem>
-                                    ))
-                                )}
-                            </StyledTextField>
+                            {renderKarabastDecksDropdown()}
+                            
                             <Box sx={styles.manageDecksContainer}>
                                 <Button
                                     onClick={handleDeckManagement}
@@ -375,7 +512,36 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             </Typography>
                         )}
                     </>
-                ) || (
+                )}
+                {showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && (
+                    <>
+                        <FormControl fullWidth sx={styles.formControlStyle}>
+                            {renderSwuStatsDecksDropdown()}
+                            
+                            <Box sx={styles.manageDecksContainer}>
+                                <Button
+                                    href="https://swustats.net"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={styles.manageDecks}
+                                >
+                                    Manage&nbsp;Decks&nbsp;on&nbsp;SWU&nbsp;Stats
+                                </Button>
+                            </Box>
+                        </FormControl>
+                        {errorState.summary && (
+                            <Typography variant={'body1'} sx={styles.errorMessageStyle}>
+                                {errorState.summary}{' '}
+                                <Link
+                                    sx={styles.errorMessageLink}
+                                    onClick={() => setModalOpen(true)}
+                                >Details
+                                </Link>
+                            </Typography>
+                        )}
+                    </>
+                )}
+                {!showSavedDecks && (
                     <>
                         {/* Deck Link Input */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
@@ -457,23 +623,17 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 {/* Additional Fields for Non-Creategame Path */}
 
                 {/* Format Selection */}
-                <FormControl fullWidth sx={styles.formControlStyle}>
-                    <Typography variant="body1" sx={styles.labelTextStyle}>Format</Typography>
-                    <StyledTextField
-                        select
-                        value={format}
-                        required
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleChangeFormat(e.target.value as SwuGameFormat)
-                        }
-                    >
-                        {formatOptions.map((fmt) => (
-                            <MenuItem key={fmt} value={fmt}>
-                                {FormatLabels[fmt] || fmt}
-                            </MenuItem>
-                        ))}
-                    </StyledTextField>
-                </FormControl>
+                <FormatSelectionForm
+                    format={lobbyConfig.format}
+                    cardPool={lobbyConfig.cardPool}
+                    gamesToWinMode={lobbyConfig.gamesToWinMode}
+                    setFormat={setFormat}
+                    setCardPool={setCardPool}
+                    setGamesToWinMode={setGamesToWinMode}
+                    formatConfigs={formatConfigs}
+                    isBo3Allowed={isBo3Allowed}
+                    styles={styles}
+                />
                 {/* Privacy Selection */}
                 <FormControl component="fieldset" sx={styles.formControlStyle}>
                     <RadioGroup
@@ -506,9 +666,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 </FormControl>
 
                 {/* Beta Announcement */}
-                <Typography variant="body1" sx={{ color: 'yellow', textAlign: 'center', mb: '1rem' }}>
-                    30-card decks now available in Open format with private lobbies
-                </Typography>
+                { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} />}
 
                 {!privateGame && (
                     <>
@@ -519,6 +677,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             <StyledTextField
                                 type="text"
                                 value={lobbyName}
+                                inputProps={{ maxLength: 100 }}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                                     setLobbyName(e.target.value)
                                 }
@@ -528,39 +687,11 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     </>
                 )}
 
-                {privateGame && format === SwuGameFormat.Open && (
-                    <>
-                        <Typography variant="body1" sx={styles.labelTextStyle}>
-                            Mainboard Minimum Size
-                        </Typography>
-                        <FormControl fullWidth sx={styles.formControlStyle}>
-                            <StyledTextField
-                                select
-                                value={thirtyCardMode ? '30Card' : '50Card'}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                                    setThirtyCardMode(e.target.value === '30Card')
-                                }
-                            >
-                                <MenuItem value="50Card">50 Cards</MenuItem>
-                                <MenuItem value="30Card">30 Cards</MenuItem>
-                            </StyledTextField>
-                        </FormControl>
-                    </>
-                )}
-
                 {/* Submit Button */}
                 <Button type="submit" variant="contained" sx={styles.submitButtonStyle}>
                     Create Game
                 </Button>
             </form>
-            <ErrorModal
-                open={errorState.modalOpen}
-                onClose={() => setModalOpen(false)}
-                title={errorState.title}
-                errors={errorState.details}
-                format={format}
-                modalType={errorState.modalType}
-            />
         </Box>
     );
 };
