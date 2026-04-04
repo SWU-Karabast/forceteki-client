@@ -53,9 +53,9 @@ function VerticalTabs({
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (tabs[value] === 'soundOptions' && hasUnsavedChanges) {
+            if ((tabs[value] === 'soundOptions' || tabs[value] === 'gameOptions') && hasUnsavedChanges) {
                 e.preventDefault();
-                e.returnValue = 'You have unsaved sound preferences. Are you sure you want to leave?';
+                e.returnValue = 'You have unsaved preferences. Are you sure you want to leave?';
             }
         };
 
@@ -75,7 +75,7 @@ function VerticalTabs({
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         // Check if leaving sound options with unsaved changes
-        if (tabs[value] === 'soundOptions' && hasUnsavedChanges && newValue !== value) {
+        if ((tabs[value] === 'soundOptions' || tabs[value] === 'gameOptions') && hasUnsavedChanges && newValue !== value) {
             setPendingTabIndex(newValue);
             setShowUnsavedDialog(true);
         } else {
@@ -112,7 +112,7 @@ function VerticalTabs({
             case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
             case TabType.GameOptions:
-                return <GameOptionsTab/>;
+                return <GameOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
             case TabType.Cosmetics:
                 return <CosmeticsTab />;
             case TabType.SoundOptions:

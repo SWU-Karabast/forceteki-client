@@ -85,7 +85,7 @@ const Chat: React.FC<IChatProps> = ({
             case doesUserHaveChatMuted:
                 return {
                     reason: ChatDisabledReason.UserDisabledChat,
-                    message: 'You have chat disabled',
+                    message: 'You have chat disabled in your account preferences',
                     borderColor: 'yellow'
                 }
             case opponentChatDisabled:
