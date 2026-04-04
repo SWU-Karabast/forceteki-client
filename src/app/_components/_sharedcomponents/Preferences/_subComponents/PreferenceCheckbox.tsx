@@ -37,13 +37,18 @@ function PreferenceCheckbox({ onChange, defaultChecked = false, disabled = false
                         p: '0px',
                         width: '1.5rem',
                         height: '1.5rem',
-                        borderRadius: 1,         // square with slight rounding
-                        backgroundColor: disabled ? '#999' : '#ccc', // darker gray when disabled
+                        borderRadius: 1,
+                        backgroundColor: 'transparent',
+                        border: '2px solid',
+                        borderColor: disabled ? '#888' : '#00D4FF',
                         opacity: disabled ? 0.5 : 1,
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                            boxShadow: disabled ? 'none' : '0 0 8px rgba(0, 212, 255, 0.3)',
+                        },
                     }}
                 />
             }
-            // Checked icon
             checkedIcon={
                 <Box
                     sx={{
@@ -51,16 +56,20 @@ function PreferenceCheckbox({ onChange, defaultChecked = false, disabled = false
                         width: '1.5rem',
                         height: '1.5rem',
                         borderRadius: 1,
-                        backgroundColor: disabled ? '#999' : '#ccc',
+                        backgroundColor: disabled ? '#888' : '#00D4FF',
+                        border: '2px solid',
+                        borderColor: disabled ? '#888' : '#00D4FF',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         opacity: disabled ? 0.5 : 1,
+                        transition: 'all 0.2s ease-in-out',
+                        boxShadow: disabled ? 'none' : '0 0 8px rgba(0, 212, 255, 0.5)',
                     }}
                 >
                     <CheckIcon sx={{
                         fontSize: 18,
-                        color: disabled ? '#666' : '#000'
+                        color: disabled ? '#444' : '#000'
                     }} />
                 </Box>
             }
