@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import DownloadGameLog from './DownloadGameLog';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useEffect, useState } from 'react';
@@ -268,6 +269,12 @@ function EndGameOptions({ handleOpenBugReport, gameMode }: IProps) {
                         Discord
                     </MuiLink>. Thanks!
                 </Typography>
+            </Box>
+
+            <Box sx={styles.functionContainer}>
+                <Typography sx={styles.typographyContainer} variant={'h3'}>Game Log</Typography>
+                <Divider sx={{ mb: '20px' }} />
+                <DownloadGameLog />
             </Box>
 
             {hasStatsMessages && (

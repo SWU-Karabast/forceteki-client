@@ -8,6 +8,7 @@ import React, {
     ReactNode,
     useEffect,
     useRef,
+    useCallback,
 } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
@@ -41,6 +42,7 @@ interface IGameContextType {
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
+    requestGameLog: () => Promise<{ rawLog: string; swuPgn: string } | null>;
 }
 
 const GameContext = createContext<IGameContextType | undefined>(undefined);
@@ -329,6 +331,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         socket?.emit('lobby', ...args);
     }
 
+    const requestGameLog = useCallback((): Promise<{ rawLog: string; swuPgn: string } | null> => {
+        return new Promise((resolve) => {
+            if (!socket) {
+                resolve(null);
+                return;
+            }
+            socket.emit('lobby', 'getGameLog', (response: { error?: string; rawLog?: string; swuPgn?: string }) => {
+                if (response?.error || !response?.rawLog || !response?.swuPgn) {
+                    resolve(null);
+                } else {
+                    resolve({ rawLog: response.rawLog, swuPgn: response.swuPgn });
+                }
+            });
+        });
+    }, [socket]);
+
     const getOpponent = (player: string) => {
         if (gameState) {
             const playerNames = Object.keys(gameState.players);
@@ -389,7 +407,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 lastQueueHeartbeat,
                 isAnonymousPlayer,
                 hasChatDisabled,
-                createNewSocket
+                createNewSocket,
+                requestGameLog
             }}
         >
             {children}
