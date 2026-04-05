@@ -10,6 +10,7 @@ import OpponentCardTray from '@/app/_components/Gameboard/OpponentCardTray/Oppon
 import Board from '@/app/_components/Gameboard/Board/Board';
 import PlayerCardTray from '@/app/_components/Gameboard/PlayerCardTray/PlayerCardTray';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
+import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
 
 function formatResult(result: string): string {
     // Convert "P1 Win" / "P2 Win" to "Player 1 Win" / "Player 2 Win"
@@ -162,6 +163,7 @@ function ReplayBoardContent({ header }: { header: Record<string, string> }) {
                     </Box>
                 </Box>
             </Grid>
+            <PopupShell sidebarOpen={false} />
             <TransportControls />
         </>
     );
