@@ -147,16 +147,16 @@ function ReplayBoardContent({ header }: { header: Record<string, string> }) {
                     }}
                 >
                     <ReplayHeader header={header} />
-                    <Box sx={{ height: '15dvh' }}>
+                    <Box sx={{ height: '13dvh' }}>
                         <OpponentCardTray
                             trayPlayer={getOpponent(connectedPlayer)}
                             preferenceToggle={() => {}}
                         />
                     </Box>
-                    <Box sx={{ height: '65dvh', position: 'relative', zIndex: 2 }}>
+                    <Box sx={{ height: 'calc(74dvh - 60px)', position: 'relative', zIndex: 2 }}>
                         <Board sidebarOpen={false} />
                     </Box>
-                    <Box sx={{ height: '15dvh', pb: '60px' }}>
+                    <Box sx={{ height: '13dvh', mb: '60px' }}>
                         <PlayerCardTray
                             trayPlayer={connectedPlayer}
                             toggleSidebar={() => {}}
