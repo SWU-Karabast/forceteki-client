@@ -22,7 +22,7 @@ const REPLAY_SEPARATOR = '=== REPLAY ===';
 const HEADER_TAG_REGEX = /^\[(\w+)\s+"(.*)"\]$/;
 
 export function parseReplayFile(content: string): ParsedReplay {
-    const lines = content.split('\n');
+    const lines = content.split(/\r?\n/);
     const header: Record<string, string> = {};
     const cardIndexLines: string[] = [];
     const events: ReplayEvent[] = [];

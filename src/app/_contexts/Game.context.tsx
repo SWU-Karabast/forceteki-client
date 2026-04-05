@@ -8,7 +8,6 @@ import React, {
     ReactNode,
     useEffect,
     useRef,
-    useCallback,
 } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';

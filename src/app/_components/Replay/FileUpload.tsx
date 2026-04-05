@@ -15,6 +15,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     const processFile = useCallback(async (file: File) => {
+        if (loading) return;
         setError(null);
         setLoading(true);
 

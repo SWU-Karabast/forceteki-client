@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 import { IBoardState } from '@/app/_hooks/useBoardState';
 import { ParsedReplay, ReplayEvent, ReplaySnapshot } from '@/app/_utils/replayParser';
@@ -43,6 +43,29 @@ const SPEED_INTERVALS: Record<number, number> = {
     2: 1000,
     4: 500,
 };
+
+// Numeric-aware seq comparison. Splits on non-alphanumeric delimiters and compares
+// each segment numerically if both are numbers, otherwise lexicographically.
+// e.g., "R10.A.2" > "R2.A.9" (because 10 > 2 in the first numeric segment)
+function compareSeq(a: string, b: string): number {
+    const partsA = a.split(/([.\-])/);
+    const partsB = b.split(/([.\-])/);
+    const len = Math.max(partsA.length, partsB.length);
+    for (let i = 0; i < len; i++) {
+        const pa = partsA[i] ?? '';
+        const pb = partsB[i] ?? '';
+        const na = parseFloat(pa.replace(/^[A-Za-z]+/, ''));
+        const nb = parseFloat(pb.replace(/^[A-Za-z]+/, ''));
+        if (!isNaN(na) && !isNaN(nb)) {
+            if (na !== nb) return na - nb;
+            // If numeric parts equal, compare the full segment for letter suffixes (e.g., "1a" vs "1b")
+            if (pa !== pb) return pa < pb ? -1 : 1;
+        } else {
+            if (pa !== pb) return pa < pb ? -1 : 1;
+        }
+    }
+    return 0;
+}
 
 interface ReplayProviderProps {
     replay: ParsedReplay;
@@ -88,13 +111,18 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
     const gameMessages: IChatEntry[] = React.useMemo(() => {
         if (currentIndex === 0 || events.length === 0) return [];
 
+        // Events and snapshots are stored in file order by the parser.
+        // Build a lookup of event indices that fall between the previous
+        // and current snapshot based on their position in the original file.
+        // We use a numeric-aware seq comparator to handle multi-digit values
+        // (e.g., "R10.A.12" should sort after "R2.A.9").
         const prevSeq = snapshots[currentIndex - 1]?.seq ?? '';
         const currSeq = snapshots[currentIndex]?.seq ?? '';
 
-        const relevantEvents = events.filter((e) => e.seq > prevSeq && e.seq <= currSeq);
+        const relevantEvents = events.filter((e) => compareSeq(e.seq, prevSeq) > 0 && compareSeq(e.seq, currSeq) <= 0);
 
         return relevantEvents.map((e) => ({
-            date: new Date().toISOString(),
+            date: e.seq,
             message: [`${e.type}: ${e.player ?? ''} ${e.card ?? ''} ${e.target ?? ''}`.trim()],
         }));
     }, [currentIndex, events, snapshots]);
@@ -144,7 +172,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
         };
     }, [isPlaying, speed, totalSnapshots]);
 
-    const value: IReplayContextType = {
+    const value: IReplayContextType = useMemo(() => ({
         gameState,
         connectedPlayer: perspective,
         getOpponent,
@@ -168,7 +196,9 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
 
         togglePerspective,
         currentPerspective: perspective,
-    };
+    }), [gameState, perspective, getOpponent, gameMessages, snapshots, events,
+        currentIndex, totalSnapshots, header, play, pause, isPlaying, speed,
+        setSpeed, stepForward, stepBack, seekTo, togglePerspective]);
 
     return (
         <ReplayContext.Provider value={value}>
