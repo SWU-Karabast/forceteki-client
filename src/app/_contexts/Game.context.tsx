@@ -443,10 +443,41 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
+const noopFn = () => {};
+const noopStringFn = () => '';
+const noopBoolFn = () => false;
+
 export const useGame = () => {
     const context = useContext(GameContext);
-    if (!context) {
-        throw new Error('useGame must be used within a GameProvider');
+    if (context) {
+        return context;
     }
-    return context;
+
+    // When outside a GameProvider (e.g., /replay page), return safe defaults.
+    // Board-state fields are not used here since board components use useBoardState().
+    // Interactive fields become no-ops so components like GameCard/LeaderBaseCard
+    // don't crash when rendered in replay mode.
+    return {
+        gameState: null,
+        gameMessages: [],
+        lobbyState: null,
+        bugReportState: null,
+        playerReportState: null,
+        statsSubmitNotification: null,
+        sendMessage: noopFn,
+        sendGameMessage: noopFn,
+        connectedPlayer: '',
+        getOpponent: noopStringFn,
+        sendLobbyMessage: noopFn,
+        resetStates: noopFn,
+        getConnectedPlayerPrompt: noopFn,
+        updateDistributionPrompt: noopFn,
+        distributionPromptData: null,
+        isSpectator: true,
+        lastQueueHeartbeat: 0,
+        isAnonymousPlayer: noopBoolFn,
+        hasChatDisabled: noopBoolFn,
+        createNewSocket: noopFn,
+        hoveredChatCard: { id: null, hover: noopFn, clear: noopFn },
+    } as IGameContextType;
 };
