@@ -250,27 +250,31 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 <Box sx={styles.timerBox}>
                     <AccessAlarm sx={styles.timer}/>
                 </Box>
-                <Box
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    sx={styles.lastPlayed}>
-                </Box>
-                <Popover
-                    id="mouse-over-popover"
-                    sx={{ pointerEvents: 'none' }}
-                    open={hasLastPlayedCard && open}
-                    anchorEl={anchorElement}
-                    onClose={handlePreviewClose}
-                    disableRestoreFocus
-                    slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
-                    {...popoverConfig()}
-                >
-                    <Box sx={{ ...styles.lastCardPlayedPreview }} />
-                </Popover>
-                <Box sx={styles.menuStyles}>
-                    <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
-                    <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
-                </Box>
+                {!isSpectator && (
+                    <>
+                        <Box
+                            onMouseEnter={handlePreviewOpen}
+                            onMouseLeave={handlePreviewClose}
+                            sx={styles.lastPlayed}>
+                        </Box>
+                        <Popover
+                            id="mouse-over-popover"
+                            sx={{ pointerEvents: 'none' }}
+                            open={hasLastPlayedCard && open}
+                            anchorEl={anchorElement}
+                            onClose={handlePreviewClose}
+                            disableRestoreFocus
+                            slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                            {...popoverConfig()}
+                        >
+                            <Box sx={{ ...styles.lastCardPlayedPreview }} />
+                        </Popover>
+                        <Box sx={styles.menuStyles}>
+                            <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
+                            <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
+                        </Box>
+                    </>
+                )}
             </Grid>
         </Grid>
     );

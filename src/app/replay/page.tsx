@@ -9,12 +9,21 @@ import Board from '@/app/_components/Gameboard/Board/Board';
 import PlayerCardTray from '@/app/_components/Gameboard/PlayerCardTray/PlayerCardTray';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 
+function formatResult(result: string): string {
+    // Convert "P1 Win" / "P2 Win" to "Player 1 Win" / "Player 2 Win"
+    return result.replace(/\bP1\b/g, 'Player 1').replace(/\bP2\b/g, 'Player 2');
+}
+
 function ReplayHeader({ header }: { header: Record<string, string> }) {
     const player1 = header.Player1 || 'Player 1';
     const player2 = header.Player2 || 'Player 2';
     const leader1 = header.Leader1 || '';
     const leader2 = header.Leader2 || '';
     const result = header.Result || '';
+    const formattedResult = formatResult(result);
+
+    const isP1Winner = result.includes('P1');
+    const isP2Winner = result.includes('P2');
 
     return (
         <Box
@@ -22,41 +31,69 @@ function ReplayHeader({ header }: { header: Record<string, string> }) {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: 3,
-                py: 0.5,
-                px: 2,
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                gap: 2,
+                py: 1,
+                px: 3,
+                background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 100%)',
+                borderBottom: '1px solid rgba(255,255,255,0.15)',
                 zIndex: 10,
             }}
         >
-            <Box sx={{ textAlign: 'right' }}>
-                <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>
+            <Box sx={{ textAlign: 'right', minWidth: '120px' }}>
+                <Typography variant="body1" sx={{
+                    color: isP1Winner ? '#4fc3f7' : 'white',
+                    fontWeight: 'bold',
+                    fontSize: '1.1rem',
+                    textShadow: isP1Winner ? '0 0 10px rgba(79,195,247,0.5)' : 'none',
+                }}>
                     {player1}
                 </Typography>
                 {leader1 && (
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block' }}>
                         {leader1}
                     </Typography>
                 )}
             </Box>
-            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+            <Typography variant="h6" sx={{
+                color: 'rgba(255,255,255,0.3)',
+                fontWeight: 300,
+                fontStyle: 'italic',
+                mx: 1,
+            }}>
                 vs
             </Typography>
-            <Box sx={{ textAlign: 'left' }}>
-                <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>
+            <Box sx={{ textAlign: 'left', minWidth: '120px' }}>
+                <Typography variant="body1" sx={{
+                    color: isP2Winner ? '#4fc3f7' : 'white',
+                    fontWeight: 'bold',
+                    fontSize: '1.1rem',
+                    textShadow: isP2Winner ? '0 0 10px rgba(79,195,247,0.5)' : 'none',
+                }}>
                     {player2}
                 </Typography>
                 {leader2 && (
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block' }}>
                         {leader2}
                     </Typography>
                 )}
             </Box>
-            {result && (
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', ml: 2 }}>
-                    {result}
-                </Typography>
+            {formattedResult && (
+                <Box sx={{
+                    ml: 2,
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(79,195,247,0.15)',
+                    border: '1px solid rgba(79,195,247,0.3)',
+                }}>
+                    <Typography variant="body2" sx={{
+                        color: '#4fc3f7',
+                        fontWeight: 'bold',
+                        letterSpacing: '0.05em',
+                    }}>
+                        {formattedResult}
+                    </Typography>
+                </Box>
             )}
         </Box>
     );
