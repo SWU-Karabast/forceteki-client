@@ -13,6 +13,7 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
 import { parseReplayFile } from '@/app/_utils/replayParser';
 import { generateReplayId, storeReplay, loadReplay } from '@/app/_utils/replayStorage';
+import KarabastBanner from '@/app/_components/_sharedcomponents/Banner/Banner';
 import ControlHub from '@/app/_components/_sharedcomponents/ControlHub/ControlHub';
 import { useUser } from '@/app/_contexts/User.context';
 
@@ -224,71 +225,65 @@ export default function ReplayPage() {
     }
 
     return (
-        <Box sx={{ width: '100%', minHeight: '100vh', position: 'relative' }}>
-            {/* Header bar matching site navbar */}
+        <Grid container sx={{ position: 'relative', overflow: 'hidden' }}>
+            <KarabastBanner />
+            <ControlHub path="/replay" user={user} logout={logout} />
+
             <Grid
                 container
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1100, width: '100%' }}
-            >
-                <Box sx={{ ml: '1rem', mt: '1.5rem', cursor: 'pointer' }} onClick={() => router.push('/')}>
-                    <Typography variant="h1" sx={{ fontSize: '3.2rem', fontWeight: 400, mb: '5px' }}>
-                        KARABAST
-                    </Typography>
-                    <Typography variant="body1" sx={{ mb: 0 }}>The Fan-Made, Open-Source</Typography>
-                    <Typography variant="body1">Star Wars Unlimited Simulator</Typography>
-                </Box>
-                <ControlHub path="/replay" user={user} logout={logout} />
-            </Grid>
-
-            {/* Main content */}
-            <Box
+                size={12}
                 sx={{
-                    width: '100%',
-                    minHeight: '100vh',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    py: 4,
+                    height: '100vh',
+                    padding: '1rem 0.75rem 3rem',
                 }}
             >
-                <Box
+                <Grid
+                    size={12}
                     sx={{
-                        width: '100%',
-                        maxWidth: '560px',
-                        backgroundColor: '#18325199',
-                        backdropFilter: 'blur(20px)',
-                        borderRadius: '.8rem',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        padding: '2rem',
+                        justifyContent: 'center',
+                        height: 'calc(100% - 10.5rem)',
+                        alignSelf: 'end',
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: 2,
+                        alignItems: 'center',
                     }}
                 >
-                    <Typography variant="h1" sx={{
-                        fontSize: '2.2rem',
-                        fontWeight: 800,
-                        textTransform: 'uppercase',
-                        mb: 0,
-                    }}>
-                        Replay Viewer
-                    </Typography>
-                    <Typography variant="body1" sx={{
-                        color: 'rgba(255,255,255,0.6)',
-                        mb: 1,
-                    }}>
-                        {loading
-                            ? 'Loading replay...'
-                            : replayId
-                                ? 'Replay not found. Upload the file again.'
-                                : 'Upload a game replay file to watch every turn play out in the simulator.'
-                        }
-                    </Typography>
-                    <FileUpload onReplayLoaded={handleReplayLoaded} />
-                </Box>
-            </Box>
-        </Box>
+                    <Box
+                        sx={{
+                            width: '100%',
+                            maxWidth: '560px',
+                            backgroundColor: '#18325199',
+                            backdropFilter: 'blur(20px)',
+                            borderRadius: '.8rem',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            padding: '2rem',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 2,
+                        }}
+                    >
+                        <Typography variant="h1" sx={{
+                            fontSize: '2.2rem',
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            mb: 0,
+                        }}>
+                            Replay Viewer
+                        </Typography>
+                        <Typography variant="body1" sx={{
+                            color: 'rgba(255,255,255,0.6)',
+                            mb: 1,
+                        }}>
+                            {loading
+                                ? 'Loading replay...'
+                                : replayId
+                                    ? 'Replay not found. Upload the file again.'
+                                    : 'Upload a game replay file to watch every turn play out in the simulator.'
+                            }
+                        </Typography>
+                        <FileUpload onReplayLoaded={handleReplayLoaded} />
+                    </Box>
+                </Grid>
+            </Grid>
+        </Grid>
     );
 }
