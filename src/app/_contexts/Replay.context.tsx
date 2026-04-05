@@ -78,35 +78,50 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
     const [speed, setSpeed] = useState(1);
     const [perspective, setPerspective] = useState('Player 1');
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const snapshotCache = useRef<Map<number, any>>(new Map());
 
     const { snapshots, events, header } = replay;
     const totalSnapshots = snapshots.length;
 
+    // Reset state when a new replay is loaded
+    useEffect(() => {
+        setCurrentIndex(0);
+        setIsPlaying(false);
+        snapshotCache.current.clear();
+    }, [replay]);
+
     const getSnapshot = useCallback((index: number): any => {
+        const cached = snapshotCache.current.get(index);
+        if (cached) return cached;
+
         const snap = snapshots[index];
         if (!snap) return null;
-        if (snap.snapshot) return snap.snapshot;
-        if (snap.rawJson) {
-            try {
-                const parsed = JSON.parse(snap.rawJson);
-                snap.snapshot = parsed.snapshot ?? parsed;
-                delete snap.rawJson;
-                return snap.snapshot;
-            } catch {
-                console.error(`Failed to parse snapshot at index ${index}`);
-                return null;
-            }
+
+        const raw = snap.rawJson ?? snap.snapshot;
+        if (!raw) return null;
+
+        try {
+            const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            const resolved = data.snapshot ?? data;
+            snapshotCache.current.set(index, resolved);
+            return resolved;
+        } catch {
+            console.error(`Failed to parse snapshot at index ${index}`);
+            return null;
         }
-        return null;
     }, [snapshots]);
 
     const gameState = getSnapshot(currentIndex);
 
+    // Derive player keys once from the first snapshot for a stable getOpponent
+    const playerKeys = useMemo(() => {
+        const first = getSnapshot(0);
+        return first?.players ? Object.keys(first.players) : [];
+    }, [getSnapshot]);
+
     const getOpponent = useCallback((player: string): string => {
-        if (!gameState?.players) return '';
-        const playerIds = Object.keys(gameState.players);
-        return playerIds.find((id) => id !== player) || '';
-    }, [gameState]);
+        return playerKeys.find((id) => id !== player) || '';
+    }, [playerKeys]);
 
     const gameMessages: IChatEntry[] = React.useMemo(() => {
         if (currentIndex === 0 || events.length === 0) return [];
