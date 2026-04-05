@@ -232,20 +232,13 @@ export default function ReplayPage() {
                 alignItems="center"
                 sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1100, width: '100%' }}
             >
-                <Typography
-                    sx={{
-                        ml: '60px',
-                        fontSize: '3.0em',
-                        fontWeight: '600',
-                        color: 'white',
-                        alignSelf: 'flex-start',
-                        mb: '0px',
-                        cursor: 'pointer',
-                    }}
-                    onClick={() => router.push('/')}
-                >
-                    KARABAST
-                </Typography>
+                <Box sx={{ ml: '1rem', mt: '1.5rem', cursor: 'pointer' }} onClick={() => router.push('/')}>
+                    <Typography variant="h1" sx={{ fontSize: '3.2rem', fontWeight: 400, mb: '5px' }}>
+                        KARABAST
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 0 }}>The Fan-Made, Open-Source</Typography>
+                    <Typography variant="body1">Star Wars Unlimited Simulator</Typography>
+                </Box>
                 <ControlHub path="/replay" user={user} logout={logout} />
             </Grid>
 
