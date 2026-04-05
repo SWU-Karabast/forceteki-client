@@ -133,7 +133,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                     ...styles.rightColumnStyle,
                 }}
             >
-                <CardActionTray />
+                {!isSpectator && <CardActionTray />}
                 <Box ml={2} sx={styles.chatColumn}>
                     <ChatBubbleOutline onClick={toggleSidebar} />
                 </Box>

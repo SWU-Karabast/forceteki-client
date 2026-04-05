@@ -64,10 +64,15 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
         if (!snap) return null;
         if (snap.snapshot) return snap.snapshot;
         if (snap.rawJson) {
-            const parsed = JSON.parse(snap.rawJson);
-            snap.snapshot = parsed.snapshot ?? parsed;
-            delete snap.rawJson;
-            return snap.snapshot;
+            try {
+                const parsed = JSON.parse(snap.rawJson);
+                snap.snapshot = parsed.snapshot ?? parsed;
+                delete snap.rawJson;
+                return snap.snapshot;
+            } catch {
+                console.error(`Failed to parse snapshot at index ${index}`);
+                return null;
+            }
         }
         return null;
     }, [snapshots]);

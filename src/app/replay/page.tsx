@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Box, Grid2 as Grid, Typography } from '@mui/material';
-import { ReplayProvider, ParsedReplay } from '@/app/_contexts/Replay.context';
+import { ReplayProvider, ParsedReplay, useReplay } from '@/app/_contexts/Replay.context';
 import FileUpload from '@/app/_components/Replay/FileUpload';
 import TransportControls from '@/app/_components/Replay/TransportControls';
 import OpponentCardTray from '@/app/_components/Gameboard/OpponentCardTray/OpponentCardTray';
@@ -62,9 +62,19 @@ function ReplayHeader({ header }: { header: Record<string, string> }) {
     );
 }
 
-function ReplayBoard({ replay }: { replay: ParsedReplay }) {
+function ReplayBoardContent({ header }: { header: Record<string, string> }) {
+    const { gameState } = useReplay();
+
+    if (!gameState?.players) {
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: 'rgba(255,255,255,0.5)' }}>
+                <Typography variant="h6">Loading snapshot...</Typography>
+            </Box>
+        );
+    }
+
     return (
-        <ReplayProvider replay={replay}>
+        <>
             <Grid container sx={{ height: '100dvh', overflow: 'hidden' }}>
                 <Box
                     component="main"
@@ -79,7 +89,7 @@ function ReplayBoard({ replay }: { replay: ParsedReplay }) {
                         flexDirection: 'column',
                     }}
                 >
-                    <ReplayHeader header={replay.header} />
+                    <ReplayHeader header={header} />
                     <Box sx={{ height: '15dvh' }}>
                         <OpponentCardTray
                             trayPlayer="opponent"
@@ -98,6 +108,14 @@ function ReplayBoard({ replay }: { replay: ParsedReplay }) {
                 </Box>
             </Grid>
             <TransportControls />
+        </>
+    );
+}
+
+function ReplayBoard({ replay }: { replay: ParsedReplay }) {
+    return (
+        <ReplayProvider replay={replay}>
+            <ReplayBoardContent header={replay.header} />
         </ReplayProvider>
     );
 }

@@ -61,7 +61,7 @@ export function parseReplayFile(content: string): ParsedReplay {
             if (!trimmed) continue;
 
             if (trimmed.includes('-snapshot')) {
-                const seqMatch = trimmed.match(/"seq"\s*:\s*"([^"]+)"/);
+                const seqMatch = trimmed.match(/"seq"\s*:\s*"([^"]*-snapshot)"/);
                 if (seqMatch) {
                     snapshots.push({
                         seq: seqMatch[1],
