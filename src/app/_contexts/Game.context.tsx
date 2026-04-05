@@ -53,7 +53,7 @@ interface IGameContextType {
     };
 }
 
-const GameContext = createContext<IGameContextType | undefined>(undefined);
+export const GameContext = createContext<IGameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
