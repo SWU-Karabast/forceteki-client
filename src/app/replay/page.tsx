@@ -63,7 +63,7 @@ function ReplayHeader({ header }: { header: Record<string, string> }) {
 }
 
 function ReplayBoardContent({ header }: { header: Record<string, string> }) {
-    const { gameState } = useReplay();
+    const { gameState, connectedPlayer, getOpponent } = useReplay();
 
     if (!gameState?.players) {
         return (
@@ -92,7 +92,7 @@ function ReplayBoardContent({ header }: { header: Record<string, string> }) {
                     <ReplayHeader header={header} />
                     <Box sx={{ height: '15dvh' }}>
                         <OpponentCardTray
-                            trayPlayer="opponent"
+                            trayPlayer={getOpponent(connectedPlayer)}
                             preferenceToggle={() => {}}
                         />
                     </Box>
@@ -101,7 +101,7 @@ function ReplayBoardContent({ header }: { header: Record<string, string> }) {
                     </Box>
                     <Box sx={{ height: '18dvh', pb: '60px' }}>
                         <PlayerCardTray
-                            trayPlayer="player"
+                            trayPlayer={connectedPlayer}
                             toggleSidebar={() => {}}
                         />
                     </Box>
