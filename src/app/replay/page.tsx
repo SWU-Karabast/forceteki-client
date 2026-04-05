@@ -153,10 +153,10 @@ function ReplayBoardContent({ header }: { header: Record<string, string> }) {
                             preferenceToggle={() => {}}
                         />
                     </Box>
-                    <Box sx={{ height: '62dvh', position: 'relative', zIndex: 2 }}>
+                    <Box sx={{ height: '65dvh', position: 'relative', zIndex: 2 }}>
                         <Board sidebarOpen={false} />
                     </Box>
-                    <Box sx={{ height: '18dvh', pb: '60px' }}>
+                    <Box sx={{ height: '15dvh', pb: '60px' }}>
                         <PlayerCardTray
                             trayPlayer={connectedPlayer}
                             toggleSidebar={() => {}}
