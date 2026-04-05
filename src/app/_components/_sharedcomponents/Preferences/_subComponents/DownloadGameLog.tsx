@@ -1,46 +1,86 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import PreferenceButton from './PreferenceButton';
 import { useGame } from '@/app/_contexts/Game.context';
+import { generateHumanNotation } from '@/app/_utils/gameLogGenerator';
+
+function triggerDownload(content: string, filename: string, mimeType: string) {
+    const blob = new Blob([content], { type: `${mimeType};charset=utf-8;` });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
 
 function DownloadGameLog() {
-    const { requestGameLog } = useGame();
-    const [loading, setLoading] = useState(false);
+    const { gameMessages, gameState, connectedPlayer } = useGame();
+    const [loadingLog, setLoadingLog] = useState(false);
+    const [loadingPgn, setLoadingPgn] = useState(false);
 
-    const triggerDownload = (content: string, filename: string, mimeType: string) => {
-        const blob = new Blob([content], { type: `${mimeType};charset=utf-8;` });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
+    const getPlayerNames = (): { p1Name: string; p2Name: string } | null => {
+        if (!gameState?.players) return null;
+        const playerIds = Object.keys(gameState.players);
+        if (playerIds.length < 2) return null;
+        return {
+            p1Name: gameState.players[playerIds[0]].name,
+            p2Name: gameState.players[playerIds[1]].name,
+        };
     };
 
-    const handleDownloadLog = async () => {
-        setLoading(true);
+    const handleDownloadLog = () => {
+        // Prefer server-generated raw game log (includes subtitles)
+        if (gameState?.rawGameLog) {
+            triggerDownload(gameState.rawGameLog, 'game-log.txt', 'text/plain');
+            return;
+        }
+
+        // Fall back to client-side generation
+        const names = getPlayerNames();
+        if (!names || !gameMessages.length) return;
+
+        setLoadingLog(true);
         try {
-            const data = await requestGameLog();
-            if (data) {
-                triggerDownload(data.rawLog, 'game-log.txt', 'text/plain');
-            }
+            const rawLog = generateHumanNotation(gameMessages, names.p1Name, names.p2Name);
+            triggerDownload(rawLog, 'game-log.txt', 'text/plain');
         } finally {
-            setLoading(false);
+            setLoadingLog(false);
         }
     };
 
-    const handleDownloadPgn = async () => {
-        setLoading(true);
+    const handleDownloadPgn = () => {
+        if (!gameState?.swuPgn) return;
+
+        setLoadingPgn(true);
         try {
-            const data = await requestGameLog();
-            if (data) {
-                triggerDownload(data.swuPgn, 'game.swupgn', 'text/plain');
-            }
+            triggerDownload(gameState.swuPgn, 'game.swupgn', 'text/plain');
         } finally {
-            setLoading(false);
+            setLoadingPgn(false);
         }
     };
+
+    // Expose console helpers for manual downloads
+    useEffect(() => {
+        (window as any).__downloadGameLog = () => {
+            handleDownloadLog();
+            return 'Download triggered';
+        };
+        (window as any).__downloadSwuPgn = () => {
+            handleDownloadPgn();
+            return 'Download triggered';
+        };
+        return () => {
+            delete (window as any).__downloadGameLog;
+            delete (window as any).__downloadSwuPgn;
+        };
+    }, [gameMessages, gameState, connectedPlayer]);
+
+    const hasPgnData = !!gameState?.swuPgn;
+    const hasLogData = !!gameState?.rawGameLog || gameMessages.length > 0;
 
     const styles = {
         contentContainer: {
@@ -63,9 +103,9 @@ function DownloadGameLog() {
             <Box sx={styles.contentContainer}>
                 <PreferenceButton
                     variant={'standard'}
-                    text={loading ? 'Loading...' : 'Download Game Log'}
+                    text={loadingLog ? 'Loading...' : 'Download Game Log'}
                     buttonFnc={handleDownloadLog}
-                    disabled={loading}
+                    disabled={loadingLog || !hasLogData}
                 />
                 <Typography sx={styles.typeographyStyle}>
                     Download the raw game log as a text file.
@@ -74,9 +114,9 @@ function DownloadGameLog() {
             <Box sx={styles.contentContainer}>
                 <PreferenceButton
                     variant={'standard'}
-                    text={loading ? 'Loading...' : 'Download SWU-PGN'}
+                    text={loadingPgn ? 'Loading...' : 'Download SWU-PGN'}
                     buttonFnc={handleDownloadPgn}
-                    disabled={loading}
+                    disabled={loadingPgn || !hasPgnData}
                 />
                 <Typography sx={styles.typeographyStyle}>
                     Download game notation for replay and analysis.

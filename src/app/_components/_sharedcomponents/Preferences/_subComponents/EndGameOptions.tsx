@@ -4,11 +4,8 @@ import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-<<<<<<< HEAD
 import DownloadGameLog from './DownloadGameLog';
-=======
 import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_subComponents/Bo3ScoreDisplay';
->>>>>>> main
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useUser } from '@/app/_contexts/User.context';
@@ -544,7 +541,7 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                 </Typography>
             </Box>
 
-            <Box sx={styles.functionContainer}>
+            <Box sx={{ ...styles.functionContainer, mt: '2rem' }}>
                 <Typography sx={styles.typographyContainer} variant={'h3'}>Game Log</Typography>
                 <Divider sx={{ mb: '20px' }} />
                 <DownloadGameLog />

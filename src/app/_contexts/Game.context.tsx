@@ -46,7 +46,6 @@ interface IGameContextType {
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
-    requestGameLog: () => Promise<{ rawLog: string; swuPgn: string } | null>;
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -369,22 +368,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         socket?.emit('lobby', ...args);
     }
 
-    const requestGameLog = useCallback((): Promise<{ rawLog: string; swuPgn: string } | null> => {
-        return new Promise((resolve) => {
-            if (!socket) {
-                resolve(null);
-                return;
-            }
-            socket.emit('lobby', 'getGameLog', (response: { error?: string; rawLog?: string; swuPgn?: string }) => {
-                if (response?.error || !response?.rawLog || !response?.swuPgn) {
-                    resolve(null);
-                } else {
-                    resolve({ rawLog: response.rawLog, swuPgn: response.swuPgn });
-                }
-            });
-        });
-    }, [socket]);
-
     const getOpponent = (player: string) => {
         if (gameState) {
             const playerNames = Object.keys(gameState.players);
@@ -449,15 +432,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 isAnonymousPlayer,
                 hasChatDisabled,
                 createNewSocket,
-<<<<<<< HEAD
-                requestGameLog
-=======
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,
                     clear: () => setHoveredCardId(null)
                 }
->>>>>>> main
             }}
         >
             {children}
