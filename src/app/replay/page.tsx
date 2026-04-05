@@ -222,40 +222,49 @@ export default function ReplayPage() {
     return (
         <Box
             sx={{
-                width: '100vw',
-                height: '100vh',
+                width: '100%',
+                minHeight: 'calc(100vh - 4rem)',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')}?v=2)`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                gap: 3,
+                py: 4,
             }}
         >
-            <Typography variant="h2" sx={{
-                color: 'white',
-                fontWeight: 'bold',
-                textShadow: '0 0 20px rgba(79,195,247,0.4), 0 2px 10px rgba(0,0,0,0.5)',
-                letterSpacing: '0.05em',
-            }}>
-                Replay Viewer
-            </Typography>
-            <Typography variant="h6" sx={{
-                color: 'rgba(255,255,255,0.6)',
-                mb: 3,
-                fontWeight: 300,
-                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-            }}>
-                {loading
-                    ? 'Loading replay...'
-                    : replayId
-                        ? 'Replay not found. Upload the file again.'
-                        : 'Upload a game replay file to watch the game play out'
-                }
-            </Typography>
-            <FileUpload onReplayLoaded={handleReplayLoaded} />
+            <Box
+                sx={{
+                    width: '100%',
+                    maxWidth: '560px',
+                    backgroundColor: '#18325199',
+                    backdropFilter: 'blur(20px)',
+                    borderRadius: '.8rem',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    padding: '2rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                }}
+            >
+                <Typography variant="h1" sx={{
+                    fontSize: '2.2rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    mb: 0,
+                }}>
+                    Replay Viewer
+                </Typography>
+                <Typography variant="body1" sx={{
+                    color: 'rgba(255,255,255,0.6)',
+                    mb: 1,
+                }}>
+                    {loading
+                        ? 'Loading replay...'
+                        : replayId
+                            ? 'Replay not found. Upload the file again.'
+                            : 'Upload a game replay file to watch every turn play out in the simulator.'
+                    }
+                </Typography>
+                <FileUpload onReplayLoaded={handleReplayLoaded} />
+            </Box>
         </Box>
     );
 }

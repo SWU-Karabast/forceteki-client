@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useCallback, useRef } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { parseReplayFile } from '@/app/_utils/replayParser';
 import { ParsedReplay } from '@/app/_contexts/Replay.context';
 
@@ -80,57 +80,81 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
     };
 
     return (
-        <Box
-            onClick={handleClick}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            sx={{
-                width: '100%',
-                maxWidth: '500px',
-                height: '250px',
-                border: '2px dashed',
-                borderColor: isDragging ? '#90caf9' : error ? '#f44336' : 'rgba(255,255,255,0.3)',
-                borderRadius: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'border-color 0.2s, background-color 0.2s',
-                backgroundColor: isDragging ? 'rgba(144,202,249,0.08)' : 'rgba(255,255,255,0.03)',
-                '&:hover': {
-                    borderColor: '#90caf9',
-                    backgroundColor: 'rgba(144,202,249,0.05)',
-                },
-            }}
-        >
-            <input
-                ref={inputRef}
-                type="file"
-                accept=".swureplay,.zip"
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-            />
-            {loading ? (
-                <Typography variant="body1" sx={{ color: '#90caf9' }}>
-                    Loading replay...
-                </Typography>
-            ) : (
-                <>
-                    <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
-                        Drop a .swureplay or .zip file here
+        <Box sx={{ width: '100%' }}>
+            <Box
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={handleClick}
+                sx={{
+                    width: '100%',
+                    height: '200px',
+                    border: '2px solid',
+                    borderColor: isDragging ? '#90caf9' : error ? '#f44336' : 'rgba(114,134,160,0.4)',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.2s, background-color 0.2s',
+                    backgroundColor: isDragging ? 'rgba(144,202,249,0.08)' : 'rgba(0,0,0,0.2)',
+                    '&:hover': {
+                        borderColor: '#90caf9',
+                        backgroundColor: 'rgba(144,202,249,0.05)',
+                    },
+                }}
+            >
+                <input
+                    ref={inputRef}
+                    type="file"
+                    accept=".swureplay,.zip"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                />
+                {loading ? (
+                    <Typography variant="body1" sx={{ color: '#90caf9', mb: 0 }}>
+                        Loading replay...
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)' }}>
-                        or click to browse
+                ) : (
+                    <>
+                        <Typography variant="h3" sx={{ color: 'rgba(255,255,255,0.8)', mb: 0, fontWeight: 700 }}>
+                            Drop a .swureplay or .zip file here
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                            or click to browse
+                        </Typography>
+                    </>
+                )}
+                {error && (
+                    <Typography variant="body2" sx={{ color: '#f44336', mt: 1 }}>
+                        {error}
                     </Typography>
-                </>
-            )}
-            {error && (
-                <Typography variant="body2" sx={{ color: '#f44336', mt: 2 }}>
-                    {error}
+                )}
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.5 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                    Max upload: 100 MB
                 </Typography>
-            )}
+                <Button
+                    onClick={handleClick}
+                    sx={{
+                        backgroundColor: '#D4A843',
+                        color: 'black',
+                        fontWeight: 700,
+                        px: 3,
+                        py: 0.8,
+                        borderRadius: '6px',
+                        textTransform: 'none',
+                        fontSize: '0.95rem',
+                        '&:hover': {
+                            backgroundColor: '#E0B84E',
+                        },
+                    }}
+                >
+                    Browse Files
+                </Button>
+            </Box>
         </Box>
     );
 };
