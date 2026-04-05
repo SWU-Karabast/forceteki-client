@@ -162,8 +162,8 @@ function ReplayBoardContent({ header }: { header: Record<string, string> }) {
                         />
                     </Box>
                 </Box>
+                <PopupShell sidebarOpen={false} />
             </Grid>
-            <PopupShell sidebarOpen={false} />
             <TransportControls />
         </>
     );
