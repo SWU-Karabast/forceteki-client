@@ -234,10 +234,20 @@ export default function ReplayPage() {
                 gap: 3,
             }}
         >
-            <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
+            <Typography variant="h2" sx={{
+                color: 'white',
+                fontWeight: 'bold',
+                textShadow: '0 0 20px rgba(79,195,247,0.4), 0 2px 10px rgba(0,0,0,0.5)',
+                letterSpacing: '0.05em',
+            }}>
                 Replay Viewer
             </Typography>
-            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', mb: 2 }}>
+            <Typography variant="h6" sx={{
+                color: 'rgba(255,255,255,0.6)',
+                mb: 3,
+                fontWeight: 300,
+                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+            }}>
                 {loading
                     ? 'Loading replay...'
                     : replayId
