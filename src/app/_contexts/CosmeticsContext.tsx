@@ -41,9 +41,11 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
     const getCosmeticDefault = (type: RegisteredCosmeticType): IRegisteredCosmeticOption => {
         switch(type) {
             case RegisteredCosmeticType.Cardback:
-                return cosmetics.cardbacks.find((cb) => cb.title === 'Default')!;
+                return cosmetics.cardbacks.find((cb) => cb.title === 'Default')
+                    ?? { id: '', title: 'Default', type: RegisteredCosmeticType.Cardback, path: '' };
             case RegisteredCosmeticType.Background:
-                return cosmetics.backgrounds.find((bg) => bg.title === 'Default')!;
+                return cosmetics.backgrounds.find((bg) => bg.title === 'Default')
+                    ?? { id: '', title: 'Default', type: RegisteredCosmeticType.Background, path: '' };
 
             /* case RegisteredCosmeticType.Playmat:
                 return { id: 'none', title: 'None', type: RegisteredCosmeticType.Playmat, path: '' };*/
