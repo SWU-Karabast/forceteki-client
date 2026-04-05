@@ -1,6 +1,8 @@
 'use client';
 import React, { useState } from 'react';
-import { Box, Grid2 as Grid, Typography } from '@mui/material';
+import { Box, Grid2 as Grid, Typography, IconButton } from '@mui/material';
+import { CloseOutlined } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 import { ReplayProvider, ParsedReplay, useReplay } from '@/app/_contexts/Replay.context';
 import FileUpload from '@/app/_components/Replay/FileUpload';
 import TransportControls from '@/app/_components/Replay/TransportControls';
@@ -15,6 +17,7 @@ function formatResult(result: string): string {
 }
 
 function ReplayHeader({ header }: { header: Record<string, string> }) {
+    const router = useRouter();
     const player1 = header.Player1 || 'Player 1';
     const player2 = header.Player2 || 'Player 2';
     const leader1 = header.Leader1 || '';
@@ -37,8 +40,23 @@ function ReplayHeader({ header }: { header: Record<string, string> }) {
                 background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 100%)',
                 borderBottom: '1px solid rgba(255,255,255,0.15)',
                 zIndex: 10,
+                position: 'relative',
             }}
         >
+            <IconButton
+                onClick={() => router.push('/')}
+                sx={{
+                    position: 'absolute',
+                    right: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'rgba(255,255,255,0.5)',
+                    '&:hover': { color: 'white' },
+                }}
+                title="Exit replay"
+            >
+                <CloseOutlined />
+            </IconButton>
             <Box sx={{ textAlign: 'right', minWidth: '120px' }}>
                 <Typography variant="body1" sx={{
                     color: isP1Winner ? '#4fc3f7' : 'white',
