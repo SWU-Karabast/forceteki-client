@@ -1,8 +1,8 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Grid2 as Grid, Typography, IconButton } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ReplayProvider, ParsedReplay, useReplay } from '@/app/_contexts/Replay.context';
 import FileUpload from '@/app/_components/Replay/FileUpload';
 import TransportControls from '@/app/_components/Replay/TransportControls';
@@ -11,9 +11,10 @@ import Board from '@/app/_components/Gameboard/Board/Board';
 import PlayerCardTray from '@/app/_components/Gameboard/PlayerCardTray/PlayerCardTray';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
+import { parseReplayFile } from '@/app/_utils/replayParser';
+import { generateReplayId, storeReplay, loadReplay } from '@/app/_utils/replayStorage';
 
 function formatResult(result: string): string {
-    // Convert "P1 Win" / "P2 Win" to "Player 1 Win" / "Player 2 Win"
     return result.replace(/\bP1\b/g, 'Player 1').replace(/\bP2\b/g, 'Player 2');
 }
 
@@ -179,6 +180,40 @@ function ReplayBoard({ replay }: { replay: ParsedReplay }) {
 
 export default function ReplayPage() {
     const [replay, setReplay] = useState<ParsedReplay | null>(null);
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const replayId = searchParams.get('id');
+
+    // On mount, if URL has ?id=, try to load from IndexedDB
+    useEffect(() => {
+        if (!replayId || replay) return;
+
+        setLoading(true);
+        loadReplay(replayId)
+            .then((rawContent) => {
+                if (rawContent) {
+                    const parsed = parseReplayFile(rawContent);
+                    if (parsed.snapshots.length > 0) {
+                        setReplay(parsed);
+                    }
+                }
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, [replayId]);
+
+    // When a file is uploaded, store it and update the URL
+    const handleReplayLoaded = async (parsed: ParsedReplay, rawContent: string) => {
+        setReplay(parsed);
+        try {
+            const id = await generateReplayId(parsed.header);
+            await storeReplay(id, rawContent);
+            router.replace(`/replay?id=${id}`, { scroll: false });
+        } catch {
+            // Storage failed, replay still works — just won't survive refresh
+        }
+    };
 
     if (replay) {
         return <ReplayBoard replay={replay} />;
@@ -203,9 +238,14 @@ export default function ReplayPage() {
                 Replay Viewer
             </Typography>
             <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', mb: 2 }}>
-                Upload a game replay file to watch the game play out
+                {loading
+                    ? 'Loading replay...'
+                    : replayId
+                        ? 'Replay not found. Upload the file again.'
+                        : 'Upload a game replay file to watch the game play out'
+                }
             </Typography>
-            <FileUpload onReplayLoaded={setReplay} />
+            <FileUpload onReplayLoaded={handleReplayLoaded} />
         </Box>
     );
 }

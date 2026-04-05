@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useCallback, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
-import { parseReplayFile, parseReplayFromZip } from '@/app/_utils/replayParser';
+import { parseReplayFile } from '@/app/_utils/replayParser';
 import { ParsedReplay } from '@/app/_contexts/Replay.context';
 
 interface FileUploadProps {
-    onReplayLoaded: (replay: ParsedReplay) => void;
+    onReplayLoaded: (replay: ParsedReplay, rawContent: string) => void;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
@@ -20,25 +20,33 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
         setLoading(true);
 
         try {
+            let rawContent: string;
+            let replay: ParsedReplay;
+
             if (file.name.endsWith('.swureplay')) {
-                const text = await file.text();
-                const replay = parseReplayFile(text);
-                if (replay.snapshots.length === 0) {
-                    setError('No snapshots found in replay file.');
-                    return;
-                }
-                onReplayLoaded(replay);
+                rawContent = await file.text();
+                replay = parseReplayFile(rawContent);
             } else if (file.name.endsWith('.zip')) {
                 const buffer = await file.arrayBuffer();
-                const replay = await parseReplayFromZip(buffer);
-                if (replay.snapshots.length === 0) {
-                    setError('No snapshots found in replay file.');
+                const { unzipSync, strFromU8 } = await import('fflate');
+                const unzipped = unzipSync(new Uint8Array(buffer));
+                const replayFilename = Object.keys(unzipped).find((name) => name.endsWith('.swureplay'));
+                if (!replayFilename) {
+                    setError('No .swureplay file found in zip.');
                     return;
                 }
-                onReplayLoaded(replay);
+                rawContent = strFromU8(unzipped[replayFilename]);
+                replay = parseReplayFile(rawContent);
             } else {
                 setError('Please upload a .swureplay or .zip file.');
+                return;
             }
+
+            if (replay.snapshots.length === 0) {
+                setError('No snapshots found in replay file.');
+                return;
+            }
+            onReplayLoaded(replay, rawContent);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to parse file.');
         } finally {
