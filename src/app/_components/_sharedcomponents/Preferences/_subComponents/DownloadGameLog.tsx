@@ -17,10 +17,21 @@ function triggerDownload(content: string, filename: string, mimeType: string) {
     URL.revokeObjectURL(url);
 }
 
+function triggerBlobDownload(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
 function DownloadGameLog() {
     const { gameMessages, gameState, connectedPlayer } = useGame();
     const [loadingLog, setLoadingLog] = useState(false);
-    const [loadingPgn, setLoadingPgn] = useState(false);
+    const [loadingZip, setLoadingZip] = useState(false);
 
     const getPlayerNames = (): { p1Name: string; p2Name: string } | null => {
         if (!gameState?.players) return null;
@@ -33,16 +44,12 @@ function DownloadGameLog() {
     };
 
     const handleDownloadLog = () => {
-        // Prefer server-generated raw game log (includes subtitles)
         if (gameState?.rawGameLog) {
             triggerDownload(gameState.rawGameLog, 'game-log.txt', 'text/plain');
             return;
         }
-
-        // Fall back to client-side generation
         const names = getPlayerNames();
         if (!names || !gameMessages.length) return;
-
         setLoadingLog(true);
         try {
             const rawLog = generateHumanNotation(gameMessages, names.p1Name, names.p2Name);
@@ -52,34 +59,39 @@ function DownloadGameLog() {
         }
     };
 
-    const handleDownloadPgn = () => {
-        if (!gameState?.swuPgn) return;
-
-        setLoadingPgn(true);
+    const handleDownloadZip = async () => {
+        if (!gameState?.swuPgn || !gameState?.swuReplay) return;
+        setLoadingZip(true);
         try {
-            triggerDownload(gameState.swuPgn, 'game.swupgn', 'text/plain');
+            const { zipSync, strToU8 } = await import('fflate');
+            const zipped = zipSync({
+                'game.swupgn': strToU8(gameState.swuPgn),
+                'game.swureplay': strToU8(gameState.swuReplay),
+            });
+            const date = new Date().toISOString().split('T')[0];
+            const blob = new Blob([zipped], { type: 'application/zip' });
+            triggerBlobDownload(blob, `game-${date}.zip`);
         } finally {
-            setLoadingPgn(false);
+            setLoadingZip(false);
         }
     };
 
-    // Expose console helpers for manual downloads
     useEffect(() => {
         (window as any).__downloadGameLog = () => {
             handleDownloadLog();
             return 'Download triggered';
         };
-        (window as any).__downloadSwuPgn = () => {
-            handleDownloadPgn();
+        (window as any).__downloadGameFiles = () => {
+            handleDownloadZip();
             return 'Download triggered';
         };
         return () => {
             delete (window as any).__downloadGameLog;
-            delete (window as any).__downloadSwuPgn;
+            delete (window as any).__downloadGameFiles;
         };
     }, [gameMessages, gameState, connectedPlayer]);
 
-    const hasPgnData = !!gameState?.swuPgn;
+    const hasZipData = !!gameState?.swuPgn && !!gameState?.swuReplay;
     const hasLogData = !!gameState?.rawGameLog || gameMessages.length > 0;
 
     const styles = {
@@ -114,12 +126,12 @@ function DownloadGameLog() {
             <Box sx={styles.contentContainer}>
                 <PreferenceButton
                     variant={'standard'}
-                    text={loadingPgn ? 'Loading...' : 'Download SWU-PGN'}
-                    buttonFnc={handleDownloadPgn}
-                    disabled={loadingPgn || !hasPgnData}
+                    text={loadingZip ? 'Loading...' : 'Download Game Files'}
+                    buttonFnc={handleDownloadZip}
+                    disabled={loadingZip || !hasZipData}
                 />
                 <Typography sx={styles.typeographyStyle}>
-                    Download game notation for replay and analysis.
+                    Download game notation and replay data as a zip file.
                 </Typography>
             </Box>
         </>
