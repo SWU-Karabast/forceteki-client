@@ -1,7 +1,7 @@
 import React, { useRef, useLayoutEffect, useState } from 'react';
 import { Box, Typography, Popover, PopoverOrigin } from '@mui/material';
 import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useGame } from '@/app/_contexts/Game.context';
+import { useBoardState } from '@/app/_hooks/useBoardState';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
@@ -10,7 +10,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
-    const { gameState, connectedPlayer } = useGame();
+    const { gameState, connectedPlayer } = useBoardState();
     const { togglePopup, popups } = usePopup();
     const { isPortrait } = useScreenOrientation();
     const { getCardback } = useCosmetics();

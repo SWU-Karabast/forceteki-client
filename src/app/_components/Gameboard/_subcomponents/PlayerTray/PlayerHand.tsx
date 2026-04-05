@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { useGame } from '@/app/_contexts/Game.context';
+import { useBoardState } from '@/app/_hooks/useBoardState';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
 import { IPlayerHandProps } from '@/app/_components/Gameboard/GameboardTypes';
@@ -9,7 +9,7 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
 const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, scrollbarEnabled = true, cardback = undefined }) => {
-    const { connectedPlayer } = useGame();
+    const { connectedPlayer } = useBoardState();
     const { isPortrait } = useScreenOrientation();
     const showDebugInfo = isDebugHandScalingEnabled();
     const customScrollbarStyles = `

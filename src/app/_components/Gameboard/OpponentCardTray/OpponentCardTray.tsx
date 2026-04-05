@@ -6,7 +6,7 @@ import Credits from '../_subcomponents/PlayerTray/Credits';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useGame } from '@/app/_contexts/Game.context';
+import { useBoardState } from '@/app/_hooks/useBoardState';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { v4 as uuidv4 } from 'uuid';
 import { usePopup } from '@/app/_contexts/Popup.context';
@@ -17,7 +17,7 @@ import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
-    const { gameState, connectedPlayer, getOpponent, isSpectator } = useGame();
+    const { gameState, connectedPlayer, getOpponent, isSpectator } = useBoardState();
     const { openPopup } = usePopup();
     const { isPortrait } = useScreenOrientation();
     const router = useRouter();

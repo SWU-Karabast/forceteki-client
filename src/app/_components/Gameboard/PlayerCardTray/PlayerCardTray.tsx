@@ -8,12 +8,12 @@ import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import CardActionTray from '../_subcomponents/PlayerTray/CardActionTray';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import { IPlayerCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useGame } from '@/app/_contexts/Game.context';
+import { useBoardState } from '@/app/_hooks/useBoardState';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
 const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSidebar }) => {
-    const { gameState, connectedPlayer, isSpectator } = useGame();
+    const { gameState, connectedPlayer, isSpectator } = useBoardState();
     const { isPortrait } = useScreenOrientation();
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
