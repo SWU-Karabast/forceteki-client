@@ -207,7 +207,7 @@ export default function ReplayPage() {
     const handleReplayLoaded = async (parsed: ParsedReplay, rawContent: string) => {
         setReplay(parsed);
         try {
-            const id = await generateReplayId(parsed.header);
+            const id = await generateReplayId(parsed.header, rawContent);
             await storeReplay(id, rawContent);
             router.replace(`/Replay?id=${id}`, { scroll: false });
         } catch {

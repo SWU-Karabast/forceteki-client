@@ -447,27 +447,44 @@ const noopFn = () => {};
 const noopStringFn = () => '';
 const noopBoolFn = () => false;
 
+// Import ReplayContext lazily to avoid circular dependency at module level
+let _ReplayContext: React.Context<any> | null = null;
+function getReplayContext() {
+    if (!_ReplayContext) {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            _ReplayContext = require('@/app/_contexts/Replay.context').ReplayContext;
+        } catch {
+            _ReplayContext = null;
+        }
+    }
+    return _ReplayContext;
+}
+
 export const useGame = () => {
     const context = useContext(GameContext);
     if (context) {
         return context;
     }
 
-    // When outside a GameProvider (e.g., /Replay page), return safe defaults.
-    // Board-state fields are not used here since board components use useBoardState().
-    // Interactive fields become no-ops so components like GameCard/LeaderBaseCard
-    // don't crash when rendered in replay mode.
+    // When outside a GameProvider (e.g., /Replay page), pull board state
+    // from ReplayContext so card components (GameCard, LeaderBaseCard) get
+    // the correct connectedPlayer and gameState for rendering.
+    const ReplayCtx = getReplayContext();
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const replayContext = ReplayCtx ? useContext(ReplayCtx) : null;
+
     return {
-        gameState: null,
-        gameMessages: [],
+        gameState: replayContext?.gameState ?? null,
+        gameMessages: replayContext?.gameMessages ?? [],
         lobbyState: null,
         bugReportState: null,
         playerReportState: null,
         statsSubmitNotification: null,
         sendMessage: noopFn,
         sendGameMessage: noopFn,
-        connectedPlayer: '',
-        getOpponent: noopStringFn,
+        connectedPlayer: replayContext?.connectedPlayer ?? '',
+        getOpponent: replayContext?.getOpponent ?? noopStringFn,
         sendLobbyMessage: noopFn,
         resetStates: noopFn,
         getConnectedPlayerPrompt: noopFn,

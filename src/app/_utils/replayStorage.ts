@@ -13,8 +13,11 @@ function openDB(): Promise<IDBDatabase> {
     });
 }
 
-// Generate a short deterministic ID from the replay header
-export async function generateReplayId(header: Record<string, string>): Promise<string> {
+// Generate a short deterministic ID from the replay header + content sample.
+// Includes content entropy so rematches/BO3s with identical headers produce
+// different IDs (different game actions = different hash).
+export async function generateReplayId(header: Record<string, string>, rawContent?: string): Promise<string> {
+    const contentSample = rawContent ? rawContent.slice(-2000) : '';
     const seed = [
         header.Player1 || '',
         header.Player2 || '',
@@ -22,6 +25,7 @@ export async function generateReplayId(header: Record<string, string>): Promise<
         header.Result || '',
         header.Leader1 || '',
         header.Leader2 || '',
+        contentSample,
     ].join('|');
 
     const encoded = new TextEncoder().encode(seed);
