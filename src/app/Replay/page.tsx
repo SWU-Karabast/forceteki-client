@@ -209,7 +209,7 @@ export default function ReplayPage() {
         try {
             const id = await generateReplayId(parsed.header);
             await storeReplay(id, rawContent);
-            router.replace(`/replay?id=${id}`, { scroll: false });
+            router.replace(`/Replay?id=${id}`, { scroll: false });
         } catch {
             // Storage failed, replay still works — just won't survive refresh
         }

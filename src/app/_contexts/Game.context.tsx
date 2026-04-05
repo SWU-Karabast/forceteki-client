@@ -453,7 +453,7 @@ export const useGame = () => {
         return context;
     }
 
-    // When outside a GameProvider (e.g., /replay page), return safe defaults.
+    // When outside a GameProvider (e.g., /Replay page), return safe defaults.
     // Board-state fields are not used here since board components use useBoardState().
     // Interactive fields become no-ops so components like GameCard/LeaderBaseCard
     // don't crash when rendered in replay mode.
