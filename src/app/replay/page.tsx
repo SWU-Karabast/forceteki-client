@@ -13,6 +13,8 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
 import { parseReplayFile } from '@/app/_utils/replayParser';
 import { generateReplayId, storeReplay, loadReplay } from '@/app/_utils/replayStorage';
+import ControlHub from '@/app/_components/_sharedcomponents/ControlHub/ControlHub';
+import { useUser } from '@/app/_contexts/User.context';
 
 function formatResult(result: string): string {
     return result.replace(/\bP1\b/g, 'Player 1').replace(/\bP2\b/g, 'Player 2');
@@ -215,55 +217,84 @@ export default function ReplayPage() {
         }
     };
 
+    const { user, logout } = useUser();
+
     if (replay) {
         return <ReplayBoard replay={replay} />;
     }
 
     return (
-        <Box
-            sx={{
-                width: '100%',
-                minHeight: 'calc(100vh - 4rem)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                py: 4,
-            }}
-        >
+        <Box sx={{ width: '100%', minHeight: '100vh', position: 'relative' }}>
+            {/* Header bar matching site navbar */}
+            <Grid
+                container
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1100, width: '100%' }}
+            >
+                <Typography
+                    sx={{
+                        ml: '60px',
+                        fontSize: '3.0em',
+                        fontWeight: '600',
+                        color: 'white',
+                        alignSelf: 'flex-start',
+                        mb: '0px',
+                        cursor: 'pointer',
+                    }}
+                    onClick={() => router.push('/')}
+                >
+                    KARABAST
+                </Typography>
+                <ControlHub path="/replay" user={user} logout={logout} />
+            </Grid>
+
+            {/* Main content */}
             <Box
                 sx={{
                     width: '100%',
-                    maxWidth: '560px',
-                    backgroundColor: '#18325199',
-                    backdropFilter: 'blur(20px)',
-                    borderRadius: '.8rem',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    padding: '2rem',
+                    minHeight: '100vh',
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    py: 4,
                 }}
             >
-                <Typography variant="h1" sx={{
-                    fontSize: '2.2rem',
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    mb: 0,
-                }}>
-                    Replay Viewer
-                </Typography>
-                <Typography variant="body1" sx={{
-                    color: 'rgba(255,255,255,0.6)',
-                    mb: 1,
-                }}>
-                    {loading
-                        ? 'Loading replay...'
-                        : replayId
-                            ? 'Replay not found. Upload the file again.'
-                            : 'Upload a game replay file to watch every turn play out in the simulator.'
-                    }
-                </Typography>
-                <FileUpload onReplayLoaded={handleReplayLoaded} />
+                <Box
+                    sx={{
+                        width: '100%',
+                        maxWidth: '560px',
+                        backgroundColor: '#18325199',
+                        backdropFilter: 'blur(20px)',
+                        borderRadius: '.8rem',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        padding: '2rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                    }}
+                >
+                    <Typography variant="h1" sx={{
+                        fontSize: '2.2rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        mb: 0,
+                    }}>
+                        Replay Viewer
+                    </Typography>
+                    <Typography variant="body1" sx={{
+                        color: 'rgba(255,255,255,0.6)',
+                        mb: 1,
+                    }}>
+                        {loading
+                            ? 'Loading replay...'
+                            : replayId
+                                ? 'Replay not found. Upload the file again.'
+                                : 'Upload a game replay file to watch every turn play out in the simulator.'
+                        }
+                    </Typography>
+                    <FileUpload onReplayLoaded={handleReplayLoaded} />
+                </Box>
             </Box>
         </Box>
     );
