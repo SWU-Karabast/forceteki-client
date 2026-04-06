@@ -102,7 +102,7 @@ const TransportControls: React.FC = () => {
                 alignItems: 'center',
                 px: 2,
                 gap: 1.5,
-                zIndex: 1000,
+                zIndex: 1300,
                 borderTop: '1px solid rgba(255,255,255,0.1)',
             }}
         >
