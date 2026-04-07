@@ -1,3 +1,4 @@
+import { rgbToHex } from '@mui/material/styles';
 import React from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,9 +106,11 @@ export const resourceReplacementRule: TextReplacementRule = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const keywordBaseStyle: React.CSSProperties = {
-    fontFamily: 'var(--font-barlow-semi-condensed), sans-serif',
-    fontWeight: 800,
-    color: 'white' // '#ff675f',
+    fontFamily: 'var(--font-barlow), sans-serif',
+    fontWeight: 900,
+    color: '#DC2626', 
+    // color: '#8B1E17',
+    // WebkitTextStroke: '0.03em white',
 };
 
 const keywordSmallStyle: React.CSSProperties = {

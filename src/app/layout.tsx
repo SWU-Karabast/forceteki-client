@@ -7,7 +7,7 @@ import './_utils/s3Utils';
 
 const barlow = Barlow({
     subsets: ['latin'],
-    weight: ['400', '600', '800'],
+    weight: ['400', '600', '800', '900'],
     variable: '--font-barlow',
 });
 
