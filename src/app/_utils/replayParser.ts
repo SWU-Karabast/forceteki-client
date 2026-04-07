@@ -12,7 +12,6 @@ export interface ReplaySnapshot {
 
 export interface ParsedReplay {
     header: Record<string, string>;
-    cardIndex: string;
     events: ReplayEvent[];
     snapshots: ReplaySnapshot[];
 }
@@ -24,7 +23,6 @@ const HEADER_TAG_REGEX = /^\[(\w+)\s+"(.*)"\]$/;
 export function parseReplayFile(content: string): ParsedReplay {
     const lines = content.split(/\r?\n/);
     const header: Record<string, string> = {};
-    const cardIndexLines: string[] = [];
     const events: ReplayEvent[] = [];
     const snapshots: ReplaySnapshot[] = [];
 
@@ -51,17 +49,16 @@ export function parseReplayFile(content: string): ParsedReplay {
         }
 
         if (section === 'cardIndex') {
-            if (trimmed) {
-                cardIndexLines.push(line);
-            }
             continue;
         }
 
         if (section === 'replay') {
             if (!trimmed) continue;
 
-            if (trimmed.includes('-snapshot')) {
-                const seqMatch = trimmed.match(/"seq"\s*:\s*"([^"]*-snapshot)"/);
+            if (trimmed.includes('snapshot')) {
+                // Server emits ".snapshot" (e.g., "R1.A.snapshot"), also accept
+                // "-snapshot" for forward compatibility.
+                const seqMatch = trimmed.match(/"seq"\s*:\s*"([^"]*[.\-]snapshot)"/);
                 if (seqMatch) {
                     snapshots.push({
                         seq: seqMatch[1],
@@ -84,21 +81,7 @@ export function parseReplayFile(content: string): ParsedReplay {
 
     return {
         header,
-        cardIndex: cardIndexLines.join('\n'),
         events,
         snapshots,
     };
-}
-
-export async function parseReplayFromZip(zipData: ArrayBuffer): Promise<ParsedReplay> {
-    const { unzipSync, strFromU8 } = await import('fflate');
-    const unzipped = unzipSync(new Uint8Array(zipData));
-
-    const replayFilename = Object.keys(unzipped).find((name) => name.endsWith('.swureplay'));
-    if (!replayFilename) {
-        throw new Error('No .swureplay file found in zip');
-    }
-
-    const content = strFromU8(unzipped[replayFilename]);
-    return parseReplayFile(content);
 }

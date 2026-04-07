@@ -76,17 +76,19 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [speed, setSpeed] = useState(1);
-    const [perspective, setPerspective] = useState('Player 1');
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const snapshotCache = useRef<Map<number, any>>(new Map());
 
     const { snapshots, events, header } = replay;
     const totalSnapshots = snapshots.length;
 
+    const [perspective, setPerspective] = useState('Player 1');
+
     // Reset state when a new replay is loaded
     useEffect(() => {
         setCurrentIndex(0);
         setIsPlaying(false);
+        setPerspective('Player 1');
         snapshotCache.current.clear();
     }, [replay]);
 
@@ -111,13 +113,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
         }
     }, [snapshots]);
 
-    const gameState = getSnapshot(currentIndex);
-
     // Derive player keys once from the first snapshot for a stable getOpponent
     const playerKeys = useMemo(() => {
         const first = getSnapshot(0);
         return first?.players ? Object.keys(first.players) : [];
     }, [getSnapshot]);
+
+    const gameState = getSnapshot(currentIndex);
 
     const getOpponent = useCallback((player: string): string => {
         return playerKeys.find((id) => id !== player) || '';

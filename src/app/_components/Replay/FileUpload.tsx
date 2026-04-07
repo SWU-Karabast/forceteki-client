@@ -14,9 +14,16 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
     const [loading, setLoading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+
     const processFile = useCallback(async (file: File) => {
-        if (loading) return;
         setError(null);
+
+        if (file.size > MAX_FILE_SIZE) {
+            setError(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max is 100 MB.`);
+            return;
+        }
+
         setLoading(true);
 
         try {

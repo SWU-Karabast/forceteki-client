@@ -449,20 +449,52 @@ const noopBoolFn = () => false;
 
 // Import ReplayContext lazily to avoid circular dependency at module level
 let _ReplayContext: React.Context<any> | null = null;
-function getReplayContext() {
+function getReplayContext(): React.Context<any> {
     if (!_ReplayContext) {
         try {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             _ReplayContext = require('@/app/_contexts/Replay.context').ReplayContext;
         } catch {
-            _ReplayContext = null;
+            // ReplayContext not available — use a dummy context so the
+            // useContext call below is always executed (Rules of Hooks).
+            _ReplayContext = React.createContext(null);
         }
     }
-    return _ReplayContext;
+    return _ReplayContext!;
 }
+
+// Default fallback object for when no GameProvider or ReplayContext is present.
+// Hoisted to module scope so consumers get a stable reference and avoid
+// unnecessary re-renders.
+const FALLBACK_GAME_CONTEXT: IGameContextType = {
+    gameState: null,
+    gameMessages: [],
+    lobbyState: null,
+    bugReportState: null,
+    playerReportState: null,
+    statsSubmitNotification: null,
+    sendMessage: noopFn,
+    sendGameMessage: noopFn,
+    connectedPlayer: '',
+    getOpponent: noopStringFn,
+    sendLobbyMessage: noopFn,
+    resetStates: noopFn,
+    getConnectedPlayerPrompt: noopFn,
+    updateDistributionPrompt: noopFn,
+    distributionPromptData: null,
+    isSpectator: true,
+    lastQueueHeartbeat: 0,
+    isAnonymousPlayer: noopBoolFn,
+    hasChatDisabled: noopBoolFn,
+    createNewSocket: noopFn,
+    hoveredChatCard: { id: null, hover: noopFn, clear: noopFn },
+} as IGameContextType;
 
 export const useGame = () => {
     const context = useContext(GameContext);
+    // Always call useContext for ReplayContext (Rules of Hooks — same order every render)
+    const replayContext = useContext(getReplayContext());
+
     if (context) {
         return context;
     }
@@ -470,31 +502,15 @@ export const useGame = () => {
     // When outside a GameProvider (e.g., /Replay page), pull board state
     // from ReplayContext so card components (GameCard, LeaderBaseCard) get
     // the correct connectedPlayer and gameState for rendering.
-    const ReplayCtx = getReplayContext();
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const replayContext = ReplayCtx ? useContext(ReplayCtx) : null;
+    if (replayContext) {
+        return {
+            ...FALLBACK_GAME_CONTEXT,
+            gameState: replayContext.gameState,
+            gameMessages: replayContext.gameMessages,
+            connectedPlayer: replayContext.connectedPlayer,
+            getOpponent: replayContext.getOpponent,
+        } as IGameContextType;
+    }
 
-    return {
-        gameState: replayContext?.gameState ?? null,
-        gameMessages: replayContext?.gameMessages ?? [],
-        lobbyState: null,
-        bugReportState: null,
-        playerReportState: null,
-        statsSubmitNotification: null,
-        sendMessage: noopFn,
-        sendGameMessage: noopFn,
-        connectedPlayer: replayContext?.connectedPlayer ?? '',
-        getOpponent: replayContext?.getOpponent ?? noopStringFn,
-        sendLobbyMessage: noopFn,
-        resetStates: noopFn,
-        getConnectedPlayerPrompt: noopFn,
-        updateDistributionPrompt: noopFn,
-        distributionPromptData: null,
-        isSpectator: true,
-        lastQueueHeartbeat: 0,
-        isAnonymousPlayer: noopBoolFn,
-        hasChatDisabled: noopBoolFn,
-        createNewSocket: noopFn,
-        hoveredChatCard: { id: null, hover: noopFn, clear: noopFn },
-    } as IGameContextType;
+    return FALLBACK_GAME_CONTEXT;
 };

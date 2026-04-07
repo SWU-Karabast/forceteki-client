@@ -22,8 +22,8 @@ function ReplayHeader({ header }: { header: Record<string, string> }) {
     const router = useRouter();
     const player1 = header.Player1 || 'Player 1';
     const player2 = header.Player2 || 'Player 2';
-    const leader1 = header.Leader1 || '';
-    const leader2 = header.Leader2 || '';
+    const leader1 = header.P1Leader || header.Leader1 || '';
+    const leader2 = header.P2Leader || header.Leader2 || '';
     const result = header.Result || '';
     const formattedResult = formatResult(result);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import PreferenceButton from './PreferenceButton';
@@ -16,37 +16,36 @@ function triggerBlobDownload(blob: Blob, filename: string) {
 }
 
 function DownloadGameLog() {
-    const { gameState } = useGame();
+    const { sendLobbyMessage } = useGame();
     const [loadingZip, setLoadingZip] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleDownloadZip = async () => {
-        if (!gameState?.swuPgn || !gameState?.swuReplay) return;
+    const handleDownloadZip = () => {
         setLoadingZip(true);
-        try {
-            const { zipSync, strToU8 } = await import('fflate');
-            const zipped = zipSync({
-                'game.swupgn': strToU8(gameState.swuPgn),
-                'game.swureplay': strToU8(gameState.swuReplay),
-            });
-            const date = new Date().toISOString().split('T')[0];
-            const blob = new Blob([zipped], { type: 'application/zip' });
-            triggerBlobDownload(blob, `game-${date}.zip`);
-        } finally {
-            setLoadingZip(false);
-        }
+        setError(null);
+
+        sendLobbyMessage(['getGameLog', async (data: { rawLog?: string; swuPgn?: string; swuReplay?: string; error?: string }) => {
+            try {
+                if (data.error || !data.swuPgn || !data.swuReplay) {
+                    setError(data.error || 'Game files not available');
+                    return;
+                }
+
+                const { zipSync, strToU8 } = await import('fflate');
+                const zipped = zipSync({
+                    'game.swupgn': strToU8(data.swuPgn),
+                    'game.swureplay': strToU8(data.swuReplay),
+                });
+                const date = new Date().toISOString().split('T')[0];
+                const blob = new Blob([zipped], { type: 'application/zip' });
+                triggerBlobDownload(blob, `game-${date}.zip`);
+            } catch (err) {
+                setError('Failed to create zip file');
+            } finally {
+                setLoadingZip(false);
+            }
+        }]);
     };
-
-    useEffect(() => {
-        (window as any).__downloadGameFiles = () => {
-            handleDownloadZip();
-            return 'Download triggered';
-        };
-        return () => {
-            delete (window as any).__downloadGameFiles;
-        };
-    }, [gameState]);
-
-    const hasZipData = !!gameState?.swuPgn && !!gameState?.swuReplay;
 
     const styles = {
         contentContainer: {
@@ -70,10 +69,10 @@ function DownloadGameLog() {
                 variant={'standard'}
                 text={loadingZip ? 'Loading...' : 'Download Game Files'}
                 buttonFnc={handleDownloadZip}
-                disabled={loadingZip || !hasZipData}
+                disabled={loadingZip}
             />
             <Typography sx={styles.typeographyStyle}>
-                Download game notation and replay data as a zip file.
+                {error || 'Download game notation and replay data as a zip file.'}
             </Typography>
         </Box>
     );
