@@ -121,6 +121,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'swuforge.com';
             case DeckSource.KyberDecks:
                 return 'kyberdecks.com';
+            case DeckSource.CardCore:
+                return 'cardcore.gg';
             default:
                 return source;
         }
