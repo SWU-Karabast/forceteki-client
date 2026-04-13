@@ -52,7 +52,7 @@ interface IGameContextType {
     };
 }
 
-const GameContext = createContext<IGameContextType | undefined>(undefined);
+export const GameContext = createContext<IGameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
@@ -120,7 +120,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             if (promptType === 'actionWindow') {
                 clearDistributionPrompt();
                 return;
-            } 
+            }
             else if (promptType === 'distributeAmongTargets') {
                 initDistributionPrompt(promptState.distributeAmongTargets);
                 return;
@@ -255,7 +255,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             resetStates();
         });
 
-        newSocket.on('inactiveDisconnect', () => {            
+        newSocket.on('inactiveDisconnect', () => {
             alert('You have been disconnected due to inactivity');
             newSocket.disconnect();
         });
@@ -269,7 +269,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 resetMessages();
                 lastGameIdRef.current = gameState.id;
             }
-            
+
             // Handle message delta if present in gameState
             if (gameState.newMessages !== undefined && gameState.messageOffset !== undefined && gameState.totalMessages !== undefined) {
                 const delta: IMessageDelta = {
@@ -286,7 +286,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     newSocket.emit('lobby', 'retransmitGameMessages', messagesToRetransmit.startIndex, messagesToRetransmit.endIndex);
                 }
             }
-            
+
             setGameState(gameState);
             if (process.env.NODE_ENV === 'development') {
                 const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
@@ -308,7 +308,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 console.log('Lobby state received:', lobbyState);
             }
         })
-        
+
         newSocket.on('queueHeartbeat', () => {
             setLastQueueHeartbeat(Date.now());
         });
@@ -359,7 +359,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.warn('Error playing sound:', error);
         }
-        
+
         socket?.emit('game', ...args);
     };
 
@@ -443,10 +443,74 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
+const noopFn = () => {};
+const noopStringFn = () => '';
+const noopBoolFn = () => false;
+
+// Import ReplayContext lazily to avoid circular dependency at module level
+let _ReplayContext: React.Context<any> | null = null;
+function getReplayContext(): React.Context<any> {
+    if (!_ReplayContext) {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            _ReplayContext = require('@/app/_contexts/Replay.context').ReplayContext;
+        } catch {
+            // ReplayContext not available — use a dummy context so the
+            // useContext call below is always executed (Rules of Hooks).
+            _ReplayContext = React.createContext(null);
+        }
+    }
+    return _ReplayContext!;
+}
+
+// Default fallback object for when no GameProvider or ReplayContext is present.
+// Hoisted to module scope so consumers get a stable reference and avoid
+// unnecessary re-renders.
+const FALLBACK_GAME_CONTEXT: IGameContextType = {
+    gameState: null,
+    gameMessages: [],
+    lobbyState: null,
+    bugReportState: null,
+    playerReportState: null,
+    statsSubmitNotification: null,
+    sendMessage: noopFn,
+    sendGameMessage: noopFn,
+    connectedPlayer: '',
+    getOpponent: noopStringFn,
+    sendLobbyMessage: noopFn,
+    resetStates: noopFn,
+    getConnectedPlayerPrompt: noopFn,
+    updateDistributionPrompt: noopFn,
+    distributionPromptData: null,
+    isSpectator: true,
+    lastQueueHeartbeat: 0,
+    isAnonymousPlayer: noopBoolFn,
+    hasChatDisabled: noopBoolFn,
+    createNewSocket: noopFn,
+    hoveredChatCard: { id: null, hover: noopFn, clear: noopFn },
+} as IGameContextType;
+
 export const useGame = () => {
     const context = useContext(GameContext);
-    if (!context) {
-        throw new Error('useGame must be used within a GameProvider');
+    // Always call useContext for ReplayContext (Rules of Hooks — same order every render)
+    const replayContext = useContext(getReplayContext());
+
+    if (context) {
+        return context;
     }
-    return context;
+
+    // When outside a GameProvider (e.g., /Replay page), pull board state
+    // from ReplayContext so card components (GameCard, LeaderBaseCard) get
+    // the correct connectedPlayer and gameState for rendering.
+    if (replayContext) {
+        return {
+            ...FALLBACK_GAME_CONTEXT,
+            gameState: replayContext.gameState,
+            gameMessages: replayContext.gameMessages,
+            connectedPlayer: replayContext.connectedPlayer,
+            getOpponent: replayContext.getOpponent,
+        } as IGameContextType;
+    }
+
+    return FALLBACK_GAME_CONTEXT;
 };

@@ -92,6 +92,9 @@ const ControlHub: React.FC<IControlHubProps> = ({
                     <NextLinkMui href="/DeckPage" sx={styles.profileLink}>
                         Decks
                     </NextLinkMui>
+                    <NextLinkMui href="/Replay" sx={styles.profileLink}>
+                        Replay
+                    </NextLinkMui>
                     <NextLinkMui href="/Preferences" sx={styles.profileLink}>
                         Preferences
                     </NextLinkMui>

@@ -20,6 +20,7 @@
 		"@mui/icons-material": "^6.1.8",
 		"@mui/material": "^6.1.8",
 		"@svgr/webpack": "^8.1.0",
+		"fflate": "^0.8.2",
 		"html-react-parser": "^5.1.18",
 		"jsonwebtoken": "^9.0.2",
 		"next": "14.2.35",
