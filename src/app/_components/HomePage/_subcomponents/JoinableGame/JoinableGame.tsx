@@ -7,9 +7,11 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { ILobbyCardData } from '../../HomePageTypes';
 import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
-import { FormatLabels, FormatTagLabels, SwuGameFormat, GamesToWinMode } from '@/app/_constants/constants';
+import { FormatLabels, FormatTagLabels, SwuGameFormat, GamesToWinMode, CardPool, CardPoolLabels } from '@/app/_constants/constants';
 import PremierIcon from '/public/premier.svg';
+import EternalIcon from '/public/eternal.svg';
 import OpenIcon from '/public/open.svg';
+import NextSetIcon from '/public/next_set.svg';
 import Bo1Icon from '/public/bo1.svg';
 import Bo3Icon from '/public/bo3.svg';
 
@@ -140,8 +142,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                marginTop: '8px',
-                marginBottom: '12px',
                 backgroundColor: 'rgba(0, 0, 0, 0.6)',
                 border: '1px solid',
                 boxShadow: '0 0 5px',
@@ -167,6 +167,24 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     borderColor: '#ffdd57',
                     color: '#ffdd57',
                     boxShadow: '0 0 5px #ffdd57',
+                }
+            },
+            cardPool: {
+                current: {
+                    borderColor: '#ff5526',
+                    color: '#ff5526',
+                    boxShadow: '0 0 5px #ff5526',
+                },
+                nextSet: {
+                    borderColor: '#bc63dc',
+                    color: '#bc63dc',
+                    boxShadow: '0 0 5px #bc63dc',
+                },
+                unlimited: {
+                    borderColor: '#fecfff',
+                    color: '#fecfff',
+                    boxShadow: '0 0 5px #fecfff',
+
                 }
             },
             gamesToWin: {
@@ -204,12 +222,38 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         switch (format) {
             case SwuGameFormat.Premier:
                 return <PremierIcon style={iconStyle} />;
+            case SwuGameFormat.Eternal:
+                return <EternalIcon style={iconStyle} />;
             case SwuGameFormat.Open:
                 return <OpenIcon style={iconStyle} />;
             default:
                 return null;
         }
     };
+
+    const getCardPoolTagStyle = (cardPool: CardPool) => {
+        switch (cardPool) {
+            case CardPool.Current:
+                return styles.tags.cardPool.current;
+            case CardPool.NextSet:
+                return styles.tags.cardPool.nextSet;
+            case CardPool.Unlimited:
+                return styles.tags.cardPool.unlimited;
+            default:
+                return {};
+        }
+    };
+
+    const getCardPoolIcon = (cardPool: CardPool) => {
+        const iconStyle = { height: '0.75rem', width: 'auto' };
+        switch (cardPool) {
+            case CardPool.NextSet:
+                return <NextSetIcon style={iconStyle} />;
+            default:
+                return null;
+        }
+    };
+
 
     const getGamesToWinTagStyle = (mode: GamesToWinMode) => {
         switch (mode) {
@@ -298,7 +342,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     )}
                     <Box>
                         <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
-                        <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px', marginBottom: '12px' }}>
                             <Box
                                 sx={{
                                     ...styles.tags.lobbySetting,
@@ -307,6 +351,15 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                             >
                                 {getFormatIcon(lobby.format)}
                                 { FormatTagLabels[lobby.format] || lobby.format.toUpperCase() }
+                            </Box>
+                            <Box
+                                sx={{
+                                    ...styles.tags.lobbySetting,
+                                    ...getCardPoolTagStyle(lobby.cardPool),
+                                }}
+                            >
+                                {getCardPoolIcon(lobby.cardPool)}
+                                { CardPoolLabels[lobby.cardPool] || lobby.cardPool.toUpperCase() }
                             </Box>
                             <Box
                                 sx={{
