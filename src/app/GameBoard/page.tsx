@@ -24,7 +24,7 @@ const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator, sendGameMessage } = useGame();
     const { user } = useUser();
     const router = useRouter();
-    const { getBackground, getPlaymat } = useCosmetics();
+    const { getBackground } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
@@ -34,13 +34,13 @@ const GameBoard = () => {
     // Playmat and Background Logic
     const playerUser = gameState?.players[connectedPlayer]?.user;
     const background = getBackground(isSpectator ? null : playerUser?.cosmetics?.background ?? null);
-    const playMatsDisabled = isSpectator ? true : playerUser?.cosmetics?.disablePlaymats ?? true;
-    const myPlaymatId = !playMatsDisabled ? playerUser?.cosmetics?.playmat : 'none';
-    const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
+    // const playMatsDisabled = isSpectator ? true : playerUser?.cosmetics?.disablePlaymats ?? true;
+    // const myPlaymatId = !playMatsDisabled ? playerUser?.cosmetics?.playmat : 'none';
+    // const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
     const opponentId = getOpponent(connectedPlayer);
     const opponentUser = gameState?.players[opponentId]?.user;
-    const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
-    const theirPlaymat = !playMatsDisabled && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+    // const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
+    // const theirPlaymat = !playMatsDisabled && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && (lobbyState.gameType !== MatchmakingType.Quick || lobbyState.winHistory.gamesToWinMode === GamesToWinMode.BestOfThree)) {
@@ -274,6 +274,7 @@ const GameBoard = () => {
     return (
         <Grid container sx={{ height: '100dvh', overflow: 'hidden' }}>
             <Box component="main" sx={styles.mainBoxStyle} data-testid="gameboard-main-box">
+                {/* Opponent Playmat - top half
                 {theirPlaymat && (
                     <Box
                         sx={{
@@ -282,14 +283,19 @@ const GameBoard = () => {
                         }}
                     />
                 )}
+
+                {/* Player Playmat - bottom half
                 {myPlaymat && (
                     <Box
                         sx={{
                             ...styles.playerPlaymat,
                             backgroundImage: `url("${myPlaymat.path}")`,
                         }}
+                        onError={(e) => {
+                            console.error('Playmat image failed to load:', myPlaymat.path);
+                        }}
                     />
-                )}
+                )} */}
                 <Box sx={{ height: '15dvh' }}>
                     <OpponentCardTray
                         trayPlayer={getOpponent(connectedPlayer)}
