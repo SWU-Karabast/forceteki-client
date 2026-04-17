@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { IKeyboardShortcuts } from '@/app/_contexts/UserTypes';
 
 type KeyItem = {
     label: string;
@@ -10,9 +11,17 @@ type KeyItem = {
     subKeys?: KeyItem[];
 };
 
-const KeyboardLayout: React.FC = () => {
-    // Which keys should be highlighted
-    const highlightedKeys = new Set(['W', 'U', 'I', 'A', 'H', 'L', 'C', 'M','SPACE BAR','ESC']);
+interface KeyboardLayoutProps {
+    keyboardShortcuts?: IKeyboardShortcuts;
+}
+
+const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ keyboardShortcuts = {} }) => {
+    // Dynamically create highlighted keys set from keyboard shortcuts
+    const highlightedKeys = new Set(
+        Object.values(keyboardShortcuts)
+            .filter((key): key is string => key !== undefined)
+            .map(key => key.toUpperCase())
+    );
 
     // Define each row of keys
     const row0: KeyItem[] = [
@@ -51,7 +60,7 @@ const KeyboardLayout: React.FC = () => {
         { label: 'Ctrl', width: '6%' },
         { label: 'Alt', width: '6%' },
         { label: 'Cmd', width: '6%' },
-        { label: 'Space Bar', width: '40%' },
+        { label: 'SPACE', width: '40%' },
         { label: 'Cmd', width: '6%' },
         { label: 'Alt', width: '6%' },
         { label: 'Fn', width: '6%' },

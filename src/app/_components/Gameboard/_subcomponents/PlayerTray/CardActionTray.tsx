@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button, Box } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context'; // Added Import
 import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
+import { PerCardButton } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const pulseBorder = keyframes`
   0% {
@@ -125,7 +127,6 @@ const createStyles = (isPortrait: boolean) => ({
         '&:not(:disabled)': {
             transition: 'box-shadow 0.3s ease-in-out',
         },
-        // Improve touch target size for mobile
         touchAction: 'manipulation',
     },
     promptButtonText: {
@@ -152,6 +153,7 @@ const CardActionTray: React.FC = () => {
     const { isPortrait } = useScreenOrientation();
     const [ resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverride ] = useState<boolean | null>(null);
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
+    const { user } = useUser(); // Hook Added
     const playerState = gameState.players[connectedPlayer];
 
     const styles = createStyles(isPortrait);
@@ -167,7 +169,7 @@ const CardActionTray: React.FC = () => {
         return false;
     };
 
-    const buttonDisabled = (button: IButtonsProps) => {
+    const buttonDisabled = useCallback((button: IButtonsProps | PerCardButton) => {
         if (button.arg === 'done') {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
@@ -177,23 +179,60 @@ const CardActionTray: React.FC = () => {
                 }
             }
 
-            // for a resource prompt, we disable the "done" button briefly to avoid double clicks
             if (getConnectedPlayerPrompt()?.promptType === 'resource') {
                 if (resourcePromptDoneButtonOverride == null) {
                     setResourcePromptDoneButtonOverride(true);
                     setTimeout(() => {
                         setResourcePromptDoneButtonOverride(false);
                     }, 500);
-
                     return true;
                 }
-
                 return resourcePromptDoneButtonOverride;
             }
         }
+        return !!(button as IButtonsProps).disabled;
+    }, [playerState.promptState, distributionPromptData, getConnectedPlayerPrompt, resourcePromptDoneButtonOverride]);
 
-        return !!button.disabled;
-    };
+    useEffect(() => {
+        const handleKeyboardShortcuts = (event: KeyboardEvent) => {
+            const isTyping = event.target instanceof HTMLInputElement || 
+                         event.target instanceof HTMLTextAreaElement;
+            if (isTyping) return;
+
+            const pressedKey = event.key === ' ' ? 'SPACE' : event.key.toUpperCase();
+
+            // --- PASS SHORTCUT ---
+            const passShortcut = user?.preferences?.keyboardShortcuts?.passTurn || 'SPACE';
+            if (pressedKey === passShortcut) {
+                const passBtn = playerState.promptState.buttons.find(
+                    (b: IButtonsProps) => b.arg === 'pass' || b.arg === 'passAbility' || b.text === 'Pass'
+                );
+                if (passBtn && !buttonDisabled(passBtn)) {
+                    event.preventDefault();
+                    sendGameMessage([passBtn.command, passBtn.arg, passBtn.uuid]);
+                    return;
+                }
+            }
+
+            // --- CLAIM INITIATIVE SHORTCUT ---
+            const initShortcut = user?.preferences?.keyboardShortcuts?.claimInitiative || 'I';
+            if (pressedKey === initShortcut) {
+                const initBtn = playerState.promptState.buttons.find(
+                    (b: IButtonsProps) => b.arg === 'claimInitiative' || b.text.includes('Initiative')
+                );
+                if (initBtn && !buttonDisabled(initBtn)) {
+                    event.preventDefault();
+                    sendGameMessage([initBtn.command, initBtn.arg, initBtn.uuid]);
+                    return;
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyboardShortcuts);
+        return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
+
+    // Added all missing dependencies including the getter function
+    }, [user, playerState.promptState, sendGameMessage, buttonDisabled, getConnectedPlayerPrompt]);
 
     useEffect(() => {
         if (getConnectedPlayerPrompt()?.promptType !== 'resource') {

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Drawer, Box, Button } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UndoIcon from '@mui/icons-material/Undo';
 import MessageIcon from '@mui/icons-material/Message';
@@ -13,6 +14,7 @@ import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
     const { gameState, gameMessages, sendGameMessage, connectedPlayer, isSpectator } = useGame();
+    const { user } = useUser();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
     const [chatMessage, setChatMessage] = useState('')
     const [isUndoHovered, setIsUndoHovered] = useState(false);
@@ -33,13 +35,46 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         setChatMessage('');
         resetTypingState();
     }
-    const handleUndoButton = () => {
-        sendGameMessage(['rollbackToSnapshot',{
+
+    let undoButtonDisabled;
+    switch (quickUndoState) {
+        case QuickUndoAvailableState.NoSnapshotAvailable:
+        case QuickUndoAvailableState.UndoRequestsBlocked:
+        case QuickUndoAvailableState.WaitingForConfirmation:
+            undoButtonDisabled = true;
+            break;
+        default:
+            undoButtonDisabled = false;
+            break;
+    }
+
+    const handleUndoButton = useCallback(() => {
+        if (undoButtonDisabled) return;
+        sendGameMessage(['rollbackToSnapshot', {
             type: 'quick',
             playerId: connectedPlayer,
             actionOffset: 0
         }])
-    }
+    }, [undoButtonDisabled, connectedPlayer, sendGameMessage]);
+
+    // Keyboard Shortcut Listener for Undo
+    useEffect(() => {
+        const handleUndoShortcut = (event: KeyboardEvent) => {
+            const isTyping = event.target instanceof HTMLInputElement || 
+                             event.target instanceof HTMLTextAreaElement;
+            if (isTyping) return;
+
+            const undoShortcut = user?.preferences?.keyboardShortcuts?.undo || 'U';
+            if (event.key.toUpperCase() === undoShortcut.toUpperCase()) {
+                event.preventDefault();
+                handleUndoButton();
+            }
+        };
+
+        window.addEventListener('keydown', handleUndoShortcut);
+        return () => window.removeEventListener('keydown', handleUndoShortcut);
+    }, [user, handleUndoButton]);
+
 
     // ------------------------STYLES------------------------//
     const quickUndoButtonBase = {
@@ -127,18 +162,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 background: 'linear-gradient(#2C4046, #2C4046) padding-box, linear-gradient(#404040, #008FC4) border-box',
             },
         }
-    }
-
-    let undoButtonDisabled;
-    switch (quickUndoState) {
-        case QuickUndoAvailableState.NoSnapshotAvailable:
-        case QuickUndoAvailableState.UndoRequestsBlocked:
-        case QuickUndoAvailableState.WaitingForConfirmation:
-            undoButtonDisabled = true;
-            break;
-        default:
-            undoButtonDisabled = false;
-            break;
     }
 
     let undoButtonStyle;

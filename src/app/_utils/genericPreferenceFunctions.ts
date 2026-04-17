@@ -22,7 +22,7 @@ export const savePreferencesGeneric = async (
         const success = await savePreferencesToServer(user, partialPreferences);
 
         if (success) {
-            // Deep merge for nested objects like sound and cosmetics
+            // Deep merge for nested objects like sound, cosmetics, and keyboardShortcuts
             const updatedUserPreferences = {
                 ...user.preferences,
                 ...partialPreferences,
@@ -37,6 +37,12 @@ export const savePreferencesGeneric = async (
                     cosmetics: {
                         ...user.preferences.cosmetics,
                         ...partialPreferences.cosmetics
+                    }
+                }),
+                ...(partialPreferences.keyboardShortcuts && {
+                    keyboardShortcuts: {
+                        ...user.preferences.keyboardShortcuts,
+                        ...partialPreferences.keyboardShortcuts
                     }
                 })
             }
@@ -57,6 +63,12 @@ export const savePreferencesGeneric = async (
                     cosmetics: {
                         ...currentLocalPreferences.cosmetics,
                         ...partialPreferences.cosmetics
+                    }
+                }),
+                ...(partialPreferences.keyboardShortcuts && {
+                    keyboardShortcuts: {
+                        ...currentLocalPreferences.keyboardShortcuts,
+                        ...partialPreferences.keyboardShortcuts
                     }
                 })
             };
@@ -83,6 +95,12 @@ export const savePreferencesGeneric = async (
                     ...currentPreferences.cosmetics,
                     ...partialPreferences.cosmetics
                 }
+            }),
+            ...(partialPreferences.keyboardShortcuts && {
+                keyboardShortcuts: {
+                    ...currentPreferences.keyboardShortcuts,
+                    ...partialPreferences.keyboardShortcuts
+                }
             })
         };
 
@@ -104,5 +122,17 @@ const getDefaultPreferences = (): IPreferences => ({
         background: undefined,
         // playmat: undefined,
         // disablePlaymats: false,
+    },
+    keyboardShortcuts: {
+        menu: 'ESC',
+        passTurn: 'SPACE',
+        undo: 'U',
+        concede: 'A',
+        leaderAbility: 'L',
+        // chat: 'C',
+        // modalMinimize: 'M',
+        // history: 'H',
+        claimInitiative: 'I',
+        welcomeMessage: 'W',
     }
 });

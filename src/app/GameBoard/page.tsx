@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Grid2 as Grid, Typography } from '@mui/material';
 import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
 import PlayerCardTray from '../_components/Gameboard/PlayerCardTray/PlayerCardTray';
 import { useGame } from '../_contexts/Game.context';
+import { useUser } from '../_contexts/User.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
@@ -15,22 +16,31 @@ import { useCosmetics } from '../_contexts/CosmeticsContext';
 import { Play } from 'next/font/google';
 import RichText from '../_components/_sharedcomponents/RichText/RichText';
 
+// Custom Popup Imports
+import { ConcedePopup } from '../_components/_sharedcomponents/Popup/PopupVariant/ConcedePopup';
+import { contentStyle } from '../_components/_sharedcomponents/Popup/Popup.styles';
+
 const GameBoard = () => {
-    const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
+    const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator, sendGameMessage } = useGame();
+    const { user } = useUser();
     const router = useRouter();
-    const { getBackground } = useCosmetics();
+    const { getBackground, getPlaymat } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
-    const user = gameState?.players[connectedPlayer]?.user;
-    const background = getBackground(isSpectator ? null : user?.cosmetics?.background ?? null);
-    // const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
-    // const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
-    // const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
-    // const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
-    // const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
-    // const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+    const [isConcedeConfirmOpen, setIsConcedeConfirmOpen] = useState(false);
+
+    // Playmat and Background Logic
+    const playerUser = gameState?.players[connectedPlayer]?.user;
+    const background = getBackground(isSpectator ? null : playerUser?.cosmetics?.background ?? null);
+    const playMatsDisabled = isSpectator ? true : playerUser?.cosmetics?.disablePlaymats ?? true;
+    const myPlaymatId = !playMatsDisabled ? playerUser?.cosmetics?.playmat : 'none';
+    const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
+    const opponentId = getOpponent(connectedPlayer);
+    const opponentUser = gameState?.players[opponentId]?.user;
+    const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
+    const theirPlaymat = !playMatsDisabled && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && (lobbyState.gameType !== MatchmakingType.Quick || lobbyState.winHistory.gamesToWinMode === GamesToWinMode.BestOfThree)) {
@@ -40,7 +50,6 @@ const GameBoard = () => {
 
     useEffect(() => {
         const hasWinners = !!gameState?.winners.length;
-        // open preferences automatically if game ended and user hasn't closed it themselves yet.
         if (hasWinners && !userClosedWinScreen) {
             setPreferenceOpen(true);
         } else if (!hasWinners && userClosedWinScreen) {
@@ -53,35 +62,105 @@ const GameBoard = () => {
         setSidebarOpen(!sidebarOpen);
     }
 
-    const handlePreferenceToggle = () => {
-        if(!!gameState?.winners.length) {
+    const handlePreferenceToggle = useCallback(() => {
+        if (!!gameState?.winners.length) {
             setUserClosedWinScreen(true);
         }
-        setPreferenceOpen(!isPreferenceOpen);
-    };
+        setPreferenceOpen((prev) => !prev);
+    }, [gameState?.winners.length]);
 
-    // check if game ended already.
+    const handleGlobalKeyDown = useCallback((event: KeyboardEvent) => {
+        // 1. Safety check for typing
+        const isTyping = event.target instanceof HTMLInputElement || 
+                         event.target instanceof HTMLTextAreaElement;
+        if (isTyping) return;
+
+        // 2. Define shortcuts from user preferences
+        const menuShortcut = user?.preferences?.keyboardShortcuts?.menu || 'ESC';
+        const concedeShortcut = user?.preferences?.keyboardShortcuts?.concede || 'A';
+        const leaderShortcut = user?.preferences?.keyboardShortcuts?.leaderAbility || 'L';
+        
+        // 3. Define the pressed key (fixes scoping issues)
+        const pressedKey = event.key === 'Escape' ? 'ESC' : event.key.toUpperCase();
+
+        // --- MENU / ESC LOGIC ---
+        if (pressedKey === menuShortcut) {
+            event.preventDefault();
+            if (isConcedeConfirmOpen) {
+                setIsConcedeConfirmOpen(false);
+            } else {
+                handlePreferenceToggle();
+            }
+            return;
+        }
+
+        // --- CONCEDE LOGIC ---
+        if (pressedKey === concedeShortcut) {
+            if (!gameState?.winners?.length && !isSpectator) {
+                event.preventDefault();
+                setIsConcedeConfirmOpen(true);
+            }
+            return;
+        }
+
+        // --- LEADER ACTION / DEPLOY LOGIC ---
+        if (pressedKey === leaderShortcut) {
+            const playerPrompt = gameState?.players[connectedPlayer]?.promptState;
+            
+            // Check if the Leader Menu (Select Cards Popup) is already open
+            const leaderBtn = playerPrompt?.perCardButtons?.find(
+                (b: any) => b.arg === 'leaderAbility' || b.arg === 'deployLeader'
+            );
+
+            if (leaderBtn) {
+                event.preventDefault();
+                sendGameMessage([leaderBtn.command, leaderBtn.arg, leaderBtn.uuid || '']);
+            } else {
+                // If menu is NOT open, find the leader card and click it
+                const leaderCard = gameState?.players[connectedPlayer]?.leader;
+                if (leaderCard?.uuid) {
+                    event.preventDefault();
+                    sendGameMessage(['cardClicked', leaderCard.uuid]);
+                }
+            }
+            return;
+        }
+
+        // --- CUSTOMIZABLE CHAT MACRO ---
+        // Fallback to 'W' and 'Good luck, have fun!' if preferences aren't set yet
+        const welcomeShortcut = user?.preferences?.keyboardShortcuts?.welcomeMsgKey || 'W';
+        const customWelcomeText = user?.preferences?.welcomeMessageText || 'Good luck, have fun!';
+
+        if (pressedKey === welcomeShortcut) {
+            event.preventDefault();
+    
+            sendGameMessage(['chat', { 
+                message: customWelcomeText, 
+                type: 'player' 
+            }]);
+            return;
+        }
+    }, [user, isConcedeConfirmOpen, gameState, connectedPlayer, isSpectator, handlePreferenceToggle, sendGameMessage]);
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleGlobalKeyDown);
+        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    }, [handleGlobalKeyDown]);
+
     const winners = !!gameState?.winners.length ? gameState.winners : undefined;
-    // const winners = ['order66']
-    // we set tabs
-    // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','soundOptions']
-        : ['currentGame','soundOptions'];
+        ? ['endGame','keyboardShortcuts','soundOptions']
+        : ['currentGame','keyboardShortcuts','soundOptions'];
 
-    // Get game number from winHistory for Bo3 mode
+    // Bo3 Logic
     const winHistory = lobbyState?.winHistory;
     const isBo3Mode = winHistory?.gamesToWinMode === GamesToWinMode.BestOfThree;
     const currentGameNumber = winHistory?.currentGameNumber || 1;
-    const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
-    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
-    const isBo3SetComplete = isBo3Mode && !!setEndResult;
-
+    const isBo3SetComplete = isBo3Mode && !!winHistory?.setEndResult;
     const gameEndedTitle = isBo3Mode
         ? (isBo3SetComplete ? 'Best-of-Three Set Ended' : `Game ${currentGameNumber} ended`)
         : 'Game ended';
 
-    // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {
         if (isSpectator && gameState?.players) {
             const player1Name = gameState.players[connectedPlayer]?.user?.username;
@@ -100,7 +179,7 @@ const GameBoard = () => {
 
     const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
     const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
-    // ----------------------Styles-----------------------------//
+
     const styles = {
         mainBoxStyle: {
             pr: sidebarOpen ? 'min(20%, 280px)' : '0',
@@ -151,38 +230,50 @@ const GameBoard = () => {
         },
         playerPlaymat: {
             position: 'absolute',
-            bottom: 0, // Touch bottom edge
-            left: '2rem', // Add left margin to constrain width
-            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
-            height: '47dvh', // Reduced height for middle spacing
-            backgroundSize: 'cover', // Fill container width, crop overflow edges
+            bottom: 0,
+            left: '2rem',
+            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem',
+            height: '47dvh',
+            backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
-            borderRadius: '8px', // Add subtle rounded corners
-            zIndex: 1, // Above background and darkening overlay, below UI elements
+            borderRadius: '8px',
+            zIndex: 1,
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
         },
         opponentPlaymat: {
             position: 'absolute',
-            top: 0, // Touch top edge
-            left: '2rem', // Add left margin to constrain width
-            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
-            height: '47dvh', // Reduced height for middle spacing
-            backgroundSize: 'cover', // Fill container width, crop overflow edges
+            top: 0,
+            left: '2rem',
+            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem',
+            height: '47dvh',
+            backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
-            borderRadius: '8px', // Add subtle rounded corners
-            zIndex: 1, // Above background and darkening overlay, below UI elements
+            borderRadius: '8px',
+            zIndex: 1,
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
+        },
+        concedePopupContainer: {
+            position: 'absolute',
+            left: sidebarOpen ? '42.5%' : '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: sidebarOpen ? 'calc(100% - min(20%, 280px))' : '100%',
+            transition: 'width 0.3s ease-in-out',
+            pointerEvents: 'auto',
         }
     };
 
     return (
         <Grid container sx={{ height: '100dvh', overflow: 'hidden' }}>
             <Box component="main" sx={styles.mainBoxStyle} data-testid="gameboard-main-box">
-                {/* Opponent Playmat - top half
                 {theirPlaymat && (
                     <Box
                         sx={{
@@ -191,19 +282,14 @@ const GameBoard = () => {
                         }}
                     />
                 )}
-
-                {/* Player Playmat - bottom half
                 {myPlaymat && (
                     <Box
                         sx={{
                             ...styles.playerPlaymat,
                             backgroundImage: `url("${myPlaymat.path}")`,
                         }}
-                        onError={(e) => {
-                            console.error('Playmat image failed to load:', myPlaymat.path);
-                        }}
                     />
-                )} */}
+                )}
                 <Box sx={{ height: '15dvh' }}>
                     <OpponentCardTray
                         trayPlayer={getOpponent(connectedPlayer)}
@@ -221,7 +307,6 @@ const GameBoard = () => {
                 </Box>
             </Box>
 
-
             <ChatDrawer
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
@@ -233,6 +318,14 @@ const GameBoard = () => {
                     <Box sx={styles.promptShadow}/>
                 </Box>
             </Box>
+
+            {isConcedeConfirmOpen && (
+                <Box sx={styles.concedePopupContainer}>
+                    <Box sx={{ ...contentStyle(0), width: '50%', display: 'flex', justifyContent: 'center' }}>
+                        <ConcedePopup onClose={() => setIsConcedeConfirmOpen(false)} />
+                    </Box>
+                </Box>
+            )}
 
             <PopupShell sidebarOpen={sidebarOpen}/>
             {isPreferenceOpen && <PreferencesComponent
