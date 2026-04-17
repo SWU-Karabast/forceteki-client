@@ -63,3 +63,12 @@ export type LeaveGamePopup = {
     uuid: string;
     source: PopupSource;
 };
+
+export type DiscloseMockDelayPopup = {
+    type: 'discloseMockDelay';
+    uuid: string;
+    title: string;
+    delayMs: number;
+    source: PopupSource;
+    buttons: PopupButton[];
+};
