@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawer, Box, Button } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
@@ -157,6 +157,25 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             undoButtonStyle = styles.quickUndoButtonDisabled;
             break;
     }
+
+    useEffect(() => {
+        const handleKeyPress = (event: KeyboardEvent) => {
+            // Don't trigger if the active element is an input or textarea
+            if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+
+            if (event.key === 'u' || event.key === 'U') {
+                event.preventDefault();
+                if (!undoButtonDisabled) {
+                    handleUndoButton();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [undoButtonDisabled, connectedPlayer, handleUndoButton]);
 
     let buttonText;
     switch (quickUndoState) {

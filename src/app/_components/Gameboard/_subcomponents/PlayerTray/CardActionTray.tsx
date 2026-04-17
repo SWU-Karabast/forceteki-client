@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button, Box } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -235,6 +235,28 @@ interface IPromptButtonProps {
 const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled }) => {
     const { isPortrait } = useScreenOrientation();
     const styles = createStyles(isPortrait);
+
+    const passButtonRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        const handleKeyPress = (event: KeyboardEvent) => {
+            // Don't trigger if the active element is an input or textarea
+            if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+
+            if (event.code === 'Space') {
+                event.preventDefault();
+                // Only trigger if this is a pass button
+                if (button.arg === 'pass' || button.arg === 'passAbility') {
+                    passButtonRef.current?.click();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [button.arg, disabled]);
     
     const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
         if (button.arg === 'claimInitiative' || button.text === 'Draw') {
@@ -312,6 +334,7 @@ const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, d
 
     return (
         <Button
+            ref={passButtonRef}
             variant="contained"
             sx={{ ...styles.promptButton, ...actionTrayStyles(button, button.disabled) }}
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
