@@ -158,9 +158,13 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         let shortcuts: IKeyboardShortcuts;
         if (user && user?.preferences?.keyboardShortcuts) {
             shortcuts = { ...defaultShortcuts, ...user.preferences.keyboardShortcuts };
+
+            setWelcomeMessage(user.preferences.welcomeMessage || '');
         } else {
             const localPreferences = loadPreferencesFromLocalStorage();
             shortcuts = { ...defaultShortcuts, ...localPreferences.keyboardShortcuts };
+
+            setWelcomeMessage(localPreferences.welcomeMessage || '');
         }
         setKeyboardShortcuts(shortcuts);
         setOriginalShortcuts(shortcuts);
@@ -169,12 +173,14 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     // Check if there are unsaved changes
     useEffect(() => {
         if (!originalShortcuts) return;
-        const hasUnsavedChanges = JSON.stringify(keyboardShortcuts) !== JSON.stringify(originalShortcuts);
+        const keysChanged = JSON.stringify(keyboardShortcuts) !== JSON.stringify(originalShortcuts);
+        const textChanged = welcomeMessage !== (user?.preferences?.welcomeMessage || '');
+        const hasUnsavedChanges = keysChanged || textChanged;
         setHasChanges(hasUnsavedChanges);
         if (setHasNewChanges) {
             setHasNewChanges(hasUnsavedChanges);
         }
-    }, [keyboardShortcuts, originalShortcuts, setHasNewChanges]);
+    }, [keyboardShortcuts, originalShortcuts, welcomeMessage, user, setHasNewChanges]);
 
     // Keep ref in sync with current keyboard shortcuts
     useEffect(() => {
@@ -252,6 +258,7 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                 keyboardShortcuts: keyboardShortcuts,
                 welcomeMessage: welcomeMessage,
             };
+            
             const result = await savePreferencesGeneric(
                 user, 
                 newPreferences, 
@@ -265,7 +272,7 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                 setTimeout(() => setSaveStatus(SaveStatus.NoChange), 3000);
             } else {
                 setSaveStatus(SaveStatus.Error);
-                setSaveMessage('Unauthorized: Please check your login.');
+                setSaveMessage('Save failed. Please try again.');
             }
         } catch (error) {
             console.error('Save error:', error);
@@ -276,12 +283,18 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         }
     };
 
+    const defaultWelcomeText = 'Good luck, have fun!';
+
+    const isNotDefault = 
+        JSON.stringify(keyboardShortcuts) !== JSON.stringify(defaultShortcuts) || 
+        welcomeMessage !== defaultWelcomeText;
+
     const handleResetShortcuts = () => {
-        if (originalShortcuts) {
-            setKeyboardShortcuts(originalShortcuts);
-            setSaveStatus(SaveStatus.NoChange);
-            setUnboundKey(null);
-        }
+        setKeyboardShortcuts(defaultShortcuts);
+        setWelcomeMessage(defaultWelcomeText);
+        setSaveStatus(SaveStatus.NoChange);
+        setUnboundKey(null);
+        setEditingKey(null);
     };
 
     const handleUnbindShortcuts = () => {
@@ -500,8 +513,8 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                     <PreferenceButton
                         variant="standard"
                         buttonFnc={handleResetShortcuts}
-                        disabled={!hasChanges || isSaving}
-                        text={'Reset'}
+                        disabled={!isNotDefault || isSaving} 
+                        text={'Reset to Defaults'} // Optional: Clarifies what the button actually does
                         sx={styles.saveButton}
                     />
                     <PreferenceButton

@@ -129,7 +129,7 @@ const GameBoard = () => {
         // --- CUSTOMIZABLE CHAT MACRO ---
         // Fallback to 'W' and 'Good luck, have fun!' if preferences aren't set yet
         const welcomeShortcut = user?.preferences?.keyboardShortcuts?.welcomeMessage || 'W';
-        const customWelcomeText = user?.preferences?.keyboardShortcuts?.welcomeMessage || 'Good luck, have fun!';
+        const customWelcomeText = user?.preferences?.welcomeMessage || 'Good luck, have fun!';
 
         if (pressedKey === welcomeShortcut) {
             event.preventDefault();
