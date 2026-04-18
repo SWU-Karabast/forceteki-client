@@ -28,14 +28,6 @@ export const useKeyboardShortcuts = (): IKeyboardShortcuts => {
  * Get default keyboard shortcuts
  */
 export const getDefaultShortcuts = (): IKeyboardShortcuts => ({
-    menu: 'ESC',
     passTurn: 'SPACE',
     undo: 'U',
-    concede: 'A',
-    leaderAbility: 'L',
-    chat: 'C',
-    modalMinimize: 'M',
-    history: 'H',
-    claimInitiative: 'I',
-    welcomeMessage: 'W',
 });

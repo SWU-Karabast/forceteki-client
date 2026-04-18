@@ -1,9 +1,8 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
-import { Divider, Typography, Dialog, DialogTitle, DialogContent, Alert } from '@mui/material';
-import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { ChangeEvent, useState, useEffect, Dispatch, SetStateAction, useRef } from 'react';
+import { Typography, Alert } from '@mui/material';
+import { useState, useEffect, Dispatch, SetStateAction, useRef } from 'react';
 import KeyboardLayout from '@/app/_components/_sharedcomponents/Preferences/_subComponents/KeyboardLayout';
 import { useUser } from '@/app/_contexts/User.context';
 import { IKeyboardShortcuts, IPreferences } from '@/app/_contexts/UserTypes';
@@ -37,17 +36,9 @@ const pulseBorder = keyframes`
   }
 `;
 
-const shortcutLabels: Record<keyof IKeyboardShortcuts, string> = {
-    menu: 'Menu',
+const shortcutLabels: Partial<Record<keyof IKeyboardShortcuts, string>> = {
     passTurn: 'Pass / End turn',
     undo: 'Undo',
-    concede: 'Concede',
-    leaderAbility: 'Leader Ability / Deploy',
-    chat: 'Chat',
-    modalMinimize: 'Modal Minimize',
-    history: 'History',
-    claimInitiative: 'Claim Initiative',
-    welcomeMessage: 'Welcome Message',
 };
 
 function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
@@ -55,16 +46,8 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     
     // Default shortcuts
     const defaultShortcuts: IKeyboardShortcuts = {
-        menu: 'ESC',
         passTurn: 'SPACE',
         undo: 'U',
-        concede: 'A',
-        leaderAbility: 'L',
-        // chat: 'C',
-        // modalMinimize: 'M',
-        // history: 'H',
-        claimInitiative: 'I',
-        welcomeMessage: 'W',
     };
 
     const [keyboardShortcuts, setKeyboardShortcuts] = useState<IKeyboardShortcuts>(() => {
@@ -77,23 +60,14 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     const [saveMessage, setSaveMessage] = useState<string | undefined>();
     const [hasChanges, setHasChanges] = useState(false);
     const [originalShortcuts, setOriginalShortcuts] = useState<IKeyboardShortcuts | undefined>();
-    const [welcomeMessage, setWelcomeMessage] = useState<string>('');
     const [editingKey, setEditingKey] = useState<keyof IKeyboardShortcuts | null>(null);
-    const [recordingKey, setRecordingKey] = useState<string>('');
     const [conflictError, setConflictError] = useState<string | undefined>();
     const [unboundKey, setUnboundKey] = useState<keyof IKeyboardShortcuts | null>(null);
     const keyboardShortcutsRef = useRef<IKeyboardShortcuts>(keyboardShortcuts);
+    
     const styles = {
-        typographyContainer: {
-            mb: '0.5rem',
-        },
         functionContainer:{
             mb:'1.5rem',
-        },
-        contentContainer:{
-            display:'flex',
-            flexDirection:'row',
-            alignItems: 'center'
         },
         keyboardStyle:{
             height: '17rem',
@@ -137,19 +111,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                 boxShadow: '0 0 6px rgba(0, 140, 255, 0.5)',
                 border: '2px solid rgba(0, 140, 255, 0.5)',
             },
-        },
-        bindButton: {
-            backgroundColor: '#1C2933',
-            border: '2px solid #038FC3',
-            color: 'white',
-            padding: '0.5rem 1rem',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            minWidth: '80px',
-            fontSize: '0.9rem',
-            '&:hover': {
-                backgroundColor: '#2a3a47',
-            }
         }
     };
 
@@ -158,13 +119,9 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         let shortcuts: IKeyboardShortcuts;
         if (user && user?.preferences?.keyboardShortcuts) {
             shortcuts = { ...defaultShortcuts, ...user.preferences.keyboardShortcuts };
-
-            setWelcomeMessage(user.preferences.welcomeMessage || '');
         } else {
             const localPreferences = loadPreferencesFromLocalStorage();
             shortcuts = { ...defaultShortcuts, ...localPreferences.keyboardShortcuts };
-
-            setWelcomeMessage(localPreferences.welcomeMessage || '');
         }
         setKeyboardShortcuts(shortcuts);
         setOriginalShortcuts(shortcuts);
@@ -174,13 +131,12 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     useEffect(() => {
         if (!originalShortcuts) return;
         const keysChanged = JSON.stringify(keyboardShortcuts) !== JSON.stringify(originalShortcuts);
-        const textChanged = welcomeMessage !== (user?.preferences?.welcomeMessage || '');
-        const hasUnsavedChanges = keysChanged || textChanged;
+        const hasUnsavedChanges = keysChanged;
         setHasChanges(hasUnsavedChanges);
         if (setHasNewChanges) {
             setHasNewChanges(hasUnsavedChanges);
         }
-    }, [keyboardShortcuts, originalShortcuts, welcomeMessage, user, setHasNewChanges]);
+    }, [keyboardShortcuts, originalShortcuts, user, setHasNewChanges]);
 
     // Keep ref in sync with current keyboard shortcuts
     useEffect(() => {
@@ -224,7 +180,7 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                 }
             }
 
-            if (conflictingKey) {
+            if (conflictingKey && shortcutLabels[conflictingKey]) {
                 setConflictError(`"${uppercaseValue}" is already assigned to ${shortcutLabels[conflictingKey]}`);
                 setEditingKey(null);
                 setTimeout(() => setConflictError(undefined), 4000);
@@ -256,7 +212,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
             const newPreferences: IPreferences = {
                 ...user?.preferences,
                 keyboardShortcuts: keyboardShortcuts,
-                welcomeMessage: welcomeMessage,
             };
             
             const result = await savePreferencesGeneric(
@@ -283,43 +238,27 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         }
     };
 
-    const defaultWelcomeText = 'Good luck, have fun!';
-
     const isNotDefault = 
-        JSON.stringify(keyboardShortcuts) !== JSON.stringify(defaultShortcuts) || 
-        welcomeMessage !== defaultWelcomeText;
+        JSON.stringify(keyboardShortcuts) !== JSON.stringify(defaultShortcuts)
 
     const handleResetShortcuts = () => {
         setKeyboardShortcuts(defaultShortcuts);
-        setWelcomeMessage(defaultWelcomeText);
         setSaveStatus(SaveStatus.NoChange);
         setUnboundKey(null);
         setEditingKey(null);
     };
 
-    const handleUnbindShortcuts = () => {
-    // Create a new object with all values set to undefined
-        const unboundShortcuts = Object.keys(keyboardShortcuts).reduce((acc, key) => {
-            acc[key as keyof IKeyboardShortcuts] = undefined;
-            return acc;
-        }, {} as IKeyboardShortcuts);
-
-        setKeyboardShortcuts(unboundShortcuts);
-        setSaveStatus(SaveStatus.NoChange);
-        setUnboundKey(null); // Clear any specific recording states
-    };
-
     const handleStartRecording = (key: keyof IKeyboardShortcuts) => {
-    // If we click a key that is already unbound (undefined), start recording
+        // If we click a key that is already unbound (undefined), start recording
         if (keyboardShortcuts[key] === undefined) {
             setEditingKey(key);
         } else {
-        // If it has a value, first click unbinds it
+            // If it has a value, first click unbinds it
             setKeyboardShortcuts(prev => ({
                 ...prev,
                 [key]: undefined
             }));
-            setUnboundKey(key); // Optional: keeps your UI highlighting consistent
+            setUnboundKey(key); 
             setSaveStatus(SaveStatus.NoChange);
         }
     };
@@ -338,21 +277,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                     <Alert severity="warning" sx={{ mt: '1rem' }}>Duplicate Key: {conflictError}</Alert>
                 )}
                 <Grid sx={styles.gridStyle}>
-                    <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                        <Box
-                            sx={{
-                                ...styles.keyPadsStyle,
-                                cursor: 'pointer',
-                                backgroundColor: editingKey === 'menu' ? '#038FC3' : '#1C2933',
-                            }}
-                            onClick={() => handleStartRecording('menu')}
-                        >
-                            <Typography variant={'h3'}>
-                                {editingKey === 'menu' ? 'Press key...' : unboundKey === 'menu' ? '' : (keyboardShortcuts.menu || '')}
-                            </Typography>
-                        </Box>
-                        <Typography>Menu</Typography>
-                    </Box>
                     <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
                         <Box
                             sx={{
@@ -383,138 +307,16 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                         </Box>
                         <Typography>Undo</Typography>
                     </Box>
-                    <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                        <Box
-                            sx={{
-                                ...styles.keyPadsStyle,
-                                cursor: 'pointer',
-                                backgroundColor: editingKey === 'concede' ? '#038FC3' : '#1C2933',
-                            }}
-                            onClick={() => handleStartRecording('concede')}
-                        >
-                            <Typography variant={'h3'}>
-                                {editingKey === 'concede' ? 'Press key...' : unboundKey === 'concede' ? '' : (keyboardShortcuts.concede || '')}
-                            </Typography>
-                        </Box>
-                        <Typography>Concede</Typography>
-                    </Box>
-                    <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                        <Box
-                            sx={{
-                                ...styles.keyPadsStyle,
-                                cursor: 'pointer',
-                                backgroundColor: editingKey === 'leaderAbility' ? '#038FC3' : '#1C2933',
-                            }}
-                            onClick={() => handleStartRecording('leaderAbility')}
-                        >
-                            <Typography variant={'h3'}>
-                                {editingKey === 'leaderAbility' ? 'Press key...' : unboundKey === 'leaderAbility' ? '' : (keyboardShortcuts.leaderAbility || '')}
-                            </Typography>
-                        </Box>
-                        <Typography>Leader Ability / Deploy</Typography>
-                    </Box>
-                    {/* Chat option - commented out for future use
-                    <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                        <Box
-                            sx={{
-                                ...styles.keyPadsStyle,
-                                cursor: 'pointer',
-                                backgroundColor: editingKey === 'chat' ? '#038FC3' : '#1C2933',
-                            }}
-                            onClick={() => handleStartRecording('chat')}
-                        >
-                            <Typography variant={'h3'}>
-                                {editingKey === 'chat' ? 'Press key...' : unboundKey === 'chat' ? '' : (keyboardShortcuts.chat || '')}
-                            </Typography>
-                        </Box>
-                        <Typography>Chat</Typography>
-                    </Box>
-                    */}
-                    {/* Modal Minimize option - commented out for future use
-                    <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                        <Box
-                            sx={{
-                                ...styles.keyPadsStyle,
-                                cursor: 'pointer',
-                                backgroundColor: editingKey === 'modalMinimize' ? '#038FC3' : '#1C2933',
-                            }}
-                            onClick={() => handleStartRecording('modalMinimize')}
-                        >
-                            <Typography variant={'h3'}>
-                                {editingKey === 'modalMinimize' ? 'Press key...' : unboundKey === 'modalMinimize' ? '' : (keyboardShortcuts.modalMinimize || '')}
-                            </Typography>
-                        </Box>
-                        <Typography>Modal Minimize</Typography>
-                    </Box>
-                    */}
-                    {/* History option - commented out for future use
-                    <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                        <Box
-                            sx={{
-                                ...styles.keyPadsStyle,
-                                cursor: 'pointer',
-                                backgroundColor: editingKey === 'history' ? '#038FC3' : '#1C2933',
-                            }}
-                            onClick={() => handleStartRecording('history')}
-                        >
-                            <Typography variant={'h3'}>
-                                {editingKey === 'history' ? 'Press key...' : unboundKey === 'history' ? '' : (keyboardShortcuts.history || '')}
-                            </Typography>
-                        </Box>
-                        <Typography>History</Typography>
-                    </Box>
-                    */}
-                    <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                        <Box
-                            sx={{
-                                ...styles.keyPadsStyle,
-                                cursor: 'pointer',
-                                backgroundColor: editingKey === 'claimInitiative' ? '#038FC3' : '#1C2933',
-                            }}
-                            onClick={() => handleStartRecording('claimInitiative')}
-                        >
-                            <Typography variant={'h3'}>
-                                {editingKey === 'claimInitiative' ? 'Press key...' : unboundKey === 'claimInitiative' ? '' : (keyboardShortcuts.claimInitiative || '')}
-                            </Typography>
-                        </Box>
-                        <Typography>Claim Initiative</Typography>
-                    </Box>
                 </Grid>
             </Box>
-            <Box sx={{ ...styles.functionContainer, mb:'0px' }}>
-                <Divider sx={{ mb:'20px' }}/>
-                <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                    <Box
-                        sx={{
-                            ...styles.keyPadsStyle,
-                            cursor: 'pointer',
-                            backgroundColor: editingKey === 'welcomeMessage' ? '#038FC3' : '#1C2933',
-                        }}
-                        onClick={() => handleStartRecording('welcomeMessage')}
-                    >
-                        <Typography variant={'h3'}>
-                            {editingKey === 'welcomeMessage' ? 'Press key...' : unboundKey === 'welcomeMessage' ? '' : (keyboardShortcuts.welcomeMessage || '')}
-                        </Typography>
-                    </Box>
-                    <Typography sx={{ mb:'0px', mr:'10px' }}>Welcome Message: </Typography>
-                    <StyledTextField
-                        type="text"
-                        value={welcomeMessage}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            setWelcomeMessage(e.target.value)
-                        }
-                        placeholder="Good luck, have fun!"
-                        sx={{ width:'50%' }}
-                    />
-                </Box>
-            </Box>
+
             <Box sx={styles.saveButtonContainer}>
                 <Box sx={{ display: 'flex', gap: '1rem' }}>
                     <PreferenceButton
                         variant="standard"
                         buttonFnc={handleResetShortcuts}
                         disabled={!isNotDefault || isSaving} 
-                        text={'Reset to Defaults'} // Optional: Clarifies what the button actually does
+                        text={'Reset to Defaults'}
                         sx={styles.saveButton}
                     />
                     <PreferenceButton
@@ -547,4 +349,5 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         </>
     );
 }
+
 export default KeyboardShortcutsTab;

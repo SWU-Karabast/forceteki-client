@@ -213,19 +213,6 @@ const CardActionTray: React.FC = () => {
                     return;
                 }
             }
-
-            // --- CLAIM INITIATIVE SHORTCUT ---
-            const initShortcut = user?.preferences?.keyboardShortcuts?.claimInitiative || 'I';
-            if (pressedKey === initShortcut) {
-                const initBtn = playerState.promptState.buttons.find(
-                    (b: IButtonsProps) => b.arg === 'claimInitiative' || b.text.includes('Initiative')
-                );
-                if (initBtn && !buttonDisabled(initBtn)) {
-                    event.preventDefault();
-                    sendGameMessage([initBtn.command, initBtn.arg, initBtn.uuid]);
-                    return;
-                }
-            }
         };
 
         window.addEventListener('keydown', handleKeyboardShortcuts);

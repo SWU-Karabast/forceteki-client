@@ -64,23 +64,14 @@ export interface ICosmeticsPreferences {
 }
 
 export interface IKeyboardShortcuts {
-    menu?: string;
     passTurn?: string;
     undo?: string;
-    concede?: string;
-    leaderAbility?: string;
-    chat?: string;
-    modalMinimize?: string;
-    history?: string;
-    claimInitiative?: string;
-    welcomeMessage?: string;
 }
 
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
     keyboardShortcuts?: IKeyboardShortcuts;
-    welcomeMessage?: string;
 }
 
 export interface IUserContextType {

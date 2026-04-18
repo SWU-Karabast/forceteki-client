@@ -16,10 +16,6 @@ import { useCosmetics } from '../_contexts/CosmeticsContext';
 import { Play } from 'next/font/google';
 import RichText from '../_components/_sharedcomponents/RichText/RichText';
 
-// Custom Popup Imports
-import { ConcedePopup } from '../_components/_sharedcomponents/Popup/PopupVariant/ConcedePopup';
-import { contentStyle } from '../_components/_sharedcomponents/Popup/Popup.styles';
-
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator, sendGameMessage } = useGame();
     const { user } = useUser();
@@ -68,84 +64,6 @@ const GameBoard = () => {
         }
         setPreferenceOpen((prev) => !prev);
     }, [gameState?.winners.length]);
-
-    const handleGlobalKeyDown = useCallback((event: KeyboardEvent) => {
-        // 1. Safety check for typing
-        const isTyping = event.target instanceof HTMLInputElement || 
-                         event.target instanceof HTMLTextAreaElement;
-        if (isTyping) return;
-
-        // 2. Define shortcuts from user preferences
-        const menuShortcut = user?.preferences?.keyboardShortcuts?.menu || 'ESC';
-        const concedeShortcut = user?.preferences?.keyboardShortcuts?.concede || 'A';
-        const leaderShortcut = user?.preferences?.keyboardShortcuts?.leaderAbility || 'L';
-        
-        // 3. Define the pressed key (fixes scoping issues)
-        const pressedKey = event.key === 'Escape' ? 'ESC' : event.key.toUpperCase();
-
-        // --- MENU / ESC LOGIC ---
-        if (pressedKey === menuShortcut) {
-            event.preventDefault();
-            if (isConcedeConfirmOpen) {
-                setIsConcedeConfirmOpen(false);
-            } else {
-                handlePreferenceToggle();
-            }
-            return;
-        }
-
-        // --- CONCEDE LOGIC ---
-        if (pressedKey === concedeShortcut) {
-            if (!gameState?.winners?.length && !isSpectator) {
-                event.preventDefault();
-                setIsConcedeConfirmOpen(true);
-            }
-            return;
-        }
-
-        // --- LEADER ACTION / DEPLOY LOGIC ---
-        if (pressedKey === leaderShortcut) {
-            const playerPrompt = gameState?.players[connectedPlayer]?.promptState;
-            
-            // Check if the Leader Menu (Select Cards Popup) is already open
-            const leaderBtn = playerPrompt?.perCardButtons?.find(
-                (b: any) => b.arg === 'leaderAbility' || b.arg === 'deployLeader'
-            );
-
-            if (leaderBtn) {
-                event.preventDefault();
-                sendGameMessage([leaderBtn.command, leaderBtn.arg, leaderBtn.uuid || '']);
-            } else {
-                // If menu is NOT open, find the leader card and click it
-                const leaderCard = gameState?.players[connectedPlayer]?.leader;
-                if (leaderCard?.uuid) {
-                    event.preventDefault();
-                    sendGameMessage(['cardClicked', leaderCard.uuid]);
-                }
-            }
-            return;
-        }
-
-        // --- CUSTOMIZABLE CHAT MACRO ---
-        // Fallback to 'W' and 'Good luck, have fun!' if preferences aren't set yet
-        const welcomeShortcut = user?.preferences?.keyboardShortcuts?.welcomeMessage || 'W';
-        const customWelcomeText = user?.preferences?.welcomeMessage || 'Good luck, have fun!';
-
-        if (pressedKey === welcomeShortcut) {
-            event.preventDefault();
-    
-            sendGameMessage(['chat', { 
-                message: customWelcomeText, 
-                type: 'player' 
-            }]);
-            return;
-        }
-    }, [user, isConcedeConfirmOpen, gameState, connectedPlayer, isSpectator, handlePreferenceToggle, sendGameMessage]);
-
-    useEffect(() => {
-        window.addEventListener('keydown', handleGlobalKeyDown);
-        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-    }, [handleGlobalKeyDown]);
 
     const winners = !!gameState?.winners.length ? gameState.winners : undefined;
     const preferenceTabs = winners
@@ -256,19 +174,6 @@ const GameBoard = () => {
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
         },
-        concedePopupContainer: {
-            position: 'absolute',
-            left: sidebarOpen ? '42.5%' : '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: sidebarOpen ? 'calc(100% - min(20%, 280px))' : '100%',
-            transition: 'width 0.3s ease-in-out',
-            pointerEvents: 'auto',
-        }
     };
 
     return (
@@ -324,14 +229,6 @@ const GameBoard = () => {
                     <Box sx={styles.promptShadow}/>
                 </Box>
             </Box>
-
-            {isConcedeConfirmOpen && (
-                <Box sx={styles.concedePopupContainer}>
-                    <Box sx={{ ...contentStyle(0), width: '50%', display: 'flex', justifyContent: 'center' }}>
-                        <ConcedePopup onClose={() => setIsConcedeConfirmOpen(false)} />
-                    </Box>
-                </Box>
-            )}
 
             <PopupShell sidebarOpen={sidebarOpen}/>
             {isPreferenceOpen && <PreferencesComponent
