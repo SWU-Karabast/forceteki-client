@@ -16,6 +16,7 @@ import { useUser } from '@/app/_contexts/User.context';
 import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
 import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
 import CosmeticsTab from '../PreferencesSubElementVariants/CosmeticsTab';
+import GameOptionsTab from '../PreferencesSubElementVariants/GameOptionsTab';
 
 function tabProps(index: number) {
     return {
@@ -28,6 +29,7 @@ function tabProps(index: number) {
 enum TabType {
     CurrentGame = 'currentGame',
     KeyboardShortcuts = 'keyboardShortcuts',
+    GameOptions = 'gameOptions',
     Cosmetics = 'cosmetics',
     SoundOptions = 'soundOptions',
     EndGame = 'endGame',
@@ -51,9 +53,9 @@ function VerticalTabs({
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (tabs[value] === 'soundOptions' && hasUnsavedChanges) {
+            if ((tabs[value] === 'soundOptions' || tabs[value] === 'gameOptions') && hasUnsavedChanges) {
                 e.preventDefault();
-                e.returnValue = 'You have unsaved sound preferences. Are you sure you want to leave?';
+                e.returnValue = 'You have unsaved preferences. Are you sure you want to leave?';
             }
         };
 
@@ -73,7 +75,7 @@ function VerticalTabs({
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         // Check if leaving sound options with unsaved changes
-        if (tabs[value] === 'soundOptions' && hasUnsavedChanges && newValue !== value) {
+        if ((tabs[value] === 'soundOptions' || tabs[value] === 'gameOptions') && hasUnsavedChanges && newValue !== value) {
             setPendingTabIndex(newValue);
             setShowUnsavedDialog(true);
         } else {
@@ -109,6 +111,8 @@ function VerticalTabs({
                 return <CurrentGameTab/>;
             case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
+            case TabType.GameOptions:
+                return <GameOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
             case TabType.Cosmetics:
                 return <CosmeticsTab />;
             case TabType.SoundOptions:
@@ -129,6 +133,8 @@ function VerticalTabs({
                 return 'Current Game';
             case TabType.KeyboardShortcuts:
                 return 'Keyboard Shortcuts';
+            case TabType.GameOptions:
+                return 'Game Options';
             case TabType.Cosmetics:
                 return 'Cosmetics';
             case TabType.SoundOptions:
