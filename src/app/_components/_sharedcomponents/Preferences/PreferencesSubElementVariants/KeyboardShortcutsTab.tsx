@@ -265,7 +265,7 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                 setTimeout(() => setSaveStatus(SaveStatus.NoChange), 3000);
             } else {
                 setSaveStatus(SaveStatus.Error);
-                setSaveMessage(result.error || 'Unauthorized: Please check your login.');
+                setSaveMessage('Unauthorized: Please check your login.');
             }
         } catch (error) {
             console.error('Save error:', error);
