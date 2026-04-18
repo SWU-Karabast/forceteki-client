@@ -80,6 +80,7 @@ export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
     keyboardShortcuts?: IKeyboardShortcuts;
+    welcomeMessage?: string;
 }
 
 export interface IUserContextType {
