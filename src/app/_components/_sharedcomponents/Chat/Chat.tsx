@@ -52,7 +52,7 @@ const Chat: React.FC<IChatProps> = ({
 
     const getChatDisabledInfo = (): IChatDisabledInfo => {
         // Always allow chat for private lobbies
-        if (isPrivateLobby) {
+        if (isPrivateLobby && !doesUserHaveChatMuted) {
             return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
         }
 
@@ -87,7 +87,7 @@ const Chat: React.FC<IChatProps> = ({
                     reason: ChatDisabledReason.UserDisabledChat,
                     message: 'You have chat disabled in your account preferences',
                     borderColor: 'yellow'
-                }
+                };
             case opponentChatDisabled:
                 return {
                     reason: ChatDisabledReason.OpponentDisabledChat,
