@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button, Box } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
 import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
+import { PerCardButton } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { useKeyboardShortcuts } from '@/app/_hooks/useKeyboardShortcuts';
 
 const pulseBorder = keyframes`
   0% {
@@ -125,7 +128,6 @@ const createStyles = (isPortrait: boolean) => ({
         '&:not(:disabled)': {
             transition: 'box-shadow 0.3s ease-in-out',
         },
-        // Improve touch target size for mobile
         touchAction: 'manipulation',
     },
     promptButtonText: {
@@ -139,7 +141,6 @@ const createStyles = (isPortrait: boolean) => ({
     },
 });
 
-
 interface IButtonsProps {
     command: string;
     arg: string;
@@ -152,6 +153,7 @@ const CardActionTray: React.FC = () => {
     const { isPortrait } = useScreenOrientation();
     const [ resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverride ] = useState<boolean | null>(null);
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
+    const { user } = useUser();
     const playerState = gameState.players[connectedPlayer];
 
     const styles = createStyles(isPortrait);
@@ -167,7 +169,7 @@ const CardActionTray: React.FC = () => {
         return false;
     };
 
-    const buttonDisabled = (button: IButtonsProps) => {
+    const buttonDisabled = useCallback((button: IButtonsProps | PerCardButton) => {
         if (button.arg === 'done') {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
@@ -177,29 +179,50 @@ const CardActionTray: React.FC = () => {
                 }
             }
 
-            // for a resource prompt, we disable the "done" button briefly to avoid double clicks
             if (getConnectedPlayerPrompt()?.promptType === 'resource') {
                 if (resourcePromptDoneButtonOverride == null) {
                     setResourcePromptDoneButtonOverride(true);
                     setTimeout(() => {
                         setResourcePromptDoneButtonOverride(false);
                     }, 500);
-
                     return true;
                 }
-
                 return resourcePromptDoneButtonOverride;
             }
         }
+        return !!(button as IButtonsProps).disabled;
+    }, [playerState.promptState, distributionPromptData, getConnectedPlayerPrompt, resourcePromptDoneButtonOverride]);
 
-        return !!button.disabled;
-    };
+    // --- KEYBOARD HANDLERS ---
+    const handlePassTurn = useCallback(() => {
+        const passBtn = playerState.promptState.buttons.find(
+            (b: IButtonsProps) => b.arg === 'pass' || b.arg === 'passAbility' || b.text === 'Pass'
+        );
+        if (passBtn && !buttonDisabled(passBtn)) {
+            sendGameMessage([passBtn.command, passBtn.arg, passBtn.uuid]);
+        }
+    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage]);
+
+    const handleClaimInitiative = useCallback(() => {
+        const claimBtn = playerState.promptState.buttons.find(
+            (b: IButtonsProps) => b.arg === 'claimInitiative'
+        );
+        if (claimBtn && !buttonDisabled(claimBtn)) {
+            sendGameMessage([claimBtn.command, claimBtn.arg, claimBtn.uuid]);
+        }
+    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage]);
+
+    // Register our actions with the global handler
+    useKeyboardShortcuts({
+        passTurn: handlePassTurn,
+        // claimInitiative: handleClaimInitiative
+    });
 
     useEffect(() => {
         if (getConnectedPlayerPrompt()?.promptType !== 'resource') {
             setResourcePromptDoneButtonOverride(null);
         }
-    }, [gameState]);
+    }, [gameState, getConnectedPlayerPrompt]);
 
     return (
         <Grid

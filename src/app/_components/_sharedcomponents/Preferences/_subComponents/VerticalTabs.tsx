@@ -24,7 +24,6 @@ function tabProps(index: number) {
     };
 }
 
-
 enum TabType {
     CurrentGame = 'currentGame',
     KeyboardShortcuts = 'keyboardShortcuts',
@@ -49,17 +48,18 @@ function VerticalTabs({
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const { logout } = useUser();
 
+    // 1. Fixed the 'beforeunload' typo and removed the hardcoded 'soundOptions' check
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (tabs[value] === 'soundOptions' && hasUnsavedChanges) {
+            if (hasUnsavedChanges) {
                 e.preventDefault();
-                e.returnValue = 'You have unsaved sound preferences. Are you sure you want to leave?';
+                e.returnValue = 'You have unsaved preferences. Are you sure you want to leave?';
             }
         };
 
-        window.addEventListener('beforeUnload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeUnload', handleBeforeUnload);
-    }, [tabs, value, hasUnsavedChanges]);
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
 
     useEffect(() => {
         if (attemptingClose) {
@@ -71,9 +71,9 @@ function VerticalTabs({
         }
     }, [attemptingClose, hasUnsavedChanges, closeHandler]);
 
+    // 2. Removed the hardcoded 'soundOptions' check here too
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-        // Check if leaving sound options with unsaved changes
-        if (tabs[value] === 'soundOptions' && hasUnsavedChanges && newValue !== value) {
+        if (hasUnsavedChanges && newValue !== value) {
             setPendingTabIndex(newValue);
             setShowUnsavedDialog(true);
         } else {
@@ -83,7 +83,8 @@ function VerticalTabs({
 
     const handleDialogDiscard = () => {
         setShowUnsavedDialog(false);
-        // Tell SoundOptionsTab to reset (you'll need to expose this)
+        setHasUnsavedChanges(false); // Reset the flag so the user can navigate cleanly
+        
         if (pendingTabIndex !== null) {
             setValue(pendingTabIndex);
         }
@@ -108,7 +109,8 @@ function VerticalTabs({
             case TabType.CurrentGame:
                 return <CurrentGameTab/>;
             case TabType.KeyboardShortcuts:
-                return <KeyboardShortcutsTab/>;
+                // 3. Passed the setter prop to the Keyboard tab!
+                return <KeyboardShortcutsTab setHasNewChanges={setHasUnsavedChanges} />;
             case TabType.Cosmetics:
                 return <CosmeticsTab />;
             case TabType.SoundOptions:
@@ -123,6 +125,7 @@ function VerticalTabs({
                 return <Typography>Not Implemented</Typography>;
         }
     };
+    
     const renderLabels = (type: string) => {
         switch (type) {
             case TabType.CurrentGame:
@@ -193,9 +196,7 @@ function VerticalTabs({
     }
 
     return (
-        <Box
-            sx={{ display: 'flex', background: 'transparent' }}
-        >
+        <Box sx={{ display: 'flex', background: 'transparent' }}>
             <Tabs
                 orientation="vertical"
                 variant="scrollable"
@@ -255,4 +256,5 @@ function VerticalTabs({
         </Box>
     );
 }
+
 export default VerticalTabs;

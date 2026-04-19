@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Drawer, Box, Button } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UndoIcon from '@mui/icons-material/Undo';
 import MessageIcon from '@mui/icons-material/Message';
@@ -10,11 +11,13 @@ import BlockIcon from '@mui/icons-material/Block';
 import Image from 'next/image';
 import { QuickUndoAvailableState } from '@/app/_constants/constants';
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
+import { useKeyboardShortcuts } from '@/app/_hooks/useKeyboardShortcuts';
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
     const { gameState, gameMessages, sendGameMessage, connectedPlayer, isSpectator } = useGame();
+    const { user } = useUser();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
-    const [chatMessage, setChatMessage] = useState('')
+    const [chatMessage, setChatMessage] = useState('');
     const [isUndoHovered, setIsUndoHovered] = useState(false);
     const isDev = process.env.NODE_ENV === 'development';
     const correctPlayer = gameState.players[connectedPlayer];
@@ -33,13 +36,33 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         setChatMessage('');
         resetTypingState();
     }
-    const handleUndoButton = () => {
-        sendGameMessage(['rollbackToSnapshot',{
+
+    let undoButtonDisabled;
+    switch (quickUndoState) {
+        case QuickUndoAvailableState.NoSnapshotAvailable:
+        case QuickUndoAvailableState.UndoRequestsBlocked:
+        case QuickUndoAvailableState.WaitingForConfirmation:
+            undoButtonDisabled = true;
+            break;
+        default:
+            undoButtonDisabled = false;
+            break;
+    }
+
+    const handleUndoButton = useCallback(() => {
+        if (undoButtonDisabled) return;
+        sendGameMessage(['rollbackToSnapshot', {
             type: 'quick',
             playerId: connectedPlayer,
             actionOffset: 0
-        }])
-    }
+        }]);
+    }, [undoButtonDisabled, connectedPlayer, sendGameMessage]);
+
+    // Centralized Keyboard Shortcuts Hook
+    useKeyboardShortcuts({
+        undo: handleUndoButton,
+    });
+
 
     // ------------------------STYLES------------------------//
     const quickUndoButtonBase = {
@@ -129,18 +152,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         }
     }
 
-    let undoButtonDisabled;
-    switch (quickUndoState) {
-        case QuickUndoAvailableState.NoSnapshotAvailable:
-        case QuickUndoAvailableState.UndoRequestsBlocked:
-        case QuickUndoAvailableState.WaitingForConfirmation:
-            undoButtonDisabled = true;
-            break;
-        default:
-            undoButtonDisabled = false;
-            break;
-    }
-
     let undoButtonStyle;
     switch (quickUndoState) {
         case QuickUndoAvailableState.FreeUndoAvailable:
@@ -196,7 +207,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             sx={styles.drawerStyle}
         >
             <Box sx={styles.headerBoxStyle}>
-                <ChevronRightIcon onClick={toggleSidebar} />
+                <ChevronRightIcon onClick={toggleSidebar} sx={{ cursor: 'pointer' }} />
             </Box>
 
             {(isDev || gameState.undoEnabled) && (!isSpectator) && (<Box sx={styles.quickUndoBox}>

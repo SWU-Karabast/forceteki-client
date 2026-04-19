@@ -63,9 +63,19 @@ export interface ICosmeticsPreferences {
     // disablePlaymats?: boolean;
 }
 
+export interface IKeyboardShortcuts {
+    passTurn?: string;
+    undo?: string;
+}
+
+export interface KeyboardLayoutProps {
+    keyboardShortcuts?: IKeyboardShortcuts;
+}
+
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
+    keyboardShortcuts?: IKeyboardShortcuts;
 }
 
 export interface IUserContextType {
