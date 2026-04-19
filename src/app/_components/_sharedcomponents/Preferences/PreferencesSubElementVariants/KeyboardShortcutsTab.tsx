@@ -2,7 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
 import { Typography, Alert } from '@mui/material';
-import { useState, useEffect, Dispatch, SetStateAction, useRef } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction, useRef, useCallback } from 'react';
 import KeyboardLayout from '@/app/_components/_sharedcomponents/Preferences/_subComponents/KeyboardLayout';
 import { useUser } from '@/app/_contexts/User.context';
 import { IKeyboardShortcuts, IPreferences } from '@/app/_contexts/UserTypes';
@@ -44,7 +44,6 @@ export enum ShortcutLabels {
 function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     const { user, updateUserPreferences } = useUser();
     
-    // Default shortcuts
     const defaultShortcuts: IKeyboardShortcuts = {
         passTurn: 'SPACE',
         undo: 'U',
@@ -62,7 +61,9 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     const [originalShortcuts, setOriginalShortcuts] = useState<IKeyboardShortcuts | undefined>();
     const [editingKey, setEditingKey] = useState<keyof IKeyboardShortcuts | null>(null);
     const [conflictError, setConflictError] = useState<string | undefined>();
+    
     const keyboardShortcutsRef = useRef<IKeyboardShortcuts>(keyboardShortcuts);
+    const containerRef = useRef<HTMLDivElement>(null); // Added for click-outside detection
     
     const styles = {
         functionContainer:{
@@ -113,7 +114,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         }
     };
 
-    // Load user preferences on component mount
     useEffect(() => {
         const shortcuts: IKeyboardShortcuts = {
             ...defaultShortcuts,
@@ -124,7 +124,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         setOriginalShortcuts(shortcuts);
     }, [user]);
 
-    // Check if there are unsaved changes
     useEffect(() => {
         if (!originalShortcuts) return;
         const keysChanged = JSON.stringify(keyboardShortcuts) !== JSON.stringify(originalShortcuts);
@@ -135,6 +134,52 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         }
     }, [keyboardShortcuts, originalShortcuts, user, setHasNewChanges]);
 
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasChanges) {
+                e.preventDefault();
+                e.returnValue = ''; 
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasChanges]);
+
+    const processKeyBinding = useCallback((keyString: string) => {
+        if (!editingKey) return;
+
+        if (keyString === 'ESC' || keyString === 'ESCAPE') {
+            setEditingKey(null);
+            setConflictError(undefined);
+            return;
+        }
+
+        let conflictingKey: keyof IKeyboardShortcuts | null = null;
+        
+        for (const [key, value] of Object.entries(keyboardShortcutsRef.current)) {
+            if (key !== editingKey && value?.toUpperCase() === keyString) {
+                conflictingKey = key as keyof IKeyboardShortcuts;
+                break;
+            }
+        }
+
+        if (conflictingKey && ShortcutLabels[conflictingKey as keyof typeof ShortcutLabels]) {
+            setConflictError(`"${keyString}" is already assigned to ${ShortcutLabels[conflictingKey as keyof typeof ShortcutLabels]}`);
+            setEditingKey(null);
+            setTimeout(() => setConflictError(undefined), 4000);
+            return;
+        }
+
+        setConflictError(undefined);
+        setKeyboardShortcuts(prev => ({
+            ...prev,
+            [editingKey]: keyString
+        }));
+        setSaveStatus(SaveStatus.NoChange);
+        setEditingKey(null);
+    }, [editingKey]);
+
     // Listen for keyboard events when recording
     useEffect(() => {
         if (!editingKey) return;
@@ -143,52 +188,20 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
             e.preventDefault();
             e.stopPropagation();
 
-            if (e.key === 'Escape') {
-                setEditingKey(null);
-                setConflictError(undefined);
-                return;
-            }
-
             let keyString = '';
+            if (e.key === ' ') keyString = 'SPACE';
+            else if (e.key === 'Control') keyString = 'CTRL';
+            else if (e.key === 'Meta') keyString = 'CMD';
+            else if (e.key === 'Escape') keyString = 'ESC';
+            else keyString = e.key.toUpperCase();
 
-            if (e.key === ' ') {
-                keyString = 'SPACE';
-            } else if (e.key === 'Control') {
-                keyString = 'CTRL';
-            } else if (e.key === 'Meta') {
-                keyString = 'CMD';
-            } else if (e.key.length === 1) {
-                keyString = e.key.toUpperCase();
-            } else {
-                keyString = e.key.toUpperCase();
-            }
-
-            let conflictingKey: keyof IKeyboardShortcuts | null = null;
-            
-            for (const [key, value] of Object.entries(keyboardShortcutsRef.current)) {
-                if (key !== editingKey && value?.toUpperCase() === keyString) {
-                    conflictingKey = key as keyof IKeyboardShortcuts;
-                    break;
-                }
-            }
-
-            if (conflictingKey && ShortcutLabels[conflictingKey as keyof typeof ShortcutLabels]) {
-                setConflictError(`"${keyString}" is already assigned to ${ShortcutLabels[conflictingKey as keyof typeof ShortcutLabels]}`);
-                setEditingKey(null);
-                setTimeout(() => setConflictError(undefined), 4000);
-                return;
-            }
-
-            setConflictError(undefined);
-            setKeyboardShortcuts(prev => ({
-                ...prev,
-                [editingKey]: keyString
-            }));
-            setSaveStatus(SaveStatus.NoChange);
-            setEditingKey(null);
+            processKeyBinding(keyString);
         };
 
-        const handleClickOutside = () => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (containerRef.current && containerRef.current.contains(e.target as Node)) {
+                return;
+            }
             setEditingKey(null);
             setConflictError(undefined);
         };
@@ -200,37 +213,41 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
             document.removeEventListener('keydown', handleKeyDown, true);
             document.removeEventListener('mousedown', handleClickOutside, true);
         };
-    }, [editingKey]);
+    }, [editingKey, processKeyBinding]);
 
     const handleSaveShortcuts = async () => {
         setIsSaving(true);
         setSaveStatus(SaveStatus.NoChange);
     
         try {
-            const newPreferences: IPreferences = {
-                ...user?.preferences,
-                keyboardShortcuts: keyboardShortcuts,
-            };
-            
             const result = await savePreferencesGeneric(
                 user, 
-                newPreferences, 
+                { keyboardShortcuts: keyboardShortcuts }, 
                 updateUserPreferences
             );
 
             if (result.success) {
+                setOriginalShortcuts(keyboardShortcuts);
                 setSaveStatus(SaveStatus.Success);
                 setSaveMessage('Preferences saved successfully!');
-                setOriginalShortcuts(keyboardShortcuts);
                 setTimeout(() => setSaveStatus(SaveStatus.NoChange), 3000);
+                
+                setHasChanges(false);
+                if (setHasNewChanges) {
+                    setHasNewChanges(false);
+                }
             } else {
                 setSaveStatus(SaveStatus.Error);
                 setSaveMessage('Save failed. Please try again.');
             }
         } catch (error) {
             console.error('Save error:', error);
+            if (error instanceof Error) {
+                setSaveMessage(error.message);
+            } else {
+                setSaveMessage('An unexpected error occurred.');
+            }
             setSaveStatus(SaveStatus.Error);
-            setSaveMessage('An unexpected error occurred.');
         } finally {
             setIsSaving(false);
         }
@@ -239,7 +256,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     const keybindIsNotDefault = 
         JSON.stringify(keyboardShortcuts) !== JSON.stringify(defaultShortcuts);
 
-    // Checks if at least one key in the state is bound (not undefined, null, or empty string)
     const hasBoundKeys = Object.values(keyboardShortcuts).some(val => val !== undefined && val !== null && val !== '');
 
     const handleResetShortcuts = () => {
@@ -262,7 +278,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
 
     return (
         <>
-            {/* Alerts moved to the very top */}
             {saveStatus === SaveStatus.Success && (
                 <Alert severity="success" sx={{ mb: '1rem' }}>{saveMessage}</Alert>
             )}
@@ -273,10 +288,20 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                 <Alert severity="warning" sx={{ mb: '1rem' }}>Duplicate Key: {conflictError}</Alert>
             )}
 
-            <Box sx={styles.functionContainer}>
-                <KeyboardLayout keyboardShortcuts={keyboardShortcuts} />
+            <Box ref={containerRef} sx={styles.functionContainer}>
                 
-                {/* Dynamically iterate over ShortcutLabels */}
+                <KeyboardLayout 
+                    keyboardShortcuts={keyboardShortcuts} 
+                    onKeyClick={(key) => processKeyBinding(key)}
+                />
+
+                <Box sx={{ mt: 3, mb: 1, px: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                        Click any shortcut box below to assign a key. You can press the key on your physical keyboard, or click the visual keyboard above. 
+                        Clicking a box that already has a key bound to it will unbind it (OPEN). Press <b>ESC</b> or click elsewhere to cancel. 
+                    </Typography>
+                </Box>
+                
                 <Grid sx={styles.gridStyle}>
                     {(Object.entries(ShortcutLabels) as [keyof IKeyboardShortcuts, string][]).map(([key, label]) => (
                         <Box key={key} sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
@@ -286,10 +311,10 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                                     cursor: 'pointer',
                                     backgroundColor: editingKey === key ? '#038FC3' : '#1C2933',
                                 }}
-                                onClick={() => handleStartRecording(key)}
+                                onClick={() => handleStartRecording(key as keyof IKeyboardShortcuts)}
                             >
                                 <Typography variant={'h3'}>
-                                    {editingKey === key ? 'Press key...' : (keyboardShortcuts[key] || 'OPEN (Click to bind)')}
+                                    {editingKey === key ? 'Press key...' : (keyboardShortcuts[key as keyof IKeyboardShortcuts] || 'OPEN')}
                                 </Typography>
                             </Box>
                             <Typography>{label}</Typography>
@@ -317,7 +342,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                             setKeyboardShortcuts(cleared);
                             setEditingKey(null);
                         }}
-                        // Disabled if there are no keys bound to unbind
                         disabled={isSaving || !hasBoundKeys}
                         text={'Unbind all'}
                         sx={styles.saveButton}
