@@ -58,12 +58,12 @@ const GameBoard = () => {
         setSidebarOpen(!sidebarOpen);
     }
 
-    const handlePreferenceToggle = useCallback(() => {
-        if (!!gameState?.winners.length) {
+    const handlePreferenceToggle = () => {
+        if(!!gameState?.winners.length) {
             setUserClosedWinScreen(true);
         }
-        setPreferenceOpen((prev) => !prev);
-    }, [gameState?.winners.length]);
+        setPreferenceOpen(!isPreferenceOpen);
+    };
 
     const winners = !!gameState?.winners.length ? gameState.winners : undefined;
     const preferenceTabs = winners
@@ -74,7 +74,9 @@ const GameBoard = () => {
     const winHistory = lobbyState?.winHistory;
     const isBo3Mode = winHistory?.gamesToWinMode === GamesToWinMode.BestOfThree;
     const currentGameNumber = winHistory?.currentGameNumber || 1;
-    const isBo3SetComplete = isBo3Mode && !!winHistory?.setEndResult;
+    const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
+    const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
+    const isBo3SetComplete = isBo3Mode && !!setEndResult;
     const gameEndedTitle = isBo3Mode
         ? (isBo3SetComplete ? 'Best-of-Three Set Ended' : `Game ${currentGameNumber} ended`)
         : 'Game ended';

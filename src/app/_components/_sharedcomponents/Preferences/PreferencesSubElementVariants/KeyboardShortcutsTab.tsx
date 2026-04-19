@@ -36,10 +36,10 @@ const pulseBorder = keyframes`
   }
 `;
 
-const shortcutLabels: Partial<Record<keyof IKeyboardShortcuts, string>> = {
-    passTurn: 'Pass / End turn',
-    undo: 'Undo',
-};
+export enum ShortcutLabels {
+    passTurn = 'Pass / End turn',
+    undo = 'Undo',
+}
 
 function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     const { user, updateUserPreferences } = useUser();
@@ -57,12 +57,11 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
 
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NoChange);
-    const [saveMessage, setSaveMessage] = useState<string | undefined>();
+    const [saveMessage, setSaveMessage] = useState<string>('');
     const [hasChanges, setHasChanges] = useState(false);
     const [originalShortcuts, setOriginalShortcuts] = useState<IKeyboardShortcuts | undefined>();
     const [editingKey, setEditingKey] = useState<keyof IKeyboardShortcuts | null>(null);
     const [conflictError, setConflictError] = useState<string | undefined>();
-    const [unboundKey, setUnboundKey] = useState<keyof IKeyboardShortcuts | null>(null);
     const keyboardShortcutsRef = useRef<IKeyboardShortcuts>(keyboardShortcuts);
     
     const styles = {
@@ -116,13 +115,11 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
 
     // Load user preferences on component mount
     useEffect(() => {
-        let shortcuts: IKeyboardShortcuts;
-        if (user && user?.preferences?.keyboardShortcuts) {
-            shortcuts = { ...defaultShortcuts, ...user.preferences.keyboardShortcuts };
-        } else {
-            const localPreferences = loadPreferencesFromLocalStorage();
-            shortcuts = { ...defaultShortcuts, ...localPreferences.keyboardShortcuts };
-        }
+        const shortcuts: IKeyboardShortcuts = {
+            ...defaultShortcuts,
+            ...(user?.preferences?.keyboardShortcuts || {})
+        };
+        
         setKeyboardShortcuts(shortcuts);
         setOriginalShortcuts(shortcuts);
     }, [user]);
@@ -138,69 +135,70 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         }
     }, [keyboardShortcuts, originalShortcuts, user, setHasNewChanges]);
 
-    // Keep ref in sync with current keyboard shortcuts
-    useEffect(() => {
-        keyboardShortcutsRef.current = keyboardShortcuts;
-    }, [keyboardShortcuts]);
-
     // Listen for keyboard events when recording
     useEffect(() => {
         if (!editingKey) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             e.preventDefault();
-            let keyString = '';
+            e.stopPropagation();
 
-            // Handle modifier keys and letter keys
-            if (e.ctrlKey) keyString += 'Ctrl+';
-            if (e.altKey) keyString += 'Alt+';
-            if (e.metaKey) keyString += 'Cmd+';
-            if (e.shiftKey && e.key !== 'Shift') keyString += 'Shift+';
-
-            if (e.key === ' ') {
-                keyString += 'Space';
-            } else if (e.key === 'Escape') {
-                keyString += 'ESC';
-            } else if (e.key.length === 1) {
-                keyString += e.key.toUpperCase();
-            } else if (e.key.startsWith('Arrow')) {
-                keyString += e.key;
-            } else {
-                keyString += e.key;
+            if (e.key === 'Escape') {
+                setEditingKey(null);
+                setConflictError(undefined);
+                return;
             }
 
-            // Check for duplicate key using ref (always has current value)
-            const uppercaseValue = keyString.toUpperCase();
+            let keyString = '';
+
+            if (e.key === ' ') {
+                keyString = 'SPACE';
+            } else if (e.key === 'Control') {
+                keyString = 'CTRL';
+            } else if (e.key === 'Meta') {
+                keyString = 'CMD';
+            } else if (e.key.length === 1) {
+                keyString = e.key.toUpperCase();
+            } else {
+                keyString = e.key.toUpperCase();
+            }
+
             let conflictingKey: keyof IKeyboardShortcuts | null = null;
             
             for (const [key, value] of Object.entries(keyboardShortcutsRef.current)) {
-                if (key !== editingKey && value?.toUpperCase() === uppercaseValue) {
+                if (key !== editingKey && value?.toUpperCase() === keyString) {
                     conflictingKey = key as keyof IKeyboardShortcuts;
                     break;
                 }
             }
 
-            if (conflictingKey && shortcutLabels[conflictingKey]) {
-                setConflictError(`"${uppercaseValue}" is already assigned to ${shortcutLabels[conflictingKey]}`);
+            if (conflictingKey && ShortcutLabels[conflictingKey as keyof typeof ShortcutLabels]) {
+                setConflictError(`"${keyString}" is already assigned to ${ShortcutLabels[conflictingKey as keyof typeof ShortcutLabels]}`);
                 setEditingKey(null);
                 setTimeout(() => setConflictError(undefined), 4000);
                 return;
             }
 
-            // No conflict, update the shortcut
             setConflictError(undefined);
             setKeyboardShortcuts(prev => ({
                 ...prev,
-                [editingKey]: uppercaseValue
+                [editingKey]: keyString
             }));
             setSaveStatus(SaveStatus.NoChange);
-            setUnboundKey(null);
             setEditingKey(null);
         };
 
+        const handleClickOutside = () => {
+            setEditingKey(null);
+            setConflictError(undefined);
+        };
+
         document.addEventListener('keydown', handleKeyDown, true);
+        document.addEventListener('mousedown', handleClickOutside, true);
+
         return () => {
             document.removeEventListener('keydown', handleKeyDown, true);
+            document.removeEventListener('mousedown', handleClickOutside, true);
         };
     }, [editingKey]);
 
@@ -238,75 +236,65 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         }
     };
 
-    const isNotDefault = 
-        JSON.stringify(keyboardShortcuts) !== JSON.stringify(defaultShortcuts)
+    const keybindIsNotDefault = 
+        JSON.stringify(keyboardShortcuts) !== JSON.stringify(defaultShortcuts);
+
+    // Checks if at least one key in the state is bound (not undefined, null, or empty string)
+    const hasBoundKeys = Object.values(keyboardShortcuts).some(val => val !== undefined && val !== null && val !== '');
 
     const handleResetShortcuts = () => {
         setKeyboardShortcuts(defaultShortcuts);
         setSaveStatus(SaveStatus.NoChange);
-        setUnboundKey(null);
         setEditingKey(null);
     };
 
     const handleStartRecording = (key: keyof IKeyboardShortcuts) => {
-        // If we click a key that is already unbound (undefined), start recording
         if (keyboardShortcuts[key] === undefined) {
             setEditingKey(key);
         } else {
-            // If it has a value, first click unbinds it
             setKeyboardShortcuts(prev => ({
                 ...prev,
                 [key]: undefined
             }));
-            setUnboundKey(key); 
             setSaveStatus(SaveStatus.NoChange);
         }
     };
 
     return (
         <>
+            {/* Alerts moved to the very top */}
+            {saveStatus === SaveStatus.Success && (
+                <Alert severity="success" sx={{ mb: '1rem' }}>{saveMessage}</Alert>
+            )}
+            {saveStatus === SaveStatus.Error && (
+                <Alert severity="error" sx={{ mb: '1rem' }}>{saveMessage}</Alert>
+            )}
+            {conflictError && (
+                <Alert severity="warning" sx={{ mb: '1rem' }}>Duplicate Key: {conflictError}</Alert>
+            )}
+
             <Box sx={styles.functionContainer}>
                 <KeyboardLayout keyboardShortcuts={keyboardShortcuts} />
-                {saveStatus === SaveStatus.Success && (
-                    <Alert severity="success" sx={{ mt: '1rem' }}>{saveMessage}</Alert>
-                )}
-                {saveStatus === SaveStatus.Error && (
-                    <Alert severity="error" sx={{ mt: '1rem' }}>{saveMessage}</Alert>
-                )}
-                {conflictError && (
-                    <Alert severity="warning" sx={{ mt: '1rem' }}>Duplicate Key: {conflictError}</Alert>
-                )}
+                
+                {/* Dynamically iterate over ShortcutLabels */}
                 <Grid sx={styles.gridStyle}>
-                    <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                        <Box
-                            sx={{
-                                ...styles.keyPadsStyle,
-                                cursor: 'pointer',
-                                backgroundColor: editingKey === 'passTurn' ? '#038FC3' : '#1C2933',
-                            }}
-                            onClick={() => handleStartRecording('passTurn')}
-                        >
-                            <Typography variant={'h3'}>
-                                {editingKey === 'passTurn' ? 'Press key...' : unboundKey === 'passTurn' ? '' : (keyboardShortcuts.passTurn || '')}
-                            </Typography>
+                    {(Object.entries(ShortcutLabels) as [keyof IKeyboardShortcuts, string][]).map(([key, label]) => (
+                        <Box key={key} sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
+                            <Box
+                                sx={{
+                                    ...styles.keyPadsStyle,
+                                    cursor: 'pointer',
+                                    backgroundColor: editingKey === key ? '#038FC3' : '#1C2933',
+                                }}
+                                onClick={() => handleStartRecording(key)}
+                            >
+                                <Typography variant={'h3'}>
+                                    {editingKey === key ? 'Press key...' : (keyboardShortcuts[key] || 'OPEN (Click to bind)')}
+                                </Typography>
+                            </Box>
+                            <Typography>{label}</Typography>
                         </Box>
-                        <Typography>Pass / End turn</Typography>
-                    </Box>
-                    <Box sx={{ display:'flex', flexDirection:'row', alignItems:'center' }}>
-                        <Box
-                            sx={{
-                                ...styles.keyPadsStyle,
-                                cursor: 'pointer',
-                                backgroundColor: editingKey === 'undo' ? '#038FC3' : '#1C2933',
-                            }}
-                            onClick={() => handleStartRecording('undo')}
-                        >
-                            <Typography variant={'h3'}>
-                                {editingKey === 'undo' ? 'Press key...' : unboundKey === 'undo' ? '' : (keyboardShortcuts.undo || '')}
-                            </Typography>
-                        </Box>
-                        <Typography>Undo</Typography>
-                    </Box>
+                    ))}
                 </Grid>
             </Box>
 
@@ -315,7 +303,7 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                     <PreferenceButton
                         variant="standard"
                         buttonFnc={handleResetShortcuts}
-                        disabled={!isNotDefault || isSaving} 
+                        disabled={!keybindIsNotDefault || isSaving} 
                         text={'Reset to Defaults'}
                         sx={styles.saveButton}
                     />
@@ -327,10 +315,10 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                                 return acc;
                             }, {} as IKeyboardShortcuts);
                             setKeyboardShortcuts(cleared);
-                            setUnboundKey(null);
                             setEditingKey(null);
                         }}
-                        disabled={isSaving}
+                        // Disabled if there are no keys bound to unbind
+                        disabled={isSaving || !hasBoundKeys}
                         text={'Unbind all'}
                         sx={styles.saveButton}
                     />

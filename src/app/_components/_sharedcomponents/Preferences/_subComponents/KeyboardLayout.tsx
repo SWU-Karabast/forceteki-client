@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { IKeyboardShortcuts } from '@/app/_contexts/UserTypes';
+import { KeyboardLayoutProps } from '@/app/_contexts/UserTypes';
 
 type KeyItem = {
     label: string;
@@ -10,10 +10,6 @@ type KeyItem = {
     highlighted?: boolean;
     subKeys?: KeyItem[];
 };
-
-interface KeyboardLayoutProps {
-    keyboardShortcuts?: IKeyboardShortcuts;
-}
 
 const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ keyboardShortcuts = {} }) => {
     // Dynamically create highlighted keys set from keyboard shortcuts

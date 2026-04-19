@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Drawer, Box, Button } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
@@ -11,12 +11,13 @@ import BlockIcon from '@mui/icons-material/Block';
 import Image from 'next/image';
 import { QuickUndoAvailableState } from '@/app/_constants/constants';
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
+import { useKeyboardShortcuts } from '@/app/_hooks/useKeyboardShortcuts';
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
     const { gameState, gameMessages, sendGameMessage, connectedPlayer, isSpectator } = useGame();
     const { user } = useUser();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
-    const [chatMessage, setChatMessage] = useState('')
+    const [chatMessage, setChatMessage] = useState('');
     const [isUndoHovered, setIsUndoHovered] = useState(false);
     const isDev = process.env.NODE_ENV === 'development';
     const correctPlayer = gameState.players[connectedPlayer];
@@ -54,26 +55,13 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             type: 'quick',
             playerId: connectedPlayer,
             actionOffset: 0
-        }])
+        }]);
     }, [undoButtonDisabled, connectedPlayer, sendGameMessage]);
 
-    // Keyboard Shortcut Listener for Undo
-    useEffect(() => {
-        const handleUndoShortcut = (event: KeyboardEvent) => {
-            const isTyping = event.target instanceof HTMLInputElement || 
-                             event.target instanceof HTMLTextAreaElement;
-            if (isTyping) return;
-
-            const undoShortcut = user?.preferences?.keyboardShortcuts?.undo || 'U';
-            if (event.key.toUpperCase() === undoShortcut.toUpperCase()) {
-                event.preventDefault();
-                handleUndoButton();
-            }
-        };
-
-        window.addEventListener('keydown', handleUndoShortcut);
-        return () => window.removeEventListener('keydown', handleUndoShortcut);
-    }, [user, handleUndoButton]);
+    // Centralized Keyboard Shortcuts Hook
+    useKeyboardShortcuts({
+        undo: handleUndoButton,
+    });
 
 
     // ------------------------STYLES------------------------//
@@ -219,7 +207,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             sx={styles.drawerStyle}
         >
             <Box sx={styles.headerBoxStyle}>
-                <ChevronRightIcon onClick={toggleSidebar} />
+                <ChevronRightIcon onClick={toggleSidebar} sx={{ cursor: 'pointer' }} />
             </Box>
 
             {(isDev || gameState.undoEnabled) && (!isSpectator) && (<Box sx={styles.quickUndoBox}>

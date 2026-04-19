@@ -68,6 +68,10 @@ export interface IKeyboardShortcuts {
     undo?: string;
 }
 
+export interface KeyboardLayoutProps {
+    keyboardShortcuts?: IKeyboardShortcuts;
+}
+
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
