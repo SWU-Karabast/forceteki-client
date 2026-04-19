@@ -215,7 +215,7 @@ const CardActionTray: React.FC = () => {
     // Register our actions with the global handler
     useKeyboardShortcuts({
         passTurn: handlePassTurn,
-        claimInitiative: handleClaimInitiative
+        // claimInitiative: handleClaimInitiative
     });
 
     useEffect(() => {
