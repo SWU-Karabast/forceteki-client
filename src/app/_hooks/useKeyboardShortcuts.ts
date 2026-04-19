@@ -52,8 +52,13 @@ export const useKeyboardShortcuts = (callbacks: ShortcutCallbacks) => {
                 if (!callback) continue;
                 
                 const actionKey = action as keyof IKeyboardShortcuts;
-                const boundKey = shortcuts[actionKey] || defaults[actionKey];
+                
+                // NEW LOGIC: Check if the key exists in the user's prefs (even if it's an empty string)
+                // If it doesn't exist at all (undefined), THEN fall back to the default.
+                const userKey = shortcuts[actionKey];
+                const boundKey = userKey !== undefined ? userKey : defaults[actionKey];
 
+                // If boundKey is '' (unbound), this safely fails and ignores the key press
                 if (boundKey && pressedKey === boundKey.toUpperCase()) {
                     event.preventDefault();
                     callback();

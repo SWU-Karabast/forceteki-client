@@ -265,12 +265,13 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     };
 
     const handleStartRecording = (key: keyof IKeyboardShortcuts) => {
-        if (keyboardShortcuts[key] === undefined) {
+        // Treat both undefined and empty string as unbound
+        if (keyboardShortcuts[key] === undefined || keyboardShortcuts[key] === '') {
             setEditingKey(key);
         } else {
             setKeyboardShortcuts(prev => ({
                 ...prev,
-                [key]: undefined
+                [key]: ''
             }));
             setSaveStatus(SaveStatus.NoChange);
         }
@@ -336,7 +337,7 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                         variant="standard"
                         buttonFnc={() => {
                             const cleared = Object.keys(keyboardShortcuts).reduce((acc, key) => {
-                                acc[key as keyof IKeyboardShortcuts] = undefined;
+                                acc[key as keyof IKeyboardShortcuts] = '';
                                 return acc;
                             }, {} as IKeyboardShortcuts);
                             setKeyboardShortcuts(cleared);
