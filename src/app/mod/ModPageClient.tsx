@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Tab, Tabs } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import CosmeticsManagerTab from './subpages/CosmeticsManagertab';
+import CosmeticsManagerTab from './subpages/CosmeticsManagerTab';
 import UserManagementTab from './subpages/UserManagementTab';
 import { useRouter } from 'next/navigation';
 

@@ -119,11 +119,13 @@ export interface IModActionResponse {
     durationDays?: number;
     note?: string;
     moderatorId: string;
+    moderatorUsername: string;
     createdAt: string;
     startedAt?: string;
     expiresAt?: string;
     cancelledAt?: string;
-    cancelledBy?: string;
+    cancelledById?: string;
+    cancelledByUsername?: string;
 }
 
 export interface IPlayerSearchResult {
@@ -132,7 +134,16 @@ export interface IPlayerSearchResult {
     createdAt: string;
     lastLogin: string;
     isMuted: boolean;
-    needsRename: boolean;
+    activeRename?: IActiveModActionCacheEntry;
+}
+
+export interface IActiveModActionCacheEntry {
+    id: string;
+    actionType: ModActionType;
+    durationDays?: number;
+    startedAt?: string;
+    expiresAt?: string;
+    modActionId: string;
 }
 
 export interface IFindUserResponse {
@@ -144,5 +155,4 @@ export interface IFindUserResponse {
 export enum DurationUnit {
     Days = 'Days',
     Weeks = 'Weeks',
-    Permanent = 'Permanent',
 }

@@ -1,25 +1,18 @@
 'use client';
-import React, { useState } from 'react';
-import {
-    Box,
-    Typography,
-    MenuItem,
-    Alert,
-} from '@mui/material';
+import React, {useState} from 'react';
+import {Alert, Box, MenuItem, Typography,} from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { ServerApiService } from '@/app/_services/ServerApiService';
+import {ServerApiService} from '@/app/_services/ServerApiService';
 import {
+    DurationUnit,
     IModActionResponse,
     IPlayerSearchResult,
-    ModActionType,
-    DurationUnit
+    ModActionType
 } from "@/app/_components/_sharedcomponents/Preferences/Preferences.types";
 import ConfirmationDialog from "@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog";
-import {formatDate, getActionLabel, getActionStatus} from "@/app/_utils/ModerationUtils";
-
-const PERMANENT_DURATION_DAYS = 36500;
+import {formatDate, formatDuration, getActionLabel, getActionStatus} from "@/app/_utils/ModerationUtils";
 
 const UserManagementTab: React.FC = () => {
     // Search state
@@ -37,7 +30,7 @@ const UserManagementTab: React.FC = () => {
     const [durationValue, setDurationValue] = useState<string>('');
     const [durationUnit, setDurationUnit] = useState<DurationUnit>(DurationUnit.Days);
     const [note, setNote] = useState('');
-
+    const [isNoteError, setIsNoteError] = useState<Boolean>(false);
     // Action history expanded state
     const [expandedActionId, setExpandedActionId] = useState<string | null>(null);
 
@@ -97,7 +90,6 @@ const UserManagementTab: React.FC = () => {
     };
 
     const getDurationInDays = (): number => {
-        if (durationUnit === DurationUnit.Permanent) return PERMANENT_DURATION_DAYS;
         const value = parseInt(durationValue);
         if (!value || value <= 0) return 0;
         return durationUnit === DurationUnit.Weeks ? value * 7 : value;
@@ -108,13 +100,13 @@ const UserManagementTab: React.FC = () => {
 
         const durationDays = getDurationInDays();
         if (actionType === ModActionType.Mute && !durationDays) return;
-
-        const durationDisplay = durationUnit === DurationUnit.Permanent
-            ? 'permanently'
-            : `for ${durationValue} ${durationUnit.toLowerCase()}`;
+        if (actionType !== ModActionType.Rename && !note.trim()){
+            setIsNoteError(true);
+            return;
+        }
 
         const actionMessages: Record<ModActionType, string> = {
-            [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} ${durationDisplay}. Are you sure?`,
+            [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} for ${durationValue} ${durationUnit.toLowerCase()}. Are you sure?`,
             [ModActionType.Warning]: `This will issue a warning to player ${selectedPlayer.username}. Are you sure?`,
             [ModActionType.Rename]: `This will force player ${selectedPlayer.username} to rename. Are you sure?`,
         };
@@ -142,6 +134,8 @@ const UserManagementTab: React.FC = () => {
                     }
                     const refreshed = await ServerApiService.getModActionsForPlayerAsync(selectedPlayer.id);
                     setModActions(refreshed.modActions || []);
+                    // since we have a selected player the refreshed player will always be one.
+                    setSelectedPlayer(refreshed.players[0])
                     setNote('');
                     setDurationValue('');
                     setDurationUnit(DurationUnit.Days);
@@ -159,9 +153,9 @@ const UserManagementTab: React.FC = () => {
 
         setConfirmDialog({
             open: true,
-            title: 'Mod Action',
-            message: `Are you sure you wish to cancel this mod action?`,
-            confirmText: 'Confirm Action',
+            title: 'Cancel Mod Action',
+            message: `Are you sure you wish to cancel this moderation action?`,
+            confirmText: 'Cancel Moderation Action',
             onConfirm: async () => {
                 setConfirmDialog((prev) => ({ ...prev, open: false }));
                 setSubmitLoading(true);
@@ -170,6 +164,8 @@ const UserManagementTab: React.FC = () => {
                     // Refresh mod actions
                     const refreshed = await ServerApiService.getModActionsForPlayerAsync(selectedPlayer.id);
                     setModActions(refreshed.modActions || []);
+                    // since we have a selected player the refreshed player will always be one.
+                    setSelectedPlayer(refreshed.players[0])
                     setSuccessMessage('Mod action cancelled successfully');
                 } catch (error) {
                     setSearchError(error instanceof Error ? error.message : 'Failed to cancel action');
@@ -298,9 +294,15 @@ const UserManagementTab: React.FC = () => {
             bgcolor: "rgba(0, 0, 0, 0.2)",
             color: 'red',
             fontSize: '0.775rem',
+        },
+        textFieldsSpecial: {
+            '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                display: 'none'
+            },
+            width: '160px'
         }
-    };
 
+    };
     // ==================== Render ====================
     return (
         <Box>
@@ -321,7 +323,7 @@ const UserManagementTab: React.FC = () => {
                 <Box sx={styles.leftColumn}>
                     {/* Search */}
                     <Box>
-                        <Typography sx={styles.sectionTitle}>Find user</Typography>
+                        <Typography sx={styles.sectionTitle}>Find User</Typography>
                         <Box sx={styles.searchRow}>
                             <StyledTextField
                                 placeholder="Search by user ID or username"
@@ -343,7 +345,7 @@ const UserManagementTab: React.FC = () => {
                     {/* Multi-player selection */}
                     {players.length > 1 && !selectedPlayer && (
                         <Box>
-                            <Typography sx={styles.sectionTitle}>Multiple players found</Typography>
+                            <Typography sx={styles.sectionTitle}>Multiple Players Found</Typography>
                             {players.map((player) => (
                                 <Box
                                     key={player.id}
@@ -389,7 +391,7 @@ const UserManagementTab: React.FC = () => {
                     {/* User Details */}
                     {selectedPlayer && (
                         <Box>
-                            <Typography sx={styles.sectionTitle}>User details</Typography>
+                            <Typography sx={styles.sectionTitle}>User Details</Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                                 <Box sx={styles.userDetailRow}>
                                     <Typography sx={styles.userDetailLabel}>Username:</Typography>
@@ -397,7 +399,7 @@ const UserManagementTab: React.FC = () => {
                                 </Box>
                                 <Box sx={styles.userDetailRow}>
                                     <Typography sx={styles.userDetailLabel}>Player ID:</Typography>
-                                    <Typography sx={{ ...styles.userDetailValue, fontSize: '0.75rem', color: '#B0B0B0' }}>
+                                    <Typography sx={{ ...styles.userDetailValue}}>
                                         {selectedPlayer.id}
                                     </Typography>
                                 </Box>
@@ -413,20 +415,28 @@ const UserManagementTab: React.FC = () => {
                                         {formatDate(selectedPlayer.createdAt)}
                                     </Typography>
                                 </Box>
-                                {selectedPlayer.isMuted && (
-                                    <Box sx={styles.userDetailRow}>
-                                        <Typography sx={{ color: '#ef5350', fontSize: '0.875rem', fontWeight: 600 }}>
-                                            Currently muted
-                                        </Typography>
+                                <Box>
+                                    <Typography sx={styles.sectionTitle}>Active mod actions:</Typography>
+                                    <Box sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        padding: '0.75rem',
+                                        border: '1px solid #4A5568',
+                                        borderRadius: '8px',
+                                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                                    }}>
+                                        {selectedPlayer.isMuted && (
+                                            <Typography sx={{ color: '#ef5350', fontSize: '0.875rem', fontWeight: 600, mb:'5px' }}>
+                                                Currently muted
+                                            </Typography>
+                                        )}
+                                        {selectedPlayer.activeRename && (
+                                            <Typography sx={{ color: '#ffd54f', fontSize: '0.875rem', fontWeight: 600 }}>
+                                                Pending force rename
+                                            </Typography>
+                                        )}
                                     </Box>
-                                )}
-                                {selectedPlayer.needsRename && (
-                                    <Box sx={styles.userDetailRow}>
-                                        <Typography sx={{ color: '#ffd54f', fontSize: '0.875rem', fontWeight: 600 }}>
-                                            Pending force rename
-                                        </Typography>
-                                    </Box>
-                                )}
+                                </Box>
                             </Box>
                         </Box>
                     )}
@@ -455,34 +465,26 @@ const UserManagementTab: React.FC = () => {
                                 {actionType === ModActionType.Mute && (
                                     <>
                                         <StyledTextField
+                                            type="number"
+                                            label="amount"
+                                            value={durationValue}
+                                            onChange={(e) => setDurationValue(e.target.value)}
+                                            size="small"
+                                            sx={styles.textFieldsSpecial}
+                                            inputProps={{ min: 1, step: 1 }}
+                                        />
+                                        <StyledTextField
                                             select
-                                            label="Duration"
                                             value={durationUnit}
                                             onChange={(e) => {
                                                 setDurationUnit(e.target.value as DurationUnit);
-                                                if (e.target.value === DurationUnit.Permanent) {
-                                                    setDurationValue('');
-                                                }
                                             }}
                                             size="small"
-                                            sx={{ minWidth: '30px', maxWidth:'150px' }}
+                                            sx={{ minWidth: '100px', maxWidth:'130px' }}
                                         >
                                             <MenuItem value={DurationUnit.Days}>Days</MenuItem>
                                             <MenuItem value={DurationUnit.Weeks}>Weeks</MenuItem>
-                                            <MenuItem value={DurationUnit.Permanent}>Permanent</MenuItem>
                                         </StyledTextField>
-
-                                        {durationUnit !== DurationUnit.Permanent && (
-                                            <StyledTextField
-                                                label={durationUnit === DurationUnit.Weeks ? 'Weeks' : 'Days'}
-                                                type="number"
-                                                value={durationValue}
-                                                onChange={(e) => setDurationValue(e.target.value)}
-                                                size="small"
-                                                sx={{ width: '300px' }}
-                                                inputProps={{ min: 1 }}
-                                            />
-                                        )}
                                     </>
                                 )}
 
@@ -497,12 +499,18 @@ const UserManagementTab: React.FC = () => {
                             {/* Notes */}
                             <Typography sx={{ ...styles.sectionTitle, mt: '0.75rem' }}>Moderator notes for action</Typography>
                             <StyledTextField
-                                placeholder="Notes about the action"
+                                placeholder={actionType === ModActionType.Rename ? 'Notes about the action (optional)' : 'Notes about the action (required)'}
                                 value={note}
-                                onChange={(e) => setNote(e.target.value)}
+                                onChange={(e) => {
+                                    setNote(e.target.value);
+                                    setIsNoteError(false);
+                                }}
                                 multiline
                                 rows={3}
                                 size="small"
+                                errorMessage={
+                                    isNoteError ? 'A note is required for this action type' : ''
+                                }
                             />
                         </Box>
                     )}
@@ -520,11 +528,13 @@ const UserManagementTab: React.FC = () => {
                         ) : (
                             <Box sx={styles.actionHistoryContainer}>
                                 {modActions.map((action) => {
-                                    const status = getActionStatus(action);
+                                    const status = getActionStatus(action, selectedPlayer);
                                     const isExpanded = expandedActionId === action.id;
-                                    const isCancellable = !action.cancelledAt
+                                    const isCancellable = (!action.cancelledAt
                                         && action.actionType !== ModActionType.Warning
-                                        && !(action.expiresAt && new Date(action.expiresAt) <= new Date());
+                                        && !(action.expiresAt && new Date(action.expiresAt) <= new Date())
+                                        && action.actionType !== ModActionType.Rename)
+                                        || selectedPlayer.activeRename?.modActionId === action.id;
 
                                     return (
                                         <Box key={action.id} sx={styles.actionHistoryItem}>
@@ -582,10 +592,10 @@ const UserManagementTab: React.FC = () => {
                                                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
                                                         <Box>
                                                             <Typography sx={{ color: '#8C8C8C', fontSize: '0.75rem', mb:'0px' }}>
-                                                                Moderator ID:
+                                                                Moderator Username:
                                                             </Typography>
                                                             <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                {action.moderatorId}
+                                                                {action.moderatorUsername}
                                                             </Typography>
                                                         </Box>
                                                         {action.startedAt && (
@@ -608,13 +618,25 @@ const UserManagementTab: React.FC = () => {
                                                                 </Typography>
                                                             </Box>
                                                         )}
+                                                        {action.durationDays && (
+                                                            <Box>
+                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
+                                                                    Time Left
+                                                                </Typography>
+                                                                <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
+                                                                    {formatDuration(action.durationDays)}
+                                                                </Typography>
+                                                            </Box>
+                                                        )
+
+                                                        }
                                                         {action.cancelledAt && (
                                                             <Box>
                                                                 <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
                                                                     Cancelled
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.cancelledAt)} by {action.cancelledBy}
+                                                                    {formatDate(action.cancelledAt)} by {action.cancelledByUsername}
                                                                 </Typography>
                                                             </Box>
                                                         )}
@@ -638,7 +660,7 @@ const UserManagementTab: React.FC = () => {
                 onConfirm={confirmDialog.onConfirm}
                 onCancel={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
                 confirmButtonText={confirmDialog.confirmText || 'Confirm Action'}
-                cancelButtonText="Cancel Action"
+                cancelButtonText="Go Back"
             />
         </Box>
     );
