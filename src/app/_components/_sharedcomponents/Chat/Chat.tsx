@@ -65,9 +65,10 @@ const Chat: React.FC<IChatProps> = ({
                 };
 
             case !!(user?.moderation):
+                const muteText = getMuteDisplayText(user.moderation);
                 return {
                     reason: ChatDisabledReason.UserMuted,
-                    message: `You are muted for ${getMuteDisplayText(user.moderation)}`,
+                    message: `You are muted for ${muteText}`,
                     borderColor: 'yellow'
                 };
             case didCurrentUserMuteChat:
