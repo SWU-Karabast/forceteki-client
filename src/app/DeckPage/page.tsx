@@ -250,7 +250,7 @@ const DeckPage: React.FC = () => {
     const styles = {
         header:{
             width: '100%',
-            flexDirection: { xs: 'row', md: 'row' },
+            flexDirection: 'row',
             display:'flex',
             justifyContent: 'space-between',
         },
@@ -271,9 +271,10 @@ const DeckPage: React.FC = () => {
         },
         deckContainer: (isSelected: boolean) => ({
             background: isSelected ? '#2F7DB680' : '#20344280',
-            width: { xs: '100%', md: '31rem' },
-            height: { xs: 'auto', md: '13rem' },
-            minHeight: { xs: '9rem', md: '13rem' },
+            width: { xs: '29rem', md: '31rem' },
+            //height: { xs: 'auto', md: '13rem' },
+            height: '13rem',
+            minHeight: '13rem',
             borderRadius: '5px',
             padding:'5px',
             display:'flex',
@@ -286,17 +287,17 @@ const DeckPage: React.FC = () => {
             position: 'relative',
         }),
         gridContainer:{
-            mt: { xs: '15px', md: '30px' },
+            mt: '30px',
             overflowY: 'auto',
-            maxHeight: { xs: 'calc(100vh - 160px)', md: '84%' },
-            pb: { xs: '11rem', md: '0' },
+            maxHeight: '84%',
+            pb:'0',
         },
         CardSetContainerStyle:{
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
-            width: { xs: '9rem', md: '15.2rem' },
-            height: { xs: '7.5rem', md: '12.1rem' },
+            width: '15.2rem',
+            height: '12.1rem',
         },
         parentBoxStyling: {
             position:'absolute',
@@ -305,8 +306,8 @@ const DeckPage: React.FC = () => {
             backgroundColor: 'transparent',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
-            width: { xs: '12.5rem', md: '14rem' },
-            height: { xs: '8.18rem', md: '10.18rem' },
+            width: {xs: '12rem', md:'14rem'},
+            height: {xs: '8.18rem', md:'10.18rem'},
             backgroundImage: 'url(/leaders/boba.webp)',
             backgroundRepeat: 'no-repeat',
             textAlign: 'center' as const,
@@ -320,18 +321,18 @@ const DeckPage: React.FC = () => {
             display:'flex',
             alignItems:'center',
             height:'100%',
-            width: { xs: '40%', md: 'calc(55% - 5px)' },
+            width: 'calc(55% - 5px)',
         },
         deckMetaContainer:{
             display:'flex',
             flexDirection:'column',
-            width: { xs: '60%', md: 'calc(45% - 5px)' },
+            width: 'calc(45% - 5px)',
             height:'100%',
             justifyContent: 'space-between',
         },
         deckTitle:{
             mt: { xs: '8%', md: '14%' },
-            fontSize: { xs: '1.3rem', md: '1rem' },
+            fontSize: { xs: '1rem', md: '1rem' },
         },
         viewDeckButton:{
             display:'flex',
@@ -581,6 +582,7 @@ const DeckPage: React.FC = () => {
                                         <PreferenceButton
                                             variant="standard"
                                             text="View Deck"
+                                            sx={{fontSize: '1rem', padding:'0.5rem' }}
                                             buttonFnc={() => handleViewDeck(deck.deckID)}
                                         />
                                     </Box>
