@@ -1,5 +1,5 @@
 'use client';
-import { Box, MenuItem, Typography } from '@mui/material';
+import {Box, MenuItem, Typography, useMediaQuery, useTheme} from '@mui/material';
 import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import Grid from '@mui/material/Grid2';
@@ -37,7 +37,8 @@ const DeckPage: React.FC = () => {
     const router = useRouter();
     const { data: session } = useSession(); // Get session from next-auth
     const { user } = useUser();
-
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     // Load decks from localStorage on component mount
     useEffect(() => {
         fetchDecks();
@@ -256,20 +257,26 @@ const DeckPage: React.FC = () => {
             justifyContent: 'space-between',
         },
         sortBy:{
-            minWidth:'100px'
+            minWidth:'100px',
+            display: { xs: 'none', md: 'block' },
         },
         sortByContainer:{
             display:'flex',
             flexDirection: 'row',
             alignItems:'center',
+            justifyContent:'space-between',
+            flexWrap: 'nowrap',
+            gap: { xs: '10px', md: '0' },
         },
         dropdown:{
-            maxWidth:'10rem',
+            maxWidth: { xs: '10rem', md: '10rem' },
         },
         deckContainer: (isSelected: boolean) => ({
             background: isSelected ? '#2F7DB680' : '#20344280',
-            width: '31rem',
+            width: { xs: '29rem', md: '31rem' },
+            //height: { xs: 'auto', md: '13rem' },
             height: '13rem',
+            minHeight: '13rem',
             borderRadius: '5px',
             padding:'5px',
             display:'flex',
@@ -285,13 +292,14 @@ const DeckPage: React.FC = () => {
             mt: '30px',
             overflowY: 'auto',
             maxHeight: '84%',
+            pb:'0',
         },
         CardSetContainerStyle:{
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
             width: '15.2rem',
-            height: '12.1rem'
+            height: '12.1rem',
         },
         parentBoxStyling: {
             position:'absolute',
@@ -300,8 +308,8 @@ const DeckPage: React.FC = () => {
             backgroundColor: 'transparent',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
-            width: '14rem',
-            height: '10.18rem',
+            width: {xs: '12rem', md:'14rem'},
+            height: {xs: '8.18rem', md:'10.18rem'},
             backgroundImage: 'url(/leaders/boba.webp)',
             backgroundRepeat: 'no-repeat',
             textAlign: 'center' as const,
@@ -309,23 +317,24 @@ const DeckPage: React.FC = () => {
             display: 'flex',
             cursor: 'pointer',
             position: 'relative' as const,
-            ml: '15px',
+            ml: { xs: '8px', md: '15px' },
         },
         leaderBaseHolder:{
             display:'flex',
             alignItems:'center',
             height:'100%',
-            width: 'calc(55% - 5px)'
+            width: 'calc(55% - 5px)',
         },
         deckMetaContainer:{
             display:'flex',
             flexDirection:'column',
-            width:'calc(45% - 5px)',
+            width: 'calc(45% - 5px)',
             height:'100%',
             justifyContent: 'space-between',
         },
         deckTitle:{
-            mt: '14%',
+            mt: { xs: '8%', md: '14%' },
+            fontSize: { xs: '1rem', md: '1rem' },
         },
         viewDeckButton:{
             display:'flex',
@@ -335,9 +344,9 @@ const DeckPage: React.FC = () => {
         },
         favoriteIcon: {
             position: 'absolute',
-            top: '10px',
-            right: '10px',
-            fontSize: '24px',
+            top: { xs: '5px', md: '10px' },
+            right: { xs: '5px', md: '10px' },
+            fontSize: { xs: '20px', md: '24px' },
             color: 'gold',
             cursor: 'pointer',
             zIndex: 10,
@@ -356,10 +365,11 @@ const DeckPage: React.FC = () => {
             width: '100%',
             textAlign: 'center',
             marginTop: '2rem',
+            fontSize: { xs: '1rem', md: 'inherit' },
         },
         addNewDeck:{
-            width:'350px',
-            ml:'40px'
+            width: { xs: 'auto', md: '350px' },
+            ml: { xs: '0px', md: '40px' },
         },
         selectionInfo: {
             color: 'white',
@@ -368,7 +378,7 @@ const DeckPage: React.FC = () => {
         // New style for the selection checkmark
         selectionCheckmark: {
             position: 'absolute',
-            bottom: '34px',
+            bottom: { xs: '10px', md: '34px' },
             right: '10px',
             width: '24px',
             height: '24px',
@@ -387,7 +397,7 @@ const DeckPage: React.FC = () => {
         sourceTag: {
             padding: '4px 10px',
             borderRadius: '15px',
-            fontSize: '0.75rem',
+            fontSize: { xs:'1rem', md:'0.75rem'},
             fontWeight: '500',
             display: 'inline-block',
             marginTop: '8px',
@@ -487,7 +497,7 @@ const DeckPage: React.FC = () => {
             boxShadow: '0 0 5px #4CB5FF',
         },
         titleContainer:{
-            width:'6rem',
+            width: '6rem',
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
@@ -518,13 +528,14 @@ const DeckPage: React.FC = () => {
                         ))}
                     </StyledTextField>
                     <Box sx={styles.addNewDeck}>
-                        <PreferenceButton variant={'standard'} text={'Add New Deck'} buttonFnc={() => setAddDeckDialogOpen(true)}/>
+                        <PreferenceButton variant={'standard'} sx={isMobile ? { fontSize: '14px', pt: '6px', pb: '6px', minWidth: '36px' } : {}}  text={isMobile ? '+' : 'Add New Deck'} buttonFnc={() => setAddDeckDialogOpen(true)}/>
                     </Box>
                 </Box>
                 <Box>
                     <PreferenceButton
                         variant={'concede'}
-                        text={'Delete deck(s)'}
+                        sx={isMobile ? { fontSize: '14px', pt: '6px', pb: '6px', minWidth: '36px' } : {}}
+                        text={isMobile ? '−' : 'Delete deck(s)'}
                         buttonFnc={openDeleteDialog}
                         disabled={selectedDecks.length === 0}
                     />
@@ -582,6 +593,7 @@ const DeckPage: React.FC = () => {
                                         <PreferenceButton
                                             variant="standard"
                                             text="View Deck"
+                                            sx={{fontSize: '1rem', padding:'0.5rem' }}
                                             buttonFnc={() => handleViewDeck(deck.deckID)}
                                         />
                                     </Box>
