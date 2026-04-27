@@ -179,12 +179,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     borderColor: '#bc63dc',
                     color: '#bc63dc',
                     boxShadow: '0 0 5px #bc63dc',
-                },
-                unlimited: {
-                    borderColor: '#fecfff',
-                    color: '#fecfff',
-                    boxShadow: '0 0 5px #fecfff',
-
                 }
             },
             gamesToWin: {
@@ -237,8 +231,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return styles.tags.cardPool.current;
             case CardPool.NextSet:
                 return styles.tags.cardPool.nextSet;
-            case CardPool.Unlimited:
-                return styles.tags.cardPool.unlimited;
             default:
                 return {};
         }
@@ -352,15 +344,19 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                 {getFormatIcon(lobby.format)}
                                 { FormatTagLabels[lobby.format] || lobby.format.toUpperCase() }
                             </Box>
-                            <Box
-                                sx={{
-                                    ...styles.tags.lobbySetting,
-                                    ...getCardPoolTagStyle(lobby.cardPool),
-                                }}
-                            >
-                                {getCardPoolIcon(lobby.cardPool)}
-                                { CardPoolLabels[lobby.cardPool] || lobby.cardPool.toUpperCase() }
-                            </Box>
+                            {lobby.cardPool !== 'unlimited' && ( 
+                                // Don't show unlimited card pool tag because it's never selectable
+                                // It's just the default card pool for Open lobbies
+                                <Box
+                                    sx={{
+                                        ...styles.tags.lobbySetting,
+                                        ...getCardPoolTagStyle(lobby.cardPool),
+                                    }}
+                                >
+                                    {getCardPoolIcon(lobby.cardPool)}
+                                    { CardPoolLabels[lobby.cardPool] || lobby.cardPool.toUpperCase() }
+                                </Box>
+                            )}
                             <Box
                                 sx={{
                                     ...styles.tags.lobbySetting,
