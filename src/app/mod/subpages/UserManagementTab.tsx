@@ -426,13 +426,18 @@ const UserManagementTab: React.FC = () => {
                                         backgroundColor: 'rgba(0, 0, 0, 0.2)',
                                     }}>
                                         {selectedPlayer.isMuted && (
-                                            <Typography sx={{ color: '#ef5350', fontSize: '0.875rem', fontWeight: 600, mb:'5px' }}>
+                                            <Typography sx={{ color: '#ef5350', fontSize: '0.875rem', fontWeight: 600, mb: '5px' }}>
                                                 Currently muted
                                             </Typography>
                                         )}
                                         {selectedPlayer.activeRename && (
                                             <Typography sx={{ color: '#ffd54f', fontSize: '0.875rem', fontWeight: 600 }}>
                                                 Pending force rename
+                                            </Typography>
+                                        )}
+                                        {!selectedPlayer.isMuted && !selectedPlayer.activeRename && (
+                                            <Typography sx={{ color: '#9e9e9e', fontSize: '0.875rem', fontWeight: 600 }}>
+                                                No active mod actions
                                             </Typography>
                                         )}
                                     </Box>
@@ -466,7 +471,7 @@ const UserManagementTab: React.FC = () => {
                                     <>
                                         <StyledTextField
                                             type="number"
-                                            label="amount"
+                                            placeholder="Duration"
                                             value={durationValue}
                                             onChange={(e) => setDurationValue(e.target.value)}
                                             size="small"
