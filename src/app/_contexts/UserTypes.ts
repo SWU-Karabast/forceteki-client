@@ -63,9 +63,15 @@ export interface ICosmeticsPreferences {
     // disablePlaymats?: boolean;
 }
 
+export interface IGameOptions {
+    muteChat?: boolean;
+}
+
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
+    gameOptions?: IGameOptions;
+
 }
 
 export interface IUserContextType {
