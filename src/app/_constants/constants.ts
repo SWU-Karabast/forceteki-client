@@ -123,6 +123,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'kyberdecks.com';
             case DeckSource.CardCore:
                 return 'cardcore.gg';
+            case DeckSource.HoloScan:
+                return 'holoscan.net';
             default:
                 return source;
         }
