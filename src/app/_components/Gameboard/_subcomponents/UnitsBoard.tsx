@@ -5,7 +5,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useGame } from '@/app/_contexts/Game.context';
+import { useBoardState } from '@/app/_hooks/useBoardState';
 import BreakpointOverlay from './BreakpointOverlay';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
@@ -77,7 +77,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         }));
     };
 
-    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { gameState, connectedPlayer, getOpponent } = useBoardState();
 
     const rawPlayerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
     const rawOpponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];

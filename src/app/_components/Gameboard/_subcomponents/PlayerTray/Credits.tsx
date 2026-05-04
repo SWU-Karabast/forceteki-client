@@ -3,7 +3,7 @@ import { Card, CardContent, Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { debugBorder } from '@/app/_utils/debug';
 import { ICreditsProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useGame } from '@/app/_contexts/Game.context';
+import { useBoardState } from '@/app/_hooks/useBoardState';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
@@ -11,7 +11,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 const Credits: React.FC<ICreditsProps> = ({
     trayPlayer
 }) => {
-    const { gameState, connectedPlayer } = useGame();
+    const { gameState, connectedPlayer } = useBoardState();
     const { togglePopup, openPopup, popups } = usePopup();
     const containerRef = useRef<HTMLDivElement>(null);
     const { isPortrait } = useScreenOrientation();
