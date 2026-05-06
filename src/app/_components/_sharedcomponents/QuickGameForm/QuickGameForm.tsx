@@ -104,10 +104,12 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         }
         const fmt = valueOrDefault(deckPreferences.matchConfig.format, formats, DefaultFormat.format);
         const config = getFormatConfig(formatConfigs, fmt);
+        const cardPools = config?.cardPools ?? [CardPool.Current];
+        const gamesToWinModes = config?.gamesToWinModes ?? [GamesToWinMode.BestOfOne];
         return {
             format: fmt,
-            cardPool: valueOrDefault(deckPreferences.matchConfig.cardPool, config?.cardPools ?? [CardPool.Current], DefaultFormat.cardPool),
-            gamesToWinMode: valueOrDefault(deckPreferences.matchConfig.gamesToWinMode, config?.gamesToWinModes ?? [GamesToWinMode.BestOfOne], DefaultFormat.gamesToWinMode),
+            cardPool: valueOrDefault(deckPreferences.matchConfig.cardPool, cardPools, cardPools[0]),
+            gamesToWinMode: valueOrDefault(deckPreferences.matchConfig.gamesToWinMode, gamesToWinModes, gamesToWinModes[0]),
         }
     }, [deckPreferences.matchConfig.format, deckPreferences.matchConfig.cardPool, deckPreferences.matchConfig.gamesToWinMode, formats, formatConfigs]);
 

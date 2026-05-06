@@ -285,6 +285,32 @@ export async function GET(req: Request) {
                 console.error('KyberDecks API error:', response.statusText);
                 throw new Error(`KyberDecks API error: ${response.statusText}`);
             }
+        } else if (deckLink.includes('cardcore.gg')) {
+            // Deck Links in the form: https://store.cardcore.gg/decks/${deckId}
+            const match = deckLink.match(/\/decks\/(\d+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if (deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.CardCore;
+
+            if (!deckId) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            const apiUrl = `https://store.cardcore.gg/api/decks/${deckId}/json`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck is set to Public on cardcore.gg.' }, { status: 404 });
+                }
+
+                console.error('CardCore API error:', response.statusText);
+                throw new Error(`CardCore API error: ${response.statusText}`);
+            }
         } else {
             console.error('Error: Deckbuilder not supported');
             return NextResponse.json({ error: 'Deckbuilder not supported' }, { status: 400 });
