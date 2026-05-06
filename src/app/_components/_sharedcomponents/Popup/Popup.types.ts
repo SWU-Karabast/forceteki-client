@@ -11,6 +11,7 @@ export type PopupButton = {
     command: string;
     arg: string;
     selected?: boolean;
+    disabled?: boolean;
 };
 
 export type PerCardButton = {

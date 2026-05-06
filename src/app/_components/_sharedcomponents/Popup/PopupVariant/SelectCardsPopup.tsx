@@ -126,6 +126,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                             key={`${button.arg}:${index}`}
                             sx={perCardButtonStyle}
                             variant="contained"
+                            disabled={button.disabled}
                             onClick={() => {
                                 sendGameMessage([button.command, button.arg, data.uuid]);
                             }}
