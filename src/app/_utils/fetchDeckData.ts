@@ -23,6 +23,7 @@ export enum DeckSource {
     SWUForge = 'SWUForge',
     KyberDecks = 'KyberDecks',
     CardCore = 'CardCore',
+    HoloScan = 'HoloScan'
 }
 
 export interface IDeckData {
@@ -93,6 +94,8 @@ export const determineDeckSource = (deckLink: string): DeckSource => {
         return DeckSource.KyberDecks;
     } else if (deckLink.includes('cardcore.gg')) {
         return DeckSource.CardCore;
+    } else if (deckLink.includes('holoscan.net')) {
+        return DeckSource.HoloScan;
     }
 
     // Default fallback
