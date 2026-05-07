@@ -28,7 +28,7 @@ const UserManagementTab: React.FC = () => {
     // Action form state
     const [actionType, setActionType] = useState<ModActionType>(ModActionType.Mute);
     const [durationValue, setDurationValue] = useState<string>('');
-    const [durationUnit, setDurationUnit] = useState<DurationUnit>(DurationUnit.Days);
+    const [durationUnit, setDurationUnit] = useState<DurationUnit>(DurationUnit.Weeks);
     const [note, setNote] = useState('');
     const [isNoteError, setIsNoteError] = useState<Boolean>(false);
     // Action history expanded state
@@ -487,8 +487,8 @@ const UserManagementTab: React.FC = () => {
                                             size="small"
                                             sx={{ minWidth: '100px', maxWidth:'130px' }}
                                         >
-                                            <MenuItem value={DurationUnit.Days}>Days</MenuItem>
                                             <MenuItem value={DurationUnit.Weeks}>Weeks</MenuItem>
+                                            <MenuItem value={DurationUnit.Days}>Days</MenuItem>
                                         </StyledTextField>
                                     </>
                                 )}
