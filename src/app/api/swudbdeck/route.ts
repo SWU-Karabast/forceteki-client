@@ -311,6 +311,33 @@ export async function GET(req: Request) {
                 console.error('CardCore API error:', response.statusText);
                 throw new Error(`CardCore API error: ${response.statusText}`);
             }
+        } else if (deckLink.includes('holoscan.net')) {
+            // Deck Links in the forms:
+            // https://holoscan.net/decks/${deckId}  (e.g. STd7VXjQoaLRS6Y6my5Q or t-409272-a1111904)
+            const match = deckLink.match(/\/decks\/([^\/]+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if (deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.HoloScan;
+
+            if (!deckId) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            const apiUrl = `https://holoscan.net/api/decks/${deckId}`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck exists on holoscan.net.' }, { status: 404 });
+                }
+
+                console.error('HoloScan API error:', response.statusText);
+                throw new Error(`HoloScan API error: ${response.statusText}`);
+            }
         } else {
             console.error('Error: Deckbuilder not supported');
             return NextResponse.json({ error: 'Deckbuilder not supported' }, { status: 400 });

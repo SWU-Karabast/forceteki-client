@@ -157,6 +157,11 @@ const CardActionTray: React.FC = () => {
     const styles = createStyles(isPortrait);
 
     const showTrayButtons = () => {
+        if (playerState.promptState.promptType === 'displayCards') {
+            // Buttons for the display cards prompt are rendered within the popup itself, not in the action tray
+            return false;
+        }
+
         if ( playerState.promptState.promptType === 'actionWindow' ||
              playerState.promptState.promptType === 'resource' ||
              playerState.promptState.promptType === 'distributeAmongTargets' ||
