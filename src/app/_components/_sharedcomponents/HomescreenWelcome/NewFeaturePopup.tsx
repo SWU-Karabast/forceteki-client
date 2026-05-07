@@ -97,9 +97,9 @@ const WhatsNewPopupAnnouncement: React.FC<IWhatsNewPopupProps> = ({ open, onClos
                         <Image
                             src={announcement.image}
                             alt="Highlighted Stats Panel"
-                            width={400}
-                            height={240}
-                            style={{ borderRadius: '8px', width: '33em', height: '14em' }}
+                            width={546}
+                            height={204}
+                            style={{ borderRadius: '8px', width: '20em', height: 'auto' }}
                         />
 
                     </Box>
