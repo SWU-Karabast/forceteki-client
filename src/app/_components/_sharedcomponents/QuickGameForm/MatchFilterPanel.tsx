@@ -10,7 +10,6 @@ import {
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import {
-    Aspect,
     BaseConstraint,
     MatchPreferences,
     NARROW_FILTER_THRESHOLD,
@@ -21,13 +20,6 @@ interface LeaderOption {
     name: string;
     id: string;
     subtitle?: string;
-}
-
-interface BaseOption {
-    name: string;
-    id: string;
-    subtitle?: string;
-    aspects: string[];
 }
 
 interface IMatchFilterPanelProps {
@@ -44,10 +36,7 @@ function leaderLabel(leader: LeaderOption | undefined): string {
     return leader.subtitle ? `${leader.name} - ${leader.subtitle}` : leader.name;
 }
 
-function baseConstraintSummary(
-    constraint: BaseConstraint | undefined,
-    bases: Map<string, BaseOption>,
-): React.ReactNode {
+function baseConstraintSummary(constraint: BaseConstraint | undefined): React.ReactNode {
     if (!constraint) {
         return <Typography component="span" sx={styles.summaryConstraint}>any base</Typography>;
     }
@@ -60,35 +49,28 @@ function baseConstraintSummary(
             </Typography>
         );
     }
-    const base = bases.get(constraint.baseId);
     return (
-        <Typography component="span" sx={styles.summaryConstraint}>+ {base?.name ?? constraint.baseId}</Typography>
+        <Typography component="span" sx={styles.summaryConstraint}>+ {constraint.label ?? `${constraint.baseIds.length} bases`}</Typography>
     );
 }
 
 const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, setMatchPreferences }) => {
     const router = useRouter();
     const [leaders, setLeaders] = useState<LeaderOption[]>([]);
-    const [bases, setBases] = useState<BaseOption[]>([]);
 
     useEffect(() => {
         let cancelled = false;
         const load = async () => {
             try {
-                const [leadersRes, basesRes] = await Promise.all([
-                    fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-leaders`),
-                    fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-bases`),
-                ]);
-                if (!leadersRes.ok || !basesRes.ok) {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-leaders`);
+                if (!res.ok) {
                     return;
                 }
-                const leadersData: LeaderOption[] = await leadersRes.json();
-                const basesData: BaseOption[] = await basesRes.json();
+                const leadersData: LeaderOption[] = await res.json();
                 if (cancelled) {
                     return;
                 }
                 setLeaders(leadersData);
-                setBases(basesData);
             } catch {
                 // Summary will fall back to ids; the manage page surfaces errors.
             }
@@ -100,7 +82,6 @@ const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, 
     }, []);
 
     const leaderById = useMemo(() => new Map(leaders.map((l) => [l.id, l])), [leaders]);
-    const baseById = useMemo(() => new Map(bases.map((b) => [b.id, b])), [bases]);
 
     const handleRadioChange = (_: ChangeEvent<HTMLInputElement>, value: string) => {
         const enabled = value === 'specific';
@@ -152,7 +133,7 @@ const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, 
                                         <Typography component="span" sx={styles.summaryLeaderName}>
                                             {leaderLabel(leaderById.get(archetype.leaderId))}
                                         </Typography>{' '}
-                                        {baseConstraintSummary(archetype.baseConstraint, baseById)}
+                                        {baseConstraintSummary(archetype.baseConstraint)}
                                     </Box>
                                 ))}
                             </Box>

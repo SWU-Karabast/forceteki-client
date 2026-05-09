@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import {
     Aspect,
     BaseConstraint,
+    IBaseTypeOption,
     OpponentArchetype,
     MatchPreferences,
 } from '@/app/_constants/constants';
@@ -48,14 +49,7 @@ interface LeaderOption {
     subtitle?: string;
 }
 
-interface BaseOption {
-    name: string;
-    id: string;
-    subtitle?: string;
-    aspects: string[];
-}
-
-type BaseConstraintKind = 'any' | 'aspect' | 'specificBase';
+type BaseConstraintKind = 'any' | 'aspect' | 'baseType';
 
 const ASPECT_OPTIONS: Aspect[] = [
     Aspect.Aggression,
@@ -80,11 +74,8 @@ function leaderLabel(option: LeaderOption | null): string {
     return option.subtitle ? `${option.name} - ${option.subtitle}` : option.name;
 }
 
-function baseLabel(option: BaseOption | null): string {
-    if (!option) {
-        return '';
-    }
-    return option.name;
+function baseTypeLabel(option: IBaseTypeOption | null): string {
+    return option?.label ?? '';
 }
 
 function capitalize(value: string): string {
@@ -104,7 +95,7 @@ const OpponentPreferencesPage: React.FC = () => {
 
     const [prefs, setPrefs] = useState<MatchPreferences>(() => loadMatchPreferences());
     const [leaders, setLeaders] = useState<LeaderOption[]>([]);
-    const [bases, setBases] = useState<BaseOption[]>([]);
+    const [baseTypes, setBaseTypes] = useState<IBaseTypeOption[]>([]);
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -112,22 +103,22 @@ const OpponentPreferencesPage: React.FC = () => {
         let cancelled = false;
         const load = async () => {
             try {
-                const [leadersRes, basesRes] = await Promise.all([
+                const [leadersRes, baseTypesRes] = await Promise.all([
                     fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-leaders`),
-                    fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-bases`),
+                    fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-base-types`),
                 ]);
-                if (!leadersRes.ok || !basesRes.ok) {
-                    throw new Error(`Failed to load leaders/bases (${leadersRes.status}/${basesRes.status})`);
+                if (!leadersRes.ok || !baseTypesRes.ok) {
+                    throw new Error(`Failed to load leaders/base types (${leadersRes.status}/${baseTypesRes.status})`);
                 }
                 const leadersData: LeaderOption[] = await leadersRes.json();
-                const basesData: BaseOption[] = await basesRes.json();
+                const baseTypesData: IBaseTypeOption[] = await baseTypesRes.json();
                 if (cancelled) {
                     return;
                 }
                 leadersData.sort((a, b) => leaderLabel(a).localeCompare(leaderLabel(b)));
-                basesData.sort((a, b) => a.name.localeCompare(b.name));
+                baseTypesData.sort((a, b) => a.label.localeCompare(b.label));
                 setLeaders(leadersData);
-                setBases(basesData);
+                setBaseTypes(baseTypesData);
                 setLoaded(true);
             } catch (err) {
                 if (cancelled) {
@@ -143,7 +134,13 @@ const OpponentPreferencesPage: React.FC = () => {
     }, []);
 
     const leaderById = useMemo(() => new Map(leaders.map((l) => [l.id, l])), [leaders]);
-    const baseById = useMemo(() => new Map(bases.map((b) => [b.id, b])), [bases]);
+    const baseTypesByJoinedIds = useMemo(() => {
+        const map = new Map<string, IBaseTypeOption>();
+        for (const baseType of baseTypes) {
+            map.set(baseType.baseIds.slice().sort().join('|'), baseType);
+        }
+        return map;
+    }, [baseTypes]);
 
     const persist = (next: MatchPreferences) => {
         setPrefs(next);
@@ -177,8 +174,10 @@ const OpponentPreferencesPage: React.FC = () => {
     const renderArchetype = (archetype: OpponentArchetype, index: number) => {
         const kind = getConstraintKind(archetype.baseConstraint);
         const selectedLeader = leaderById.get(archetype.leaderId) ?? null;
-        const selectedBaseId = archetype.baseConstraint?.kind === 'specificBase' ? archetype.baseConstraint.baseId : null;
-        const selectedBase = selectedBaseId ? (baseById.get(selectedBaseId) ?? null) : null;
+        const selectedBaseTypeKey = archetype.baseConstraint?.kind === 'baseType'
+            ? archetype.baseConstraint.baseIds.slice().sort().join('|')
+            : null;
+        const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
         const selectedAspect = archetype.baseConstraint?.kind === 'aspect' ? archetype.baseConstraint.aspect : Aspect.Vigilance;
 
         const onLeaderChange = (next: LeaderOption | null) => {
@@ -199,9 +198,13 @@ const OpponentPreferencesPage: React.FC = () => {
                 });
                 return;
             }
+            const firstType = baseTypes[0];
+            if (!firstType) {
+                return;
+            }
             updateArchetype(index, {
                 ...archetype,
-                baseConstraint: { kind: 'specificBase', baseId: bases[0]?.id ?? '' },
+                baseConstraint: { kind: 'baseType', baseIds: firstType.baseIds, label: firstType.label },
             });
         };
 
@@ -212,15 +215,19 @@ const OpponentPreferencesPage: React.FC = () => {
             });
         };
 
-        const onBaseChange = (next: BaseOption | null) => {
+        const onBaseTypeChange = (next: IBaseTypeOption | null) => {
+            if (!next) {
+                return;
+            }
             updateArchetype(index, {
                 ...archetype,
-                baseConstraint: { kind: 'specificBase', baseId: next?.id ?? '' },
+                baseConstraint: { kind: 'baseType', baseIds: next.baseIds, label: next.label },
             });
         };
 
         const leaderImageUrl = selectedLeader ? cardImageUrlFromSetCodeId(selectedLeader.id) : null;
-        const baseImageUrl = selectedBase ? cardImageUrlFromSetCodeId(selectedBase.id) : null;
+        const baseImageUrl = selectedBaseType ? cardImageUrlFromSetCodeId(selectedBaseType.representativeId) : null;
+        const isUniqueBaseType = !!selectedBaseType && selectedBaseType.baseIds.length === 1;
 
         return (
             <Box key={index} sx={styles.archetypeCard}>
@@ -230,8 +237,18 @@ const OpponentPreferencesPage: React.FC = () => {
                     ) : (
                         <Box sx={styles.cardImagePlaceholder} />
                     )}
-                    {kind === 'specificBase' && baseImageUrl && (
+                    {kind === 'baseType' && baseImageUrl && isUniqueBaseType && (
                         <Box sx={{ ...styles.cardImage, backgroundImage: `url(${baseImageUrl})` }} />
+                    )}
+                    {kind === 'baseType' && selectedBaseType && !isUniqueBaseType && (
+                        <Box sx={styles.aspectImageWrapper}>
+                            <Box
+                                component="img"
+                                src={aspectIconUrl(selectedBaseType.aspect)}
+                                alt={selectedBaseType.aspect}
+                                sx={styles.aspectImage}
+                            />
+                        </Box>
                     )}
                     {kind === 'aspect' && (
                         <Box sx={styles.aspectImageWrapper}>
@@ -267,7 +284,7 @@ const OpponentPreferencesPage: React.FC = () => {
                         >
                             <MenuItem value="any">Any base</MenuItem>
                             <MenuItem value="aspect">Any base of aspect…</MenuItem>
-                            <MenuItem value="specificBase">Specific base…</MenuItem>
+                            <MenuItem value="baseType">Specific base type…</MenuItem>
                         </Select>
                     </Box>
                     {kind === 'aspect' && (
@@ -295,30 +312,36 @@ const OpponentPreferencesPage: React.FC = () => {
                             </Select>
                         </Box>
                     )}
-                    {kind === 'specificBase' && (
+                    {kind === 'baseType' && (
                         <Box sx={styles.fieldRow}>
-                            <Typography sx={styles.fieldLabel}>Specific base</Typography>
+                            <Typography sx={styles.fieldLabel}>Base type</Typography>
                             <Autocomplete
-                                options={bases}
-                                value={selectedBase}
-                                getOptionLabel={baseLabel}
+                                options={baseTypes}
+                                value={selectedBaseType}
+                                getOptionLabel={baseTypeLabel}
                                 isOptionEqualToValue={(option, value) => option.id === value.id}
-                                onChange={(_, value) => onBaseChange(value)}
-                                renderInput={(params) => <TextField {...params} placeholder="Select base" size="small" />}
+                                onChange={(_, value) => onBaseTypeChange(value)}
+                                groupBy={(option) => capitalize(option.aspect)}
+                                renderInput={(params) => <TextField {...params} placeholder="Select base type" size="small" />}
                                 sx={styles.field}
                                 renderOption={(props, option) => {
-                                    const { key, ...optionProps } = props as any;
+                                    const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
                                     return (
                                         <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.baseOption}>
-                                            {option.aspects[0] && (
+                                            {option.aspect && (
                                                 <Box
                                                     component="img"
-                                                    src={aspectIconUrl(option.aspects[0])}
-                                                    alt={option.aspects[0]}
+                                                    src={aspectIconUrl(option.aspect)}
+                                                    alt={option.aspect}
                                                     sx={styles.aspectOptionIcon}
                                                 />
                                             )}
-                                            {option.name}
+                                            <Typography component="span" sx={styles.baseOptionLabel}>{option.label}</Typography>
+                                            {option.baseIds.length > 1 && (
+                                                <Typography component="span" sx={styles.baseOptionMembers}>
+                                                    ({option.baseIds.length} cards)
+                                                </Typography>
+                                            )}
                                         </Box>
                                     );
                                 }}
@@ -526,6 +549,13 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
+    },
+    baseOptionLabel: {
+        flex: 1,
+    },
+    baseOptionMembers: {
+        color: '#888',
+        fontSize: '0.85em',
     },
     removeButton: {
         color: '#cccccc',

@@ -56,11 +56,25 @@ export enum Aspect {
  * Constraint on which bases a filtered opponent's deck can use, paired with a
  * leader. Omit `baseConstraint` for "any base of this leader".
  *
+ * `baseType` carries the inline list of acceptable card ids — used both for
+ * unique named bases (a single id) and for functionally-grouped types like
+ * "Aggression - Force" (multiple printed cards). The optional `label` is for
+ * display only; the BE rule only inspects `baseIds`.
+ *
  * Wire-format mirror of the BE type in `forceteki/server/gamenode/MatchmakingRules.ts`.
  */
 export type BaseConstraint =
-    | { kind: 'specificBase'; baseId: string }
-    | { kind: 'aspect'; aspect: Aspect };
+    | { kind: 'aspect'; aspect: Aspect }
+    | { kind: 'baseType'; baseIds: string[]; label?: string };
+
+export interface IBaseTypeOption {
+    id: string;
+    label: string;
+    aspect: string;
+    hp: number;
+    baseIds: string[];
+    representativeId: string;
+}
 
 export interface OpponentArchetype {
     leaderId: string;
