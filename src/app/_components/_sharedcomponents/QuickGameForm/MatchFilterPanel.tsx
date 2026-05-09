@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'next/navigation';
 import {
     BaseConstraint,
+    IBaseTypeOption,
     MatchPreferences,
     NARROW_FILTER_THRESHOLD,
     OpponentArchetype,
@@ -36,7 +37,17 @@ function leaderLabel(leader: LeaderOption | undefined): string {
     return leader.subtitle ? `${leader.name} - ${leader.subtitle}` : leader.name;
 }
 
-function baseConstraintSummary(constraint: BaseConstraint | undefined): React.ReactNode {
+/**
+ * Matches a leading '<Aspect> - ' prefix on a base-type label. Stripped when
+ * rendering an aspect-icon badge alongside the label so the aspect isn't
+ * conveyed twice.
+ */
+const ASPECT_PREFIX_PATTERN = /^(?:Aggression|Command|Cunning|Heroism|Vigilance|Villainy) - /;
+
+function baseConstraintSummary(
+    constraint: BaseConstraint | undefined,
+    baseTypesByJoinedIds: Map<string, IBaseTypeOption>,
+): React.ReactNode {
     if (!constraint) {
         return <Typography component="span" sx={styles.summaryConstraint}>any base</Typography>;
     }
@@ -49,28 +60,45 @@ function baseConstraintSummary(constraint: BaseConstraint | undefined): React.Re
             </Typography>
         );
     }
+    const key = constraint.baseIds.slice().sort().join('|');
+    const type = baseTypesByJoinedIds.get(key);
+    const baseAspect = type?.aspect ?? null;
+    const labelText = constraint.label ?? `${constraint.baseIds.length} bases`;
+    const trimmed = baseAspect ? labelText.replace(ASPECT_PREFIX_PATTERN, '') : labelText;
     return (
-        <Typography component="span" sx={styles.summaryConstraint}>+ {constraint.label ?? `${constraint.baseIds.length} bases`}</Typography>
+        <Typography component="span" sx={styles.summaryConstraint}>
+            +
+            {baseAspect && (
+                <Box component="img" src={aspectIconUrl(baseAspect)} alt={baseAspect} sx={styles.summaryAspectIcon} />
+            )}
+            {trimmed}
+        </Typography>
     );
 }
 
 const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, setMatchPreferences }) => {
     const router = useRouter();
     const [leaders, setLeaders] = useState<LeaderOption[]>([]);
+    const [baseTypes, setBaseTypes] = useState<IBaseTypeOption[]>([]);
 
     useEffect(() => {
         let cancelled = false;
         const load = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-leaders`);
-                if (!res.ok) {
+                const [leadersRes, baseTypesRes] = await Promise.all([
+                    fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-leaders`),
+                    fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/all-base-types`),
+                ]);
+                if (!leadersRes.ok || !baseTypesRes.ok) {
                     return;
                 }
-                const leadersData: LeaderOption[] = await res.json();
+                const leadersData: LeaderOption[] = await leadersRes.json();
+                const baseTypesData: IBaseTypeOption[] = await baseTypesRes.json();
                 if (cancelled) {
                     return;
                 }
                 setLeaders(leadersData);
+                setBaseTypes(baseTypesData);
             } catch {
                 // Summary will fall back to ids; the manage page surfaces errors.
             }
@@ -82,6 +110,13 @@ const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, 
     }, []);
 
     const leaderById = useMemo(() => new Map(leaders.map((l) => [l.id, l])), [leaders]);
+    const baseTypesByJoinedIds = useMemo(() => {
+        const map = new Map<string, IBaseTypeOption>();
+        for (const baseType of baseTypes) {
+            map.set(baseType.baseIds.slice().sort().join('|'), baseType);
+        }
+        return map;
+    }, [baseTypes]);
 
     const handleRadioChange = (_: ChangeEvent<HTMLInputElement>, value: string) => {
         const enabled = value === 'specific';
@@ -146,7 +181,7 @@ const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, 
                                             <Typography component="span" sx={styles.summaryLeaderName}>
                                                 {leaderLabel(leaderById.get(archetype.leaderId))}
                                             </Typography>{' '}
-                                            {baseConstraintSummary(archetype.baseConstraint)}
+                                            {baseConstraintSummary(archetype.baseConstraint, baseTypesByJoinedIds)}
                                         </Box>
                                     );
                                 })}

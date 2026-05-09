@@ -68,6 +68,14 @@ const ASPECT_OPTIONS: Aspect[] = [
     Aspect.Villainy,
 ];
 
+/**
+ * Matches a leading '<Aspect> - ' prefix on a base-type label. Used when
+ * an aspect icon is rendered alongside the label, making the text
+ * prefix redundant. Unique-named labels (e.g. 'Colossus - 35hp (R)')
+ * don't match this pattern.
+ */
+const ASPECT_PREFIX_PATTERN = /^(?:Aggression|Command|Cunning|Heroism|Vigilance|Villainy) - /;
+
 function getConstraintKind(constraint: BaseConstraint | undefined): BaseConstraintKind {
     if (!constraint) {
         return 'any';
@@ -215,6 +223,7 @@ const OpponentPreferencesPage: React.FC = () => {
     const renderCollapsedArchetype = (archetype: OpponentArchetype, index: number) => {
         const leader = leaderById.get(archetype.leaderId) ?? null;
         const baseSummary = baseConstraintSummary(archetype.baseConstraint);
+        const baseAspect = baseConstraintAspect(archetype.baseConstraint);
         const isEnabled = archetype.enabled !== false;
         return (
             <Box
@@ -244,9 +253,19 @@ const OpponentPreferencesPage: React.FC = () => {
                 <Typography component="span" sx={styles.collapsedLeader}>
                     {leader ? leaderLabel(leader) : 'Unknown leader'}
                 </Typography>
-                <Typography component="span" sx={styles.collapsedConstraint}>
-                    {baseSummary}
-                </Typography>
+                <Box sx={styles.collapsedConstraintGroup}>
+                    {baseAspect && (
+                        <Box
+                            component="img"
+                            src={aspectIconUrl(baseAspect)}
+                            alt={baseAspect}
+                            sx={styles.aspectOptionIcon}
+                        />
+                    )}
+                    <Typography component="span" sx={styles.collapsedConstraint}>
+                        {baseSummary}
+                    </Typography>
+                </Box>
                 <IconButton
                     aria-label="Edit archetype"
                     size="small"
@@ -272,15 +291,37 @@ const OpponentPreferencesPage: React.FC = () => {
             return 'any base';
         }
         if (constraint.kind === 'aspect') {
-            return `+ any ${capitalize(constraint.aspect)} base`;
+            // The aspect icon next to this text already conveys the aspect.
+            return '+ any base';
         }
         if (constraint.label) {
-            // Use the full label (aspect + tag + hp). The collapsed row shows
-            // the leader's aspect icons next to the leader name; the base's
-            // aspect isn't otherwise represented, so don't strip it.
-            return `+ ${constraint.label}`;
+            // Strip the leading aspect prefix when the label starts with
+            // '<Aspect> - ' (covers grouped types like 'Aggression - 30hp'
+            // and 'Aggression - Force - 28hp'). Unique-named bases like
+            // 'Colossus - 35hp (R)' don't start with an aspect, so they
+            // pass through unchanged.
+            const trimmed = constraint.label.replace(ASPECT_PREFIX_PATTERN, '');
+            return `+ ${trimmed}`;
         }
         return `+ ${constraint.baseIds.length} bases`;
+    }
+
+    /**
+     * Returns the aspect string (e.g. 'aggression') of the base under this
+     * constraint, used to render a small aspect-icon badge next to the
+     * constraint summary in the collapsed row. `null` for "any base"
+     * (no specific aspect) or when the baseType isn't found.
+     */
+    function baseConstraintAspect(constraint: BaseConstraint | undefined): string | null {
+        if (!constraint) {
+            return null;
+        }
+        if (constraint.kind === 'aspect') {
+            return constraint.aspect;
+        }
+        const key = constraint.baseIds.slice().sort().join('|');
+        const type = baseTypesByJoinedIds.get(key);
+        return type?.aspect ?? null;
     }
 
     const renderExpandedArchetype = (archetype: OpponentArchetype, index: number) => {
@@ -689,11 +730,16 @@ const styles = {
         margin: 0,
         flexShrink: 0,
     },
+    collapsedConstraintGroup: {
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.25rem',
+    },
     collapsedConstraint: {
         color: '#bbbbbb',
         fontSize: '0.9em',
         margin: 0,
-        flex: 1,
     },
     collapsedActionButton: {
         color: '#cccccc',
