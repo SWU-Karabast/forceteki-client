@@ -183,9 +183,12 @@ const styles = {
         color: 'white',
     },
     radio: {
-        color: '#bbbbbb',
+        color: '#fff',
         '&.Mui-checked': {
-            color: '#4FABD2',
+            color: '#fff',
+        },
+        '&.Mui-disabled': {
+            color: 'rgba(255, 255, 255, 0.3)',
         },
     },
     radioLabel: {

@@ -17,6 +17,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import {
     Aspect,
     BaseConstraint,
@@ -108,6 +109,9 @@ const OpponentPreferencesPage: React.FC = () => {
     // Index of the archetype currently in expanded-edit mode. Only one at a
     // time; null = all collapsed.
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+    // Index pending removal — when set, the confirmation dialog opens.
+    const [pendingRemovalIndex, setPendingRemovalIndex] = useState<number | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -254,7 +258,7 @@ const OpponentPreferencesPage: React.FC = () => {
                 <IconButton
                     aria-label="Remove archetype"
                     size="small"
-                    onClick={(e) => { e.stopPropagation(); removeArchetype(index); }}
+                    onClick={(e) => { e.stopPropagation(); setPendingRemovalIndex(index); }}
                     sx={styles.collapsedActionButton}
                 >
                     <CloseIcon fontSize="small" />
@@ -507,7 +511,7 @@ const OpponentPreferencesPage: React.FC = () => {
                     </IconButton>
                     <IconButton
                         aria-label="Remove archetype"
-                        onClick={() => removeArchetype(index)}
+                        onClick={() => setPendingRemovalIndex(index)}
                         sx={styles.removeButton}
                     >
                         <CloseIcon />
@@ -552,6 +556,29 @@ const OpponentPreferencesPage: React.FC = () => {
                     </Button>
                 )}
             </Box>
+            <ConfirmationDialog
+                open={pendingRemovalIndex !== null}
+                title="Remove archetype"
+                message={
+                    <>
+                        <Typography sx={styles.confirmPrimary}>
+                            Are you sure you want to remove this archetype? This action cannot be undone.
+                        </Typography>
+                        <Typography sx={styles.confirmHint}>
+                            Tip: if you only want to pause it, toggle it off with the switch instead — disabled
+                            archetypes stay saved and can be re-enabled later.
+                        </Typography>
+                    </>
+                }
+                onCancel={() => setPendingRemovalIndex(null)}
+                onConfirm={() => {
+                    if (pendingRemovalIndex !== null) {
+                        removeArchetype(pendingRemovalIndex);
+                    }
+                    setPendingRemovalIndex(null);
+                }}
+                confirmButtonText="Remove"
+            />
         </Box>
     );
 };
@@ -633,12 +660,23 @@ const styles = {
             opacity: 0.75,
         },
     },
+    confirmPrimary: {
+        color: '#fff',
+        marginBottom: '0.75rem',
+    },
+    confirmHint: {
+        color: '#aaaaaa',
+        fontSize: '0.9em',
+        fontStyle: 'italic',
+    },
     archetypeSwitch: {
+        // Match Karabast's white-accent convention used by checkboxes and
+        // radios elsewhere on the site.
         '& .MuiSwitch-switchBase.Mui-checked': {
-            color: '#4FABD2',
+            color: '#fff',
         },
         '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-            backgroundColor: '#4FABD2',
+            backgroundColor: '#fff',
             opacity: 0.5,
         },
     },
@@ -741,9 +779,12 @@ const styles = {
         gap: '0.5rem',
     },
     radio: {
-        color: '#888',
+        color: '#fff',
         '&.Mui-checked': {
-            color: '#4FABD2',
+            color: '#fff',
+        },
+        '&.Mui-disabled': {
+            color: 'rgba(255, 255, 255, 0.3)',
         },
     },
     radioLabel: {

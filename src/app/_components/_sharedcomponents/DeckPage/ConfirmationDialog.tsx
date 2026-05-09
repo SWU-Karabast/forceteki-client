@@ -5,7 +5,10 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 interface ConfirmationDialogProps {
     open: boolean;
     title: string;
-    message: string;
+    /** Rendered inside the centered message slot. Plain strings work as-is;
+     * pass a ReactNode (e.g. multiple <Typography> elements) for richer
+     * messages like a primary line plus a hint. */
+    message: React.ReactNode;
     onCancel: () => void;
     onConfirm: () => void;
     confirmButtonText?: string;
@@ -67,7 +70,11 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         <Box sx={styles.overlayStyle}>
             <Box sx={styles.dialogStyle}>
                 <Typography sx={styles.titleStyle}>{title}</Typography>
-                <Typography sx={styles.messageStyle}>{message}</Typography>
+                {typeof message === 'string' ? (
+                    <Typography sx={styles.messageStyle}>{message}</Typography>
+                ) : (
+                    <Box sx={styles.messageStyle}>{message}</Box>
+                )}
                 <Box sx={styles.buttonContainerStyle}>
                     <PreferenceButton text={cancelButtonText} buttonFnc={onCancel} variant={'standard'}/>
                     <PreferenceButton text={confirmButtonText} buttonFnc={onConfirm} variant={'concede'}/>
