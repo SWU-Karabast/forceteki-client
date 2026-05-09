@@ -72,6 +72,7 @@ export interface IBaseTypeOption {
     label: string;
     aspect: string;
     hp: number;
+    rarity: string | null;
     baseIds: string[];
     representativeId: string;
 }

@@ -4,8 +4,11 @@ import {
     Autocomplete,
     Box,
     Button,
+    FormControlLabel,
     IconButton,
     MenuItem,
+    Radio,
+    RadioGroup,
     Select,
     TextField,
     Typography,
@@ -284,16 +287,27 @@ const OpponentPreferencesPage: React.FC = () => {
                     </Box>
                     <Box sx={styles.fieldRow}>
                         <Typography sx={styles.fieldLabel}>Base</Typography>
-                        <Select
+                        <RadioGroup
+                            row
                             value={kind}
-                            size="small"
-                            onChange={(e) => onKindChange(e.target.value as BaseConstraintKind)}
-                            sx={styles.field}
+                            onChange={(_, value) => onKindChange(value as BaseConstraintKind)}
                         >
-                            <MenuItem value="any">Any base</MenuItem>
-                            <MenuItem value="aspect">Any base of aspect…</MenuItem>
-                            <MenuItem value="baseType">Specific base type…</MenuItem>
-                        </Select>
+                            <FormControlLabel
+                                value="any"
+                                control={<Radio size="small" sx={styles.radio} />}
+                                label={<Typography sx={styles.radioLabel}>Any base</Typography>}
+                            />
+                            <FormControlLabel
+                                value="aspect"
+                                control={<Radio size="small" sx={styles.radio} />}
+                                label={<Typography sx={styles.radioLabel}>Any base of aspect</Typography>}
+                            />
+                            <FormControlLabel
+                                value="baseType"
+                                control={<Radio size="small" sx={styles.radio} />}
+                                label={<Typography sx={styles.radioLabel}>Specific base type</Typography>}
+                            />
+                        </RadioGroup>
                     </Box>
                     {kind === 'aspect' && (
                         <Box sx={styles.fieldRow}>
@@ -546,6 +560,16 @@ const styles = {
         display: 'inline-flex',
         alignItems: 'center',
         gap: '0.5rem',
+    },
+    radio: {
+        color: '#888',
+        '&.Mui-checked': {
+            color: '#00ffff',
+        },
+    },
+    radioLabel: {
+        color: '#fff',
+        fontSize: '0.9em',
     },
     aspectOptionIcon: {
         width: '20px',
