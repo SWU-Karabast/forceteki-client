@@ -252,23 +252,29 @@ const OpponentPreferencesPage: React.FC = () => {
                         <Box sx={{ ...styles.cardImage, backgroundImage: `url(${baseImageUrl})` }} />
                     )}
                     {kind === 'baseType' && selectedBaseType && !isUniqueBaseType && (
-                        <Box sx={styles.aspectImageWrapper}>
+                        <Box sx={styles.aspectPreview}>
                             <Box
                                 component="img"
                                 src={aspectIconUrl(selectedBaseType.aspect)}
                                 alt={selectedBaseType.aspect}
                                 sx={styles.aspectImage}
                             />
+                            <Typography sx={styles.aspectPreviewLabel}>
+                                {selectedBaseType.label.replace(`${capitalize(selectedBaseType.aspect)} - `, '')}
+                            </Typography>
                         </Box>
                     )}
                     {kind === 'aspect' && (
-                        <Box sx={styles.aspectImageWrapper}>
+                        <Box sx={styles.aspectPreview}>
                             <Box
                                 component="img"
                                 src={aspectIconUrl(selectedAspect)}
                                 alt={selectedAspect}
                                 sx={styles.aspectImage}
                             />
+                            <Typography sx={styles.aspectPreviewLabel}>
+                                Any {capitalize(selectedAspect)} base
+                            </Typography>
                         </Box>
                     )}
                 </Box>
@@ -347,6 +353,7 @@ const OpponentPreferencesPage: React.FC = () => {
                                 sx={styles.field}
                                 renderOption={(props, option) => {
                                     const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+                                    const showRare = option.rarity === 'R';
                                     return (
                                         <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.baseOption}>
                                             {option.aspect && (
@@ -358,11 +365,10 @@ const OpponentPreferencesPage: React.FC = () => {
                                                 />
                                             )}
                                             <Typography component="span" sx={styles.baseOptionLabel}>{option.label}</Typography>
-                                            {option.baseIds.length > 1 && (
-                                                <Typography component="span" sx={styles.baseOptionMembers}>
-                                                    ({option.baseIds.length} cards)
-                                                </Typography>
-                                            )}
+                                            <Box sx={styles.baseOptionMeta}>
+                                                {showRare && <Typography component="span" sx={styles.baseOptionRare}>Rare</Typography>}
+                                                {option.set && <Typography component="span" sx={styles.baseOptionSet}>{option.set}</Typography>}
+                                            </Box>
                                         </Box>
                                     );
                                 }}
@@ -533,6 +539,19 @@ const styles = {
         height: '60px',
         objectFit: 'contain',
     },
+    aspectPreview: {
+        width: '90px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.25rem',
+    },
+    aspectPreviewLabel: {
+        color: '#dddddd',
+        fontSize: '0.8em',
+        textAlign: 'center',
+        lineHeight: 1.2,
+    },
     archetypeFields: {
         flex: 1,
         display: 'flex',
@@ -580,13 +599,31 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
+        minHeight: '36px',
+        py: '0.25rem',
     },
     baseOptionLabel: {
         flex: 1,
+        lineHeight: 1.2,
     },
-    baseOptionMembers: {
+    baseOptionMeta: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        flexShrink: 0,
+    },
+    baseOptionRare: {
+        color: '#f0c060',
+        fontSize: '0.8em',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        fontWeight: 600,
+    },
+    baseOptionSet: {
         color: '#888',
-        fontSize: '0.85em',
+        fontSize: '0.8em',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
     },
     removeButton: {
         color: '#cccccc',
