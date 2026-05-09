@@ -275,7 +275,10 @@ const OpponentPreferencesPage: React.FC = () => {
             return `+ any ${capitalize(constraint.aspect)} base`;
         }
         if (constraint.label) {
-            return `+ ${constraint.label.replace(/^[A-Z][a-z]+ - /, '')}`;
+            // Use the full label (aspect + tag + hp). The collapsed row shows
+            // the leader's aspect icons next to the leader name; the base's
+            // aspect isn't otherwise represented, so don't strip it.
+            return `+ ${constraint.label}`;
         }
         return `+ ${constraint.baseIds.length} bases`;
     }
