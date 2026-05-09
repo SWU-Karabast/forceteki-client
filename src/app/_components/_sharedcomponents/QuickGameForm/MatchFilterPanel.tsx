@@ -185,7 +185,7 @@ const styles = {
     radio: {
         color: '#bbbbbb',
         '&.Mui-checked': {
-            color: '#00ffff',
+            color: '#4FABD2',
         },
     },
     radioLabel: {
@@ -263,7 +263,7 @@ const styles = {
         textTransform: 'none',
         fontWeight: 500,
         '&:hover': {
-            color: '#00ffff',
+            color: '#4FABD2',
             backgroundColor: 'transparent',
         },
     },

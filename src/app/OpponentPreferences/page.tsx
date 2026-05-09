@@ -17,7 +17,6 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { useRouter } from 'next/navigation';
 import {
     Aspect,
     BaseConstraint,
@@ -96,7 +95,6 @@ function capitalize(value: string): string {
 const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
 
 const OpponentPreferencesPage: React.FC = () => {
-    const router = useRouter();
     const { getBackground } = useCosmetics();
     const { user } = useUser();
     const background = getBackground(user?.preferences.cosmetics?.background);
@@ -195,10 +193,6 @@ const OpponentPreferencesPage: React.FC = () => {
         persist({ ...prefs, allowedArchetypes: updated });
         // Auto-expand the freshly-added archetype, collapsing any previous.
         setActiveIndex(updated.length - 1);
-    };
-
-    const handleBack = () => {
-        router.push('/');
     };
 
     const renderArchetypeCard = (archetype: OpponentArchetype, index: number) => {
@@ -525,15 +519,6 @@ const OpponentPreferencesPage: React.FC = () => {
 
     return (
         <Box sx={{ ...styles.container, backgroundImage: `url(${background?.path}?v=2)` }}>
-            <Box sx={styles.header}>
-                <Typography sx={styles.title} onClick={handleBack}>
-                    Karabast
-                </Typography>
-                <Button onClick={handleBack} sx={styles.backButton} variant="outlined">
-                    Back to Play
-                </Button>
-            </Box>
-
             <Box sx={styles.content}>
                 <Typography variant="h4" sx={styles.pageHeading}>Opponent Match Preferences</Typography>
                 <Typography sx={styles.intro}>
@@ -580,25 +565,9 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         color: '#fff',
-    },
-    header: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '1.25rem 2rem',
-    },
-    title: {
-        fontSize: '2.25em',
-        fontWeight: 600,
-        cursor: 'pointer',
-    },
-    backButton: {
-        color: '#fff',
-        borderColor: '#ffffff66',
-        '&:hover': {
-            borderColor: '#fff',
-            backgroundColor: 'rgba(255,255,255,0.05)',
-        },
+        // Leave room for the global Navbar (KARABAST + ControlHub) which is
+        // position: fixed at the top.
+        paddingTop: '5rem',
     },
     content: {
         flex: 1,
@@ -666,10 +635,10 @@ const styles = {
     },
     archetypeSwitch: {
         '& .MuiSwitch-switchBase.Mui-checked': {
-            color: '#00ffff',
+            color: '#4FABD2',
         },
         '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-            backgroundColor: '#00ffff',
+            backgroundColor: '#4FABD2',
             opacity: 0.5,
         },
     },
@@ -774,7 +743,7 @@ const styles = {
     radio: {
         color: '#888',
         '&.Mui-checked': {
-            color: '#00ffff',
+            color: '#4FABD2',
         },
     },
     radioLabel: {
