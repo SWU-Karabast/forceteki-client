@@ -384,6 +384,13 @@ const OpponentPreferencesPage: React.FC = () => {
 
         return (
             <Box key={index} sx={styles.archetypeCard}>
+                <Switch
+                    size="small"
+                    checked={archetype.enabled !== false}
+                    onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
+                    sx={styles.archetypeSwitch}
+                    inputProps={{ 'aria-label': archetype.enabled !== false ? 'Disable archetype' : 'Enable archetype' }}
+                />
                 <Box sx={styles.archetypeImages}>
                     {leaderImageUrl ? (
                         <Box sx={{ ...styles.cardImage, backgroundImage: `url(${leaderImageUrl})` }} />
@@ -527,7 +534,9 @@ const OpponentPreferencesPage: React.FC = () => {
                                                     sx={styles.aspectOptionIcon}
                                                 />
                                             )}
-                                            <Typography component="span" sx={styles.baseOptionLabel}>{option.label}</Typography>
+                                            <Typography component="span" sx={styles.baseOptionLabel}>
+                                                {option.label.replace(ASPECT_PREFIX_PATTERN, '')}
+                                            </Typography>
                                             {option.set && (
                                                 <Typography component="span" sx={styles.baseOptionSet}>{option.set}</Typography>
                                             )}
@@ -539,13 +548,6 @@ const OpponentPreferencesPage: React.FC = () => {
                     )}
                 </Box>
                 <Box sx={styles.expandedActions}>
-                    <Switch
-                        size="small"
-                        checked={archetype.enabled !== false}
-                        onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
-                        sx={styles.archetypeSwitch}
-                        inputProps={{ 'aria-label': archetype.enabled !== false ? 'Disable archetype' : 'Enable archetype' }}
-                    />
                     <IconButton
                         aria-label="Collapse archetype"
                         onClick={() => setActiveIndex(null)}
@@ -570,10 +572,9 @@ const OpponentPreferencesPage: React.FC = () => {
             <Box sx={styles.content}>
                 <Typography variant="h4" sx={styles.pageHeading}>Opponent Match Preferences</Typography>
                 <Typography sx={styles.intro}>
-                    Pick the leader and base combinations you{'’'}re willing to be matched against in
-                    the public queue. Both players must accept each other for a match to be made,
-                    so a narrow filter may mean longer waits. The default ({'“'}Any Opponent{'”'})
-                    preserves Karabast{'’'}s normal behavior of matching against anyone.
+                    Choose the leader and base combinations you{'’'}re willing to play against in
+                    the public queue. The default ({'“'}Any Opponent{'”'}) matches you against
+                    anyone, like Karabast normally does.
                 </Typography>
 
                 {error && <Typography sx={styles.error}>{error}</Typography>}
@@ -804,9 +805,6 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         gap: '0.5rem',
-        '& .MuiInputBase-root': {
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        },
     },
     fieldRow: {
         display: 'flex',
@@ -821,6 +819,15 @@ const styles = {
     },
     field: {
         flex: 1,
+        // MUI Autocomplete defaults the clear-X and dropdown-chevron icons
+        // to a very low-contrast gray on dark backgrounds. Brighten them so
+        // they read like the existing Format/Match Type dropdowns.
+        '& .MuiAutocomplete-clearIndicator, & .MuiAutocomplete-popupIndicator': {
+            color: '#ffffff',
+        },
+        '& .MuiSelect-icon': {
+            color: '#ffffff',
+        },
     },
     aspectOption: {
         display: 'inline-flex',
