@@ -39,6 +39,47 @@ export interface IMatchConfiguration {
     gamesToWinMode: GamesToWinMode;
 }
 
+/**
+ * Mirrors the BE `Aspect` enum from `forceteki/server/game/core/Constants.ts`.
+ * Used by the matchmaking-queue base-aspect filter.
+ */
+export enum Aspect {
+    Aggression = 'aggression',
+    Command = 'command',
+    Cunning = 'cunning',
+    Heroism = 'heroism',
+    Vigilance = 'vigilance',
+    Villainy = 'villainy',
+}
+
+/**
+ * Constraint on which bases a filtered opponent's deck can use, paired with a
+ * leader. Omit `baseConstraint` for "any base of this leader".
+ *
+ * Wire-format mirror of the BE type in `forceteki/server/gamenode/MatchmakingRules.ts`.
+ */
+export type BaseConstraint =
+    | { kind: 'specificBase'; baseId: string }
+    | { kind: 'aspect'; aspect: Aspect };
+
+export interface OpponentArchetype {
+    leaderId: string;
+    baseConstraint?: BaseConstraint;
+}
+
+export interface MatchPreferences {
+    enabled: boolean;
+    allowedArchetypes: OpponentArchetype[];
+}
+
+export const DefaultMatchPreferences: MatchPreferences = {
+    enabled: false,
+    allowedArchetypes: [],
+};
+
+export const MATCH_PREFERENCES_LOCALSTORAGE_KEY = 'matchPreferences';
+export const NARROW_FILTER_THRESHOLD = 2;
+
 export const DefaultFormat: IMatchConfiguration = {
     format: SwuGameFormat.Premier,
     cardPool: CardPool.Current,

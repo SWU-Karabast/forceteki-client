@@ -21,7 +21,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchPreferences, DefaultMatchPreferences, MATCH_PREFERENCES_LOCALSTORAGE_KEY } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -33,6 +33,7 @@ import {
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
 import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
+import MatchFilterPanel from './MatchFilterPanel';
 import { NewGameFormatAvailable } from '@/app/_constants/constants';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
@@ -115,6 +116,43 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+
+    // Opt-in opponent-archetype filter, persisted in localStorage. The default
+    // is `enabled: false` so absent prefs preserve current behavior server-side.
+    const [matchPreferences, setMatchPreferencesState] = useState<MatchPreferences>(() => {
+        if (typeof window === 'undefined') {
+            return DefaultMatchPreferences;
+        }
+        try {
+            const stored = window.localStorage.getItem(MATCH_PREFERENCES_LOCALSTORAGE_KEY);
+            if (!stored) {
+                return DefaultMatchPreferences;
+            }
+            const parsed = JSON.parse(stored);
+            if (
+                parsed &&
+                typeof parsed === 'object' &&
+                typeof parsed.enabled === 'boolean' &&
+                Array.isArray(parsed.allowedArchetypes)
+            ) {
+                return parsed as MatchPreferences;
+            }
+        } catch {
+            // ignore corrupt localStorage entry
+        }
+        return DefaultMatchPreferences;
+    });
+
+    const setMatchPreferences = (next: MatchPreferences) => {
+        setMatchPreferencesState(next);
+        if (typeof window !== 'undefined') {
+            try {
+                window.localStorage.setItem(MATCH_PREFERENCES_LOCALSTORAGE_KEY, JSON.stringify(next));
+            } catch {
+                // best-effort; persistence failure is non-fatal
+            }
+        }
+    };
 
     // Timer ref for clearing the inline text after 5s
 
@@ -224,13 +262,20 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 }
             }
 
-            const payload = {
+            const payload: Record<string, unknown> = {
                 user: getUserPayload(user),
                 deck: deckData,
                 format: queueConfig.format,
                 cardPool: queueConfig.cardPool,
                 gamesToWinMode: queueConfig.gamesToWinMode,
             };
+
+            // Only send the filter when it would actually constrain matching.
+            // Disabled or empty prefs are equivalent to omitting the field
+            // (server treats both as "match anyone").
+            if (matchPreferences.enabled && matchPreferences.allowedArchetypes.length > 0) {
+                payload.matchPreferences = matchPreferences;
+            }
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
                     method: 'POST',
@@ -592,6 +637,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     formatConfigs={formatConfigs}
                     isBo3Allowed={isBo3Allowed}
                     styles={styles}
+                />
+
+                <MatchFilterPanel
+                    matchPreferences={matchPreferences}
+                    setMatchPreferences={setMatchPreferences}
                 />
 
                 {/* Beta Announcement */}
