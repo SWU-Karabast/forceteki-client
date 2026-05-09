@@ -379,8 +379,13 @@ const OpponentPreferencesPage: React.FC = () => {
                         ) : (
                             <Box sx={styles.cardImagePlaceholder} />
                         )}
-                        {kind === 'baseType' && baseImageUrl && isUniqueBaseType && (
-                            <Box sx={{ ...styles.cardImage, backgroundImage: `url(${baseImageUrl})` }} />
+                        {kind === 'baseType' && baseImageUrl && isUniqueBaseType && selectedBaseType && (
+                            <Box sx={styles.aspectPreview}>
+                                <Box sx={{ ...styles.cardImage, backgroundImage: `url(${baseImageUrl})` }} />
+                                <Typography sx={styles.aspectPreviewLabel}>
+                                    {selectedBaseType.label}
+                                </Typography>
+                            </Box>
                         )}
                         {kind === 'baseType' && selectedBaseType && !isUniqueBaseType && (
                             <Box sx={styles.aspectPreview}>
@@ -408,25 +413,18 @@ const OpponentPreferencesPage: React.FC = () => {
                                 </Typography>
                             </Box>
                         )}
+                        {kind === 'any' && (
+                            <Box sx={styles.aspectPreview}>
+                                <Box sx={styles.anyBasePlaceholder} />
+                                <Typography sx={styles.aspectPreviewLabel}>
+                                    Any base
+                                </Typography>
+                            </Box>
+                        )}
                     </Box>
-                    <Box sx={styles.headerSummary}>
-                        <Typography component="span" sx={styles.headerLeaderName}>
-                            {selectedLeader ? leaderLabel(selectedLeader) : 'Unknown leader'}
-                        </Typography>
-                        <Box sx={styles.headerConstraintGroup}>
-                            {baseAspect && (
-                                <Box
-                                    component="img"
-                                    src={aspectIconUrl(baseAspect)}
-                                    alt={baseAspect}
-                                    sx={styles.aspectOptionIcon}
-                                />
-                            )}
-                            <Typography component="span" sx={styles.headerConstraint}>
-                                {baseSummary}
-                            </Typography>
-                        </Box>
-                    </Box>
+                    <Typography component="span" sx={styles.headerLeaderName}>
+                        {selectedLeader ? leaderLabel(selectedLeader) : 'Unknown leader'}
+                    </Typography>
                     <Button
                         size="small"
                         variant="outlined"
@@ -710,27 +708,17 @@ const styles = {
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
         },
     },
-    headerSummary: {
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        flexWrap: 'wrap',
-    },
     headerLeaderName: {
+        flex: 1,
         color: '#fff',
         fontWeight: 500,
         margin: 0,
     },
-    headerConstraintGroup: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.25rem',
-    },
-    headerConstraint: {
-        color: '#bbbbbb',
-        fontSize: '0.9em',
-        margin: 0,
+    anyBasePlaceholder: {
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        border: '1px dashed rgba(255, 255, 255, 0.3)',
     },
     confirmPrimary: {
         color: '#fff',
