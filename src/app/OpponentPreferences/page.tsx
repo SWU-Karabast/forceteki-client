@@ -116,7 +116,15 @@ const OpponentPreferencesPage: React.FC = () => {
                     return;
                 }
                 leadersData.sort((a, b) => leaderLabel(a).localeCompare(leaderLabel(b)));
-                baseTypesData.sort((a, b) => a.label.localeCompare(b.label));
+                // Cluster by aspect first, then alphabetical within each aspect.
+                // Each option already shows its aspect icon, so explicit
+                // group headers would just add visual noise.
+                baseTypesData.sort((a, b) => {
+                    if (a.aspect !== b.aspect) {
+                        return a.aspect.localeCompare(b.aspect);
+                    }
+                    return a.label.localeCompare(b.label);
+                });
                 setLeaders(leadersData);
                 setBaseTypes(baseTypesData);
                 setLoaded(true);
@@ -321,7 +329,6 @@ const OpponentPreferencesPage: React.FC = () => {
                                 getOptionLabel={baseTypeLabel}
                                 isOptionEqualToValue={(option, value) => option.id === value.id}
                                 onChange={(_, value) => onBaseTypeChange(value)}
-                                groupBy={(option) => capitalize(option.aspect)}
                                 renderInput={(params) => <TextField {...params} placeholder="Select base type" size="small" />}
                                 sx={styles.field}
                                 renderOption={(props, option) => {
