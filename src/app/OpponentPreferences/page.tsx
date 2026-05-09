@@ -15,8 +15,8 @@ import {
     Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import EditIcon from '@mui/icons-material/Edit';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import {
     Aspect,
@@ -207,83 +207,10 @@ const OpponentPreferencesPage: React.FC = () => {
         setActiveIndex(updated.length - 1);
     };
 
-    const renderArchetypeCard = (archetype: OpponentArchetype, index: number) => {
-        if (activeIndex === index) {
-            return renderExpandedArchetype(archetype, index);
-        }
-        return renderCollapsedArchetype(archetype, index);
-    };
-
     const setArchetypeEnabled = (index: number, enabled: boolean) => {
         const updated = prefs.allowedArchetypes.slice();
         updated[index] = { ...updated[index], enabled };
         persist({ ...prefs, allowedArchetypes: updated });
-    };
-
-    const renderCollapsedArchetype = (archetype: OpponentArchetype, index: number) => {
-        const leader = leaderById.get(archetype.leaderId) ?? null;
-        const baseSummary = baseConstraintSummary(archetype.baseConstraint);
-        const baseAspect = baseConstraintAspect(archetype.baseConstraint);
-        const isEnabled = archetype.enabled !== false;
-        return (
-            <Box
-                key={index}
-                sx={{ ...styles.collapsedRow, ...(isEnabled ? null : styles.collapsedRowDisabled) }}
-                onClick={() => setActiveIndex(index)}
-            >
-                <Switch
-                    size="small"
-                    checked={isEnabled}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
-                    sx={styles.archetypeSwitch}
-                    inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
-                />
-                <Box sx={styles.leaderAspectStack}>
-                    {(leader?.aspects ?? []).map((aspect) => (
-                        <Box
-                            key={aspect}
-                            component="img"
-                            src={aspectIconUrl(aspect)}
-                            alt={aspect}
-                            sx={styles.aspectOptionIcon}
-                        />
-                    ))}
-                </Box>
-                <Typography component="span" sx={styles.collapsedLeader}>
-                    {leader ? leaderLabel(leader) : 'Unknown leader'}
-                </Typography>
-                <Box sx={styles.collapsedConstraintGroup}>
-                    {baseAspect && (
-                        <Box
-                            component="img"
-                            src={aspectIconUrl(baseAspect)}
-                            alt={baseAspect}
-                            sx={styles.aspectOptionIcon}
-                        />
-                    )}
-                    <Typography component="span" sx={styles.collapsedConstraint}>
-                        {baseSummary}
-                    </Typography>
-                </Box>
-                <IconButton
-                    aria-label="Edit archetype"
-                    size="small"
-                    onClick={(e) => { e.stopPropagation(); setActiveIndex(index); }}
-                    sx={styles.collapsedActionButton}
-                >
-                    <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                    aria-label="Remove archetype"
-                    size="small"
-                    onClick={(e) => { e.stopPropagation(); setPendingRemovalIndex(index); }}
-                    sx={styles.collapsedActionButton}
-                >
-                    <CloseIcon fontSize="small" />
-                </IconButton>
-            </Box>
-        );
     };
 
     function baseConstraintSummary(constraint: BaseConstraint | undefined): string {
@@ -324,7 +251,9 @@ const OpponentPreferencesPage: React.FC = () => {
         return type?.aspect ?? null;
     }
 
-    const renderExpandedArchetype = (archetype: OpponentArchetype, index: number) => {
+    const renderArchetypeCard = (archetype: OpponentArchetype, index: number) => {
+        const isExpanded = activeIndex === index;
+        const isEnabled = archetype.enabled !== false;
         const kind = getConstraintKind(archetype.baseConstraint);
         const selectedLeader = leaderById.get(archetype.leaderId) ?? null;
         const selectedBaseTypeKey = archetype.baseConstraint?.kind === 'baseType'
@@ -332,6 +261,8 @@ const OpponentPreferencesPage: React.FC = () => {
             : null;
         const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
         const selectedAspect = archetype.baseConstraint?.kind === 'aspect' ? archetype.baseConstraint.aspect : Aspect.Vigilance;
+        const baseSummary = baseConstraintSummary(archetype.baseConstraint);
+        const baseAspect = baseConstraintAspect(archetype.baseConstraint);
 
         const onLeaderChange = (next: LeaderOption | null) => {
             updateArchetype(index, { ...archetype, leaderId: next?.id ?? '' });
@@ -383,50 +314,85 @@ const OpponentPreferencesPage: React.FC = () => {
         const isUniqueBaseType = !!selectedBaseType && selectedBaseType.baseIds.length === 1;
 
         return (
-            <Box key={index} sx={styles.archetypeCard}>
-                <Switch
-                    size="small"
-                    checked={archetype.enabled !== false}
-                    onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
-                    sx={styles.archetypeSwitch}
-                    inputProps={{ 'aria-label': archetype.enabled !== false ? 'Disable archetype' : 'Enable archetype' }}
-                />
-                <Box sx={styles.archetypeImages}>
-                    {leaderImageUrl ? (
-                        <Box sx={{ ...styles.cardImage, backgroundImage: `url(${leaderImageUrl})` }} />
-                    ) : (
-                        <Box sx={styles.cardImagePlaceholder} />
-                    )}
-                    {kind === 'baseType' && baseImageUrl && isUniqueBaseType && (
-                        <Box sx={{ ...styles.cardImage, backgroundImage: `url(${baseImageUrl})` }} />
-                    )}
-                    {kind === 'baseType' && selectedBaseType && !isUniqueBaseType && (
-                        <Box sx={styles.aspectPreview}>
-                            <Box
-                                component="img"
-                                src={aspectIconUrl(selectedBaseType.aspect)}
-                                alt={selectedBaseType.aspect}
-                                sx={styles.aspectImage}
-                            />
-                            <Typography sx={styles.aspectPreviewLabel}>
-                                {selectedBaseType.label.replace(`${capitalize(selectedBaseType.aspect)} - `, '')}
+            <Box key={index} sx={{ ...styles.archetypeCard, ...(isEnabled ? null : styles.archetypeCardDisabled) }}>
+                <Box sx={styles.archetypeHeader}>
+                    <IconButton
+                        aria-label={isExpanded ? 'Collapse archetype' : 'Expand archetype'}
+                        onClick={() => setActiveIndex(isExpanded ? null : index)}
+                        sx={styles.headerActionButton}
+                    >
+                        {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                    <Switch
+                        size="small"
+                        checked={isEnabled}
+                        onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
+                        sx={styles.archetypeSwitch}
+                        inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
+                    />
+                    <Box sx={styles.archetypeImages}>
+                        {leaderImageUrl ? (
+                            <Box sx={{ ...styles.cardImage, backgroundImage: `url(${leaderImageUrl})` }} />
+                        ) : (
+                            <Box sx={styles.cardImagePlaceholder} />
+                        )}
+                        {kind === 'baseType' && baseImageUrl && isUniqueBaseType && (
+                            <Box sx={{ ...styles.cardImage, backgroundImage: `url(${baseImageUrl})` }} />
+                        )}
+                        {kind === 'baseType' && selectedBaseType && !isUniqueBaseType && (
+                            <Box sx={styles.aspectPreview}>
+                                <Box
+                                    component="img"
+                                    src={aspectIconUrl(selectedBaseType.aspect)}
+                                    alt={selectedBaseType.aspect}
+                                    sx={styles.aspectImage}
+                                />
+                                <Typography sx={styles.aspectPreviewLabel}>
+                                    {selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '')}
+                                </Typography>
+                            </Box>
+                        )}
+                        {kind === 'aspect' && (
+                            <Box sx={styles.aspectPreview}>
+                                <Box
+                                    component="img"
+                                    src={aspectIconUrl(selectedAspect)}
+                                    alt={selectedAspect}
+                                    sx={styles.aspectImage}
+                                />
+                                <Typography sx={styles.aspectPreviewLabel}>
+                                    Any {capitalize(selectedAspect)} base
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                    <Box sx={styles.headerSummary}>
+                        <Typography component="span" sx={styles.headerLeaderName}>
+                            {selectedLeader ? leaderLabel(selectedLeader) : 'Unknown leader'}
+                        </Typography>
+                        <Box sx={styles.headerConstraintGroup}>
+                            {baseAspect && (
+                                <Box
+                                    component="img"
+                                    src={aspectIconUrl(baseAspect)}
+                                    alt={baseAspect}
+                                    sx={styles.aspectOptionIcon}
+                                />
+                            )}
+                            <Typography component="span" sx={styles.headerConstraint}>
+                                {baseSummary}
                             </Typography>
                         </Box>
-                    )}
-                    {kind === 'aspect' && (
-                        <Box sx={styles.aspectPreview}>
-                            <Box
-                                component="img"
-                                src={aspectIconUrl(selectedAspect)}
-                                alt={selectedAspect}
-                                sx={styles.aspectImage}
-                            />
-                            <Typography sx={styles.aspectPreviewLabel}>
-                                Any {capitalize(selectedAspect)} base
-                            </Typography>
-                        </Box>
-                    )}
+                    </Box>
+                    <IconButton
+                        aria-label="Remove archetype"
+                        onClick={() => setPendingRemovalIndex(index)}
+                        sx={styles.headerActionButton}
+                    >
+                        <CloseIcon />
+                    </IconButton>
                 </Box>
+                {isExpanded && (
                 <Box sx={styles.archetypeFields}>
                     <Box sx={styles.fieldRow}>
                         <Typography sx={styles.fieldLabel}>Leader</Typography>
@@ -547,22 +513,7 @@ const OpponentPreferencesPage: React.FC = () => {
                         </Box>
                     )}
                 </Box>
-                <Box sx={styles.expandedActions}>
-                    <IconButton
-                        aria-label="Collapse archetype"
-                        onClick={() => setActiveIndex(null)}
-                        sx={styles.removeButton}
-                    >
-                        <ExpandLessIcon />
-                    </IconButton>
-                    <IconButton
-                        aria-label="Remove archetype"
-                        onClick={() => setPendingRemovalIndex(index)}
-                        sx={styles.removeButton}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
+                )}
             </Box>
         );
     };
@@ -675,35 +626,49 @@ const styles = {
     },
     archetypeCard: {
         display: 'flex',
-        gap: '1.25rem',
-        padding: '1rem 1.25rem',
+        flexDirection: 'column',
+        padding: '0.75rem 1rem',
         borderRadius: '12px',
         backgroundColor: 'rgba(0, 0, 0, 0.45)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         backdropFilter: 'blur(6px)',
-        alignItems: 'flex-start',
     },
-    collapsedRow: {
+    archetypeCardDisabled: {
+        opacity: 0.55,
+    },
+    archetypeHeader: {
         display: 'flex',
         alignItems: 'center',
         gap: '0.75rem',
-        padding: '0.6rem 1rem',
-        borderRadius: '10px',
-        backgroundColor: 'rgba(0, 0, 0, 0.35)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-        backdropFilter: 'blur(6px)',
-        cursor: 'pointer',
-        transition: 'background-color 0.15s ease',
+    },
+    headerActionButton: {
+        color: '#cccccc',
         '&:hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.55)',
-            borderColor: 'rgba(255, 255, 255, 0.15)',
+            color: '#ffffff',
+            backgroundColor: 'rgba(255,255,255,0.05)',
         },
     },
-    collapsedRowDisabled: {
-        opacity: 0.55,
-        '&:hover': {
-            opacity: 0.75,
-        },
+    headerSummary: {
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        flexWrap: 'wrap',
+    },
+    headerLeaderName: {
+        color: '#fff',
+        fontWeight: 500,
+        margin: 0,
+    },
+    headerConstraintGroup: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.25rem',
+    },
+    headerConstraint: {
+        color: '#bbbbbb',
+        fontSize: '0.9em',
+        margin: 0,
     },
     confirmPrimary: {
         color: '#fff',
@@ -761,50 +726,53 @@ const styles = {
         alignItems: 'center',
     },
     cardImage: {
-        width: '120px',
-        height: '90px',
+        width: '80px',
+        height: '60px',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
         borderRadius: '6px',
     },
     cardImagePlaceholder: {
-        width: '120px',
-        height: '90px',
+        width: '80px',
+        height: '60px',
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: '6px',
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
     aspectImageWrapper: {
-        width: '60px',
-        height: '60px',
+        width: '40px',
+        height: '40px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
     },
     aspectImage: {
-        width: '60px',
-        height: '60px',
+        width: '40px',
+        height: '40px',
         objectFit: 'contain',
     },
     aspectPreview: {
-        width: '90px',
+        width: '80px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.25rem',
+        gap: '0.15rem',
     },
     aspectPreviewLabel: {
         color: '#dddddd',
-        fontSize: '0.8em',
+        fontSize: '0.75em',
         textAlign: 'center',
         lineHeight: 1.2,
+        margin: 0,
     },
     archetypeFields: {
-        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         gap: '0.5rem',
+        marginTop: '0.75rem',
+        paddingTop: '0.75rem',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
     },
     fieldRow: {
         display: 'flex',
