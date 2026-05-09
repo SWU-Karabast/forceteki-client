@@ -603,10 +603,12 @@ const styles = {
     baseOptionLabel: {
         flex: 1,
         lineHeight: 1.2,
+        margin: 0,
     },
     baseOptionSet: {
         color: '#aaaaaa',
         fontSize: '0.85em',
+        lineHeight: 1.2,
         textTransform: 'uppercase',
         letterSpacing: '0.05em',
         flexShrink: 0,
