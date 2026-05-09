@@ -353,7 +353,6 @@ const OpponentPreferencesPage: React.FC = () => {
                                 sx={styles.field}
                                 renderOption={(props, option) => {
                                     const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
-                                    const showRare = option.rarity === 'R';
                                     return (
                                         <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.baseOption}>
                                             {option.aspect && (
@@ -365,10 +364,9 @@ const OpponentPreferencesPage: React.FC = () => {
                                                 />
                                             )}
                                             <Typography component="span" sx={styles.baseOptionLabel}>{option.label}</Typography>
-                                            <Box sx={styles.baseOptionMeta}>
-                                                {showRare && <Typography component="span" sx={styles.baseOptionRare}>Rare</Typography>}
-                                                {option.set && <Typography component="span" sx={styles.baseOptionSet}>{option.set}</Typography>}
-                                            </Box>
+                                            {option.set && (
+                                                <Typography component="span" sx={styles.baseOptionSet}>{option.set}</Typography>
+                                            )}
                                         </Box>
                                     );
                                 }}
@@ -606,24 +604,12 @@ const styles = {
         flex: 1,
         lineHeight: 1.2,
     },
-    baseOptionMeta: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        flexShrink: 0,
-    },
-    baseOptionRare: {
-        color: '#f0c060',
-        fontSize: '0.8em',
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-        fontWeight: 600,
-    },
     baseOptionSet: {
-        color: '#888',
-        fontSize: '0.8em',
+        color: '#aaaaaa',
+        fontSize: '0.85em',
         textTransform: 'uppercase',
         letterSpacing: '0.05em',
+        flexShrink: 0,
     },
     removeButton: {
         color: '#cccccc',
