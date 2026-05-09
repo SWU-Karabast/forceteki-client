@@ -14,6 +14,8 @@ import {
     Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useRouter } from 'next/navigation';
 import {
     Aspect,
@@ -50,6 +52,8 @@ interface LeaderOption {
     name: string;
     id: string;
     subtitle?: string;
+    aspects: string[];
+    set: string | null;
 }
 
 type BaseConstraintKind = 'any' | 'aspect' | 'baseType';
@@ -101,6 +105,10 @@ const OpponentPreferencesPage: React.FC = () => {
     const [baseTypes, setBaseTypes] = useState<IBaseTypeOption[]>([]);
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Index of the archetype currently in expanded-edit mode. Only one at a
+    // time; null = all collapsed.
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -168,21 +176,93 @@ const OpponentPreferencesPage: React.FC = () => {
         const updated = prefs.allowedArchetypes.slice();
         updated.splice(index, 1);
         persist({ ...prefs, allowedArchetypes: updated });
+        // If we just removed the active row, collapse all. If we removed an
+        // earlier row, shift the active index down so the same row stays open.
+        if (activeIndex === null) {
+            return;
+        }
+        if (index === activeIndex) {
+            setActiveIndex(null);
+        } else if (index < activeIndex) {
+            setActiveIndex(activeIndex - 1);
+        }
     };
 
     const addArchetype = () => {
         const leaderId = leaders[0]?.id ?? '';
-        persist({
-            ...prefs,
-            allowedArchetypes: [...prefs.allowedArchetypes, { leaderId }],
-        });
+        const updated = [...prefs.allowedArchetypes, { leaderId }];
+        persist({ ...prefs, allowedArchetypes: updated });
+        // Auto-expand the freshly-added archetype, collapsing any previous.
+        setActiveIndex(updated.length - 1);
     };
 
     const handleBack = () => {
         router.push('/');
     };
 
-    const renderArchetype = (archetype: OpponentArchetype, index: number) => {
+    const renderArchetypeCard = (archetype: OpponentArchetype, index: number) => {
+        if (activeIndex === index) {
+            return renderExpandedArchetype(archetype, index);
+        }
+        return renderCollapsedArchetype(archetype, index);
+    };
+
+    const renderCollapsedArchetype = (archetype: OpponentArchetype, index: number) => {
+        const leader = leaderById.get(archetype.leaderId) ?? null;
+        const baseSummary = baseConstraintSummary(archetype.baseConstraint);
+        return (
+            <Box key={index} sx={styles.collapsedRow} onClick={() => setActiveIndex(index)}>
+                <Box sx={styles.leaderAspectStack}>
+                    {(leader?.aspects ?? []).map((aspect) => (
+                        <Box
+                            key={aspect}
+                            component="img"
+                            src={aspectIconUrl(aspect)}
+                            alt={aspect}
+                            sx={styles.aspectOptionIcon}
+                        />
+                    ))}
+                </Box>
+                <Typography component="span" sx={styles.collapsedLeader}>
+                    {leader ? leaderLabel(leader) : 'Unknown leader'}
+                </Typography>
+                <Typography component="span" sx={styles.collapsedConstraint}>
+                    {baseSummary}
+                </Typography>
+                <IconButton
+                    aria-label="Edit archetype"
+                    size="small"
+                    onClick={(e) => { e.stopPropagation(); setActiveIndex(index); }}
+                    sx={styles.collapsedActionButton}
+                >
+                    <EditIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                    aria-label="Remove archetype"
+                    size="small"
+                    onClick={(e) => { e.stopPropagation(); removeArchetype(index); }}
+                    sx={styles.collapsedActionButton}
+                >
+                    <CloseIcon fontSize="small" />
+                </IconButton>
+            </Box>
+        );
+    };
+
+    function baseConstraintSummary(constraint: BaseConstraint | undefined): string {
+        if (!constraint) {
+            return 'any base';
+        }
+        if (constraint.kind === 'aspect') {
+            return `+ any ${capitalize(constraint.aspect)} base`;
+        }
+        if (constraint.label) {
+            return `+ ${constraint.label.replace(/^[A-Z][a-z]+ - /, '')}`;
+        }
+        return `+ ${constraint.baseIds.length} bases`;
+    }
+
+    const renderExpandedArchetype = (archetype: OpponentArchetype, index: number) => {
         const kind = getConstraintKind(archetype.baseConstraint);
         const selectedLeader = leaderById.get(archetype.leaderId) ?? null;
         const selectedBaseTypeKey = archetype.baseConstraint?.kind === 'baseType'
@@ -289,6 +369,28 @@ const OpponentPreferencesPage: React.FC = () => {
                             onChange={(_, value) => onLeaderChange(value)}
                             renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
                             sx={styles.field}
+                            renderOption={(props, option) => {
+                                const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+                                return (
+                                    <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.baseOption}>
+                                        <Box sx={styles.leaderAspectStack}>
+                                            {option.aspects.map((aspect) => (
+                                                <Box
+                                                    key={aspect}
+                                                    component="img"
+                                                    src={aspectIconUrl(aspect)}
+                                                    alt={aspect}
+                                                    sx={styles.aspectOptionIcon}
+                                                />
+                                            ))}
+                                        </Box>
+                                        <Typography component="span" sx={styles.baseOptionLabel}>{leaderLabel(option)}</Typography>
+                                        {option.set && (
+                                            <Typography component="span" sx={styles.baseOptionSet}>{option.set}</Typography>
+                                        )}
+                                    </Box>
+                                );
+                            }}
                         />
                     </Box>
                     <Box sx={styles.fieldRow}>
@@ -374,13 +476,22 @@ const OpponentPreferencesPage: React.FC = () => {
                         </Box>
                     )}
                 </Box>
-                <IconButton
-                    aria-label="Remove archetype"
-                    onClick={() => removeArchetype(index)}
-                    sx={styles.removeButton}
-                >
-                    <CloseIcon />
-                </IconButton>
+                <Box sx={styles.expandedActions}>
+                    <IconButton
+                        aria-label="Collapse archetype"
+                        onClick={() => setActiveIndex(null)}
+                        sx={styles.removeButton}
+                    >
+                        <ExpandLessIcon />
+                    </IconButton>
+                    <IconButton
+                        aria-label="Remove archetype"
+                        onClick={() => removeArchetype(index)}
+                        sx={styles.removeButton}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </Box>
             </Box>
         );
     };
@@ -416,7 +527,7 @@ const OpponentPreferencesPage: React.FC = () => {
                     </Box>
                 )}
 
-                {loaded && prefs.allowedArchetypes.map(renderArchetype)}
+                {loaded && prefs.allowedArchetypes.map(renderArchetypeCard)}
 
                 {loaded && (
                     <Button
@@ -503,6 +614,46 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.08)',
         backdropFilter: 'blur(6px)',
         alignItems: 'flex-start',
+    },
+    collapsedRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        padding: '0.6rem 1rem',
+        borderRadius: '10px',
+        backgroundColor: 'rgba(0, 0, 0, 0.35)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        backdropFilter: 'blur(6px)',
+        cursor: 'pointer',
+        transition: 'background-color 0.15s ease',
+        '&:hover': {
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            borderColor: 'rgba(255, 255, 255, 0.15)',
+        },
+    },
+    collapsedLeader: {
+        color: '#fff',
+        fontWeight: 500,
+        margin: 0,
+        flexShrink: 0,
+    },
+    collapsedConstraint: {
+        color: '#bbbbbb',
+        fontSize: '0.9em',
+        margin: 0,
+        flex: 1,
+    },
+    collapsedActionButton: {
+        color: '#cccccc',
+        '&:hover': {
+            color: '#ffffff',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+        },
+    },
+    expandedActions: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.25rem',
     },
     archetypeImages: {
         display: 'flex',
@@ -592,6 +743,13 @@ const styles = {
         width: '20px',
         height: '20px',
         objectFit: 'contain',
+    },
+    leaderAspectStack: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.15rem',
+        flexShrink: 0,
+        minWidth: '20px',
     },
     baseOption: {
         display: 'flex',
