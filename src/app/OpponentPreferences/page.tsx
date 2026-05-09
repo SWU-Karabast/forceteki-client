@@ -15,8 +15,6 @@ import {
     Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import {
     Aspect,
@@ -118,6 +116,11 @@ const OpponentPreferencesPage: React.FC = () => {
     // time; null = all collapsed.
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
+    // Working copy of the archetype being edited. While non-null, field
+    // changes mutate this draft rather than the persisted state. "Save"
+    // commits the draft; opening another row for edit auto-saves first.
+    const [editingDraft, setEditingDraft] = useState<OpponentArchetype | null>(null);
+
     // Index pending removal — when set, the confirmation dialog opens.
     const [pendingRemovalIndex, setPendingRemovalIndex] = useState<number | null>(null);
 
@@ -177,34 +180,78 @@ const OpponentPreferencesPage: React.FC = () => {
         saveMatchPreferences(next);
     };
 
+    /**
+     * Mutates the in-flight draft for the active archetype. Field changes
+     * call this; persistence happens in `commitDraft`.
+     */
     const updateArchetype = (index: number, next: OpponentArchetype) => {
+        if (activeIndex === index && editingDraft) {
+            setEditingDraft(next);
+            return;
+        }
+        // Fallback: editing-not-active path (shouldn't generally happen, but
+        // keeps the function safe for any caller that bypasses the draft).
         const updated = prefs.allowedArchetypes.slice();
         updated[index] = next;
         persist({ ...prefs, allowedArchetypes: updated });
+    };
+
+    const startEditing = (index: number) => {
+        // If we were editing a different row, commit that one first.
+        if (editingDraft !== null && activeIndex !== null && activeIndex !== index) {
+            const updated = prefs.allowedArchetypes.slice();
+            updated[activeIndex] = editingDraft;
+            persist({ ...prefs, allowedArchetypes: updated });
+        }
+        setEditingDraft({ ...prefs.allowedArchetypes[index] });
+        setActiveIndex(index);
+    };
+
+    const commitDraft = () => {
+        if (editingDraft === null || activeIndex === null) {
+            setActiveIndex(null);
+            setEditingDraft(null);
+            return;
+        }
+        const updated = prefs.allowedArchetypes.slice();
+        updated[activeIndex] = editingDraft;
+        persist({ ...prefs, allowedArchetypes: updated });
+        setActiveIndex(null);
+        setEditingDraft(null);
     };
 
     const removeArchetype = (index: number) => {
         const updated = prefs.allowedArchetypes.slice();
         updated.splice(index, 1);
         persist({ ...prefs, allowedArchetypes: updated });
-        // If we just removed the active row, collapse all. If we removed an
-        // earlier row, shift the active index down so the same row stays open.
+        // If we just removed the active row, drop its draft. If we removed
+        // an earlier row, shift the active index down so the same row stays
+        // open with its existing draft.
         if (activeIndex === null) {
             return;
         }
         if (index === activeIndex) {
             setActiveIndex(null);
+            setEditingDraft(null);
         } else if (index < activeIndex) {
             setActiveIndex(activeIndex - 1);
         }
     };
 
     const addArchetype = () => {
+        // If something else was being edited, commit first so we don't lose it.
+        let baseList = prefs.allowedArchetypes;
+        if (editingDraft !== null && activeIndex !== null) {
+            baseList = baseList.slice();
+            baseList[activeIndex] = editingDraft;
+        }
         const leaderId = leaders[0]?.id ?? '';
-        const updated = [...prefs.allowedArchetypes, { leaderId }];
+        const newArchetype: OpponentArchetype = { leaderId };
+        const updated = [...baseList, newArchetype];
         persist({ ...prefs, allowedArchetypes: updated });
-        // Auto-expand the freshly-added archetype, collapsing any previous.
+        // Auto-open the freshly-added archetype with a fresh draft.
         setActiveIndex(updated.length - 1);
+        setEditingDraft({ ...newArchetype });
     };
 
     const setArchetypeEnabled = (index: number, enabled: boolean) => {
@@ -253,16 +300,19 @@ const OpponentPreferencesPage: React.FC = () => {
 
     const renderArchetypeCard = (archetype: OpponentArchetype, index: number) => {
         const isExpanded = activeIndex === index;
-        const isEnabled = archetype.enabled !== false;
-        const kind = getConstraintKind(archetype.baseConstraint);
-        const selectedLeader = leaderById.get(archetype.leaderId) ?? null;
-        const selectedBaseTypeKey = archetype.baseConstraint?.kind === 'baseType'
-            ? archetype.baseConstraint.baseIds.slice().sort().join('|')
+        // While editing, render the live-mutating draft so the header summary
+        // reflects what the user is changing in the form below.
+        const view = isExpanded && editingDraft ? editingDraft : archetype;
+        const isEnabled = view.enabled !== false;
+        const kind = getConstraintKind(view.baseConstraint);
+        const selectedLeader = leaderById.get(view.leaderId) ?? null;
+        const selectedBaseTypeKey = view.baseConstraint?.kind === 'baseType'
+            ? view.baseConstraint.baseIds.slice().sort().join('|')
             : null;
         const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
-        const selectedAspect = archetype.baseConstraint?.kind === 'aspect' ? archetype.baseConstraint.aspect : Aspect.Vigilance;
-        const baseSummary = baseConstraintSummary(archetype.baseConstraint);
-        const baseAspect = baseConstraintAspect(archetype.baseConstraint);
+        const selectedAspect = view.baseConstraint?.kind === 'aspect' ? view.baseConstraint.aspect : Aspect.Vigilance;
+        const baseSummary = baseConstraintSummary(view.baseConstraint);
+        const baseAspect = baseConstraintAspect(view.baseConstraint);
 
         const onLeaderChange = (next: LeaderOption | null) => {
             updateArchetype(index, { ...archetype, leaderId: next?.id ?? '' });
@@ -316,13 +366,6 @@ const OpponentPreferencesPage: React.FC = () => {
         return (
             <Box key={index} sx={{ ...styles.archetypeCard, ...(isEnabled ? null : styles.archetypeCardDisabled) }}>
                 <Box sx={styles.archetypeHeader}>
-                    <IconButton
-                        aria-label={isExpanded ? 'Collapse archetype' : 'Expand archetype'}
-                        onClick={() => setActiveIndex(isExpanded ? null : index)}
-                        sx={styles.headerActionButton}
-                    >
-                        {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
-                    </IconButton>
                     <Switch
                         size="small"
                         checked={isEnabled}
@@ -384,6 +427,14 @@ const OpponentPreferencesPage: React.FC = () => {
                             </Typography>
                         </Box>
                     </Box>
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => (isExpanded ? commitDraft() : startEditing(index))}
+                        sx={styles.editSaveButton}
+                    >
+                        {isExpanded ? 'Save' : 'Edit'}
+                    </Button>
                     <IconButton
                         aria-label="Remove archetype"
                         onClick={() => setPendingRemovalIndex(index)}
@@ -646,6 +697,17 @@ const styles = {
         '&:hover': {
             color: '#ffffff',
             backgroundColor: 'rgba(255,255,255,0.05)',
+        },
+    },
+    editSaveButton: {
+        color: '#fff',
+        borderColor: 'rgba(255, 255, 255, 0.4)',
+        textTransform: 'none',
+        fontWeight: 500,
+        minWidth: '64px',
+        '&:hover': {
+            borderColor: '#fff',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
         },
     },
     headerSummary: {
