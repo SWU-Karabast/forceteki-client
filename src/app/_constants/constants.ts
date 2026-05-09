@@ -81,6 +81,12 @@ export interface IBaseTypeOption {
 export interface OpponentArchetype {
     leaderId: string;
     baseConstraint?: BaseConstraint;
+    /**
+     * Per-archetype on/off toggle. Treated as `true` when omitted, so a
+     * disabled archetype stays in the saved list but doesn't contribute to
+     * the active filter.
+     */
+    enabled?: boolean;
 }
 
 export interface MatchPreferences {

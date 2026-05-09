@@ -96,7 +96,9 @@ const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, 
     const showManageBlock = matchPreferences.enabled;
     const archetypes = matchPreferences.allowedArchetypes;
     const hasArchetypes = archetypes.length > 0;
-    const showNarrowFilterNote = showManageBlock && hasArchetypes && archetypes.length <= NARROW_FILTER_THRESHOLD;
+    const activeArchetypeCount = archetypes.filter((a) => a.enabled !== false).length;
+    const disabledArchetypeCount = archetypes.length - activeArchetypeCount;
+    const showNarrowFilterNote = showManageBlock && activeArchetypeCount > 0 && activeArchetypeCount <= NARROW_FILTER_THRESHOLD;
 
     return (
         <FormControl fullWidth sx={styles.formControl}>
@@ -125,21 +127,38 @@ const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, 
                     {hasArchetypes && (
                         <Box sx={styles.summaryList}>
                             <Typography sx={styles.summaryHeading}>
-                                Currently allowing {archetypes.length} archetype{archetypes.length === 1 ? '' : 's'}:
+                                Currently allowing {activeArchetypeCount} archetype{activeArchetypeCount === 1 ? '' : 's'}
+                                {disabledArchetypeCount > 0 && (
+                                    <Typography component="span" sx={styles.summaryDisabledCount}>
+                                        {' '}({disabledArchetypeCount} disabled)
+                                    </Typography>
+                                )}:
                             </Typography>
                             <Box component="ul" sx={styles.summaryItems}>
-                                {archetypes.map((archetype: OpponentArchetype, i: number) => (
-                                    <Box component="li" key={i} sx={styles.summaryItem}>
-                                        <Typography component="span" sx={styles.summaryLeaderName}>
-                                            {leaderLabel(leaderById.get(archetype.leaderId))}
-                                        </Typography>{' '}
-                                        {baseConstraintSummary(archetype.baseConstraint)}
-                                    </Box>
-                                ))}
+                                {archetypes.map((archetype: OpponentArchetype, i: number) => {
+                                    const isEnabled = archetype.enabled !== false;
+                                    return (
+                                        <Box
+                                            component="li"
+                                            key={i}
+                                            sx={isEnabled ? styles.summaryItem : { ...styles.summaryItem, ...styles.summaryItemDisabled }}
+                                        >
+                                            <Typography component="span" sx={styles.summaryLeaderName}>
+                                                {leaderLabel(leaderById.get(archetype.leaderId))}
+                                            </Typography>{' '}
+                                            {baseConstraintSummary(archetype.baseConstraint)}
+                                        </Box>
+                                    );
+                                })}
                             </Box>
                             {showNarrowFilterNote && (
                                 <Typography sx={styles.narrowFilterNote}>
                                     Narrow filter — expect longer queue waits.
+                                </Typography>
+                            )}
+                            {activeArchetypeCount === 0 && (
+                                <Typography sx={styles.summaryEmpty}>
+                                    Every archetype is currently disabled — you{'’'}ll match against any opponent until at least one is enabled.
                                 </Typography>
                             )}
                         </Box>
@@ -203,6 +222,14 @@ const styles = {
     },
     summaryItem: {
         marginBottom: '0.15rem',
+    },
+    summaryItemDisabled: {
+        opacity: 0.5,
+        textDecoration: 'line-through',
+    },
+    summaryDisabledCount: {
+        color: '#888',
+        fontSize: 'inherit',
     },
     summaryLeaderName: {
         color: '#fff',

@@ -10,6 +10,7 @@ import {
     Radio,
     RadioGroup,
     Select,
+    Switch,
     TextField,
     Typography,
 } from '@mui/material';
@@ -207,11 +208,30 @@ const OpponentPreferencesPage: React.FC = () => {
         return renderCollapsedArchetype(archetype, index);
     };
 
+    const setArchetypeEnabled = (index: number, enabled: boolean) => {
+        const updated = prefs.allowedArchetypes.slice();
+        updated[index] = { ...updated[index], enabled };
+        persist({ ...prefs, allowedArchetypes: updated });
+    };
+
     const renderCollapsedArchetype = (archetype: OpponentArchetype, index: number) => {
         const leader = leaderById.get(archetype.leaderId) ?? null;
         const baseSummary = baseConstraintSummary(archetype.baseConstraint);
+        const isEnabled = archetype.enabled !== false;
         return (
-            <Box key={index} sx={styles.collapsedRow} onClick={() => setActiveIndex(index)}>
+            <Box
+                key={index}
+                sx={{ ...styles.collapsedRow, ...(isEnabled ? null : styles.collapsedRowDisabled) }}
+                onClick={() => setActiveIndex(index)}
+            >
+                <Switch
+                    size="small"
+                    checked={isEnabled}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
+                    sx={styles.archetypeSwitch}
+                    inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
+                />
                 <Box sx={styles.leaderAspectStack}>
                     {(leader?.aspects ?? []).map((aspect) => (
                         <Box
@@ -477,6 +497,13 @@ const OpponentPreferencesPage: React.FC = () => {
                     )}
                 </Box>
                 <Box sx={styles.expandedActions}>
+                    <Switch
+                        size="small"
+                        checked={archetype.enabled !== false}
+                        onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
+                        sx={styles.archetypeSwitch}
+                        inputProps={{ 'aria-label': archetype.enabled !== false ? 'Disable archetype' : 'Enable archetype' }}
+                    />
                     <IconButton
                         aria-label="Collapse archetype"
                         onClick={() => setActiveIndex(null)}
@@ -629,6 +656,21 @@ const styles = {
         '&:hover': {
             backgroundColor: 'rgba(0, 0, 0, 0.55)',
             borderColor: 'rgba(255, 255, 255, 0.15)',
+        },
+    },
+    collapsedRowDisabled: {
+        opacity: 0.55,
+        '&:hover': {
+            opacity: 0.75,
+        },
+    },
+    archetypeSwitch: {
+        '& .MuiSwitch-switchBase.Mui-checked': {
+            color: '#00ffff',
+        },
+        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+            backgroundColor: '#00ffff',
+            opacity: 0.5,
         },
     },
     collapsedLeader: {
