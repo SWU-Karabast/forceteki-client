@@ -21,7 +21,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchPreferences, DefaultMatchPreferences, MATCH_PREFERENCES_LOCALSTORAGE_KEY } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchPreferences } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -34,6 +34,7 @@ import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
 import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
 import MatchFilterPanel from './MatchFilterPanel';
+import { loadMatchPreferences, saveMatchPreferences } from '@/app/_utils/matchPreferences';
 import { NewGameFormatAvailable } from '@/app/_constants/constants';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
@@ -119,39 +120,37 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Opt-in opponent-archetype filter, persisted in localStorage. The default
     // is `enabled: false` so absent prefs preserve current behavior server-side.
-    const [matchPreferences, setMatchPreferencesState] = useState<MatchPreferences>(() => {
+    // Storage I/O lives in `_utils/matchPreferences.ts` so the dedicated
+    // /OpponentPreferences manager page can read and write the same state.
+    const [matchPreferences, setMatchPreferencesState] = useState<MatchPreferences>(loadMatchPreferences);
+
+    // Re-load when the page becomes visible — covers the case where the user
+    // navigates to /OpponentPreferences, edits archetypes, then returns.
+    useEffect(() => {
         if (typeof window === 'undefined') {
-            return DefaultMatchPreferences;
+            return;
         }
-        try {
-            const stored = window.localStorage.getItem(MATCH_PREFERENCES_LOCALSTORAGE_KEY);
-            if (!stored) {
-                return DefaultMatchPreferences;
+        const onVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                setMatchPreferencesState(loadMatchPreferences());
             }
-            const parsed = JSON.parse(stored);
-            if (
-                parsed &&
-                typeof parsed === 'object' &&
-                typeof parsed.enabled === 'boolean' &&
-                Array.isArray(parsed.allowedArchetypes)
-            ) {
-                return parsed as MatchPreferences;
+        };
+        const onStorage = (event: StorageEvent) => {
+            if (event.key === 'matchPreferences') {
+                setMatchPreferencesState(loadMatchPreferences());
             }
-        } catch {
-            // ignore corrupt localStorage entry
-        }
-        return DefaultMatchPreferences;
-    });
+        };
+        document.addEventListener('visibilitychange', onVisibility);
+        window.addEventListener('storage', onStorage);
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibility);
+            window.removeEventListener('storage', onStorage);
+        };
+    }, []);
 
     const setMatchPreferences = (next: MatchPreferences) => {
         setMatchPreferencesState(next);
-        if (typeof window !== 'undefined') {
-            try {
-                window.localStorage.setItem(MATCH_PREFERENCES_LOCALSTORAGE_KEY, JSON.stringify(next));
-            } catch {
-                // best-effort; persistence failure is non-fatal
-            }
-        }
+        saveMatchPreferences(next);
     };
 
     // Timer ref for clearing the inline text after 5s
