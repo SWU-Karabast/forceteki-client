@@ -15,7 +15,7 @@ import {
     Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import {
@@ -321,7 +321,7 @@ const OpponentPreferencesPage: React.FC = () => {
                         onClick={() => setActiveIndex(isExpanded ? null : index)}
                         sx={styles.headerActionButton}
                     >
-                        {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        {isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
                     </IconButton>
                     <Switch
                         size="small"
