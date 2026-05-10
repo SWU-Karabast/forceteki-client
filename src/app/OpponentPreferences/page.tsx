@@ -839,14 +839,15 @@ const styles = {
         width: 'calc(45% - 5px)',
         height: '100%',
         justifyContent: 'space-between',
-        padding: '1.6rem 1rem 0.5rem 0.25rem',
+        padding: '1.3rem 0.5rem 0.5rem 0.25rem',
         minWidth: 0,
-        gap: '1rem',
+        gap: '0.5rem',
     },
     cardSection: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.35rem',
+        gap: '0.25rem',
+        minWidth: 0,
     },
     cardSectionLabel: {
         color: '#888',
@@ -858,7 +859,8 @@ const styles = {
     cardLeaderHeader: {
         display: 'flex',
         alignItems: 'center',
-        gap: '0.55rem',
+        gap: '0.5rem',
+        minWidth: 0,
     },
     cardLeaderAspects: {
         display: 'flex',
@@ -872,20 +874,23 @@ const styles = {
     },
     leaderNameTop: {
         color: '#fff',
-        fontSize: '1.35em',
+        fontSize: '1.15em',
         fontWeight: 600,
         margin: 0,
         lineHeight: 1.2,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        minWidth: 0,
     },
     leaderNameSub: {
         color: '#bbbbbb',
-        fontSize: '1em',
+        fontSize: '0.95em',
         margin: 0,
         lineHeight: 1.25,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
     },
     cardBaseLine: {
         display: 'flex',
@@ -906,10 +911,12 @@ const styles = {
     },
     cardBaseText: {
         color: '#dddddd',
-        fontSize: '1.1em',
+        fontSize: '1.05em',
         margin: 0,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        minWidth: 0,
     },
     cardEditRow: {
         display: 'flex',
