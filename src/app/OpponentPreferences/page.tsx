@@ -350,9 +350,11 @@ const OpponentPreferencesPage: React.FC = () => {
             );
         };
 
-        const leaderImageUrl = selectedLeader ? cardImageUrlFromSetCodeId(selectedLeader.id) : null;
+        const leaderImageUrl = selectedLeader
+            ? s3CardImageURL({ id: selectedLeader.id, count: 0 } as never, CardStyle.PlainLeader)
+            : null;
         const baseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
-            ? cardImageUrlFromSetCodeId(selectedBaseType.representativeId)
+            ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
             : null;
         const isSelected = selectedIndices.includes(index);
         const stop = (e: React.MouseEvent) => e.stopPropagation();
@@ -377,49 +379,44 @@ const OpponentPreferencesPage: React.FC = () => {
                         <Typography sx={styles.checkmarkSymbol}>✓</Typography>
                     </Box>
                 )}
-                <Box sx={styles.cardImagery}>
-                    <Box sx={styles.imageStackContainer}>
-                        {leaderImageUrl ? (
-                            <Box sx={{ ...styles.leaderImage, backgroundImage: `url(${leaderImageUrl})` }} />
-                        ) : (
-                            <Box sx={styles.leaderImagePlaceholder} />
-                        )}
-                        {baseImageUrl && (
-                            <Box sx={{ ...styles.baseImage, backgroundImage: `url(${baseImageUrl})` }} />
-                        )}
-                        {kind === 'aspect' && (
-                            <Box sx={styles.baseAspectImageWrapper}>
-                                <Box
-                                    component="img"
-                                    src={aspectIconUrl(selectedAspect)}
-                                    alt={selectedAspect}
-                                    sx={styles.baseAspectImage}
-                                />
-                                <Typography sx={styles.aspectImageLabel}>
-                                    Any {capitalize(selectedAspect)}
-                                </Typography>
-                            </Box>
-                        )}
-                        {kind === 'baseType' && selectedBaseType && selectedBaseType.baseIds.length > 1 && (
-                            <Box sx={styles.baseAspectImageWrapper}>
-                                <Box
-                                    component="img"
-                                    src={aspectIconUrl(selectedBaseType.aspect)}
-                                    alt={selectedBaseType.aspect}
-                                    sx={styles.baseAspectImage}
-                                />
-                                <Typography sx={styles.aspectImageLabel}>
-                                    {selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '')}
-                                </Typography>
-                            </Box>
-                        )}
-                        {kind === 'any' && (
-                            <Box sx={styles.baseAspectImageWrapper}>
-                                <Box sx={styles.anyBasePlaceholder} />
-                                <Typography sx={styles.aspectImageLabel}>Any base</Typography>
-                            </Box>
-                        )}
-                    </Box>
+                <Box sx={styles.leaderBaseHolder}>
+                    {leaderImageUrl ? (
+                        <Box sx={{ ...styles.cardArt, backgroundImage: `url(${leaderImageUrl})` }} />
+                    ) : (
+                        <Box sx={styles.cardArtPlaceholder} />
+                    )}
+                    {kind === 'baseType' && baseImageUrl ? (
+                        <Box sx={{ ...styles.cardArt, backgroundImage: `url(${baseImageUrl})` }} />
+                    ) : kind === 'aspect' ? (
+                        <Box sx={styles.cardArtAspect}>
+                            <Box
+                                component="img"
+                                src={aspectIconUrl(selectedAspect)}
+                                alt={selectedAspect}
+                                sx={styles.aspectArtImage}
+                            />
+                            <Typography sx={styles.aspectArtLabel}>
+                                Any {capitalize(selectedAspect)}
+                            </Typography>
+                        </Box>
+                    ) : kind === 'baseType' && selectedBaseType ? (
+                        <Box sx={styles.cardArtAspect}>
+                            <Box
+                                component="img"
+                                src={aspectIconUrl(selectedBaseType.aspect)}
+                                alt={selectedBaseType.aspect}
+                                sx={styles.aspectArtImage}
+                            />
+                            <Typography sx={styles.aspectArtLabel}>
+                                {selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '')}
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Box sx={styles.cardArtAspect}>
+                            <Box sx={styles.anyBaseRing} />
+                            <Typography sx={styles.aspectArtLabel}>Any base</Typography>
+                        </Box>
+                    )}
                 </Box>
                 <Box sx={styles.cardForm}>
                     <Box onClick={stop}>
@@ -649,16 +646,16 @@ const styles = {
     archetypeCard: (isSelected: boolean) => ({
         background: isSelected ? '#2F7DB680' : '#20344280',
         width: '31rem',
+        height: '13rem',
         borderRadius: '5px',
-        padding: '1rem',
+        padding: '5px',
         display: 'flex',
         flexDirection: 'row',
-        gap: '0.75rem',
         border: '2px solid transparent',
         cursor: 'pointer',
         position: 'relative',
         '&:hover': {
-            backgroundColor: isSelected ? '#2F7DB680' : '#284a6280',
+            backgroundColor: '#2F7DB680',
         },
     }),
     archetypeCardDisabled: {
@@ -666,13 +663,13 @@ const styles = {
     },
     cardSwitch: {
         position: 'absolute',
-        top: '0.5rem',
-        right: '0.5rem',
-        zIndex: 5,
+        top: '8px',
+        right: '8px',
+        zIndex: 10,
     },
     selectionCheckmark: {
         position: 'absolute',
-        bottom: '10px',
+        bottom: '34px',
         right: '10px',
         width: '24px',
         height: '24px',
@@ -688,84 +685,71 @@ const styles = {
         fontWeight: 'bold',
         fontSize: '16px',
     },
-    cardImagery: {
-        width: '12rem',
-        flexShrink: 0,
+    leaderBaseHolder: {
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        height: '100%',
+        width: 'calc(55% - 5px)',
+        gap: '0.4rem',
+        padding: '0 0.3rem',
     },
-    imageStackContainer: {
-        position: 'relative',
-        width: '11rem',
-        height: '11rem',
-    },
-    leaderImage: {
-        position: 'absolute',
-        top: 0,
-        left: '2rem',
-        width: '8rem',
-        height: '6rem',
+    cardArt: {
+        flex: 1,
+        backgroundColor: 'transparent',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
-        borderRadius: '6px',
+        height: '11.5rem',
+        minWidth: 0,
     },
-    leaderImagePlaceholder: {
-        position: 'absolute',
-        top: 0,
-        left: '2rem',
-        width: '8rem',
-        height: '6rem',
+    cardArtPlaceholder: {
+        flex: 1,
+        height: '11.5rem',
+        minWidth: 0,
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: '6px',
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
-    baseImage: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        width: '8rem',
-        height: '6rem',
-        backgroundSize: 'contain',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-        borderRadius: '6px',
-    },
-    baseAspectImageWrapper: {
-        position: 'absolute',
-        bottom: 0,
-        left: '0.5rem',
-        width: '7rem',
+    cardArtAspect: {
+        flex: 1,
+        height: '11.5rem',
+        minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.25rem',
+        justifyContent: 'center',
+        gap: '0.5rem',
+        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+        borderRadius: '6px',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        padding: '0.5rem',
     },
-    baseAspectImage: {
+    aspectArtImage: {
         width: '4rem',
         height: '4rem',
         objectFit: 'contain',
     },
-    aspectImageLabel: {
-        color: '#dddddd',
+    aspectArtLabel: {
+        color: '#fff',
         fontSize: '0.85em',
         textAlign: 'center',
-        lineHeight: 1.2,
         margin: 0,
+        lineHeight: 1.2,
     },
-    anyBasePlaceholder: {
+    anyBaseRing: {
         width: '4rem',
         height: '4rem',
         borderRadius: '50%',
-        border: '1px dashed rgba(255, 255, 255, 0.3)',
+        border: '2px dashed rgba(255, 255, 255, 0.3)',
     },
     cardForm: {
-        flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.6rem',
-        minWidth: 0,
+        width: 'calc(45% - 5px)',
+        height: '100%',
+        gap: '0.5rem',
+        justifyContent: 'center',
+        paddingRight: '0.5rem',
     },
     kindRadios: {
         flexWrap: 'nowrap',
