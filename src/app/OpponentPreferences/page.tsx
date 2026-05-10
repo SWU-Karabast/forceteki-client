@@ -319,26 +319,23 @@ const OpponentPreferencesPage: React.FC = () => {
                     </Box>
                 )}
                 <Box sx={styles.cardImagery}>
-                    {leaderImageUrl ? (
-                        <Box sx={{ ...styles.leaderArtImage, backgroundImage: `url(${leaderImageUrl})` }} />
-                    ) : (
-                        <Box sx={styles.leaderArtPlaceholder} />
-                    )}
+                    {/* Base in the back; leader overlays in front, offset
+                        down-and-left, mirroring DeckPage's stacked-cards
+                        aesthetic. */}
                     {(() => {
                         const baseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
                             ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
                             : null;
                         if (baseImageUrl) {
-                            return <Box sx={{ ...styles.leaderArtImage, backgroundImage: `url(${baseImageUrl})` }} />;
+                            return <Box sx={{ ...styles.cardBaseBack, backgroundImage: `url(${baseImageUrl})` }} />;
                         }
-                        const badgeAspect = baseAspect;
                         return (
-                            <Box sx={styles.cardBaseBadge}>
-                                {badgeAspect ? (
+                            <Box sx={styles.cardBaseBackBadge}>
+                                {baseAspect ? (
                                     <Box
                                         component="img"
-                                        src={aspectIconUrl(badgeAspect)}
-                                        alt={badgeAspect}
+                                        src={aspectIconUrl(baseAspect)}
+                                        alt={baseAspect}
                                         sx={styles.cardBaseBadgeIcon}
                                     />
                                 ) : (
@@ -347,6 +344,13 @@ const OpponentPreferencesPage: React.FC = () => {
                             </Box>
                         );
                     })()}
+                    <Box sx={styles.cardLeaderFront}>
+                        {leaderImageUrl ? (
+                            <Box sx={{ ...styles.cardArtImage, backgroundImage: `url(${leaderImageUrl})` }} />
+                        ) : (
+                            <Box sx={styles.cardArtPlaceholder} />
+                        )}
+                    </Box>
                 </Box>
                 <Box sx={styles.cardMeta}>
                     <Box sx={styles.cardSection}>
@@ -795,7 +799,7 @@ const styles = {
         width: '32rem',
         height: '13rem',
         borderRadius: '5px',
-        padding: '0.6rem',
+        padding: '0.5rem',
         display: 'flex',
         flexDirection: 'row',
         gap: '0.75rem',
@@ -807,34 +811,58 @@ const styles = {
         },
     }),
     cardImagery: {
+        // Stack: base in the back at the top, leader in front offset
+        // down-and-left so both are visible. Matches the DeckPage pattern.
+        position: 'relative',
         flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.4rem',
+        width: '14rem',
+        height: '12rem',
     },
-    leaderArtImage: {
-        width: '8rem',
-        height: '11.5rem',
+    cardBaseBack: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: '12rem',
+        height: '8.6rem',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
-    },
-    leaderArtPlaceholder: {
-        width: '8rem',
-        height: '11.5rem',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: '6px',
-        border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
-    cardBaseBadge: {
-        width: '5rem',
-        height: '11.5rem',
+    cardBaseBackBadge: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: '12rem',
+        height: '8.6rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.35)',
         borderRadius: '6px',
         border: '1px solid rgba(255, 255, 255, 0.08)',
+    },
+    cardLeaderFront: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        width: '12rem',
+        height: '8.6rem',
+    },
+    cardArtImage: {
+        width: '100%',
+        height: '100%',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        borderRadius: '6px',
+    },
+    cardArtPlaceholder: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '6px',
+        border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
     cardBaseBadgeIcon: {
         width: '3.5rem',
@@ -946,8 +974,8 @@ const styles = {
         borderRadius: '15px',
         border: '2px solid transparent',
         background: 'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
-        width: '720px',
-        maxWidth: '94%',
+        width: '560px',
+        maxWidth: '92%',
         maxHeight: '92vh',
         overflow: 'auto',
         position: 'relative',
@@ -970,22 +998,23 @@ const styles = {
         gap: '0.5rem',
     },
     dialogPreviewImage: {
-        width: '11rem',
-        height: '15rem',
+        // SWU base & leader-deployed cards are landscape (~7:5).
+        width: '14rem',
+        height: '10rem',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
     },
     dialogPreviewPlaceholder: {
-        width: '11rem',
-        height: '15rem',
+        width: '14rem',
+        height: '10rem',
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: '6px',
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
     dialogPreviewBadge: {
-        width: '11rem',
-        height: '15rem',
+        width: '14rem',
+        height: '10rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -994,13 +1023,13 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
     },
     dialogPreviewBadgeIcon: {
-        width: '6rem',
-        height: '6rem',
+        width: '5rem',
+        height: '5rem',
         objectFit: 'contain',
     },
     dialogPreviewAnyRing: {
-        width: '6rem',
-        height: '6rem',
+        width: '5rem',
+        height: '5rem',
         borderRadius: '50%',
         border: '2px dashed rgba(255, 255, 255, 0.3)',
     },
@@ -1126,75 +1155,6 @@ const styles = {
         color: '#1E2D32',
         fontWeight: 'bold',
         fontSize: '16px',
-    },
-    leaderBaseHolder: {
-        display: 'flex',
-        alignItems: 'center',
-        height: '100%',
-        width: 'calc(55% - 5px)',
-        gap: '0.4rem',
-        padding: '0 0.3rem',
-    },
-    cardArt: {
-        flex: 1,
-        backgroundColor: 'transparent',
-        backgroundSize: 'contain',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-        height: '11.5rem',
-        minWidth: 0,
-    },
-    cardArtPlaceholder: {
-        flex: 1,
-        height: '11.5rem',
-        minWidth: 0,
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: '6px',
-        border: '1px dashed rgba(255, 255, 255, 0.18)',
-    },
-    cardArtAspect: {
-        flex: 1,
-        height: '11.5rem',
-        minWidth: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem',
-        backgroundColor: 'rgba(0, 0, 0, 0.25)',
-        borderRadius: '6px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        padding: '0.5rem',
-    },
-    aspectArtImage: {
-        width: '4rem',
-        height: '4rem',
-        objectFit: 'contain',
-    },
-    aspectArtLabel: {
-        color: '#fff',
-        fontSize: '0.85em',
-        textAlign: 'center',
-        margin: 0,
-        lineHeight: 1.2,
-    },
-    anyBaseRing: {
-        width: '4rem',
-        height: '4rem',
-        borderRadius: '50%',
-        border: '2px dashed rgba(255, 255, 255, 0.3)',
-    },
-    cardForm: {
-        display: 'flex',
-        flexDirection: 'column',
-        width: 'calc(45% - 5px)',
-        height: '100%',
-        gap: '0.5rem',
-        justifyContent: 'center',
-        paddingRight: '0.5rem',
-    },
-    kindRadios: {
-        flexWrap: 'nowrap',
     },
     headerActionButton: {
         color: '#cccccc',
