@@ -318,38 +318,42 @@ const OpponentPreferencesPage: React.FC = () => {
                         <Typography sx={styles.checkmarkSymbol}>✓</Typography>
                     </Box>
                 )}
-                <Box sx={styles.cardImagery}>
-                    {/* Base in the back; leader overlays in front, offset
-                        down-and-left, mirroring DeckPage's stacked-cards
-                        aesthetic. */}
-                    {(() => {
-                        const baseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
-                            ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
-                            : null;
-                        if (baseImageUrl) {
-                            return <Box sx={{ ...styles.cardBaseBack, backgroundImage: `url(${baseImageUrl})` }} />;
-                        }
-                        return (
-                            <Box sx={styles.cardBaseBackBadge}>
-                                {baseAspect ? (
-                                    <Box
-                                        component="img"
-                                        src={aspectIconUrl(baseAspect)}
-                                        alt={baseAspect}
-                                        sx={styles.cardBaseBadgeIcon}
-                                    />
-                                ) : (
-                                    <Box sx={styles.cardBaseBadgeRing} />
-                                )}
-                            </Box>
-                        );
-                    })()}
-                    <Box sx={styles.cardLeaderFront}>
-                        {leaderImageUrl ? (
-                            <Box sx={{ ...styles.cardArtImage, backgroundImage: `url(${leaderImageUrl})` }} />
-                        ) : (
-                            <Box sx={styles.cardArtPlaceholder} />
-                        )}
+                <Box sx={styles.leaderBaseHolder}>
+                    <Box sx={styles.cardSetContainerStyle}>
+                        {/* Base in the back at natural flow (top), then leader
+                            absolute-positioned with offset (-15, 26) overlaying
+                            it. Identical to DeckPage. */}
+                        <Box>
+                            {(() => {
+                                const baseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
+                                    ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
+                                    : null;
+                                if (baseImageUrl) {
+                                    return <Box sx={{ ...styles.boxGeneralStyling, backgroundImage: `url(${baseImageUrl})` }} />;
+                                }
+                                return (
+                                    <Box sx={{ ...styles.boxGeneralStyling, ...styles.aspectBadgeBg }}>
+                                        {baseAspect ? (
+                                            <Box
+                                                component="img"
+                                                src={aspectIconUrl(baseAspect)}
+                                                alt={baseAspect}
+                                                sx={styles.cardBaseBadgeIcon}
+                                            />
+                                        ) : (
+                                            <Box sx={styles.cardBaseBadgeRing} />
+                                        )}
+                                    </Box>
+                                );
+                            })()}
+                        </Box>
+                        <Box sx={{ ...styles.parentBoxStyling, left: '-15px', top: '26px' }}>
+                            {leaderImageUrl ? (
+                                <Box sx={{ ...styles.boxGeneralStyling, backgroundImage: `url(${leaderImageUrl})` }} />
+                            ) : (
+                                <Box sx={{ ...styles.boxGeneralStyling, ...styles.boxGeneralPlaceholder }} />
+                            )}
+                        </Box>
                     </Box>
                 </Box>
                 <Box sx={styles.cardMeta}>
@@ -794,94 +798,85 @@ const styles = {
         overflowY: 'auto',
         maxHeight: '84%',
     },
+    // Card container, dimensions, hover, and selection styling lifted
+    // verbatim from DeckPage so the visual is identical.
     archetypeCard: (isSelected: boolean) => ({
         background: isSelected ? '#2F7DB680' : '#20344280',
-        width: '32rem',
+        width: '31rem',
         height: '13rem',
         borderRadius: '5px',
-        padding: '0.5rem',
+        padding: '5px',
         display: 'flex',
         flexDirection: 'row',
-        gap: '0.75rem',
         border: '2px solid transparent',
-        cursor: 'pointer',
-        position: 'relative',
         '&:hover': {
             backgroundColor: '#2F7DB680',
         },
-    }),
-    cardImagery: {
-        // Stack: base in the back at the top, leader in front offset
-        // down-and-left so both are visible. Matches the DeckPage pattern.
+        cursor: 'pointer',
         position: 'relative',
-        flexShrink: 0,
-        width: '14rem',
-        height: '12rem',
+    }),
+    // The leader/base imagery section uses DeckPage's exact stack: base in
+    // the back at natural flow position, leader absolute-positioned at
+    // left:-15px / top:26px so it overlays the base offset down-and-left.
+    leaderBaseHolder: {
+        display: 'flex',
+        alignItems: 'center',
+        height: '100%',
+        width: 'calc(55% - 5px)',
     },
-    cardBaseBack: {
+    cardSetContainerStyle: {
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        width: '15.2rem',
+        height: '12.1rem',
+    },
+    parentBoxStyling: {
         position: 'absolute',
-        top: 0,
-        right: 0,
-        width: '12rem',
-        height: '8.6rem',
+    },
+    boxGeneralStyling: {
+        backgroundColor: 'transparent',
         backgroundSize: 'contain',
+        width: '14rem',
+        height: '10.18rem',
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-        borderRadius: '6px',
-    },
-    cardBaseBackBadge: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        width: '12rem',
-        height: '8.6rem',
+        textAlign: 'center' as const,
+        color: 'white',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.35)',
-        borderRadius: '6px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        cursor: 'pointer',
+        position: 'relative' as const,
+        ml: '15px',
     },
-    cardLeaderFront: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        width: '12rem',
-        height: '8.6rem',
-    },
-    cardArtImage: {
-        width: '100%',
-        height: '100%',
-        backgroundSize: 'contain',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-        borderRadius: '6px',
-    },
-    cardArtPlaceholder: {
-        width: '100%',
-        height: '100%',
+    boxGeneralPlaceholder: {
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: '6px',
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
+    aspectBadgeBg: {
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        borderRadius: '6px',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+    },
     cardBaseBadgeIcon: {
-        width: '3.5rem',
-        height: '3.5rem',
+        width: '4rem',
+        height: '4rem',
         objectFit: 'contain',
     },
     cardBaseBadgeRing: {
-        width: '3.5rem',
-        height: '3.5rem',
+        width: '4rem',
+        height: '4rem',
         borderRadius: '50%',
         border: '2px dashed rgba(255, 255, 255, 0.3)',
     },
     cardMeta: {
-        flex: 1,
-        height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.6rem',
-        padding: '1.5rem 0.25rem 0.25rem 0',
+        width: 'calc(45% - 5px)',
+        height: '100%',
+        justifyContent: 'space-between',
+        padding: '1.25rem 0.25rem 0.25rem 0',
         minWidth: 0,
     },
     cardSection: {
