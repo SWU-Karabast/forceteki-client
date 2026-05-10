@@ -14,8 +14,6 @@ import {
     Typography,
 } from '@mui/material';
 import { createFilterOptions } from '@mui/material/Autocomplete';
-import Grid from '@mui/material/Grid2';
-import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
@@ -29,26 +27,6 @@ import {
     MatchPreferences,
 } from '@/app/_constants/constants';
 import { loadMatchPreferences, saveMatchPreferences } from '@/app/_utils/matchPreferences';
-import { s3ImageURL } from '@/app/_utils/s3Utils';
-
-/**
- * Build a card-art URL from a set-code id (e.g. `SEC_010`). Mirrors the
- * format used by `s3CardImageURL` for plain-style standard-format leader
- * and base art, but skips the type-specific branches that depend on
- * runtime card state (e.g. "leader on base zone") which don't apply here.
- */
-function cardImageUrlFromSetCodeId(setCodeId: string): string | null {
-    const [set, numStr] = setCodeId.split('_');
-    if (!set || !numStr) {
-        return null;
-    }
-    const num = parseInt(numStr, 10);
-    if (Number.isNaN(num)) {
-        return null;
-    }
-    const padded = num.toString().padStart(3, '0');
-    return s3ImageURL(`cards/${set}/standard/large/${padded}.webp?v=2`);
-}
 
 interface LeaderOption {
     name: string;
@@ -69,19 +47,9 @@ const ASPECT_OPTIONS: Aspect[] = [
     Aspect.Vigilance,
 ];
 
-/**
- * Matches a leading '<Aspect> - ' prefix on a base-type label. Used when
- * an aspect icon is rendered alongside the label, making the text
- * prefix redundant. Unique-named labels (e.g. 'Colossus - 35hp (R)')
- * don't match this pattern.
- */
+// Stripped from base-type labels for display since the aspect icon and the
+// uniqueness of the base name already convey the same info as the prefix/tag.
 const ASPECT_PREFIX_PATTERN = /^(?:Aggression|Command|Cunning|Heroism|Vigilance|Villainy) - /;
-
-/**
- * Trailing rare-rarity tag on a base-type label (e.g. ' (R)'). Every
- * single-card base has a unique title, so the (R) is redundant — we strip
- * it from anywhere the label is shown to the user.
- */
 const RARE_TAG_PATTERN = /\s*\(R\)\s*$/;
 
 function displayBaseLabel(label: string): string {
@@ -115,22 +83,15 @@ function capitalize(value: string): string {
 
 const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
 
-// Only the four 'color' base aspects have an aspect-icon image. Bases tagged
-// 'neutral' (e.g. Lake Country) have no aspect — gating the icon render on
-// this avoids the broken-image fallback text ("neutral") from showing in
-// the slot where the icon should be.
+// Bases tagged 'neutral' have no aspect-icon image; checking before rendering
+// avoids a broken-image with the alt text 'neutral' showing in the icon slot.
 const VALID_BASE_ASPECTS = new Set(['aggression', 'command', 'cunning', 'vigilance']);
 function aspectHasIcon(aspect: string | null | undefined): aspect is string {
     return !!aspect && VALID_BASE_ASPECTS.has(aspect.toLowerCase());
 }
 
-/**
- * Filter base-type options on the *displayed* label (aspect prefix and rare
- * tag stripped) so the search behavior matches what the user sees in the
- * dropdown. Typing 'agg' no longer matches every Aggression-prefix multi-
- * card group — only typing the actual visible label terms (e.g. 'Force',
- * 'Vanilla', '30hp', or a specific card name) narrows the list.
- */
+// Filter on the displayed label so typing 'agg' doesn't match every
+// Aggression-prefix multi-card group.
 const baseTypeFilter = createFilterOptions<IBaseTypeOption>({
     stringify: (option) => displayBaseLabel(option.label),
 });
@@ -142,15 +103,8 @@ const OpponentPreferencesPage: React.FC = () => {
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Indices of archetypes currently selected for batch operations
-    // (mirrors the DeckPage selection pattern).
     const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-
-    // When true, the confirmation dialog for deleting selected archetypes is
-    // open.
     const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
-
-    // Index being edited in the modal (and a working draft). Null = closed.
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editingDraft, setEditingDraft] = useState<OpponentArchetype | null>(null);
 
@@ -171,9 +125,6 @@ const OpponentPreferencesPage: React.FC = () => {
                     return;
                 }
                 leadersData.sort((a, b) => leaderLabel(a).localeCompare(leaderLabel(b)));
-                // Cluster by aspect first, then alphabetical within each aspect.
-                // Each option already shows its aspect icon, so explicit
-                // group headers would just add visual noise.
                 baseTypesData.sort((a, b) => {
                     if (a.aspect !== b.aspect) {
                         return a.aspect.localeCompare(b.aspect);
@@ -210,19 +161,11 @@ const OpponentPreferencesPage: React.FC = () => {
         saveMatchPreferences(next);
     };
 
-    const updateArchetype = (index: number, next: OpponentArchetype) => {
-        const updated = prefs.allowedArchetypes.slice();
-        updated[index] = next;
-        persist({ ...prefs, allowedArchetypes: updated });
-    };
-
     const addArchetype = () => {
         const leaderId = leaders[0]?.id ?? '';
         const newArchetype: OpponentArchetype = { leaderId };
         const updated = [...prefs.allowedArchetypes, newArchetype];
         persist({ ...prefs, allowedArchetypes: updated });
-        // Open the new archetype in the edit modal so the user can immediately
-        // configure it.
         setEditingIndex(updated.length - 1);
         setEditingDraft({ ...newArchetype });
     };
@@ -266,32 +209,6 @@ const OpponentPreferencesPage: React.FC = () => {
         persist({ ...prefs, allowedArchetypes: updated });
     };
 
-    function baseConstraintSummary(constraint: BaseConstraint | undefined): string {
-        if (!constraint) {
-            return 'any base';
-        }
-        if (constraint.kind === 'aspect') {
-            // The aspect icon next to this text already conveys the aspect.
-            return '+ any base';
-        }
-        if (constraint.label) {
-            // Strip the leading aspect prefix when the label starts with
-            // '<Aspect> - ' (covers grouped types like 'Aggression - 30hp'
-            // and 'Aggression - Force - 28hp'). Unique-named bases like
-            // 'Colossus - 35hp (R)' don't start with an aspect, so they
-            // pass through unchanged.
-            const trimmed = constraint.label.replace(ASPECT_PREFIX_PATTERN, '');
-            return `+ ${trimmed}`;
-        }
-        return `+ ${constraint.baseIds.length} bases`;
-    }
-
-    /**
-     * Returns the aspect string (e.g. 'aggression') of the base under this
-     * constraint, used to render a small aspect-icon badge next to the
-     * constraint summary in the collapsed row. `null` for "any base"
-     * (no specific aspect) or when the baseType isn't found.
-     */
     function baseConstraintAspect(constraint: BaseConstraint | undefined): string | null {
         if (!constraint) {
             return null;
@@ -322,14 +239,6 @@ const OpponentPreferencesPage: React.FC = () => {
             ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
             : null;
 
-        // Build a base { title, subtitle } pair with the same shape as the
-        // leader name/subtitle so the row's two text columns read the same:
-        //   - any: "Any base"
-        //   - aspect: "Any <Aspect>"
-        //   - multi-card group ("Aggression - Force - 28hp"): "Force" / "28hp"
-        //   - specific card ("Shadow Collective Camp - 25hp (R)"):
-        //       "Shadow Collective Camp" / "25hp" (rare-tag dropped — every
-        //       single-card base has a unique title, so (R) is redundant).
         let baseTitle: string;
         let baseSubtitle: string | null = null;
         if (!archetype.baseConstraint) {
@@ -619,20 +528,14 @@ const OpponentPreferencesPage: React.FC = () => {
                             renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
                             sx={styles.field}
                             renderOption={(props, option) => {
-                                // MUI's default props.key uses getOptionLabel(option), which collides
-                                // when multiple options have the same displayed label (e.g. all 4
-                                // 'Vanilla - 30hp' multi-card groups share that label). Force option.id
-                                // (guaranteed unique) so React reconciliation doesn't keep stale DOM
-                                // nodes when the filter narrows the visible set.
-                                const { key: _ignoredKey, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
-                                void _ignoredKey;
+                                // Use option.id as React key — MUI's default key is getOptionLabel,
+                                // which collides for multi-card groups that share a displayed label.
+                                const { key: _key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+                                void _key;
                                 return (
                                     <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
                                         <Box sx={styles.dialogOptionAspects}>
                                             {option.aspects.map((aspect, i) => (
-                                                // Some mono-aspect leaders (e.g. DJ) list the aspect
-                                                // twice in their .aspects array; keying on aspect alone
-                                                // collides, so include the index.
                                                 <Box
                                                     key={`${aspect}-${i}`}
                                                     component="img"
@@ -745,11 +648,8 @@ const OpponentPreferencesPage: React.FC = () => {
                                 )}
                                 sx={styles.field}
                                 renderOption={(props, option) => {
-                                    // Same key-collision avoidance as the leader Autocomplete: MUI's
-                                    // default props.key is getOptionLabel(option) which collides for
-                                    // multi-card groups that share a displayed label across aspects.
-                                    const { key: _ignoredKey, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
-                                    void _ignoredKey;
+                                    const { key: _key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+                                    void _key;
                                     return (
                                         <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
                                             {aspectHasIcon(option.aspect) && (
@@ -857,23 +757,16 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
     },
-    // Wrappable middle area: leader section and base section sit side-by-side
-    // when there's room, and wrap onto separate lines when the row is too
-    // narrow. Toggle and Edit stay anchored on either side.
+    // Wrappable middle area: when content doesn't fit on one line, the leader
+    // and base sections wrap to separate lines while toggle + Edit stay anchored.
     rowContent: {
         display: 'flex',
         flexWrap: 'wrap' as const,
         alignItems: 'center',
-        gap: '8px 16px', // row-gap col-gap
+        gap: '8px 16px',
         flex: '1 1 auto',
         minWidth: 0,
     },
-    // Leader section uses flex-basis 22rem with grow:1 so it expands to fill
-    // its share of the row when there's space (and base section also expands
-    // by flex 1 1 auto, both growing together). The 22rem basis means the
-    // base section starts at a roughly consistent x position across rows
-    // when content fits — long leader subtitles can push it slightly, but
-    // never enough to cause premature wrapping.
     rowLeaderSection: {
         display: 'flex',
         alignItems: 'center',
@@ -890,7 +783,7 @@ const styles = {
     },
     rowLeaderThumb: {
         width: '6.5rem',
-        height: '4.65rem', // 7:5 landscape (SWU leader-deployed)
+        height: '4.65rem',
         backgroundColor: 'rgba(255, 255, 255, 0.04)',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
@@ -908,8 +801,6 @@ const styles = {
         flex: '1 1 auto',
         overflow: 'hidden',
     },
-    // Shared title/subtitle styling — used by both the leader name/subtitle
-    // and the base title/subtitle so the row reads as two parallel columns.
     rowTitle: {
         color: '#fff',
         fontSize: '1.1em',
@@ -954,13 +845,10 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         color: 'rgba(255, 255, 255, 0.55)',
-        // Bigger glyph + lighter weight so it has comparable visual weight to
-        // a colored aspect icon without looking like a chunky bullet point.
+        // Asterisk visual mass sits near cap-height; nudge down to optically center.
         fontSize: '4.5rem',
         fontWeight: 400,
-        lineHeight: 0.6, // tightens line box so the glyph centers cleanly
-        // Asterisk's visual mass sits near cap-height; nudge down so the
-        // optical center of the * lines up with the text baseline next to it.
+        lineHeight: 0.6,
         transform: 'translateY(0.18em)',
     },
     rowEditSlot: {
@@ -968,11 +856,6 @@ const styles = {
         flexShrink: 0,
     },
     rowSelectionCheckmark: {
-        // Sits in flex flow at the end of the row (after the Edit button) so
-        // it's vertically centered with the rest of the row content. The
-        // slot is always rendered (visibility toggles on selection) so the
-        // Edit button doesn't shift horizontally when an archetype is
-        // selected/deselected.
         width: '24px',
         height: '24px',
         borderRadius: '50%',
@@ -1026,8 +909,6 @@ const styles = {
         maxWidth: '14rem',
     },
     dialogPreviewImage: {
-        // SWU base & leader-deployed cards are landscape (~7:5). Width caps
-        // at 14rem so it shrinks on narrow viewports rather than overflowing.
         width: '100%',
         maxWidth: '14rem',
         aspectRatio: '7 / 5',
@@ -1066,14 +947,9 @@ const styles = {
     dialogPreviewAnyBaseText: {
         color: 'rgba(255, 255, 255, 0.55)',
         fontSize: '12rem',
-        // Match the row-view asterisk: regular weight, not bold. The 700
-        // weight rendered as a chunky asterisk (system fonts often map
-        // bold-asterisk to a heavily-filled glyph that reads as a bullet).
         fontWeight: 400,
         margin: 0,
-        lineHeight: 0.6, // tightens the line box so * doesn't sit visually high
-        // Asterisks have their visual mass near the cap-height (high in the
-        // em-box); a small downward nudge optically centers them in the panel.
+        lineHeight: 0.6,
         transform: 'translateY(0.18em)',
     },
     dialogPreviewCaption: {
@@ -1182,8 +1058,6 @@ const styles = {
     },
     archetypeSwitch: {
         flexShrink: 0,
-        // Match Karabast's white-accent convention used by checkboxes and
-        // radios elsewhere on the site.
         '& .MuiSwitch-switchBase.Mui-checked': {
             color: '#fff',
         },
@@ -1200,9 +1074,7 @@ const styles = {
     },
     field: {
         flex: 1,
-        // MUI Autocomplete defaults the clear-X and dropdown-chevron icons
-        // to a very low-contrast gray on dark backgrounds. Brighten them so
-        // they read like the existing Format/Match Type dropdowns.
+        // Brighten clear-X and dropdown-chevron icons to match the existing dropdowns.
         '& .MuiAutocomplete-clearIndicator, & .MuiAutocomplete-popupIndicator': {
             color: '#ffffff',
         },
