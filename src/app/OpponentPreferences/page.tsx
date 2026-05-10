@@ -3,9 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
     Autocomplete,
     Box,
-    Button,
     FormControlLabel,
-    IconButton,
+    Grid,
     MenuItem,
     Radio,
     RadioGroup,
@@ -14,8 +13,10 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
+import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
     Aspect,
     BaseConstraint,
@@ -112,8 +113,13 @@ const OpponentPreferencesPage: React.FC = () => {
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Index pending removal — when set, the confirmation dialog opens.
-    const [pendingRemovalIndex, setPendingRemovalIndex] = useState<number | null>(null);
+    // Indices of archetypes currently selected for batch operations
+    // (mirrors the DeckPage selection pattern).
+    const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+
+    // When true, the confirmation dialog for deleting selected archetypes is
+    // open.
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -177,16 +183,24 @@ const OpponentPreferencesPage: React.FC = () => {
         persist({ ...prefs, allowedArchetypes: updated });
     };
 
-    const removeArchetype = (index: number) => {
-        const updated = prefs.allowedArchetypes.slice();
-        updated.splice(index, 1);
-        persist({ ...prefs, allowedArchetypes: updated });
-    };
-
     const addArchetype = () => {
         const leaderId = leaders[0]?.id ?? '';
         const updated = [...prefs.allowedArchetypes, { leaderId }];
         persist({ ...prefs, allowedArchetypes: updated });
+    };
+
+    const toggleSelection = (index: number) => {
+        setSelectedIndices((prev) => (
+            prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+        ));
+    };
+
+    const deleteSelected = () => {
+        const removeSet = new Set(selectedIndices);
+        const updated = prefs.allowedArchetypes.filter((_, i) => !removeSet.has(i));
+        persist({ ...prefs, allowedArchetypes: updated });
+        setSelectedIndices([]);
+        setDeleteDialogOpen(false);
     };
 
     const setArchetypeEnabled = (index: number, enabled: boolean) => {
@@ -336,114 +350,166 @@ const OpponentPreferencesPage: React.FC = () => {
             );
         };
 
+        const leaderImageUrl = selectedLeader ? cardImageUrlFromSetCodeId(selectedLeader.id) : null;
+        const baseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
+            ? cardImageUrlFromSetCodeId(selectedBaseType.representativeId)
+            : null;
+        const isSelected = selectedIndices.includes(index);
+        const stop = (e: React.MouseEvent) => e.stopPropagation();
+
         return (
-            <Box key={index} sx={{ ...styles.archetypeRow, ...(isEnabled ? null : styles.archetypeRowDisabled) }}>
-                <Switch
-                    size="small"
-                    checked={isEnabled}
-                    onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
-                    sx={styles.archetypeSwitch}
-                    inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
-                />
-                <Box sx={styles.leaderAspectStack}>
-                    {(selectedLeader?.aspects ?? []).map((aspect) => (
-                        <Box
-                            key={aspect}
-                            component="img"
-                            src={aspectIconUrl(aspect)}
-                            alt={aspect}
-                            sx={styles.aspectOptionIcon}
-                        />
-                    ))}
+            <Box
+                key={index}
+                sx={{ ...styles.archetypeCard(isSelected), ...(isEnabled ? null : styles.archetypeCardDisabled) }}
+                onClick={() => toggleSelection(index)}
+            >
+                <Box sx={styles.cardSwitch} onClick={stop}>
+                    <Switch
+                        size="small"
+                        checked={isEnabled}
+                        onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
+                        sx={styles.archetypeSwitch}
+                        inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
+                    />
                 </Box>
-                <Autocomplete
-                    options={leaders}
-                    value={selectedLeader}
-                    getOptionLabel={leaderLabel}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    onChange={(_, value) => onLeaderChange(value)}
-                    clearIcon={null}
-                    renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
-                    sx={styles.leaderField}
-                    renderOption={leaderOptionRender}
-                />
-                <RadioGroup
-                    row
-                    value={kind}
-                    onChange={(_, value) => onKindChange(value as BaseConstraintKind)}
-                    sx={styles.kindRadios}
-                >
-                    <FormControlLabel
-                        value="any"
-                        control={<Radio size="small" sx={styles.radio} />}
-                        label={<Typography sx={styles.radioLabel}>Any</Typography>}
-                    />
-                    <FormControlLabel
-                        value="aspect"
-                        control={<Radio size="small" sx={styles.radio} />}
-                        label={<Typography sx={styles.radioLabel}>Aspect</Typography>}
-                    />
-                    <FormControlLabel
-                        value="baseType"
-                        control={<Radio size="small" sx={styles.radio} />}
-                        label={<Typography sx={styles.radioLabel}>Specific</Typography>}
-                    />
-                </RadioGroup>
-                <Box sx={styles.baseValueSlot}>
-                    {kind === 'aspect' && (
-                        <Select
-                            value={selectedAspect}
-                            size="small"
-                            onChange={(e) => onAspectChange(e.target.value as Aspect)}
+                {isSelected && (
+                    <Box sx={styles.selectionCheckmark}>
+                        <Typography sx={styles.checkmarkSymbol}>✓</Typography>
+                    </Box>
+                )}
+                <Box sx={styles.cardImagery}>
+                    <Box sx={styles.imageStackContainer}>
+                        {leaderImageUrl ? (
+                            <Box sx={{ ...styles.leaderImage, backgroundImage: `url(${leaderImageUrl})` }} />
+                        ) : (
+                            <Box sx={styles.leaderImagePlaceholder} />
+                        )}
+                        {baseImageUrl && (
+                            <Box sx={{ ...styles.baseImage, backgroundImage: `url(${baseImageUrl})` }} />
+                        )}
+                        {kind === 'aspect' && (
+                            <Box sx={styles.baseAspectImageWrapper}>
+                                <Box
+                                    component="img"
+                                    src={aspectIconUrl(selectedAspect)}
+                                    alt={selectedAspect}
+                                    sx={styles.baseAspectImage}
+                                />
+                                <Typography sx={styles.aspectImageLabel}>
+                                    Any {capitalize(selectedAspect)}
+                                </Typography>
+                            </Box>
+                        )}
+                        {kind === 'baseType' && selectedBaseType && selectedBaseType.baseIds.length > 1 && (
+                            <Box sx={styles.baseAspectImageWrapper}>
+                                <Box
+                                    component="img"
+                                    src={aspectIconUrl(selectedBaseType.aspect)}
+                                    alt={selectedBaseType.aspect}
+                                    sx={styles.baseAspectImage}
+                                />
+                                <Typography sx={styles.aspectImageLabel}>
+                                    {selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '')}
+                                </Typography>
+                            </Box>
+                        )}
+                        {kind === 'any' && (
+                            <Box sx={styles.baseAspectImageWrapper}>
+                                <Box sx={styles.anyBasePlaceholder} />
+                                <Typography sx={styles.aspectImageLabel}>Any base</Typography>
+                            </Box>
+                        )}
+                    </Box>
+                </Box>
+                <Box sx={styles.cardForm}>
+                    <Box onClick={stop}>
+                        <Autocomplete
+                            options={leaders}
+                            value={selectedLeader}
+                            getOptionLabel={leaderLabel}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            onChange={(_, value) => onLeaderChange(value)}
+                            clearIcon={null}
+                            renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
                             sx={styles.field}
-                            renderValue={(value) => (
-                                <Box component="span" sx={styles.aspectOption}>
-                                    <Box
-                                        component="img"
-                                        src={aspectIconUrl(value)}
-                                        alt={value}
-                                        sx={styles.aspectOptionIcon}
-                                    />
-                                    {capitalize(value as string)}
-                                </Box>
-                            )}
+                            renderOption={leaderOptionRender}
+                        />
+                    </Box>
+                    <Box onClick={stop}>
+                        <RadioGroup
+                            row
+                            value={kind}
+                            onChange={(_, value) => onKindChange(value as BaseConstraintKind)}
+                            sx={styles.kindRadios}
                         >
-                            {ASPECT_OPTIONS.map((aspect) => (
-                                <MenuItem key={aspect} value={aspect}>
+                            <FormControlLabel
+                                value="any"
+                                control={<Radio size="small" sx={styles.radio} />}
+                                label={<Typography sx={styles.radioLabel}>Any</Typography>}
+                            />
+                            <FormControlLabel
+                                value="aspect"
+                                control={<Radio size="small" sx={styles.radio} />}
+                                label={<Typography sx={styles.radioLabel}>Aspect</Typography>}
+                            />
+                            <FormControlLabel
+                                value="baseType"
+                                control={<Radio size="small" sx={styles.radio} />}
+                                label={<Typography sx={styles.radioLabel}>Specific</Typography>}
+                            />
+                        </RadioGroup>
+                    </Box>
+                    {kind === 'aspect' && (
+                        <Box onClick={stop}>
+                            <Select
+                                value={selectedAspect}
+                                size="small"
+                                fullWidth
+                                onChange={(e) => onAspectChange(e.target.value as Aspect)}
+                                renderValue={(value) => (
                                     <Box component="span" sx={styles.aspectOption}>
                                         <Box
                                             component="img"
-                                            src={aspectIconUrl(aspect)}
-                                            alt={aspect}
+                                            src={aspectIconUrl(value)}
+                                            alt={value}
                                             sx={styles.aspectOptionIcon}
                                         />
-                                        {capitalize(aspect)}
+                                        {capitalize(value as string)}
                                     </Box>
-                                </MenuItem>
-                            ))}
-                        </Select>
+                                )}
+                            >
+                                {ASPECT_OPTIONS.map((aspect) => (
+                                    <MenuItem key={aspect} value={aspect}>
+                                        <Box component="span" sx={styles.aspectOption}>
+                                            <Box
+                                                component="img"
+                                                src={aspectIconUrl(aspect)}
+                                                alt={aspect}
+                                                sx={styles.aspectOptionIcon}
+                                            />
+                                            {capitalize(aspect)}
+                                        </Box>
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </Box>
                     )}
                     {kind === 'baseType' && (
-                        <Autocomplete
-                            options={baseTypes}
-                            value={selectedBaseType}
-                            getOptionLabel={baseTypeLabel}
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            onChange={(_, value) => onBaseTypeChange(value)}
-                            clearIcon={null}
-                            renderInput={(params) => <TextField {...params} placeholder="Select base type" size="small" />}
-                            sx={styles.field}
-                            renderOption={baseTypeOptionRender}
-                        />
+                        <Box onClick={stop}>
+                            <Autocomplete
+                                options={baseTypes}
+                                value={selectedBaseType}
+                                getOptionLabel={baseTypeLabel}
+                                isOptionEqualToValue={(option, value) => option.id === value.id}
+                                onChange={(_, value) => onBaseTypeChange(value)}
+                                clearIcon={null}
+                                renderInput={(params) => <TextField {...params} placeholder="Select base type" size="small" />}
+                                sx={styles.field}
+                                renderOption={baseTypeOptionRender}
+                            />
+                        </Box>
                     )}
                 </Box>
-                <IconButton
-                    aria-label="Remove archetype"
-                    onClick={() => setPendingRemovalIndex(index)}
-                    sx={styles.headerActionButton}
-                >
-                    <CloseIcon />
-                </IconButton>
             </Box>
         );
     };
@@ -461,49 +527,63 @@ const OpponentPreferencesPage: React.FC = () => {
                 {error && <Typography sx={styles.error}>{error}</Typography>}
                 {!loaded && !error && <Typography sx={styles.muted}>Loading leaders and bases…</Typography>}
 
+                {loaded && (
+                    <Box sx={styles.toolbar}>
+                        <Box sx={styles.toolbarSlot}>
+                            <PreferenceButton
+                                variant="standard"
+                                text="Add archetype"
+                                buttonFnc={addArchetype}
+                                disabled={leaders.length === 0}
+                            />
+                        </Box>
+                        <Box sx={styles.toolbarSlot}>
+                            <PreferenceButton
+                                variant="concede"
+                                text={`Delete archetype${selectedIndices.length === 1 ? '' : 's'}`}
+                                buttonFnc={() => setDeleteDialogOpen(true)}
+                                disabled={selectedIndices.length === 0}
+                            />
+                        </Box>
+                    </Box>
+                )}
+
                 {loaded && prefs.allowedArchetypes.length === 0 && (
                     <Box sx={styles.emptyState}>
                         <Typography sx={styles.muted}>
-                            No archetypes added yet. Add at least one to start filtering.
+                            No archetypes added yet. Click {'“'}Add archetype{'”'} above to start filtering.
                         </Typography>
                     </Box>
                 )}
 
-                {loaded && prefs.allowedArchetypes.map(renderArchetypeCard)}
-
-                {loaded && (
-                    <Button
-                        variant="contained"
-                        onClick={addArchetype}
-                        sx={styles.addButton}
-                        disabled={leaders.length === 0}
-                    >
-                        + Add allowed archetype
-                    </Button>
+                {loaded && prefs.allowedArchetypes.length > 0 && (
+                    <Grid container spacing={2} sx={styles.gridContainer}>
+                        {prefs.allowedArchetypes.map((archetype, i) => (
+                            <Grid key={i}>
+                                {renderArchetypeCard(archetype, i)}
+                            </Grid>
+                        ))}
+                    </Grid>
                 )}
             </Box>
             <ConfirmationDialog
-                open={pendingRemovalIndex !== null}
-                title="Remove archetype"
+                open={deleteDialogOpen}
+                title={`Delete archetype${selectedIndices.length === 1 ? '' : 's'}`}
                 message={
                     <>
                         <Typography sx={styles.confirmPrimary}>
-                            Are you sure you want to remove this archetype? This action cannot be undone.
+                            Are you sure you want to delete {selectedIndices.length} archetype
+                            {selectedIndices.length === 1 ? '' : 's'}? This action cannot be undone.
                         </Typography>
                         <Typography sx={styles.confirmHint}>
-                            Tip: if you only want to pause it, toggle it off with the switch instead — disabled
-                            archetypes stay saved and can be re-enabled later.
+                            Tip: if you only want to pause an archetype, toggle it off with the switch on
+                            the card — disabled archetypes stay saved and can be re-enabled later.
                         </Typography>
                     </>
                 }
-                onCancel={() => setPendingRemovalIndex(null)}
-                onConfirm={() => {
-                    if (pendingRemovalIndex !== null) {
-                        removeArchetype(pendingRemovalIndex);
-                    }
-                    setPendingRemovalIndex(null);
-                }}
-                confirmButtonText="Remove"
+                onCancel={() => setDeleteDialogOpen(false)}
+                onConfirm={deleteSelected}
+                confirmButtonText="Delete"
             />
         </Box>
     );
@@ -554,30 +634,141 @@ const styles = {
         border: '1px dashed rgba(255, 255, 255, 0.18)',
         textAlign: 'center',
     },
-    archetypeRow: {
+    toolbar: {
         display: 'flex',
+        gap: '1rem',
         alignItems: 'center',
-        gap: '0.5rem',
-        padding: '0.6rem 0.75rem',
-        borderRadius: '10px',
-        backgroundColor: 'rgba(0, 0, 0, 0.35)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        backdropFilter: 'blur(6px)',
+        marginBottom: '0.5rem',
     },
-    archetypeRowDisabled: {
+    toolbarSlot: {
+        minWidth: '180px',
+    },
+    gridContainer: {
+        marginTop: '0.5rem',
+    },
+    archetypeCard: (isSelected: boolean) => ({
+        background: isSelected ? '#2F7DB680' : '#20344280',
+        width: '31rem',
+        borderRadius: '5px',
+        padding: '1rem',
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '0.75rem',
+        border: '2px solid transparent',
+        cursor: 'pointer',
+        position: 'relative',
+        '&:hover': {
+            backgroundColor: isSelected ? '#2F7DB680' : '#284a6280',
+        },
+    }),
+    archetypeCardDisabled: {
         opacity: 0.55,
     },
-    leaderField: {
-        flex: '2 1 240px',
-        minWidth: '200px',
+    cardSwitch: {
+        position: 'absolute',
+        top: '0.5rem',
+        right: '0.5rem',
+        zIndex: 5,
+    },
+    selectionCheckmark: {
+        position: 'absolute',
+        bottom: '10px',
+        right: '10px',
+        width: '24px',
+        height: '24px',
+        borderRadius: '50%',
+        backgroundColor: '#66E5FF',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+    },
+    checkmarkSymbol: {
+        color: '#1E2D32',
+        fontWeight: 'bold',
+        fontSize: '16px',
+    },
+    cardImagery: {
+        width: '12rem',
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    imageStackContainer: {
+        position: 'relative',
+        width: '11rem',
+        height: '11rem',
+    },
+    leaderImage: {
+        position: 'absolute',
+        top: 0,
+        left: '2rem',
+        width: '8rem',
+        height: '6rem',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        borderRadius: '6px',
+    },
+    leaderImagePlaceholder: {
+        position: 'absolute',
+        top: 0,
+        left: '2rem',
+        width: '8rem',
+        height: '6rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '6px',
+        border: '1px dashed rgba(255, 255, 255, 0.18)',
+    },
+    baseImage: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        width: '8rem',
+        height: '6rem',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        borderRadius: '6px',
+    },
+    baseAspectImageWrapper: {
+        position: 'absolute',
+        bottom: 0,
+        left: '0.5rem',
+        width: '7rem',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.25rem',
+    },
+    baseAspectImage: {
+        width: '4rem',
+        height: '4rem',
+        objectFit: 'contain',
+    },
+    aspectImageLabel: {
+        color: '#dddddd',
+        fontSize: '0.85em',
+        textAlign: 'center',
+        lineHeight: 1.2,
+        margin: 0,
+    },
+    anyBasePlaceholder: {
+        width: '4rem',
+        height: '4rem',
+        borderRadius: '50%',
+        border: '1px dashed rgba(255, 255, 255, 0.3)',
+    },
+    cardForm: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.6rem',
+        minWidth: 0,
     },
     kindRadios: {
-        flexShrink: 0,
         flexWrap: 'nowrap',
-    },
-    baseValueSlot: {
-        flex: '1 1 200px',
-        minWidth: '180px',
     },
     headerActionButton: {
         color: '#cccccc',
