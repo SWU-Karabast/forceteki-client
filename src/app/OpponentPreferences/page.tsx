@@ -112,15 +112,6 @@ const OpponentPreferencesPage: React.FC = () => {
     const [loaded, setLoaded] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Index of the archetype currently in expanded-edit mode. Only one at a
-    // time; null = all collapsed.
-    const [activeIndex, setActiveIndex] = useState<number | null>(null);
-
-    // Working copy of the archetype being edited. While non-null, field
-    // changes mutate this draft rather than the persisted state. "Save"
-    // commits the draft; opening another row for edit auto-saves first.
-    const [editingDraft, setEditingDraft] = useState<OpponentArchetype | null>(null);
-
     // Index pending removal — when set, the confirmation dialog opens.
     const [pendingRemovalIndex, setPendingRemovalIndex] = useState<number | null>(null);
 
@@ -180,78 +171,22 @@ const OpponentPreferencesPage: React.FC = () => {
         saveMatchPreferences(next);
     };
 
-    /**
-     * Mutates the in-flight draft for the active archetype. Field changes
-     * call this; persistence happens in `commitDraft`.
-     */
     const updateArchetype = (index: number, next: OpponentArchetype) => {
-        if (activeIndex === index && editingDraft) {
-            setEditingDraft(next);
-            return;
-        }
-        // Fallback: editing-not-active path (shouldn't generally happen, but
-        // keeps the function safe for any caller that bypasses the draft).
         const updated = prefs.allowedArchetypes.slice();
         updated[index] = next;
         persist({ ...prefs, allowedArchetypes: updated });
-    };
-
-    const startEditing = (index: number) => {
-        // If we were editing a different row, commit that one first.
-        if (editingDraft !== null && activeIndex !== null && activeIndex !== index) {
-            const updated = prefs.allowedArchetypes.slice();
-            updated[activeIndex] = editingDraft;
-            persist({ ...prefs, allowedArchetypes: updated });
-        }
-        setEditingDraft({ ...prefs.allowedArchetypes[index] });
-        setActiveIndex(index);
-    };
-
-    const commitDraft = () => {
-        if (editingDraft === null || activeIndex === null) {
-            setActiveIndex(null);
-            setEditingDraft(null);
-            return;
-        }
-        const updated = prefs.allowedArchetypes.slice();
-        updated[activeIndex] = editingDraft;
-        persist({ ...prefs, allowedArchetypes: updated });
-        setActiveIndex(null);
-        setEditingDraft(null);
     };
 
     const removeArchetype = (index: number) => {
         const updated = prefs.allowedArchetypes.slice();
         updated.splice(index, 1);
         persist({ ...prefs, allowedArchetypes: updated });
-        // If we just removed the active row, drop its draft. If we removed
-        // an earlier row, shift the active index down so the same row stays
-        // open with its existing draft.
-        if (activeIndex === null) {
-            return;
-        }
-        if (index === activeIndex) {
-            setActiveIndex(null);
-            setEditingDraft(null);
-        } else if (index < activeIndex) {
-            setActiveIndex(activeIndex - 1);
-        }
     };
 
     const addArchetype = () => {
-        // If something else was being edited, commit first so we don't lose it.
-        let baseList = prefs.allowedArchetypes;
-        if (editingDraft !== null && activeIndex !== null) {
-            baseList = baseList.slice();
-            baseList[activeIndex] = editingDraft;
-        }
         const leaderId = leaders[0]?.id ?? '';
-        const newArchetype: OpponentArchetype = { leaderId };
-        const updated = [...baseList, newArchetype];
+        const updated = [...prefs.allowedArchetypes, { leaderId }];
         persist({ ...prefs, allowedArchetypes: updated });
-        // Auto-open the freshly-added archetype with a fresh draft.
-        setActiveIndex(updated.length - 1);
-        setEditingDraft({ ...newArchetype });
     };
 
     const setArchetypeEnabled = (index: number, enabled: boolean) => {
@@ -299,23 +234,20 @@ const OpponentPreferencesPage: React.FC = () => {
     }
 
     const renderArchetypeCard = (archetype: OpponentArchetype, index: number) => {
-        const isExpanded = activeIndex === index;
-        // While editing, render the live-mutating draft so the header summary
-        // reflects what the user is changing in the form below.
-        const view = isExpanded && editingDraft ? editingDraft : archetype;
-        const isEnabled = view.enabled !== false;
-        const kind = getConstraintKind(view.baseConstraint);
-        const selectedLeader = leaderById.get(view.leaderId) ?? null;
-        const selectedBaseTypeKey = view.baseConstraint?.kind === 'baseType'
-            ? view.baseConstraint.baseIds.slice().sort().join('|')
+        const isEnabled = archetype.enabled !== false;
+        const kind = getConstraintKind(archetype.baseConstraint);
+        const selectedLeader = leaderById.get(archetype.leaderId) ?? null;
+        const selectedBaseTypeKey = archetype.baseConstraint?.kind === 'baseType'
+            ? archetype.baseConstraint.baseIds.slice().sort().join('|')
             : null;
         const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
-        const selectedAspect = view.baseConstraint?.kind === 'aspect' ? view.baseConstraint.aspect : Aspect.Vigilance;
-        const baseSummary = baseConstraintSummary(view.baseConstraint);
-        const baseAspect = baseConstraintAspect(view.baseConstraint);
+        const selectedAspect = archetype.baseConstraint?.kind === 'aspect' ? archetype.baseConstraint.aspect : Aspect.Vigilance;
 
         const onLeaderChange = (next: LeaderOption | null) => {
-            updateArchetype(index, { ...archetype, leaderId: next?.id ?? '' });
+            if (!next) {
+                return;
+            }
+            updateArchetype(index, { ...archetype, leaderId: next.id });
         };
 
         const onKindChange = (nextKind: BaseConstraintKind) => {
@@ -359,210 +291,159 @@ const OpponentPreferencesPage: React.FC = () => {
             });
         };
 
-        const leaderImageUrl = selectedLeader ? cardImageUrlFromSetCodeId(selectedLeader.id) : null;
-        const baseImageUrl = selectedBaseType ? cardImageUrlFromSetCodeId(selectedBaseType.representativeId) : null;
-        const isUniqueBaseType = !!selectedBaseType && selectedBaseType.baseIds.length === 1;
+        const leaderOptionRender = (props: React.HTMLAttributes<HTMLLIElement>, option: LeaderOption) => {
+            const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+            return (
+                <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.baseOption}>
+                    <Box sx={styles.leaderAspectStack}>
+                        {option.aspects.map((aspect) => (
+                            <Box
+                                key={aspect}
+                                component="img"
+                                src={aspectIconUrl(aspect)}
+                                alt={aspect}
+                                sx={styles.aspectOptionIcon}
+                            />
+                        ))}
+                    </Box>
+                    <Typography component="span" sx={styles.baseOptionLabel}>{leaderLabel(option)}</Typography>
+                    {option.set && (
+                        <Typography component="span" sx={styles.baseOptionSet}>{option.set}</Typography>
+                    )}
+                </Box>
+            );
+        };
+
+        const baseTypeOptionRender = (props: React.HTMLAttributes<HTMLLIElement>, option: IBaseTypeOption) => {
+            const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+            return (
+                <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.baseOption}>
+                    {option.aspect && (
+                        <Box
+                            component="img"
+                            src={aspectIconUrl(option.aspect)}
+                            alt={option.aspect}
+                            sx={styles.aspectOptionIcon}
+                        />
+                    )}
+                    <Typography component="span" sx={styles.baseOptionLabel}>
+                        {option.label.replace(ASPECT_PREFIX_PATTERN, '')}
+                    </Typography>
+                    {option.set && (
+                        <Typography component="span" sx={styles.baseOptionSet}>{option.set}</Typography>
+                    )}
+                </Box>
+            );
+        };
 
         return (
-            <Box key={index} sx={{ ...styles.archetypeCard, ...(isEnabled ? null : styles.archetypeCardDisabled) }}>
-                <Box sx={styles.archetypeHeader}>
-                    <Switch
-                        size="small"
-                        checked={isEnabled}
-                        onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
-                        sx={styles.archetypeSwitch}
-                        inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
-                    />
-                    <Box sx={styles.archetypeImages}>
-                        {leaderImageUrl ? (
-                            <Box sx={{ ...styles.cardImage, backgroundImage: `url(${leaderImageUrl})` }} />
-                        ) : (
-                            <Box sx={styles.cardImagePlaceholder} />
-                        )}
-                        {kind === 'baseType' && baseImageUrl && isUniqueBaseType && selectedBaseType && (
-                            <Box sx={styles.aspectPreview}>
-                                <Box sx={{ ...styles.cardImage, backgroundImage: `url(${baseImageUrl})` }} />
-                                <Typography sx={styles.aspectPreviewLabel}>
-                                    {selectedBaseType.label}
-                                </Typography>
-                            </Box>
-                        )}
-                        {kind === 'baseType' && selectedBaseType && !isUniqueBaseType && (
-                            <Box sx={styles.aspectPreview}>
-                                <Box
-                                    component="img"
-                                    src={aspectIconUrl(selectedBaseType.aspect)}
-                                    alt={selectedBaseType.aspect}
-                                    sx={styles.aspectImage}
-                                />
-                                <Typography sx={styles.aspectPreviewLabel}>
-                                    {selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '')}
-                                </Typography>
-                            </Box>
-                        )}
-                        {kind === 'aspect' && (
-                            <Box sx={styles.aspectPreview}>
-                                <Box
-                                    component="img"
-                                    src={aspectIconUrl(selectedAspect)}
-                                    alt={selectedAspect}
-                                    sx={styles.aspectImage}
-                                />
-                                <Typography sx={styles.aspectPreviewLabel}>
-                                    Any {capitalize(selectedAspect)} base
-                                </Typography>
-                            </Box>
-                        )}
-                        {kind === 'any' && (
-                            <Box sx={styles.aspectPreview}>
-                                <Box sx={styles.anyBasePlaceholder} />
-                                <Typography sx={styles.aspectPreviewLabel}>
-                                    Any base
-                                </Typography>
-                            </Box>
-                        )}
-                    </Box>
-                    <Typography component="span" sx={styles.headerLeaderName}>
-                        {selectedLeader ? leaderLabel(selectedLeader) : 'Unknown leader'}
-                    </Typography>
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => (isExpanded ? commitDraft() : startEditing(index))}
-                        sx={styles.editSaveButton}
-                    >
-                        {isExpanded ? 'Save' : 'Edit'}
-                    </Button>
-                    <IconButton
-                        aria-label="Remove archetype"
-                        onClick={() => setPendingRemovalIndex(index)}
-                        sx={styles.headerActionButton}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-                {isExpanded && (
-                <Box sx={styles.archetypeFields}>
-                    <Box sx={styles.fieldRow}>
-                        <Typography sx={styles.fieldLabel}>Leader</Typography>
-                        <Autocomplete
-                            options={leaders}
-                            value={selectedLeader}
-                            getOptionLabel={leaderLabel}
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            onChange={(_, value) => onLeaderChange(value)}
-                            renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
-                            sx={styles.field}
-                            renderOption={(props, option) => {
-                                const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
-                                return (
-                                    <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.baseOption}>
-                                        <Box sx={styles.leaderAspectStack}>
-                                            {option.aspects.map((aspect) => (
-                                                <Box
-                                                    key={aspect}
-                                                    component="img"
-                                                    src={aspectIconUrl(aspect)}
-                                                    alt={aspect}
-                                                    sx={styles.aspectOptionIcon}
-                                                />
-                                            ))}
-                                        </Box>
-                                        <Typography component="span" sx={styles.baseOptionLabel}>{leaderLabel(option)}</Typography>
-                                        {option.set && (
-                                            <Typography component="span" sx={styles.baseOptionSet}>{option.set}</Typography>
-                                        )}
-                                    </Box>
-                                );
-                            }}
+            <Box key={index} sx={{ ...styles.archetypeRow, ...(isEnabled ? null : styles.archetypeRowDisabled) }}>
+                <Switch
+                    size="small"
+                    checked={isEnabled}
+                    onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
+                    sx={styles.archetypeSwitch}
+                    inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
+                />
+                <Box sx={styles.leaderAspectStack}>
+                    {(selectedLeader?.aspects ?? []).map((aspect) => (
+                        <Box
+                            key={aspect}
+                            component="img"
+                            src={aspectIconUrl(aspect)}
+                            alt={aspect}
+                            sx={styles.aspectOptionIcon}
                         />
-                    </Box>
-                    <Box sx={styles.fieldRow}>
-                        <Typography sx={styles.fieldLabel}>Base</Typography>
-                        <RadioGroup
-                            row
-                            value={kind}
-                            onChange={(_, value) => onKindChange(value as BaseConstraintKind)}
-                        >
-                            <FormControlLabel
-                                value="any"
-                                control={<Radio size="small" sx={styles.radio} />}
-                                label={<Typography sx={styles.radioLabel}>Any base</Typography>}
-                            />
-                            <FormControlLabel
-                                value="aspect"
-                                control={<Radio size="small" sx={styles.radio} />}
-                                label={<Typography sx={styles.radioLabel}>Any base of aspect</Typography>}
-                            />
-                            <FormControlLabel
-                                value="baseType"
-                                control={<Radio size="small" sx={styles.radio} />}
-                                label={<Typography sx={styles.radioLabel}>Specific base type</Typography>}
-                            />
-                        </RadioGroup>
-                    </Box>
+                    ))}
+                </Box>
+                <Autocomplete
+                    options={leaders}
+                    value={selectedLeader}
+                    getOptionLabel={leaderLabel}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    onChange={(_, value) => onLeaderChange(value)}
+                    clearIcon={null}
+                    renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
+                    sx={styles.leaderField}
+                    renderOption={leaderOptionRender}
+                />
+                <RadioGroup
+                    row
+                    value={kind}
+                    onChange={(_, value) => onKindChange(value as BaseConstraintKind)}
+                    sx={styles.kindRadios}
+                >
+                    <FormControlLabel
+                        value="any"
+                        control={<Radio size="small" sx={styles.radio} />}
+                        label={<Typography sx={styles.radioLabel}>Any</Typography>}
+                    />
+                    <FormControlLabel
+                        value="aspect"
+                        control={<Radio size="small" sx={styles.radio} />}
+                        label={<Typography sx={styles.radioLabel}>Aspect</Typography>}
+                    />
+                    <FormControlLabel
+                        value="baseType"
+                        control={<Radio size="small" sx={styles.radio} />}
+                        label={<Typography sx={styles.radioLabel}>Specific</Typography>}
+                    />
+                </RadioGroup>
+                <Box sx={styles.baseValueSlot}>
                     {kind === 'aspect' && (
-                        <Box sx={styles.fieldRow}>
-                            <Typography sx={styles.fieldLabel}>Aspect</Typography>
-                            <Select
-                                value={selectedAspect}
-                                size="small"
-                                onChange={(e) => onAspectChange(e.target.value as Aspect)}
-                                sx={styles.field}
-                            >
-                                {ASPECT_OPTIONS.map((aspect) => (
-                                    <MenuItem key={aspect} value={aspect}>
-                                        <Box component="span" sx={styles.aspectOption}>
-                                            <Box
-                                                component="img"
-                                                src={aspectIconUrl(aspect)}
-                                                alt={aspect}
-                                                sx={styles.aspectOptionIcon}
-                                            />
-                                            {capitalize(aspect)}
-                                        </Box>
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
+                        <Select
+                            value={selectedAspect}
+                            size="small"
+                            onChange={(e) => onAspectChange(e.target.value as Aspect)}
+                            sx={styles.field}
+                            renderValue={(value) => (
+                                <Box component="span" sx={styles.aspectOption}>
+                                    <Box
+                                        component="img"
+                                        src={aspectIconUrl(value)}
+                                        alt={value}
+                                        sx={styles.aspectOptionIcon}
+                                    />
+                                    {capitalize(value as string)}
+                                </Box>
+                            )}
+                        >
+                            {ASPECT_OPTIONS.map((aspect) => (
+                                <MenuItem key={aspect} value={aspect}>
+                                    <Box component="span" sx={styles.aspectOption}>
+                                        <Box
+                                            component="img"
+                                            src={aspectIconUrl(aspect)}
+                                            alt={aspect}
+                                            sx={styles.aspectOptionIcon}
+                                        />
+                                        {capitalize(aspect)}
+                                    </Box>
+                                </MenuItem>
+                            ))}
+                        </Select>
                     )}
                     {kind === 'baseType' && (
-                        <Box sx={styles.fieldRow}>
-                            <Typography sx={styles.fieldLabel}>Base type</Typography>
-                            <Autocomplete
-                                options={baseTypes}
-                                value={selectedBaseType}
-                                getOptionLabel={baseTypeLabel}
-                                isOptionEqualToValue={(option, value) => option.id === value.id}
-                                onChange={(_, value) => onBaseTypeChange(value)}
-                                renderInput={(params) => <TextField {...params} placeholder="Select base type" size="small" />}
-                                sx={styles.field}
-                                renderOption={(props, option) => {
-                                    const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
-                                    return (
-                                        <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.baseOption}>
-                                            {option.aspect && (
-                                                <Box
-                                                    component="img"
-                                                    src={aspectIconUrl(option.aspect)}
-                                                    alt={option.aspect}
-                                                    sx={styles.aspectOptionIcon}
-                                                />
-                                            )}
-                                            <Typography component="span" sx={styles.baseOptionLabel}>
-                                                {option.label.replace(ASPECT_PREFIX_PATTERN, '')}
-                                            </Typography>
-                                            {option.set && (
-                                                <Typography component="span" sx={styles.baseOptionSet}>{option.set}</Typography>
-                                            )}
-                                        </Box>
-                                    );
-                                }}
-                            />
-                        </Box>
+                        <Autocomplete
+                            options={baseTypes}
+                            value={selectedBaseType}
+                            getOptionLabel={baseTypeLabel}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            onChange={(_, value) => onBaseTypeChange(value)}
+                            clearIcon={null}
+                            renderInput={(params) => <TextField {...params} placeholder="Select base type" size="small" />}
+                            sx={styles.field}
+                            renderOption={baseTypeOptionRender}
+                        />
                     )}
                 </Box>
-                )}
+                <IconButton
+                    aria-label="Remove archetype"
+                    onClick={() => setPendingRemovalIndex(index)}
+                    sx={styles.headerActionButton}
+                >
+                    <CloseIcon />
+                </IconButton>
             </Box>
         );
     };
@@ -673,52 +554,38 @@ const styles = {
         border: '1px dashed rgba(255, 255, 255, 0.18)',
         textAlign: 'center',
     },
-    archetypeCard: {
+    archetypeRow: {
         display: 'flex',
-        flexDirection: 'column',
-        padding: '0.75rem 1rem',
-        borderRadius: '12px',
-        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.6rem 0.75rem',
+        borderRadius: '10px',
+        backgroundColor: 'rgba(0, 0, 0, 0.35)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         backdropFilter: 'blur(6px)',
     },
-    archetypeCardDisabled: {
+    archetypeRowDisabled: {
         opacity: 0.55,
     },
-    archetypeHeader: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
+    leaderField: {
+        flex: '2 1 240px',
+        minWidth: '200px',
+    },
+    kindRadios: {
+        flexShrink: 0,
+        flexWrap: 'nowrap',
+    },
+    baseValueSlot: {
+        flex: '1 1 200px',
+        minWidth: '180px',
     },
     headerActionButton: {
         color: '#cccccc',
+        flexShrink: 0,
         '&:hover': {
             color: '#ffffff',
             backgroundColor: 'rgba(255,255,255,0.05)',
         },
-    },
-    editSaveButton: {
-        color: '#fff',
-        borderColor: 'rgba(255, 255, 255, 0.4)',
-        textTransform: 'none',
-        fontWeight: 500,
-        minWidth: '64px',
-        '&:hover': {
-            borderColor: '#fff',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        },
-    },
-    headerLeaderName: {
-        flex: 1,
-        color: '#fff',
-        fontWeight: 500,
-        margin: 0,
-    },
-    anyBasePlaceholder: {
-        width: '40px',
-        height: '40px',
-        borderRadius: '50%',
-        border: '1px dashed rgba(255, 255, 255, 0.3)',
     },
     confirmPrimary: {
         color: '#fff',
@@ -730,6 +597,7 @@ const styles = {
         fontStyle: 'italic',
     },
     archetypeSwitch: {
+        flexShrink: 0,
         // Match Karabast's white-accent convention used by checkboxes and
         // radios elsewhere on the site.
         '& .MuiSwitch-switchBase.Mui-checked': {
@@ -739,95 +607,6 @@ const styles = {
             backgroundColor: '#fff',
             opacity: 0.5,
         },
-    },
-    collapsedLeader: {
-        color: '#fff',
-        fontWeight: 500,
-        margin: 0,
-        flexShrink: 0,
-    },
-    collapsedConstraintGroup: {
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.25rem',
-    },
-    collapsedConstraint: {
-        color: '#bbbbbb',
-        fontSize: '0.9em',
-        margin: 0,
-    },
-    collapsedActionButton: {
-        color: '#cccccc',
-        '&:hover': {
-            color: '#ffffff',
-            backgroundColor: 'rgba(255,255,255,0.05)',
-        },
-    },
-    expandedActions: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.25rem',
-    },
-    archetypeImages: {
-        display: 'flex',
-        gap: '0.5rem',
-        flexShrink: 0,
-        alignItems: 'center',
-    },
-    cardImage: {
-        width: '80px',
-        height: '60px',
-        backgroundSize: 'contain',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-        borderRadius: '6px',
-    },
-    cardImagePlaceholder: {
-        width: '80px',
-        height: '60px',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: '6px',
-        border: '1px dashed rgba(255, 255, 255, 0.18)',
-    },
-    aspectImageWrapper: {
-        width: '40px',
-        height: '40px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    aspectImage: {
-        width: '40px',
-        height: '40px',
-        objectFit: 'contain',
-    },
-    aspectPreview: {
-        width: '80px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '0.15rem',
-    },
-    aspectPreviewLabel: {
-        color: '#dddddd',
-        fontSize: '0.75em',
-        textAlign: 'center',
-        lineHeight: 1.2,
-        margin: 0,
-    },
-    archetypeFields: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.5rem',
-        marginTop: '0.75rem',
-        paddingTop: '0.75rem',
-        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-    },
-    fieldRow: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.25rem',
     },
     fieldLabel: {
         color: '#aaaaaa',
