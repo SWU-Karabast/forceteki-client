@@ -726,6 +726,16 @@ const OpponentPreferencesPage: React.FC = () => {
             backgroundColor: '#394452',
             color: '#fff',
         },
+        optionLeaderThumb: {
+            width: '3.5rem',
+            height: '2.5rem',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            borderRadius: '3px',
+            flexShrink: 0,
+        },
         noOptionsText: {
             color: '#bbbbbb',
             fontSize: '0.85em',
@@ -1007,8 +1017,10 @@ const OpponentPreferencesPage: React.FC = () => {
                                 // which collides for leader options whose displayed label is identical.
                                 const { key: _key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
                                 void _key;
+                                const thumbUrl = s3CardImageURL({ id: option.id, count: 0 } as never, CardStyle.PlainLeader);
                                 return (
                                     <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
+                                        <Box sx={{ ...styles.optionLeaderThumb, backgroundImage: `url(${thumbUrl})` }} />
                                         <Typography component="span" sx={styles.dialogOptionLabel}>{leaderLabel(option)}</Typography>
                                     </Box>
                                 );
