@@ -369,7 +369,7 @@ const OpponentPreferencesPage: React.FC = () => {
                                 sx={styles.rowBaseAspectIcon}
                             />
                         ) : (
-                            <Box sx={styles.rowBaseAnyDot} />
+                            <Typography sx={styles.rowBaseAnyAsterisk} aria-hidden>*</Typography>
                         )}
                         <Box sx={styles.rowTextStack}>
                             <Typography sx={styles.rowTitle}>{baseTitle}</Typography>
@@ -906,12 +906,21 @@ const styles = {
         objectFit: 'contain' as const,
         flexShrink: 0,
     },
-    rowBaseAnyDot: {
+    rowBaseAnyAsterisk: {
         width: '2.6rem',
         height: '2.6rem',
-        borderRadius: '50%',
-        border: '1px dashed rgba(255, 255, 255, 0.25)',
         flexShrink: 0,
+        margin: 0,
+        // Sized + optically centered so the asterisk visually matches the
+        // 2.6rem aspect-icon slot it replaces for the 'any base' case.
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'rgba(255, 255, 255, 0.55)',
+        fontSize: '3rem',
+        fontWeight: 700,
+        lineHeight: 0.6,
+        transform: 'translateY(0.1em)',
     },
     rowEditSlot: {
         display: 'flex',
