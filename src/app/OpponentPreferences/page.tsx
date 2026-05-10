@@ -282,7 +282,7 @@ const OpponentPreferencesPage: React.FC = () => {
         return type?.aspect ?? null;
     }
 
-    const renderArchetypeCard = (archetype: OpponentArchetype, index: number) => {
+    const renderArchetypeRow = (archetype: OpponentArchetype, index: number) => {
         const isEnabled = archetype.enabled !== false;
         const isSelected = selectedIndices.includes(index);
         const selectedLeader = leaderById.get(archetype.leaderId) ?? null;
@@ -295,6 +295,9 @@ const OpponentPreferencesPage: React.FC = () => {
 
         const leaderImageUrl = selectedLeader
             ? s3CardImageURL({ id: selectedLeader.id, count: 0 } as never, CardStyle.PlainLeader)
+            : null;
+        const uniqueBaseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
+            ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
             : null;
 
         let baseSummaryText: string;
@@ -311,10 +314,10 @@ const OpponentPreferencesPage: React.FC = () => {
         return (
             <Box
                 key={index}
-                sx={{ ...styles.archetypeCard(isSelected), ...(isEnabled ? null : styles.archetypeCardDisabled) }}
+                sx={{ ...styles.archetypeRow(isSelected), ...(isEnabled ? null : styles.archetypeRowDisabled) }}
                 onClick={() => toggleSelection(index)}
             >
-                <Box sx={styles.cardSwitch} onClick={stop}>
+                <Box sx={styles.rowToggle} onClick={stop}>
                     <Switch
                         size="small"
                         checked={isEnabled}
@@ -323,80 +326,50 @@ const OpponentPreferencesPage: React.FC = () => {
                         inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
                     />
                 </Box>
+                <Box sx={styles.rowContent}>
+                    <Box sx={styles.rowSection}>
+                        {leaderImageUrl ? (
+                            <Box sx={{ ...styles.rowLeaderThumb, backgroundImage: `url(${leaderImageUrl})` }} />
+                        ) : (
+                            <Box sx={{ ...styles.rowLeaderThumb, ...styles.rowThumbPlaceholder }} />
+                        )}
+                        <Box sx={styles.rowLeaderText}>
+                            <Typography sx={styles.rowLeaderName}>
+                                {selectedLeader ? selectedLeader.name : 'Unknown leader'}
+                            </Typography>
+                            {selectedLeader?.subtitle && (
+                                <Typography sx={styles.rowLeaderSubtitle}>{selectedLeader.subtitle}</Typography>
+                            )}
+                        </Box>
+                    </Box>
+                    <Box sx={styles.rowSection}>
+                        {uniqueBaseImageUrl ? (
+                            <Box sx={{ ...styles.rowBaseThumb, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
+                        ) : baseAspect ? (
+                            <Box
+                                component="img"
+                                src={aspectIconUrl(baseAspect)}
+                                alt={baseAspect}
+                                sx={styles.rowBaseAspectIcon}
+                            />
+                        ) : (
+                            <Box sx={styles.rowBaseAnyDot} />
+                        )}
+                        <Typography sx={styles.rowBaseText}>{baseSummaryText}</Typography>
+                    </Box>
+                </Box>
+                <Box sx={styles.rowEditSlot} onClick={stop}>
+                    <PreferenceButton
+                        variant="standard"
+                        text="Edit"
+                        buttonFnc={() => openEditDialog(index)}
+                    />
+                </Box>
                 {isSelected && (
-                    <Box sx={styles.selectionCheckmark}>
+                    <Box sx={styles.rowSelectionCheckmark}>
                         <Typography sx={styles.checkmarkSymbol}>✓</Typography>
                     </Box>
                 )}
-                {(() => {
-                    const uniqueBaseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
-                        ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
-                        : null;
-                    if (uniqueBaseImageUrl) {
-                        // Specific single-card base: DeckPage overlap stack —
-                        // base in the back at natural flow, leader absolute-
-                        // positioned at (-15px, 26px) overlaying it.
-                        return (
-                            <Box sx={styles.leaderBaseHolder}>
-                                <Box sx={styles.cardSetContainerStyle}>
-                                    <Box>
-                                        <Box sx={{ ...styles.boxGeneralStyling, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
-                                    </Box>
-                                    <Box sx={{ ...styles.parentBoxStyling, left: '-15px', top: '26px' }}>
-                                        {leaderImageUrl ? (
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage: `url(${leaderImageUrl})` }} />
-                                        ) : (
-                                            <Box sx={{ ...styles.boxGeneralStyling, ...styles.boxGeneralPlaceholder }} />
-                                        )}
-                                    </Box>
-                                </Box>
-                            </Box>
-                        );
-                    }
-                    // Any base / aspect / multi-card group: just the leader
-                    // image, large and centered. The base info is conveyed by
-                    // the caption text on the right.
-                    return (
-                        <Box sx={styles.leaderHolder}>
-                            {leaderImageUrl ? (
-                                <Box sx={{ ...styles.leaderArt, backgroundImage: `url(${leaderImageUrl})` }} />
-                            ) : (
-                                <Box sx={{ ...styles.leaderArt, ...styles.leaderArtPlaceholder }} />
-                            )}
-                        </Box>
-                    );
-                })()}
-                <Box sx={styles.cardMeta}>
-                    <Box sx={styles.cardSection}>
-                        <Typography sx={styles.leaderNameTop}>
-                            {selectedLeader ? selectedLeader.name : 'Unknown leader'}
-                        </Typography>
-                        {selectedLeader?.subtitle && (
-                            <Typography sx={styles.leaderNameSub}>{selectedLeader.subtitle}</Typography>
-                        )}
-                    </Box>
-                    <Box sx={styles.cardSection}>
-                        <Typography sx={styles.cardSectionLabel}>Base</Typography>
-                        <Box sx={styles.cardBaseLine}>
-                            {baseAspect && (
-                                <Box
-                                    component="img"
-                                    src={aspectIconUrl(baseAspect)}
-                                    alt={baseAspect}
-                                    sx={styles.cardBaseAspectIcon}
-                                />
-                            )}
-                            <Typography sx={styles.cardBaseText}>{baseSummaryText}</Typography>
-                        </Box>
-                    </Box>
-                    <Box sx={styles.cardEditRow} onClick={stop}>
-                        <PreferenceButton
-                            variant="standard"
-                            text="Edit"
-                            buttonFnc={() => openEditDialog(index)}
-                        />
-                    </Box>
-                </Box>
             </Box>
         );
     };
@@ -444,9 +417,9 @@ const OpponentPreferencesPage: React.FC = () => {
                 )}
 
                 {loaded && prefs.allowedArchetypes.length > 0 && (
-                    <Grid container alignItems="center" spacing={1} sx={styles.gridContainer}>
-                        {prefs.allowedArchetypes.map((archetype, i) => renderArchetypeCard(archetype, i))}
-                    </Grid>
+                    <Box sx={styles.rowList}>
+                        {prefs.allowedArchetypes.map((archetype, i) => renderArchetypeRow(archetype, i))}
+                    </Box>
                 )}
             </Box>
             <ConfirmationDialog
@@ -797,177 +770,137 @@ const styles = {
     toolbarSlot: {
         minWidth: '200px',
     },
-    gridContainer: {
+    rowList: {
         mt: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
         overflowY: 'auto',
         maxHeight: '84%',
     },
-    // Card container, dimensions, hover, and selection styling lifted
-    // verbatim from DeckPage so the visual is identical.
-    archetypeCard: (isSelected: boolean) => ({
+    archetypeRow: (isSelected: boolean) => ({
         background: isSelected ? '#2F7DB680' : '#20344280',
-        width: '31rem',
-        // Karabast sets the root font-size to 10px globally (1rem = 10px),
-        // so all rem values here render at ~62.5% of the equivalent at a
-        // standard 16px root. The Edit button anchored to the bottom-right
-        // corner takes ~50px tall + 12px corner offset = ~62px reserved at
-        // the bottom. The card needs enough height to fit the leader+base
-        // text content plus that bottom button area without overlap; 18rem
-        // (180px) gives ~12px clearance between content end and button top.
-        height: '18rem',
-        maxWidth: '100%',
         borderRadius: '5px',
-        padding: '5px',
-        display: 'flex',
-        flexDirection: 'row',
         border: '2px solid transparent',
+        padding: '8px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        cursor: 'pointer',
+        position: 'relative' as const,
         '&:hover': {
             backgroundColor: '#2F7DB680',
         },
-        cursor: 'pointer',
-        position: 'relative',
     }),
-    leaderHolder: {
+    rowToggle: {
+        flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        width: 'calc(55% - 5px)',
-        height: '100%',
-        padding: '0 0.5rem',
     },
-    leaderArt: {
-        width: '100%',
-        height: '92%',
-        backgroundColor: 'transparent',
+    // Wrappable middle area: leader section and base section sit side-by-side
+    // when there's room, and wrap onto separate lines when the row is too
+    // narrow. Toggle and Edit stay anchored on either side.
+    rowContent: {
+        display: 'flex',
+        flexWrap: 'wrap' as const,
+        alignItems: 'center',
+        gap: '8px 16px', // row-gap col-gap
+        flex: '1 1 auto',
+        minWidth: 0,
+    },
+    rowSection: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        flex: '1 1 auto',
+        minWidth: 0,
+    },
+    rowLeaderThumb: {
+        width: '6.5rem',
+        height: '4.65rem', // 7:5 landscape (SWU leader-deployed)
+        backgroundColor: 'rgba(255, 255, 255, 0.04)',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
-        borderRadius: '6px',
+        borderRadius: '4px',
+        flexShrink: 0,
     },
-    leaderArtPlaceholder: {
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    rowThumbPlaceholder: {
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
-    // DeckPage-mirrored stack used when the archetype has a specific
-    // single-card base. Lifts the same dimensions/offsets verbatim.
-    leaderBaseHolder: {
-        display: 'flex',
-        alignItems: 'center',
-        height: '100%',
-        width: 'calc(55% - 5px)',
-    },
-    cardSetContainerStyle: {
+    rowLeaderText: {
         display: 'flex',
         flexDirection: 'column' as const,
-        position: 'relative' as const,
-        width: '15.2rem',
-        height: '12.1rem',
-    },
-    parentBoxStyling: {
-        position: 'absolute' as const,
-    },
-    boxGeneralStyling: {
-        backgroundColor: 'transparent',
-        backgroundSize: 'contain',
-        width: '14rem',
-        height: '10.18rem',
-        backgroundRepeat: 'no-repeat',
-        textAlign: 'center' as const,
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        position: 'relative' as const,
-        ml: '15px',
-    },
-    boxGeneralPlaceholder: {
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: '6px',
-        border: '1px dashed rgba(255, 255, 255, 0.18)',
-    },
-    cardMeta: {
-        display: 'flex',
-        flexDirection: 'column',
-        width: 'calc(45% - 5px)',
-        height: '100%',
-        justifyContent: 'flex-start',
-        // Bottom padding clears the absolutely-positioned Edit button in the
-        // card's bottom-right corner so the base text doesn't sit underneath.
-        padding: '1.5rem 0.75rem 3.25rem 0.25rem',
         minWidth: 0,
-        gap: '0.75rem',
+        flex: '1 1 auto',
+        overflow: 'hidden',
     },
-    cardSection: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.25rem',
-        minWidth: 0,
-    },
-    cardSectionLabel: {
-        color: '#888',
-        fontSize: '0.8em',
-        textTransform: 'uppercase',
-        letterSpacing: '0.1em',
-        margin: 0,
-    },
-    leaderNameTop: {
+    rowLeaderName: {
         color: '#fff',
-        fontSize: '1.25em',
+        fontSize: '1.1em',
         fontWeight: 600,
         margin: 0,
         lineHeight: 1.25,
+        whiteSpace: 'nowrap' as const,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        minWidth: 0,
     },
-    leaderNameSub: {
+    rowLeaderSubtitle: {
         color: '#bbbbbb',
-        fontSize: '0.95em',
+        fontSize: '0.85em',
         margin: 0,
         lineHeight: 1.25,
+        whiteSpace: 'nowrap' as const,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
     },
-    cardBaseLine: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
+    rowBaseThumb: {
+        width: '6.5rem',
+        height: '4.65rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        borderRadius: '4px',
+        flexShrink: 0,
     },
-    cardBaseLabel: {
-        color: '#888',
-        fontSize: '0.85em',
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-        margin: 0,
-    },
-    cardBaseAspectIcon: {
-        width: '26px',
-        height: '26px',
+    rowBaseAspectIcon: {
+        width: '2.6rem',
+        height: '2.6rem',
         objectFit: 'contain' as const,
+        flexShrink: 0,
     },
-    cardBaseText: {
+    rowBaseAnyDot: {
+        width: '2.6rem',
+        height: '2.6rem',
+        borderRadius: '50%',
+        border: '1px dashed rgba(255, 255, 255, 0.25)',
+        flexShrink: 0,
+    },
+    rowBaseText: {
         color: '#dddddd',
-        fontSize: '1.05em',
+        fontSize: '1em',
         margin: 0,
+        whiteSpace: 'nowrap' as const,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
         minWidth: 0,
     },
-    // Pin the Edit row to the card's bottom-right corner (mirroring the
-    // top-right anchored toggle in cardSwitch). Anchored absolute so the
-    // button keeps its default size + position regardless of how narrow
-    // the card gets — it never overflows because it's always tied to the
-    // card's bottom-right corner, and cardMeta has reserved padding-bottom
-    // to keep the base text from sliding underneath it.
-    cardEditRow: {
-        position: 'absolute',
-        bottom: '12px',
-        right: '12px',
+    rowEditSlot: {
         display: 'flex',
+        flexShrink: 0,
+    },
+    rowSelectionCheckmark: {
+        position: 'absolute' as const,
+        top: '6px',
+        right: '6px',
+        width: '20px',
+        height: '20px',
+        borderRadius: '50%',
+        backgroundColor: '#66E5FF',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         zIndex: 5,
     },
     dialogOverlay: {
@@ -1137,32 +1070,14 @@ const styles = {
         flexShrink: 0,
         marginLeft: 'auto',
     },
-    archetypeCardDisabled: {
+    archetypeRowDisabled: {
         opacity: 0.55,
-    },
-    cardSwitch: {
-        position: 'absolute',
-        top: '8px',
-        right: '8px',
-        zIndex: 10,
-    },
-    selectionCheckmark: {
-        position: 'absolute',
-        bottom: '34px',
-        right: '10px',
-        width: '24px',
-        height: '24px',
-        borderRadius: '50%',
-        backgroundColor: '#66E5FF',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 10,
     },
     checkmarkSymbol: {
         color: '#1E2D32',
         fontWeight: 'bold',
-        fontSize: '16px',
+        fontSize: '13px',
+        lineHeight: 1,
     },
     headerActionButton: {
         color: '#cccccc',
