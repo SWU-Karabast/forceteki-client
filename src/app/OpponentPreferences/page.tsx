@@ -722,6 +722,15 @@ const OpponentPreferencesPage: React.FC = () => {
                 color: '#ffffff',
             },
         },
+        autocompletePaper: {
+            backgroundColor: '#394452',
+            color: '#fff',
+        },
+        noOptionsText: {
+            color: '#bbbbbb',
+            fontSize: '0.85em',
+            padding: '0.25rem 0.5rem',
+        },
         aspectOption: {
             display: 'inline-flex',
             alignItems: 'center',
@@ -991,6 +1000,8 @@ const OpponentPreferencesPage: React.FC = () => {
                             clearIcon={null}
                             renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
                             sx={styles.field}
+                            noOptionsText={<Typography sx={styles.noOptionsText}>No matches</Typography>}
+                            slotProps={{ paper: { sx: styles.autocompletePaper } }}
                             renderOption={(props, option) => {
                                 // Use option.id as React key — MUI's default key is getOptionLabel,
                                 // which collides for leader options whose displayed label is identical.
@@ -1078,6 +1089,8 @@ const OpponentPreferencesPage: React.FC = () => {
                                 isOptionEqualToValue={(option, value) => option.id === value.id}
                                 onChange={(_, value) => onBaseTypeChange(value)}
                                 clearIcon={null}
+                                noOptionsText={<Typography sx={styles.noOptionsText}>No matches</Typography>}
+                                slotProps={{ paper: { sx: styles.autocompletePaper } }}
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
