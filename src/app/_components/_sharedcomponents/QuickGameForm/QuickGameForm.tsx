@@ -21,7 +21,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchPreferences } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchPreferences, MATCH_PREFERENCES_LOCALSTORAGE_KEY } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -130,7 +130,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         }
         const reload = () => setMatchPreferencesState(loadMatchPreferences());
         const onVisibility = () => { if (document.visibilityState === 'visible') reload(); };
-        const onStorage = (e: StorageEvent) => { if (e.key === 'matchPreferences') reload(); };
+        const onStorage = (e: StorageEvent) => { if (e.key === MATCH_PREFERENCES_LOCALSTORAGE_KEY) reload(); };
         document.addEventListener('visibilitychange', onVisibility);
         window.addEventListener('storage', onStorage);
         return () => {
