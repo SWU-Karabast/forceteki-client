@@ -337,22 +337,9 @@ const OpponentPreferencesPage: React.FC = () => {
                 </Box>
                 <Box sx={styles.cardMeta}>
                     <Box sx={styles.cardSection}>
-                        <Box sx={styles.cardLeaderHeader}>
-                            <Box sx={styles.cardLeaderAspects}>
-                                {(selectedLeader?.aspects ?? []).map((aspect) => (
-                                    <Box
-                                        key={aspect}
-                                        component="img"
-                                        src={aspectIconUrl(aspect)}
-                                        alt={aspect}
-                                        sx={styles.cardLeaderAspectIcon}
-                                    />
-                                ))}
-                            </Box>
-                            <Typography sx={styles.leaderNameTop}>
-                                {selectedLeader ? selectedLeader.name : 'Unknown leader'}
-                            </Typography>
-                        </Box>
+                        <Typography sx={styles.leaderNameTop}>
+                            {selectedLeader ? selectedLeader.name : 'Unknown leader'}
+                        </Typography>
                         {selectedLeader?.subtitle && (
                             <Typography sx={styles.leaderNameSub}>{selectedLeader.subtitle}</Typography>
                         )}
@@ -800,7 +787,8 @@ const styles = {
     archetypeCard: (isSelected: boolean) => ({
         background: isSelected ? '#2F7DB680' : '#20344280',
         width: '31rem',
-        height: '13rem',
+        height: '14.5rem',
+        maxWidth: '100%',
         borderRadius: '5px',
         padding: '5px',
         display: 'flex',
@@ -839,9 +827,9 @@ const styles = {
         width: 'calc(45% - 5px)',
         height: '100%',
         justifyContent: 'space-between',
-        padding: '1.3rem 0.5rem 0.5rem 0.25rem',
+        padding: '1.5rem 0.75rem 0.75rem 0.25rem',
         minWidth: 0,
-        gap: '0.5rem',
+        gap: '0.75rem',
     },
     cardSection: {
         display: 'flex',
@@ -856,28 +844,12 @@ const styles = {
         letterSpacing: '0.1em',
         margin: 0,
     },
-    cardLeaderHeader: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        minWidth: 0,
-    },
-    cardLeaderAspects: {
-        display: 'flex',
-        gap: '0.2rem',
-        flexShrink: 0,
-    },
-    cardLeaderAspectIcon: {
-        width: '24px',
-        height: '24px',
-        objectFit: 'contain',
-    },
     leaderNameTop: {
         color: '#fff',
-        fontSize: '1.15em',
+        fontSize: '1.25em',
         fontWeight: 600,
         margin: 0,
-        lineHeight: 1.2,
+        lineHeight: 1.25,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
