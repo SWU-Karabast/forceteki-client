@@ -13,6 +13,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import Grid from '@mui/material/Grid2';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
@@ -129,23 +130,10 @@ function aspectHasIcon(aspect: string | null | undefined): aspect is string {
  * dropdown. Typing 'agg' no longer matches every Aggression-prefix multi-
  * card group — only typing the actual visible label terms (e.g. 'Force',
  * 'Vanilla', '30hp', or a specific card name) narrows the list.
- *
- * Hand-written instead of via MUI's createFilterOptions to make the
- * filtering behavior 100% explicit (no chance of MUI defaults short-
- * circuiting on us).
  */
-function filterBaseTypes(
-    options: IBaseTypeOption[],
-    state: { inputValue: string },
-): IBaseTypeOption[] {
-    const needle = state.inputValue.trim().toLowerCase();
-    if (!needle) {
-        return options;
-    }
-    return options.filter((option) =>
-        displayBaseLabel(option.label).toLowerCase().includes(needle),
-    );
-}
+const baseTypeFilter = createFilterOptions<IBaseTypeOption>({
+    stringify: (option) => displayBaseLabel(option.label),
+});
 
 const OpponentPreferencesPage: React.FC = () => {
     const [prefs, setPrefs] = useState<MatchPreferences>(() => loadMatchPreferences());
@@ -730,7 +718,7 @@ const OpponentPreferencesPage: React.FC = () => {
                                 options={baseTypes}
                                 value={selectedBaseType}
                                 getOptionLabel={(option) => displayBaseLabel(baseTypeLabel(option))}
-                                filterOptions={filterBaseTypes}
+                                filterOptions={baseTypeFilter}
                                 isOptionEqualToValue={(option, value) => option.id === value.id}
                                 onChange={(_, value) => onBaseTypeChange(value)}
                                 clearIcon={null}
