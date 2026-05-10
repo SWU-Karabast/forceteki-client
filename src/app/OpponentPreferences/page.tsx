@@ -1,97 +1,26 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-    Autocomplete,
-    Box,
-    FormControlLabel,
-    IconButton,
-    MenuItem,
-    Radio,
-    RadioGroup,
-    Select,
-    Switch,
-    TextField,
-    Typography,
-} from '@mui/material';
-import { createFilterOptions } from '@mui/material/Autocomplete';
-import CloseIcon from '@mui/icons-material/Close';
+import { Box, Switch, Typography } from '@mui/material';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import EditArchetypeDialog from '@/app/_components/_sharedcomponents/OpponentPreferences/EditArchetypeDialog';
+import {
+    aspectHasIcon,
+    aspectIconUrl,
+    capitalize,
+    displayBaseLabel,
+    LeaderOption,
+    leaderLabel,
+} from '@/app/_components/_sharedcomponents/OpponentPreferences/utils';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
-    Aspect,
     BaseConstraint,
     IBaseTypeOption,
     OpponentArchetype,
     MatchPreferences,
 } from '@/app/_constants/constants';
 import { loadMatchPreferences, saveMatchPreferences } from '@/app/_utils/matchPreferences';
-
-interface LeaderOption {
-    name: string;
-    id: string;
-    subtitle?: string;
-}
-
-type BaseConstraintKind = 'any' | 'aspect' | 'baseType';
-
-// Bases only carry the four 'color' aspects — never Heroism or Villainy
-// (those are alignment aspects on leaders/units, not on bases).
-const ASPECT_OPTIONS: Aspect[] = [
-    Aspect.Aggression,
-    Aspect.Command,
-    Aspect.Cunning,
-    Aspect.Vigilance,
-];
-
-// Stripped from base-type labels for display because the aspect icon next to
-// the label already conveys the aspect.
-const ASPECT_PREFIX_PATTERN = /^(?:Aggression|Command|Cunning|Heroism|Vigilance|Villainy) - /;
-
-function displayBaseLabel(label: string): string {
-    return label.replace(ASPECT_PREFIX_PATTERN, '');
-}
-
-function getConstraintKind(constraint: BaseConstraint | undefined): BaseConstraintKind {
-    if (!constraint) {
-        return 'any';
-    }
-    return constraint.kind;
-}
-
-function leaderLabel(option: LeaderOption | null): string {
-    if (!option) {
-        return '';
-    }
-    return option.subtitle ? `${option.name} - ${option.subtitle}` : option.name;
-}
-
-function baseTypeLabel(option: IBaseTypeOption | null): string {
-    return option?.label ?? '';
-}
-
-function capitalize(value: string): string {
-    if (value.length === 0) {
-        return value;
-    }
-    return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
-
-// Bases tagged 'neutral' have no aspect-icon image; checking before rendering
-// avoids a broken-image with the alt text 'neutral' showing in the icon slot.
-const VALID_BASE_ASPECTS = new Set(['aggression', 'command', 'cunning', 'vigilance']);
-function aspectHasIcon(aspect: string | null | undefined): aspect is string {
-    return !!aspect && VALID_BASE_ASPECTS.has(aspect.toLowerCase());
-}
-
-// Filter on the displayed label so typing 'agg' doesn't match every
-// Aggression-prefix multi-card group.
-const baseTypeFilter = createFilterOptions<IBaseTypeOption>({
-    stringify: (option) => displayBaseLabel(option.label),
-});
 
 const OpponentPreferencesPage: React.FC = () => {
     const [prefs, setPrefs] = useState<MatchPreferences>(() => loadMatchPreferences());
@@ -245,7 +174,7 @@ const OpponentPreferencesPage: React.FC = () => {
         } else if (archetype.baseConstraint.kind === 'aspect') {
             baseTitle = `Any ${capitalize(archetype.baseConstraint.aspect)}`;
         } else if (selectedBaseType) {
-            const stripped = selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '');
+            const stripped = displayBaseLabel(selectedBaseType.label);
             const match = stripped.match(/^(.+?)\s*-\s*(\d+hp)\s*$/i);
             if (match) {
                 baseTitle = match[1];
@@ -909,295 +838,20 @@ const OpponentPreferencesPage: React.FC = () => {
                 onConfirm={deleteSelected}
                 confirmButtonText="Delete"
             />
-            {editingIndex !== null && editingDraft !== null && renderEditDialog()}
+            {editingDraft !== null && (
+                <EditArchetypeDialog
+                    draft={editingDraft}
+                    leaders={leaders}
+                    baseTypes={baseTypes}
+                    baseTypesByJoinedIds={baseTypesByJoinedIds}
+                    leaderById={leaderById}
+                    setDraft={setEditingDraft}
+                    onCancel={closeEditDialog}
+                    onCommit={commitEditDialog}
+                />
+            )}
         </Box>
     );
-
-    function renderEditDialog() {
-        if (editingDraft === null) {
-            return null;
-        }
-        const draft = editingDraft;
-        const kind = getConstraintKind(draft.baseConstraint);
-        const selectedLeader = leaderById.get(draft.leaderId) ?? null;
-        const selectedBaseTypeKey = draft.baseConstraint?.kind === 'baseType'
-            ? draft.baseConstraint.baseIds.slice().sort().join('|')
-            : null;
-        const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
-        const selectedAspect = draft.baseConstraint?.kind === 'aspect' ? draft.baseConstraint.aspect : Aspect.Vigilance;
-
-        const leaderImageUrl = selectedLeader
-            ? s3CardImageURL({ id: selectedLeader.id, count: 0 } as never, CardStyle.PlainLeader)
-            : null;
-        const uniqueBaseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
-            ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
-            : null;
-
-        const setDraft = (next: OpponentArchetype) => setEditingDraft(next);
-
-        const onLeaderChange = (next: LeaderOption | null) => {
-            if (!next) return;
-            setDraft({ ...draft, leaderId: next.id });
-        };
-        const onKindChange = (nextKind: BaseConstraintKind) => {
-            if (nextKind === 'any') {
-                const { baseConstraint, ...rest } = draft;
-                void baseConstraint;
-                setDraft(rest);
-                return;
-            }
-            if (nextKind === 'aspect') {
-                setDraft({ ...draft, baseConstraint: { kind: 'aspect', aspect: selectedAspect } });
-                return;
-            }
-            const firstType = baseTypes[0];
-            if (!firstType) return;
-            setDraft({ ...draft, baseConstraint: { kind: 'baseType', baseIds: firstType.baseIds, label: firstType.label } });
-        };
-        const onAspectChange = (nextAspect: Aspect) => {
-            setDraft({ ...draft, baseConstraint: { kind: 'aspect', aspect: nextAspect } });
-        };
-        const onBaseTypeChange = (next: IBaseTypeOption | null) => {
-            if (!next) return;
-            setDraft({ ...draft, baseConstraint: { kind: 'baseType', baseIds: next.baseIds, label: next.label } });
-        };
-
-        return (
-            <Box sx={styles.dialogOverlay} onClick={closeEditDialog}>
-                <Box sx={styles.dialog} onClick={(e) => e.stopPropagation()}>
-                    <IconButton sx={styles.dialogClose} onClick={closeEditDialog} aria-label="close">
-                        <CloseIcon />
-                    </IconButton>
-                    <Typography sx={styles.dialogTitle}>Edit archetype</Typography>
-
-                    <Box sx={styles.dialogPreview}>
-                        <Box sx={styles.dialogPreviewSlot}>
-                            {leaderImageUrl ? (
-                                <Box sx={{ ...styles.dialogPreviewImage, backgroundImage: `url(${leaderImageUrl})` }} />
-                            ) : (
-                                <Box sx={styles.dialogPreviewPlaceholder} />
-                            )}
-                            <Box sx={styles.dialogPreviewCaption}>
-                                <Typography sx={styles.dialogPreviewCaptionText}>
-                                    {selectedLeader ? selectedLeader.name : 'Unknown leader'}
-                                </Typography>
-                                {selectedLeader?.subtitle && (
-                                    <Typography sx={styles.dialogPreviewCaptionSub}>
-                                        {selectedLeader.subtitle}
-                                    </Typography>
-                                )}
-                            </Box>
-                        </Box>
-                        <Box sx={styles.dialogPreviewSlot}>
-                            {uniqueBaseImageUrl ? (
-                                <Box sx={{ ...styles.dialogPreviewImage, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
-                            ) : kind === 'aspect' ? (
-                                <Box sx={styles.dialogPreviewBadge}>
-                                    <Box
-                                        component="img"
-                                        src={aspectIconUrl(selectedAspect)}
-                                        alt={selectedAspect}
-                                        sx={styles.dialogPreviewBadgeIcon}
-                                    />
-                                </Box>
-                            ) : kind === 'baseType' && selectedBaseType && selectedBaseType.aspects.some(aspectHasIcon) ? (
-                                <Box sx={styles.dialogPreviewBadge}>
-                                    <Box sx={styles.dialogPreviewBadgeIconStack}>
-                                        {selectedBaseType.aspects.filter(aspectHasIcon).map((aspect) => (
-                                            <Box
-                                                key={aspect}
-                                                component="img"
-                                                src={aspectIconUrl(aspect)}
-                                                alt={aspect}
-                                                sx={styles.dialogPreviewBadgeIcon}
-                                            />
-                                        ))}
-                                    </Box>
-                                </Box>
-                            ) : (
-                                <Box sx={{ ...styles.dialogPreviewBadge, ...styles.dialogPreviewAnyBase }}>
-                                    <Typography sx={styles.dialogPreviewAnyBaseText}>*</Typography>
-                                </Box>
-                            )}
-                            <Box sx={styles.dialogPreviewCaption}>
-                                <Typography sx={styles.dialogPreviewCaptionText}>
-                                    {kind === 'any'
-                                        ? 'Any base'
-                                        : kind === 'aspect'
-                                            ? `Any ${capitalize(selectedAspect)} base`
-                                            : selectedBaseType
-                                                ? displayBaseLabel(selectedBaseType.label)
-                                                : 'Any base'}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Box>
-
-                    <Box sx={styles.dialogField}>
-                        <Typography sx={styles.dialogLabel}>Leader</Typography>
-                        <Autocomplete
-                            options={leaders}
-                            value={selectedLeader}
-                            getOptionLabel={leaderLabel}
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            onChange={(_, value) => onLeaderChange(value)}
-                            clearIcon={null}
-                            renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
-                            sx={styles.field}
-                            noOptionsText={<Typography sx={styles.noOptionsText}>No matches</Typography>}
-                            slotProps={{ paper: { sx: styles.autocompletePaper } }}
-                            renderOption={(props, option) => {
-                                const { key: _key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
-                                void _key;
-                                const thumbUrl = s3CardImageURL({ id: option.id, count: 0 } as never, CardStyle.PlainLeader);
-                                return (
-                                    <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
-                                        <Box sx={{ ...styles.optionLeaderThumb, backgroundImage: `url(${thumbUrl})` }} />
-                                        <Typography component="span" sx={styles.dialogOptionLabel}>{leaderLabel(option)}</Typography>
-                                    </Box>
-                                );
-                            }}
-                        />
-                    </Box>
-
-                    <Box sx={styles.dialogField}>
-                        <Typography sx={styles.dialogLabel}>Base</Typography>
-                        <RadioGroup
-                            row
-                            value={kind}
-                            onChange={(_, value) => onKindChange(value as BaseConstraintKind)}
-                        >
-                            <FormControlLabel
-                                value="any"
-                                control={<Radio size="small" sx={styles.radio} />}
-                                label={<Typography sx={styles.radioLabel}>Any base</Typography>}
-                            />
-                            <FormControlLabel
-                                value="aspect"
-                                control={<Radio size="small" sx={styles.radio} />}
-                                label={<Typography sx={styles.radioLabel}>Any base of aspect</Typography>}
-                            />
-                            <FormControlLabel
-                                value="baseType"
-                                control={<Radio size="small" sx={styles.radio} />}
-                                label={<Typography sx={styles.radioLabel}>Specific base type</Typography>}
-                            />
-                        </RadioGroup>
-                    </Box>
-
-                    {kind === 'aspect' && (
-                        <Box sx={styles.dialogField}>
-                            <Typography sx={styles.dialogLabel}>Aspect</Typography>
-                            <Select
-                                value={selectedAspect}
-                                size="small"
-                                fullWidth
-                                onChange={(e) => onAspectChange(e.target.value as Aspect)}
-                                renderValue={(value) => (
-                                    <Box component="span" sx={styles.aspectOption}>
-                                        <Box
-                                            component="img"
-                                            src={aspectIconUrl(value)}
-                                            alt={value}
-                                            sx={styles.aspectOptionIcon}
-                                        />
-                                        {capitalize(value as string)}
-                                    </Box>
-                                )}
-                            >
-                                {ASPECT_OPTIONS.map((aspect) => (
-                                    <MenuItem key={aspect} value={aspect}>
-                                        <Box component="span" sx={styles.aspectOption}>
-                                            <Box
-                                                component="img"
-                                                src={aspectIconUrl(aspect)}
-                                                alt={aspect}
-                                                sx={styles.aspectOptionIcon}
-                                            />
-                                            {capitalize(aspect)}
-                                        </Box>
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </Box>
-                    )}
-
-                    {kind === 'baseType' && (
-                        <Box sx={styles.dialogField}>
-                            <Typography sx={styles.dialogLabel}>Base type</Typography>
-                            <Autocomplete
-                                options={baseTypes}
-                                value={selectedBaseType}
-                                getOptionLabel={(option) => displayBaseLabel(baseTypeLabel(option))}
-                                filterOptions={baseTypeFilter}
-                                isOptionEqualToValue={(option, value) => option.id === value.id}
-                                onChange={(_, value) => onBaseTypeChange(value)}
-                                clearIcon={null}
-                                noOptionsText={<Typography sx={styles.noOptionsText}>No matches</Typography>}
-                                slotProps={{ paper: { sx: styles.autocompletePaper } }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        placeholder="Select base type"
-                                        size="small"
-                                        InputProps={{
-                                            ...params.InputProps,
-                                            startAdornment: selectedBaseType?.aspects.some(aspectHasIcon) ? (
-                                                <Box sx={styles.inputAspectAdornmentStack}>
-                                                    {selectedBaseType.aspects.filter(aspectHasIcon).map((aspect) => (
-                                                        <Box
-                                                            key={aspect}
-                                                            component="img"
-                                                            src={aspectIconUrl(aspect)}
-                                                            alt={aspect}
-                                                            sx={styles.inputAspectAdornment}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                            ) : null,
-                                        }}
-                                    />
-                                )}
-                                sx={styles.field}
-                                renderOption={(props, option) => {
-                                    const { key: _key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
-                                    void _key;
-                                    return (
-                                        <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
-                                            {option.aspects.some(aspectHasIcon) && (
-                                                <Box sx={styles.dialogOptionAspectStack}>
-                                                    {option.aspects.filter(aspectHasIcon).map((aspect) => (
-                                                        <Box
-                                                            key={aspect}
-                                                            component="img"
-                                                            src={aspectIconUrl(aspect)}
-                                                            alt={aspect}
-                                                            sx={styles.aspectOptionIcon}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                            )}
-                                            <Typography component="span" sx={styles.dialogOptionLabel}>
-                                                {displayBaseLabel(option.label)}
-                                            </Typography>
-                                            {option.set && (
-                                                <Typography component="span" sx={styles.dialogOptionSet}>{option.set}</Typography>
-                                            )}
-                                        </Box>
-                                    );
-                                }}
-                            />
-                        </Box>
-                    )}
-
-                    <Box sx={styles.dialogActions}>
-                        <PreferenceButton variant="standard" text="Cancel" buttonFnc={closeEditDialog} />
-                        <PreferenceButton variant="standard" text="Done" buttonFnc={commitEditDialog} />
-                    </Box>
-                </Box>
-            </Box>
-        );
-    }
 };
 
 export default OpponentPreferencesPage;
