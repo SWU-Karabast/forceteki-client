@@ -13,6 +13,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import Grid from '@mui/material/Grid2';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
@@ -102,6 +103,15 @@ function capitalize(value: string): string {
 }
 
 const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
+
+/**
+ * Filter base-type options on the *full* label (including the aspect prefix)
+ * so typing "Aggression" still matches even though the displayed selected
+ * value strips the aspect text in favor of an aspect-icon adornment.
+ */
+const baseTypeFilter = createFilterOptions<IBaseTypeOption>({
+    stringify: (option) => option.label,
+});
 
 const OpponentPreferencesPage: React.FC = () => {
     const [prefs, setPrefs] = useState<MatchPreferences>(() => loadMatchPreferences());
@@ -674,11 +684,29 @@ const OpponentPreferencesPage: React.FC = () => {
                             <Autocomplete
                                 options={baseTypes}
                                 value={selectedBaseType}
-                                getOptionLabel={baseTypeLabel}
+                                getOptionLabel={(option) => baseTypeLabel(option).replace(ASPECT_PREFIX_PATTERN, '')}
+                                filterOptions={baseTypeFilter}
                                 isOptionEqualToValue={(option, value) => option.id === value.id}
                                 onChange={(_, value) => onBaseTypeChange(value)}
                                 clearIcon={null}
-                                renderInput={(params) => <TextField {...params} placeholder="Select base type" size="small" />}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        placeholder="Select base type"
+                                        size="small"
+                                        InputProps={{
+                                            ...params.InputProps,
+                                            startAdornment: selectedBaseType?.aspect ? (
+                                                <Box
+                                                    component="img"
+                                                    src={aspectIconUrl(selectedBaseType.aspect)}
+                                                    alt={selectedBaseType.aspect}
+                                                    sx={styles.inputAspectAdornment}
+                                                />
+                                            ) : null,
+                                        }}
+                                    />
+                                )}
                                 sx={styles.field}
                                 renderOption={(props, option) => {
                                     const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
@@ -1155,6 +1183,14 @@ const styles = {
         width: '20px',
         height: '20px',
         objectFit: 'contain',
+    },
+    inputAspectAdornment: {
+        width: '22px',
+        height: '22px',
+        objectFit: 'contain',
+        ml: '4px',
+        mr: '2px',
+        flexShrink: 0,
     },
     leaderAspectStack: {
         display: 'flex',
