@@ -335,7 +335,6 @@ const OpponentPreferencesPage: React.FC = () => {
                         )}
                     </Box>
                     <Box sx={styles.cardBaseLine}>
-                        <Typography sx={styles.cardBaseLabel}>vs</Typography>
                         {baseAspect && (
                             <Box
                                 component="img"
@@ -515,7 +514,6 @@ const OpponentPreferencesPage: React.FC = () => {
                                 )}
                             </Box>
                         </Box>
-                        <Typography sx={styles.dialogPreviewVs}>vs</Typography>
                         <Box sx={styles.dialogPreviewSlot}>
                             {uniqueBaseImageUrl ? (
                                 <Box sx={{ ...styles.dialogPreviewImage, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
