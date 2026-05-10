@@ -1,6 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import {
     Box,
+    Button,
     FormControl,
     FormControlLabel,
     Radio,
@@ -9,7 +10,6 @@ import {
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { MatchPreferences } from '@/app/_constants/constants';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 
 interface IMatchFilterPanelProps {
     matchPreferences: MatchPreferences;
@@ -69,11 +69,9 @@ const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, 
                         </Typography>
                     )}
                     <Box sx={styles.manageButtonRow}>
-                        <PreferenceButton
-                            variant="standard"
-                            text="Manage Opponent Preferences"
-                            buttonFnc={handleManage}
-                        />
+                        <Button onClick={handleManage} variant="contained">
+                            Manage Opponent Preferences
+                        </Button>
                     </Box>
                 </Box>
             )}
