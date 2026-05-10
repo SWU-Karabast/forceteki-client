@@ -103,6 +103,73 @@ function capitalize(value: string): string {
 
 const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
 
+/**
+ * Renders a stylized "fake" base card that mimics the SWU base layout (HP in
+ * the top-left, BASE banner + title in the center, aspect icon in the
+ * top-right) for the cases where no single SWU card represents the user's
+ * choice — i.e. an aspect-only constraint, a multi-card functional group like
+ * "Aggression Force 28hp", or "any base". Real, single-card bases continue to
+ * render as the normal card image.
+ */
+function renderFakeBaseCard(
+    constraint: BaseConstraint | undefined,
+    selectedBaseType: IBaseTypeOption | null,
+): React.ReactNode {
+    const aspect: string | null =
+        constraint?.kind === 'aspect'
+            ? constraint.aspect
+            : (selectedBaseType?.aspect ?? null);
+    const hp: number | null =
+        constraint?.kind === 'baseType' ? (selectedBaseType?.hp ?? null) : null;
+
+    let title: string;
+    if (!constraint || constraint.kind === 'aspect') {
+        title = 'Any base';
+    } else {
+        const label = selectedBaseType?.label ?? constraint.label ?? '';
+        const stripped = label
+            .replace(ASPECT_PREFIX_PATTERN, '')
+            .replace(/\s*-\s*\d+\s*hp$/i, '')
+            .trim();
+        title = stripped || 'Base';
+    }
+
+    return (
+        <Box sx={styles.fakeBaseCard}>
+            <Box sx={styles.fakeBaseHeader}>
+                {hp != null ? (
+                    <Box sx={styles.fakeBaseHpCircle}>{hp}</Box>
+                ) : (
+                    <Box sx={styles.fakeBaseHpPlaceholder} />
+                )}
+                <Box sx={styles.fakeBaseTitleStack}>
+                    <Typography sx={styles.fakeBaseLabel}>BASE</Typography>
+                    <Typography sx={styles.fakeBaseTitle}>{title}</Typography>
+                </Box>
+                {aspect ? (
+                    <Box
+                        component="img"
+                        src={aspectIconUrl(aspect)}
+                        alt={aspect}
+                        sx={styles.fakeBaseAspectIcon}
+                    />
+                ) : (
+                    <Box sx={styles.fakeBaseAspectPlaceholder} />
+                )}
+            </Box>
+            {aspect && (
+                <Box
+                    component="img"
+                    src={aspectIconUrl(aspect)}
+                    alt=""
+                    aria-hidden
+                    sx={styles.fakeBaseBgIcon}
+                />
+            )}
+        </Box>
+    );
+}
+
 const OpponentPreferencesPage: React.FC = () => {
     const [prefs, setPrefs] = useState<MatchPreferences>(() => loadMatchPreferences());
     const [leaders, setLeaders] = useState<LeaderOption[]>([]);
@@ -331,20 +398,7 @@ const OpponentPreferencesPage: React.FC = () => {
                                 if (baseImageUrl) {
                                     return <Box sx={{ ...styles.boxGeneralStyling, backgroundImage: `url(${baseImageUrl})` }} />;
                                 }
-                                return (
-                                    <Box sx={{ ...styles.boxGeneralStyling, ...styles.aspectBadgeBg }}>
-                                        {baseAspect ? (
-                                            <Box
-                                                component="img"
-                                                src={aspectIconUrl(baseAspect)}
-                                                alt={baseAspect}
-                                                sx={styles.cardBaseBadgeIcon}
-                                            />
-                                        ) : (
-                                            <Box sx={styles.cardBaseBadgeRing} />
-                                        )}
-                                    </Box>
-                                );
+                                return renderFakeBaseCard(archetype.baseConstraint, selectedBaseType);
                             })()}
                         </Box>
                         <Box sx={{ ...styles.parentBoxStyling, left: '-15px', top: '26px' }}>
@@ -854,21 +908,104 @@ const styles = {
         borderRadius: '6px',
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
-    aspectBadgeBg: {
-        backgroundColor: 'rgba(0, 0, 0, 0.45)',
-        borderRadius: '6px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+    // Stylized "fake" base card used when the user's choice doesn't map to a
+    // single SWU base (aspect-only, multi-card group, or any). Imitates the
+    // SWU base layout: HP top-left, BASE banner + title centered, aspect
+    // top-right — so the card-stack behind the leader still reads as a base.
+    fakeBaseCard: {
+        width: '14rem',
+        height: '10.18rem',
+        ml: '15px',
+        position: 'relative' as const,
+        display: 'flex',
+        flexDirection: 'column' as const,
+        background: 'linear-gradient(135deg, #1a2a36 0%, #08111a 100%)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        boxShadow: 'inset 0 0 24px rgba(0, 0, 0, 0.45)',
     },
-    cardBaseBadgeIcon: {
-        width: '4rem',
-        height: '4rem',
-        objectFit: 'contain',
+    fakeBaseHeader: {
+        position: 'relative' as const,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '6px 8px',
+        background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.06), transparent)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        zIndex: 2,
+        gap: '6px',
     },
-    cardBaseBadgeRing: {
-        width: '4rem',
-        height: '4rem',
+    fakeBaseHpCircle: {
+        width: '30px',
+        height: '30px',
         borderRadius: '50%',
-        border: '2px dashed rgba(255, 255, 255, 0.3)',
+        border: '2px solid #c8c8c8',
+        backgroundColor: 'rgba(0, 0, 0, 0.55)',
+        color: '#fff',
+        fontSize: '0.85rem',
+        fontWeight: 700,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        lineHeight: 1,
+    },
+    fakeBaseHpPlaceholder: {
+        width: '30px',
+        height: '30px',
+        flexShrink: 0,
+    },
+    fakeBaseTitleStack: {
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        minWidth: 0,
+    },
+    fakeBaseLabel: {
+        fontSize: '0.55rem',
+        letterSpacing: '0.18em',
+        color: 'rgba(255, 255, 255, 0.55)',
+        margin: 0,
+        lineHeight: 1,
+    },
+    fakeBaseTitle: {
+        fontSize: '0.95rem',
+        fontWeight: 600,
+        color: '#fff',
+        margin: 0,
+        marginTop: '2px',
+        lineHeight: 1.15,
+        textAlign: 'center' as const,
+        whiteSpace: 'nowrap' as const,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: '100%',
+    },
+    fakeBaseAspectIcon: {
+        width: '30px',
+        height: '30px',
+        objectFit: 'contain' as const,
+        flexShrink: 0,
+    },
+    fakeBaseAspectPlaceholder: {
+        width: '30px',
+        height: '30px',
+        flexShrink: 0,
+    },
+    fakeBaseBgIcon: {
+        position: 'absolute' as const,
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -42%)',
+        width: '70%',
+        height: '60%',
+        objectFit: 'contain' as const,
+        opacity: 0.08,
+        pointerEvents: 'none' as const,
+        zIndex: 1,
     },
     cardMeta: {
         display: 'flex',
