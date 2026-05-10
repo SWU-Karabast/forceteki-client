@@ -808,6 +808,12 @@ const styles = {
         background: isSelected ? '#2F7DB680' : '#20344280',
         width: '31rem',
         height: '14.5rem',
+        // Floor at 26rem: below this width the cardMeta column gets narrow
+        // enough that base text starts colliding horizontally with the
+        // bottom-right Edit button. Below 26rem viewport the page just
+        // scrolls horizontally (matches how DeckPage behaves at narrow
+        // widths). Above 26rem and below 31rem, card scales with parent.
+        minWidth: '26rem',
         maxWidth: '100%',
         borderRadius: '5px',
         padding: '5px',
