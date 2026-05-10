@@ -72,9 +72,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
     };
     const onKindChange = (nextKind: BaseConstraintKind) => {
         if (nextKind === 'any') {
-            const { baseConstraint, ...rest } = draft;
-            void baseConstraint;
-            setDraft(rest);
+            setDraft({ ...draft, baseConstraint: undefined });
             return;
         }
         if (nextKind === 'aspect') {
@@ -93,6 +91,11 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
         if (!next) return;
         setDraft({ ...draft, baseConstraint: { kind: 'baseType', baseIds: next.baseIds, label: next.label } });
     };
+
+    const basePreviewCaption =
+        kind === 'aspect' ? `Any ${capitalize(selectedAspect)} base` :
+            kind === 'baseType' && selectedBaseType ? displayBaseLabel(selectedBaseType.label) :
+                'Any base';
 
     // ----------------------Styles-----------------------------//
     const styles = {
@@ -384,15 +387,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                             </Box>
                         )}
                         <Box sx={styles.previewCaption}>
-                            <Typography sx={styles.previewCaptionText}>
-                                {kind === 'any'
-                                    ? 'Any base'
-                                    : kind === 'aspect'
-                                        ? `Any ${capitalize(selectedAspect)} base`
-                                        : selectedBaseType
-                                            ? displayBaseLabel(selectedBaseType.label)
-                                            : 'Any base'}
-                            </Typography>
+                            <Typography sx={styles.previewCaptionText}>{basePreviewCaption}</Typography>
                         </Box>
                     </Box>
                 </Box>
