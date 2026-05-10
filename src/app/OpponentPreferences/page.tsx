@@ -394,6 +394,7 @@ const OpponentPreferencesPage: React.FC = () => {
                             variant="standard"
                             text="Edit"
                             buttonFnc={() => openEditDialog(index)}
+                            sx={styles.cardEditButton}
                         />
                     </Box>
                 </Box>
@@ -819,6 +820,10 @@ const styles = {
         },
         cursor: 'pointer',
         position: 'relative',
+        // Set up an inline-size container so child elements can scale down
+        // their font sizes / paddings when the card is squeezed by a narrow
+        // viewport (it has maxWidth: 100%, so it shrinks below 31rem).
+        containerType: 'inline-size',
     }),
     leaderHolder: {
         display: 'flex',
@@ -888,6 +893,14 @@ const styles = {
         padding: '1.5rem 0.75rem 0.75rem 0.25rem',
         minWidth: 0,
         gap: '0.75rem',
+        '@container (max-width: 26rem)': {
+            padding: '1.1rem 0.5rem 0.5rem 0.15rem',
+            gap: '0.5rem',
+        },
+        '@container (max-width: 22rem)': {
+            padding: '0.85rem 0.4rem 0.4rem 0.1rem',
+            gap: '0.35rem',
+        },
     },
     cardSection: {
         display: 'flex',
@@ -901,6 +914,13 @@ const styles = {
         textTransform: 'uppercase',
         letterSpacing: '0.1em',
         margin: 0,
+        '@container (max-width: 26rem)': {
+            fontSize: '0.7em',
+            letterSpacing: '0.08em',
+        },
+        '@container (max-width: 22rem)': {
+            fontSize: '0.65em',
+        },
     },
     leaderNameTop: {
         color: '#fff',
@@ -912,6 +932,12 @@ const styles = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         minWidth: 0,
+        '@container (max-width: 26rem)': {
+            fontSize: '1.05em',
+        },
+        '@container (max-width: 22rem)': {
+            fontSize: '0.95em',
+        },
     },
     leaderNameSub: {
         color: '#bbbbbb',
@@ -921,6 +947,12 @@ const styles = {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
+        '@container (max-width: 26rem)': {
+            fontSize: '0.85em',
+        },
+        '@container (max-width: 22rem)': {
+            fontSize: '0.78em',
+        },
     },
     cardBaseLine: {
         display: 'flex',
@@ -937,7 +969,15 @@ const styles = {
     cardBaseAspectIcon: {
         width: '26px',
         height: '26px',
-        objectFit: 'contain',
+        objectFit: 'contain' as const,
+        '@container (max-width: 26rem)': {
+            width: '22px',
+            height: '22px',
+        },
+        '@container (max-width: 22rem)': {
+            width: '18px',
+            height: '18px',
+        },
     },
     cardBaseText: {
         color: '#dddddd',
@@ -947,11 +987,38 @@ const styles = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         minWidth: 0,
+        '@container (max-width: 26rem)': {
+            fontSize: '0.92em',
+        },
+        '@container (max-width: 22rem)': {
+            fontSize: '0.82em',
+        },
     },
     cardEditRow: {
         display: 'flex',
         justifyContent: 'flex-start',
         marginTop: 'auto',
+    },
+    // PreferenceButton override that shrinks the Edit button alongside the
+    // rest of the card via container queries on the archetypeCard wrapper.
+    // Keeps button proportional with everything else when the card is
+    // squeezed by a narrow viewport (the card has maxWidth: 100%).
+    cardEditButton: {
+        fontSize: '0.85rem',
+        pt: '5px',
+        pb: '5px',
+        px: '14px',
+        minWidth: 0,
+        '@container (max-width: 26rem)': {
+            fontSize: '0.75rem',
+            pt: '4px',
+            pb: '4px',
+            px: '10px',
+        },
+        '@container (max-width: 22rem)': {
+            fontSize: '0.7rem',
+            px: '8px',
+        },
     },
     dialogOverlay: {
         position: 'fixed',
