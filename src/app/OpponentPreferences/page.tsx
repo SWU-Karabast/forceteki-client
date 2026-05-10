@@ -300,15 +300,31 @@ const OpponentPreferencesPage: React.FC = () => {
             ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
             : null;
 
-        let baseSummaryText: string;
+        // Build a base { title, subtitle } pair with the same shape as the
+        // leader name/subtitle so the row's two text columns read the same:
+        //   - any: "Any base"
+        //   - aspect: "Any <Aspect>"
+        //   - multi-card group ("Aggression - Force - 28hp"): "Force" / "28hp"
+        //   - specific card ("Shadow Collective Camp - 25hp (R)"):
+        //       "Shadow Collective Camp" / "25hp" (rare-tag dropped — every
+        //       single-card base has a unique title, so (R) is redundant).
+        let baseTitle: string;
+        let baseSubtitle: string | null = null;
         if (!archetype.baseConstraint) {
-            baseSummaryText = 'Any base';
+            baseTitle = 'Any base';
         } else if (archetype.baseConstraint.kind === 'aspect') {
-            baseSummaryText = `Any ${capitalize(archetype.baseConstraint.aspect)} base`;
+            baseTitle = `Any ${capitalize(archetype.baseConstraint.aspect)}`;
         } else if (selectedBaseType) {
-            baseSummaryText = selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '');
+            const stripped = selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '');
+            const match = stripped.match(/^(.+?)\s*-\s*(\d+hp)(?:\s*\(R\))?\s*$/i);
+            if (match) {
+                baseTitle = match[1];
+                baseSubtitle = match[2];
+            } else {
+                baseTitle = stripped;
+            }
         } else {
-            baseSummaryText = `${archetype.baseConstraint.baseIds.length} bases`;
+            baseTitle = `${archetype.baseConstraint.baseIds.length} bases`;
         }
 
         return (
@@ -327,22 +343,22 @@ const OpponentPreferencesPage: React.FC = () => {
                     />
                 </Box>
                 <Box sx={styles.rowContent}>
-                    <Box sx={styles.rowSection}>
+                    <Box sx={styles.rowLeaderSection}>
                         {leaderImageUrl ? (
                             <Box sx={{ ...styles.rowLeaderThumb, backgroundImage: `url(${leaderImageUrl})` }} />
                         ) : (
                             <Box sx={{ ...styles.rowLeaderThumb, ...styles.rowThumbPlaceholder }} />
                         )}
-                        <Box sx={styles.rowLeaderText}>
-                            <Typography sx={styles.rowLeaderName}>
+                        <Box sx={styles.rowTextStack}>
+                            <Typography sx={styles.rowTitle}>
                                 {selectedLeader ? selectedLeader.name : 'Unknown leader'}
                             </Typography>
                             {selectedLeader?.subtitle && (
-                                <Typography sx={styles.rowLeaderSubtitle}>{selectedLeader.subtitle}</Typography>
+                                <Typography sx={styles.rowSubtitle}>{selectedLeader.subtitle}</Typography>
                             )}
                         </Box>
                     </Box>
-                    <Box sx={styles.rowSection}>
+                    <Box sx={styles.rowBaseSection}>
                         {uniqueBaseImageUrl ? (
                             <Box sx={{ ...styles.rowBaseThumb, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
                         ) : baseAspect ? (
@@ -355,7 +371,12 @@ const OpponentPreferencesPage: React.FC = () => {
                         ) : (
                             <Box sx={styles.rowBaseAnyDot} />
                         )}
-                        <Typography sx={styles.rowBaseText}>{baseSummaryText}</Typography>
+                        <Box sx={styles.rowTextStack}>
+                            <Typography sx={styles.rowTitle}>{baseTitle}</Typography>
+                            {baseSubtitle && (
+                                <Typography sx={styles.rowSubtitle}>{baseSubtitle}</Typography>
+                            )}
+                        </Box>
                     </Box>
                 </Box>
                 <Box sx={styles.rowEditSlot} onClick={stop}>
@@ -808,11 +829,24 @@ const styles = {
         flex: '1 1 auto',
         minWidth: 0,
     },
-    rowSection: {
+    // Leader section uses flex-basis 22rem with grow:1 so it expands to fill
+    // its share of the row when there's space (and base section also expands
+    // by flex 1 1 auto, both growing together). The 22rem basis means the
+    // base section starts at a roughly consistent x position across rows
+    // when content fits — long leader subtitles can push it slightly, but
+    // never enough to cause premature wrapping.
+    rowLeaderSection: {
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        flex: '1 1 auto',
+        flex: '1 1 22rem',
+        minWidth: 0,
+    },
+    rowBaseSection: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        flex: '1 1 16rem',
         minWidth: 0,
     },
     rowLeaderThumb: {
@@ -828,14 +862,16 @@ const styles = {
     rowThumbPlaceholder: {
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
-    rowLeaderText: {
+    rowTextStack: {
         display: 'flex',
         flexDirection: 'column' as const,
         minWidth: 0,
         flex: '1 1 auto',
         overflow: 'hidden',
     },
-    rowLeaderName: {
+    // Shared title/subtitle styling — used by both the leader name/subtitle
+    // and the base title/subtitle so the row reads as two parallel columns.
+    rowTitle: {
         color: '#fff',
         fontSize: '1.1em',
         fontWeight: 600,
@@ -845,7 +881,7 @@ const styles = {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
     },
-    rowLeaderSubtitle: {
+    rowSubtitle: {
         color: '#bbbbbb',
         fontSize: '0.85em',
         margin: 0,
@@ -876,15 +912,6 @@ const styles = {
         borderRadius: '50%',
         border: '1px dashed rgba(255, 255, 255, 0.25)',
         flexShrink: 0,
-    },
-    rowBaseText: {
-        color: '#dddddd',
-        fontSize: '1em',
-        margin: 0,
-        whiteSpace: 'nowrap' as const,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        minWidth: 0,
     },
     rowEditSlot: {
         display: 'flex',
