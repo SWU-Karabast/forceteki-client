@@ -118,28 +118,19 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
 
-    // Opt-in opponent-archetype filter, persisted in localStorage. The default
-    // is `enabled: false` so absent prefs preserve current behavior server-side.
-    // Storage I/O lives in `_utils/matchPreferences.ts` so the dedicated
-    // /OpponentPreferences manager page can read and write the same state.
+    // Opt-in opponent-archetype filter, persisted in localStorage and shared
+    // with the /OpponentPreferences manager page via _utils/matchPreferences.
     const [matchPreferences, setMatchPreferencesState] = useState<MatchPreferences>(loadMatchPreferences);
 
-    // Re-load when the page becomes visible — covers the case where the user
-    // navigates to /OpponentPreferences, edits archetypes, then returns.
+    // Re-load on visibilitychange (user navigated to /OpponentPreferences and back)
+    // and storage events (cross-tab edits).
     useEffect(() => {
         if (typeof window === 'undefined') {
             return;
         }
-        const onVisibility = () => {
-            if (document.visibilityState === 'visible') {
-                setMatchPreferencesState(loadMatchPreferences());
-            }
-        };
-        const onStorage = (event: StorageEvent) => {
-            if (event.key === 'matchPreferences') {
-                setMatchPreferencesState(loadMatchPreferences());
-            }
-        };
+        const reload = () => setMatchPreferencesState(loadMatchPreferences());
+        const onVisibility = () => { if (document.visibilityState === 'visible') reload(); };
+        const onStorage = (e: StorageEvent) => { if (e.key === 'matchPreferences') reload(); };
         document.addEventListener('visibilitychange', onVisibility);
         window.addEventListener('storage', onStorage);
         return () => {
@@ -261,20 +252,17 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 }
             }
 
-            const payload: Record<string, unknown> = {
+            // Only include matchPreferences when the filter is actually constraining;
+            // disabled or empty are equivalent to omitting the field server-side.
+            const sendFilter = matchPreferences.enabled && matchPreferences.allowedArchetypes.length > 0;
+            const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
                 format: queueConfig.format,
                 cardPool: queueConfig.cardPool,
                 gamesToWinMode: queueConfig.gamesToWinMode,
+                ...(sendFilter ? { matchPreferences } : {}),
             };
-
-            // Only send the filter when it would actually constrain matching.
-            // Disabled or empty prefs are equivalent to omitting the field
-            // (server treats both as "match anyone").
-            if (matchPreferences.enabled && matchPreferences.allowedArchetypes.length > 0) {
-                payload.matchPreferences = matchPreferences;
-            }
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
                     method: 'POST',

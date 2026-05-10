@@ -5,9 +5,6 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 interface ConfirmationDialogProps {
     open: boolean;
     title: string;
-    /** Rendered inside the centered message slot. Plain strings work as-is;
-     * pass a ReactNode (e.g. multiple <Typography> elements) for richer
-     * messages like a primary line plus a hint. */
     message: React.ReactNode;
     onCancel: () => void;
     onConfirm: () => void;

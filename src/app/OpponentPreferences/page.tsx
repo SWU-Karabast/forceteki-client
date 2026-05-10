@@ -1047,8 +1047,6 @@ const OpponentPreferencesPage: React.FC = () => {
                             noOptionsText={<Typography sx={styles.noOptionsText}>No matches</Typography>}
                             slotProps={{ paper: { sx: styles.autocompletePaper } }}
                             renderOption={(props, option) => {
-                                // Use option.id as React key — MUI's default key is getOptionLabel,
-                                // which collides for leader options whose displayed label is identical.
                                 const { key: _key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
                                 void _key;
                                 const thumbUrl = s3CardImageURL({ id: option.id, count: 0 } as never, CardStyle.PlainLeader);
