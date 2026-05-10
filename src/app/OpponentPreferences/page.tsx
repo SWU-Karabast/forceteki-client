@@ -442,6 +442,13 @@ const OpponentPreferencesPage: React.FC = () => {
         const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
         const selectedAspect = draft.baseConstraint?.kind === 'aspect' ? draft.baseConstraint.aspect : Aspect.Vigilance;
 
+        const leaderImageUrl = selectedLeader
+            ? s3CardImageURL({ id: selectedLeader.id, count: 0 } as never, CardStyle.PlainLeader)
+            : null;
+        const uniqueBaseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
+            ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
+            : null;
+
         const setDraft = (next: OpponentArchetype) => setEditingDraft(next);
 
         const onLeaderChange = (next: LeaderOption | null) => {
@@ -478,6 +485,76 @@ const OpponentPreferencesPage: React.FC = () => {
                         <CloseIcon />
                     </IconButton>
                     <Typography sx={styles.dialogTitle}>Edit archetype</Typography>
+
+                    <Box sx={styles.dialogPreview}>
+                        <Box sx={styles.dialogPreviewSlot}>
+                            {leaderImageUrl ? (
+                                <Box sx={{ ...styles.dialogPreviewImage, backgroundImage: `url(${leaderImageUrl})` }} />
+                            ) : (
+                                <Box sx={styles.dialogPreviewPlaceholder} />
+                            )}
+                            <Box sx={styles.dialogPreviewCaption}>
+                                <Box sx={styles.dialogPreviewAspects}>
+                                    {(selectedLeader?.aspects ?? []).map((aspect) => (
+                                        <Box
+                                            key={aspect}
+                                            component="img"
+                                            src={aspectIconUrl(aspect)}
+                                            alt={aspect}
+                                            sx={styles.dialogPreviewAspectIcon}
+                                        />
+                                    ))}
+                                </Box>
+                                <Typography sx={styles.dialogPreviewCaptionText}>
+                                    {selectedLeader ? selectedLeader.name : 'Unknown leader'}
+                                </Typography>
+                                {selectedLeader?.subtitle && (
+                                    <Typography sx={styles.dialogPreviewCaptionSub}>
+                                        {selectedLeader.subtitle}
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Box>
+                        <Typography sx={styles.dialogPreviewVs}>vs</Typography>
+                        <Box sx={styles.dialogPreviewSlot}>
+                            {uniqueBaseImageUrl ? (
+                                <Box sx={{ ...styles.dialogPreviewImage, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
+                            ) : kind === 'aspect' ? (
+                                <Box sx={styles.dialogPreviewBadge}>
+                                    <Box
+                                        component="img"
+                                        src={aspectIconUrl(selectedAspect)}
+                                        alt={selectedAspect}
+                                        sx={styles.dialogPreviewBadgeIcon}
+                                    />
+                                </Box>
+                            ) : kind === 'baseType' && selectedBaseType ? (
+                                <Box sx={styles.dialogPreviewBadge}>
+                                    <Box
+                                        component="img"
+                                        src={aspectIconUrl(selectedBaseType.aspect)}
+                                        alt={selectedBaseType.aspect}
+                                        sx={styles.dialogPreviewBadgeIcon}
+                                    />
+                                </Box>
+                            ) : (
+                                <Box sx={styles.dialogPreviewBadge}>
+                                    <Box sx={styles.dialogPreviewAnyRing} />
+                                </Box>
+                            )}
+                            <Box sx={styles.dialogPreviewCaption}>
+                                <Typography sx={styles.dialogPreviewCaptionText}>
+                                    {kind === 'any'
+                                        ? 'Any base'
+                                        : kind === 'aspect'
+                                            ? `Any ${capitalize(selectedAspect)} base`
+                                            : selectedBaseType
+                                                ? selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '')
+                                                : 'Any base'}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
 
                     <Box sx={styles.dialogField}>
                         <Typography sx={styles.dialogLabel}>Leader</Typography>
@@ -790,12 +867,102 @@ const styles = {
         borderRadius: '15px',
         border: '2px solid transparent',
         background: 'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
-        width: '500px',
-        maxWidth: '90%',
+        width: '580px',
+        maxWidth: '92%',
+        maxHeight: '90vh',
+        overflow: 'auto',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
+    },
+    dialogPreview: {
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        gap: '1rem',
+        marginBottom: '0.5rem',
+    },
+    dialogPreviewSlot: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.5rem',
+    },
+    dialogPreviewImage: {
+        width: '7rem',
+        height: '9.6rem',
+        backgroundSize: 'contain',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+    },
+    dialogPreviewPlaceholder: {
+        width: '7rem',
+        height: '9.6rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '6px',
+        border: '1px dashed rgba(255, 255, 255, 0.18)',
+    },
+    dialogPreviewBadge: {
+        width: '7rem',
+        height: '9.6rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.35)',
+        borderRadius: '6px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+    },
+    dialogPreviewBadgeIcon: {
+        width: '4.5rem',
+        height: '4.5rem',
+        objectFit: 'contain',
+    },
+    dialogPreviewAnyRing: {
+        width: '4.5rem',
+        height: '4.5rem',
+        borderRadius: '50%',
+        border: '2px dashed rgba(255, 255, 255, 0.3)',
+    },
+    dialogPreviewCaption: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.15rem',
+        textAlign: 'center',
+    },
+    dialogPreviewAspects: {
+        display: 'flex',
+        gap: '0.2rem',
+        justifyContent: 'center',
+    },
+    dialogPreviewAspectIcon: {
+        width: '20px',
+        height: '20px',
+        objectFit: 'contain',
+    },
+    dialogPreviewCaptionText: {
+        color: '#fff',
+        fontSize: '0.95em',
+        fontWeight: 500,
+        margin: 0,
+        lineHeight: 1.2,
+    },
+    dialogPreviewCaptionSub: {
+        color: '#bbbbbb',
+        fontSize: '0.85em',
+        margin: 0,
+        lineHeight: 1.2,
+    },
+    dialogPreviewVs: {
+        color: '#888',
+        fontSize: '0.85em',
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em',
+        alignSelf: 'center',
+        margin: 0,
+        flexShrink: 0,
     },
     dialogClose: {
         position: 'absolute',
