@@ -397,11 +397,15 @@ const OpponentPreferencesPage: React.FC = () => {
                         buttonFnc={() => openEditDialog(index)}
                     />
                 </Box>
-                {isSelected && (
-                    <Box sx={styles.rowSelectionCheckmark}>
-                        <Typography sx={styles.checkmarkSymbol}>✓</Typography>
-                    </Box>
-                )}
+                <Box
+                    sx={{
+                        ...styles.rowSelectionCheckmark,
+                        visibility: isSelected ? 'visible' : 'hidden',
+                    }}
+                    aria-hidden={!isSelected}
+                >
+                    <Typography sx={styles.checkmarkSymbol}>✓</Typography>
+                </Box>
             </Box>
         );
     };
@@ -940,17 +944,19 @@ const styles = {
         flexShrink: 0,
     },
     rowSelectionCheckmark: {
-        position: 'absolute' as const,
-        top: '6px',
-        right: '6px',
-        width: '20px',
-        height: '20px',
+        // Sits in flex flow at the end of the row (after the Edit button) so
+        // it's vertically centered with the rest of the row content. The
+        // slot is always rendered (visibility toggles on selection) so the
+        // Edit button doesn't shift horizontally when an archetype is
+        // selected/deselected.
+        width: '24px',
+        height: '24px',
         borderRadius: '50%',
         backgroundColor: '#66E5FF',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 5,
+        flexShrink: 0,
     },
     dialogOverlay: {
         position: 'fixed',
