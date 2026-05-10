@@ -999,25 +999,23 @@ const styles = {
         justifyContent: 'flex-start',
         marginTop: 'auto',
     },
-    // PreferenceButton override that shrinks the Edit button alongside the
-    // rest of the card via container queries on the archetypeCard wrapper.
-    // Keeps button proportional with everything else when the card is
-    // squeezed by a narrow viewport (the card has maxWidth: 100%).
+    // PreferenceButton override that only kicks in via container queries on
+    // the archetypeCard wrapper — at full card width the Edit button keeps
+    // PreferenceButton's normal (16px/10px) sizing, and only shrinks once
+    // the card itself is squeezed below 26rem on narrow viewports.
     cardEditButton: {
-        fontSize: '0.85rem',
-        pt: '5px',
-        pb: '5px',
-        px: '14px',
-        minWidth: 0,
         '@container (max-width: 26rem)': {
-            fontSize: '0.75rem',
-            pt: '4px',
-            pb: '4px',
-            px: '10px',
+            fontSize: '0.8rem',
+            pt: '5px',
+            pb: '5px',
+            px: '12px',
+            minWidth: 0,
         },
         '@container (max-width: 22rem)': {
             fontSize: '0.7rem',
-            px: '8px',
+            pt: '4px',
+            pb: '4px',
+            px: '9px',
         },
     },
     dialogOverlay: {
