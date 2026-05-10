@@ -807,13 +807,14 @@ const styles = {
     archetypeCard: (isSelected: boolean) => ({
         background: isSelected ? '#2F7DB680' : '#20344280',
         width: '31rem',
-        height: '14.5rem',
-        // Floor at 26rem: below this width the cardMeta column gets narrow
-        // enough that base text starts colliding horizontally with the
-        // bottom-right Edit button. Below 26rem viewport the page just
-        // scrolls horizontally (matches how DeckPage behaves at narrow
-        // widths). Above 26rem and below 31rem, card scales with parent.
-        minWidth: '26rem',
+        // Karabast sets the root font-size to 10px globally (1rem = 10px),
+        // so all rem values here render at ~62.5% of the equivalent at a
+        // standard 16px root. The Edit button anchored to the bottom-right
+        // corner takes ~50px tall + 12px corner offset = ~62px reserved at
+        // the bottom. The card needs enough height to fit the leader+base
+        // text content plus that bottom button area without overlap; 18rem
+        // (180px) gives ~12px clearance between content end and button top.
+        height: '18rem',
         maxWidth: '100%',
         borderRadius: '5px',
         padding: '5px',
