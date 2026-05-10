@@ -394,7 +394,6 @@ const OpponentPreferencesPage: React.FC = () => {
                             variant="standard"
                             text="Edit"
                             buttonFnc={() => openEditDialog(index)}
-                            sx={styles.cardEditButton}
                         />
                     </Box>
                 </Box>
@@ -820,10 +819,6 @@ const styles = {
         },
         cursor: 'pointer',
         position: 'relative',
-        // Set up an inline-size container so child elements can scale down
-        // their font sizes / paddings when the card is squeezed by a narrow
-        // viewport (it has maxWidth: 100%, so it shrinks below 31rem).
-        containerType: 'inline-size',
     }),
     leaderHolder: {
         display: 'flex',
@@ -889,18 +884,12 @@ const styles = {
         flexDirection: 'column',
         width: 'calc(45% - 5px)',
         height: '100%',
-        justifyContent: 'space-between',
-        padding: '1.5rem 0.75rem 0.75rem 0.25rem',
+        justifyContent: 'flex-start',
+        // Bottom padding clears the absolutely-positioned Edit button in the
+        // card's bottom-right corner so the base text doesn't sit underneath.
+        padding: '1.5rem 0.75rem 3.25rem 0.25rem',
         minWidth: 0,
         gap: '0.75rem',
-        '@container (max-width: 30rem)': {
-            padding: '1.1rem 0.5rem 0.5rem 0.15rem',
-            gap: '0.5rem',
-        },
-        '@container (max-width: 25rem)': {
-            padding: '0.85rem 0.4rem 0.4rem 0.1rem',
-            gap: '0.35rem',
-        },
     },
     cardSection: {
         display: 'flex',
@@ -914,13 +903,6 @@ const styles = {
         textTransform: 'uppercase',
         letterSpacing: '0.1em',
         margin: 0,
-        '@container (max-width: 30rem)': {
-            fontSize: '0.7em',
-            letterSpacing: '0.08em',
-        },
-        '@container (max-width: 25rem)': {
-            fontSize: '0.65em',
-        },
     },
     leaderNameTop: {
         color: '#fff',
@@ -932,12 +914,6 @@ const styles = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         minWidth: 0,
-        '@container (max-width: 30rem)': {
-            fontSize: '1.05em',
-        },
-        '@container (max-width: 25rem)': {
-            fontSize: '0.95em',
-        },
     },
     leaderNameSub: {
         color: '#bbbbbb',
@@ -947,12 +923,6 @@ const styles = {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
-        '@container (max-width: 30rem)': {
-            fontSize: '0.85em',
-        },
-        '@container (max-width: 25rem)': {
-            fontSize: '0.78em',
-        },
     },
     cardBaseLine: {
         display: 'flex',
@@ -970,14 +940,6 @@ const styles = {
         width: '26px',
         height: '26px',
         objectFit: 'contain' as const,
-        '@container (max-width: 30rem)': {
-            width: '22px',
-            height: '22px',
-        },
-        '@container (max-width: 25rem)': {
-            width: '18px',
-            height: '18px',
-        },
     },
     cardBaseText: {
         color: '#dddddd',
@@ -987,36 +949,19 @@ const styles = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         minWidth: 0,
-        '@container (max-width: 30rem)': {
-            fontSize: '0.92em',
-        },
-        '@container (max-width: 25rem)': {
-            fontSize: '0.82em',
-        },
     },
+    // Pin the Edit row to the card's bottom-right corner (mirroring the
+    // top-right anchored toggle in cardSwitch). Anchored absolute so the
+    // button keeps its default size + position regardless of how narrow
+    // the card gets — it never overflows because it's always tied to the
+    // card's bottom-right corner, and cardMeta has reserved padding-bottom
+    // to keep the base text from sliding underneath it.
     cardEditRow: {
+        position: 'absolute',
+        bottom: '12px',
+        right: '12px',
         display: 'flex',
-        justifyContent: 'flex-start',
-        marginTop: 'auto',
-    },
-    // PreferenceButton override that only kicks in via container queries on
-    // the archetypeCard wrapper — at full card width the Edit button keeps
-    // PreferenceButton's normal (16px/10px) sizing, and only shrinks once
-    // the card itself is squeezed below 26rem on narrow viewports.
-    cardEditButton: {
-        '@container (max-width: 30rem)': {
-            fontSize: '0.8rem',
-            pt: '5px',
-            pb: '5px',
-            px: '12px',
-            minWidth: 0,
-        },
-        '@container (max-width: 25rem)': {
-            fontSize: '0.7rem',
-            pt: '4px',
-            pb: '4px',
-            px: '9px',
-        },
+        zIndex: 5,
     },
     dialogOverlay: {
         position: 'fixed',
