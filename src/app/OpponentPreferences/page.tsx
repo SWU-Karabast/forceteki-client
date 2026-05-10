@@ -318,32 +318,71 @@ const OpponentPreferencesPage: React.FC = () => {
                         <Typography sx={styles.checkmarkSymbol}>✓</Typography>
                     </Box>
                 )}
-                <Box sx={styles.cardLeaderArt}>
+                <Box sx={styles.cardImagery}>
                     {leaderImageUrl ? (
                         <Box sx={{ ...styles.leaderArtImage, backgroundImage: `url(${leaderImageUrl})` }} />
                     ) : (
                         <Box sx={styles.leaderArtPlaceholder} />
                     )}
+                    {(() => {
+                        const baseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
+                            ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
+                            : null;
+                        if (baseImageUrl) {
+                            return <Box sx={{ ...styles.leaderArtImage, backgroundImage: `url(${baseImageUrl})` }} />;
+                        }
+                        const badgeAspect = baseAspect;
+                        return (
+                            <Box sx={styles.cardBaseBadge}>
+                                {badgeAspect ? (
+                                    <Box
+                                        component="img"
+                                        src={aspectIconUrl(badgeAspect)}
+                                        alt={badgeAspect}
+                                        sx={styles.cardBaseBadgeIcon}
+                                    />
+                                ) : (
+                                    <Box sx={styles.cardBaseBadgeRing} />
+                                )}
+                            </Box>
+                        );
+                    })()}
                 </Box>
                 <Box sx={styles.cardMeta}>
-                    <Box sx={styles.cardLeaderName}>
-                        <Typography sx={styles.leaderNameTop}>
-                            {selectedLeader ? selectedLeader.name : 'Unknown leader'}
-                        </Typography>
+                    <Box sx={styles.cardSection}>
+                        <Box sx={styles.cardLeaderHeader}>
+                            <Box sx={styles.cardLeaderAspects}>
+                                {(selectedLeader?.aspects ?? []).map((aspect) => (
+                                    <Box
+                                        key={aspect}
+                                        component="img"
+                                        src={aspectIconUrl(aspect)}
+                                        alt={aspect}
+                                        sx={styles.cardLeaderAspectIcon}
+                                    />
+                                ))}
+                            </Box>
+                            <Typography sx={styles.leaderNameTop}>
+                                {selectedLeader ? selectedLeader.name : 'Unknown leader'}
+                            </Typography>
+                        </Box>
                         {selectedLeader?.subtitle && (
                             <Typography sx={styles.leaderNameSub}>{selectedLeader.subtitle}</Typography>
                         )}
                     </Box>
-                    <Box sx={styles.cardBaseLine}>
-                        {baseAspect && (
-                            <Box
-                                component="img"
-                                src={aspectIconUrl(baseAspect)}
-                                alt={baseAspect}
-                                sx={styles.cardBaseAspectIcon}
-                            />
-                        )}
-                        <Typography sx={styles.cardBaseText}>{baseSummaryText}</Typography>
+                    <Box sx={styles.cardSection}>
+                        <Typography sx={styles.cardSectionLabel}>Base</Typography>
+                        <Box sx={styles.cardBaseLine}>
+                            {baseAspect && (
+                                <Box
+                                    component="img"
+                                    src={aspectIconUrl(baseAspect)}
+                                    alt={baseAspect}
+                                    sx={styles.cardBaseAspectIcon}
+                                />
+                            )}
+                            <Typography sx={styles.cardBaseText}>{baseSummaryText}</Typography>
+                        </Box>
                     </Box>
                     <Box sx={styles.cardEditRow} onClick={stop}>
                         <PreferenceButton
@@ -753,10 +792,10 @@ const styles = {
     },
     archetypeCard: (isSelected: boolean) => ({
         background: isSelected ? '#2F7DB680' : '#20344280',
-        width: '31rem',
+        width: '32rem',
         height: '13rem',
         borderRadius: '5px',
-        padding: '0.5rem',
+        padding: '0.6rem',
         display: 'flex',
         flexDirection: 'row',
         gap: '0.75rem',
@@ -767,45 +806,86 @@ const styles = {
             backgroundColor: '#2F7DB680',
         },
     }),
-    cardLeaderArt: {
-        width: '8.5rem',
-        height: '100%',
+    cardImagery: {
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        gap: '0.4rem',
     },
     leaderArtImage: {
         width: '8rem',
-        height: '11rem',
+        height: '11.5rem',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
     },
     leaderArtPlaceholder: {
         width: '8rem',
-        height: '11rem',
+        height: '11.5rem',
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: '6px',
         border: '1px dashed rgba(255, 255, 255, 0.18)',
+    },
+    cardBaseBadge: {
+        width: '5rem',
+        height: '11.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.35)',
+        borderRadius: '6px',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+    },
+    cardBaseBadgeIcon: {
+        width: '3.5rem',
+        height: '3.5rem',
+        objectFit: 'contain',
+    },
+    cardBaseBadgeRing: {
+        width: '3.5rem',
+        height: '3.5rem',
+        borderRadius: '50%',
+        border: '2px dashed rgba(255, 255, 255, 0.3)',
     },
     cardMeta: {
         flex: 1,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '1.25rem 0.5rem 0.5rem 0',
+        gap: '0.6rem',
+        padding: '1.5rem 0.25rem 0.25rem 0',
         minWidth: 0,
     },
-    cardLeaderName: {
+    cardSection: {
         display: 'flex',
         flexDirection: 'column',
         gap: '0.15rem',
     },
+    cardSectionLabel: {
+        color: '#888',
+        fontSize: '0.7em',
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+        margin: 0,
+    },
+    cardLeaderHeader: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+    },
+    cardLeaderAspects: {
+        display: 'flex',
+        gap: '0.15rem',
+        flexShrink: 0,
+    },
+    cardLeaderAspectIcon: {
+        width: '18px',
+        height: '18px',
+        objectFit: 'contain',
+    },
     leaderNameTop: {
         color: '#fff',
-        fontSize: '1.1em',
+        fontSize: '1em',
         fontWeight: 600,
         margin: 0,
         lineHeight: 1.2,
@@ -814,7 +894,7 @@ const styles = {
     },
     leaderNameSub: {
         color: '#bbbbbb',
-        fontSize: '0.9em',
+        fontSize: '0.85em',
         margin: 0,
         lineHeight: 1.2,
         overflow: 'hidden',
@@ -847,6 +927,7 @@ const styles = {
     cardEditRow: {
         display: 'flex',
         justifyContent: 'flex-start',
+        marginTop: 'auto',
     },
     dialogOverlay: {
         position: 'fixed',
@@ -865,9 +946,9 @@ const styles = {
         borderRadius: '15px',
         border: '2px solid transparent',
         background: 'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
-        width: '580px',
-        maxWidth: '92%',
-        maxHeight: '90vh',
+        width: '720px',
+        maxWidth: '94%',
+        maxHeight: '92vh',
         overflow: 'auto',
         position: 'relative',
         display: 'flex',
@@ -889,22 +970,22 @@ const styles = {
         gap: '0.5rem',
     },
     dialogPreviewImage: {
-        width: '7rem',
-        height: '9.6rem',
+        width: '11rem',
+        height: '15rem',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
     },
     dialogPreviewPlaceholder: {
-        width: '7rem',
-        height: '9.6rem',
+        width: '11rem',
+        height: '15rem',
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: '6px',
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
     dialogPreviewBadge: {
-        width: '7rem',
-        height: '9.6rem',
+        width: '11rem',
+        height: '15rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -913,13 +994,13 @@ const styles = {
         border: '1px solid rgba(255, 255, 255, 0.1)',
     },
     dialogPreviewBadgeIcon: {
-        width: '4.5rem',
-        height: '4.5rem',
+        width: '6rem',
+        height: '6rem',
         objectFit: 'contain',
     },
     dialogPreviewAnyRing: {
-        width: '4.5rem',
-        height: '4.5rem',
+        width: '6rem',
+        height: '6rem',
         borderRadius: '50%',
         border: '2px dashed rgba(255, 255, 255, 0.3)',
     },
