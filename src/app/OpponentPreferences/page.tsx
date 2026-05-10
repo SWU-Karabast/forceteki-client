@@ -629,9 +629,12 @@ const OpponentPreferencesPage: React.FC = () => {
                                 return (
                                     <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
                                         <Box sx={styles.dialogOptionAspects}>
-                                            {option.aspects.map((aspect) => (
+                                            {option.aspects.map((aspect, i) => (
+                                                // Some mono-aspect leaders (e.g. DJ) list the aspect
+                                                // twice in their .aspects array; keying on aspect alone
+                                                // collides, so include the index.
                                                 <Box
-                                                    key={aspect}
+                                                    key={`${aspect}-${i}`}
                                                     component="img"
                                                     src={aspectIconUrl(aspect)}
                                                     alt={aspect}
