@@ -4,7 +4,6 @@ import {
     Autocomplete,
     Box,
     FormControlLabel,
-    Grid,
     MenuItem,
     Radio,
     RadioGroup,
@@ -13,6 +12,7 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
@@ -26,8 +26,6 @@ import {
 } from '@/app/_constants/constants';
 import { loadMatchPreferences, saveMatchPreferences } from '@/app/_utils/matchPreferences';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
-import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
-import { useUser } from '@/app/_contexts/User.context';
 
 /**
  * Build a card-art URL from a set-code id (e.g. `SEC_010`). Mirrors the
@@ -103,10 +101,6 @@ function capitalize(value: string): string {
 const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
 
 const OpponentPreferencesPage: React.FC = () => {
-    const { getBackground } = useCosmetics();
-    const { user } = useUser();
-    const background = getBackground(user?.preferences.cosmetics?.background);
-
     const [prefs, setPrefs] = useState<MatchPreferences>(() => loadMatchPreferences());
     const [leaders, setLeaders] = useState<LeaderOption[]>([]);
     const [baseTypes, setBaseTypes] = useState<IBaseTypeOption[]>([]);
@@ -512,7 +506,7 @@ const OpponentPreferencesPage: React.FC = () => {
     };
 
     return (
-        <Box sx={{ ...styles.container, backgroundImage: `url(${background?.path}?v=2)` }}>
+        <Box sx={styles.container}>
             <Box sx={styles.content}>
                 <Typography variant="h4" sx={styles.pageHeading}>Opponent Match Preferences</Typography>
                 <Typography sx={styles.intro}>
@@ -525,7 +519,7 @@ const OpponentPreferencesPage: React.FC = () => {
                 {!loaded && !error && <Typography sx={styles.muted}>Loading leaders and bases…</Typography>}
 
                 {loaded && (
-                    <Box sx={styles.toolbar}>
+                    <Box sx={styles.header}>
                         <Box sx={styles.toolbarSlot}>
                             <PreferenceButton
                                 variant="standard"
@@ -554,12 +548,8 @@ const OpponentPreferencesPage: React.FC = () => {
                 )}
 
                 {loaded && prefs.allowedArchetypes.length > 0 && (
-                    <Grid container spacing={2} sx={styles.gridContainer}>
-                        {prefs.allowedArchetypes.map((archetype, i) => (
-                            <Grid key={i}>
-                                {renderArchetypeCard(archetype, i)}
-                            </Grid>
-                        ))}
+                    <Grid container alignItems="center" spacing={1} sx={styles.gridContainer}>
+                        {prefs.allowedArchetypes.map((archetype, i) => renderArchetypeCard(archetype, i))}
                     </Grid>
                 )}
             </Box>
@@ -588,26 +578,17 @@ const OpponentPreferencesPage: React.FC = () => {
 
 const styles = {
     container: {
-        minHeight: '100vh',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         color: '#fff',
-        // Leave room for the global Navbar (KARABAST + ControlHub) which is
-        // position: fixed at the top.
-        paddingTop: '5rem',
     },
     content: {
-        flex: 1,
-        maxWidth: '960px',
-        width: '100%',
-        margin: '0 auto',
-        padding: '0 2rem 4rem',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
+        overflow: 'hidden',
     },
     pageHeading: {
         fontWeight: 600,
@@ -631,17 +612,21 @@ const styles = {
         border: '1px dashed rgba(255, 255, 255, 0.18)',
         textAlign: 'center',
     },
-    toolbar: {
+    header: {
+        width: '100%',
+        flexDirection: 'row',
         display: 'flex',
-        gap: '1rem',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '0.5rem',
+        gap: '1rem',
     },
     toolbarSlot: {
-        minWidth: '180px',
+        minWidth: '200px',
     },
     gridContainer: {
-        marginTop: '0.5rem',
+        mt: '20px',
+        overflowY: 'auto',
+        maxHeight: '84%',
     },
     archetypeCard: (isSelected: boolean) => ({
         background: isSelected ? '#2F7DB680' : '#20344280',
