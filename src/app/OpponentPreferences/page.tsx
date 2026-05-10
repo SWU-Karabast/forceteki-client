@@ -631,9 +631,15 @@ const OpponentPreferencesPage: React.FC = () => {
                             renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
                             sx={styles.field}
                             renderOption={(props, option) => {
-                                const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+                                // MUI's default props.key uses getOptionLabel(option), which collides
+                                // when multiple options have the same displayed label (e.g. all 4
+                                // 'Vanilla - 30hp' multi-card groups share that label). Force option.id
+                                // (guaranteed unique) so React reconciliation doesn't keep stale DOM
+                                // nodes when the filter narrows the visible set.
+                                const { key: _ignoredKey, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+                                void _ignoredKey;
                                 return (
-                                    <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.dialogOptionRow}>
+                                    <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
                                         <Box sx={styles.dialogOptionAspects}>
                                             {option.aspects.map((aspect) => (
                                                 <Box
@@ -748,9 +754,13 @@ const OpponentPreferencesPage: React.FC = () => {
                                 )}
                                 sx={styles.field}
                                 renderOption={(props, option) => {
-                                    const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+                                    // Same key-collision avoidance as the leader Autocomplete: MUI's
+                                    // default props.key is getOptionLabel(option) which collides for
+                                    // multi-card groups that share a displayed label across aspects.
+                                    const { key: _ignoredKey, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+                                    void _ignoredKey;
                                     return (
-                                        <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.dialogOptionRow}>
+                                        <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
                                             {aspectHasIcon(option.aspect) && (
                                                 <Box
                                                     component="img"
