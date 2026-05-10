@@ -893,11 +893,11 @@ const styles = {
         padding: '1.5rem 0.75rem 0.75rem 0.25rem',
         minWidth: 0,
         gap: '0.75rem',
-        '@container (max-width: 26rem)': {
+        '@container (max-width: 30rem)': {
             padding: '1.1rem 0.5rem 0.5rem 0.15rem',
             gap: '0.5rem',
         },
-        '@container (max-width: 22rem)': {
+        '@container (max-width: 25rem)': {
             padding: '0.85rem 0.4rem 0.4rem 0.1rem',
             gap: '0.35rem',
         },
@@ -914,11 +914,11 @@ const styles = {
         textTransform: 'uppercase',
         letterSpacing: '0.1em',
         margin: 0,
-        '@container (max-width: 26rem)': {
+        '@container (max-width: 30rem)': {
             fontSize: '0.7em',
             letterSpacing: '0.08em',
         },
-        '@container (max-width: 22rem)': {
+        '@container (max-width: 25rem)': {
             fontSize: '0.65em',
         },
     },
@@ -932,10 +932,10 @@ const styles = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         minWidth: 0,
-        '@container (max-width: 26rem)': {
+        '@container (max-width: 30rem)': {
             fontSize: '1.05em',
         },
-        '@container (max-width: 22rem)': {
+        '@container (max-width: 25rem)': {
             fontSize: '0.95em',
         },
     },
@@ -947,10 +947,10 @@ const styles = {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
-        '@container (max-width: 26rem)': {
+        '@container (max-width: 30rem)': {
             fontSize: '0.85em',
         },
-        '@container (max-width: 22rem)': {
+        '@container (max-width: 25rem)': {
             fontSize: '0.78em',
         },
     },
@@ -970,11 +970,11 @@ const styles = {
         width: '26px',
         height: '26px',
         objectFit: 'contain' as const,
-        '@container (max-width: 26rem)': {
+        '@container (max-width: 30rem)': {
             width: '22px',
             height: '22px',
         },
-        '@container (max-width: 22rem)': {
+        '@container (max-width: 25rem)': {
             width: '18px',
             height: '18px',
         },
@@ -987,10 +987,10 @@ const styles = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
         minWidth: 0,
-        '@container (max-width: 26rem)': {
+        '@container (max-width: 30rem)': {
             fontSize: '0.92em',
         },
-        '@container (max-width: 22rem)': {
+        '@container (max-width: 25rem)': {
             fontSize: '0.82em',
         },
     },
@@ -1004,14 +1004,14 @@ const styles = {
     // PreferenceButton's normal (16px/10px) sizing, and only shrinks once
     // the card itself is squeezed below 26rem on narrow viewports.
     cardEditButton: {
-        '@container (max-width: 26rem)': {
+        '@container (max-width: 30rem)': {
             fontSize: '0.8rem',
             pt: '5px',
             pb: '5px',
             px: '12px',
             minWidth: 0,
         },
-        '@container (max-width: 22rem)': {
+        '@container (max-width: 25rem)': {
             fontSize: '0.7rem',
             pt: '4px',
             pb: '4px',
