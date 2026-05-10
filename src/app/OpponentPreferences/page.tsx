@@ -564,7 +564,7 @@ const OpponentPreferencesPage: React.FC = () => {
                                 </Box>
                             ) : (
                                 <Box sx={{ ...styles.dialogPreviewBadge, ...styles.dialogPreviewAnyBase }}>
-                                    <Typography sx={styles.dialogPreviewAnyBaseText}>ANY</Typography>
+                                    <Typography sx={styles.dialogPreviewAnyBaseText}>*</Typography>
                                 </Box>
                             )}
                             <Box sx={styles.dialogPreviewCaption}>
@@ -1013,11 +1013,13 @@ const styles = {
     },
     dialogPreviewAnyBaseText: {
         color: 'rgba(255, 255, 255, 0.55)',
-        fontSize: '2.4rem',
+        fontSize: '12rem',
         fontWeight: 700,
-        letterSpacing: '0.18em',
         margin: 0,
-        lineHeight: 1,
+        lineHeight: 0.6, // tightens the line box so * doesn't sit visually high
+        // Asterisks have their visual mass near the cap-height (high in the
+        // em-box); a small downward nudge optically centers them in the panel.
+        transform: 'translateY(0.12em)',
     },
     dialogPreviewCaption: {
         display: 'flex',
