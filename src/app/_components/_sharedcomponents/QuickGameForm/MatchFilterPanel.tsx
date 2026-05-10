@@ -34,6 +34,51 @@ const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, 
     const hasArchetypes = archetypes.length > 0;
     const activeArchetypeCount = archetypes.filter((a) => a.enabled !== false).length;
 
+    // ----------------------Styles-----------------------------//
+    const styles = {
+        formControl: {
+            mb: '1rem',
+        },
+        label: {
+            mb: '.5em',
+            color: 'white',
+        },
+        radio: {
+            color: '#fff',
+            '&.Mui-checked': {
+                color: '#fff',
+            },
+            '&.Mui-disabled': {
+                color: 'rgba(255, 255, 255, 0.3)',
+            },
+        },
+        radioLabel: {
+            color: '#fff',
+        },
+        manageBlock: {
+            mt: '0.5rem',
+            p: '0.75rem 1rem',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(0, 0, 0, 0.25)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem',
+        },
+        summaryEmpty: {
+            color: '#bbbbbb',
+            fontSize: '0.85em',
+        },
+        summaryHeading: {
+            color: '#dddddd',
+            fontSize: '0.85em',
+        },
+        manageButtonRow: {
+            display: 'flex',
+            justifyContent: 'flex-end',
+        },
+    };
+
     return (
         <FormControl fullWidth sx={styles.formControl}>
             <Typography sx={styles.label}>Opponent matchmaking</Typography>
@@ -77,50 +122,6 @@ const MatchFilterPanel: React.FC<IMatchFilterPanelProps> = ({ matchPreferences, 
             )}
         </FormControl>
     );
-};
-
-const styles = {
-    formControl: {
-        mb: '1rem',
-    },
-    label: {
-        mb: '.5em',
-        color: 'white',
-    },
-    radio: {
-        color: '#fff',
-        '&.Mui-checked': {
-            color: '#fff',
-        },
-        '&.Mui-disabled': {
-            color: 'rgba(255, 255, 255, 0.3)',
-        },
-    },
-    radioLabel: {
-        color: '#fff',
-    },
-    manageBlock: {
-        mt: '0.5rem',
-        p: '0.75rem 1rem',
-        borderRadius: '8px',
-        backgroundColor: 'rgba(0, 0, 0, 0.25)',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.5rem',
-    },
-    summaryEmpty: {
-        color: '#bbbbbb',
-        fontSize: '0.85em',
-    },
-    summaryHeading: {
-        color: '#dddddd',
-        fontSize: '0.85em',
-    },
-    manageButtonRow: {
-        display: 'flex',
-        justifyContent: 'flex-end',
-    },
 };
 
 export default MatchFilterPanel;

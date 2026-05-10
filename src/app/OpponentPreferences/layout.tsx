@@ -7,6 +7,7 @@ export default function OpponentPreferencesLayout({
 }: {
     children: React.ReactNode;
 }) {
+    // ----------------------Styles-----------------------------//
     const styles = {
         mainContainer: {
             height: '100vh',

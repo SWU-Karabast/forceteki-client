@@ -1,10 +1,5 @@
 import { DefaultMatchPreferences, MATCH_PREFERENCES_LOCALSTORAGE_KEY, MatchPreferences } from '@/app/_constants/constants';
 
-/**
- * Loads opt-in opponent-archetype filter preferences from localStorage. Falls
- * back to the safe default ({ enabled: false, allowedArchetypes: [] }) when
- * unset, malformed, or running outside a browser.
- */
 export function loadMatchPreferences(): MatchPreferences {
     if (typeof window === 'undefined') {
         return DefaultMatchPreferences;
@@ -29,11 +24,6 @@ export function loadMatchPreferences(): MatchPreferences {
     return DefaultMatchPreferences;
 }
 
-/**
- * Persists match preferences to localStorage. Best-effort: a write failure
- * (quota, private mode) is swallowed since the in-memory state still works
- * for the current session.
- */
 export function saveMatchPreferences(prefs: MatchPreferences): void {
     if (typeof window === 'undefined') {
         return;
@@ -41,6 +31,6 @@ export function saveMatchPreferences(prefs: MatchPreferences): void {
     try {
         window.localStorage.setItem(MATCH_PREFERENCES_LOCALSTORAGE_KEY, JSON.stringify(prefs));
     } catch {
-        // best-effort
+        // Quota / private mode — best-effort.
     }
 }
