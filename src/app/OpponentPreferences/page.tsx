@@ -328,13 +328,44 @@ const OpponentPreferencesPage: React.FC = () => {
                         <Typography sx={styles.checkmarkSymbol}>✓</Typography>
                     </Box>
                 )}
-                <Box sx={styles.leaderHolder}>
-                    {leaderImageUrl ? (
-                        <Box sx={{ ...styles.leaderArt, backgroundImage: `url(${leaderImageUrl})` }} />
-                    ) : (
-                        <Box sx={{ ...styles.leaderArt, ...styles.leaderArtPlaceholder }} />
-                    )}
-                </Box>
+                {(() => {
+                    const uniqueBaseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
+                        ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
+                        : null;
+                    if (uniqueBaseImageUrl) {
+                        // Specific single-card base: DeckPage overlap stack —
+                        // base in the back at natural flow, leader absolute-
+                        // positioned at (-15px, 26px) overlaying it.
+                        return (
+                            <Box sx={styles.leaderBaseHolder}>
+                                <Box sx={styles.cardSetContainerStyle}>
+                                    <Box>
+                                        <Box sx={{ ...styles.boxGeneralStyling, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
+                                    </Box>
+                                    <Box sx={{ ...styles.parentBoxStyling, left: '-15px', top: '26px' }}>
+                                        {leaderImageUrl ? (
+                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage: `url(${leaderImageUrl})` }} />
+                                        ) : (
+                                            <Box sx={{ ...styles.boxGeneralStyling, ...styles.boxGeneralPlaceholder }} />
+                                        )}
+                                    </Box>
+                                </Box>
+                            </Box>
+                        );
+                    }
+                    // Any base / aspect / multi-card group: just the leader
+                    // image, large and centered. The base info is conveyed by
+                    // the caption text on the right.
+                    return (
+                        <Box sx={styles.leaderHolder}>
+                            {leaderImageUrl ? (
+                                <Box sx={{ ...styles.leaderArt, backgroundImage: `url(${leaderImageUrl})` }} />
+                            ) : (
+                                <Box sx={{ ...styles.leaderArt, ...styles.leaderArtPlaceholder }} />
+                            )}
+                        </Box>
+                    );
+                })()}
                 <Box sx={styles.cardMeta}>
                     <Box sx={styles.cardSection}>
                         <Typography sx={styles.leaderNameTop}>
@@ -506,17 +537,6 @@ const OpponentPreferencesPage: React.FC = () => {
                                 <Box sx={styles.dialogPreviewPlaceholder} />
                             )}
                             <Box sx={styles.dialogPreviewCaption}>
-                                <Box sx={styles.dialogPreviewAspects}>
-                                    {(selectedLeader?.aspects ?? []).map((aspect) => (
-                                        <Box
-                                            key={aspect}
-                                            component="img"
-                                            src={aspectIconUrl(aspect)}
-                                            alt={aspect}
-                                            sx={styles.dialogPreviewAspectIcon}
-                                        />
-                                    ))}
-                                </Box>
                                 <Typography sx={styles.dialogPreviewCaptionText}>
                                     {selectedLeader ? selectedLeader.name : 'Unknown leader'}
                                 </Typography>
@@ -549,8 +569,8 @@ const OpponentPreferencesPage: React.FC = () => {
                                     />
                                 </Box>
                             ) : (
-                                <Box sx={styles.dialogPreviewBadge}>
-                                    <Box sx={styles.dialogPreviewAnyRing} />
+                                <Box sx={{ ...styles.dialogPreviewBadge, ...styles.dialogPreviewAnyBase }}>
+                                    <Typography sx={styles.dialogPreviewAnyBaseText}>ANY</Typography>
                                 </Box>
                             )}
                             <Box sx={styles.dialogPreviewCaption}>
@@ -821,6 +841,44 @@ const styles = {
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
+    // DeckPage-mirrored stack used when the archetype has a specific
+    // single-card base. Lifts the same dimensions/offsets verbatim.
+    leaderBaseHolder: {
+        display: 'flex',
+        alignItems: 'center',
+        height: '100%',
+        width: 'calc(55% - 5px)',
+    },
+    cardSetContainerStyle: {
+        display: 'flex',
+        flexDirection: 'column' as const,
+        position: 'relative' as const,
+        width: '15.2rem',
+        height: '12.1rem',
+    },
+    parentBoxStyling: {
+        position: 'absolute' as const,
+    },
+    boxGeneralStyling: {
+        backgroundColor: 'transparent',
+        backgroundSize: 'contain',
+        width: '14rem',
+        height: '10.18rem',
+        backgroundRepeat: 'no-repeat',
+        textAlign: 'center' as const,
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        position: 'relative' as const,
+        ml: '15px',
+    },
+    boxGeneralPlaceholder: {
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '6px',
+        border: '1px dashed rgba(255, 255, 255, 0.18)',
+    },
     cardMeta: {
         display: 'flex',
         flexDirection: 'column',
@@ -927,32 +985,39 @@ const styles = {
         justifyContent: 'center',
         gap: '1rem',
         marginBottom: '0.5rem',
+        flexWrap: 'wrap' as const,
     },
     dialogPreviewSlot: {
-        flex: 1,
+        flex: '1 1 12rem',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: '0.5rem',
+        minWidth: 0,
+        maxWidth: '14rem',
     },
     dialogPreviewImage: {
-        // SWU base & leader-deployed cards are landscape (~7:5).
-        width: '14rem',
-        height: '10rem',
+        // SWU base & leader-deployed cards are landscape (~7:5). Width caps
+        // at 14rem so it shrinks on narrow viewports rather than overflowing.
+        width: '100%',
+        maxWidth: '14rem',
+        aspectRatio: '7 / 5',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
     },
     dialogPreviewPlaceholder: {
-        width: '14rem',
-        height: '10rem',
+        width: '100%',
+        maxWidth: '14rem',
+        aspectRatio: '7 / 5',
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: '6px',
         border: '1px dashed rgba(255, 255, 255, 0.18)',
     },
     dialogPreviewBadge: {
-        width: '14rem',
-        height: '10rem',
+        width: '100%',
+        maxWidth: '14rem',
+        aspectRatio: '7 / 5',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -963,30 +1028,26 @@ const styles = {
     dialogPreviewBadgeIcon: {
         width: '5rem',
         height: '5rem',
-        objectFit: 'contain',
+        objectFit: 'contain' as const,
     },
-    dialogPreviewAnyRing: {
-        width: '5rem',
-        height: '5rem',
-        borderRadius: '50%',
-        border: '2px dashed rgba(255, 255, 255, 0.3)',
+    dialogPreviewAnyBase: {
+        background: 'linear-gradient(135deg, #1a2530 0%, #08111a 100%)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+    },
+    dialogPreviewAnyBaseText: {
+        color: 'rgba(255, 255, 255, 0.55)',
+        fontSize: '2.4rem',
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        margin: 0,
+        lineHeight: 1,
     },
     dialogPreviewCaption: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: '0.15rem',
-        textAlign: 'center',
-    },
-    dialogPreviewAspects: {
-        display: 'flex',
-        gap: '0.2rem',
-        justifyContent: 'center',
-    },
-    dialogPreviewAspectIcon: {
-        width: '20px',
-        height: '20px',
-        objectFit: 'contain',
+        textAlign: 'center' as const,
     },
     dialogPreviewCaptionText: {
         color: '#fff',
@@ -1000,15 +1061,6 @@ const styles = {
         fontSize: '0.85em',
         margin: 0,
         lineHeight: 1.2,
-    },
-    dialogPreviewVs: {
-        color: '#888',
-        fontSize: '0.85em',
-        textTransform: 'uppercase',
-        letterSpacing: '0.1em',
-        alignSelf: 'center',
-        margin: 0,
-        flexShrink: 0,
     },
     dialogClose: {
         position: 'absolute',
@@ -1055,9 +1107,9 @@ const styles = {
         flexShrink: 0,
     },
     dialogOptionLabel: {
-        flex: 1,
         lineHeight: 1.2,
         margin: 0,
+        minWidth: 0,
     },
     dialogOptionSet: {
         color: '#aaaaaa',
@@ -1066,6 +1118,7 @@ const styles = {
         textTransform: 'uppercase',
         letterSpacing: '0.05em',
         flexShrink: 0,
+        marginLeft: 'auto',
     },
     archetypeCardDisabled: {
         opacity: 0.55,
