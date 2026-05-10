@@ -77,6 +77,17 @@ const ASPECT_OPTIONS: Aspect[] = [
  */
 const ASPECT_PREFIX_PATTERN = /^(?:Aggression|Command|Cunning|Heroism|Vigilance|Villainy) - /;
 
+/**
+ * Trailing rare-rarity tag on a base-type label (e.g. ' (R)'). Every
+ * single-card base has a unique title, so the (R) is redundant — we strip
+ * it from anywhere the label is shown to the user.
+ */
+const RARE_TAG_PATTERN = /\s*\(R\)\s*$/;
+
+function displayBaseLabel(label: string): string {
+    return label.replace(ASPECT_PREFIX_PATTERN, '').replace(RARE_TAG_PATTERN, '');
+}
+
 function getConstraintKind(constraint: BaseConstraint | undefined): BaseConstraintKind {
     if (!constraint) {
         return 'any';
@@ -421,7 +432,7 @@ const OpponentPreferencesPage: React.FC = () => {
                         <Box sx={styles.toolbarSlot}>
                             <PreferenceButton
                                 variant="concede"
-                                text={`Delete archetype${selectedIndices.length === 1 ? '' : 's'}`}
+                                text={'Delete archetype(s)'}
                                 buttonFnc={() => setDeleteDialogOpen(true)}
                                 disabled={selectedIndices.length === 0}
                             />
@@ -445,7 +456,7 @@ const OpponentPreferencesPage: React.FC = () => {
             </Box>
             <ConfirmationDialog
                 open={deleteDialogOpen}
-                title={`Delete archetype${selectedIndices.length === 1 ? '' : 's'}`}
+                title="Delete Archetypes"
                 message={
                     <>
                         <Typography sx={styles.confirmPrimary}>
@@ -574,7 +585,7 @@ const OpponentPreferencesPage: React.FC = () => {
                                         : kind === 'aspect'
                                             ? `Any ${capitalize(selectedAspect)} base`
                                             : selectedBaseType
-                                                ? selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '')
+                                                ? displayBaseLabel(selectedBaseType.label)
                                                 : 'Any base'}
                                 </Typography>
                             </Box>
@@ -685,7 +696,7 @@ const OpponentPreferencesPage: React.FC = () => {
                             <Autocomplete
                                 options={baseTypes}
                                 value={selectedBaseType}
-                                getOptionLabel={(option) => baseTypeLabel(option).replace(ASPECT_PREFIX_PATTERN, '')}
+                                getOptionLabel={(option) => displayBaseLabel(baseTypeLabel(option))}
                                 filterOptions={baseTypeFilter}
                                 isOptionEqualToValue={(option, value) => option.id === value.id}
                                 onChange={(_, value) => onBaseTypeChange(value)}
@@ -722,7 +733,7 @@ const OpponentPreferencesPage: React.FC = () => {
                                                 />
                                             )}
                                             <Typography component="span" sx={styles.dialogOptionLabel}>
-                                                {option.label.replace(ASPECT_PREFIX_PATTERN, '')}
+                                                {displayBaseLabel(option.label)}
                                             </Typography>
                                             {option.set && (
                                                 <Typography component="span" sx={styles.dialogOptionSet}>{option.set}</Typography>
