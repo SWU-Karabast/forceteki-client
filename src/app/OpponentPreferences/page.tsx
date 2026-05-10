@@ -60,13 +60,13 @@ interface LeaderOption {
 
 type BaseConstraintKind = 'any' | 'aspect' | 'baseType';
 
+// Bases only carry the four 'color' aspects — never Heroism or Villainy
+// (those are alignment aspects on leaders/units, not on bases).
 const ASPECT_OPTIONS: Aspect[] = [
     Aspect.Aggression,
     Aspect.Command,
     Aspect.Cunning,
-    Aspect.Heroism,
     Aspect.Vigilance,
-    Aspect.Villainy,
 ];
 
 /**
@@ -115,13 +115,24 @@ function capitalize(value: string): string {
 
 const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
 
+// Only the four 'color' base aspects have an aspect-icon image. Bases tagged
+// 'neutral' (e.g. Lake Country) have no aspect — gating the icon render on
+// this avoids the broken-image fallback text ("neutral") from showing in
+// the slot where the icon should be.
+const VALID_BASE_ASPECTS = new Set(['aggression', 'command', 'cunning', 'vigilance']);
+function aspectHasIcon(aspect: string | null | undefined): aspect is string {
+    return !!aspect && VALID_BASE_ASPECTS.has(aspect.toLowerCase());
+}
+
 /**
- * Filter base-type options on the *full* label (including the aspect prefix)
- * so typing "Aggression" still matches even though the displayed selected
- * value strips the aspect text in favor of an aspect-icon adornment.
+ * Filter base-type options on the *displayed* label (aspect prefix and rare
+ * tag stripped) so the search behavior matches what the user sees in the
+ * dropdown. Typing 'agg' no longer matches every Aggression-prefix multi-
+ * card group — only typing the actual visible label terms (e.g. 'Force',
+ * 'Vanilla', '30hp', or a specific card name) narrows the list.
  */
 const baseTypeFilter = createFilterOptions<IBaseTypeOption>({
-    stringify: (option) => option.label,
+    stringify: (option) => displayBaseLabel(option.label),
 });
 
 const OpponentPreferencesPage: React.FC = () => {
@@ -372,7 +383,7 @@ const OpponentPreferencesPage: React.FC = () => {
                     <Box sx={styles.rowBaseSection}>
                         {uniqueBaseImageUrl ? (
                             <Box sx={{ ...styles.rowBaseThumb, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
-                        ) : baseAspect ? (
+                        ) : aspectHasIcon(baseAspect) ? (
                             <Box
                                 component="img"
                                 src={aspectIconUrl(baseAspect)}
@@ -568,7 +579,7 @@ const OpponentPreferencesPage: React.FC = () => {
                                         sx={styles.dialogPreviewBadgeIcon}
                                     />
                                 </Box>
-                            ) : kind === 'baseType' && selectedBaseType ? (
+                            ) : kind === 'baseType' && selectedBaseType && aspectHasIcon(selectedBaseType.aspect) ? (
                                 <Box sx={styles.dialogPreviewBadge}>
                                     <Box
                                         component="img"
@@ -712,11 +723,11 @@ const OpponentPreferencesPage: React.FC = () => {
                                         size="small"
                                         InputProps={{
                                             ...params.InputProps,
-                                            startAdornment: selectedBaseType?.aspect ? (
+                                            startAdornment: aspectHasIcon(selectedBaseType?.aspect) ? (
                                                 <Box
                                                     component="img"
-                                                    src={aspectIconUrl(selectedBaseType.aspect)}
-                                                    alt={selectedBaseType.aspect}
+                                                    src={aspectIconUrl(selectedBaseType!.aspect)}
+                                                    alt={selectedBaseType!.aspect}
                                                     sx={styles.inputAspectAdornment}
                                                 />
                                             ) : null,
@@ -728,7 +739,7 @@ const OpponentPreferencesPage: React.FC = () => {
                                     const { key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
                                     return (
                                         <Box component="li" key={key ?? option.id} {...optionProps} sx={styles.dialogOptionRow}>
-                                            {option.aspect && (
+                                            {aspectHasIcon(option.aspect) && (
                                                 <Box
                                                     component="img"
                                                     src={aspectIconUrl(option.aspect)}
