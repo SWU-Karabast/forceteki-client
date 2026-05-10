@@ -32,8 +32,6 @@ interface LeaderOption {
     name: string;
     id: string;
     subtitle?: string;
-    aspects: string[];
-    set: string | null;
 }
 
 type BaseConstraintKind = 'any' | 'aspect' | 'baseType';
@@ -658,12 +656,6 @@ const OpponentPreferencesPage: React.FC = () => {
             minHeight: '36px',
             py: '0.25rem',
         },
-        dialogOptionAspects: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.15rem',
-            flexShrink: 0,
-        },
         dialogOptionLabel: {
             lineHeight: 1.2,
             margin: 0,
@@ -1001,26 +993,12 @@ const OpponentPreferencesPage: React.FC = () => {
                             sx={styles.field}
                             renderOption={(props, option) => {
                                 // Use option.id as React key — MUI's default key is getOptionLabel,
-                                // which collides for multi-card groups that share a displayed label.
+                                // which collides for leader options whose displayed label is identical.
                                 const { key: _key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
                                 void _key;
                                 return (
                                     <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
-                                        <Box sx={styles.dialogOptionAspects}>
-                                            {option.aspects.map((aspect, i) => (
-                                                <Box
-                                                    key={`${aspect}-${i}`}
-                                                    component="img"
-                                                    src={aspectIconUrl(aspect)}
-                                                    alt={aspect}
-                                                    sx={styles.aspectOptionIcon}
-                                                />
-                                            ))}
-                                        </Box>
                                         <Typography component="span" sx={styles.dialogOptionLabel}>{leaderLabel(option)}</Typography>
-                                        {option.set && (
-                                            <Typography component="span" sx={styles.dialogOptionSet}>{option.set}</Typography>
-                                        )}
                                     </Box>
                                 );
                             }}
