@@ -911,16 +911,18 @@ const styles = {
         height: '2.6rem',
         flexShrink: 0,
         margin: 0,
-        // Sized + optically centered so the asterisk visually matches the
-        // 2.6rem aspect-icon slot it replaces for the 'any base' case.
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         color: 'rgba(255, 255, 255, 0.55)',
-        fontSize: '3rem',
-        fontWeight: 700,
-        lineHeight: 0.6,
-        transform: 'translateY(0.1em)',
+        // Bigger glyph + lighter weight so it has comparable visual weight to
+        // a colored aspect icon without looking like a chunky bullet point.
+        fontSize: '4.5rem',
+        fontWeight: 400,
+        lineHeight: 0.6, // tightens line box so the glyph centers cleanly
+        // Asterisk's visual mass sits near cap-height; nudge down so the
+        // optical center of the * lines up with the text baseline next to it.
+        transform: 'translateY(0.18em)',
     },
     rowEditSlot: {
         display: 'flex',
