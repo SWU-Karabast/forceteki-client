@@ -123,8 +123,10 @@ const OpponentPreferencesPage: React.FC = () => {
                 }
                 leadersData.sort((a, b) => leaderLabel(a).localeCompare(leaderLabel(b)));
                 baseTypesData.sort((a, b) => {
-                    if (a.aspect !== b.aspect) {
-                        return a.aspect.localeCompare(b.aspect);
+                    const aKey = a.aspects.join('+');
+                    const bKey = b.aspects.join('+');
+                    if (aKey !== bKey) {
+                        return aKey.localeCompare(bKey);
                     }
                     return a.label.localeCompare(b.label);
                 });
@@ -215,7 +217,10 @@ const OpponentPreferencesPage: React.FC = () => {
         }
         const key = constraint.baseIds.slice().sort().join('|');
         const type = baseTypesByJoinedIds.get(key);
-        return type?.aspect ?? null;
+        // Multi-aspect bases fall back to the first aspect for the row's
+        // single-icon adornment; the BE filter rule still considers the full
+        // aspect list when matching.
+        return type?.aspects[0] ?? null;
     }
 
     const renderArchetypeRow = (archetype: OpponentArchetype, index: number) => {
@@ -970,12 +975,12 @@ const OpponentPreferencesPage: React.FC = () => {
                                         sx={styles.dialogPreviewBadgeIcon}
                                     />
                                 </Box>
-                            ) : kind === 'baseType' && selectedBaseType && aspectHasIcon(selectedBaseType.aspect) ? (
+                            ) : kind === 'baseType' && selectedBaseType && aspectHasIcon(selectedBaseType.aspects[0]) ? (
                                 <Box sx={styles.dialogPreviewBadge}>
                                     <Box
                                         component="img"
-                                        src={aspectIconUrl(selectedBaseType.aspect)}
-                                        alt={selectedBaseType.aspect}
+                                        src={aspectIconUrl(selectedBaseType.aspects[0])}
+                                        alt={selectedBaseType.aspects[0]}
                                         sx={styles.dialogPreviewBadgeIcon}
                                     />
                                 </Box>
@@ -1109,11 +1114,11 @@ const OpponentPreferencesPage: React.FC = () => {
                                         size="small"
                                         InputProps={{
                                             ...params.InputProps,
-                                            startAdornment: aspectHasIcon(selectedBaseType?.aspect) ? (
+                                            startAdornment: aspectHasIcon(selectedBaseType?.aspects[0]) ? (
                                                 <Box
                                                     component="img"
-                                                    src={aspectIconUrl(selectedBaseType!.aspect)}
-                                                    alt={selectedBaseType!.aspect}
+                                                    src={aspectIconUrl(selectedBaseType!.aspects[0])}
+                                                    alt={selectedBaseType!.aspects[0]}
                                                     sx={styles.inputAspectAdornment}
                                                 />
                                             ) : null,
@@ -1126,11 +1131,11 @@ const OpponentPreferencesPage: React.FC = () => {
                                     void _key;
                                     return (
                                         <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
-                                            {aspectHasIcon(option.aspect) && (
+                                            {aspectHasIcon(option.aspects[0]) && (
                                                 <Box
                                                     component="img"
-                                                    src={aspectIconUrl(option.aspect)}
-                                                    alt={option.aspect}
+                                                    src={aspectIconUrl(option.aspects[0])}
+                                                    alt={option.aspects[0]}
                                                     sx={styles.aspectOptionIcon}
                                                 />
                                             )}

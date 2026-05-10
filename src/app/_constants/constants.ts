@@ -56,7 +56,7 @@ export type BaseConstraint =
 export interface IBaseTypeOption {
     id: string;
     label: string;
-    aspect: string;
+    aspects: string[];
     hp: number;
     set: string | null;
     baseIds: string[];
