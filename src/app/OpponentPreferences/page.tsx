@@ -1042,12 +1042,15 @@ const styles = {
     dialogPreviewAnyBaseText: {
         color: 'rgba(255, 255, 255, 0.55)',
         fontSize: '12rem',
-        fontWeight: 700,
+        // Match the row-view asterisk: regular weight, not bold. The 700
+        // weight rendered as a chunky asterisk (system fonts often map
+        // bold-asterisk to a heavily-filled glyph that reads as a bullet).
+        fontWeight: 400,
         margin: 0,
         lineHeight: 0.6, // tightens the line box so * doesn't sit visually high
         // Asterisks have their visual mass near the cap-height (high in the
         // em-box); a small downward nudge optically centers them in the panel.
-        transform: 'translateY(0.12em)',
+        transform: 'translateY(0.18em)',
     },
     dialogPreviewCaption: {
         display: 'flex',
