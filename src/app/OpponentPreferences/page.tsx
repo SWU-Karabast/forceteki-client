@@ -45,13 +45,12 @@ const ASPECT_OPTIONS: Aspect[] = [
     Aspect.Vigilance,
 ];
 
-// Stripped from base-type labels for display since the aspect icon and the
-// uniqueness of the base name already convey the same info as the prefix/tag.
+// Stripped from base-type labels for display because the aspect icon next to
+// the label already conveys the aspect.
 const ASPECT_PREFIX_PATTERN = /^(?:Aggression|Command|Cunning|Heroism|Vigilance|Villainy) - /;
-const RARE_TAG_PATTERN = /\s*\(R\)\s*$/;
 
 function displayBaseLabel(label: string): string {
-    return label.replace(ASPECT_PREFIX_PATTERN, '').replace(RARE_TAG_PATTERN, '');
+    return label.replace(ASPECT_PREFIX_PATTERN, '');
 }
 
 function getConstraintKind(constraint: BaseConstraint | undefined): BaseConstraintKind {
@@ -245,7 +244,7 @@ const OpponentPreferencesPage: React.FC = () => {
             baseTitle = `Any ${capitalize(archetype.baseConstraint.aspect)}`;
         } else if (selectedBaseType) {
             const stripped = selectedBaseType.label.replace(ASPECT_PREFIX_PATTERN, '');
-            const match = stripped.match(/^(.+?)\s*-\s*(\d+hp)(?:\s*\(R\))?\s*$/i);
+            const match = stripped.match(/^(.+?)\s*-\s*(\d+hp)\s*$/i);
             if (match) {
                 baseTitle = match[1];
                 baseSubtitle = match[2];
