@@ -208,19 +208,16 @@ const OpponentPreferencesPage: React.FC = () => {
         persist({ ...prefs, allowedArchetypes: updated });
     };
 
-    function baseConstraintAspect(constraint: BaseConstraint | undefined): string | null {
+    function baseConstraintAspects(constraint: BaseConstraint | undefined): string[] {
         if (!constraint) {
-            return null;
+            return [];
         }
         if (constraint.kind === 'aspect') {
-            return constraint.aspect;
+            return [constraint.aspect];
         }
         const key = constraint.baseIds.slice().sort().join('|');
         const type = baseTypesByJoinedIds.get(key);
-        // Multi-aspect bases fall back to the first aspect for the row's
-        // single-icon adornment; the BE filter rule still considers the full
-        // aspect list when matching.
-        return type?.aspects[0] ?? null;
+        return type?.aspects ?? [];
     }
 
     const renderArchetypeRow = (archetype: OpponentArchetype, index: number) => {
@@ -231,7 +228,7 @@ const OpponentPreferencesPage: React.FC = () => {
             ? archetype.baseConstraint.baseIds.slice().sort().join('|')
             : null;
         const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
-        const baseAspect = baseConstraintAspect(archetype.baseConstraint);
+        const baseAspects = baseConstraintAspects(archetype.baseConstraint).filter(aspectHasIcon);
         const stop = (e: React.MouseEvent) => e.stopPropagation();
 
         const leaderImageUrl = selectedLeader
@@ -294,13 +291,18 @@ const OpponentPreferencesPage: React.FC = () => {
                     <Box sx={styles.rowBaseSection}>
                         {uniqueBaseImageUrl ? (
                             <Box sx={{ ...styles.rowBaseThumb, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
-                        ) : aspectHasIcon(baseAspect) ? (
-                            <Box
-                                component="img"
-                                src={aspectIconUrl(baseAspect)}
-                                alt={baseAspect}
-                                sx={styles.rowBaseAspectIcon}
-                            />
+                        ) : baseAspects.length > 0 ? (
+                            <Box sx={styles.rowBaseAspectIconStack}>
+                                {baseAspects.map((aspect) => (
+                                    <Box
+                                        key={aspect}
+                                        component="img"
+                                        src={aspectIconUrl(aspect)}
+                                        alt={aspect}
+                                        sx={styles.rowBaseAspectIcon}
+                                    />
+                                ))}
+                            </Box>
                         ) : (
                             <Typography sx={styles.rowBaseAnyAsterisk} aria-hidden>*</Typography>
                         )}
@@ -486,6 +488,12 @@ const OpponentPreferencesPage: React.FC = () => {
             objectFit: 'contain' as const,
             flexShrink: 0,
         },
+        rowBaseAspectIconStack: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            flexShrink: 0,
+        },
         rowBaseAnyAsterisk: {
             width: '2.6rem',
             height: '2.6rem',
@@ -589,6 +597,11 @@ const OpponentPreferencesPage: React.FC = () => {
             width: '5rem',
             height: '5rem',
             objectFit: 'contain' as const,
+        },
+        dialogPreviewBadgeIconStack: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
         },
         dialogPreviewAnyBase: {
             background: 'linear-gradient(135deg, #1a2530 0%, #08111a 100%)',
@@ -767,6 +780,18 @@ const OpponentPreferencesPage: React.FC = () => {
             width: '20px',
             height: '20px',
             objectFit: 'contain',
+        },
+        dialogOptionAspectStack: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2px',
+            flexShrink: 0,
+        },
+        inputAspectAdornmentStack: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2px',
+            ml: '4px',
         },
         inputAspectAdornment: {
             width: '22px',
@@ -975,14 +1000,19 @@ const OpponentPreferencesPage: React.FC = () => {
                                         sx={styles.dialogPreviewBadgeIcon}
                                     />
                                 </Box>
-                            ) : kind === 'baseType' && selectedBaseType && aspectHasIcon(selectedBaseType.aspects[0]) ? (
+                            ) : kind === 'baseType' && selectedBaseType && selectedBaseType.aspects.some(aspectHasIcon) ? (
                                 <Box sx={styles.dialogPreviewBadge}>
-                                    <Box
-                                        component="img"
-                                        src={aspectIconUrl(selectedBaseType.aspects[0])}
-                                        alt={selectedBaseType.aspects[0]}
-                                        sx={styles.dialogPreviewBadgeIcon}
-                                    />
+                                    <Box sx={styles.dialogPreviewBadgeIconStack}>
+                                        {selectedBaseType.aspects.filter(aspectHasIcon).map((aspect) => (
+                                            <Box
+                                                key={aspect}
+                                                component="img"
+                                                src={aspectIconUrl(aspect)}
+                                                alt={aspect}
+                                                sx={styles.dialogPreviewBadgeIcon}
+                                            />
+                                        ))}
+                                    </Box>
                                 </Box>
                             ) : (
                                 <Box sx={{ ...styles.dialogPreviewBadge, ...styles.dialogPreviewAnyBase }}>
@@ -1114,13 +1144,18 @@ const OpponentPreferencesPage: React.FC = () => {
                                         size="small"
                                         InputProps={{
                                             ...params.InputProps,
-                                            startAdornment: aspectHasIcon(selectedBaseType?.aspects[0]) ? (
-                                                <Box
-                                                    component="img"
-                                                    src={aspectIconUrl(selectedBaseType!.aspects[0])}
-                                                    alt={selectedBaseType!.aspects[0]}
-                                                    sx={styles.inputAspectAdornment}
-                                                />
+                                            startAdornment: selectedBaseType?.aspects.some(aspectHasIcon) ? (
+                                                <Box sx={styles.inputAspectAdornmentStack}>
+                                                    {selectedBaseType.aspects.filter(aspectHasIcon).map((aspect) => (
+                                                        <Box
+                                                            key={aspect}
+                                                            component="img"
+                                                            src={aspectIconUrl(aspect)}
+                                                            alt={aspect}
+                                                            sx={styles.inputAspectAdornment}
+                                                        />
+                                                    ))}
+                                                </Box>
                                             ) : null,
                                         }}
                                     />
@@ -1131,13 +1166,18 @@ const OpponentPreferencesPage: React.FC = () => {
                                     void _key;
                                     return (
                                         <Box component="li" key={option.id} {...optionProps} sx={styles.dialogOptionRow}>
-                                            {aspectHasIcon(option.aspects[0]) && (
-                                                <Box
-                                                    component="img"
-                                                    src={aspectIconUrl(option.aspects[0])}
-                                                    alt={option.aspects[0]}
-                                                    sx={styles.aspectOptionIcon}
-                                                />
+                                            {option.aspects.some(aspectHasIcon) && (
+                                                <Box sx={styles.dialogOptionAspectStack}>
+                                                    {option.aspects.filter(aspectHasIcon).map((aspect) => (
+                                                        <Box
+                                                            key={aspect}
+                                                            component="img"
+                                                            src={aspectIconUrl(aspect)}
+                                                            alt={aspect}
+                                                            sx={styles.aspectOptionIcon}
+                                                        />
+                                                    ))}
+                                                </Box>
                                             )}
                                             <Typography component="span" sx={styles.dialogOptionLabel}>
                                                 {displayBaseLabel(option.label)}
