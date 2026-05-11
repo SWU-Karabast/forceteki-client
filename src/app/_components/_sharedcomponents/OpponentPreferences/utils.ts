@@ -50,10 +50,10 @@ export function capitalize(value: string): string {
 export function baseTypeDisplayName(option: IBaseTypeOption): string {
     switch (option.kind) {
         case 'unique': return option.name;
-        case 'standard': return 'Standard';
+        case 'standard': return 'Standard 30HP';
         case 'force': return 'Force';
         case 'splash': return 'Splash';
-        case 'unknown': return `${option.hp}hp`;
+        case 'unknown': return 'Other';
     }
 }
 

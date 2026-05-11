@@ -172,14 +172,12 @@ const OpponentPreferencesPage: React.FC = () => {
             : null;
 
         let baseTitle: string;
-        let baseSubtitle: string | null = null;
         if (!archetype.baseConstraint) {
             baseTitle = 'Any base';
         } else if (archetype.baseConstraint.kind === 'aspect') {
             baseTitle = `Any ${capitalize(archetype.baseConstraint.aspect)}`;
         } else if (selectedBaseType) {
             baseTitle = baseTypeDisplayName(selectedBaseType);
-            baseSubtitle = `${selectedBaseType.hp}hp`;
         } else {
             baseTitle = `${archetype.baseConstraint.baseIds.length} bases`;
         }
@@ -224,9 +222,6 @@ const OpponentPreferencesPage: React.FC = () => {
                         )}
                         <Box sx={styles.rowTextStack}>
                             <Typography sx={styles.rowTitle}>{baseTitle}</Typography>
-                            {baseSubtitle && (
-                                <Typography sx={styles.rowSubtitle}>{baseSubtitle}</Typography>
-                            )}
                         </Box>
                     </Box>
                 </Box>
