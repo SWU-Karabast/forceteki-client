@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Switch, Typography } from '@mui/material';
+import { Box, Checkbox, Typography } from '@mui/material';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import EditArchetypeDialog from '@/app/_components/_sharedcomponents/OpponentPreferences/EditArchetypeDialog';
@@ -188,11 +188,10 @@ const OpponentPreferencesPage: React.FC = () => {
                 onClick={() => toggleSelection(index)}
             >
                 <Box sx={styles.rowToggle} onClick={stop}>
-                    <Switch
-                        size="small"
+                    <Checkbox
                         checked={isEnabled}
                         onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
-                        sx={styles.archetypeSwitch}
+                        sx={styles.archetypeCheckbox}
                         inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
                     />
                 </Box>
@@ -482,14 +481,11 @@ const OpponentPreferencesPage: React.FC = () => {
             fontSize: '0.9em',
             fontStyle: 'italic',
         },
-        archetypeSwitch: {
+        archetypeCheckbox: {
             flexShrink: 0,
-            '& .MuiSwitch-switchBase.Mui-checked': {
+            color: '#fff',
+            '&.Mui-checked': {
                 color: '#fff',
-            },
-            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                backgroundColor: '#fff',
-                opacity: 0.5,
             },
         },
     };
@@ -557,8 +553,8 @@ const OpponentPreferencesPage: React.FC = () => {
                             {selectedIndices.length === 1 ? '' : 's'}? This action cannot be undone.
                         </Typography>
                         <Typography sx={styles.confirmHint}>
-                            Tip: if you only want to pause an archetype, toggle it off with the switch on
-                            the card — disabled archetypes stay saved and can be re-enabled later.
+                            Tip: if you only want to pause an archetype, uncheck its checkbox —
+                            disabled archetypes stay saved and can be re-enabled later.
                         </Typography>
                     </>
                 }
