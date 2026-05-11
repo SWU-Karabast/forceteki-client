@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Checkbox, FormControlLabel, Typography } from '@mui/material';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import EditArchetypeDialog from '@/app/_components/_sharedcomponents/OpponentPreferences/EditArchetypeDialog';
@@ -154,8 +154,16 @@ const OpponentPreferencesPage: React.FC = () => {
         return (baseType?.aspects ?? []).filter(aspectHasIcon);
     }
 
+    const totalCount = prefs.allowedArchetypes.length;
     const enabledCount = prefs.allowedArchetypes.filter((a) => a.enabled !== false).length;
-    const disabledCount = prefs.allowedArchetypes.length - enabledCount;
+    const allEnabled = totalCount > 0 && enabledCount === totalCount;
+    const someEnabled = enabledCount > 0 && !allEnabled;
+    const setAllEnabled = (enabled: boolean) => {
+        persist({
+            ...prefs,
+            allowedArchetypes: prefs.allowedArchetypes.map((a) => ({ ...a, enabled })),
+        });
+    };
 
     // ----------------------Styles-----------------------------//
     const styles = {
@@ -194,22 +202,30 @@ const OpponentPreferencesPage: React.FC = () => {
             border: '1px dashed rgba(255, 255, 255, 0.18)',
             textAlign: 'center',
         },
-        header: {
+        toolbar: {
             width: '100%',
-            flexDirection: 'row',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: '1rem',
+            flexWrap: 'wrap' as const,
         },
-        toolbarSlot: {
-            minWidth: '200px',
+        bulkActions: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
         },
-        summary: {
+        bulkEnableLabel: {
+            margin: 0,
+        },
+        bulkEnableCheckbox: {
+            color: '#fff',
+            '&.Mui-checked': { color: '#fff' },
+            '&.MuiCheckbox-indeterminate': { color: '#fff' },
+        },
+        bulkEnableStatus: {
             color: '#cccccc',
             fontSize: '0.95em',
-            textAlign: 'center' as const,
-            flex: '1 1 auto',
         },
         rowList: {
             mt: '20px',
@@ -226,37 +242,49 @@ const OpponentPreferencesPage: React.FC = () => {
             <Box sx={styles.content}>
                 <Typography variant="h4" sx={styles.pageHeading}>Opponent Match Preferences</Typography>
                 <Typography sx={styles.intro}>
-                    Choose the leader and base combinations you{'’'}re willing to play against in
-                    the public queue. The default ({'“'}Any Opponent{'”'}) matches you against
-                    anyone, like Karabast normally does.
+                    Add and manage the opponent archetypes you{'’'}ll be paired against when
+                    {' '}{'“'}Specific Opponents{'”'} is selected in matchmaking. Each archetype
+                    is a leader + base combination; toggle them on or off without removing them
+                    to fine-tune your queue.
                 </Typography>
 
                 {error && <Typography sx={styles.error}>{error}</Typography>}
                 {!loaded && !error && <Typography sx={styles.muted}>Loading leaders and bases…</Typography>}
 
                 {loaded && (
-                    <Box sx={styles.header}>
-                        <Box sx={styles.toolbarSlot}>
-                            <PreferenceButton
-                                variant="standard"
-                                text="Add archetype"
-                                buttonFnc={addArchetype}
-                                disabled={leaders.length === 0}
-                            />
-                        </Box>
-                        {prefs.allowedArchetypes.length > 0 && (
-                            <Typography sx={styles.summary}>
-                                {enabledCount} enabled · {disabledCount} disabled
-                            </Typography>
+                    <Box sx={styles.toolbar}>
+                        <PreferenceButton
+                            variant="standard"
+                            text="Add archetype"
+                            buttonFnc={addArchetype}
+                            disabled={leaders.length === 0}
+                        />
+                        {totalCount > 0 && (
+                            <Box sx={styles.bulkActions}>
+                                <FormControlLabel
+                                    sx={styles.bulkEnableLabel}
+                                    control={
+                                        <Checkbox
+                                            checked={allEnabled}
+                                            indeterminate={someEnabled}
+                                            onChange={(e) => setAllEnabled(e.target.checked)}
+                                            sx={styles.bulkEnableCheckbox}
+                                        />
+                                    }
+                                    label={
+                                        <Typography sx={styles.bulkEnableStatus}>
+                                            {enabledCount} of {totalCount} enabled
+                                        </Typography>
+                                    }
+                                />
+                                <PreferenceButton
+                                    variant="concede"
+                                    text={'Delete archetype(s)'}
+                                    buttonFnc={() => setDeleteDialogOpen(true)}
+                                    disabled={selectedIndices.length === 0}
+                                />
+                            </Box>
                         )}
-                        <Box sx={styles.toolbarSlot}>
-                            <PreferenceButton
-                                variant="concede"
-                                text={'Delete archetype(s)'}
-                                buttonFnc={() => setDeleteDialogOpen(true)}
-                                disabled={selectedIndices.length === 0}
-                            />
-                        </Box>
                     </Box>
                 )}
 
