@@ -21,7 +21,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchPreferences, MATCH_PREFERENCES_LOCALSTORAGE_KEY } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -33,6 +33,8 @@ import {
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
 import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
+import MatchFilterPanel from './MatchFilterPanel';
+import { loadMatchPreferences, saveMatchPreferences } from '@/app/_utils/matchPreferences';
 import { NewGameFormatAvailable } from '@/app/_constants/constants';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
@@ -115,6 +117,29 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+
+    const [matchPreferences, setMatchPreferencesState] = useState<MatchPreferences>(loadMatchPreferences);
+
+    // Refresh after the /OpponentPreferences manager edits the same localStorage entry.
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const reload = () => setMatchPreferencesState(loadMatchPreferences());
+        const onVisibility = () => { if (document.visibilityState === 'visible') reload(); };
+        const onStorage = (e: StorageEvent) => { if (e.key === MATCH_PREFERENCES_LOCALSTORAGE_KEY) reload(); };
+        document.addEventListener('visibilitychange', onVisibility);
+        window.addEventListener('storage', onStorage);
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibility);
+            window.removeEventListener('storage', onStorage);
+        };
+    }, []);
+
+    const setMatchPreferences = (next: MatchPreferences) => {
+        setMatchPreferencesState(next);
+        saveMatchPreferences(next);
+    };
 
     // Timer ref for clearing the inline text after 5s
 
@@ -224,12 +249,14 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 }
             }
 
+            const sendFilter = matchPreferences.enabled && matchPreferences.allowedArchetypes.length > 0;
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
                 format: queueConfig.format,
                 cardPool: queueConfig.cardPool,
                 gamesToWinMode: queueConfig.gamesToWinMode,
+                ...(sendFilter ? { matchPreferences } : {}),
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
@@ -592,6 +619,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     formatConfigs={formatConfigs}
                     isBo3Allowed={isBo3Allowed}
                     styles={styles}
+                />
+
+                <MatchFilterPanel
+                    matchPreferences={matchPreferences}
+                    setMatchPreferences={setMatchPreferences}
                 />
 
                 {/* Beta Announcement */}
