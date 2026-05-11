@@ -10,19 +10,19 @@ export interface LeaderOption {
 export type BaseConstraintKind = 'any' | 'aspect' | 'baseType';
 
 // Heroism / Villainy are alignment aspects on leaders/units, not bases.
-export const ASPECT_OPTIONS: Aspect[] = [
+export const BASE_ASPECTS: Aspect[] = [
     Aspect.Aggression,
     Aspect.Command,
     Aspect.Cunning,
     Aspect.Vigilance,
 ];
 
-const VALID_BASE_ASPECTS = new Set(['aggression', 'command', 'cunning', 'vigilance']);
+const BASE_ASPECT_SET: Set<string> = new Set(BASE_ASPECTS);
 
 export const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
 
 export function aspectHasIcon(aspect: string | null | undefined): aspect is string {
-    return !!aspect && VALID_BASE_ASPECTS.has(aspect.toLowerCase());
+    return !!aspect && BASE_ASPECT_SET.has(aspect.toLowerCase());
 }
 
 export function getConstraintKind(constraint: BaseConstraint | undefined): BaseConstraintKind {

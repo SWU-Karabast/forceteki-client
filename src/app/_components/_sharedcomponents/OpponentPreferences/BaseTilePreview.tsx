@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { aspectHasIcon, aspectIconUrl } from './utils';
+import { BASE_ASPECTS, aspectHasIcon, aspectIconUrl } from './utils';
 
 export type BaseTileKind = 'force' | 'splash' | 'standard' | 'unknown' | 'aspect' | 'any';
 
@@ -8,8 +8,6 @@ interface IBaseTilePreviewProps {
     kind: BaseTileKind;
     aspects: string[];
 }
-
-const BASE_ASPECTS = ['aggression', 'command', 'cunning', 'vigilance'];
 
 // Inner icon layout for a base-type preview. Sizes are in `em` units so the
 // parent's `font-size` controls the scale — used at small size in the list

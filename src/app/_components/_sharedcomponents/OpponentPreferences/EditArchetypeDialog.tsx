@@ -18,7 +18,7 @@ import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { Aspect, BaseConstraint, IBaseTypeOption, OpponentArchetype } from '@/app/_constants/constants';
 import BaseTilePreview, { BaseTileKind } from './BaseTilePreview';
 import {
-    ASPECT_OPTIONS,
+    BASE_ASPECTS,
     BaseConstraintKind,
     LeaderOption,
     aspectHasIcon,
@@ -436,7 +436,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                                 </Box>
                             )}
                         >
-                            {ASPECT_OPTIONS.map((aspect) => (
+                            {BASE_ASPECTS.map((aspect) => (
                                 <MenuItem key={aspect} value={aspect}>
                                     <Box component="span" sx={styles.aspectOption}>
                                         <Box
