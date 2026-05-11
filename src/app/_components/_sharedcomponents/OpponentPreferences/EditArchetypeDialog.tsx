@@ -303,18 +303,17 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             margin: 0,
             minWidth: 0,
         },
-        inputAspectAdornmentStack: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '2px',
-            ml: '4px',
-        },
-        inputAspectAdornment: {
-            width: '22px',
-            height: '22px',
-            objectFit: 'contain' as const,
-            mr: '2px',
+        inputThumb: {
+            width: '2.2rem',
+            height: '1.6rem',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            borderRadius: '3px',
             flexShrink: 0,
+            ml: '4px',
+            fontSize: '0.55rem',
         },
         actions: {
             display: 'flex',
@@ -381,7 +380,19 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                         isOptionEqualToValue={(option, value) => option.id === value.id}
                         onChange={(_, value) => onLeaderChange(value)}
                         clearIcon={null}
-                        renderInput={(params) => <TextField {...params} placeholder="Select leader" size="small" />}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                placeholder="Select leader"
+                                size="small"
+                                InputProps={{
+                                    ...params.InputProps,
+                                    startAdornment: selectedLeader ? (
+                                        <Box sx={{ ...styles.inputThumb, backgroundImage: `url(${cardImageUrl(selectedLeader.id, CardStyle.PlainLeader)})` }} />
+                                    ) : null,
+                                }}
+                            />
+                        )}
                         sx={styles.field}
                         noOptionsText={<Typography sx={styles.noOptionsText}>No matches</Typography>}
                         slotProps={{ paper: { sx: styles.autocompletePaper } }}
@@ -470,23 +481,18 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                                     size="small"
                                     InputProps={{
                                         ...params.InputProps,
-                                        startAdornment: (() => {
-                                            const adornAspects = (selectedBaseType?.aspects ?? []).filter(aspectHasIcon);
-                                            if (adornAspects.length === 0) return null;
-                                            return (
-                                                <Box sx={styles.inputAspectAdornmentStack}>
-                                                    {adornAspects.map((aspect) => (
-                                                        <Box
-                                                            key={aspect}
-                                                            component="img"
-                                                            src={aspectIconUrl(aspect)}
-                                                            alt={aspect}
-                                                            sx={styles.inputAspectAdornment}
-                                                        />
-                                                    ))}
+                                        startAdornment: selectedBaseType ? (
+                                            selectedBaseType.kind === 'unique' ? (
+                                                <Box sx={{ ...styles.inputThumb, backgroundImage: `url(${cardImageUrl(selectedBaseType.id)})` }} />
+                                            ) : (
+                                                <Box sx={styles.inputThumb}>
+                                                    <BaseTilePreview
+                                                        kind={selectedBaseType.kind}
+                                                        aspects={(selectedBaseType.aspects ?? []).filter(aspectHasIcon)}
+                                                    />
                                                 </Box>
-                                            );
-                                        })(),
+                                            )
+                                        ) : null,
                                     }}
                                 />
                             )}
