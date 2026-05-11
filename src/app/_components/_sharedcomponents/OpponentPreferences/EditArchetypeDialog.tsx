@@ -292,6 +292,13 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             margin: 0,
             minWidth: 0,
         },
+        optionHp: {
+            color: '#aaaaaa',
+            fontSize: '0.85em',
+            lineHeight: 1.2,
+            flexShrink: 0,
+            marginLeft: 'auto',
+        },
         optionSet: {
             color: '#aaaaaa',
             fontSize: '0.85em',
@@ -299,7 +306,6 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             textTransform: 'uppercase' as const,
             letterSpacing: '0.05em',
             flexShrink: 0,
-            marginLeft: 'auto',
         },
         optionAspectStack: {
             display: 'flex',
@@ -387,6 +393,9 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                         )}
                         <Box sx={styles.previewCaption}>
                             <Typography sx={styles.previewCaptionText}>{basePreviewCaption}</Typography>
+                            {kind === 'baseType' && selectedBaseType && (
+                                <Typography sx={styles.previewCaptionSub}>{selectedBaseType.hp}hp</Typography>
+                            )}
                         </Box>
                     </Box>
                 </Box>
@@ -534,6 +543,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                                         <Typography component="span" sx={styles.optionLabel}>
                                             {baseTypeDisplayName(option)}
                                         </Typography>
+                                        <Typography component="span" sx={styles.optionHp}>{option.hp}hp</Typography>
                                         {option.set && (
                                             <Typography component="span" sx={styles.optionSet}>{option.set}</Typography>
                                         )}
