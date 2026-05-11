@@ -427,15 +427,6 @@ const OpponentPreferencesPage: React.FC = () => {
             fontSize: '13px',
             lineHeight: 1,
         },
-        confirmPrimary: {
-            color: '#fff',
-            marginBottom: '0.75rem',
-        },
-        confirmHint: {
-            color: '#aaaaaa',
-            fontSize: '0.9em',
-            fontStyle: 'italic',
-        },
         archetypeCheckbox: {
             flexShrink: 0,
             color: '#fff',
@@ -501,18 +492,7 @@ const OpponentPreferencesPage: React.FC = () => {
             <ConfirmationDialog
                 open={deleteDialogOpen}
                 title="Delete Archetypes"
-                message={
-                    <>
-                        <Typography sx={styles.confirmPrimary}>
-                            Are you sure you want to delete {selectedIndices.length} archetype
-                            {selectedIndices.length === 1 ? '' : 's'}? This action cannot be undone.
-                        </Typography>
-                        <Typography sx={styles.confirmHint}>
-                            Tip: if you only want to pause an archetype, uncheck its checkbox —
-                            disabled archetypes stay saved and can be re-enabled later.
-                        </Typography>
-                    </>
-                }
+                message={`Are you sure you want to delete ${selectedIndices.length} archetype${selectedIndices.length === 1 ? '' : 's'}? This action cannot be undone.`}
                 onCancel={() => setDeleteDialogOpen(false)}
                 onConfirm={deleteSelected}
                 confirmButtonText="Delete"
