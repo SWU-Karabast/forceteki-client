@@ -56,7 +56,6 @@ const OpponentPreferencesPage: React.FC = () => {
                 baseTypesData.sort((a, b) => {
                     const aspectCmp = (a.aspects ?? []).join('+').localeCompare((b.aspects ?? []).join('+'));
                     if (aspectCmp !== 0) return aspectCmp;
-                    if (a.hp !== b.hp) return a.hp - b.hp;
                     return baseTypeDisplayName(a).localeCompare(baseTypeDisplayName(b));
                 });
                 setLeaders(leadersData);
