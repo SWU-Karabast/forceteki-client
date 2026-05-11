@@ -457,6 +457,10 @@ const OpponentPreferencesPage: React.FC = () => {
         rowEditSlot: {
             display: 'flex',
             flexShrink: 0,
+            // Anchor to the top so the button aligns with the leader row when
+            // the leader+base sections wrap to two lines in 2-column mode,
+            // instead of floating between them.
+            alignSelf: 'flex-start',
         },
         rowSelectionCheckmark: {
             width: '24px',
