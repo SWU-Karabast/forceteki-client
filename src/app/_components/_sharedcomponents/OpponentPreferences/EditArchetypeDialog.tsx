@@ -280,6 +280,17 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             borderRadius: '3px',
             flexShrink: 0,
         },
+        optionBaseTile: {
+            width: '3.5rem',
+            height: '2.5rem',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            borderRadius: '3px',
+            flexShrink: 0,
+            fontSize: '0.875rem',
+        },
         optionRow: {
             display: 'flex',
             alignItems: 'center',
@@ -291,12 +302,6 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             lineHeight: 1.2,
             margin: 0,
             minWidth: 0,
-        },
-        optionAspectStack: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '2px',
-            flexShrink: 0,
         },
         inputAspectAdornmentStack: {
             display: 'flex',
@@ -486,34 +491,28 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                                 />
                             )}
                             sx={styles.field}
-                            renderOption={(props, option) => {
-                                const renderableAspects = (option.aspects ?? []).filter(aspectHasIcon);
-                                return (
-                                    <Box
-                                        component="li"
-                                        key={option.id}
-                                        {...pluckOptionProps(props as React.HTMLAttributes<HTMLLIElement>)}
-                                        sx={styles.optionRow}
-                                    >
-                                        {renderableAspects.length > 0 && (
-                                            <Box sx={styles.optionAspectStack}>
-                                                {renderableAspects.map((aspect) => (
-                                                    <Box
-                                                        key={aspect}
-                                                        component="img"
-                                                        src={aspectIconUrl(aspect)}
-                                                        alt={aspect}
-                                                        sx={styles.aspectOptionIcon}
-                                                    />
-                                                ))}
-                                            </Box>
-                                        )}
-                                        <Typography component="span" sx={styles.optionLabel}>
-                                            {baseTypeDisplayName(option)}
-                                        </Typography>
-                                    </Box>
-                                );
-                            }}
+                            renderOption={(props, option) => (
+                                <Box
+                                    component="li"
+                                    key={option.id}
+                                    {...pluckOptionProps(props as React.HTMLAttributes<HTMLLIElement>)}
+                                    sx={styles.optionRow}
+                                >
+                                    {option.kind === 'unique' ? (
+                                        <Box sx={{ ...styles.optionBaseTile, backgroundImage: `url(${cardImageUrl(option.id)})` }} />
+                                    ) : (
+                                        <Box sx={styles.optionBaseTile}>
+                                            <BaseTilePreview
+                                                kind={option.kind}
+                                                aspects={(option.aspects ?? []).filter(aspectHasIcon)}
+                                            />
+                                        </Box>
+                                    )}
+                                    <Typography component="span" sx={styles.optionLabel}>
+                                        {baseTypeDisplayName(option)}
+                                    </Typography>
+                                </Box>
+                            )}
                         />
                     </Box>
                 )}
