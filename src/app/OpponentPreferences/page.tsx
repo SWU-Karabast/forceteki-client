@@ -227,7 +227,18 @@ const OpponentPreferencesPage: React.FC = () => {
                                 ))}
                             </Box>
                         ) : (
-                            <Typography sx={styles.rowBaseAnyAsterisk} aria-hidden>*</Typography>
+                            <Box sx={styles.rowBaseAnyTile} aria-hidden>
+                                <Box
+                                    component="svg"
+                                    viewBox="0 0 24 24"
+                                    sx={styles.rowBaseAnySvg}
+                                >
+                                    <path
+                                        fill="currentColor"
+                                        d="M11 1.5h2v7.36l5.36-4.13 1.2 1.55-5.4 4.16 6.07 1.93-.61 1.9-6.05-1.93 2.07 6.36-1.9.62L11 12.95 8.26 19.32l-1.9-.62 2.07-6.36-6.05 1.93-.61-1.9 6.07-1.93-5.4-4.16 1.2-1.55L8.62 8.86z"
+                                    />
+                                </Box>
+                            </Box>
                         )}
                         <Box sx={styles.rowTextStack}>
                             <Typography sx={styles.rowTitle}>{baseTitle}</Typography>
@@ -435,23 +446,23 @@ const OpponentPreferencesPage: React.FC = () => {
             gap: '4px',
             flexShrink: 0,
         },
-        rowBaseAnyAsterisk: {
-            // Match rowBaseThumb dimensions + background treatment.
+        rowBaseAnyTile: {
+            // Same dimensions + treatment as rowBaseThumb.
             width: '4rem',
             height: '2.85rem',
             backgroundColor: 'rgba(255, 255, 255, 0.04)',
             borderRadius: '4px',
             flexShrink: 0,
-            margin: 0,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'rgba(255, 255, 255, 0.55)',
-            // Asterisk visual mass sits near cap-height; nudge down to optically center.
-            fontSize: '2.5rem',
-            fontWeight: 400,
-            lineHeight: 0.6,
-            transform: 'translateY(0.16em)',
+        },
+        rowBaseAnySvg: {
+            // SVG asterisk fills ~1.6rem at the optical centre of the tile,
+            // matching the aspect-icon visual weight in the icon-stack slot.
+            width: '1.6rem',
+            height: '1.6rem',
         },
         rowEditSlot: {
             display: 'flex',
