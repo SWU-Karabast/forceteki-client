@@ -322,9 +322,11 @@ const OpponentPreferencesPage: React.FC = () => {
         },
         rowList: {
             mt: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
+            // Reflows to 1 / 2 / 3+ columns based on container width; each row
+            // needs ~28rem to render its leader+base on one line.
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(28rem, 1fr))',
+            gap: '8px 12px',
             overflowY: 'auto',
             maxHeight: '84%',
         },
