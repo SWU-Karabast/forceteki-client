@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { Aspect, BaseConstraint, IBaseTypeOption, OpponentArchetype } from '@/app/_constants/constants';
 import BaseTilePreview from './BaseTilePreview';
@@ -27,9 +26,17 @@ import {
     baseTypeDisplayName,
     baseTypeFilter,
     capitalize,
+    cardImageUrl,
     getConstraintKind,
     leaderLabel,
+    pluckOptionProps,
 } from './utils';
+
+const BASE_CONSTRAINT_KIND_OPTIONS: { value: BaseConstraintKind; label: string }[] = [
+    { value: 'any', label: 'Any base' },
+    { value: 'aspect', label: 'Any base of aspect' },
+    { value: 'baseType', label: 'Specific base type' },
+];
 
 interface IEditArchetypeDialogProps {
     draft: OpponentArchetype;
@@ -62,11 +69,9 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
     const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
     const selectedAspect = draft.baseConstraint?.kind === 'aspect' ? draft.baseConstraint.aspect : Aspect.Vigilance;
 
-    const leaderImageUrl = selectedLeader
-        ? s3CardImageURL({ id: selectedLeader.id, count: 0 } as never, CardStyle.PlainLeader)
-        : null;
+    const leaderImageUrl = selectedLeader ? cardImageUrl(selectedLeader.id, CardStyle.PlainLeader) : null;
     const uniqueBaseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
-        ? s3CardImageURL({ id: selectedBaseType.id, count: 0 } as never)
+        ? cardImageUrl(selectedBaseType.id)
         : null;
 
     const onLeaderChange = (next: LeaderOption | null) => {
@@ -366,38 +371,31 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                         sx={styles.field}
                         noOptionsText={<Typography sx={styles.noOptionsText}>No matches</Typography>}
                         slotProps={{ paper: { sx: styles.autocompletePaper } }}
-                        renderOption={(props, option) => {
-                            const { key: _key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
-                            void _key;
-                            const thumbUrl = s3CardImageURL({ id: option.id, count: 0 } as never, CardStyle.PlainLeader);
-                            return (
-                                <Box component="li" key={option.id} {...optionProps} sx={styles.optionRow}>
-                                    <Box sx={{ ...styles.optionLeaderThumb, backgroundImage: `url(${thumbUrl})` }} />
-                                    <Typography component="span" sx={styles.optionLabel}>{leaderLabel(option)}</Typography>
-                                </Box>
-                            );
-                        }}
+                        renderOption={(props, option) => (
+                            <Box
+                                component="li"
+                                key={option.id}
+                                {...pluckOptionProps(props as React.HTMLAttributes<HTMLLIElement>)}
+                                sx={styles.optionRow}
+                            >
+                                <Box sx={{ ...styles.optionLeaderThumb, backgroundImage: `url(${cardImageUrl(option.id, CardStyle.PlainLeader)})` }} />
+                                <Typography component="span" sx={styles.optionLabel}>{leaderLabel(option)}</Typography>
+                            </Box>
+                        )}
                     />
                 </Box>
 
                 <Box sx={styles.fieldGroup}>
                     <Typography sx={styles.fieldLabel}>Base</Typography>
                     <RadioGroup row value={kind} onChange={(_, value) => onKindChange(value as BaseConstraintKind)}>
-                        <FormControlLabel
-                            value="any"
-                            control={<Radio size="small" sx={styles.radio} />}
-                            label={<Typography sx={styles.radioLabel}>Any base</Typography>}
-                        />
-                        <FormControlLabel
-                            value="aspect"
-                            control={<Radio size="small" sx={styles.radio} />}
-                            label={<Typography sx={styles.radioLabel}>Any base of aspect</Typography>}
-                        />
-                        <FormControlLabel
-                            value="baseType"
-                            control={<Radio size="small" sx={styles.radio} />}
-                            label={<Typography sx={styles.radioLabel}>Specific base type</Typography>}
-                        />
+                        {BASE_CONSTRAINT_KIND_OPTIONS.map(({ value, label }) => (
+                            <FormControlLabel
+                                key={value}
+                                value={value}
+                                control={<Radio size="small" sx={styles.radio} />}
+                                label={<Typography sx={styles.radioLabel}>{label}</Typography>}
+                            />
+                        ))}
                     </RadioGroup>
                 </Box>
 
@@ -417,7 +415,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                                         alt={value}
                                         sx={styles.aspectOptionIcon}
                                     />
-                                    {capitalize(value as string)}
+                                    {capitalize(value)}
                                 </Box>
                             )}
                         >
@@ -458,31 +456,39 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                                     size="small"
                                     InputProps={{
                                         ...params.InputProps,
-                                        startAdornment: selectedBaseType?.aspects?.some(aspectHasIcon) ? (
-                                            <Box sx={styles.inputAspectAdornmentStack}>
-                                                {selectedBaseType.aspects!.filter(aspectHasIcon).map((aspect) => (
-                                                    <Box
-                                                        key={aspect}
-                                                        component="img"
-                                                        src={aspectIconUrl(aspect)}
-                                                        alt={aspect}
-                                                        sx={styles.inputAspectAdornment}
-                                                    />
-                                                ))}
-                                            </Box>
-                                        ) : null,
+                                        startAdornment: (() => {
+                                            const adornAspects = (selectedBaseType?.aspects ?? []).filter(aspectHasIcon);
+                                            if (adornAspects.length === 0) return null;
+                                            return (
+                                                <Box sx={styles.inputAspectAdornmentStack}>
+                                                    {adornAspects.map((aspect) => (
+                                                        <Box
+                                                            key={aspect}
+                                                            component="img"
+                                                            src={aspectIconUrl(aspect)}
+                                                            alt={aspect}
+                                                            sx={styles.inputAspectAdornment}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                            );
+                                        })(),
                                     }}
                                 />
                             )}
                             sx={styles.field}
                             renderOption={(props, option) => {
-                                const { key: _key, ...optionProps } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
-                                void _key;
+                                const renderableAspects = (option.aspects ?? []).filter(aspectHasIcon);
                                 return (
-                                    <Box component="li" key={option.id} {...optionProps} sx={styles.optionRow}>
-                                        {option.aspects?.some(aspectHasIcon) && (
+                                    <Box
+                                        component="li"
+                                        key={option.id}
+                                        {...pluckOptionProps(props as React.HTMLAttributes<HTMLLIElement>)}
+                                        sx={styles.optionRow}
+                                    >
+                                        {renderableAspects.length > 0 && (
                                             <Box sx={styles.optionAspectStack}>
-                                                {option.aspects!.filter(aspectHasIcon).map((aspect) => (
+                                                {renderableAspects.map((aspect) => (
                                                     <Box
                                                         key={aspect}
                                                         component="img"

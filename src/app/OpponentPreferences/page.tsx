@@ -1,21 +1,17 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Checkbox, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import EditArchetypeDialog from '@/app/_components/_sharedcomponents/OpponentPreferences/EditArchetypeDialog';
-import BaseTilePreview from '@/app/_components/_sharedcomponents/OpponentPreferences/BaseTilePreview';
+import ArchetypeRow from '@/app/_components/_sharedcomponents/OpponentPreferences/ArchetypeRow';
 import {
     archetypesEqual,
     aspectHasIcon,
-    baseTileKindFor,
     baseTypeDisplayName,
-    capitalize,
     LeaderOption,
     leaderLabel,
 } from '@/app/_components/_sharedcomponents/OpponentPreferences/utils';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
     Aspect,
     BaseConstraint,
@@ -144,113 +140,22 @@ const OpponentPreferencesPage: React.FC = () => {
         persist({ ...prefs, allowedArchetypes: updated });
     };
 
-    function baseConstraintAspects(constraint: BaseConstraint | undefined): Aspect[] {
-        if (!constraint) {
-            return [];
+    function resolveBaseType(constraint: BaseConstraint | undefined): IBaseTypeOption | null {
+        if (constraint?.kind !== 'baseType') {
+            return null;
         }
-        if (constraint.kind === 'aspect') {
+        return baseTypesByJoinedIds.get(constraint.baseIds.slice().sort().join('|')) ?? null;
+    }
+
+    function rowBaseAspects(constraint: BaseConstraint | undefined, baseType: IBaseTypeOption | null): Aspect[] {
+        if (constraint?.kind === 'aspect') {
             return [constraint.aspect];
         }
-        const key = constraint.baseIds.slice().sort().join('|');
-        const type = baseTypesByJoinedIds.get(key);
-        return type?.aspects ?? [];
+        return (baseType?.aspects ?? []).filter(aspectHasIcon);
     }
 
     const enabledCount = prefs.allowedArchetypes.filter((a) => a.enabled !== false).length;
     const disabledCount = prefs.allowedArchetypes.length - enabledCount;
-
-    const renderArchetypeRow = (archetype: OpponentArchetype, index: number) => {
-        const isEnabled = archetype.enabled !== false;
-        const isSelected = selectedIndices.includes(index);
-        const selectedLeader = leaderById.get(archetype.leaderId) ?? null;
-        const selectedBaseTypeKey = archetype.baseConstraint?.kind === 'baseType'
-            ? archetype.baseConstraint.baseIds.slice().sort().join('|')
-            : null;
-        const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
-        const baseAspects = baseConstraintAspects(archetype.baseConstraint).filter(aspectHasIcon);
-        const rowBaseTileKind = baseTileKindFor(archetype.baseConstraint, selectedBaseType);
-        const stop = (e: React.MouseEvent) => e.stopPropagation();
-
-        const leaderImageUrl = selectedLeader
-            ? s3CardImageURL({ id: selectedLeader.id, count: 0 } as never, CardStyle.PlainLeader)
-            : null;
-        const uniqueBaseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
-            ? s3CardImageURL({ id: selectedBaseType.id, count: 0 } as never)
-            : null;
-
-        let baseTitle: string;
-        if (!archetype.baseConstraint) {
-            baseTitle = 'Any base';
-        } else if (archetype.baseConstraint.kind === 'aspect') {
-            baseTitle = `Any ${capitalize(archetype.baseConstraint.aspect)}`;
-        } else if (selectedBaseType) {
-            baseTitle = baseTypeDisplayName(selectedBaseType);
-        } else {
-            baseTitle = `${archetype.baseConstraint.baseIds.length} bases`;
-        }
-
-        return (
-            <Box
-                key={index}
-                sx={{ ...styles.archetypeRow(isSelected), ...(isEnabled ? null : styles.archetypeRowDisabled) }}
-                onClick={() => toggleSelection(index)}
-            >
-                <Box sx={styles.rowToggle} onClick={stop}>
-                    <Checkbox
-                        checked={isEnabled}
-                        onChange={(e) => setArchetypeEnabled(index, e.target.checked)}
-                        sx={styles.archetypeCheckbox}
-                        inputProps={{ 'aria-label': isEnabled ? 'Disable archetype' : 'Enable archetype' }}
-                    />
-                </Box>
-                <Box sx={styles.rowContent}>
-                    <Box sx={styles.rowLeaderSection}>
-                        {leaderImageUrl ? (
-                            <Box sx={{ ...styles.rowLeaderThumb, backgroundImage: `url(${leaderImageUrl})` }} />
-                        ) : (
-                            <Box sx={{ ...styles.rowLeaderThumb, ...styles.rowThumbPlaceholder }} />
-                        )}
-                        <Box sx={styles.rowTextStack}>
-                            <Typography sx={styles.rowTitle}>
-                                {selectedLeader ? selectedLeader.name : 'Unknown leader'}
-                            </Typography>
-                            {selectedLeader?.subtitle && (
-                                <Typography sx={styles.rowSubtitle}>{selectedLeader.subtitle}</Typography>
-                            )}
-                        </Box>
-                    </Box>
-                    <Box sx={styles.rowBaseSection}>
-                        {uniqueBaseImageUrl ? (
-                            <Box sx={{ ...styles.rowBaseTile, backgroundImage: `url(${uniqueBaseImageUrl})`, backgroundColor: 'rgba(255,255,255,0.04)', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }} />
-                        ) : (
-                            <Box sx={styles.rowBaseTile}>
-                                <BaseTilePreview kind={rowBaseTileKind} aspects={baseAspects} />
-                            </Box>
-                        )}
-                        <Box sx={styles.rowTextStack}>
-                            <Typography sx={styles.rowTitle}>{baseTitle}</Typography>
-                        </Box>
-                    </Box>
-                </Box>
-                <Box sx={styles.rowEditSlot} onClick={stop}>
-                    <PreferenceButton
-                        variant="standard"
-                        text="Edit"
-                        buttonFnc={() => openEditDialog(index)}
-                    />
-                </Box>
-                <Box
-                    sx={{
-                        ...styles.rowSelectionCheckmark,
-                        visibility: isSelected ? 'visible' : 'hidden',
-                    }}
-                    aria-hidden={!isSelected}
-                >
-                    <Typography sx={styles.checkmarkSymbol}>✓</Typography>
-                </Box>
-            </Box>
-        );
-    };
 
     // ----------------------Styles-----------------------------//
     const styles = {
@@ -314,124 +219,6 @@ const OpponentPreferencesPage: React.FC = () => {
             overflowY: 'auto',
             maxHeight: '84%',
         },
-        archetypeRow: (isSelected: boolean) => ({
-            background: isSelected ? '#2F7DB680' : '#20344280',
-            borderRadius: '5px',
-            border: '2px solid transparent',
-            padding: '8px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            cursor: 'pointer',
-            position: 'relative' as const,
-            '&:hover': {
-                backgroundColor: '#2F7DB680',
-            },
-        }),
-        rowToggle: {
-            flexShrink: 0,
-            display: 'flex',
-            alignItems: 'center',
-        },
-        rowContent: {
-            display: 'flex',
-            flexWrap: 'wrap' as const,
-            alignItems: 'center',
-            gap: '8px 16px',
-            flex: '1 1 auto',
-            minWidth: 0,
-        },
-        rowLeaderSection: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            flex: '1 1 22rem',
-            minWidth: 0,
-        },
-        rowBaseSection: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            flex: '1 1 16rem',
-            minWidth: 0,
-        },
-        rowLeaderThumb: {
-            width: '4rem',
-            height: '2.85rem',
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            borderRadius: '4px',
-            flexShrink: 0,
-        },
-        rowThumbPlaceholder: {
-            border: '1px dashed rgba(255, 255, 255, 0.18)',
-        },
-        rowTextStack: {
-            display: 'flex',
-            flexDirection: 'column' as const,
-            minWidth: 0,
-            flex: '1 1 auto',
-            overflow: 'hidden',
-        },
-        rowTitle: {
-            color: '#fff',
-            fontSize: '1.1em',
-            fontWeight: 600,
-            margin: 0,
-            lineHeight: 1.25,
-            whiteSpace: 'nowrap' as const,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-        },
-        rowSubtitle: {
-            color: '#bbbbbb',
-            fontSize: '0.85em',
-            margin: 0,
-            lineHeight: 1.25,
-            whiteSpace: 'nowrap' as const,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-        },
-        rowBaseTile: {
-            width: '4rem',
-            height: '2.85rem',
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            borderRadius: '4px',
-            flexShrink: 0,
-            fontSize: '1rem',
-        },
-        rowEditSlot: {
-            display: 'flex',
-            flexShrink: 0,
-        },
-        rowSelectionCheckmark: {
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            backgroundColor: '#66E5FF',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexShrink: 0,
-        },
-        archetypeRowDisabled: {
-            opacity: 0.55,
-        },
-        checkmarkSymbol: {
-            color: '#1E2D32',
-            fontWeight: 'bold',
-            fontSize: '13px',
-            lineHeight: 1,
-        },
-        archetypeCheckbox: {
-            flexShrink: 0,
-            color: '#fff',
-            '&.Mui-checked': {
-                color: '#fff',
-            },
-        },
     };
 
     return (
@@ -483,7 +270,22 @@ const OpponentPreferencesPage: React.FC = () => {
 
                 {loaded && prefs.allowedArchetypes.length > 0 && (
                     <Box sx={styles.rowList}>
-                        {prefs.allowedArchetypes.map((archetype, i) => renderArchetypeRow(archetype, i))}
+                        {prefs.allowedArchetypes.map((archetype, index) => {
+                            const baseType = resolveBaseType(archetype.baseConstraint);
+                            return (
+                                <ArchetypeRow
+                                    key={index}
+                                    archetype={archetype}
+                                    isSelected={selectedIndices.includes(index)}
+                                    leader={leaderById.get(archetype.leaderId) ?? null}
+                                    baseType={baseType}
+                                    baseAspects={rowBaseAspects(archetype.baseConstraint, baseType)}
+                                    onToggleSelection={() => toggleSelection(index)}
+                                    onToggleEnabled={(enabled) => setArchetypeEnabled(index, enabled)}
+                                    onEdit={() => openEditDialog(index)}
+                                />
+                            );
+                        })}
                     </Box>
                 )}
             </Box>

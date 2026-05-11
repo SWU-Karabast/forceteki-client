@@ -1,5 +1,8 @@
+import type React from 'react';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import { Aspect, BaseConstraint, IBaseTypeOption } from '@/app/_constants/constants';
+import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import type { BaseTileKind } from './BaseTilePreview';
 
 export interface LeaderOption {
@@ -61,6 +64,42 @@ export function baseTypeDisplayName(option: IBaseTypeOption): string {
 export const baseTypeFilter = createFilterOptions<IBaseTypeOption>({
     stringify: baseTypeDisplayName,
 });
+
+// Wrap s3CardImageURL for the common case where we only have a card id
+// (no full ICardData/ISetCode payload). The shape-check inside s3Utils
+// handles a bare {id} at runtime.
+export function cardImageUrl(id: string, style?: CardStyle): string {
+    return s3CardImageURL({ id, count: 0 } as never, style);
+}
+
+// Strip MUI Autocomplete's auto-generated `key` from the rendered <li>
+// props — React needs the key passed explicitly via JSX, not through a
+// spread. Returns the rest of the props ready for spreading.
+export function pluckOptionProps(
+    props: React.HTMLAttributes<HTMLLIElement> & { key?: React.Key },
+): React.HTMLAttributes<HTMLLIElement> {
+    const { key, ...rest } = props;
+    void key;
+    return rest;
+}
+
+// User-facing title for the "base" half of an archetype row, given the
+// constraint and any resolved baseType for it.
+export function formatBaseTitle(
+    constraint: BaseConstraint | undefined,
+    selectedBaseType: IBaseTypeOption | null,
+): string {
+    if (!constraint) {
+        return 'Any base';
+    }
+    if (constraint.kind === 'aspect') {
+        return `Any ${capitalize(constraint.aspect)}`;
+    }
+    if (selectedBaseType) {
+        return baseTypeDisplayName(selectedBaseType);
+    }
+    return `${constraint.baseIds.length} bases`;
+}
 
 // Two archetypes are equal iff they target the same leader+base constraint.
 // `enabled` doesn't affect identity — the user toggles it independently.
