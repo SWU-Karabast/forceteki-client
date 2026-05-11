@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Autocomplete,
     Box,
@@ -61,7 +61,12 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
     onCommit,
     isDuplicate,
 }) => {
-    const kind = getConstraintKind(draft.baseConstraint);
+    // New archetypes start with no base-kind selected; reopening an existing
+    // archetype pre-selects from its saved constraint (or 'any' if absent).
+    const [selectedKind, setSelectedKind] = useState<BaseConstraintKind | null>(
+        () => (draft.leaderId === '' && draft.baseConstraint === undefined ? null : getConstraintKind(draft.baseConstraint)),
+    );
+    const kind = selectedKind ?? getConstraintKind(draft.baseConstraint);
     const selectedLeader = leaderById.get(draft.leaderId) ?? null;
     const selectedBaseTypeKey = draft.baseConstraint?.kind === 'baseType'
         ? draft.baseConstraint.baseIds.slice().sort().join('|')
@@ -79,6 +84,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
         setDraft({ ...draft, leaderId: next.id });
     };
     const onKindChange = (nextKind: BaseConstraintKind) => {
+        setSelectedKind(nextKind);
         if (nextKind === 'any') {
             setDraft({ ...draft, baseConstraint: undefined });
             return;
@@ -101,9 +107,10 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
     };
 
     const basePreviewCaption =
-        kind === 'aspect' ? `Any ${capitalize(selectedAspect)} base` :
-            kind === 'baseType' && selectedBaseType ? baseTypeDisplayName(selectedBaseType) :
-                'Any base';
+        selectedKind === null ? 'Select a base' :
+            kind === 'aspect' ? `Any ${capitalize(selectedAspect)} base` :
+                kind === 'baseType' && selectedBaseType ? baseTypeDisplayName(selectedBaseType) :
+                    'Any base';
 
     const previewTileKind = baseTileKindFor(draft.baseConstraint, selectedBaseType);
     const previewTileAspects: Aspect[] = kind === 'aspect'
@@ -345,7 +352,9 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                         </Box>
                     </Box>
                     <Box sx={styles.previewSlot}>
-                        {uniqueBaseImageUrl ? (
+                        {selectedKind === null ? (
+                            <Box sx={styles.previewPlaceholder} />
+                        ) : uniqueBaseImageUrl ? (
                             <Box sx={{ ...styles.previewImage, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
                         ) : (
                             <Box sx={styles.previewBadge}>
@@ -387,7 +396,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
 
                 <Box sx={styles.fieldGroup}>
                     <Typography sx={styles.fieldLabel}>Base</Typography>
-                    <RadioGroup row value={kind} onChange={(_, value) => onKindChange(value as BaseConstraintKind)}>
+                    <RadioGroup row value={selectedKind ?? ''} onChange={(_, value) => onKindChange(value as BaseConstraintKind)}>
                         {BASE_CONSTRAINT_KIND_OPTIONS.map(({ value, label }) => (
                             <FormControlLabel
                                 key={value}
@@ -520,7 +529,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                         variant="standard"
                         text="Done"
                         buttonFnc={onCommit}
-                        disabled={!draft.leaderId || isDuplicate}
+                        disabled={!draft.leaderId || selectedKind === null || isDuplicate}
                     />
                 </Box>
             </Box>
