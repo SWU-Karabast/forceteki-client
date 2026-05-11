@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Checkbox, FormControlLabel, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import EditArchetypeDialog from '@/app/_components/_sharedcomponents/OpponentPreferences/EditArchetypeDialog';
@@ -157,7 +157,6 @@ const OpponentPreferencesPage: React.FC = () => {
     const totalCount = prefs.allowedArchetypes.length;
     const enabledCount = prefs.allowedArchetypes.filter((a) => a.enabled !== false).length;
     const allEnabled = totalCount > 0 && enabledCount === totalCount;
-    const someEnabled = enabledCount > 0 && !allEnabled;
     const setAllEnabled = (enabled: boolean) => {
         persist({
             ...prefs,
@@ -210,22 +209,26 @@ const OpponentPreferencesPage: React.FC = () => {
             gap: '1rem',
             flexWrap: 'wrap' as const,
         },
-        bulkActions: {
+        toolbarGroup: {
             display: 'flex',
             alignItems: 'center',
-            gap: '1rem',
+            gap: '0.75rem',
+            flexWrap: 'wrap' as const,
         },
-        bulkEnableLabel: {
-            margin: 0,
-        },
-        bulkEnableCheckbox: {
-            color: '#fff',
-            '&.Mui-checked': { color: '#fff' },
-            '&.MuiCheckbox-indeterminate': { color: '#fff' },
+        bulkActionButton: {
+            backgroundColor: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            fontSize: '0.85rem',
+            pt: '6px',
+            pb: '6px',
+            '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                boxShadow: 'none',
+            },
         },
         bulkEnableStatus: {
             color: '#cccccc',
-            fontSize: '0.95em',
+            fontSize: '0.9em',
         },
         rowList: {
             mt: '20px',
@@ -253,37 +256,42 @@ const OpponentPreferencesPage: React.FC = () => {
 
                 {loaded && (
                     <Box sx={styles.toolbar}>
-                        <PreferenceButton
-                            variant="standard"
-                            text="Add archetype"
-                            buttonFnc={addArchetype}
-                            disabled={leaders.length === 0}
-                        />
+                        <Box sx={styles.toolbarGroup}>
+                            <PreferenceButton
+                                variant="standard"
+                                text="Add archetype"
+                                buttonFnc={addArchetype}
+                                disabled={leaders.length === 0}
+                            />
+                            {totalCount > 0 && (
+                                <>
+                                    <PreferenceButton
+                                        variant="standard"
+                                        text="Enable all"
+                                        buttonFnc={() => setAllEnabled(true)}
+                                        disabled={allEnabled}
+                                        sx={styles.bulkActionButton}
+                                    />
+                                    <PreferenceButton
+                                        variant="standard"
+                                        text="Disable all"
+                                        buttonFnc={() => setAllEnabled(false)}
+                                        disabled={enabledCount === 0}
+                                        sx={styles.bulkActionButton}
+                                    />
+                                    <Typography sx={styles.bulkEnableStatus}>
+                                        {enabledCount} of {totalCount} enabled
+                                    </Typography>
+                                </>
+                            )}
+                        </Box>
                         {totalCount > 0 && (
-                            <Box sx={styles.bulkActions}>
-                                <FormControlLabel
-                                    sx={styles.bulkEnableLabel}
-                                    control={
-                                        <Checkbox
-                                            checked={allEnabled}
-                                            indeterminate={someEnabled}
-                                            onChange={(e) => setAllEnabled(e.target.checked)}
-                                            sx={styles.bulkEnableCheckbox}
-                                        />
-                                    }
-                                    label={
-                                        <Typography sx={styles.bulkEnableStatus}>
-                                            {enabledCount} of {totalCount} enabled
-                                        </Typography>
-                                    }
-                                />
-                                <PreferenceButton
-                                    variant="concede"
-                                    text={'Delete archetype(s)'}
-                                    buttonFnc={() => setDeleteDialogOpen(true)}
-                                    disabled={selectedIndices.length === 0}
-                                />
-                            </Box>
+                            <PreferenceButton
+                                variant="concede"
+                                text={'Delete archetype(s)'}
+                                buttonFnc={() => setDeleteDialogOpen(true)}
+                                disabled={selectedIndices.length === 0}
+                            />
                         )}
                     </Box>
                 )}
