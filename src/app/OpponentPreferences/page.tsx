@@ -429,13 +429,18 @@ const OpponentPreferencesPage: React.FC = () => {
             flexShrink: 0,
         },
         rowBaseAspectIconStack: {
+            // Match rowBaseThumb width so the base text aligns horizontally
+            // with the leader name regardless of which preview kind renders.
+            width: '4rem',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: '4px',
             flexShrink: 0,
         },
         rowBaseAnyAsterisk: {
-            width: '1.8rem',
+            // Same width as rowBaseThumb to keep text columns aligned.
+            width: '4rem',
             height: '1.8rem',
             flexShrink: 0,
             margin: 0,
