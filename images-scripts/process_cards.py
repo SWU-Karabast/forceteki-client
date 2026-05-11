@@ -447,8 +447,11 @@ def _collect_token_jobs(cfg: "Config") -> list[UploadJob]:
     """Token files upload to cards/_tokens/{standard,truncated}/{s3Id}.webp.
 
     The on-disk filename is already the desired numeric S3 id (per the
-    swudbId=s3Id mapping resolved at download time).
+    swudbId=s3Id mapping resolved at download time). Only files matching the
+    s3Ids in the current --tokens mapping are uploaded; previously-processed
+    tokens left over in the local folder are ignored.
     """
+    allowed = {f"{s3_id}.webp" for _, s3_id in (cfg.tokens or [])}
     jobs: list[UploadJob] = []
     for fmt in ("standard", "truncated"):
         d = token_format_dir(cfg.set_code, fmt)
@@ -456,6 +459,8 @@ def _collect_token_jobs(cfg: "Config") -> list[UploadJob]:
             continue
         for entry in sorted(d.iterdir()):
             if entry.suffix.lower() != ".webp":
+                continue
+            if entry.name not in allowed:
                 continue
             key = f"{TOKEN_KEY_PREFIX}{fmt}/{entry.name}"
             jobs.append(UploadJob(entry, key))
