@@ -16,6 +16,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { Aspect, BaseConstraint, IBaseTypeOption, OpponentArchetype } from '@/app/_constants/constants';
+import BaseTilePreview, { BaseTileKind } from './BaseTilePreview';
 import {
     ASPECT_OPTIONS,
     BaseConstraintKind,
@@ -96,6 +97,17 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             kind === 'baseType' && selectedBaseType ? baseTypeDisplayName(selectedBaseType) :
                 'Any base';
 
+    const previewTileKind: BaseTileKind = kind === 'any'
+        ? 'any'
+        : kind === 'aspect'
+            ? 'aspect'
+            : selectedBaseType?.kind === 'unique'
+                ? 'vanilla' // never rendered; the unique branch above handles unique with an image
+                : (selectedBaseType?.kind ?? 'themed');
+    const previewTileAspects: string[] = kind === 'aspect'
+        ? [selectedAspect]
+        : selectedBaseType?.aspects ?? [];
+
     // ----------------------Styles-----------------------------//
     const styles = {
         overlay: {
@@ -158,6 +170,9 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             border: '1px dashed rgba(255, 255, 255, 0.18)',
         },
         previewBadge: {
+            // Wrapper that BaseTilePreview fills. font-size sets the scale
+            // for the component's em-based inner sizing — bigger than the
+            // list-row tile so icons appear ~5x larger.
             width: '100%',
             maxWidth: '14rem',
             aspectRatio: '7 / 5',
@@ -167,30 +182,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             backgroundColor: 'rgba(0, 0, 0, 0.35)',
             borderRadius: '6px',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-        },
-        previewBadgeIcon: {
-            width: '5rem',
-            height: '5rem',
-            objectFit: 'contain' as const,
-        },
-        previewBadgeIconStack: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-        },
-        previewAnyBase: {
-            background: 'linear-gradient(135deg, #1a2530 0%, #08111a 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-        },
-        previewAnyAspectGrid: {
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '0.4rem',
-        },
-        previewAnyAspectIcon: {
-            width: '2.5rem',
-            height: '2.5rem',
-            objectFit: 'contain' as const,
+            fontSize: '3.2rem',
         },
         previewCaption: {
             display: 'flex',
@@ -365,42 +357,9 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                     <Box sx={styles.previewSlot}>
                         {uniqueBaseImageUrl ? (
                             <Box sx={{ ...styles.previewImage, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
-                        ) : kind === 'aspect' ? (
-                            <Box sx={styles.previewBadge}>
-                                <Box
-                                    component="img"
-                                    src={aspectIconUrl(selectedAspect)}
-                                    alt={selectedAspect}
-                                    sx={styles.previewBadgeIcon}
-                                />
-                            </Box>
-                        ) : kind === 'baseType' && selectedBaseType && selectedBaseType.aspects.some(aspectHasIcon) ? (
-                            <Box sx={styles.previewBadge}>
-                                <Box sx={styles.previewBadgeIconStack}>
-                                    {selectedBaseType.aspects.filter(aspectHasIcon).map((aspect) => (
-                                        <Box
-                                            key={aspect}
-                                            component="img"
-                                            src={aspectIconUrl(aspect)}
-                                            alt={aspect}
-                                            sx={styles.previewBadgeIcon}
-                                        />
-                                    ))}
-                                </Box>
-                            </Box>
                         ) : (
-                            <Box sx={{ ...styles.previewBadge, ...styles.previewAnyBase }}>
-                                <Box sx={styles.previewAnyAspectGrid}>
-                                    {['aggression', 'command', 'cunning', 'vigilance'].map((aspect) => (
-                                        <Box
-                                            key={aspect}
-                                            component="img"
-                                            src={aspectIconUrl(aspect)}
-                                            alt=""
-                                            sx={styles.previewAnyAspectIcon}
-                                        />
-                                    ))}
-                                </Box>
+                            <Box sx={styles.previewBadge}>
+                                <BaseTilePreview kind={previewTileKind} aspects={previewTileAspects} />
                             </Box>
                         )}
                         <Box sx={styles.previewCaption}>

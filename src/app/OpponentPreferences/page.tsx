@@ -4,9 +4,9 @@ import { Box, Checkbox, Typography } from '@mui/material';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import EditArchetypeDialog from '@/app/_components/_sharedcomponents/OpponentPreferences/EditArchetypeDialog';
+import BaseTilePreview, { BaseTileKind } from '@/app/_components/_sharedcomponents/OpponentPreferences/BaseTilePreview';
 import {
     aspectHasIcon,
-    aspectIconUrl,
     baseTypeDisplayName,
     capitalize,
     LeaderOption,
@@ -21,8 +21,6 @@ import {
     MatchPreferences,
 } from '@/app/_constants/constants';
 import { loadMatchPreferences, saveMatchPreferences } from '@/app/_utils/matchPreferences';
-
-const BASE_ASPECTS = ['aggression', 'command', 'cunning', 'vigilance'];
 
 const OpponentPreferencesPage: React.FC = () => {
     const [prefs, setPrefs] = useState<MatchPreferences>(() => loadMatchPreferences());
@@ -161,6 +159,13 @@ const OpponentPreferencesPage: React.FC = () => {
             : null;
         const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
         const baseAspects = baseConstraintAspects(archetype.baseConstraint).filter(aspectHasIcon);
+        const rowBaseTileKind: BaseTileKind = !archetype.baseConstraint
+            ? 'any'
+            : archetype.baseConstraint.kind === 'aspect'
+                ? 'aspect'
+                : selectedBaseType?.kind === 'unique'
+                    ? 'vanilla' // fallback; the unique branch above already renders a thumbnail
+                    : (selectedBaseType?.kind ?? 'themed');
         const stop = (e: React.MouseEvent) => e.stopPropagation();
 
         const leaderImageUrl = selectedLeader
@@ -215,70 +220,10 @@ const OpponentPreferencesPage: React.FC = () => {
                     </Box>
                     <Box sx={styles.rowBaseSection}>
                         {uniqueBaseImageUrl ? (
-                            <Box sx={{ ...styles.rowBaseThumb, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
-                        ) : baseAspects.length > 0 && selectedBaseType?.kind === 'force' ? (
-                            <Box sx={styles.rowBaseAspectIconStack}>
-                                {baseAspects.map((aspect) => (
-                                    <Box
-                                        key={aspect}
-                                        component="img"
-                                        src={aspectIconUrl(aspect)}
-                                        alt={aspect}
-                                        sx={styles.rowBaseAspectIcon}
-                                    />
-                                ))}
-                                <Box component="img" src="/ForceTokenHeroism.png" alt="" sx={styles.rowBaseForceBadge} />
-                            </Box>
-                        ) : baseAspects.length > 0 && selectedBaseType?.kind === 'splash' ? (
-                            <Box sx={styles.rowBaseSplashTile}>
-                                <Box sx={styles.rowBaseSplashMain}>
-                                    {baseAspects.map((aspect) => (
-                                        <Box
-                                            key={aspect}
-                                            component="img"
-                                            src={aspectIconUrl(aspect)}
-                                            alt={aspect}
-                                            sx={styles.rowBaseSplashMainIcon}
-                                        />
-                                    ))}
-                                </Box>
-                                <Box sx={styles.rowBaseSplashOthers}>
-                                    {BASE_ASPECTS.filter((a) => !baseAspects.includes(a)).map((aspect) => (
-                                        <Box
-                                            key={aspect}
-                                            component="img"
-                                            src={aspectIconUrl(aspect)}
-                                            alt=""
-                                            sx={styles.rowBaseSplashOther}
-                                        />
-                                    ))}
-                                </Box>
-                            </Box>
-                        ) : baseAspects.length > 0 ? (
-                            <Box sx={styles.rowBaseAspectIconStack}>
-                                {baseAspects.map((aspect) => (
-                                    <Box
-                                        key={aspect}
-                                        component="img"
-                                        src={aspectIconUrl(aspect)}
-                                        alt={aspect}
-                                        sx={styles.rowBaseAspectIcon}
-                                    />
-                                ))}
-                            </Box>
+                            <Box sx={{ ...styles.rowBaseTile, backgroundImage: `url(${uniqueBaseImageUrl})`, backgroundColor: 'rgba(255,255,255,0.04)', backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }} />
                         ) : (
-                            <Box sx={styles.rowBaseAnyTile} aria-hidden>
-                                <Box sx={styles.rowBaseAnyAspectGrid}>
-                                    {BASE_ASPECTS.map((aspect) => (
-                                        <Box
-                                            key={aspect}
-                                            component="img"
-                                            src={aspectIconUrl(aspect)}
-                                            alt=""
-                                            sx={styles.rowBaseAnyAspectIcon}
-                                        />
-                                    ))}
-                                </Box>
+                            <Box sx={styles.rowBaseTile}>
+                                <BaseTilePreview kind={rowBaseTileKind} aspects={baseAspects} />
                             </Box>
                         )}
                         <Box sx={styles.rowTextStack}>
@@ -457,103 +402,15 @@ const OpponentPreferencesPage: React.FC = () => {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
         },
-        rowBaseThumb: {
-            width: '4rem',
-            height: '2.85rem',
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            borderRadius: '4px',
-            flexShrink: 0,
-        },
-        rowBaseAspectIcon: {
-            width: '1.5rem',
-            height: '1.5rem',
-            objectFit: 'contain' as const,
-            flexShrink: 0,
-        },
-        rowBaseAspectIconStack: {
-            // Match rowBaseThumb dimensions + background treatment so the
-            // aspect-icon slot reads as the same visual element as a base
-            // thumbnail (rectangular tile, same width, same border-radius).
-            width: '4rem',
-            height: '2.85rem',
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            borderRadius: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '4px',
-            flexShrink: 0,
-            position: 'relative' as const,
-        },
-        rowBaseForceBadge: {
-            // Force-token glyph overlaid at bottom-right corner of the tile.
-            position: 'absolute' as const,
-            bottom: '2px',
-            right: '2px',
-            width: '0.95rem',
-            height: '0.95rem',
-            objectFit: 'contain' as const,
-        },
-        rowBaseSplashTile: {
-            // Splash: main aspect icon stacked over a row of the three
-            // splash-able "other" aspects, signalling "play any aspect".
-            width: '4rem',
-            height: '2.85rem',
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            borderRadius: '4px',
-            display: 'flex',
-            flexDirection: 'column' as const,
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '2px',
-            flexShrink: 0,
-            padding: '2px 0',
-        },
-        rowBaseSplashMain: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '2px',
-        },
-        rowBaseSplashMainIcon: {
-            width: '1.15rem',
-            height: '1.15rem',
-            objectFit: 'contain' as const,
-        },
-        rowBaseSplashOthers: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '2px',
-        },
-        rowBaseSplashOther: {
-            width: '0.7rem',
-            height: '0.7rem',
-            objectFit: 'contain' as const,
-            opacity: 0.85,
-        },
-        rowBaseAnyTile: {
-            // Same dimensions + treatment as rowBaseThumb. Centers a small
-            // 2x2 cluster of the four base-eligible aspect icons.
+        rowBaseTile: {
+            // Shared tile wrapper for every base preview kind. BaseTilePreview
+            // fills it; em-based inner sizing scales with the tile's font-size.
             width: '4rem',
             height: '2.85rem',
             backgroundColor: 'rgba(255, 255, 255, 0.04)',
             borderRadius: '4px',
             flexShrink: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-        },
-        rowBaseAnyAspectGrid: {
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '1px',
-        },
-        rowBaseAnyAspectIcon: {
-            width: '0.85rem',
-            height: '0.85rem',
-            objectFit: 'contain' as const,
+            fontSize: '1rem',
         },
         rowEditSlot: {
             display: 'flex',
