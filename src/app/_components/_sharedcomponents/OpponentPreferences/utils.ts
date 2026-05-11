@@ -9,9 +9,7 @@ export interface LeaderOption {
 
 export type BaseConstraintKind = 'any' | 'aspect' | 'baseType';
 
-// Aspects offered in the 'any base of aspect' picker. Bases only carry the
-// four 'color' aspects — Heroism / Villainy are alignment aspects on
-// leaders/units, not on bases.
+// Heroism / Villainy are alignment aspects on leaders/units, not bases.
 export const ASPECT_OPTIONS: Aspect[] = [
     Aspect.Aggression,
     Aspect.Command,
@@ -19,7 +17,6 @@ export const ASPECT_OPTIONS: Aspect[] = [
     Aspect.Vigilance,
 ];
 
-// Bases tagged 'neutral' have no aspect-icon image.
 const VALID_BASE_ASPECTS = new Set(['aggression', 'command', 'cunning', 'vigilance']);
 
 export const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
@@ -49,8 +46,6 @@ export function capitalize(value: string): string {
     return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-// Display name of the base group (everything except the redundant aspect
-// prefix that we render alongside an aspect icon).
 export function baseTypeDisplayName(option: IBaseTypeOption): string {
     switch (option.kind) {
         case 'unique': return option.name ?? '';
@@ -61,8 +56,7 @@ export function baseTypeDisplayName(option: IBaseTypeOption): string {
     }
 }
 
-// Autocomplete filter keyed on the display name so typing 'agg' doesn't
-// match every Aggression-prefix multi-card group.
+// Filter on display name so 'agg' doesn't match every Aggression group.
 export const baseTypeFilter = createFilterOptions<IBaseTypeOption>({
     stringify: baseTypeDisplayName,
 });

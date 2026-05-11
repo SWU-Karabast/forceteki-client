@@ -11,11 +11,9 @@ interface IBaseTilePreviewProps {
 
 const BASE_ASPECTS = ['aggression', 'command', 'cunning', 'vigilance'];
 
-// Renders the inner icon layout for a base-type preview. All sizes are in
-// `em` units so the parent's `font-size` controls the scale — the list row
-// passes a small font-size and the edit dialog passes a larger one, but the
-// arrangement (force-token overlap, splash tiered layout, 4-aspect cluster)
-// stays identical between the two surfaces.
+// Inner icon layout for a base-type preview. Sizes are in `em` units so the
+// parent's `font-size` controls the scale — used at small size in the list
+// row and at larger size in the edit dialog.
 const BaseTilePreview: React.FC<IBaseTilePreviewProps> = ({ kind, aspects }) => {
     const renderableAspects = aspects.filter(aspectHasIcon);
 
@@ -89,7 +87,6 @@ const BaseTilePreview: React.FC<IBaseTilePreviewProps> = ({ kind, aspects }) => 
         );
     }
 
-    // standard / unknown / aspect-only constraint: just the aspect icon(s)
     return (
         <Box sx={styles.aspectRow}>
             {renderableAspects.map((aspect) => (
@@ -129,8 +126,6 @@ const styles = {
         gap: '0.1em',
     },
     forceBadge: {
-        // Partial overlap with the centred aspect icon — badge sits at the
-        // lower-right and bites into the icon's bottom-right quadrant.
         position: 'absolute' as const,
         width: '1.1em',
         height: '1.1em',

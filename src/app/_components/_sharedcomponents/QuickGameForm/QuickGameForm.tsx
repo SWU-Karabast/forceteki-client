@@ -118,12 +118,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
 
-    // Opt-in opponent-archetype filter, persisted in localStorage and shared
-    // with the /OpponentPreferences manager page via _utils/matchPreferences.
     const [matchPreferences, setMatchPreferencesState] = useState<MatchPreferences>(loadMatchPreferences);
 
-    // Re-load on visibilitychange (user navigated to /OpponentPreferences and back)
-    // and storage events (cross-tab edits).
+    // Refresh after the /OpponentPreferences manager edits the same localStorage entry.
     useEffect(() => {
         if (typeof window === 'undefined') {
             return;
@@ -252,8 +249,6 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 }
             }
 
-            // Only include matchPreferences when the filter is actually constraining;
-            // disabled or empty are equivalent to omitting the field server-side.
             const sendFilter = matchPreferences.enabled && matchPreferences.allowedArchetypes.length > 0;
             const payload = {
                 user: getUserPayload(user),

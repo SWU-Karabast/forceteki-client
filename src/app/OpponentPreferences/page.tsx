@@ -164,7 +164,7 @@ const OpponentPreferencesPage: React.FC = () => {
             : archetype.baseConstraint.kind === 'aspect'
                 ? 'aspect'
                 : selectedBaseType?.kind === 'unique'
-                    ? 'standard' // fallback; the unique branch above already renders a thumbnail
+                    ? 'standard'
                     : (selectedBaseType?.kind ?? 'unknown');
         const stop = (e: React.MouseEvent) => e.stopPropagation();
 
@@ -310,10 +310,6 @@ const OpponentPreferencesPage: React.FC = () => {
         },
         rowList: {
             mt: '20px',
-            // Reflows to 1 / 2 / 3+ columns based on container width. The
-            // row's internal flex-wrap stacks leader+base vertically once a
-            // cell drops below ~22rem, so cells stay readable even at 3-col
-            // widths on standard ~14px-rem layouts.
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(24rem, 1fr))',
             gap: '8px 12px',
@@ -339,8 +335,6 @@ const OpponentPreferencesPage: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
         },
-        // Wrappable middle area: when content doesn't fit on one line, the leader
-        // and base sections wrap to separate lines while toggle + Edit stay anchored.
         rowContent: {
             display: 'flex',
             flexWrap: 'wrap' as const,
@@ -403,8 +397,6 @@ const OpponentPreferencesPage: React.FC = () => {
             textOverflow: 'ellipsis',
         },
         rowBaseTile: {
-            // Shared tile wrapper for every base preview kind. BaseTilePreview
-            // fills it; em-based inner sizing scales with the tile's font-size.
             width: '4rem',
             height: '2.85rem',
             backgroundColor: 'rgba(255, 255, 255, 0.04)',

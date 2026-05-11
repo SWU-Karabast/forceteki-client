@@ -102,7 +102,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
         : kind === 'aspect'
             ? 'aspect'
             : selectedBaseType?.kind === 'unique'
-                ? 'standard' // never rendered; the unique branch above handles unique with an image
+                ? 'standard'
                 : (selectedBaseType?.kind ?? 'unknown');
     const previewTileAspects: string[] = kind === 'aspect'
         ? [selectedAspect]
@@ -170,9 +170,6 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             border: '1px dashed rgba(255, 255, 255, 0.18)',
         },
         previewBadge: {
-            // Wrapper that BaseTilePreview fills. font-size sets the scale
-            // for the component's em-based inner sizing — bigger than the
-            // list-row tile so icons appear ~5x larger.
             width: '100%',
             maxWidth: '14rem',
             aspectRatio: '7 / 5',
