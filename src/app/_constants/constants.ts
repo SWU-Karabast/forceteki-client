@@ -55,18 +55,17 @@ export type BaseConstraint =
 
 export type BaseTypeKind = 'standard' | 'force' | 'splash' | 'unknown' | 'unique';
 
-export interface IBaseTypeOption {
+interface IBaseTypeCommon {
     id: string;
-    kind: BaseTypeKind;
-
-    /** Card name; only populated for `kind: 'unique'` (single-card types). */
-    name?: string;
     aspects: Aspect[] | null;
     hp: number;
     set: string | null;
     baseIds: string[];
-    representativeId: string;
 }
+
+export type IBaseTypeOption =
+    | (IBaseTypeCommon & { kind: 'unique'; name: string })
+    | (IBaseTypeCommon & { kind: 'standard' | 'force' | 'splash' | 'unknown' });
 
 export interface OpponentArchetype {
     leaderId: string;

@@ -48,7 +48,7 @@ export function capitalize(value: string): string {
 
 export function baseTypeDisplayName(option: IBaseTypeOption): string {
     switch (option.kind) {
-        case 'unique': return option.name ?? '';
+        case 'unique': return option.name;
         case 'standard': return 'Standard';
         case 'force': return 'Force';
         case 'splash': return 'Splash';

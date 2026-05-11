@@ -63,7 +63,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
         ? s3CardImageURL({ id: selectedLeader.id, count: 0 } as never, CardStyle.PlainLeader)
         : null;
     const uniqueBaseImageUrl = selectedBaseType && selectedBaseType.baseIds.length === 1
-        ? s3CardImageURL({ id: selectedBaseType.representativeId, count: 0 } as never)
+        ? s3CardImageURL({ id: selectedBaseType.id, count: 0 } as never)
         : null;
 
     const onLeaderChange = (next: LeaderOption | null) => {
