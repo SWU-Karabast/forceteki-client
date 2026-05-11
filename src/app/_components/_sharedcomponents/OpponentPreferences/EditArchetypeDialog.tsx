@@ -22,10 +22,9 @@ import {
     LeaderOption,
     aspectHasIcon,
     aspectIconUrl,
+    baseTypeDisplayName,
     baseTypeFilter,
-    baseTypeLabel,
     capitalize,
-    displayBaseLabel,
     getConstraintKind,
     leaderLabel,
 } from './utils';
@@ -81,7 +80,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
         }
         const firstType = baseTypes[0];
         if (!firstType) return;
-        const next: BaseConstraint = { kind: 'baseType', baseIds: firstType.baseIds, label: firstType.label };
+        const next: BaseConstraint = { kind: 'baseType', baseIds: firstType.baseIds };
         setDraft({ ...draft, baseConstraint: next });
     };
     const onAspectChange = (nextAspect: Aspect) => {
@@ -89,12 +88,12 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
     };
     const onBaseTypeChange = (next: IBaseTypeOption | null) => {
         if (!next) return;
-        setDraft({ ...draft, baseConstraint: { kind: 'baseType', baseIds: next.baseIds, label: next.label } });
+        setDraft({ ...draft, baseConstraint: { kind: 'baseType', baseIds: next.baseIds } });
     };
 
     const basePreviewCaption =
         kind === 'aspect' ? `Any ${capitalize(selectedAspect)} base` :
-            kind === 'baseType' && selectedBaseType ? displayBaseLabel(selectedBaseType.label) :
+            kind === 'baseType' && selectedBaseType ? baseTypeDisplayName(selectedBaseType) :
                 'Any base';
 
     // ----------------------Styles-----------------------------//
@@ -483,7 +482,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                         <Autocomplete
                             options={baseTypes}
                             value={selectedBaseType}
-                            getOptionLabel={(option) => displayBaseLabel(baseTypeLabel(option))}
+                            getOptionLabel={(option) => (option ? baseTypeDisplayName(option) : '')}
                             filterOptions={baseTypeFilter}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
                             onChange={(_, value) => onBaseTypeChange(value)}
@@ -533,7 +532,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                                             </Box>
                                         )}
                                         <Typography component="span" sx={styles.optionLabel}>
-                                            {displayBaseLabel(option.label)}
+                                            {baseTypeDisplayName(option)}
                                         </Typography>
                                         {option.set && (
                                             <Typography component="span" sx={styles.optionSet}>{option.set}</Typography>

@@ -19,9 +19,6 @@ export const ASPECT_OPTIONS: Aspect[] = [
     Aspect.Vigilance,
 ];
 
-const ASPECT_NAME = '(?:Aggression|Command|Cunning|Heroism|Vigilance|Villainy)';
-const ASPECT_PREFIX_PATTERN = new RegExp(`^${ASPECT_NAME}(?:\\s*/\\s*${ASPECT_NAME})*\\s*-\\s*`);
-
 // Bases tagged 'neutral' have no aspect-icon image.
 const VALID_BASE_ASPECTS = new Set(['aggression', 'command', 'cunning', 'vigilance']);
 
@@ -29,10 +26,6 @@ export const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}
 
 export function aspectHasIcon(aspect: string | null | undefined): aspect is string {
     return !!aspect && VALID_BASE_ASPECTS.has(aspect.toLowerCase());
-}
-
-export function displayBaseLabel(label: string): string {
-    return label.replace(ASPECT_PREFIX_PATTERN, '');
 }
 
 export function getConstraintKind(constraint: BaseConstraint | undefined): BaseConstraintKind {
@@ -49,10 +42,6 @@ export function leaderLabel(option: LeaderOption | null): string {
     return option.subtitle ? `${option.name} - ${option.subtitle}` : option.name;
 }
 
-export function baseTypeLabel(option: IBaseTypeOption | null): string {
-    return option?.label ?? '';
-}
-
 export function capitalize(value: string): string {
     if (value.length === 0) {
         return value;
@@ -60,8 +49,20 @@ export function capitalize(value: string): string {
     return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-// Filter on the displayed label so typing 'agg' doesn't match every
-// Aggression-prefix multi-card group.
+// Display name of the base group (everything except the redundant aspect
+// prefix that we render alongside an aspect icon).
+export function baseTypeDisplayName(option: IBaseTypeOption): string {
+    switch (option.kind) {
+        case 'unique': return option.name ?? '';
+        case 'vanilla': return 'Vanilla';
+        case 'force': return 'Force';
+        case 'splash': return 'Splash';
+        case 'themed': return `${option.hp}hp`;
+    }
+}
+
+// Autocomplete filter keyed on the display name so typing 'agg' doesn't
+// match every Aggression-prefix multi-card group.
 export const baseTypeFilter = createFilterOptions<IBaseTypeOption>({
-    stringify: (option) => displayBaseLabel(option.label),
+    stringify: baseTypeDisplayName,
 });

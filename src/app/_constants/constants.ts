@@ -51,11 +51,16 @@ export enum Aspect {
 
 export type BaseConstraint =
     | { kind: 'aspect'; aspect: Aspect }
-    | { kind: 'baseType'; baseIds: string[]; label?: string };
+    | { kind: 'baseType'; baseIds: string[] };
+
+export type BaseTypeKind = 'vanilla' | 'force' | 'splash' | 'themed' | 'unique';
 
 export interface IBaseTypeOption {
     id: string;
-    label: string;
+    kind: BaseTypeKind;
+
+    /** Card name; only populated for `kind: 'unique'` (single-card types). */
+    name?: string;
     aspects: string[];
     hp: number;
     set: string | null;

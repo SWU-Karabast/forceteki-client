@@ -7,8 +7,8 @@ import EditArchetypeDialog from '@/app/_components/_sharedcomponents/OpponentPre
 import {
     aspectHasIcon,
     aspectIconUrl,
+    baseTypeDisplayName,
     capitalize,
-    displayBaseLabel,
     LeaderOption,
     leaderLabel,
 } from '@/app/_components/_sharedcomponents/OpponentPreferences/utils';
@@ -52,12 +52,10 @@ const OpponentPreferencesPage: React.FC = () => {
                 }
                 leadersData.sort((a, b) => leaderLabel(a).localeCompare(leaderLabel(b)));
                 baseTypesData.sort((a, b) => {
-                    const aKey = a.aspects.join('+');
-                    const bKey = b.aspects.join('+');
-                    if (aKey !== bKey) {
-                        return aKey.localeCompare(bKey);
-                    }
-                    return a.label.localeCompare(b.label);
+                    const aspectCmp = a.aspects.join('+').localeCompare(b.aspects.join('+'));
+                    if (aspectCmp !== 0) return aspectCmp;
+                    if (a.hp !== b.hp) return a.hp - b.hp;
+                    return baseTypeDisplayName(a).localeCompare(baseTypeDisplayName(b));
                 });
                 setLeaders(leadersData);
                 setBaseTypes(baseTypesData);
@@ -177,14 +175,8 @@ const OpponentPreferencesPage: React.FC = () => {
         } else if (archetype.baseConstraint.kind === 'aspect') {
             baseTitle = `Any ${capitalize(archetype.baseConstraint.aspect)}`;
         } else if (selectedBaseType) {
-            const stripped = displayBaseLabel(selectedBaseType.label);
-            const match = stripped.match(/^(.+?)\s*-\s*(\d+hp)\s*$/i);
-            if (match) {
-                baseTitle = match[1];
-                baseSubtitle = match[2];
-            } else {
-                baseTitle = stripped;
-            }
+            baseTitle = baseTypeDisplayName(selectedBaseType);
+            baseSubtitle = `${selectedBaseType.hp}hp`;
         } else {
             baseTitle = `${archetype.baseConstraint.baseIds.length} bases`;
         }
