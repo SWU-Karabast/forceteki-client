@@ -1,0 +1,4 @@
+requests>=2.32
+Pillow>=10.4
+opencv-python>=4.10
+boto3>=1.35
