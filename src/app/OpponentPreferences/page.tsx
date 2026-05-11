@@ -228,15 +228,17 @@ const OpponentPreferencesPage: React.FC = () => {
                             </Box>
                         ) : (
                             <Box sx={styles.rowBaseAnyTile} aria-hidden>
-                                {['aggression', 'command', 'cunning', 'vigilance'].map((aspect) => (
-                                    <Box
-                                        key={aspect}
-                                        component="img"
-                                        src={aspectIconUrl(aspect)}
-                                        alt=""
-                                        sx={styles.rowBaseAnyAspectIcon}
-                                    />
-                                ))}
+                                <Box sx={styles.rowBaseAnyAspectGrid}>
+                                    {['aggression', 'command', 'cunning', 'vigilance'].map((aspect) => (
+                                        <Box
+                                            key={aspect}
+                                            component="img"
+                                            src={aspectIconUrl(aspect)}
+                                            alt=""
+                                            sx={styles.rowBaseAnyAspectIcon}
+                                        />
+                                    ))}
+                                </Box>
                             </Box>
                         )}
                         <Box sx={styles.rowTextStack}>
@@ -446,24 +448,25 @@ const OpponentPreferencesPage: React.FC = () => {
             flexShrink: 0,
         },
         rowBaseAnyTile: {
-            // Same dimensions + treatment as rowBaseThumb. Renders the four
-            // base-eligible aspect icons in a 2x2 grid to signal "any of
-            // these aspects" without an abstract glyph.
+            // Same dimensions + treatment as rowBaseThumb. Centers a small
+            // 2x2 cluster of the four base-eligible aspect icons.
             width: '4rem',
             height: '2.85rem',
             backgroundColor: 'rgba(255, 255, 255, 0.04)',
             borderRadius: '4px',
             flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        rowBaseAnyAspectGrid: {
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gridTemplateRows: '1fr 1fr',
-            gap: '2px',
-            padding: '3px',
-            placeItems: 'center',
+            gap: '1px',
         },
         rowBaseAnyAspectIcon: {
-            width: '1.1rem',
-            height: '1.1rem',
+            width: '0.85rem',
+            height: '0.85rem',
             objectFit: 'contain' as const,
         },
         rowEditSlot: {
