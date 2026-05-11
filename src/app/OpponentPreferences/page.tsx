@@ -313,10 +313,12 @@ const OpponentPreferencesPage: React.FC = () => {
         },
         rowList: {
             mt: '20px',
-            // Reflows to 1 / 2 / 3+ columns based on container width; each row
-            // needs ~28rem to render its leader+base on one line.
+            // Reflows to 1 / 2 / 3+ columns based on container width. The
+            // row's internal flex-wrap stacks leader+base vertically once a
+            // cell drops below ~22rem, so cells stay readable even at 3-col
+            // widths on standard ~14px-rem layouts.
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(28rem, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(24rem, 1fr))',
             gap: '8px 12px',
             overflowY: 'auto',
             maxHeight: '84%',
@@ -414,15 +416,19 @@ const OpponentPreferencesPage: React.FC = () => {
             flexShrink: 0,
         },
         rowBaseAspectIcon: {
-            width: '1.8rem',
-            height: '1.8rem',
+            width: '1.5rem',
+            height: '1.5rem',
             objectFit: 'contain' as const,
             flexShrink: 0,
         },
         rowBaseAspectIconStack: {
-            // Match rowBaseThumb width so the base text aligns horizontally
-            // with the leader name regardless of which preview kind renders.
+            // Match rowBaseThumb dimensions + background treatment so the
+            // aspect-icon slot reads as the same visual element as a base
+            // thumbnail (rectangular tile, same width, same border-radius).
             width: '4rem',
+            height: '2.85rem',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            borderRadius: '4px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -430,9 +436,11 @@ const OpponentPreferencesPage: React.FC = () => {
             flexShrink: 0,
         },
         rowBaseAnyAsterisk: {
-            // Same width as rowBaseThumb to keep text columns aligned.
+            // Match rowBaseThumb dimensions + background treatment.
             width: '4rem',
-            height: '1.8rem',
+            height: '2.85rem',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            borderRadius: '4px',
             flexShrink: 0,
             margin: 0,
             display: 'flex',
@@ -440,10 +448,10 @@ const OpponentPreferencesPage: React.FC = () => {
             justifyContent: 'center',
             color: 'rgba(255, 255, 255, 0.55)',
             // Asterisk visual mass sits near cap-height; nudge down to optically center.
-            fontSize: '3rem',
+            fontSize: '2.5rem',
             fontWeight: 400,
             lineHeight: 0.6,
-            transform: 'translateY(0.18em)',
+            transform: 'translateY(0.16em)',
         },
         rowEditSlot: {
             display: 'flex',
