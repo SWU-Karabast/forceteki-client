@@ -149,6 +149,9 @@ const OpponentPreferencesPage: React.FC = () => {
         return type?.aspects ?? [];
     }
 
+    const enabledCount = prefs.allowedArchetypes.filter((a) => a.enabled !== false).length;
+    const disabledCount = prefs.allowedArchetypes.length - enabledCount;
+
     const renderArchetypeRow = (archetype: OpponentArchetype, index: number) => {
         const isEnabled = archetype.enabled !== false;
         const isSelected = selectedIndices.includes(index);
@@ -311,6 +314,12 @@ const OpponentPreferencesPage: React.FC = () => {
         toolbarSlot: {
             minWidth: '200px',
         },
+        summary: {
+            color: '#cccccc',
+            fontSize: '0.95em',
+            textAlign: 'center' as const,
+            flex: '1 1 auto',
+        },
         rowList: {
             mt: '20px',
             display: 'flex',
@@ -363,8 +372,8 @@ const OpponentPreferencesPage: React.FC = () => {
             minWidth: 0,
         },
         rowLeaderThumb: {
-            width: '6.5rem',
-            height: '4.65rem',
+            width: '4rem',
+            height: '2.85rem',
             backgroundColor: 'rgba(255, 255, 255, 0.04)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
@@ -402,8 +411,8 @@ const OpponentPreferencesPage: React.FC = () => {
             textOverflow: 'ellipsis',
         },
         rowBaseThumb: {
-            width: '6.5rem',
-            height: '4.65rem',
+            width: '4rem',
+            height: '2.85rem',
             backgroundColor: 'rgba(255, 255, 255, 0.04)',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
@@ -412,8 +421,8 @@ const OpponentPreferencesPage: React.FC = () => {
             flexShrink: 0,
         },
         rowBaseAspectIcon: {
-            width: '2.6rem',
-            height: '2.6rem',
+            width: '1.8rem',
+            height: '1.8rem',
             objectFit: 'contain' as const,
             flexShrink: 0,
         },
@@ -424,8 +433,8 @@ const OpponentPreferencesPage: React.FC = () => {
             flexShrink: 0,
         },
         rowBaseAnyAsterisk: {
-            width: '2.6rem',
-            height: '2.6rem',
+            width: '1.8rem',
+            height: '1.8rem',
             flexShrink: 0,
             margin: 0,
             display: 'flex',
@@ -433,7 +442,7 @@ const OpponentPreferencesPage: React.FC = () => {
             justifyContent: 'center',
             color: 'rgba(255, 255, 255, 0.55)',
             // Asterisk visual mass sits near cap-height; nudge down to optically center.
-            fontSize: '4.5rem',
+            fontSize: '3rem',
             fontWeight: 400,
             lineHeight: 0.6,
             transform: 'translateY(0.18em)',
@@ -505,6 +514,11 @@ const OpponentPreferencesPage: React.FC = () => {
                                 disabled={leaders.length === 0}
                             />
                         </Box>
+                        {prefs.allowedArchetypes.length > 0 && (
+                            <Typography sx={styles.summary}>
+                                {enabledCount} enabled · {disabledCount} disabled
+                            </Typography>
+                        )}
                         <Box sx={styles.toolbarSlot}>
                             <PreferenceButton
                                 variant="concede"
