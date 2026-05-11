@@ -182,13 +182,15 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             background: 'linear-gradient(135deg, #1a2530 0%, #08111a 100%)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
         },
-        previewAnyBaseText: {
-            color: 'rgba(255, 255, 255, 0.55)',
-            fontSize: '12rem',
-            fontWeight: 400,
-            margin: 0,
-            lineHeight: 0.6,
-            transform: 'translateY(0.18em)',
+        previewAnyAspectGrid: {
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '0.4rem',
+        },
+        previewAnyAspectIcon: {
+            width: '2.5rem',
+            height: '2.5rem',
+            objectFit: 'contain' as const,
         },
         previewCaption: {
             display: 'flex',
@@ -388,7 +390,17 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                             </Box>
                         ) : (
                             <Box sx={{ ...styles.previewBadge, ...styles.previewAnyBase }}>
-                                <Typography sx={styles.previewAnyBaseText}>*</Typography>
+                                <Box sx={styles.previewAnyAspectGrid}>
+                                    {['aggression', 'command', 'cunning', 'vigilance'].map((aspect) => (
+                                        <Box
+                                            key={aspect}
+                                            component="img"
+                                            src={aspectIconUrl(aspect)}
+                                            alt=""
+                                            sx={styles.previewAnyAspectIcon}
+                                        />
+                                    ))}
+                                </Box>
                             </Box>
                         )}
                         <Box sx={styles.previewCaption}>
