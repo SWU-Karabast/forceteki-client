@@ -1,12 +1,13 @@
 import React from 'react';
 import { Box } from '@mui/material';
+import { Aspect } from '@/app/_constants/constants';
 import { BASE_ASPECTS, aspectHasIcon, aspectIconUrl } from './utils';
 
 export type BaseTileKind = 'force' | 'splash' | 'standard' | 'unknown' | 'aspect' | 'any';
 
 interface IBaseTilePreviewProps {
     kind: BaseTileKind;
-    aspects: string[];
+    aspects: Aspect[];
 }
 
 // Inner icon layout for a base-type preview. Sizes are in `em` units so the

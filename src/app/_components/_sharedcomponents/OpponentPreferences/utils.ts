@@ -21,7 +21,7 @@ const BASE_ASPECT_SET: Set<string> = new Set(BASE_ASPECTS);
 
 export const aspectIconUrl = (aspect: string) => `/aspect-icons/aspect-${aspect}.webp`;
 
-export function aspectHasIcon(aspect: string | null | undefined): aspect is string {
+export function aspectHasIcon(aspect: string | null | undefined): aspect is Aspect {
     return !!aspect && BASE_ASPECT_SET.has(aspect.toLowerCase());
 }
 

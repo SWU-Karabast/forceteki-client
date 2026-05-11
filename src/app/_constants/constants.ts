@@ -61,7 +61,7 @@ export interface IBaseTypeOption {
 
     /** Card name; only populated for `kind: 'unique'` (single-card types). */
     name?: string;
-    aspects: string[];
+    aspects: Aspect[] | null;
     hp: number;
     set: string | null;
     baseIds: string[];

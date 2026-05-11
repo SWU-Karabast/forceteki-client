@@ -104,7 +104,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             : selectedBaseType?.kind === 'unique'
                 ? 'standard'
                 : (selectedBaseType?.kind ?? 'unknown');
-    const previewTileAspects: string[] = kind === 'aspect'
+    const previewTileAspects: Aspect[] = kind === 'aspect'
         ? [selectedAspect]
         : selectedBaseType?.aspects ?? [];
 
@@ -473,9 +473,9 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                                     size="small"
                                     InputProps={{
                                         ...params.InputProps,
-                                        startAdornment: selectedBaseType?.aspects.some(aspectHasIcon) ? (
+                                        startAdornment: selectedBaseType?.aspects?.some(aspectHasIcon) ? (
                                             <Box sx={styles.inputAspectAdornmentStack}>
-                                                {selectedBaseType.aspects.filter(aspectHasIcon).map((aspect) => (
+                                                {selectedBaseType.aspects!.filter(aspectHasIcon).map((aspect) => (
                                                     <Box
                                                         key={aspect}
                                                         component="img"
@@ -495,9 +495,9 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                                 void _key;
                                 return (
                                     <Box component="li" key={option.id} {...optionProps} sx={styles.optionRow}>
-                                        {option.aspects.some(aspectHasIcon) && (
+                                        {option.aspects?.some(aspectHasIcon) && (
                                             <Box sx={styles.optionAspectStack}>
-                                                {option.aspects.filter(aspectHasIcon).map((aspect) => (
+                                                {option.aspects!.filter(aspectHasIcon).map((aspect) => (
                                                     <Box
                                                         key={aspect}
                                                         component="img"

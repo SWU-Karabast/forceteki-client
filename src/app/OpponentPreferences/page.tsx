@@ -15,6 +15,7 @@ import {
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
+    Aspect,
     BaseConstraint,
     IBaseTypeOption,
     OpponentArchetype,
@@ -52,7 +53,7 @@ const OpponentPreferencesPage: React.FC = () => {
                 }
                 leadersData.sort((a, b) => leaderLabel(a).localeCompare(leaderLabel(b)));
                 baseTypesData.sort((a, b) => {
-                    const aspectCmp = a.aspects.join('+').localeCompare(b.aspects.join('+'));
+                    const aspectCmp = (a.aspects ?? []).join('+').localeCompare((b.aspects ?? []).join('+'));
                     if (aspectCmp !== 0) return aspectCmp;
                     if (a.hp !== b.hp) return a.hp - b.hp;
                     return baseTypeDisplayName(a).localeCompare(baseTypeDisplayName(b));
@@ -135,7 +136,7 @@ const OpponentPreferencesPage: React.FC = () => {
         persist({ ...prefs, allowedArchetypes: updated });
     };
 
-    function baseConstraintAspects(constraint: BaseConstraint | undefined): string[] {
+    function baseConstraintAspects(constraint: BaseConstraint | undefined): Aspect[] {
         if (!constraint) {
             return [];
         }
