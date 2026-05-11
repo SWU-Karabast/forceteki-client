@@ -134,8 +134,8 @@ const styles = {
         position: 'absolute' as const,
         width: '1.1em',
         height: '1.1em',
-        right: '0.95em',
-        bottom: '0.4em',
+        right: '0.65em',
+        bottom: '0.2em',
         objectFit: 'contain' as const,
     },
     splashTile: {
@@ -153,8 +153,8 @@ const styles = {
         gap: '0.1em',
     },
     splashOtherIcon: {
-        width: '0.35em',
-        height: '0.35em',
+        width: '0.45em',
+        height: '0.45em',
         objectFit: 'contain' as const,
     },
     anyWrap: {
