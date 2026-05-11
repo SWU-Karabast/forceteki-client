@@ -335,7 +335,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                         )}
                         <Box sx={styles.previewCaption}>
                             <Typography sx={styles.previewCaptionText}>
-                                {selectedLeader ? selectedLeader.name : 'Unknown leader'}
+                                {selectedLeader ? selectedLeader.name : 'Select a leader'}
                             </Typography>
                             {selectedLeader?.subtitle && (
                                 <Typography sx={styles.previewCaptionSub}>
