@@ -8,6 +8,9 @@ import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/C
 import { ILobbyCardData } from '../../HomePageTypes';
 import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { FormatLabels, FormatTagLabels, SwuGameFormat, GamesToWinMode, CardPool, CardPoolLabels } from '@/app/_constants/constants';
+import { useArchetypeLookup } from '@/app/_utils/archetypeLookup';
+import ArchetypeFilterDetailModal from '@/app/_components/_sharedcomponents/OpponentPreferences/ArchetypeFilterDetailModal';
+import JoinFilteredLobbyModal from '@/app/_components/_sharedcomponents/JoinFilteredLobbyModal/JoinFilteredLobbyModal';
 import PremierIcon from '/public/premier.svg';
 import EternalIcon from '/public/eternal.svg';
 import OpenIcon from '/public/open.svg';
@@ -18,10 +21,24 @@ import Bo3Icon from '/public/bo3.svg';
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
     const { user } = useUser();
+    const lookup = useArchetypeLookup();
+    const activeArchetypes = (lobby.archetypeFilter ?? []).filter((a) => a.enabled !== false);
+    const isFiltered = activeArchetypes.length > 0;
+
+    const [showJoinModal, setShowJoinModal] = React.useState<boolean>(false);
+    const [showFilterDetail, setShowFilterDetail] = React.useState<boolean>(false);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+
+    const handleJoinClick = () => {
+        if (isFiltered) {
+            setShowJoinModal(true);
+        } else {
+            void joinLobby(lobby.id);
+        }
+    };
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         const target = event.currentTarget;
@@ -100,7 +117,9 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         },
         cardsContainer: {
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
+            gap: '10px',
             paddingLeft: '10px',
         },
         parentBoxStyling: {
@@ -192,8 +211,23 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     color: '#ff66b2',
                     boxShadow: '0 0 5px #ff66b2',
                 }
-            }
-        }
+            },
+        },
+        viewAllButton: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '4px 10px',
+            borderRadius: '15px',
+            fontSize: '0.7rem',
+            fontWeight: 500,
+            color: '#bfe1ff',
+            border: '1px solid #78c8ff',
+            background: 'transparent',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap' as const,
+            '&:hover': { backgroundColor: 'rgba(120, 200, 255, 0.12)' },
+        },
     };
 
     const getGameFormatTagStyle = (format: SwuGameFormat) => {
@@ -302,9 +336,9 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 <Box sx={styles.lobbyInfo}>
                     {lobby.host && (
                         <Box sx={styles.cardsContainer}>
-                            <Box sx={{ position: 'relative' }}>
+                            <Box sx={{ position: 'relative', paddingBottom: '24px' }}>
                                 <Box>
-                                    <Box 
+                                    <Box
                                         sx={{
                                             ...styles.cardPreview,
                                             backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)})`
@@ -317,7 +351,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                     </Box>
                                 </Box>
                                 <Box sx={styles.parentBoxStyling}>
-                                    <Box 
+                                    <Box
                                         sx={{
                                             ...styles.cardPreview,
                                             backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)})`
@@ -330,6 +364,16 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                     </Box>
                                 </Box>
                             </Box>
+                            {isFiltered && (
+                                <Box
+                                    component="button"
+                                    type="button"
+                                    sx={styles.viewAllButton}
+                                    onClick={() => setShowFilterDetail(true)}
+                                >
+                                    Allowed Decks ({activeArchetypes.length})
+                                </Box>
+                            )}
                         </Box>
                     )}
                     <Box>
@@ -369,7 +413,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                         </Box>
                     </Box>
                 </Box>
-                <Button onClick={() => joinLobby(lobby.id)}>Join</Button>
+                <Button onClick={handleJoinClick}>Join</Button>
             </Box>
             <Popover
                 id="mouse-over-popover"
@@ -383,6 +427,20 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             >
                 <Box sx={{ ...styles.cardPopover, backgroundImage: previewImage }} />
             </Popover>
+            {showJoinModal && (
+                <JoinFilteredLobbyModal
+                    lobby={lobby}
+                    onClose={() => setShowJoinModal(false)}
+                />
+            )}
+            {showFilterDetail && (
+                <ArchetypeFilterDetailModal
+                    onClose={() => setShowFilterDetail(false)}
+                    lobbyName={lobby.name}
+                    archetypes={activeArchetypes}
+                    lookup={lookup}
+                />
+            )}
         </>
     );
 };

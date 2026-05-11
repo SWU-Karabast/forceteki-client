@@ -1,5 +1,5 @@
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { SwuGameFormat, GamesToWinMode, CardPool } from '@/app/_constants/constants';
+import { SwuGameFormat, GamesToWinMode, CardPool, OpponentArchetype } from '@/app/_constants/constants';
 
 export interface IHexagonProps {
     backgroundColor: string;
@@ -39,6 +39,7 @@ export interface ILobby {
     cardPool: CardPool;
     gamesToWinMode: GamesToWinMode;
     host?: ILobbyHost;
+    archetypeFilter?: OpponentArchetype[] | null;
 }
 
 export interface IJoinableGameProps {
