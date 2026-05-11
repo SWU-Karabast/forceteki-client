@@ -6,6 +6,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import EditArchetypeDialog from '@/app/_components/_sharedcomponents/OpponentPreferences/EditArchetypeDialog';
 import BaseTilePreview from '@/app/_components/_sharedcomponents/OpponentPreferences/BaseTilePreview';
 import {
+    archetypesEqual,
     aspectHasIcon,
     baseTileKindFor,
     baseTypeDisplayName,
@@ -89,12 +90,8 @@ const OpponentPreferencesPage: React.FC = () => {
     };
 
     const addArchetype = () => {
-        const leaderId = leaders[0]?.id ?? '';
-        const newArchetype: OpponentArchetype = { leaderId };
-        const updated = [...prefs.allowedArchetypes, newArchetype];
-        persist({ ...prefs, allowedArchetypes: updated });
-        setEditingIndex(updated.length - 1);
-        setEditingDraft({ ...newArchetype });
+        setEditingIndex(null);
+        setEditingDraft({ leaderId: '' });
     };
 
     const openEditDialog = (index: number) => {
@@ -108,13 +105,24 @@ const OpponentPreferencesPage: React.FC = () => {
     };
 
     const commitEditDialog = () => {
-        if (editingIndex !== null && editingDraft !== null) {
-            const updated = prefs.allowedArchetypes.slice();
-            updated[editingIndex] = editingDraft;
-            persist({ ...prefs, allowedArchetypes: updated });
+        if (editingDraft === null) {
+            closeEditDialog();
+            return;
         }
+        let updated: OpponentArchetype[];
+        if (editingIndex === null) {
+            updated = [...prefs.allowedArchetypes, editingDraft];
+        } else {
+            updated = prefs.allowedArchetypes.slice();
+            updated[editingIndex] = editingDraft;
+        }
+        persist({ ...prefs, allowedArchetypes: updated });
         closeEditDialog();
     };
+
+    const draftIsDuplicate = editingDraft !== null && prefs.allowedArchetypes.some(
+        (other, i) => i !== editingIndex && archetypesEqual(other, editingDraft),
+    );
 
     const toggleSelection = (index: number) => {
         setSelectedIndices((prev) => (
@@ -497,6 +505,7 @@ const OpponentPreferencesPage: React.FC = () => {
                     setDraft={setEditingDraft}
                     onCancel={closeEditDialog}
                     onCommit={commitEditDialog}
+                    isDuplicate={draftIsDuplicate}
                 />
             )}
         </Box>

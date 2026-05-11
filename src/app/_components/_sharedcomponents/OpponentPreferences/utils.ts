@@ -62,6 +62,25 @@ export const baseTypeFilter = createFilterOptions<IBaseTypeOption>({
     stringify: baseTypeDisplayName,
 });
 
+// Two archetypes are equal iff they target the same leader+base constraint.
+// `enabled` doesn't affect identity — the user toggles it independently.
+function constraintsEqual(a: BaseConstraint | undefined, b: BaseConstraint | undefined): boolean {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    if (a.kind !== b.kind) return false;
+    if (a.kind === 'aspect' && b.kind === 'aspect') {
+        return a.aspect === b.aspect;
+    }
+    if (a.kind === 'baseType' && b.kind === 'baseType') {
+        return a.baseIds.slice().sort().join('|') === b.baseIds.slice().sort().join('|');
+    }
+    return false;
+}
+
+export function archetypesEqual(a: { leaderId: string; baseConstraint?: BaseConstraint }, b: { leaderId: string; baseConstraint?: BaseConstraint }): boolean {
+    return a.leaderId === b.leaderId && constraintsEqual(a.baseConstraint, b.baseConstraint);
+}
+
 // Resolve which BaseTilePreview variant to render for an archetype. Callers
 // pass the constraint and the resolved baseType (if applicable) — unique
 // base types are rendered as a thumbnail by the caller, not the tile.

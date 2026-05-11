@@ -40,6 +40,7 @@ interface IEditArchetypeDialogProps {
     setDraft: (next: OpponentArchetype) => void;
     onCancel: () => void;
     onCommit: () => void;
+    isDuplicate: boolean;
 }
 
 const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
@@ -51,6 +52,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
     setDraft,
     onCancel,
     onCommit,
+    isDuplicate,
 }) => {
     const kind = getConstraintKind(draft.baseConstraint);
     const selectedLeader = leaderById.get(draft.leaderId) ?? null;
@@ -303,6 +305,12 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             gap: '0.75rem',
             marginTop: '0.5rem',
         },
+        duplicateHint: {
+            color: '#ff9c70',
+            fontSize: '0.85em',
+            textAlign: 'right' as const,
+            marginTop: '0.5rem',
+        },
     };
 
     return (
@@ -495,9 +503,19 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
                     </Box>
                 )}
 
+                {isDuplicate && (
+                    <Typography sx={styles.duplicateHint}>
+                        An archetype with this leader and base is already in your list.
+                    </Typography>
+                )}
                 <Box sx={styles.actions}>
                     <PreferenceButton variant="standard" text="Cancel" buttonFnc={onCancel} />
-                    <PreferenceButton variant="standard" text="Done" buttonFnc={onCommit} />
+                    <PreferenceButton
+                        variant="standard"
+                        text="Done"
+                        buttonFnc={onCommit}
+                        disabled={!draft.leaderId || isDuplicate}
+                    />
                 </Box>
             </Box>
         </Box>
