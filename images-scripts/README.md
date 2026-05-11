@@ -93,5 +93,5 @@ When the set rotates, bump `DEFAULT_SET_CODE` near the top of
 Tokens live under `cards/_tokens/{standard,truncated}/{numeric_id}.webp` (no
 large/small split). Because swudb identifies tokens by a code like `T01` but
 the site references them by a numeric id, the `--tokens` flag takes a
-comma-separated `swudbId=s3Id` mapping. The numeric ids currently in use are
+comma-separated `swudbId=ffgId` mapping. The numeric ids currently in use are
 listed in `s3Utils.ts`.
