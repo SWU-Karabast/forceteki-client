@@ -22,6 +22,8 @@ import {
 } from '@/app/_constants/constants';
 import { loadMatchPreferences, saveMatchPreferences } from '@/app/_utils/matchPreferences';
 
+const BASE_ASPECTS = ['aggression', 'command', 'cunning', 'vigilance'];
+
 const OpponentPreferencesPage: React.FC = () => {
     const [prefs, setPrefs] = useState<MatchPreferences>(() => loadMatchPreferences());
     const [leaders, setLeaders] = useState<LeaderOption[]>([]);
@@ -214,6 +216,44 @@ const OpponentPreferencesPage: React.FC = () => {
                     <Box sx={styles.rowBaseSection}>
                         {uniqueBaseImageUrl ? (
                             <Box sx={{ ...styles.rowBaseThumb, backgroundImage: `url(${uniqueBaseImageUrl})` }} />
+                        ) : baseAspects.length > 0 && selectedBaseType?.kind === 'force' ? (
+                            <Box sx={styles.rowBaseAspectIconStack}>
+                                {baseAspects.map((aspect) => (
+                                    <Box
+                                        key={aspect}
+                                        component="img"
+                                        src={aspectIconUrl(aspect)}
+                                        alt={aspect}
+                                        sx={styles.rowBaseAspectIcon}
+                                    />
+                                ))}
+                                <Box component="img" src="/ForceTokenHeroism.png" alt="" sx={styles.rowBaseForceBadge} />
+                            </Box>
+                        ) : baseAspects.length > 0 && selectedBaseType?.kind === 'splash' ? (
+                            <Box sx={styles.rowBaseSplashTile}>
+                                <Box sx={styles.rowBaseSplashMain}>
+                                    {baseAspects.map((aspect) => (
+                                        <Box
+                                            key={aspect}
+                                            component="img"
+                                            src={aspectIconUrl(aspect)}
+                                            alt={aspect}
+                                            sx={styles.rowBaseSplashMainIcon}
+                                        />
+                                    ))}
+                                </Box>
+                                <Box sx={styles.rowBaseSplashOthers}>
+                                    {BASE_ASPECTS.filter((a) => !baseAspects.includes(a)).map((aspect) => (
+                                        <Box
+                                            key={aspect}
+                                            component="img"
+                                            src={aspectIconUrl(aspect)}
+                                            alt=""
+                                            sx={styles.rowBaseSplashOther}
+                                        />
+                                    ))}
+                                </Box>
+                            </Box>
                         ) : baseAspects.length > 0 ? (
                             <Box sx={styles.rowBaseAspectIconStack}>
                                 {baseAspects.map((aspect) => (
@@ -229,7 +269,7 @@ const OpponentPreferencesPage: React.FC = () => {
                         ) : (
                             <Box sx={styles.rowBaseAnyTile} aria-hidden>
                                 <Box sx={styles.rowBaseAnyAspectGrid}>
-                                    {['aggression', 'command', 'cunning', 'vigilance'].map((aspect) => (
+                                    {BASE_ASPECTS.map((aspect) => (
                                         <Box
                                             key={aspect}
                                             component="img"
@@ -446,6 +486,52 @@ const OpponentPreferencesPage: React.FC = () => {
             justifyContent: 'center',
             gap: '4px',
             flexShrink: 0,
+            position: 'relative' as const,
+        },
+        rowBaseForceBadge: {
+            // Force-token glyph overlaid at bottom-right corner of the tile.
+            position: 'absolute' as const,
+            bottom: '2px',
+            right: '2px',
+            width: '0.95rem',
+            height: '0.95rem',
+            objectFit: 'contain' as const,
+        },
+        rowBaseSplashTile: {
+            // Splash: main aspect icon stacked over a row of the three
+            // splash-able "other" aspects, signalling "play any aspect".
+            width: '4rem',
+            height: '2.85rem',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            borderRadius: '4px',
+            display: 'flex',
+            flexDirection: 'column' as const,
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '2px',
+            flexShrink: 0,
+            padding: '2px 0',
+        },
+        rowBaseSplashMain: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2px',
+        },
+        rowBaseSplashMainIcon: {
+            width: '1.15rem',
+            height: '1.15rem',
+            objectFit: 'contain' as const,
+        },
+        rowBaseSplashOthers: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2px',
+        },
+        rowBaseSplashOther: {
+            width: '0.7rem',
+            height: '0.7rem',
+            objectFit: 'contain' as const,
+            opacity: 0.85,
         },
         rowBaseAnyTile: {
             // Same dimensions + treatment as rowBaseThumb. Centers a small
