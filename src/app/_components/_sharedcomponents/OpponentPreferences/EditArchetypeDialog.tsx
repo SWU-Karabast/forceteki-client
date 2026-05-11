@@ -102,8 +102,8 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
         : kind === 'aspect'
             ? 'aspect'
             : selectedBaseType?.kind === 'unique'
-                ? 'vanilla' // never rendered; the unique branch above handles unique with an image
-                : (selectedBaseType?.kind ?? 'themed');
+                ? 'standard' // never rendered; the unique branch above handles unique with an image
+                : (selectedBaseType?.kind ?? 'unknown');
     const previewTileAspects: string[] = kind === 'aspect'
         ? [selectedAspect]
         : selectedBaseType?.aspects ?? [];

@@ -164,8 +164,8 @@ const OpponentPreferencesPage: React.FC = () => {
             : archetype.baseConstraint.kind === 'aspect'
                 ? 'aspect'
                 : selectedBaseType?.kind === 'unique'
-                    ? 'vanilla' // fallback; the unique branch above already renders a thumbnail
-                    : (selectedBaseType?.kind ?? 'themed');
+                    ? 'standard' // fallback; the unique branch above already renders a thumbnail
+                    : (selectedBaseType?.kind ?? 'unknown');
         const stop = (e: React.MouseEvent) => e.stopPropagation();
 
         const leaderImageUrl = selectedLeader

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { aspectHasIcon, aspectIconUrl } from './utils';
 
-export type BaseTileKind = 'force' | 'splash' | 'vanilla' | 'themed' | 'aspect' | 'any';
+export type BaseTileKind = 'force' | 'splash' | 'standard' | 'unknown' | 'aspect' | 'any';
 
 interface IBaseTilePreviewProps {
     kind: BaseTileKind;
@@ -89,7 +89,7 @@ const BaseTilePreview: React.FC<IBaseTilePreviewProps> = ({ kind, aspects }) => 
         );
     }
 
-    // vanilla / themed / aspect-only constraint: just the aspect icon(s)
+    // standard / unknown / aspect-only constraint: just the aspect icon(s)
     return (
         <Box sx={styles.aspectRow}>
             {renderableAspects.map((aspect) => (

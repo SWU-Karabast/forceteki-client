@@ -53,7 +53,7 @@ export type BaseConstraint =
     | { kind: 'aspect'; aspect: Aspect }
     | { kind: 'baseType'; baseIds: string[] };
 
-export type BaseTypeKind = 'vanilla' | 'force' | 'splash' | 'themed' | 'unique';
+export type BaseTypeKind = 'standard' | 'force' | 'splash' | 'unknown' | 'unique';
 
 export interface IBaseTypeOption {
     id: string;
