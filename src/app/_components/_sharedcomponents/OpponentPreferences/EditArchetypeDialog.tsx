@@ -16,13 +16,14 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { Aspect, BaseConstraint, IBaseTypeOption, OpponentArchetype } from '@/app/_constants/constants';
-import BaseTilePreview, { BaseTileKind } from './BaseTilePreview';
+import BaseTilePreview from './BaseTilePreview';
 import {
     BASE_ASPECTS,
     BaseConstraintKind,
     LeaderOption,
     aspectHasIcon,
     aspectIconUrl,
+    baseTileKindFor,
     baseTypeDisplayName,
     baseTypeFilter,
     capitalize,
@@ -97,13 +98,7 @@ const EditArchetypeDialog: React.FC<IEditArchetypeDialogProps> = ({
             kind === 'baseType' && selectedBaseType ? baseTypeDisplayName(selectedBaseType) :
                 'Any base';
 
-    const previewTileKind: BaseTileKind = kind === 'any'
-        ? 'any'
-        : kind === 'aspect'
-            ? 'aspect'
-            : selectedBaseType?.kind === 'unique'
-                ? 'standard'
-                : (selectedBaseType?.kind ?? 'unknown');
+    const previewTileKind = baseTileKindFor(draft.baseConstraint, selectedBaseType);
     const previewTileAspects: Aspect[] = kind === 'aspect'
         ? [selectedAspect]
         : selectedBaseType?.aspects ?? [];

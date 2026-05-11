@@ -1,9 +1,12 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { Aspect } from '@/app/_constants/constants';
+import { Aspect, BaseTypeKind } from '@/app/_constants/constants';
 import { BASE_ASPECTS, aspectHasIcon, aspectIconUrl } from './utils';
 
-export type BaseTileKind = 'force' | 'splash' | 'standard' | 'unknown' | 'aspect' | 'any';
+// Unique base types render as a thumbnail in the parent (not this component),
+// plus the FE-only 'aspect' and 'any' display modes for archetypes that don't
+// resolve to a specific base type.
+export type BaseTileKind = Exclude<BaseTypeKind, 'unique'> | 'aspect' | 'any';
 
 interface IBaseTilePreviewProps {
     kind: BaseTileKind;

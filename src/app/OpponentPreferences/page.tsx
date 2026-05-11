@@ -4,9 +4,10 @@ import { Box, Checkbox, Typography } from '@mui/material';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import EditArchetypeDialog from '@/app/_components/_sharedcomponents/OpponentPreferences/EditArchetypeDialog';
-import BaseTilePreview, { BaseTileKind } from '@/app/_components/_sharedcomponents/OpponentPreferences/BaseTilePreview';
+import BaseTilePreview from '@/app/_components/_sharedcomponents/OpponentPreferences/BaseTilePreview';
 import {
     aspectHasIcon,
+    baseTileKindFor,
     baseTypeDisplayName,
     capitalize,
     LeaderOption,
@@ -160,13 +161,7 @@ const OpponentPreferencesPage: React.FC = () => {
             : null;
         const selectedBaseType = selectedBaseTypeKey ? (baseTypesByJoinedIds.get(selectedBaseTypeKey) ?? null) : null;
         const baseAspects = baseConstraintAspects(archetype.baseConstraint).filter(aspectHasIcon);
-        const rowBaseTileKind: BaseTileKind = !archetype.baseConstraint
-            ? 'any'
-            : archetype.baseConstraint.kind === 'aspect'
-                ? 'aspect'
-                : selectedBaseType?.kind === 'unique'
-                    ? 'standard'
-                    : (selectedBaseType?.kind ?? 'unknown');
+        const rowBaseTileKind = baseTileKindFor(archetype.baseConstraint, selectedBaseType);
         const stop = (e: React.MouseEvent) => e.stopPropagation();
 
         const leaderImageUrl = selectedLeader
