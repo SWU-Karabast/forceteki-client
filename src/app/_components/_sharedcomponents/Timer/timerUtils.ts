@@ -18,7 +18,7 @@ export const getTimerColor = ({
     timerWarning?: boolean;
 } => {
     if (activeTurn === 'opponent') return { timerColor: 'var(--initiative-red)', timerOpacity: 0.5 };
-    if (timeRemaining < (maxTime / 4)) return { timerColor: 'var(--selection-yellow)', timerOpacity: 1, timerWarning: true };
+    if (timeRemaining < (maxTime / 4)) return { timerColor: 'var(--initiative-blue)', timerOpacity: 0.5, timerWarning: true };
     const cssColor = activeTurn === 'player'
         ? 'var(--initiative-blue)'
         : activeTurn === 'opponent'
