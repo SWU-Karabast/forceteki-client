@@ -63,8 +63,15 @@ export interface ICosmeticsPreferences {
     // disablePlaymats?: boolean;
 }
 
+export enum TimerVisibility {
+    Standard = 'standard',
+    HideTurnTimer = 'hideTurnTimer',
+    HideAll = 'hideAll',
+}
+
 export interface IGameOptions {
     muteChat?: boolean;
+    timerVisibility?: TimerVisibility;
 }
 
 export interface IPreferences {

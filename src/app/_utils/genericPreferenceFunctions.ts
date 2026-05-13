@@ -1,4 +1,4 @@
-import { IPreferences, IUser } from '@/app/_contexts/UserTypes';
+import { IPreferences, IUser, TimerVisibility } from '@/app/_contexts/UserTypes';
 import {
     loadPreferencesFromLocalStorage,
     savePreferencesToLocalStorage,
@@ -95,6 +95,12 @@ export const savePreferencesGeneric = async (
                     ...currentPreferences.cosmetics,
                     ...partialPreferences.cosmetics
                 }
+            }),
+            ...(partialPreferences.gameOptions && {
+                gameOptions: {
+                    ...currentPreferences.gameOptions,
+                    ...partialPreferences.gameOptions
+                }
             })
         };
 
@@ -119,5 +125,6 @@ const getDefaultPreferences = (): IPreferences => ({
     },
     gameOptions: {
         muteChat: false,
+        timerVisibility: TimerVisibility.Standard,
     }
 });

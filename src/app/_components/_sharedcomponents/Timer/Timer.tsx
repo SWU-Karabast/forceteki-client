@@ -11,6 +11,7 @@ const TIMER_STEP = 100; // shorter intervals provide a smoother progress animati
 interface TimerProps extends CircularProgressProps {
     activeTurn?: 'player' | 'opponent';
     children?: React.ReactNode;
+    hideProgressIndicator?: boolean;
     isRunning?: boolean;
     isTurnTime?: boolean;
     maxTime: number;
@@ -22,6 +23,7 @@ interface TimerProps extends CircularProgressProps {
 const Timer: React.FC<TimerProps> = ({
     activeTurn,
     children,
+    hideProgressIndicator = false,
     isRunning = true,
     isTurnTime = false,
     maxTime,
@@ -71,6 +73,7 @@ const Timer: React.FC<TimerProps> = ({
                     sx={{
                         color: timerColor,
                         opacity: timerOpacity,
+                        visibility: hideProgressIndicator ? 'hidden' : 'visible',
                     }}
                     {...props}
                 />
