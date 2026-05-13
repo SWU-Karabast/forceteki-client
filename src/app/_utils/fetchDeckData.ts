@@ -41,23 +41,53 @@ export interface IDeckData {
 
 export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) => {
     try {
-        const response = await fetch(
-            `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
-        );
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            if (errorData && errorData.error) {
-                if (response.status === 403) {
-                    throw new Error(`403: ${errorData.error}`);
-                } else {
-                    throw new Error(errorData.error);
+        const source = determineDeckSource(deckLink);
+        let data: IDeckData;
+
+        if (source === DeckSource.SWUDB) {
+            // swudb.com deck resolution lives on the BE; the Amplify
+            // `/api/swudbdeck` route still handles other deck-builders.
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_ROOT_URL}/api/resolve-deck-link`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deckLink }),
+                    credentials: 'include'
                 }
-            } else {
-                throw new Error(`Failed to fetch deck: ${response.status}`);
+            );
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                const message = errorData?.error ?? `Failed to fetch deck: ${response.status}`;
+                if (response.status === 403) {
+                    throw new Error(`403: ${message}`);
+                }
+                throw new Error(message);
             }
+            const body = await response.json();
+            data = {
+                ...(body.deck as IDeckData),
+                deckSource: DeckSource.SWUDB,
+            };
+        } else {
+            const response = await fetch(
+                `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
+            );
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                if (errorData && errorData.error) {
+                    if (response.status === 403) {
+                        throw new Error(`403: ${errorData.error}`);
+                    } else {
+                        throw new Error(errorData.error);
+                    }
+                } else {
+                    throw new Error(`Failed to fetch deck: ${response.status}`);
+                }
+            }
+            data = await response.json();
         }
 
-        const data: IDeckData = await response.json();
         if (!fetchAll){
             return data;
         }

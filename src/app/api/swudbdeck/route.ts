@@ -42,33 +42,6 @@ export async function GET(req: Request) {
                 throw new Error(`SWUSTATS API error: ${response.statusText}`);
             }
         }
-        else if (deckLink.includes('swudb.com')) {
-            const match = deckLink.match(/\/([^\/]+)\/?$/);
-            const deckId = match ? match[1] : null;
-            if(deckId != null) deckIdentifier = deckId;
-            deckSource = DeckSource.SWUDB;
-            if (!deckId) {
-                console.error('Error: Invalid deckLink format');
-                return NextResponse.json(
-                    { error: 'Invalid deckLink format' },
-                    { status: 400 }
-                );
-            }
-
-            const apiUrl = `https://swudb.com/api/getDeckJson/${deckId}`;
-
-            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
-            if (!response.ok) {
-                if(response.status === 403) {
-                    return NextResponse.json({ error: 'Deck is set to Private. Change deck to unlisted on swudb' }, { status: 403 });
-                }
-                if(response.status === 404) {
-                    return NextResponse.json({ error: 'Deck not found. Make sure the deck exists on swudb.com.' }, { status: 404 });
-                }
-                console.error('SWUDB API error:', response.statusText);
-                throw new Error(`SWUDB API error: ${response.statusText}`);
-            }
-        }
         else if (deckLink.includes('sw-unlimited-db.com')) {
             const match = deckLink.match(/\/decks\/(\d+)\/?$/);
             const deckId = match ? match[1] : null;
