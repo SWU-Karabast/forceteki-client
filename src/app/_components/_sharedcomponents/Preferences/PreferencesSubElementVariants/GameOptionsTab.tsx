@@ -34,7 +34,7 @@ const TIMER_VISIBILITY_OPTIONS: Array<{ value: TimerVisibility, label: string, d
     },
 ];
 
-function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean) => void }) {
+function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' | 'homePage', setHasNewChanges?: (has: boolean) => void }) {
     const { user, updateUserPreferences } = useUser();
     const [muteChatEnabled, setMuteChatEnabled] = useState<boolean>(false);
     const [originalMuteChat, setOriginalMuteChat] = useState<boolean>(false);
@@ -60,7 +60,7 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
         if (setHasNewChanges) {
             setHasNewChanges(unsaved);
         }
-    }, [muteChatEnabled, originalMuteChat, timerVisibility, originalTimerVisibility]);
+    }, [muteChatEnabled, originalMuteChat, timerVisibility, originalTimerVisibility, setHasNewChanges]);
 
     const handleMuteChatChange = (value: boolean) => {
         setMuteChatEnabled(value);
@@ -151,25 +151,27 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
 
     return (
         <>
-            <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h2'}>Chat</Typography>
-                <Divider sx={{ mb: '20px' }} />
-                <Box sx={{ mb: '10px' }}>
-                    <PreferenceOption
-                        option={'Mute Chat'}
-                        optionDescription={'Mute chat in all games.'}
-                        iconType="checkbox"
-                        onChange={handleMuteChatChange}
-                        defaultChecked={muteChatEnabled}
-                        disabled={!user}
-                    />
+            {variant !== 'gameBoard' && (
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h2'}>Chat</Typography>
+                    <Divider sx={{ mb: '20px' }} />
+                    <Box sx={{ mb: '10px' }}>
+                        <PreferenceOption
+                            option={'Mute Chat'}
+                            optionDescription={'Mute chat in all games.'}
+                            iconType="checkbox"
+                            onChange={handleMuteChatChange}
+                            defaultChecked={muteChatEnabled}
+                            disabled={!user}
+                        />
+                    </Box>
+                    {!user && (
+                        <Typography sx={{ ml: '1rem', color: '#888', fontSize: '0.85rem' }}>
+                            Log in to save game options.
+                        </Typography>
+                    )}
                 </Box>
-                {!user && (
-                    <Typography sx={{ ml: '1rem', color: '#888', fontSize: '0.85rem' }}>
-                        Log in to save game options.
-                    </Typography>
-                )}
-            </Box>
+            )}
 
             <Box sx={styles.functionContainer}>
                 <Typography sx={styles.typographyContainer} variant={'h2'}>Timer Visibility</Typography>
