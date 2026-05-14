@@ -38,7 +38,7 @@ const TIMER_VISIBILITY_OPTIONS: Array<{ value: TimerVisibility, label: string, d
     },
 ];
 
-function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean) => void }) {
+function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' | 'homePage', setHasNewChanges?: (has: boolean) => void }) {
     const { user, updateUserPreferences } = useUser();
     const { setLocale } = useCardImageLocaleContext();
 
@@ -82,7 +82,7 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
         if (setHasNewChanges) {
             setHasNewChanges(unsaved);
         }
-    }, [muteChatEnabled, originalMuteChat, cardLanguage, originalCardLanguage, timerVisibility, originalTimerVisibility]);
+    }, [muteChatEnabled, originalMuteChat, cardLanguage, originalCardLanguage, timerVisibility, originalTimerVisibility, setHasNewChanges]);
 
     const handleMuteChatChange = (value: boolean) => {
         setMuteChatEnabled(value);
@@ -258,7 +258,7 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
                 </FormControl>
             </Box>
 
-            {user && (
+            {variant !== 'gameBoard' && (
                 <Box sx={styles.functionContainer}>
                     <Typography sx={styles.typographyContainer} variant={'h2'}>Chat</Typography>
                     <Divider sx={{ mb: '20px' }} />
@@ -269,8 +269,14 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
                             iconType="checkbox"
                             onChange={handleMuteChatChange}
                             defaultChecked={muteChatEnabled}
+                            disabled={!user}
                         />
                     </Box>
+                    {!user && (
+                        <Typography sx={{ ml: '1rem', color: '#888', fontSize: '0.85rem' }}>
+                            Log in to save game options.
+                        </Typography>
+                    )}
                 </Box>
             )}
 
