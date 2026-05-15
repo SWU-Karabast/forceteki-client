@@ -124,17 +124,17 @@ const TooltipContent = (
                     Game Timer
                 </Typography>
                 <Typography variant="body2">
-                    Once turn time reaches zero, main time will be used.
+                    Once turn time reaches zero, main time will be used. Once a player&apos;s main time reaches zero, that player conceeds the game.
                 </Typography>
             </Stack>
 
             <Stack width='fit-content'>
                 <Typography variant="body2">
-                    Your Main Time
+                    Opp. Main Time
                 </Typography>
                 <Divider />
                 <Typography variant="body2">
-                    Opp. Main Time
+                    Your Main Time
                 </Typography>
             </Stack>
 
