@@ -18,10 +18,25 @@ export const s3ImageURL = (path: string) => {
     return s3Bucket + path;
 };
 
+/**
+ * Card image locales supported by the S3 image pipeline. The S3 layout is
+ * `cards/{SET}/{locale}/{format}/{size}/{cardNumber}.webp` and
+ * `cards/_tokens/{locale}/{format}/{numericId}.webp`. When a non-English
+ * locale lacks a localized image, the pipeline fills the gap with a copy of
+ * the English webp, so every locale URL is guaranteed to resolve.
+ */
+export type CardImageLocale = 'en' | 'fr' | 'de' | 'es' | 'it';
+
+// TODO: wire this to a user preference (locale selector in settings) so
+// callers can resolve the active locale from context instead of relying on
+// the default.
+export const DEFAULT_CARD_IMAGE_LOCALE: CardImageLocale = 'en';
+
 export function s3CardImageURL(
     card: ICardData | ISetCode | IServerCardData | IPreviewCard,
     cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain,
     cardback?: string,
+    locale: CardImageLocale = DEFAULT_CARD_IMAGE_LOCALE,
 ): string {
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
     if ((isGameOrSetCard && !card?.setId) && !card?.id) {
@@ -39,7 +54,7 @@ export function s3CardImageURL(
 
     const tokenIds = ['3941784506', '3463348370', '7268926664', '9415311381', '8752877738', '2007868442', '6665455613']
     if (cardType?.includes('token') || (card.id && tokenIds.includes(card.id))) {
-        return s3ImageURL(`cards/_tokens/${format}/${card.id}.webp`);
+        return s3ImageURL(`cards/_tokens/${locale}/${format}/${card.id}.webp?v=3`);
     }
 
     let cardNumber = setId.number.toString().padStart(3, '0')
@@ -52,7 +67,7 @@ export function s3CardImageURL(
         cardNumber += '2';
     }
 
-    return s3ImageURL(`cards/${setId.set}/${format}/large/${cardNumber}.webp?v=2`);
+    return s3ImageURL(`cards/${setId.set}/${locale}/${format}/large/${cardNumber}.webp?v=3`);
 };
 
 
