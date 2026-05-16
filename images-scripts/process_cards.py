@@ -229,19 +229,30 @@ def _ffg_index(session: requests.Session, set_code: str, locale: str) -> dict[in
             card_number = attrs.get("cardNumber")
             if not isinstance(card_number, int):
                 continue
-            # Skip tokens: within a set, tokens reuse the same cardNumber as
-            # regular cards (e.g. LOF #3 = Ahsoka Tano leader AND the "Force"
-            # token, both with cardNumber 3). Without this guard the token's
-            # artFront overwrites the leader's in the index, producing a
-            # localized image that's the wrong card AND leaving the leader's
-            # artBack unfilled (since tokens have artBack=null), which then
-            # falls back to the English back-side.
-            #
-            # `type.data.attributes.value` is the locale-independent Strapi
-            # enum: "Token" covers both "Force Token"/"Jeton force" and
-            # "Token Unit"/"Jeton Unité"/"Klontruppler"/etc. This matches the
-            # convention used by forceteki/scripts/fetchdata.js (which splits
-            # type.name on spaces and checks for 'token').
+            # Skip non-original printings. The FFG API returns variants
+            # alongside the base printing they're derived from
+            # (Hyperspace, Showcase, Prerelease Promo, Weekly Play / OP /
+            # event, Reprint, and the "token variants of upgrades" that
+            # ship with newer sets like JTL's TIE Fighter / X-Wing
+            # tokens). Variant subsets renumber from 1, so e.g. a Luke
+            # Skywalker prerelease promo with cardNumber=1 collides with
+            # the real cardNumber=1 leader of every set (Director Krennic
+            # in SOR, etc.) and last-write-wins clobbers it. The
+            # schema-canonical "is this the original?" signal is
+            # variantOf: originals have variantOf.data == null; every
+            # variant points back at its parent via
+            # variantOf.data.attributes.cardNumber.
+            variant_of = ((attrs.get("variantOf") or {}).get("data"))
+            if variant_of is not None:
+                continue
+            # Belt-and-braces: skip standalone Token-typed entries too.
+            # LOF's "Force" token is type.value="Token" with
+            # variantOf=null (it isn't a variant of anything), and within
+            # a set its cardNumber collides with a real card (LOF #3
+            # Ahsoka). JTL's TIE Fighter / X-Wing tokens are caught by
+            # the variantOf check above (they're typed Upgrade and
+            # variantOf a real upgrade card), so this branch handles only
+            # the LOF-style case.
             type_value = (((attrs.get("type") or {}).get("data") or {}).get("attributes") or {}).get("value")
             if type_value == "Token":
                 continue
@@ -1232,7 +1243,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dry-run", action="store_true",
                    help="Plan uploads but do not write to S3.")
     p.add_argument("--overwrite-downloads", action="store_true",
-                   help="Re-download even if the local file exists.")
+                   help=("Ignore the local download cache and re-fetch every source "
+                         "image, as if the on-disk copies did not exist. "
+                         "(Resize/truncate stages always overwrite their outputs, "
+                         "so this also causes the full pipeline to regenerate "
+                         "every processed webp.)"))
     p.add_argument("--max-attempts", type=int, default=MAX_ATTEMPTS)
     p.add_argument("--leader-attempts", type=int, default=LEADER_ATTEMPTS)
     p.add_argument("--workers", type=int, default=DEFAULT_WORKERS,
