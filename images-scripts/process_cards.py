@@ -31,6 +31,35 @@ from botocore.exceptions import (
     UnauthorizedSSOTokenError,
 )
 from PIL import Image, ImageFilter
+from tqdm import tqdm
+
+# ─────────────────────────── Output verbosity ─────────────────────────────
+#
+# When False (the default), per-item status lines like "+ resize ...",
+# "= skip ...", "+ upload ..." are suppressed and each stage shows a single
+# tqdm progress bar instead. Stage headers, warnings (lines starting with
+# "!"), and per-stage summaries are always shown. Set via --verbose on the
+# command line; flipped once in main() before any stages run.
+VERBOSE: bool = False
+
+
+def vprint(*args, **kwargs) -> None:
+    """Print only when --verbose is set. Use for per-item success/skip lines."""
+    if VERBOSE:
+        print(*args, **kwargs)
+
+
+def _maybe_progress(iterable, *, total: int, desc: str, unit: str = "item"):
+    """Wrap `iterable` in a tqdm bar unless verbose mode is on.
+
+    In verbose mode we return the iterable unchanged so per-item prints can
+    interleave normally. In quiet mode tqdm renders a single self-updating
+    line per stage; we use leave=False so finished bars are removed and the
+    final on-screen output is the always-on stage summary.
+    """
+    if VERBOSE:
+        return iterable
+    return tqdm(iterable, total=total, desc=desc, unit=unit, leave=False, dynamic_ncols=True)
 
 # ─────────────────────────── Config / Defaults ────────────────────────────
 
@@ -87,37 +116,46 @@ DEFAULT_WORKERS = 8
 # Repo-relative working directory (this script's directory)
 SCRIPT_DIR = Path(__file__).resolve().parent
 
+# Single top-level cache root for everything the script reads/writes locally.
+# Layout:
+#   card-images/downloaded/{SET or T{SET}}/{locale}/...png   (raw PNGs)
+#   card-images/processed/{SET}/{locale}/{standard,truncated}/{large,small}/...webp
+#   card-images/processed/T{SET}/{locale}/{standard,truncated}/...webp
+CACHE_ROOT = SCRIPT_DIR / "card-images"
+DOWNLOADS_ROOT = CACHE_ROOT / "downloaded"
+PROCESSED_ROOT = CACHE_ROOT / "processed"
+
 
 # ───────────────────────────── Path helpers ───────────────────────────────
 #
 # Every helper takes a `locale`. Working tree shape:
-#   downloaded_images/{SET}/{locale}/{NNN}.png
-#   downloaded_images/T{SET}/{locale}/{id}.png
-#   {SET}/{locale}/standard/{large,small}/{NNN}.webp
-#   {SET}/{locale}/truncated/{large,small}/{NNN}.webp
-#   T{SET}/{locale}/{standard,truncated}/{id}.webp     (no size split)
+#   card-images/downloaded/{SET}/{locale}/{NNN}.png
+#   card-images/downloaded/T{SET}/{locale}/{id}.png
+#   card-images/processed/{SET}/{locale}/standard/{large,small}/{NNN}.webp
+#   card-images/processed/{SET}/{locale}/truncated/{large,small}/{NNN}.webp
+#   card-images/processed/T{SET}/{locale}/{standard,truncated}/{id}.webp  (no size split)
 #
-# S3 keys mirror these shapes:
+# S3 keys mirror the processed shape:
 #   cards/{SET}/{locale}/{standard,truncated}/{large,small}/{NNN}.webp
 #   cards/_tokens/{locale}/{standard,truncated}/{id}.webp
 
 
 def downloads_dir(set_code: str, locale: str, *, tokens: bool = False) -> Path:
     name = f"T{set_code}" if tokens else set_code
-    return SCRIPT_DIR / "downloaded_images" / name / locale
+    return DOWNLOADS_ROOT / name / locale
 
 
 def standard_dir(set_code: str, locale: str, size: str) -> Path:
-    return SCRIPT_DIR / set_code / locale / "standard" / size
+    return PROCESSED_ROOT / set_code / locale / "standard" / size
 
 
 def truncated_dir(set_code: str, locale: str, size: str) -> Path:
-    return SCRIPT_DIR / set_code / locale / "truncated" / size
+    return PROCESSED_ROOT / set_code / locale / "truncated" / size
 
 
 def token_format_dir(set_code: str, locale: str, fmt: str) -> Path:
     """Tokens: cards/_tokens/{locale}/{standard,truncated}/{id}.webp — no size split."""
-    return SCRIPT_DIR / f"T{set_code}" / locale / fmt
+    return PROCESSED_ROOT / f"T{set_code}" / locale / fmt
 
 
 # ─────────────────────── HTTP retry helper (FFG / swudb) ──────────────────
@@ -191,6 +229,22 @@ def _ffg_index(session: requests.Session, set_code: str, locale: str) -> dict[in
             card_number = attrs.get("cardNumber")
             if not isinstance(card_number, int):
                 continue
+            # Skip tokens: within a set, tokens reuse the same cardNumber as
+            # regular cards (e.g. LOF #3 = Ahsoka Tano leader AND the "Force"
+            # token, both with cardNumber 3). Without this guard the token's
+            # artFront overwrites the leader's in the index, producing a
+            # localized image that's the wrong card AND leaving the leader's
+            # artBack unfilled (since tokens have artBack=null), which then
+            # falls back to the English back-side.
+            #
+            # `type.data.attributes.value` is the locale-independent Strapi
+            # enum: "Token" covers both "Force Token"/"Jeton force" and
+            # "Token Unit"/"Jeton Unité"/"Klontruppler"/etc. This matches the
+            # convention used by forceteki/scripts/fetchdata.js (which splits
+            # type.name on spaces and checks for 'token').
+            type_value = (((attrs.get("type") or {}).get("data") or {}).get("attributes") or {}).get("value")
+            if type_value == "Token":
+                continue
             front = (((attrs.get("artFront") or {}).get("data") or {}).get("attributes") or {}).get("url")
             back = (((attrs.get("artBack") or {}).get("data") or {}).get("attributes") or {}).get("url")
             if not front:
@@ -227,7 +281,7 @@ def _download_card_swudb(
     save_path = out / f"{n}.png"
 
     if save_path.exists() and not cfg.overwrite_downloads:
-        print(f"= exists: en/{save_path.name}")
+        vprint(f"= exists: en/{save_path.name}")
         return True
 
     url = cfg.source_url.format(set=cfg.set_code, n=n)
@@ -247,25 +301,25 @@ def _download_card_swudb(
             leader_response = session.get(leader_url, stream=True, timeout=HTTP_TIMEOUT)
             if leader_response.status_code == 200:
                 _save_response(leader_response, save_path)
-                print(f"+ leader portrait: en/{save_path.name}")
+                vprint(f"+ leader portrait: en/{save_path.name}")
             else:
                 leader_response = session.get(leader_url_alt, stream=True, timeout=HTTP_TIMEOUT)
                 if leader_response.status_code == 200:
                     _save_response(leader_response, save_path)
-                    print(f"+ leader back: en/{save_path.name}")
+                    vprint(f"+ leader back: en/{save_path.name}")
                 else:
                     leader_response = None
 
         if response.status_code == 200:
             if leader_response is not None:
                 _save_response(response, leader_save_path)
-                print(f"+ leader base: en/{leader_save_path.name}")
+                vprint(f"+ leader base: en/{leader_save_path.name}")
             else:
                 _save_response(response, save_path)
-                print(f"+ en/{save_path.name}")
+                vprint(f"+ en/{save_path.name}")
             return True
 
-        print(f"- 404: {url}")
+        vprint(f"- 404: {url}")
         return False
 
     except requests.RequestException as e:
@@ -291,7 +345,7 @@ def _download_card_ffg(
     leader_save_path = out / f"{n}-base.png"
 
     if save_path.exists() and not cfg.overwrite_downloads:
-        print(f"= exists: {locale}/{save_path.name}")
+        vprint(f"= exists: {locale}/{save_path.name}")
         return True
 
     entry = ffg_index.get(card_number)
@@ -312,22 +366,25 @@ def _download_card_ffg(
             return False
 
         if back_url:
-            # Leader: artFront is the portrait (primary file = NNN.png),
-            # artBack is the deployed/unit side (= NNN-base.png). Same
-            # convention as the swudb leader path above.
+            # Leader: artFront is the deployed/unit side, artBack is the
+            # portrait/leader side — opposite to swudb's convention. The S3
+            # contract (which the client URL builder in
+            # forceteki-client/src/app/_utils/s3Utils.ts depends on) follows
+            # swudb: NNN.webp = portrait/leader side, NNN-base.webp = unit
+            # side. So we map FFG -> swudb here by swapping destinations.
             back_resp = _get_with_retry(session, back_url, stream=True)
             if back_resp is None or back_resp.status_code != 200:
                 print(f"! FFG back fetch failed {locale}/{n}: status="
                       f"{getattr(back_resp, 'status_code', '?')}; skipping card")
                 front_resp.close()
                 return False
-            _save_response(front_resp, save_path)
-            _save_response(back_resp, leader_save_path)
-            print(f"+ leader portrait: {locale}/{save_path.name}")
-            print(f"+ leader base:     {locale}/{leader_save_path.name}")
+            _save_response(back_resp, save_path)          # NNN.png      <- artBack (portrait)
+            _save_response(front_resp, leader_save_path)  # NNN-base.png <- artFront (unit)
+            vprint(f"+ leader portrait: {locale}/{save_path.name}")
+            vprint(f"+ leader base:     {locale}/{leader_save_path.name}")
         else:
             _save_response(front_resp, save_path)
-            print(f"+ {locale}/{save_path.name}")
+            vprint(f"+ {locale}/{save_path.name}")
         return True
 
     except requests.RequestException as e:
@@ -345,13 +402,17 @@ def stage_download(cfg: "Config") -> None:
             out = downloads_dir(cfg.set_code, locale)
             out.mkdir(parents=True, exist_ok=True)
             if locale == "en":
-                print(f"\n  · Downloading en from swudb ({len(numbers)} candidates)")
+                print(f"  · Downloading en from swudb ({len(numbers)} candidates)")
                 with cf.ThreadPoolExecutor(max_workers=cfg.workers) as ex:
                     futures = [ex.submit(_download_card_swudb, session, cfg, n) for n in numbers]
-                    for fut in cf.as_completed(futures):
+                    iterator = _maybe_progress(
+                        cf.as_completed(futures), total=len(futures),
+                        desc=f"download {cfg.set_code}/en", unit="card",
+                    )
+                    for fut in iterator:
                         fut.result()
             else:
-                print(f"\n  · Downloading {locale} from FFG (building index…)")
+                print(f"  · Downloading {locale} from FFG (building index…)")
                 index = _ffg_index(session, cfg.set_code, locale)
                 if not index:
                     print(f"  · FFG index for {locale} is empty; relying on fallback stage")
@@ -361,7 +422,11 @@ def stage_download(cfg: "Config") -> None:
                         ex.submit(_download_card_ffg, session, cfg, locale, n, index)
                         for n in numbers
                     ]
-                    for fut in cf.as_completed(futures):
+                    iterator = _maybe_progress(
+                        cf.as_completed(futures), total=len(futures),
+                        desc=f"download {cfg.set_code}/{locale}", unit="card",
+                    )
+                    for fut in iterator:
                         fut.result()
     finally:
         session.close()
@@ -397,20 +462,25 @@ def _resize_one(src: Path, dest_large: Path, dest_small: Path, cfg: "Config") ->
     dest_small.parent.mkdir(parents=True, exist_ok=True)
     small.save(dest_small, "WEBP", quality=cfg.webp_quality)
 
-    print(f"+ resize {src.parent.name}/{src.name} -> {large.size}, {small.size}")
+    vprint(f"+ resize {src.parent.name}/{src.name} -> {large.size}, {small.size}")
 
 
-def _run_in_parallel(fn, items: list, *, workers: int) -> None:
+def _run_in_parallel(fn, items: list, *, workers: int, desc: Optional[str] = None) -> None:
     """Run fn(item) for each item in a thread pool, surfacing any exception.
 
     Prints results in completion order (so logs may interleave between files,
     but each line is atomic). Fast-fails on the first unhandled exception.
+
+    When `desc` is provided and we're not in verbose mode, a tqdm progress
+    bar labeled `desc` is shown for completion of these futures.
     """
     if not items:
         return
     with cf.ThreadPoolExecutor(max_workers=workers) as ex:
         futures = [ex.submit(fn, item) for item in items]
-        for fut in cf.as_completed(futures):
+        iterator = _maybe_progress(cf.as_completed(futures), total=len(futures),
+                                   desc=desc or "working")
+        for fut in iterator:
             fut.result()
 
 
@@ -431,6 +501,7 @@ def stage_resize(cfg: "Config") -> None:
             lambda e: _resize_one(e, large_dir / (e.stem + ".webp"), small_dir / (e.stem + ".webp"), cfg),
             entries,
             workers=cfg.workers,
+            desc=f"resize {cfg.set_code}/{locale}",
         )
 
 
@@ -443,7 +514,7 @@ def _resize_token_one(src: Path, dest: Path, cfg: "Config") -> None:
     out = _resize_to_max(pil, cfg.large_dimension).filter(sharpen)
     dest.parent.mkdir(parents=True, exist_ok=True)
     out.save(dest, "WEBP", quality=cfg.webp_quality)
-    print(f"+ token resize {src.parent.name}/{src.name} -> {out.size}")
+    vprint(f"+ token resize {src.parent.name}/{src.name} -> {out.size}")
 
 
 def stage_resize_tokens(cfg: "Config") -> None:
@@ -461,6 +532,7 @@ def stage_resize_tokens(cfg: "Config") -> None:
             lambda e: _resize_token_one(e, out_dir / (e.stem + ".webp"), cfg),
             entries,
             workers=cfg.workers,
+            desc=f"resize T{cfg.set_code}/{locale}",
         )
 
 
@@ -471,10 +543,10 @@ def _truncate_one(src: Path, dest_large: Path, dest_small: Path, cfg: "Config") 
     w, h = img.size
 
     if w > h:
-        print(f"= skip wide: {src.parent.name}/{src.name} ({w}x{h})")
+        vprint(f"= skip wide: {src.parent.name}/{src.name} ({w}x{h})")
         return
     if h < cfg.top_crop + cfg.bottom_crop:
-        print(f"= skip short: {src.parent.name}/{src.name} (h={h})")
+        vprint(f"= skip short: {src.parent.name}/{src.name} (h={h})")
         return
 
     top = img.crop((0, 0, w, cfg.top_crop))
@@ -492,7 +564,7 @@ def _truncate_one(src: Path, dest_large: Path, dest_small: Path, cfg: "Config") 
     dest_small.parent.mkdir(parents=True, exist_ok=True)
     small.save(dest_small, "WEBP", quality=cfg.webp_quality)
 
-    print(f"+ truncate {src.parent.name}/{src.name} -> {large.size}, {small.size}")
+    vprint(f"+ truncate {src.parent.name}/{src.name} -> {large.size}, {small.size}")
 
 
 def stage_truncate(cfg: "Config") -> None:
@@ -511,6 +583,7 @@ def stage_truncate(cfg: "Config") -> None:
             lambda e: _truncate_one(e, large_dir / e.name, small_dir / e.name, cfg),
             entries,
             workers=cfg.workers,
+            desc=f"truncate {cfg.set_code}/{locale}",
         )
 
 
@@ -519,10 +592,10 @@ def _truncate_token_one(src: Path, dest: Path, cfg: "Config") -> None:
     img = Image.open(src)
     w, h = img.size
     if w > h:
-        print(f"= skip wide token: {src.parent.name}/{src.name} ({w}x{h})")
+        vprint(f"= skip wide token: {src.parent.name}/{src.name} ({w}x{h})")
         return
     if h < cfg.top_crop + cfg.bottom_crop:
-        print(f"= skip short token: {src.parent.name}/{src.name} (h={h})")
+        vprint(f"= skip short token: {src.parent.name}/{src.name} (h={h})")
         return
     top = img.crop((0, 0, w, cfg.top_crop))
     bottom = img.crop((0, h - cfg.bottom_crop, w, h))
@@ -532,7 +605,7 @@ def _truncate_token_one(src: Path, dest: Path, cfg: "Config") -> None:
     out = _resize_to_max(composite, cfg.trunc_large_dimension)
     dest.parent.mkdir(parents=True, exist_ok=True)
     out.save(dest, "WEBP", quality=cfg.webp_quality)
-    print(f"+ token truncate {src.parent.name}/{src.name} -> {out.size}")
+    vprint(f"+ token truncate {src.parent.name}/{src.name} -> {out.size}")
 
 
 def stage_truncate_tokens(cfg: "Config") -> None:
@@ -549,6 +622,7 @@ def stage_truncate_tokens(cfg: "Config") -> None:
             lambda e: _truncate_token_one(e, out_dir / e.name, cfg),
             entries,
             workers=cfg.workers,
+            desc=f"truncate T{cfg.set_code}/{locale}",
         )
 
 
@@ -560,8 +634,19 @@ def stage_truncate_tokens(cfg: "Config") -> None:
 # and so does a previous run's fallback copy (which the next download cycle
 # will replace if FFG catches up and the md5 changes).
 
-def _fallback_fill_dir(en_dir: Path, locale_dir: Path, *, allowed: Optional[set[str]] = None) -> int:
-    """Copy any .webp present in `en_dir` but missing in `locale_dir`. Returns count copied."""
+def _fallback_fill_dir(
+    en_dir: Path,
+    locale_dir: Path,
+    *,
+    allowed: Optional[set[str]] = None,
+    filled_names: Optional[set[str]] = None,
+) -> int:
+    """Copy any .webp present in `en_dir` but missing in `locale_dir`. Returns count copied.
+
+    If `filled_names` is provided, the basenames of files copied are added
+    to it — used by the caller to count unique cards/tokens across the
+    multiple format/size axes that share a basename.
+    """
     if not en_dir.exists():
         return 0
     copied = 0
@@ -576,11 +661,13 @@ def _fallback_fill_dir(en_dir: Path, locale_dir: Path, *, allowed: Optional[set[
             continue
         shutil.copy2(src, dest)
         try:
-            rel = dest.relative_to(SCRIPT_DIR)
+            rel = dest.relative_to(CACHE_ROOT)
         except ValueError:
             rel = dest
-        print(f"+ fallback copy en -> {rel}")
+        vprint(f"+ fallback copy en -> {rel}")
         copied += 1
+        if filled_names is not None:
+            filled_names.add(src.name)
     return copied
 
 
@@ -590,6 +677,12 @@ def stage_fill_locale_fallbacks(cfg: "Config") -> None:
         print(f"\n── Stage: Fallback (skipped: only en in --locales) ──")
         return
     print(f"\n── Stage: Fallback (set={cfg.set_code}, locales={','.join(non_en)}) ──")
+
+    # Per-locale set of unique basenames that received an en fallback copy.
+    # A card has 4 webps (standard/truncated × large/small), a token has 2
+    # (standard/truncated), so file counts overstate the number of distinct
+    # cards/tokens that fell back. Dedup by basename for the summary.
+    per_locale_filled: dict[str, set[str]] = {locale: set() for locale in non_en}
 
     if cfg.tokens is not None:
         # Token mode: 2 axes, no size split, restricted to the s3Ids in the
@@ -603,8 +696,10 @@ def stage_fill_locale_fallbacks(cfg: "Config") -> None:
                     en_dir,
                     token_format_dir(cfg.set_code, locale, fmt),
                     allowed=allowed,
+                    filled_names=per_locale_filled[locale],
                 )
         print(f"  · {total} token webps copied from en")
+        _print_fallback_summary(per_locale_filled, kind="token", denom_label="(standard+truncated)")
         return
 
     # Card mode: 4 axes (standard/truncated × large/small).
@@ -616,8 +711,43 @@ def stage_fill_locale_fallbacks(cfg: "Config") -> None:
         for size in ("large", "small"):
             en_dir = size_fn(cfg.set_code, "en", size)
             for locale in non_en:
-                total += _fallback_fill_dir(en_dir, size_fn(cfg.set_code, locale, size))
+                total += _fallback_fill_dir(
+                    en_dir,
+                    size_fn(cfg.set_code, locale, size),
+                    filled_names=per_locale_filled[locale],
+                )
     print(f"  · {total} card webps copied from en")
+    _print_fallback_summary(per_locale_filled, kind="card", denom_label="(standard+truncated × large+small)")
+
+
+def _print_fallback_summary(
+    per_locale_filled: dict[str, set[str]],
+    *,
+    kind: str,
+    denom_label: str,
+) -> None:
+    """Emit a per-locale breakdown of how many distinct cards/tokens received
+    an English fallback copy. Run at the end of the fallback stage so it's
+    easy to see at a glance how much localized data FFG is currently
+    missing.
+    """
+    total_filled = sum(len(names) for names in per_locale_filled.values())
+    print(f"\n  Fallback summary — {kind}s temporarily served with EN variant:")
+    if total_filled == 0:
+        print(f"    (none — all locales fully populated)")
+        return
+    for locale in sorted(per_locale_filled):
+        names = per_locale_filled[locale]
+        if not names:
+            print(f"    {locale}: 0")
+            continue
+        print(f"    {locale}: {len(names)} {kind}{'s' if len(names) != 1 else ''}"
+              f" filled with EN copy {denom_label}")
+        # List each basename so the operator can see exactly which cards or
+        # tokens FFG is still missing in this locale. Always shown, even in
+        # non-verbose mode.
+        for name in sorted(names):
+            print(f"      - {name}")
 
 
 # ───────────────────────────── Stage: Upload ──────────────────────────────
@@ -844,14 +974,17 @@ def stage_upload(cfg: "Config", *, tokens: bool = False) -> None:
         print("! nothing to upload")
         return
     print(f"… {len(jobs)} candidate files in s3://{cfg.bucket}/")
-
     counts: dict[str, int] = {}
     with cf.ThreadPoolExecutor(max_workers=cfg.workers) as ex:
         futures = [ex.submit(_upload_one, client, cfg.bucket, j, dry_run=cfg.dry_run) for j in jobs]
-        for fut in cf.as_completed(futures):
+        iterator = _maybe_progress(
+            cf.as_completed(futures), total=len(futures),
+            desc=f"upload {label}", unit="file",
+        )
+        for fut in iterator:
             status, msg = fut.result()
             counts[status] = counts.get(status, 0) + 1
-            print(msg)
+            vprint(msg)
 
     print(f"\n── Upload summary ({label}) ──")
     if cfg.dry_run:
@@ -909,7 +1042,7 @@ def _download_token_ffg(
     """
     dest = dest_dir / f"{numeric_id}.png"
     if dest.exists() and not overwrite:
-        print(f"= exists: {locale}/{dest.name}")
+        vprint(f"= exists: {locale}/{dest.name}")
         return True
 
     url = (
@@ -938,7 +1071,7 @@ def _download_token_ffg(
         print(f"! FFG token art download failed: id={numeric_id} locale={locale} url={front}")
         return False
     _save_response(art_resp, dest)
-    print(f"+ {numeric_id} ({locale}) -> {locale}/{dest.name}")
+    vprint(f"+ {numeric_id} ({locale}) -> {locale}/{dest.name}")
     return True
 
 
@@ -967,16 +1100,16 @@ def stage_tokens_download(cfg: "Config", mapping: list[tuple[str, str]]) -> None
         # already named correctly for upload.
         dest = en_out / f"{s3_id}.png"
         if dest.exists() and not cfg.overwrite_downloads:
-            print(f"= exists: en/{dest.name}")
+            vprint(f"= exists: en/{dest.name}")
             return
         url = cfg.token_source_url.format(set=cfg.set_code, n=swu_id)
         try:
             r = session.get(url, stream=True, timeout=HTTP_TIMEOUT)
             if r.status_code == 200:
                 _save_response(r, dest)
-                print(f"+ {swu_id} -> en/{dest.name}")
+                vprint(f"+ {swu_id} -> en/{dest.name}")
             else:
-                print(f"- 404 {url}")
+                vprint(f"- 404 {url}")
         except requests.RequestException as e:
             print(f"! download error {url}: {e}")
 
@@ -996,11 +1129,21 @@ def stage_tokens_download(cfg: "Config", mapping: list[tuple[str, str]]) -> None
                 overwrite=cfg.overwrite_downloads,
             )
 
-        _run_in_parallel(fetch_one, mapping, workers=min(cfg.workers, len(mapping)))
+        _run_in_parallel(
+            fetch_one,
+            mapping,
+            workers=min(cfg.workers, len(mapping)),
+            desc=f"download T{cfg.set_code}/{locale}",
+        )
 
     try:
         if "en" in cfg.locales:
-            _run_in_parallel(fetch_en, mapping, workers=min(cfg.workers, len(mapping)))
+            _run_in_parallel(
+                fetch_en,
+                mapping,
+                workers=min(cfg.workers, len(mapping)),
+                desc=f"download T{cfg.set_code}/en",
+            )
         for locale in non_en_locales:
             fetch_locale(locale)
     finally:
@@ -1066,7 +1209,9 @@ def parse_locales(raw: str) -> list[str]:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Download, process, and upload SWU card images.")
-    p.add_argument("--set", default=DEFAULT_SET_CODE, help=f"3-letter set code (default: {DEFAULT_SET_CODE}).")
+    p.add_argument("--set", default=DEFAULT_SET_CODE,
+                   help=(f"3-letter set code, or comma-separated list of set codes to process "
+                         f"sequentially (default: {DEFAULT_SET_CODE})."))
     p.add_argument("--locales", default="all",
                    help=(f"Locales to process. 'all' (default) = {','.join(DEFAULT_LOCALES)}, "
                          "or a comma-separated subset like 'en,fr'."))
@@ -1101,14 +1246,28 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--webp-quality", type=int, default=WEBP_QUALITY)
     p.add_argument("--tokens", default=None,
                    help="Token mode. Comma-separated swudbId=s3Id pairs, e.g. 'T01=3941784506,T03=7268926664'.")
+    p.add_argument("--verbose", action="store_true",
+                   help="Show per-item logs (default: stage headers + progress bars only).")
     return p
 
 
-def cfg_from_args(args: argparse.Namespace) -> Config:
+def parse_set_codes(raw: str) -> list[str]:
+    seen: list[str] = []
+    for part in raw.split(","):
+        code = part.strip().upper()
+        if not code or code in seen:
+            continue
+        seen.append(code)
+    if not seen:
+        raise ValueError("--set must contain at least one non-empty set code")
+    return seen
+
+
+def cfg_from_args(args: argparse.Namespace, set_code: str) -> Config:
     tokens = parse_token_mapping(args.tokens) if args.tokens else None
     locales = parse_locales(args.locales)
     return Config(
-        set_code=args.set.upper(),
+        set_code=set_code,
         locales=locales,
         from_stage=args.from_stage,
         to_stage=args.to,
@@ -1140,7 +1299,24 @@ def stage_index(name: str) -> int:
 
 def main(argv: Optional[list[str]] = None) -> int:
     args = build_parser().parse_args(argv)
-    cfg = cfg_from_args(args)
+    global VERBOSE
+    VERBOSE = bool(args.verbose)
+    set_codes = parse_set_codes(args.set)
+
+    overall_rc = 0
+    for i, set_code in enumerate(set_codes):
+        if len(set_codes) > 1:
+            banner = f" SET {i + 1}/{len(set_codes)}: {set_code} "
+            bar = "=" * max(8, (60 - len(banner)) // 2)
+            print(f"\n{bar}{banner}{bar}")
+        rc = run_one_set(args, set_code)
+        if rc != 0:
+            overall_rc = rc
+    return overall_rc
+
+
+def run_one_set(args: argparse.Namespace, set_code: str) -> int:
+    cfg = cfg_from_args(args, set_code)
 
     first = stage_index(cfg.from_stage)
     last = stage_index(cfg.to_stage)

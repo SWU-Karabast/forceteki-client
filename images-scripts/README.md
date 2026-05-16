@@ -73,7 +73,7 @@ Run `python process_cards.py --help` for the full list of options.
 
 ## Stages
 
-1. **download** – fetches `NNN.png` into `downloaded_images/{SET}/{locale}/`.
+1. **download** – fetches `NNN.png` into `card-images/downloaded/{SET}/{locale}/`.
    - `en`: from swudb. For card numbers within `--leader-attempts`, also
      fetches `-portrait` / `-back` and stores it as `NNN.png`, while the
      regular card image is stored as `NNN-base.png`.
@@ -88,11 +88,11 @@ Run `python process_cards.py --help` for the full list of options.
    > `src/app/_utils/s3Utils.ts` — the site's URL builder expects this
    > convention.
 
-2. **resize** – produces `{SET}/{locale}/standard/large/*.webp` (max 400 px)
-   and `{SET}/{locale}/standard/small/*.webp` (max 200 px).
+2. **resize** – produces `card-images/processed/{SET}/{locale}/standard/large/*.webp` (max 400 px)
+   and `card-images/processed/{SET}/{locale}/standard/small/*.webp` (max 200 px).
 
-3. **truncate** – produces `{SET}/{locale}/truncated/large/*.webp` (max 180 px)
-   and `{SET}/{locale}/truncated/small/*.webp` (max 100 px) by cropping the
+3. **truncate** – produces `card-images/processed/{SET}/{locale}/truncated/large/*.webp` (max 180 px)
+   and `card-images/processed/{SET}/{locale}/truncated/small/*.webp` (max 100 px) by cropping the
    top 255 px and bottom 32 px of each card and stitching them together.
 
 4. **fallback** – for each non-`en` locale, copies any `en/*.webp` that has
