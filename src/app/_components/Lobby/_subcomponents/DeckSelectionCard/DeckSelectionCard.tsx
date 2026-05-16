@@ -22,7 +22,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, determineDeckSource, DeckSource } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures,
     DeckValidationFailureReason,
@@ -31,6 +31,7 @@ import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 
 import {
+    getUserPayload,
     saveDeckToLocalStorage,
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
@@ -211,13 +212,51 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                 }
             }
 
-            sendLobbyMessage(['changeDeck', deckData])
+            const lobbyIdForRequest = lobbyState?.id;
+            if (!lobbyIdForRequest) {
+                throw new Error('Lobby id not available for change-deck request');
+            }
+            const isSwudbUrl = deckType === 'url' && determineDeckSource(userDeck) === DeckSource.SWUDB;
+            const changeDeckBody = isSwudbUrl
+                ? { swudbLink: userDeck, user: getUserPayload(user) }
+                : { deck: deckData, user: getUserPayload(user) };
+            const changeDeckResponse = await fetch(
+                `${process.env.NEXT_PUBLIC_ROOT_URL}/api/lobby/${lobbyIdForRequest}/change-deck`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(changeDeckBody),
+                }
+            );
+            if (!changeDeckResponse.ok) {
+                let bodyError: string | undefined;
+                let bodyErrorCode: string | undefined;
+                try {
+                    const errBody = await changeDeckResponse.json();
+                    bodyError = errBody?.error;
+                    bodyErrorCode = errBody?.errorCode;
+                } catch {
+                    // ignore json parse errors
+                }
+                if (bodyErrorCode === 'NotLobbyMember') {
+                    throw new Error('NotLobbyMember: ' + (bodyError || 'Not a player in this lobby'));
+                }
+                if (changeDeckResponse.status === 403) {
+                    throw new Error('403: deck is private');
+                }
+                throw new Error(bodyError || `Failed to change deck (status ${changeDeckResponse.status})`);
+            }
         }catch (error){
             setDisplayError(true);
             clearErrorsFunc();
             setModalOpen(true)
             if(error instanceof Error){
-                if(error.message.includes('403')) {
+                if(error.message.includes('NotLobbyMember')) {
+                    setError('Couldn\'t change deck. Your lobby session was lost. Please refresh the page.',
+                        undefined,
+                        'Lobby Error', 'error');
+                }else if(error.message.includes('403')) {
                     setError('Couldn\'t import. The deck is set to private.',{
                         [DeckValidationFailureReason.DeckSetToPrivate]: true,
                     }, 'Deck Validation Error', 'error');
