@@ -103,6 +103,14 @@ MAX_ATTEMPTS = 265
 LEADER_ATTEMPTS = 30
 HTTP_TIMEOUT = 10
 
+# Per-set override of MAX_ATTEMPTS. Applied only when the user did not
+# pass --max-attempts on the command line. TS26 only ships 84 cards, so
+# probing all the way to 265 wastes ~180 swudb GETs (each tried at 2
+# widths by the TS26 branch in `_download_card_swudb`).
+PER_SET_MAX_ATTEMPTS: dict[str, int] = {
+    "TS26": 100,
+}
+
 # Retry tuning for flaky upstreams (matches fetchdata.js policy).
 HTTP_RETRY_ATTEMPTS = 3
 HTTP_RETRY_BASE_DELAY = 1.0  # seconds
@@ -281,6 +289,81 @@ def _save_response(response: requests.Response, dest: Path) -> None:
             f.write(chunk)
 
 
+# TS26 (2026 Twin Suns) is the only set whose swudb image filenames don't
+# follow the standard 3-digit zero-padding convention. Most TS26 cards use
+# 2 digits (e.g. "03.png", "84.png"), but leaders #01 and #02 are uploaded
+# with NO padding at all ("1.png", "2.png"). Page URLs on swudb are
+# uniformly 2-digit for TS26. The local filename and S3 key are ALWAYS
+# 3-digit padded (the client URL builder at
+# forceteki-client/src/app/_utils/s3Utils.ts L64 calls padStart(3,'0')),
+# so this only affects the GET URL — never where the file is saved.
+#
+# Order: 2-digit first because it covers ~99% of TS26; 1-digit handles
+# leaders #1 and #2 (and any future single-digit anomalies in the set).
+_TS26_SWUDB_WIDTHS: tuple[int, ...] = (2, 1)
+
+
+def _download_card_swudb_ts26(
+    session: requests.Session,
+    cfg: "Config",
+    card_number: int,
+    save_path: Path,
+    leader_save_path: Path,
+) -> bool:
+    """TS26-only swudb fetch with per-card padding fallback.
+
+    Branched into from `_download_card_swudb` when `cfg.set_code == 'TS26'`;
+    every other set follows the standard single-width 3-digit path below
+    unchanged. See `_TS26_SWUDB_WIDTHS` for the rationale.
+    """
+    response: Optional[requests.Response] = None
+    chosen_width: Optional[int] = None
+    for w in _TS26_SWUDB_WIDTHS:
+        n_url = str(card_number).zfill(w)
+        url = cfg.source_url.format(set=cfg.set_code, n=n_url)
+        r = session.get(url, stream=True, timeout=HTTP_TIMEOUT)
+        if r.status_code == 200:
+            response = r
+            chosen_width = w
+            break
+        r.close()
+
+    if response is None:
+        vprint(f"- 404 (TS26 widths {list(_TS26_SWUDB_WIDTHS)}): card {card_number}")
+        return False
+
+    leader_response: Optional[requests.Response] = None
+    if card_number <= cfg.leader_attempts:
+        # Probe the width that worked for the front first, then the other
+        # width — TS26 mixes widths even within its leader range. Suffix
+        # order matches the standard path: -portrait, then -back.
+        widths_in_order = (
+            chosen_width,
+            *(w for w in _TS26_SWUDB_WIDTHS if w != chosen_width),
+        )
+        for w in widths_in_order:
+            n_url = str(card_number).zfill(w)
+            for suffix in ("-portrait", "-back"):
+                leader_url = cfg.source_url.format(set=cfg.set_code, n=f"{n_url}{suffix}")
+                lr = session.get(leader_url, stream=True, timeout=HTTP_TIMEOUT)
+                if lr.status_code == 200:
+                    _save_response(lr, save_path)
+                    vprint(f"+ leader {suffix.lstrip('-')}: en/{save_path.name}")
+                    leader_response = lr
+                    break
+                lr.close()
+            if leader_response is not None:
+                break
+
+    if leader_response is not None:
+        _save_response(response, leader_save_path)
+        vprint(f"+ leader base: en/{leader_save_path.name}")
+    else:
+        _save_response(response, save_path)
+        vprint(f"+ en/{save_path.name}")
+    return True
+
+
 def _download_card_swudb(
     session: requests.Session,
     cfg: "Config",
@@ -290,15 +373,24 @@ def _download_card_swudb(
     n = str(card_number).zfill(3)
     out = downloads_dir(cfg.set_code, "en")
     save_path = out / f"{n}.png"
+    leader_save_path = out / f"{n}-base.png"
 
     if save_path.exists() and not cfg.overwrite_downloads:
         vprint(f"= exists: en/{save_path.name}")
         return True
 
+    if cfg.set_code == "TS26":
+        try:
+            return _download_card_swudb_ts26(
+                session, cfg, card_number, save_path, leader_save_path,
+            )
+        except requests.RequestException as e:
+            print(f"! download error TS26/{card_number}: {e}")
+            return False
+
     url = cfg.source_url.format(set=cfg.set_code, n=n)
     leader_url = cfg.source_url.format(set=cfg.set_code, n=f"{n}-portrait")
     leader_url_alt = cfg.source_url.format(set=cfg.set_code, n=f"{n}-back")
-    leader_save_path = out / f"{n}-base.png"
 
     try:
         response = session.get(url, stream=True, timeout=HTTP_TIMEOUT)
@@ -711,6 +803,7 @@ def stage_fill_locale_fallbacks(cfg: "Config") -> None:
                 )
         print(f"  · {total} token webps copied from en")
         _print_fallback_summary(per_locale_filled, kind="token", denom_label="(standard+truncated)")
+        _enforce_strict_locales(cfg, per_locale_filled, kind="token")
         return
 
     # Card mode: 4 axes (standard/truncated × large/small).
@@ -729,6 +822,7 @@ def stage_fill_locale_fallbacks(cfg: "Config") -> None:
                 )
     print(f"  · {total} card webps copied from en")
     _print_fallback_summary(per_locale_filled, kind="card", denom_label="(standard+truncated × large+small)")
+    _enforce_strict_locales(cfg, per_locale_filled, kind="card")
 
 
 def _print_fallback_summary(
@@ -759,6 +853,32 @@ def _print_fallback_summary(
         # non-verbose mode.
         for name in sorted(names):
             print(f"      - {name}")
+
+
+def _enforce_strict_locales(
+    cfg: "Config",
+    per_locale_filled: dict[str, set[str]],
+    *,
+    kind: str,
+) -> None:
+    """Abort with a non-zero exit if --strict-locales is set and any locale
+    fell back to the English variant. Run at the end of the fallback stage
+    so the operator gets the full per-locale list of missing items printed
+    above before the process halts (and before the upload stage runs).
+    """
+    if not cfg.strict_locales:
+        return
+    deficient = {loc: names for loc, names in per_locale_filled.items() if names}
+    if not deficient:
+        return
+    total_missing = sum(len(n) for n in deficient.values())
+    print(
+        f"\n! --strict-locales: aborting before upload — {len(deficient)} locale(s) "
+        f"missing {total_missing} unique {kind}(s) that would be substituted with EN."
+    )
+    for locale in sorted(deficient):
+        print(f"    {locale}: {len(deficient[locale])} missing {kind}(s)")
+    raise SystemExit(3)
 
 
 # ───────────────────────────── Stage: Upload ──────────────────────────────
@@ -1188,6 +1308,7 @@ class Config:
     bottom_crop: int
     webp_quality: int
     tokens: Optional[list[tuple[str, str]]]
+    strict_locales: bool
 
 
 def parse_locales(raw: str) -> list[str]:
@@ -1261,6 +1382,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--webp-quality", type=int, default=WEBP_QUALITY)
     p.add_argument("--tokens", default=None,
                    help="Token mode. Comma-separated swudbId=s3Id pairs, e.g. 'T01=3941784506,T03=7268926664'.")
+    p.add_argument("--strict-locales", action="store_true",
+                   help=("Halt with a non-zero exit code before upload if any non-en locale "
+                         "is missing card/token images that would otherwise be substituted "
+                         "with the English variant by the fallback stage. Useful for CI / "
+                         "release runs where you want to guarantee fully-localized coverage."))
     p.add_argument("--verbose", action="store_true",
                    help="Show per-item logs (default: stage headers + progress bars only).")
     return p
@@ -1281,6 +1407,11 @@ def parse_set_codes(raw: str) -> list[str]:
 def cfg_from_args(args: argparse.Namespace, set_code: str) -> Config:
     tokens = parse_token_mapping(args.tokens) if args.tokens else None
     locales = parse_locales(args.locales)
+    # Honor a per-set max-attempts override only when the user hasn't
+    # explicitly passed --max-attempts (i.e. it's still the default).
+    max_attempts = args.max_attempts
+    if max_attempts == MAX_ATTEMPTS and set_code in PER_SET_MAX_ATTEMPTS:
+        max_attempts = PER_SET_MAX_ATTEMPTS[set_code]
     return Config(
         set_code=set_code,
         locales=locales,
@@ -1294,7 +1425,7 @@ def cfg_from_args(args: argparse.Namespace, set_code: str) -> Config:
         no_auto_login=args.no_auto_login,
         dry_run=args.dry_run,
         overwrite_downloads=args.overwrite_downloads,
-        max_attempts=args.max_attempts,
+        max_attempts=max_attempts,
         leader_attempts=args.leader_attempts,
         workers=args.workers,
         large_dimension=args.large_dimension,
@@ -1305,6 +1436,7 @@ def cfg_from_args(args: argparse.Namespace, set_code: str) -> Config:
         bottom_crop=args.bottom_crop,
         webp_quality=args.webp_quality,
         tokens=tokens,
+        strict_locales=bool(args.strict_locales),
     )
 
 
