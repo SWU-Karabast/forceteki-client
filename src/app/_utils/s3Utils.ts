@@ -27,10 +27,33 @@ export const s3ImageURL = (path: string) => {
  */
 export type CardImageLocale = 'en' | 'fr' | 'de' | 'es' | 'it';
 
+const SUPPORTED_CARD_IMAGE_LOCALES: readonly CardImageLocale[] = ['en', 'fr', 'de', 'es', 'it'];
+
+function resolveDefaultCardImageLocale(): CardImageLocale {
+    // `NEXT_PUBLIC_*` env vars are inlined at build time and so are safe to
+    // read on both server and client. Falls back to 'en' when unset or set
+    // to an unsupported value (with a console warning in the latter case so
+    // a typo in the deployment config is visible).
+    const raw = process.env.NEXT_PUBLIC_CARD_IMAGE_LOCALE?.trim().toLowerCase();
+    if (!raw) {
+        return 'en';
+    }
+    if ((SUPPORTED_CARD_IMAGE_LOCALES as readonly string[]).includes(raw)) {
+        return raw as CardImageLocale;
+    }
+    if (typeof console !== 'undefined') {
+        console.warn(
+            `NEXT_PUBLIC_CARD_IMAGE_LOCALE="${raw}" is not a supported locale ` +
+            `(${SUPPORTED_CARD_IMAGE_LOCALES.join(', ')}); falling back to 'en'.`
+        );
+    }
+    return 'en';
+}
+
 // TODO: wire this to a user preference (locale selector in settings) so
 // callers can resolve the active locale from context instead of relying on
 // the default.
-export const DEFAULT_CARD_IMAGE_LOCALE: CardImageLocale = 'en';
+export const DEFAULT_CARD_IMAGE_LOCALE: CardImageLocale = resolveDefaultCardImageLocale();
 
 export function s3CardImageURL(
     card: ICardData | ISetCode | IServerCardData | IPreviewCard,
