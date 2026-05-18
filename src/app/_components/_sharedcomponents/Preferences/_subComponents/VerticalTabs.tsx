@@ -4,10 +4,8 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { useEffect, useState } from 'react';
-import CurrentGameTab
-    from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CurrentGameTab';
-import KeyboardShortcutsTab
-    from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/KeyboardShortcutsTab';
+import CurrentGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/CurrentGameTab';
+import KeyboardShortcutsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/KeyboardShortcutsTab';
 import SoundOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/SoundOptionsTab';
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
@@ -43,14 +41,13 @@ function VerticalTabs({
     attemptingClose = false,
     closeHandler = () => undefined,
     cancelCloseHandler = () => undefined,
-}:IVerticalTabsProps) {
+}: IVerticalTabsProps) {
     const [value, setValue] = useState(0);
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
     const [pendingTabIndex, setPendingTabIndex] = useState<number | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const { logout } = useUser();
 
-    // 1. Fixed the 'beforeunload' typo and removed the hardcoded 'soundOptions' check
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (hasUnsavedChanges) {
@@ -73,11 +70,8 @@ function VerticalTabs({
         }
     }, [attemptingClose, hasUnsavedChanges, closeHandler]);
 
-    // 2. Removed the hardcoded 'soundOptions' check here too
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         if (hasUnsavedChanges && newValue !== value) {
-        // Check if leaving sound options with unsaved changes
-        if ((tabs[value] === 'soundOptions' || tabs[value] === 'gameOptions') && hasUnsavedChanges && newValue !== value) {
             setPendingTabIndex(newValue);
             setShowUnsavedDialog(true);
         } else {
@@ -87,7 +81,7 @@ function VerticalTabs({
 
     const handleDialogDiscard = () => {
         setShowUnsavedDialog(false);
-        setHasUnsavedChanges(false); // Reset the flag so the user can navigate cleanly
+        setHasUnsavedChanges(false);
         
         if (pendingTabIndex !== null) {
             setValue(pendingTabIndex);
@@ -111,98 +105,78 @@ function VerticalTabs({
     const renderPreferencesContent = (type: string) => {
         switch (type) {
             case TabType.CurrentGame:
-                return <CurrentGameTab/>;
+                return <CurrentGameTab />;
             case TabType.KeyboardShortcuts:
-                // 3. Passed the setter prop to the Keyboard tab!
                 return <KeyboardShortcutsTab setHasNewChanges={setHasUnsavedChanges} />;
-                return <KeyboardShortcutsTab/>;
             case TabType.GameOptions:
-                return <GameOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
+                return <GameOptionsTab setHasNewChanges={setHasUnsavedChanges} />;
             case TabType.Cosmetics:
                 return <CosmeticsTab />;
             case TabType.SoundOptions:
-                return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
+                return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges} />;
             case TabType.EndGame:
-                return <EndGameTab/>;
+                return <EndGameTab />;
             case TabType.BlockList:
-                return <BlockListTab/>;
+                return <BlockListTab />;
             case TabType.General:
-                return <GeneralTab/>;
+                return <GeneralTab />;
             default:
                 return <Typography>Not Implemented</Typography>;
         }
     };
-    
+
     const renderLabels = (type: string) => {
         switch (type) {
-            case TabType.CurrentGame:
-                return 'Current Game';
-            case TabType.KeyboardShortcuts:
-                return 'Keyboard Shortcuts';
-            case TabType.GameOptions:
-                return 'Game Options';
-            case TabType.Cosmetics:
-                return 'Cosmetics';
-            case TabType.SoundOptions:
-                return 'Sound Options';
-            case TabType.EndGame:
-                return 'Current Game';
-            case TabType.BlockList:
-                return 'Block List';
-            case TabType.Logout:
-                return 'Log Out'
-            case TabType.General:
-                return 'General';
-            default:
-                return null;
+            case TabType.CurrentGame: return 'Current Game';
+            case TabType.KeyboardShortcuts: return 'Keyboard Shortcuts';
+            case TabType.GameOptions: return 'Game Options';
+            case TabType.Cosmetics: return 'Cosmetics';
+            case TabType.SoundOptions: return 'Sound Options';
+            case TabType.EndGame: return 'Current Game';
+            case TabType.BlockList: return 'Block List';
+            case TabType.Logout: return 'Log Out';
+            case TabType.General: return 'General';
+            default: return null;
         }
-    }
+    };
 
-    // ------------------------STYLES------------------------//
     const styles = {
         tabContainer: {
             width: '20%',
             backgroundColor: 'transparent',
-            gap:'1rem',
+            gap: '1rem',
         },
-        tab:{
-            color:'white',
+        tab: {
+            color: 'white',
             alignItems: 'start',
             textTransform: 'none',
             fontSize: '1.2rem',
-            height:'4rem',
-            mb:'10px',
+            height: '4rem',
+            mb: '10px',
             '&.Mui-selected': {
                 backgroundColor: 'rgba(47, 125, 182, 0.5)',
-                borderRadius:'5px',
-                color:'white',
+                borderRadius: '5px',
+                color: 'white',
             },
             '&:hover': {
                 backgroundColor: 'rgba(47, 125, 182, 0.5)',
-                borderRadius:'5px',
-                color:'white',
+                borderRadius: '5px',
+                color: 'white',
             }
         },
-        tabPanelContainer:{
+        tabPanelContainer: {
             backgroundColor: 'transparent',
             width: '80%',
-            pl:9,
+            pl: 9,
             gap: '20px',
             maxHeight: variant === 'gameBoard' ? 'calc(80vh - 1rem)' : 'calc(100vh - 14rem - 60px)',
             overflowY: 'auto',
-            '::-webkit-scrollbar': {
-                width: '0.2vw',
-            },
-            '::-webkit-scrollbar-thumb': {
-                backgroundColor: '#D3D3D3B3',
-                borderRadius: '1vw',
-            },
-            '::-webkit-scrollbar-button': {
-                display: 'none',
-            },
+            '::-webkit-scrollbar': { width: '0.2vw' },
+            '::-webkit-scrollbar-thumb': { backgroundColor: '#D3D3D3B3', borderRadius: '1vw' },
+            '::-webkit-scrollbar-button': { display: 'none' },
             transition: 'scrollbar-color 0.3s ease-in-out',
         }
-    }
+    };
 
     return (
         <Box sx={{ display: 'flex', background: 'transparent' }}>
@@ -211,38 +185,23 @@ function VerticalTabs({
                 variant="scrollable"
                 value={value}
                 onChange={handleChange}
-                TabIndicatorProps={{
-                    style: { display: 'none' }
-                }}
+                TabIndicatorProps={{ style: { display: 'none' } }}
                 sx={styles.tabContainer}
             >
-                {tabs.map((tabName, idx) => {
-                    if (tabName === 'logout') {
-                        return (
-                            <Tab
-                                key={tabName}
-                                sx={styles.tab}
-                                label={renderLabels(tabName)}
-                                onClick={logout}
-                                {...tabProps(idx)}
-                            />
-                        );
-                    }
-                    return (
-                        <Tab
-                            key={tabName}
-                            sx={styles.tab}
-                            label={renderLabels(tabName)}
-                            {...tabProps(idx)}
-                        />
-                    );
-                })}
+                {tabs.map((tabName, idx) => (
+                    <Tab
+                        key={tabName}
+                        sx={styles.tab}
+                        label={renderLabels(tabName)}
+                        onClick={tabName === 'logout' ? logout : undefined}
+                        {...tabProps(idx)}
+                    />
+                ))}
             </Tabs>
+
             <Box sx={styles.tabPanelContainer}>
                 {tabs.map((tabName, idx) => {
-                    if (tabName === 'logout') {
-                        return null;
-                    }
+                    if (tabName === 'logout') return null;
                     return (
                         <Box
                             key={tabName}
@@ -257,14 +216,15 @@ function VerticalTabs({
                     );
                 })}
             </Box>
+
             <UnsavedChangesDialog
                 open={showUnsavedDialog}
                 onDiscard={handleDialogDiscard}
                 onCancel={handleDialogCancel}
-                // NEW: Pass the dynamic message based on the active tab!
                 customMessage={`You have unsaved ${
                     tabs[value] === 'soundOptions' ? 'sound ' : 
-                    tabs[value] === 'keyboardShortcuts' ? 'keyboard shortcut ' : ''
+                    tabs[value] === 'keyboardShortcuts' ? 'keyboard shortcut ' : 
+                    tabs[value] === 'gameOptions' ? 'game option ' : ''
                 }changes.`}
             />
         </Box>
