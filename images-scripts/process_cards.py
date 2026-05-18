@@ -109,6 +109,7 @@ HTTP_TIMEOUT = 10
 # widths by the TS26 branch in `_download_card_swudb`).
 PER_SET_MAX_ATTEMPTS: dict[str, int] = {
     "TS26": 100,
+    "IBH": 60,
 }
 
 # Retry tuning for flaky upstreams (matches fetchdata.js policy).
@@ -1106,11 +1107,15 @@ def stage_upload(cfg: "Config", *, tokens: bool = False) -> None:
         return
     print(f"… {len(jobs)} candidate files in s3://{cfg.bucket}/")
     counts: dict[str, int] = {}
+    # In dry-run mode no PutObject calls happen — _upload_one only HEADs
+    # each key and compares ETag to local MD5. Use a label that reflects
+    # what's actually happening so the progress bar doesn't mislead.
+    action_verb = "check-exists" if cfg.dry_run else "upload"
     with cf.ThreadPoolExecutor(max_workers=cfg.workers) as ex:
         futures = [ex.submit(_upload_one, client, cfg.bucket, j, dry_run=cfg.dry_run) for j in jobs]
         iterator = _maybe_progress(
             cf.as_completed(futures), total=len(futures),
-            desc=f"upload {label}", unit="file",
+            desc=f"{action_verb} {label}", unit="file",
         )
         for fut in iterator:
             status, msg = fut.result()
