@@ -63,6 +63,15 @@ export interface ICosmeticsPreferences {
     // disablePlaymats?: boolean;
 }
 
+export interface IKeyboardShortcuts {
+    passTurn?: string;
+    undo?: string;
+}
+
+export interface KeyboardLayoutProps {
+    keyboardShortcuts?: IKeyboardShortcuts;
+}
+
 export interface IGameOptions {
     muteChat?: boolean;
 }
@@ -70,6 +79,7 @@ export interface IGameOptions {
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
+    keyboardShortcuts?: IKeyboardShortcuts;
     gameOptions?: IGameOptions;
 
 }

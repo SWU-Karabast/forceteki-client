@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Grid2 as Grid, Typography } from '@mui/material';
 import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
 import PlayerCardTray from '../_components/Gameboard/PlayerCardTray/PlayerCardTray';
 import { useGame } from '../_contexts/Game.context';
+import { useUser } from '../_contexts/User.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
@@ -16,21 +17,26 @@ import { Play } from 'next/font/google';
 import RichText from '../_components/_sharedcomponents/RichText/RichText';
 
 const GameBoard = () => {
-    const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
+    const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator, sendGameMessage } = useGame();
+    const { user } = useUser();
     const router = useRouter();
     const { getBackground } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
-    const user = gameState?.players[connectedPlayer]?.user;
-    const background = getBackground(isSpectator ? null : user?.cosmetics?.background ?? null);
-    // const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
-    // const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
+    const [isConcedeConfirmOpen, setIsConcedeConfirmOpen] = useState(false);
+
+    // Playmat and Background Logic
+    const playerUser = gameState?.players[connectedPlayer]?.user;
+    const background = getBackground(isSpectator ? null : playerUser?.cosmetics?.background ?? null);
+    // const playMatsDisabled = isSpectator ? true : playerUser?.cosmetics?.disablePlaymats ?? true;
+    // const myPlaymatId = !playMatsDisabled ? playerUser?.cosmetics?.playmat : 'none';
     // const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
-    // const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
+    const opponentId = getOpponent(connectedPlayer);
+    const opponentUser = gameState?.players[opponentId]?.user;
     // const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
-    // const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+    // const theirPlaymat = !playMatsDisabled && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && (lobbyState.gameType !== MatchmakingType.Quick || lobbyState.winHistory.gamesToWinMode === GamesToWinMode.BestOfThree)) {
@@ -40,7 +46,6 @@ const GameBoard = () => {
 
     useEffect(() => {
         const hasWinners = !!gameState?.winners.length;
-        // open preferences automatically if game ended and user hasn't closed it themselves yet.
         if (hasWinners && !userClosedWinScreen) {
             setPreferenceOpen(true);
         } else if (!hasWinners && userClosedWinScreen) {
@@ -60,28 +65,22 @@ const GameBoard = () => {
         setPreferenceOpen(!isPreferenceOpen);
     };
 
-    // check if game ended already.
     const winners = !!gameState?.winners.length ? gameState.winners : undefined;
-    // const winners = ['order66']
-    // we set tabs
-    // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','soundOptions']
-        : ['currentGame','soundOptions'];
+        ? ['endGame','keyboardShortcuts','soundOptions']
+        : ['currentGame','keyboardShortcuts','soundOptions'];
 
-    // Get game number from winHistory for Bo3 mode
+    // Bo3 Logic
     const winHistory = lobbyState?.winHistory;
     const isBo3Mode = winHistory?.gamesToWinMode === GamesToWinMode.BestOfThree;
     const currentGameNumber = winHistory?.currentGameNumber || 1;
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
     const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
     const isBo3SetComplete = isBo3Mode && !!setEndResult;
-
     const gameEndedTitle = isBo3Mode
         ? (isBo3SetComplete ? 'Best-of-Three Set Ended' : `Game ${currentGameNumber} ended`)
         : 'Game ended';
 
-    // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {
         if (isSpectator && gameState?.players) {
             const player1Name = gameState.players[connectedPlayer]?.user?.username;
@@ -100,7 +99,7 @@ const GameBoard = () => {
 
     const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
     const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
-    // ----------------------Styles-----------------------------//
+
     const styles = {
         mainBoxStyle: {
             pr: sidebarOpen ? 'min(20%, 280px)' : '0',
@@ -151,32 +150,32 @@ const GameBoard = () => {
         },
         playerPlaymat: {
             position: 'absolute',
-            bottom: 0, // Touch bottom edge
-            left: '2rem', // Add left margin to constrain width
-            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
-            height: '47dvh', // Reduced height for middle spacing
-            backgroundSize: 'cover', // Fill container width, crop overflow edges
+            bottom: 0,
+            left: '2rem',
+            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem',
+            height: '47dvh',
+            backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
-            borderRadius: '8px', // Add subtle rounded corners
-            zIndex: 1, // Above background and darkening overlay, below UI elements
+            borderRadius: '8px',
+            zIndex: 1,
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
         },
         opponentPlaymat: {
             position: 'absolute',
-            top: 0, // Touch top edge
-            left: '2rem', // Add left margin to constrain width
-            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
-            height: '47dvh', // Reduced height for middle spacing
-            backgroundSize: 'cover', // Fill container width, crop overflow edges
+            top: 0,
+            left: '2rem',
+            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem',
+            height: '47dvh',
+            backgroundSize: 'cover',
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
-            borderRadius: '8px', // Add subtle rounded corners
-            zIndex: 1, // Above background and darkening overlay, below UI elements
+            borderRadius: '8px',
+            zIndex: 1,
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
-        }
+        },
     };
 
     return (
@@ -220,7 +219,6 @@ const GameBoard = () => {
                     />
                 </Box>
             </Box>
-
 
             <ChatDrawer
                 sidebarOpen={sidebarOpen}
