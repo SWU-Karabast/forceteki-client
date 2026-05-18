@@ -10,6 +10,8 @@ import { loadPreferencesFromLocalStorage } from '@/app/_utils/ServerAndLocalStor
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { keyframes } from '@mui/system';
 import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
+import { getDefaultShortcuts } from '@/app/_hooks/useKeyboardShortcuts';
+import { normalizeKeyBinding } from '@/app/_utils/keyboardUtils';
 
 interface KeyboardShortcutsTabProps {
     setHasNewChanges?: Dispatch<SetStateAction<boolean>>;
@@ -43,11 +45,10 @@ export enum ShortcutLabels {
 
 function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     const { user, updateUserPreferences } = useUser();
+
+    const isAnonymous = !user || !user.email;
     
-    const defaultShortcuts: IKeyboardShortcuts = {
-        passTurn: 'SPACE',
-        undo: 'U',
-    };
+    const defaultShortcuts = getDefaultShortcuts();
 
     const [keyboardShortcuts, setKeyboardShortcuts] = useState<IKeyboardShortcuts>(() => {
         const localPrefs = loadPreferencesFromLocalStorage();
@@ -64,6 +65,10 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     
     const keyboardShortcutsRef = useRef<IKeyboardShortcuts>(keyboardShortcuts);
     const containerRef = useRef<HTMLDivElement>(null); // Added for click-outside detection
+
+    useEffect(() => {
+        keyboardShortcutsRef.current = keyboardShortcuts;
+    }, [keyboardShortcuts]);
     
     const styles = {
         functionContainer:{
@@ -185,15 +190,18 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         if (!editingKey) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
+            
+            const isModifierHeld = e.ctrlKey || e.metaKey || e.altKey;
+            const isJustModifierKey = ['Control', 'Meta', 'Alt', 'Shift'].includes(e.key);
+            
+            if (isModifierHeld && !isJustModifierKey) {
+                return; // Let the browser refresh/switch tabs normally
+            }
+
             e.preventDefault();
             e.stopPropagation();
 
-            let keyString = '';
-            if (e.key === ' ') keyString = 'SPACE';
-            else if (e.key === 'Control') keyString = 'CTRL';
-            else if (e.key === 'Meta') keyString = 'CMD';
-            else if (e.key === 'Escape') keyString = 'ESC';
-            else keyString = e.key.toUpperCase();
+            const keyString = normalizeKeyBinding(e.key);
 
             processKeyBinding(keyString);
         };
@@ -288,6 +296,11 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
             {conflictError && (
                 <Alert severity="warning" sx={{ mb: '1rem' }}>Duplicate Key: {conflictError}</Alert>
             )}
+            {isAnonymous && (
+                <Alert severity="info" sx={{ mb: '1rem' }}>
+                    You are playing as a guest. Log in to create an account and save custom preferences!
+                </Alert>
+            )}
 
             <Box ref={containerRef} sx={styles.functionContainer}>
                 
@@ -295,13 +308,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                     keyboardShortcuts={keyboardShortcuts} 
                     onKeyClick={(key) => processKeyBinding(key)}
                 />
-
-                <Box sx={{ mt: 3, mb: 1, px: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                        Click any shortcut box below to assign a key. You can press the key on your physical keyboard, or click the visual keyboard above. 
-                        Clicking a box that already has a key bound to it will unbind it (OPEN). Press <b>ESC</b> or click elsewhere to cancel. 
-                    </Typography>
-                </Box>
                 
                 <Grid sx={styles.gridStyle}>
                     {(Object.entries(ShortcutLabels) as [keyof IKeyboardShortcuts, string][]).map(([key, label]) => (
@@ -315,13 +321,25 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                                 onClick={() => handleStartRecording(key as keyof IKeyboardShortcuts)}
                             >
                                 <Typography variant={'h3'}>
-                                    {editingKey === key ? 'Press key...' : (keyboardShortcuts[key as keyof IKeyboardShortcuts] || 'OPEN')}
+                                    {editingKey === key ? 'Press key...' : (keyboardShortcuts[key as keyof IKeyboardShortcuts] || 'Unbound')}
                                 </Typography>
                             </Box>
                             <Typography>{label}</Typography>
                         </Box>
                     ))}
                 </Grid>
+
+                <Box sx={{ mt: 4, px: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', lineHeight: 1.6 }}>
+                        <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                            <li style={{ marginBottom: '8px' }}>Click a shortcut box above to change its key.</li>
+                            <li style={{ marginBottom: '8px' }}>Clicking a shortcut box that already has a key assigned will remove that shortcut key.</li>
+                            <li style={{ marginBottom: '8px' }}>After selecting a box the box will state "Press key...", you can either press a key on your physical keyboard or click a key on the visual keyboard above to bind the key to the action.</li>
+                            <li style={{ marginBottom: '8px' }}>While assigning a key, press <b>ESC</b> or click outside the box to cancel without making changes.</li>
+                            <li>"Unbound" means the key does not have a keybind.</li>
+                        </ul>
+                    </Typography>
+                </Box>
             </Box>
 
             <Box sx={styles.saveButtonContainer}>
@@ -354,7 +372,7 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                 <PreferenceButton
                     variant="standard"
                     buttonFnc={handleSaveShortcuts}
-                    disabled={!hasChanges || isSaving}
+                    disabled={!hasChanges || isSaving || isAnonymous}
                     text={isSaving ? 'Saving...' : 'Save Changes'}
                     sx={styles.saveButton}
                 />

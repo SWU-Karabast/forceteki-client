@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useUser } from '@/app/_contexts/User.context';
 import { IKeyboardShortcuts } from '@/app/_contexts/UserTypes';
+import { normalizeKeyBinding } from '@/app/_utils/keyboardUtils';
 
 /**
  * Get default keyboard shortcuts
@@ -35,13 +36,16 @@ export const useKeyboardShortcuts = (callbacks: ShortcutCallbacks) => {
                              event.target instanceof HTMLTextAreaElement;
             if (isTyping) return;
 
+            const isModifierHeld = event.ctrlKey || event.metaKey || event.altKey;
+            const isJustModifierKey = ['Control', 'Meta', 'Alt', 'Shift'].includes(event.key);
+            
+            // If they are holding a modifier AND pressing a normal key, let the browser handle it!
+            if (isModifierHeld && !isJustModifierKey) {
+                return;
+            }
+
             // 2. Normalize the raw browser key
-            let pressedKey = '';
-            if (event.key === ' ') pressedKey = 'SPACE';
-            else if (event.key === 'Control') pressedKey = 'CTRL';
-            else if (event.key === 'Meta') pressedKey = 'CMD';
-            else if (event.key === 'Escape') pressedKey = 'ESC';
-            else pressedKey = event.key.toUpperCase();
+            const pressedKey = normalizeKeyBinding(event.key);
 
             // 3. Get user shortcuts or fallback to defaults
             const shortcuts = user?.preferences?.keyboardShortcuts || {};

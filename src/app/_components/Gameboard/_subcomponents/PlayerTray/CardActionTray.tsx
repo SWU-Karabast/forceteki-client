@@ -153,12 +153,12 @@ const CardActionTray: React.FC = () => {
     const { isPortrait } = useScreenOrientation();
     const [ resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverride ] = useState<boolean | null>(null);
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
-    const { user } = useUser();
     const playerState = gameState.players[connectedPlayer];
 
     const styles = createStyles(isPortrait);
 
-    const showTrayButtons = () => {
+    // Wrapped in useCallback so it can be safely used as a dependency in our keyboard handlers
+    const showTrayButtons = useCallback(() => {
         if ( playerState.promptState.promptType === 'actionWindow' ||
              playerState.promptState.promptType === 'resource' ||
              playerState.promptState.promptType === 'distributeAmongTargets' ||
@@ -167,7 +167,7 @@ const CardActionTray: React.FC = () => {
             return true;
         }
         return false;
-    };
+    }, [playerState.promptState, gameState]);
 
     const buttonDisabled = useCallback((button: IButtonsProps | PerCardButton) => {
         if (button.arg === 'done') {
@@ -195,22 +195,30 @@ const CardActionTray: React.FC = () => {
 
     // --- KEYBOARD HANDLERS ---
     const handlePassTurn = useCallback(() => {
+        // 1. Only allow the shortcut if the tray is actually visible to the user
+        if (!showTrayButtons()) return;
+
+        // 2. Find the pass button in the current state
         const passBtn = playerState.promptState.buttons.find(
             (b: IButtonsProps) => b.arg === 'pass' || b.arg === 'passAbility' || b.text === 'Pass'
         );
+        
+        // 3. Fire if found and not disabled
         if (passBtn && !buttonDisabled(passBtn)) {
             sendGameMessage([passBtn.command, passBtn.arg, passBtn.uuid]);
         }
-    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage]);
+    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage, showTrayButtons]);
 
-    const handleClaimInitiative = useCallback(() => {
+    /* const handleClaimInitiative = useCallback(() => {
+        if (!showTrayButtons()) return;
+
         const claimBtn = playerState.promptState.buttons.find(
             (b: IButtonsProps) => b.arg === 'claimInitiative'
         );
         if (claimBtn && !buttonDisabled(claimBtn)) {
             sendGameMessage([claimBtn.command, claimBtn.arg, claimBtn.uuid]);
         }
-    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage]);
+    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage, showTrayButtons]); */
 
     // Register our actions with the global handler
     useKeyboardShortcuts({

@@ -252,6 +252,11 @@ function VerticalTabs({
                 open={showUnsavedDialog}
                 onDiscard={handleDialogDiscard}
                 onCancel={handleDialogCancel}
+                // NEW: Pass the dynamic message based on the active tab!
+                customMessage={`You have unsaved ${
+                    tabs[value] === 'soundOptions' ? 'sound ' : 
+                    tabs[value] === 'keyboardShortcuts' ? 'keyboard shortcut ' : ''
+                }changes.`}
             />
         </Box>
     );
