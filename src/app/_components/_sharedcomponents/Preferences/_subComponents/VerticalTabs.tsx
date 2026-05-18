@@ -54,7 +54,6 @@ function VerticalTabs({
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (hasUnsavedChanges) {
-            if ((tabs[value] === 'soundOptions' || tabs[value] === 'gameOptions') && hasUnsavedChanges) {
                 e.preventDefault();
                 e.returnValue = 'You have unsaved preferences. Are you sure you want to leave?';
             }

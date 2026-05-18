@@ -70,6 +70,8 @@ export interface IKeyboardShortcuts {
 
 export interface KeyboardLayoutProps {
     keyboardShortcuts?: IKeyboardShortcuts;
+}
+
 export interface IGameOptions {
     muteChat?: boolean;
 }
