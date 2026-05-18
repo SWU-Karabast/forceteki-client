@@ -49,7 +49,7 @@ const Preferences: React.FC = () => {
             <PreferencesComponent
                 sidebarOpen={false}
                 isPreferenceOpen={true}
-                tabs={user ? ['general','keyboardShortcuts','soundOptions','cosmetics'] : ['general','soundOptions']}
+                tabs={user ? ['general','gameOptions', 'keyboardShortcuts','soundOptions','cosmetics'] : ['general','soundOptions']}
                 variant={'homePage'}
             />
             <Typography variant="body1" sx={styles.disclaimer}>
