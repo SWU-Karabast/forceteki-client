@@ -1233,16 +1233,48 @@ def stage_tokens_download(cfg: "Config", mapping: list[tuple[str, str]]) -> None
         if dest.exists() and not cfg.overwrite_downloads:
             vprint(f"= exists: en/{dest.name}")
             return
-        url = cfg.token_source_url.format(set=cfg.set_code, n=swu_id)
-        try:
-            r = session.get(url, stream=True, timeout=HTTP_TIMEOUT)
+
+        # swudb is inconsistent about where token PNGs live: some sets
+        # publish them at `T{SET}/{T01}.png` (matching the swudb id used in
+        # README.md / --tokens), others omit the leading 'T' on the
+        # filename and publish at `T{SET}/{01}.png`. Try the T-prefixed
+        # form first (the documented convention) and fall back to the
+        # un-prefixed numeric portion only if it 404s. Both attempts go
+        # through `_get_with_retry` so transient 5xx / connection errors
+        # don't get mistaken for an inconsistency.
+        candidates: list[str] = [cfg.token_source_url.format(set=cfg.set_code, n=swu_id)]
+        stripped = swu_id.lstrip("Tt")
+        if stripped and stripped != swu_id:
+            candidates.append(cfg.token_source_url.format(set=cfg.set_code, n=stripped))
+
+        tried: list[str] = []
+        for url in candidates:
+            tried.append(url)
+            r = _get_with_retry(session, url, stream=True)
+            if r is None:
+                # _get_with_retry already logged a giving-up message for
+                # exhausted retries; treat as a miss and try the next
+                # candidate.
+                continue
             if r.status_code == 200:
                 _save_response(r, dest)
-                vprint(f"+ {swu_id} -> en/{dest.name}")
-            else:
-                vprint(f"- 404 {url}")
-        except requests.RequestException as e:
-            print(f"! download error {url}: {e}")
+                vprint(f"+ {swu_id} -> en/{dest.name} ({url})")
+                return
+            r.close()
+            vprint(f"- HTTP {r.status_code} {url}")
+
+        # Tokens are expected to always exist on swudb (unlike preview
+        # cards on FFG), so a complete miss is a hard error: abort the run
+        # before later stages silently produce an empty token upload set.
+        tried_lines = "\n      ".join(tried)
+        raise SystemExit(
+            f"\n! Token swudbId={swu_id} (s3Id={s3_id}) not found on swudb.\n"
+            f"  Tried:\n      {tried_lines}\n"
+            f"  Check that the swudbId is correct and that the token exists "
+            f"on swudb.com. If swudb publishes it at a path that doesn't "
+            f"match either form above, update DEFAULT_TOKEN_SOURCE_URL or "
+            f"the fetch_en candidate list in process_cards.py."
+        )
 
     non_en_locales = [loc for loc in cfg.locales if loc != "en"]
 
