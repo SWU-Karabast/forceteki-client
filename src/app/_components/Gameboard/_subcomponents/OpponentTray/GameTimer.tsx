@@ -4,11 +4,16 @@ import { MAX_MAIN_TIME, MAX_TURN_TIME, secondsToMilliseconds } from '@/app/_comp
 import { Stack, Typography } from '@mui/material';
 import { formatMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
+import { TimerVisibility } from '@/app/_contexts/UserTypes';
+import { DEFAULT_TIMER_VISIBILITY } from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
 
 const TIMER_STEP = 100;
 
 const GameTimer: React.FC = ({ ...props }) => {
     const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { user } = useUser();
+    const timerVisibility: TimerVisibility = user?.preferences?.gameOptions?.timerVisibility ?? DEFAULT_TIMER_VISIBILITY;
     const playerState = gameState?.players[connectedPlayer];
     const opponentState = gameState?.players[getOpponent(connectedPlayer)];
 
@@ -85,9 +90,14 @@ const GameTimer: React.FC = ({ ...props }) => {
     // Show opponent's main time in the circle when they are active on main time and player is not active
     const showOpponentMainTime = !playerIsActive && opponentIsActive && !isTurnTime;
 
+    if (timerVisibility === TimerVisibility.HideAll) {
+        return null;
+    }
+
     return (
         <Timer
             activeTurn={activeTurn}
+            hideProgressIndicator={timerVisibility === TimerVisibility.HideTurnTimer}
             isTurnTime={isTurnTime}
             isRunning={isTurnTime ? (playerIsActive || opponentIsActive) : (playerIsActive || showOpponentMainTime)}
             maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME}
