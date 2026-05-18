@@ -110,17 +110,18 @@ export const articles: IArticle[] = [
 ];
 
 export const announcement: IAnnouncement = {
-    key:'callForVolunteers01',
-    title: 'Dev Volunteers Needed',
+    key:'updatedTimers01',
+    title: 'Updated Game Timers',
     content:`
-    The Karabast dev team is entirely volunteer-based and we are looking for more help! As the SWU community has grown, so have the needs of the Karabast platform, and some existing volunteers have needed to step back for personal reasons.<br/><br/> 
-    
-    So, we are seeking additional developers to join our team so that we can efficiently bring <b>new features, bug fixes, and new cards</b> to the community! We are particularly seeking contributors who have any of the following skill sets, but all help is welcomed:<br/><br/>
-    - Senior-level backend experience with JavaScript / TypeScript<br/>
-    - Anyone with design experience, especially related to UI/UX<br/>
-    - Senior- or junior-level frontend experience with React<br/>
+    We've reworked how game timers work to help keep matches moving and prevent indefinite stalling.<br/><br/>
+
+    <b>What's changed:</b> Previously, each player had a per-action timer that reset on any button click or chat message. Now, each player has <b>20 seconds per action</b> backed by a <b>2 minute time bank</b>. When a player's 20 seconds runs out, their timer begins drawing from their bank. The bank does not refill — if a player's bank runs out, that player concedes the game.<br/><br/>
+
+    <b>A few things to note:</b><br/>
+    - This only applies to <b>public games</b>. Private games remain untimed.<br/>
+    - We'll be actively monitoring the values for both the per-action timer and the time bank, and may adjust them based on how games play out.<br/>
     <br/>
-    If you're interested, please reach out in our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>!`,
-    endDate: '2025-12-21', // The date should be year-month-day
-    image:'/karabastdevlogoedited.png'
+    Have feedback? Let us know in our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>!`,
+    endDate: '2027-05-06', // The date should be year-month-day
+    image:'/timerexplainer.png'
 }

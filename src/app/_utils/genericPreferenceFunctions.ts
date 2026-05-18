@@ -43,6 +43,10 @@ export const savePreferencesGeneric = async (
                     keyboardShortcuts: {
                         ...user.preferences.keyboardShortcuts,
                         ...partialPreferences.keyboardShortcuts
+                ...(partialPreferences.gameOptions && {
+                    gameOptions: {
+                        ...user.preferences.gameOptions,
+                        ...partialPreferences.gameOptions
                     }
                 })
             }
@@ -69,6 +73,10 @@ export const savePreferencesGeneric = async (
                     keyboardShortcuts: {
                         ...currentLocalPreferences.keyboardShortcuts,
                         ...partialPreferences.keyboardShortcuts
+                ...(partialPreferences.gameOptions && {
+                    gameOptions: {
+                        ...currentLocalPreferences.gameOptions,
+                        ...partialPreferences.gameOptions
                     }
                 })
             };
@@ -126,5 +134,7 @@ const getDefaultPreferences = (): IPreferences => ({
     keyboardShortcuts: {
         passTurn: 'SPACE',
         undo: 'U',
+    gameOptions: {
+        muteChat: false,
     }
 });

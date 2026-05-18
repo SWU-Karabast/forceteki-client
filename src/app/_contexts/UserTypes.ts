@@ -70,12 +70,16 @@ export interface IKeyboardShortcuts {
 
 export interface KeyboardLayoutProps {
     keyboardShortcuts?: IKeyboardShortcuts;
+export interface IGameOptions {
+    muteChat?: boolean;
 }
 
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
     keyboardShortcuts?: IKeyboardShortcuts;
+    gameOptions?: IGameOptions;
+
 }
 
 export interface IUserContextType {

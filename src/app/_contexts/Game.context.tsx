@@ -45,6 +45,7 @@ interface IGameContextType {
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
+    gameIsEnded: () => boolean;
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -408,6 +409,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setDistributionPrompt(uuid, amount, promptData);
     };
 
+    const gameIsEnded = () => !!gameState?.winners?.length
+
     return (
         <GameContext.Provider
             value={{
@@ -431,6 +434,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 isAnonymousPlayer,
                 hasChatDisabled,
                 createNewSocket,
+                gameIsEnded,
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,

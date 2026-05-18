@@ -42,33 +42,6 @@ export async function GET(req: Request) {
                 throw new Error(`SWUSTATS API error: ${response.statusText}`);
             }
         }
-        else if (deckLink.includes('swudb.com')) {
-            const match = deckLink.match(/\/([^\/]+)\/?$/);
-            const deckId = match ? match[1] : null;
-            if(deckId != null) deckIdentifier = deckId;
-            deckSource = DeckSource.SWUDB;
-            if (!deckId) {
-                console.error('Error: Invalid deckLink format');
-                return NextResponse.json(
-                    { error: 'Invalid deckLink format' },
-                    { status: 400 }
-                );
-            }
-
-            const apiUrl = `https://swudb.com/api/getDeckJson/${deckId}`;
-
-            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
-            if (!response.ok) {
-                if(response.status === 403) {
-                    return NextResponse.json({ error: 'Deck is set to Private. Change deck to unlisted on swudb' }, { status: 403 });
-                }
-                if(response.status === 404) {
-                    return NextResponse.json({ error: 'Deck not found. Make sure the deck exists on swudb.com.' }, { status: 404 });
-                }
-                console.error('SWUDB API error:', response.statusText);
-                throw new Error(`SWUDB API error: ${response.statusText}`);
-            }
-        }
         else if (deckLink.includes('sw-unlimited-db.com')) {
             const match = deckLink.match(/\/decks\/(\d+)\/?$/);
             const deckId = match ? match[1] : null;
@@ -310,6 +283,33 @@ export async function GET(req: Request) {
 
                 console.error('CardCore API error:', response.statusText);
                 throw new Error(`CardCore API error: ${response.statusText}`);
+            }
+        } else if (deckLink.includes('holoscan.net')) {
+            // Deck Links in the forms:
+            // https://holoscan.net/decks/${deckId}  (e.g. STd7VXjQoaLRS6Y6my5Q or t-409272-a1111904)
+            const match = deckLink.match(/\/decks\/([^\/]+)\/?$/);
+            const deckId = match ? match[1] : null;
+            if (deckId != null) deckIdentifier = deckId;
+            deckSource = DeckSource.HoloScan;
+
+            if (!deckId) {
+                console.error('Error: Invalid deckLink format');
+                return NextResponse.json(
+                    { error: 'Invalid deckLink format' },
+                    { status: 400 }
+                );
+            }
+
+            const apiUrl = `https://holoscan.net/api/decks/${deckId}`;
+
+            response = await fetch(apiUrl, { method: 'GET', cache: 'no-store' });
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return NextResponse.json({ error: 'Deck not found. Make sure the deck exists on holoscan.net.' }, { status: 404 });
+                }
+
+                console.error('HoloScan API error:', response.statusText);
+                throw new Error(`HoloScan API error: ${response.statusText}`);
             }
         } else {
             console.error('Error: Deckbuilder not supported');
