@@ -5,8 +5,10 @@ import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
-import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay } from './CardImageMissingOverlay';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
@@ -247,6 +249,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         { ...card, setId: updatedCardId },
         cardStyle,
         cardbackPath);
+    const cardImageStatus = useImageLoadStatus(styledCardUrl);
     const cardbackgroundImage = card.selected && (phase === 'setup' || phase === 'regroup')
         ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${styledCardUrl})`
         : `url(${styledCardUrl})`;
@@ -651,6 +654,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                 sx={styles.card}
                 onClick={handleClick}
             >
+                {cardImageStatus === 'error' && (
+                    <CardImageMissingOverlay label={cardImageLabel({ ...card, setId: updatedCardId })} />
+                )}
                 <Box
                     sx={styles.cardOverlay}
                     onMouseEnter={handlePreviewOpen}

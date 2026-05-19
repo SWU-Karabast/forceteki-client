@@ -2,8 +2,10 @@ import React from 'react';
 import { Box, Popover, Typography } from '@mui/material';
 import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay } from './CardImageMissingOverlay';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
@@ -168,6 +170,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
     const isConnectedPlayer = card.controllerId === connectedPlayer;
+
+    const mainCardImageUrl = s3CardImageURL(card, cardStyle);
+    const mainCardImageStatus = useImageLoadStatus(mainCardImageUrl);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getForceTokenIconStyle = (player: any, isSelectable: boolean = false) => {
@@ -498,6 +503,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 onMouseLeave={handlePreviewClose}
                 {...longPressHandlers}
             >
+                {mainCardImageStatus === 'error' && !isDeployed && (
+                    <CardImageMissingOverlay label={cardImageLabel(card)} />
+                )}
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
                 </Box>

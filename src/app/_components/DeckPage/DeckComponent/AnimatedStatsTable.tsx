@@ -10,8 +10,44 @@ import {
     Box, Popover, PopoverOrigin,
     Tooltip
 } from '@mui/material';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, IMatchTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
+
+interface IMatchupCardCellProps {
+    cardId: string;
+    cardStyle?: CardStyle;
+    boxGeneralStyling: object;
+    onMouseEnter: (event: React.MouseEvent<HTMLElement>) => void;
+    onMouseLeave: () => void;
+}
+
+const MatchupCardCell: React.FC<IMatchupCardCellProps> = ({
+    cardId,
+    cardStyle,
+    boxGeneralStyling,
+    onMouseEnter,
+    onMouseLeave,
+}) => {
+    const cardArg = { id: cardId, count: 0 };
+    const url = cardStyle !== undefined ? s3CardImageURL(cardArg, cardStyle) : s3CardImageURL(cardArg);
+    const status = useImageLoadStatus(url);
+    return (
+        <Box
+            sx={{
+                ...boxGeneralStyling,
+                backgroundImage: `url(${url})`,
+                position: 'relative',
+            }}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            data-card-url={url}
+        >
+            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(cardArg)} />}
+        </Box>
+    );
+};
 
 interface AnimatedStatsTableProps {
     data: IMatchTableStats[];
@@ -340,39 +376,32 @@ const AnimatedStatsTable: React.FC<AnimatedStatsTableProps> = ({
                                                     </Tooltip>
                                                 </Box>
                                                 <Box sx={{ ...styles.parentBoxStyling, left: '-30px', top: '0px',zIndex:'0' }}>
-                                                    <Box
-                                                        sx={{
-                                                            ...styles.boxGeneralStyling,
-                                                            backgroundImage: `url(${s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)})`,
-                                                        }}
+                                                    <MatchupCardCell
+                                                        cardId={row.leaderId}
+                                                        cardStyle={CardStyle.PlainLeader}
+                                                        boxGeneralStyling={styles.boxGeneralStyling}
                                                         onMouseEnter={handlePreviewOpen}
                                                         onMouseLeave={handlePreviewClose}
-                                                        data-card-url={s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)}
                                                     />
                                                 </Box>
                                             </Box>
                                         ) : (
                                             <Box>
                                                 <Box sx={{ ...styles.parentBoxStyling, left: '20px', top: '0px',zIndex:'0' }}>
-                                                    <Box
-                                                        sx={{
-                                                            ...styles.boxGeneralStyling,
-                                                            backgroundImage: `url(${s3CardImageURL({ id: row.baseId, count: 0 })})`,
-                                                        }}
+                                                    <MatchupCardCell
+                                                        cardId={row.baseId}
+                                                        boxGeneralStyling={styles.boxGeneralStyling}
                                                         onMouseEnter={handlePreviewOpen}
                                                         onMouseLeave={handlePreviewClose}
-                                                        data-card-url={s3CardImageURL({ id: row.baseId, count: 0 })}
                                                     />
                                                 </Box>
                                                 <Box sx={{ ...styles.parentBoxStyling, left: '-30px', top: '14px',zIndex:'0' }}>
-                                                    <Box
-                                                        sx={{
-                                                            ...styles.boxGeneralStyling,
-                                                            backgroundImage: `url(${s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)})`,
-                                                        }}
+                                                    <MatchupCardCell
+                                                        cardId={row.leaderId}
+                                                        cardStyle={CardStyle.PlainLeader}
+                                                        boxGeneralStyling={styles.boxGeneralStyling}
                                                         onMouseEnter={handlePreviewOpen}
                                                         onMouseLeave={handlePreviewClose}
-                                                        data-card-url={s3CardImageURL({ id: row.leaderId, count: 0 }, CardStyle.PlainLeader)}
                                                     />
                                                 </Box>
                                             </Box>

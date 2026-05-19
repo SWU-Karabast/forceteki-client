@@ -15,7 +15,9 @@ import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/PercentageCircle';
 import AnimatedStatsTable from '@/app/_components/DeckPage/DeckComponent/AnimatedStatsTable';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
@@ -51,6 +53,11 @@ const DeckDetails: React.FC = () => {
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const params = useParams();
     const deckId = params?.DeckId;
+
+    const leaderImageUrl = deckData ? s3CardImageURL(deckData.leader, CardStyle.PlainLeader) : '';
+    const baseImageUrl = deckData ? s3CardImageURL(deckData.base) : '';
+    const leaderImageStatus = useImageLoadStatus(leaderImageUrl);
+    const baseImageStatus = useImageLoadStatus(baseImageUrl);
 
     // Rename states
     const [isRenaming, setIsRenaming] = useState(false);
@@ -549,22 +556,30 @@ const DeckDetails: React.FC = () => {
 
                     {/* Leader + Base */}
                     <Box sx={styles.leaderBaseContainer}>
-                        <Box sx={styles.boxGeneralStylingLeader}
+                        <Box sx={{ ...styles.boxGeneralStylingLeader, position: 'relative' }}
                             aria-owns={open ? 'mouse-over-popover' : undefined}
                             aria-haspopup="true"
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-type="leader"
                             data-card-url={deckData ? s3CardImageURL(deckData.leader, CardStyle.PlainLeader) : ''}
-                        />
-                        <Box sx={styles.boxGeneralStylingBase}
+                        >
+                            {deckData && leaderImageStatus === 'error' && (
+                                <CardImageMissingOverlay label={cardImageLabel(deckData.leader)} />
+                            )}
+                        </Box>
+                        <Box sx={{ ...styles.boxGeneralStylingBase, position: 'relative' }}
                             aria-owns={open ? 'mouse-over-popover' : undefined}
                             aria-haspopup="true"
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-type="base"
                             data-card-url={deckData ? s3CardImageURL(deckData.base) : ''}
-                        />
+                        >
+                            {deckData && baseImageStatus === 'error' && (
+                                <CardImageMissingOverlay label={cardImageLabel(deckData.base)} />
+                            )}
+                        </Box>
                     </Box>
                     <Popover
                         id="mouse-over-popover"
