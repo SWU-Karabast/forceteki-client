@@ -112,6 +112,18 @@ PER_SET_MAX_ATTEMPTS: dict[str, int] = {
     "IBH": 60,
 }
 
+# Per-set extra leader cardNumbers. Some sets have a leader whose number
+# falls outside the default leader-probe range (1..leader_attempts). Each
+# entry lists card numbers in that set that should ALSO be probed for
+# `-portrait`/`-back` URLs on swudb. Numbers already inside the default
+# range don't need to be listed.
+#
+# IBH (Imperial Brotherhood) has leaders at 001 and 053 — only 053 is
+# outside the default range.
+PER_SET_EXTRA_LEADERS: dict[str, set[int]] = {
+    "IBH": {53},
+}
+
 # Retry tuning for flaky upstreams (matches fetchdata.js policy).
 HTTP_RETRY_ATTEMPTS = 3
 HTTP_RETRY_BASE_DELAY = 1.0  # seconds
@@ -304,6 +316,18 @@ def _save_response(response: requests.Response, dest: Path) -> None:
 _TS26_SWUDB_WIDTHS: tuple[int, ...] = (2, 1)
 
 
+def _is_leader_candidate(cfg: "Config", card_number: int) -> bool:
+    """True if the swudb branch should probe `-portrait`/`-back` for this card.
+
+    Leaders are normally numbered within the first `leader_attempts` cards of
+    a set, but some sets (e.g. IBH #053) place a leader at a much higher
+    number. `PER_SET_EXTRA_LEADERS` lists those out-of-range numbers per set.
+    """
+    if card_number <= cfg.leader_attempts:
+        return True
+    return card_number in PER_SET_EXTRA_LEADERS.get(cfg.set_code, frozenset())
+
+
 def _download_card_swudb_ts26(
     session: requests.Session,
     cfg: "Config",
@@ -334,7 +358,7 @@ def _download_card_swudb_ts26(
         return False
 
     leader_response: Optional[requests.Response] = None
-    if card_number <= cfg.leader_attempts:
+    if _is_leader_candidate(cfg, card_number):
         # Probe the width that worked for the front first, then the other
         # width — TS26 mixes widths even within its leader range. Suffix
         # order matches the standard path: -portrait, then -back.
@@ -397,7 +421,7 @@ def _download_card_swudb(
         response = session.get(url, stream=True, timeout=HTTP_TIMEOUT)
         leader_response: Optional[requests.Response] = None
 
-        if card_number <= cfg.leader_attempts:
+        if _is_leader_candidate(cfg, card_number):
             # Try -portrait first, then -back. The portrait/back is saved as
             # the primary file (NNN.png); the regular card image is saved
             # as the "base" file (NNN-base.png). Do not "fix" this without
@@ -1449,6 +1473,15 @@ def cfg_from_args(args: argparse.Namespace, set_code: str) -> Config:
     max_attempts = args.max_attempts
     if max_attempts == MAX_ATTEMPTS and set_code in PER_SET_MAX_ATTEMPTS:
         max_attempts = PER_SET_MAX_ATTEMPTS[set_code]
+    extra_leaders = PER_SET_EXTRA_LEADERS.get(set_code, frozenset())
+    if extra_leaders:
+        out_of_range = sorted(n for n in extra_leaders if n > max_attempts)
+        if out_of_range:
+            raise SystemExit(
+                f"PER_SET_EXTRA_LEADERS[{set_code!r}] contains leader number(s) "
+                f"{out_of_range} > max_attempts={max_attempts}. Raise "
+                f"PER_SET_MAX_ATTEMPTS[{set_code!r}] or pass --max-attempts."
+            )
     return Config(
         set_code=set_code,
         locales=locales,
