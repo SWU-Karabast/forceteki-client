@@ -118,7 +118,7 @@ PER_SET_MAX_ATTEMPTS: dict[str, int] = {
 # `-portrait`/`-back` URLs on swudb. Numbers already inside the default
 # range don't need to be listed.
 #
-# IBH (Imperial Brotherhood) has leaders at 001 and 053 — only 053 is
+# IBH has leaders at 001 and 053 — only 053 is
 # outside the default range.
 PER_SET_EXTRA_LEADERS: dict[str, set[int]] = {
     "IBH": {53},
