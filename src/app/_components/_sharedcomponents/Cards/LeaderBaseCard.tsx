@@ -5,7 +5,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
-import { CardImageMissingOverlay } from './CardImageMissingOverlay';
+import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
@@ -172,7 +172,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const isConnectedPlayer = card.controllerId === connectedPlayer;
 
     const mainCardImageUrl = s3CardImageURL(card, cardStyle);
-    const mainCardImageStatus = useImageLoadStatus(mainCardImageUrl);
+    const { status: mainCardImageStatus, imgProps: mainCardImgProps } = useImageLoadStatus(mainCardImageUrl);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getForceTokenIconStyle = (player: any, isSelectable: boolean = false) => {
@@ -234,9 +234,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const styles = {
         card: {
             backgroundColor: 'black',
-            backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
             borderRadius: '0.5rem',
-            backgroundSize: 'cover',
             width: '100%',
             aspectRatio: '1.39',
             display: 'flex',
@@ -503,6 +501,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 onMouseLeave={handlePreviewClose}
                 {...longPressHandlers}
             >
+                {!isDeployed && (
+                    <Box
+                        component="img"
+                        src={mainCardImageUrl}
+                        alt=""
+                        draggable={false}
+                        {...mainCardImgProps}
+                        sx={cardImageFillSx}
+                    />
+                )}
                 {mainCardImageStatus === 'error' && !isDeployed && (
                     <CardImageMissingOverlay label={cardImageLabel(card)} />
                 )}

@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export type ImageLoadStatus = 'loading' | 'loaded' | 'error';
 
 /**
- * Tracks whether `url` loads successfully. Uses a parallel `Image()` request
- * that the browser dedupes with the same-URL `background-image` request the
- * caller is already issuing, so this adds no additional network calls.
+ * Tracks load status of an `<img>` element rendered by the caller. Spread
+ * the returned `imgProps` onto the element; the hook listens directly to
+ * the element's `onLoad`/`onError` events (no proxy `Image()` request).
  *
  * Returns `'error'` immediately for empty/undefined URLs.
  */
-export function useImageLoadStatus(url: string | undefined | null): ImageLoadStatus {
+export function useImageLoadStatus(url: string | undefined | null) {
+    const ref = useRef<HTMLImageElement | null>(null);
     const [status, setStatus] = useState<ImageLoadStatus>(() =>
         url ? 'loading' : 'error'
     );
@@ -20,32 +21,20 @@ export function useImageLoadStatus(url: string | undefined | null): ImageLoadSta
             return;
         }
         setStatus('loading');
-
-        const img = new Image();
-        let cancelled = false;
-
-        const handleLoad = () => { if (!cancelled) setStatus('loaded'); };
-        const handleError = () => { if (!cancelled) setStatus('error'); };
-
-        img.addEventListener('load', handleLoad);
-        img.addEventListener('error', handleError);
-        img.src = url;
-
-        // If the response was already cached, `complete` may be true synchronously.
-        if (img.complete) {
-            if (img.naturalWidth > 0) {
-                setStatus('loaded');
-            } else {
-                setStatus('error');
-            }
+        // If the response was already cached, `load` may fire before React
+        // attaches handlers; inspect `complete` after commit to catch it.
+        const img = ref.current;
+        if (img && img.complete) {
+            setStatus(img.naturalWidth > 0 ? 'loaded' : 'error');
         }
-
-        return () => {
-            cancelled = true;
-            img.removeEventListener('load', handleLoad);
-            img.removeEventListener('error', handleError);
-        };
     }, [url]);
 
-    return status;
+    return {
+        status,
+        imgProps: {
+            ref,
+            onLoad: () => setStatus('loaded'),
+            onError: () => setStatus('error'),
+        } as const,
+    };
 }

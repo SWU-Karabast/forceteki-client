@@ -17,7 +17,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
-import { CardImageMissingOverlay } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
+import { CardImageMissingOverlay, cardImageFillContainSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/PercentageCircle';
 import AnimatedStatsTable from '@/app/_components/DeckPage/DeckComponent/AnimatedStatsTable';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
@@ -56,8 +56,8 @@ const DeckDetails: React.FC = () => {
 
     const leaderImageUrl = deckData ? s3CardImageURL(deckData.leader, CardStyle.PlainLeader) : '';
     const baseImageUrl = deckData ? s3CardImageURL(deckData.base) : '';
-    const leaderImageStatus = useImageLoadStatus(leaderImageUrl);
-    const baseImageStatus = useImageLoadStatus(baseImageUrl);
+    const { status: leaderImageStatus, imgProps: leaderImgProps } = useImageLoadStatus(leaderImageUrl);
+    const { status: baseImageStatus, imgProps: baseImgProps } = useImageLoadStatus(baseImageUrl);
 
     // Rename states
     const [isRenaming, setIsRenaming] = useState(false);
@@ -362,21 +362,13 @@ const DeckDetails: React.FC = () => {
         },
         boxGeneralStylingLeader: {
             backgroundColor: 'transparent',
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundImage: deckData ? `url(${s3CardImageURL(deckData.leader, CardStyle.PlainLeader)})` : 'none',
             width: '14rem',
             height: '10.18rem',
-            backgroundRepeat: 'no-repeat',
         },
         boxGeneralStylingBase: {
             backgroundColor: 'transparent',
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundImage: deckData ? `url(${s3CardImageURL(deckData.base)})` : 'none',
             width: '14rem',
             height: '10.18rem',
-            backgroundRepeat: 'no-repeat',
         },
         titleContainer:{
             width:'40rem',
@@ -562,8 +554,18 @@ const DeckDetails: React.FC = () => {
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-type="leader"
-                            data-card-url={deckData ? s3CardImageURL(deckData.leader, CardStyle.PlainLeader) : ''}
+                            data-card-url={leaderImageUrl}
                         >
+                            {deckData && (
+                                <Box
+                                    component="img"
+                                    src={leaderImageUrl}
+                                    alt=""
+                                    draggable={false}
+                                    {...leaderImgProps}
+                                    sx={cardImageFillContainSx}
+                                />
+                            )}
                             {deckData && leaderImageStatus === 'error' && (
                                 <CardImageMissingOverlay label={cardImageLabel(deckData.leader)} />
                             )}
@@ -574,8 +576,18 @@ const DeckDetails: React.FC = () => {
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-type="base"
-                            data-card-url={deckData ? s3CardImageURL(deckData.base) : ''}
+                            data-card-url={baseImageUrl}
                         >
+                            {deckData && (
+                                <Box
+                                    component="img"
+                                    src={baseImageUrl}
+                                    alt=""
+                                    draggable={false}
+                                    {...baseImgProps}
+                                    sx={cardImageFillContainSx}
+                                />
+                            )}
                             {deckData && baseImageStatus === 'error' && (
                                 <CardImageMissingOverlay label={cardImageLabel(deckData.base)} />
                             )}

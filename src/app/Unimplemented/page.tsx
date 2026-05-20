@@ -14,7 +14,7 @@ import { IPreviewCard } from '@/app/_components/_sharedcomponents/Cards/CardType
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
-import { CardImageMissingOverlay } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
+import { CardImageMissingOverlay, cardImageFillSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 
 interface IUnimplementedCardTileProps {
     card: IPreviewCard;
@@ -32,15 +32,23 @@ const UnimplementedCardTile: React.FC<IUnimplementedCardTileProps> = ({
     onMouseLeave,
 }) => {
     const url = s3CardImageURL(card);
-    const status = useImageLoadStatus(url);
+    const { status, imgProps } = useImageLoadStatus(url);
     const baseSx = card.types === 'base' ? leaderStyleCardSx : styleCardSx;
     return (
         <Box
-            sx={{ ...baseSx, backgroundImage: `url(${url})`, position: 'relative' }}
+            sx={{ ...baseSx, position: 'relative' }}
             onMouseEnter={(e) => onMouseEnter(e, card.types)}
             onMouseLeave={onMouseLeave}
             data-card-url={url}
         >
+            <Box
+                component="img"
+                src={url}
+                alt=""
+                draggable={false}
+                {...imgProps}
+                sx={cardImageFillSx}
+            />
             {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(card)} />}
         </Box>
     );

@@ -8,7 +8,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
-import { CardImageMissingOverlay } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
+import { CardImageMissingOverlay, cardImageFillContainSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { CardStyle, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -31,9 +31,17 @@ interface IDeckSummaryCardTileProps {
 const DeckSummaryCardTile: React.FC<IDeckSummaryCardTileProps> = ({ cardId, cardStyle, boxGeneralStyling }) => {
     const cardArg = { id: cardId, count: 0 };
     const url = cardStyle !== undefined ? s3CardImageURL(cardArg, cardStyle) : s3CardImageURL(cardArg);
-    const status = useImageLoadStatus(url);
+    const { status, imgProps } = useImageLoadStatus(url);
     return (
-        <Box sx={{ ...boxGeneralStyling, backgroundImage: `url(${url})`, position: 'relative' }}>
+        <Box sx={{ ...boxGeneralStyling, position: 'relative' }}>
+            <Box
+                component="img"
+                src={url}
+                alt=""
+                draggable={false}
+                {...imgProps}
+                sx={cardImageFillContainSx}
+            />
             {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(cardArg)} />}
         </Box>
     );

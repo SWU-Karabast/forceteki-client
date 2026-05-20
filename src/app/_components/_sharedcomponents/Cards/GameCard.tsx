@@ -8,7 +8,7 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { getBorderColor } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
-import { CardImageMissingOverlay } from './CardImageMissingOverlay';
+import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
@@ -249,10 +249,8 @@ const GameCard: React.FC<IGameCardProps> = ({
         { ...card, setId: updatedCardId },
         cardStyle,
         cardbackPath);
-    const cardImageStatus = useImageLoadStatus(styledCardUrl);
-    const cardbackgroundImage = card.selected && (phase === 'setup' || phase === 'regroup')
-        ? `linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6)), url(${styledCardUrl})`
-        : `url(${styledCardUrl})`;
+    const { status: cardImageStatus, imgProps: cardImgProps } = useImageLoadStatus(styledCardUrl);
+    const showSelectedGradient = card.selected && (phase === 'setup' || phase === 'regroup');
     // Styles
     const styles = {
         cardContainer: {
@@ -273,9 +271,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         card: {
             borderRadius: '0.5rem',
             position: 'relative',
-            backgroundImage: cardbackgroundImage,
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
+            backgroundColor: 'black',
             aspectRatio: cardStyle === CardStyle.InPlay ? '1' : '1/1.4',
             width: '100%',
             border: isHiddenHandCard
@@ -287,6 +283,15 @@ const GameCard: React.FC<IGameCardProps> = ({
                     : '2px solid transparent',
             boxShadow: borderColor && card.selected && card.zone !== 'hand' ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
+        },
+        cardImage: cardImageFillSx,
+        selectedGradient: {
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 'inherit',
+            background: 'linear-gradient(rgba(255, 254, 80, 0.2), rgba(255, 254, 80, 0.6))',
+            pointerEvents: 'none',
+            zIndex: 1,
         },
         cardOverlay: {
             position: 'absolute',
@@ -654,6 +659,15 @@ const GameCard: React.FC<IGameCardProps> = ({
                 sx={styles.card}
                 onClick={handleClick}
             >
+                <Box
+                    component="img"
+                    src={styledCardUrl}
+                    alt=""
+                    draggable={false}
+                    {...cardImgProps}
+                    sx={styles.cardImage}
+                />
+                {showSelectedGradient && <Box sx={styles.selectedGradient} />}
                 {cardImageStatus === 'error' && (
                     <CardImageMissingOverlay label={cardImageLabel({ ...card, setId: updatedCardId })} />
                 )}

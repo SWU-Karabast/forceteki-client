@@ -3,7 +3,7 @@ import { Card, Box, Typography, Divider, Popover, PopoverOrigin } from '@mui/mat
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { IDeckCard, IDeckData } from '@/app/_utils/fetchDeckData';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
-import { CardImageMissingOverlay } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
+import { CardImageMissingOverlay, cardImageFillSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 
 interface IDeckCardTileProps {
     card: IDeckCard;
@@ -14,14 +14,22 @@ interface IDeckCardTileProps {
 
 const DeckCardTile: React.FC<IDeckCardTileProps> = ({ card, styleCardSx, onMouseEnter, onMouseLeave }) => {
     const url = s3CardImageURL(card);
-    const status = useImageLoadStatus(url);
+    const { status, imgProps } = useImageLoadStatus(url);
     return (
         <Box
-            sx={{ ...styleCardSx, backgroundImage: `url(${url})` }}
+            sx={styleCardSx}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             data-card-url={url}
         >
+            <Box
+                component="img"
+                src={url}
+                alt=""
+                draggable={false}
+                {...imgProps}
+                sx={cardImageFillSx}
+            />
             {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(card)} />}
         </Box>
     );
