@@ -6,6 +6,7 @@ import Grid from '@mui/material/Grid2';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
+import { deckSourceTagStyles } from '@/app/_utils/deckProviders/registry';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
@@ -221,31 +222,8 @@ const DeckPage: React.FC = () => {
         sortDecks(e.target.value);
     };
 
-    const getDeckSourceStyle = (deckSource: string) => {
-        switch (deckSource.toUpperCase()) {
-            case 'SWUSTATS':
-                return styles.swuStatsTag;
-            case 'SWUDB':
-                return styles.swudbTag;
-            case 'SWUNLIMITEDDB':
-                return styles.swuUnlimitedTag;
-            case 'SWUCARDHUB':
-                return styles.swuCardHubTag;
-            case 'SWUBASE':
-                return styles.swuBaseTag;
-            case 'SWUMETASTATS':
-                return styles.swuMetaStatsTag;
-            case 'MYSWU':
-                return styles.mySwuTag;
-            case 'PROTECTTHEPOD':
-                return styles.protectThePodTag;
-            case 'CARDCORE':
-                return styles.cardCoreTag;
-            default:
-                console.log(`Unknown deck source: ${deckSource}`);
-                return styles.unknownTag;
-        }
-    };
+    const getDeckSourceStyle = (deckSource: string) =>
+        deckSourceTagStyles[deckSource] ?? styles.unknownTag;
 
     // ----------------------Styles-----------------------------//
     const styles = {
@@ -396,87 +374,6 @@ const DeckPage: React.FC = () => {
             border: '1px solid',
             boxShadow: '0 0 5px',
             width:'fit-content',
-        },
-        swuStatsTag: {
-            borderColor: '#FFD700', // Blue for SWUStats
-            color: '#FFD700',
-            '&:hover': {
-                backgroundColor: '#FFD700',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #FFD700',
-        },
-        swudbTag: {
-            borderColor: '#4CB5FF',
-            color: '#4CB5FF',
-            '&:hover': {
-                backgroundColor: '#4CB5FF',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #4CB5FF',
-        },
-        swuUnlimitedTag: {
-            borderColor: '#4CFF85',
-            color: '#4CFF85',
-            '&:hover': {
-                backgroundColor: '#4CFF85',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #4CB5FF',
-        },
-        swuCardHubTag: {
-            borderColor: '#4F39F6',
-            color: '#4F39F6',
-            '&:hover': {
-                backgroundColor: '#4F39F6',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #4F39F6',
-        },
-        swuBaseTag: {
-            borderColor: '#4CFF85',
-            color: '#4CFF85',
-            '&:hover': {
-                backgroundColor: '#4CFF85',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #4CFF85',
-        },
-        swuMetaStatsTag: {
-            borderColor: '#00DBCC',
-            color: '#00DBCC',
-            '&:hover': {
-                backgroundColor: '#00DBCC',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #00DBCC',
-        },
-        mySwuTag: {
-            borderColor: '#F65526',
-            color: '#F65526',
-            '&:hover': {
-                backgroundColor: '#F65526',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #F65526',
-        },
-        protectThePodTag: {
-            borderColor: '#B388FF',
-            color: '#B388FF',
-            '&:hover': {
-                backgroundColor: '#B388FF',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #B388FF',
-        },
-        cardCoreTag: {
-            borderColor: '#FF6B35',
-            color: '#FF6B35',
-            '&:hover': {
-                backgroundColor: '#FF6B35',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #FF6B35',
         },
         unknownTag: {
             color: 'white',

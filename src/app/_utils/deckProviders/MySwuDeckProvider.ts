@@ -2,10 +2,11 @@ import { DeckSource } from '../deckTypes';
 import { DeckProviderBase, IStatusErrorOverride } from './DeckProviderBase';
 import { DeckFetchErrorReason } from './types';
 
-export class MySwuProvider extends DeckProviderBase {
+export class MySwuDeckProvider extends DeckProviderBase {
     public readonly source = DeckSource.MySWU;
     public readonly displayName = 'my-swu.com';
-    protected readonly hostNameMatch = 'my-swu.com';
+    public readonly hostNameMatch = 'my-swu.com';
+    public readonly tagColor = '#F65526';
 
     // My-SWU returns 404 for private decks.
     protected readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {

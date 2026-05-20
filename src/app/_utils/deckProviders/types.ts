@@ -1,5 +1,3 @@
-import { DeckSource, IDeckData } from '../deckTypes';
-
 /**
  * Discriminator for {@link DeckFetchError}. Consumers should switch on this
  * (rather than parse the error message) to decide which UX to show.
@@ -39,18 +37,4 @@ export class DeckFetchError extends Error {
         this.status = status;
         this.providerName = providerName;
     }
-}
-
-/**
- * Implementations MUST issue their HTTP requests via `httpGetJson` so that
- * `cache: 'no-store'` is applied uniformly. Browser caching of deck-builder
- * responses is not allowed.
- */
-export interface IDeckProvider {
-    readonly source: DeckSource;
-
-    /** Human-readable name used in error messages (e.g. "swubase.com"). */
-    readonly displayName: string;
-    matches(deckLink: string): boolean;
-    fetchAsync(deckLink: string): Promise<IDeckData>;
 }

@@ -2,10 +2,11 @@ import { DeckSource } from '../deckTypes';
 import { DeckProviderBase, IStatusErrorOverride } from './DeckProviderBase';
 import { DeckFetchErrorReason } from './types';
 
-export class SwustatsProvider extends DeckProviderBase {
+export class SwustatsDeckProvider extends DeckProviderBase {
     public readonly source = DeckSource.SWUStats;
     public readonly displayName = 'swustats.net';
-    protected readonly hostNameMatch = 'swustats.net';
+    public readonly hostNameMatch = 'swustats.net';
+    public readonly tagColor = '#FFD700';
 
     // swustats also returns 500 for missing decks.
     protected readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {

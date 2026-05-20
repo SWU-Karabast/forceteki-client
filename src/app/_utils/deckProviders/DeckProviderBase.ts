@@ -1,6 +1,6 @@
 import { DeckSource, IDeckData } from '../deckTypes';
 import { httpGetJson } from './httpGetJson';
-import { DeckFetchError, DeckFetchErrorReason, IDeckProvider } from './types';
+import { DeckFetchError, DeckFetchErrorReason } from './types';
 
 export interface IStatusErrorOverride {
     reason: DeckFetchErrorReason;
@@ -14,21 +14,35 @@ export interface IStatusErrorOverride {
  * base handles *how* (validate link, fetch via `httpGetJson`, map errors,
  * parse JSON, stamp `deckSource`/`deckID`). All thrown errors are
  * {@link DeckFetchError} tagged with `providerName = this.displayName`.
+ *
+ * Add a new provider by creating a subclass and registering an instance in
+ * `registry.ts`. No other wiring is required: `determineDeckSource`,
+ * `SupportedDeckSources`, and the DeckPage tag-style lookup all derive
+ * themselves from the registry.
  */
-export abstract class DeckProviderBase implements IDeckProvider {
+export abstract class DeckProviderBase {
     // ----- Required per-provider configuration -----
 
     public abstract readonly source: DeckSource;
 
-    /** Human-readable name used in error messages (e.g. "swubase.com"). */
+    /** Human-readable name used in error messages and the supported-sites list (e.g. "swubase.com"). */
     public abstract readonly displayName: string;
 
     /**
      * Substring used by the default {@link matches} implementation
      * (`deckLink.includes(hostNameMatch)`). Override `matches` for anything
-     * more elaborate.
+     * more elaborate. Also consumed by `determineDeckSource` via the
+     * registry.
      */
-    protected abstract readonly hostNameMatch: string;
+    public abstract readonly hostNameMatch: string;
+
+    /**
+     * Accent color (any CSS color string) used for the provider's pill on
+     * the DeckPage. The full SX block is derived from this in
+     * `tagStyle.ts`. Required so a new provider cannot ship without a
+     * colored tag.
+     */
+    public abstract readonly tagColor: string;
 
     /** Construct the JSON API URL that returns the deck for the given id. */
     protected abstract buildApiUrl(deckId: string): string;

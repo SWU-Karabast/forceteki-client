@@ -2,10 +2,11 @@ import { DeckSource } from '../deckTypes';
 import { DeckProviderBase, IStatusErrorOverride } from './DeckProviderBase';
 import { DeckFetchErrorReason } from './types';
 
-export class SwubaseProvider extends DeckProviderBase {
+export class SwubaseDeckProvider extends DeckProviderBase {
     public readonly source = DeckSource.SWUBase;
     public readonly displayName = 'swubase.com';
-    protected readonly hostNameMatch = 'swubase.com';
+    public readonly hostNameMatch = 'swubase.com';
+    public readonly tagColor = '#4CFF85';
     // Deck Links in the form: https://swubase.com/decks/${deckId}
     protected readonly deckIdRegex = /\/decks\/([^/]+)\/?$/;
 

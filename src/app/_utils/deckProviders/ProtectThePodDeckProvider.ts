@@ -2,10 +2,11 @@ import { DeckSource } from '../deckTypes';
 import { DeckProviderBase, IStatusErrorOverride } from './DeckProviderBase';
 import { DeckFetchError, DeckFetchErrorReason } from './types';
 
-export class ProtectThePodProvider extends DeckProviderBase {
+export class ProtectThePodDeckProvider extends DeckProviderBase {
     public readonly source = DeckSource.ProtectThePod;
     public readonly displayName = 'protectthepod.com';
-    protected readonly hostNameMatch = 'protectthepod.com';
+    public readonly hostNameMatch = 'protectthepod.com';
+    public readonly tagColor = '#B388FF';
 
     protected readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
         400: {
