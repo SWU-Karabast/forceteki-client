@@ -124,6 +124,19 @@ PER_SET_EXTRA_LEADERS: dict[str, set[int]] = {
     "IBH": {53},
 }
 
+# Per-set leaders whose BOTH faces are landscape-oriented (unlike normal
+# leaders, which have a portrait front + landscape unit back). Because
+# there is no "primary portrait" side, these cards are stored as
+# `{NNN}-base.webp` and `{NNN}-base2.webp` rather than the usual
+# `{NNN}.webp` (portrait) + `{NNN}-base.webp` (unit). The client URL
+# builder in forceteki-client/src/app/_utils/s3Utils.ts knows to look for
+# `-base2` for these specific cards.
+#
+# TWI #017 is the first such card.
+PER_SET_LANDSCAPE_DOUBLE_LEADERS: dict[str, set[int]] = {
+    "TWI": {17},
+}
+
 # Retry tuning for flaky upstreams (matches fetchdata.js policy).
 HTTP_RETRY_ATTEMPTS = 3
 HTTP_RETRY_BASE_DELAY = 1.0  # seconds
@@ -328,6 +341,16 @@ def _is_leader_candidate(cfg: "Config", card_number: int) -> bool:
     return card_number in PER_SET_EXTRA_LEADERS.get(cfg.set_code, frozenset())
 
 
+def _is_landscape_double_leader(cfg: "Config", card_number: int) -> bool:
+    """True if this leader has two landscape faces (no portrait side).
+
+    Such cards are saved as `{NNN}-base.png` + `{NNN}-base2.png` rather
+    than the usual `{NNN}.png` (portrait) + `{NNN}-base.png` (unit). See
+    `PER_SET_LANDSCAPE_DOUBLE_LEADERS` for the list.
+    """
+    return card_number in PER_SET_LANDSCAPE_DOUBLE_LEADERS.get(cfg.set_code, frozenset())
+
+
 def _download_card_swudb_ts26(
     session: requests.Session,
     cfg: "Config",
@@ -399,9 +422,14 @@ def _download_card_swudb(
     out = downloads_dir(cfg.set_code, "en")
     save_path = out / f"{n}.png"
     leader_save_path = out / f"{n}-base.png"
+    # Landscape-double leaders never write NNN.png; their two faces are
+    # NNN-base.png (front/unit URL) and NNN-base2.png (portrait/back URL).
+    landscape_double = _is_landscape_double_leader(cfg, card_number)
+    leader_secondary_path = out / f"{n}-base2.png"
+    existence_sentinel = leader_save_path if landscape_double else save_path
 
-    if save_path.exists() and not cfg.overwrite_downloads:
-        vprint(f"= exists: en/{save_path.name}")
+    if existence_sentinel.exists() and not cfg.overwrite_downloads:
+        vprint(f"= exists: en/{existence_sentinel.name}")
         return True
 
     if cfg.set_code == "TS26":
@@ -420,21 +448,27 @@ def _download_card_swudb(
     try:
         response = session.get(url, stream=True, timeout=HTTP_TIMEOUT)
         leader_response: Optional[requests.Response] = None
+        # Where the portrait/back side gets saved. For normal leaders this
+        # is NNN.png (the primary file); for landscape-double leaders it's
+        # NNN-base2.png and NNN.png is never written.
+        leader_primary_path = leader_secondary_path if landscape_double else save_path
 
         if _is_leader_candidate(cfg, card_number):
-            # Try -portrait first, then -back. The portrait/back is saved as
-            # the primary file (NNN.png); the regular card image is saved
-            # as the "base" file (NNN-base.png). Do not "fix" this without
-            # also updating the site's URL builder (s3Utils.ts).
+            # Try -portrait first, then -back. For normal leaders the
+            # portrait/back is saved as the primary file (NNN.png) and the
+            # regular card image is saved as the "base" file (NNN-base.png).
+            # Do not "fix" this without also updating the site's URL
+            # builder (s3Utils.ts). For landscape-double leaders both faces
+            # are saved with -base/-base2 suffixes instead.
             leader_response = session.get(leader_url, stream=True, timeout=HTTP_TIMEOUT)
             if leader_response.status_code == 200:
-                _save_response(leader_response, save_path)
-                vprint(f"+ leader portrait: en/{save_path.name}")
+                _save_response(leader_response, leader_primary_path)
+                vprint(f"+ leader portrait: en/{leader_primary_path.name}")
             else:
                 leader_response = session.get(leader_url_alt, stream=True, timeout=HTTP_TIMEOUT)
                 if leader_response.status_code == 200:
-                    _save_response(leader_response, save_path)
-                    vprint(f"+ leader back: en/{save_path.name}")
+                    _save_response(leader_response, leader_primary_path)
+                    vprint(f"+ leader back: en/{leader_primary_path.name}")
                 else:
                     leader_response = None
 
@@ -471,9 +505,13 @@ def _download_card_ffg(
     out = downloads_dir(cfg.set_code, locale)
     save_path = out / f"{n}.png"
     leader_save_path = out / f"{n}-base.png"
+    # See `_download_card_swudb` for the landscape-double-leader contract.
+    landscape_double = _is_landscape_double_leader(cfg, card_number)
+    leader_secondary_path = out / f"{n}-base2.png"
+    existence_sentinel = leader_save_path if landscape_double else save_path
 
-    if save_path.exists() and not cfg.overwrite_downloads:
-        vprint(f"= exists: {locale}/{save_path.name}")
+    if existence_sentinel.exists() and not cfg.overwrite_downloads:
+        vprint(f"= exists: {locale}/{existence_sentinel.name}")
         return True
 
     entry = ffg_index.get(card_number)
@@ -500,15 +538,19 @@ def _download_card_ffg(
             # forceteki-client/src/app/_utils/s3Utils.ts depends on) follows
             # swudb: NNN.webp = portrait/leader side, NNN-base.webp = unit
             # side. So we map FFG -> swudb here by swapping destinations.
+            # For landscape-double leaders both faces are landscape and the
+            # client expects NNN-base.webp + NNN-base2.webp; we still keep
+            # artFront=unit on -base for cross-locale consistency.
             back_resp = _get_with_retry(session, back_url, stream=True)
             if back_resp is None or back_resp.status_code != 200:
                 print(f"! FFG back fetch failed {locale}/{n}: status="
                       f"{getattr(back_resp, 'status_code', '?')}; skipping card")
                 front_resp.close()
                 return False
-            _save_response(back_resp, save_path)          # NNN.png      <- artBack (portrait)
-            _save_response(front_resp, leader_save_path)  # NNN-base.png <- artFront (unit)
-            vprint(f"+ leader portrait: {locale}/{save_path.name}")
+            leader_primary_path = leader_secondary_path if landscape_double else save_path
+            _save_response(back_resp, leader_primary_path)   # portrait (or 2nd landscape)
+            _save_response(front_resp, leader_save_path)     # NNN-base.png <- artFront (unit)
+            vprint(f"+ leader portrait: {locale}/{leader_primary_path.name}")
             vprint(f"+ leader base:     {locale}/{leader_save_path.name}")
         else:
             _save_response(front_resp, save_path)
