@@ -78,6 +78,12 @@ export enum TimerVisibility {
     HideAll = 'hideAll',
 }
 
+export enum PlayerTimeRemainingStatus {
+    NoAlert = 'NoAlert',
+    Warning = 'Warning',
+    Danger = 'Danger',
+}
+
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;

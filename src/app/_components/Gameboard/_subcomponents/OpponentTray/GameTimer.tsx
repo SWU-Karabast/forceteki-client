@@ -7,6 +7,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useUser } from '@/app/_contexts/User.context';
 import { TimerVisibility } from '@/app/_contexts/UserTypes';
 import { DEFAULT_TIMER_VISIBILITY } from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
+import TimerWarningIcon from './TimerWarningIcon';
 
 const TIMER_STEP = 100;
 
@@ -91,7 +92,9 @@ const GameTimer: React.FC = ({ ...props }) => {
     const showOpponentMainTime = !playerIsActive && opponentIsActive && !isTurnTime;
 
     if (timerVisibility === TimerVisibility.HideAll) {
-        return null;
+        // Clock is hidden, but the warning icon still appears in this slot when main time
+        // is low so the player has a chance to react before timing out.
+        return <TimerWarningIcon />;
     }
 
     return (
