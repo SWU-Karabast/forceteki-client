@@ -109,7 +109,7 @@ HTTP_TIMEOUT = 10
 # widths by the TS26 branch in `_download_card_swudb`).
 PER_SET_MAX_ATTEMPTS: dict[str, int] = {
     "TS26": 100,
-    "IBH": 60,
+    "IBH": 110,
 }
 
 # Per-set extra leader cardNumbers. Some sets have a leader whose number
