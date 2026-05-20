@@ -87,7 +87,11 @@ DEFAULT_LOCALES = ("en", "fr", "de", "es", "it")
 # `fallback` copies any missing per-locale webps from the `en` working tree
 # before upload, so the S3 layout is "complete" for every locale even when
 # FFG has no localized image for a card yet.
-STAGES = ("download", "resize", "truncate", "fallback", "upload")
+# `check-exists` HEADs every candidate S3 key and diffs against local MD5,
+# producing the upload plan without writing anything. The `upload` stage
+# then PUTs only the new/changed files. Stopping at `check-exists` gives a
+# preview; the default `--to upload` runs both back-to-back.
+STAGES = ("download", "resize", "truncate", "fallback", "check-exists", "upload")
 
 # Sizes / quality
 LARGE_DIMENSION = 400
@@ -122,6 +126,19 @@ PER_SET_MAX_ATTEMPTS: dict[str, int] = {
 # outside the default range.
 PER_SET_EXTRA_LEADERS: dict[str, set[int]] = {
     "IBH": {53},
+}
+
+# Per-set leaders whose BOTH faces are landscape-oriented (unlike normal
+# leaders, which have a portrait front + landscape unit back). Because
+# there is no "primary portrait" side, these cards are stored as
+# `{NNN}-base.webp` and `{NNN}-base2.webp` rather than the usual
+# `{NNN}.webp` (portrait) + `{NNN}-base.webp` (unit). The client URL
+# builder in forceteki-client/src/app/_utils/s3Utils.ts knows to look for
+# `-base2` for these specific cards.
+#
+# TWI #017 is the first such card.
+PER_SET_LANDSCAPE_DOUBLE_LEADERS: dict[str, set[int]] = {
+    "TWI": {17},
 }
 
 # Retry tuning for flaky upstreams (matches fetchdata.js policy).
@@ -328,6 +345,16 @@ def _is_leader_candidate(cfg: "Config", card_number: int) -> bool:
     return card_number in PER_SET_EXTRA_LEADERS.get(cfg.set_code, frozenset())
 
 
+def _is_landscape_double_leader(cfg: "Config", card_number: int) -> bool:
+    """True if this leader has two landscape faces (no portrait side).
+
+    Such cards are saved as `{NNN}-base.png` + `{NNN}-base2.png` rather
+    than the usual `{NNN}.png` (portrait) + `{NNN}-base.png` (unit). See
+    `PER_SET_LANDSCAPE_DOUBLE_LEADERS` for the list.
+    """
+    return card_number in PER_SET_LANDSCAPE_DOUBLE_LEADERS.get(cfg.set_code, frozenset())
+
+
 def _download_card_swudb_ts26(
     session: requests.Session,
     cfg: "Config",
@@ -399,9 +426,14 @@ def _download_card_swudb(
     out = downloads_dir(cfg.set_code, "en")
     save_path = out / f"{n}.png"
     leader_save_path = out / f"{n}-base.png"
+    # Landscape-double leaders never write NNN.png; their two faces are
+    # NNN-base.png (front/unit URL) and NNN-base2.png (portrait/back URL).
+    landscape_double = _is_landscape_double_leader(cfg, card_number)
+    leader_secondary_path = out / f"{n}-base2.png"
+    existence_sentinel = leader_save_path if landscape_double else save_path
 
-    if save_path.exists() and not cfg.overwrite_downloads:
-        vprint(f"= exists: en/{save_path.name}")
+    if existence_sentinel.exists() and not cfg.overwrite_downloads:
+        vprint(f"= exists: en/{existence_sentinel.name}")
         return True
 
     if cfg.set_code == "TS26":
@@ -420,21 +452,27 @@ def _download_card_swudb(
     try:
         response = session.get(url, stream=True, timeout=HTTP_TIMEOUT)
         leader_response: Optional[requests.Response] = None
+        # Where the portrait/back side gets saved. For normal leaders this
+        # is NNN.png (the primary file); for landscape-double leaders it's
+        # NNN-base2.png and NNN.png is never written.
+        leader_primary_path = leader_secondary_path if landscape_double else save_path
 
         if _is_leader_candidate(cfg, card_number):
-            # Try -portrait first, then -back. The portrait/back is saved as
-            # the primary file (NNN.png); the regular card image is saved
-            # as the "base" file (NNN-base.png). Do not "fix" this without
-            # also updating the site's URL builder (s3Utils.ts).
+            # Try -portrait first, then -back. For normal leaders the
+            # portrait/back is saved as the primary file (NNN.png) and the
+            # regular card image is saved as the "base" file (NNN-base.png).
+            # Do not "fix" this without also updating the site's URL
+            # builder (s3Utils.ts). For landscape-double leaders both faces
+            # are saved with -base/-base2 suffixes instead.
             leader_response = session.get(leader_url, stream=True, timeout=HTTP_TIMEOUT)
             if leader_response.status_code == 200:
-                _save_response(leader_response, save_path)
-                vprint(f"+ leader portrait: en/{save_path.name}")
+                _save_response(leader_response, leader_primary_path)
+                vprint(f"+ leader portrait: en/{leader_primary_path.name}")
             else:
                 leader_response = session.get(leader_url_alt, stream=True, timeout=HTTP_TIMEOUT)
                 if leader_response.status_code == 200:
-                    _save_response(leader_response, save_path)
-                    vprint(f"+ leader back: en/{save_path.name}")
+                    _save_response(leader_response, leader_primary_path)
+                    vprint(f"+ leader back: en/{leader_primary_path.name}")
                 else:
                     leader_response = None
 
@@ -471,9 +509,13 @@ def _download_card_ffg(
     out = downloads_dir(cfg.set_code, locale)
     save_path = out / f"{n}.png"
     leader_save_path = out / f"{n}-base.png"
+    # See `_download_card_swudb` for the landscape-double-leader contract.
+    landscape_double = _is_landscape_double_leader(cfg, card_number)
+    leader_secondary_path = out / f"{n}-base2.png"
+    existence_sentinel = leader_save_path if landscape_double else save_path
 
-    if save_path.exists() and not cfg.overwrite_downloads:
-        vprint(f"= exists: {locale}/{save_path.name}")
+    if existence_sentinel.exists() and not cfg.overwrite_downloads:
+        vprint(f"= exists: {locale}/{existence_sentinel.name}")
         return True
 
     entry = ffg_index.get(card_number)
@@ -500,15 +542,19 @@ def _download_card_ffg(
             # forceteki-client/src/app/_utils/s3Utils.ts depends on) follows
             # swudb: NNN.webp = portrait/leader side, NNN-base.webp = unit
             # side. So we map FFG -> swudb here by swapping destinations.
+            # For landscape-double leaders both faces are landscape and the
+            # client expects NNN-base.webp + NNN-base2.webp; we still keep
+            # artFront=unit on -base for cross-locale consistency.
             back_resp = _get_with_retry(session, back_url, stream=True)
             if back_resp is None or back_resp.status_code != 200:
                 print(f"! FFG back fetch failed {locale}/{n}: status="
                       f"{getattr(back_resp, 'status_code', '?')}; skipping card")
                 front_resp.close()
                 return False
-            _save_response(back_resp, save_path)          # NNN.png      <- artBack (portrait)
-            _save_response(front_resp, leader_save_path)  # NNN-base.png <- artFront (unit)
-            vprint(f"+ leader portrait: {locale}/{save_path.name}")
+            leader_primary_path = leader_secondary_path if landscape_double else save_path
+            _save_response(back_resp, leader_primary_path)   # portrait (or 2nd landscape)
+            _save_response(front_resp, leader_save_path)     # NNN-base.png <- artFront (unit)
+            vprint(f"+ leader portrait: {locale}/{leader_primary_path.name}")
             vprint(f"+ leader base:     {locale}/{leader_save_path.name}")
         else:
             _save_response(front_resp, save_path)
@@ -942,25 +988,15 @@ def _s3_etag_md5(client, bucket: str, key: str) -> Optional[str]:
     return etag
 
 
-def _upload_one(client, bucket: str, job: UploadJob, *, dry_run: bool) -> tuple[str, str]:
-    """Upload (or skip) a single file. Returns (status, message).
+def _upload_one(client, bucket: str, classified: "ClassifiedJob") -> tuple[str, str]:
+    """PUT a previously-classified new/changed job. Returns (status, message).
 
-    Status is one of: 'skipped', 'uploaded_new', 'uploaded_changed', 'failed',
-    'planned_new', 'planned_changed'.
+    Status is one of: 'uploaded_new', 'uploaded_changed', 'failed'. Only
+    called for `classified.status in ('new', 'changed')` — up-to-date and
+    check-failed entries are filtered out before this runs.
     """
-    try:
-        local_md5 = _md5_hex(job.local_path)
-        remote_md5 = _s3_etag_md5(client, bucket, job.s3_key)
-    except Exception as e:
-        return ("failed", f"! error checking {job.s3_key}: {e}")
-
-    if remote_md5 == local_md5:
-        return ("skipped", f"= skip (unchanged): {job.s3_key}")
-
-    detail = "new" if remote_md5 is None else "changed"
-    if dry_run:
-        return (f"planned_{detail}", f"~ would upload {detail}: {job.s3_key}")
-
+    job = classified.job
+    detail = classified.status  # 'new' or 'changed'
     try:
         with job.local_path.open("rb") as body:
             client.put_object(
@@ -973,6 +1009,42 @@ def _upload_one(client, bucket: str, job: UploadJob, *, dry_run: bool) -> tuple[
     except Exception as e:
         return ("failed", f"! upload failed {job.s3_key}: {e}")
     return (f"uploaded_{detail}", f"+ upload {detail}: {job.s3_key}")
+
+
+@dataclass
+class ClassifiedJob:
+    """Result of HEAD-ing a candidate UploadJob against S3.
+
+    Produced by `stage_check_exists`; consumed by `stage_upload`. Status
+    determines whether the upload stage will PUT this file:
+      'up_to_date'   — remote ETag matches local MD5; skip.
+      'new'          — no remote object exists yet; PUT.
+      'changed'      — remote ETag differs from local MD5; PUT (overwrite).
+      'check_failed' — HEAD or local MD5 raised; skip and report.
+    """
+    job: UploadJob
+    status: str
+    local_md5: Optional[str]
+    remote_md5: Optional[str]
+    message: str
+
+
+def _classify_one(client, bucket: str, job: UploadJob) -> ClassifiedJob:
+    """HEAD + local-MD5 compare for a single job. No S3 writes."""
+    try:
+        local_md5 = _md5_hex(job.local_path)
+        remote_md5 = _s3_etag_md5(client, bucket, job.s3_key)
+    except Exception as e:
+        return ClassifiedJob(job, "check_failed", None, None,
+                             f"! error checking {job.s3_key}: {e}")
+    if remote_md5 == local_md5:
+        return ClassifiedJob(job, "up_to_date", local_md5, remote_md5,
+                             f"= up-to-date: {job.s3_key}")
+    if remote_md5 is None:
+        return ClassifiedJob(job, "new", local_md5, None,
+                             f"~ new: {job.s3_key}")
+    return ClassifiedJob(job, "changed", local_md5, remote_md5,
+                         f"~ changed: {job.s3_key}")
 
 
 def _collect_set_jobs(cfg: "Config") -> list[UploadJob]:
@@ -1117,29 +1189,85 @@ def ensure_aws_credentials(cfg: "Config") -> boto3.Session:
     raise SystemExit(2)
 
 
-def stage_upload(cfg: "Config", *, tokens: bool = False) -> None:
+def stage_check_exists(cfg: "Config", *, tokens: bool = False) -> list[ClassifiedJob]:
+    """HEAD every candidate S3 key and diff against local MD5.
+
+    Returns the full classified list (including up-to-date entries) so the
+    caller can pass it directly to `stage_upload`. Never writes to S3.
+    """
     label = "tokens" if tokens else f"set={cfg.set_code}"
-    print(f"\n── Stage: Upload ({label}, locales={','.join(cfg.locales)}, "
-          f"dry_run={cfg.dry_run}) ──")
+    print(f"\n── Stage: Check S3 ({label}, locales={','.join(cfg.locales)}) ──")
 
     session = ensure_aws_credentials(cfg)
     client = session.client("s3")
 
     jobs = _collect_token_jobs(cfg) if tokens else _collect_set_jobs(cfg)
     if not jobs:
-        print("! nothing to upload")
-        return
+        print("! nothing to check")
+        return []
     print(f"… {len(jobs)} candidate files in s3://{cfg.bucket}/")
+
+    classified: list[ClassifiedJob] = []
     counts: dict[str, int] = {}
-    # In dry-run mode no PutObject calls happen — _upload_one only HEADs
-    # each key and compares ETag to local MD5. Use a label that reflects
-    # what's actually happening so the progress bar doesn't mislead.
-    action_verb = "check-exists" if cfg.dry_run else "upload"
     with cf.ThreadPoolExecutor(max_workers=cfg.workers) as ex:
-        futures = [ex.submit(_upload_one, client, cfg.bucket, j, dry_run=cfg.dry_run) for j in jobs]
+        futures = [ex.submit(_classify_one, client, cfg.bucket, j) for j in jobs]
         iterator = _maybe_progress(
             cf.as_completed(futures), total=len(futures),
-            desc=f"{action_verb} {label}", unit="file",
+            desc=f"check-exists {label}", unit="file",
+        )
+        for fut in iterator:
+            c = fut.result()
+            classified.append(c)
+            counts[c.status] = counts.get(c.status, 0) + 1
+            vprint(c.message)
+
+    print(f"\n── Check summary ({label}) ──")
+    print(f"  up-to-date:    {counts.get('up_to_date', 0)}")
+    print(f"  new:           {counts.get('new', 0)}")
+    print(f"  changed:       {counts.get('changed', 0)}")
+    cf_count = counts.get('check_failed', 0)
+    if cf_count:
+        print(f"  check-failed:  {cf_count}")
+    print(f"  total:         {len(jobs)}")
+    return classified
+
+
+def stage_upload(
+    cfg: "Config",
+    classified: list[ClassifiedJob],
+    *,
+    tokens: bool = False,
+) -> None:
+    """PUT every 'new' or 'changed' entry from a prior check-exists pass.
+
+    In `--dry-run` mode this is a single informational line — no PUTs.
+    """
+    label = "tokens" if tokens else f"set={cfg.set_code}"
+    to_upload = [c for c in classified if c.status in ("new", "changed")]
+    n_new = sum(1 for c in to_upload if c.status == "new")
+    n_changed = len(to_upload) - n_new
+
+    print(f"\n── Stage: Upload ({label}, dry_run={cfg.dry_run}, "
+          f"files={len(to_upload)}) ──")
+
+    if not to_upload:
+        print("  · nothing to upload")
+        return
+
+    if cfg.dry_run:
+        print(f"  · dry-run: would PUT {len(to_upload)} files "
+              f"({n_new} new + {n_changed} changed) — no S3 writes")
+        return
+
+    session = ensure_aws_credentials(cfg)
+    client = session.client("s3")
+
+    counts: dict[str, int] = {}
+    with cf.ThreadPoolExecutor(max_workers=cfg.workers) as ex:
+        futures = [ex.submit(_upload_one, client, cfg.bucket, c) for c in to_upload]
+        iterator = _maybe_progress(
+            cf.as_completed(futures), total=len(futures),
+            desc=f"upload {label}", unit="file",
         )
         for fut in iterator:
             status, msg = fut.result()
@@ -1147,17 +1275,12 @@ def stage_upload(cfg: "Config", *, tokens: bool = False) -> None:
             vprint(msg)
 
     print(f"\n── Upload summary ({label}) ──")
-    if cfg.dry_run:
-        print(f"  would upload (new):     {counts.get('planned_new', 0)}")
-        print(f"  would upload (changed): {counts.get('planned_changed', 0)}")
-    else:
-        print(f"  uploaded (new):         {counts.get('uploaded_new', 0)}")
-        print(f"  uploaded (changed):     {counts.get('uploaded_changed', 0)}")
-    print(f"  skipped (unchanged):    {counts.get('skipped', 0)}")
+    print(f"  uploaded (new):     {counts.get('uploaded_new', 0)}")
+    print(f"  uploaded (changed): {counts.get('uploaded_changed', 0)}")
     failed = counts.get('failed', 0)
     if failed:
-        print(f"  failed:                 {failed}")
-    print(f"  total:                  {len(jobs)}")
+        print(f"  failed:             {failed}")
+    print(f"  total:              {len(to_upload)}")
 
 
 # ──────────────────────────────── Tokens ──────────────────────────────────
@@ -1411,7 +1534,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--from", dest="from_stage", choices=STAGES, default="download",
                    help="Run stages starting from this one (default: download).")
     p.add_argument("--to", choices=STAGES, default="upload",
-                   help="Run stages up to and including this one (default: upload).")
+                   help=("Run stages up to and including this one (default: upload). "
+                         "Use --to check-exists to preview the S3 diff without uploading."))
     p.add_argument("--source-url", default=DEFAULT_SOURCE_URL,
                    help="URL template for English (swudb); supports {set} and {n}.")
     p.add_argument("--token-source-url", default=DEFAULT_TOKEN_SOURCE_URL,
@@ -1546,9 +1670,9 @@ def run_one_set(args: argparse.Namespace, set_code: str) -> int:
         return first <= idx <= last
 
     if cfg.tokens is not None:
-        # Token pipeline: download -> resize (standard) -> truncate -> fallback -> upload.
-        # Produces cards/_tokens/{locale}/standard/{id}.webp and
-        # cards/_tokens/{locale}/truncated/{id}.webp.
+        # Token pipeline: download -> resize (standard) -> truncate -> fallback
+        # -> check-exists -> upload. Produces cards/_tokens/{locale}/standard/{id}.webp
+        # and cards/_tokens/{locale}/truncated/{id}.webp.
         if should_run("download"):
             stage_tokens_download(cfg, cfg.tokens)
         if should_run("resize"):
@@ -1557,8 +1681,14 @@ def run_one_set(args: argparse.Namespace, set_code: str) -> int:
             stage_truncate_tokens(cfg)
         if should_run("fallback"):
             stage_fill_locale_fallbacks(cfg)
-        if should_run("upload"):
-            stage_upload(cfg, tokens=True)
+        # check-exists feeds upload. When upload runs without check-exists
+        # in this invocation (e.g. --from upload), we still need the diff;
+        # silently run check-exists first so both stages are always paired.
+        classified_tokens: Optional[list[ClassifiedJob]] = None
+        if should_run("check-exists") or should_run("upload"):
+            classified_tokens = stage_check_exists(cfg, tokens=True)
+        if should_run("upload") and classified_tokens is not None:
+            stage_upload(cfg, classified_tokens, tokens=True)
         return 0
 
     if should_run("download"):
@@ -1569,8 +1699,11 @@ def run_one_set(args: argparse.Namespace, set_code: str) -> int:
         stage_truncate(cfg)
     if should_run("fallback"):
         stage_fill_locale_fallbacks(cfg)
-    if should_run("upload"):
-        stage_upload(cfg)
+    classified_cards: Optional[list[ClassifiedJob]] = None
+    if should_run("check-exists") or should_run("upload"):
+        classified_cards = stage_check_exists(cfg)
+    if should_run("upload") and classified_cards is not None:
+        stage_upload(cfg, classified_cards)
     return 0
 
 
