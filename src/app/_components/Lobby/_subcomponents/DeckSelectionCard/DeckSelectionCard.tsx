@@ -22,7 +22,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { fetchDeckData, determineDeckSource, DeckSource } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, determineDeckSource, DeckSource, DeckFetchError, DeckFetchErrorReason } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures,
     DeckValidationFailureReason,
@@ -36,7 +36,7 @@ import {
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { GamesToWinMode, IMatchConfiguration, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
+import { GamesToWinMode, IMatchConfiguration, SupportedDeckSources, SwuGameFormat, DiscordInviteUrl } from '@/app/_constants/constants';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 
@@ -251,7 +251,32 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
             setDisplayError(true);
             clearErrorsFunc();
             setModalOpen(true)
-            if(error instanceof Error){
+            if (error instanceof DeckFetchError) {
+                switch (error.reason) {
+                    case DeckFetchErrorReason.Private:
+                        setError('Couldn\'t import. The deck is set to private.', {
+                            [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                        }, 'Deck Validation Error', 'error');
+                        break;
+                    case DeckFetchErrorReason.NotFound:
+                        setError(error.message, undefined, 'Deck Validation Error', 'error');
+                        break;
+                    case DeckFetchErrorReason.InvalidLink:
+                    case DeckFetchErrorReason.UnsupportedProvider:
+                        setError('Couldn\'t import. Deck link is invalid or unsupported.', undefined, 'Deck Validation Error', 'error');
+                        break;
+                    case DeckFetchErrorReason.NetworkError:
+                    case DeckFetchErrorReason.ProviderError: {
+                        const partnerMsg = `${error.providerName ?? 'The deck site'} failed to return a decklist. Try again later.`;
+                        setError(partnerMsg, partnerMsg, 'Deck Validation Error', 'error',
+                            { label: 'Report this issue in our Discord', href: DiscordInviteUrl });
+                        break;
+                    }
+                    default:
+                        setError('Couldn\'t import. Deck is invalid.', undefined, 'Deck Validation Error', 'error');
+                        break;
+                }
+            } else if (error instanceof Error) {
                 if(error.message.includes('NotLobbyMember')) {
                     setError('Couldn\'t change deck. Your lobby session was lost. Please refresh the page.',
                         undefined,
@@ -764,6 +789,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     errors={errorState.details}
                     matchConfig={matchConfig}
                     modalType={errorState.modalType}
+                    footerLink={errorState.footerLink}
                 />
             )}
             {lobbyState.isPrivate && (

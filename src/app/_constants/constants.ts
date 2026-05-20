@@ -21,6 +21,9 @@ export enum CardPool {
 
 export const NewGameFormatAvailable: SwuGameFormat | undefined = SwuGameFormat.Limited;
 
+/** Invite link to the Karabast Discord. */
+export const DiscordInviteUrl = 'https://discord.gg/hKRaqHND4v';
+
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
     BestOfThree = 'bestOfThree',

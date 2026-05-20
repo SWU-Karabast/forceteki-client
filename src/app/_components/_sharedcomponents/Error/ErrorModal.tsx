@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Box, Modal, Typography } from '@mui/material';
+import { Box, Link, Modal, Typography } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { getReadableDeckErrors } from '@/app/_validators/DeckValidation/getReadableDeckErrors';
 import { IDeckValidationFailures } from '@/app/_validators/DeckValidation/DeckValidationTypes';
@@ -13,6 +13,7 @@ interface ErrorModalProps {
     errors?: IDeckValidationFailures | string;
     matchConfig?: IMatchConfiguration;
     modalType?: string;
+    footerLink?: { label: string; href: string };
 }
 
 export const ErrorModal: React.FC<ErrorModalProps> = ({
@@ -22,6 +23,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
     errors,
     matchConfig,
     modalType = 'error',
+    footerLink,
 }) => {
     // Inline styling for the modal content
     let messages: string[];
@@ -66,6 +68,19 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
                         </li>
                     ))}
                 </ul>
+
+                {footerLink && (
+                    <Typography variant="body2" sx={{ color: 'white', mt: 1, textAlign: 'center' }}>
+                        <Link
+                            href={footerLink.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ color: '#90caf9' }}
+                        >
+                            {footerLink.label}
+                        </Link>
+                    </Typography>
+                )}
 
                 <PreferenceButton
                     variant={modalType === 'error' ? 'concede' : 'warning'}

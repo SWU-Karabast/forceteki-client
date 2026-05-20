@@ -14,13 +14,14 @@ import {
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
-import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, IDeckData, DeckFetchError, DeckFetchErrorReason } from '@/app/_utils/fetchDeckData';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/PercentageCircle';
 import AnimatedStatsTable from '@/app/_components/DeckPage/DeckComponent/AnimatedStatsTable';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
+import { DiscordInviteUrl } from '@/app/_constants/constants';
 import {
     DeckValidationFailureReason,
     IDeckValidationFailures
@@ -62,6 +63,7 @@ const DeckDetails: React.FC = () => {
 
     // For the raw/technical error details
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
+    const [errorFooterLink, setErrorFooterLink] = useState<{ label: string; href: string } | undefined>(undefined);
 
     // preview states
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
@@ -232,16 +234,34 @@ const DeckDetails: React.FC = () => {
                 setDeckData(data);
                 setDisplayDeck(deckDataServer);
             } catch (error) {
-                if (error instanceof Error) {
+                if (error instanceof DeckFetchError) {
                     setErrorModalOpen(true);
-                    if (error.message.includes('403')) {
-                        setDeckErrorDetails({
-                            [DeckValidationFailureReason.DeckSetToPrivate]: true,
-                        });
-                    } else {
-                        setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
+                    switch (error.reason) {
+                        case DeckFetchErrorReason.Private:
+                            setDeckErrorDetails({
+                                [DeckValidationFailureReason.DeckSetToPrivate]: true,
+                            });
+                            break;
+                        case DeckFetchErrorReason.NotFound:
+                            setDeckErrorDetails(error.message);
+                            break;
+                        case DeckFetchErrorReason.InvalidLink:
+                        case DeckFetchErrorReason.UnsupportedProvider:
+                            setDeckErrorDetails('Couldn\'t import. Deck link is invalid or unsupported.');
+                            break;
+                        case DeckFetchErrorReason.NetworkError:
+                        case DeckFetchErrorReason.ProviderError:
+                            setDeckErrorDetails(`${error.providerName ?? 'The deck site'} failed to return a decklist. Try again later.`);
+                            setErrorFooterLink({ label: 'Report this issue in our Discord', href: DiscordInviteUrl });
+                            break;
+                        default:
+                            setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
+                            break;
                     }
-
+                    return;
+                } else if (error instanceof Error) {
+                    setErrorModalOpen(true);
+                    setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
                     return;
                 }else{
                     setErrorModalOpen(true);
@@ -297,6 +317,7 @@ const DeckDetails: React.FC = () => {
 
     const onCloseError = () => {
         setErrorModalOpen(false);
+        setErrorFooterLink(undefined);
         router.push('/DeckPage');
     }
 
@@ -708,6 +729,7 @@ const DeckDetails: React.FC = () => {
                     onClose={onCloseError}
                     title={'Deck Error'}
                     errors={deckErrorDetails}
+                    footerLink={errorFooterLink}
                 />
             </Grid>
         </>

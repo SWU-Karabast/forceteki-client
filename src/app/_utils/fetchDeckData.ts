@@ -1,43 +1,14 @@
 // app/_utils/fetchDeckData.ts
+import { DeckSource } from './deckTypes';
+import type { IDeckData } from './deckTypes';
+import { fetchExternalDeckListAsync } from './deckProviders/registry';
+import { DeckFetchError, DeckFetchErrorReason } from './deckProviders/types';
 
-export interface IDeckMetadata {
-    name: string;
-    author?: string;
-}
-
-export interface IDeckCard {
-    id: string;
-    count: number;
-}
-
-export enum DeckSource {
-    NotSupported = 'NotSupported',
-    SWUStats = 'SWUStats',
-    SWUDB = 'SWUDB',
-    SWUnlimitedDB = 'SWUnlimitedDB',
-    SWUCardHub = 'SWUCardHub',
-    SWUBase = 'SWUBase',
-    SWUMetaStats = 'SWUMetaStats',
-    MySWU = 'MySWU',
-    ProtectThePod = 'ProtectThePod',
-    SWUForge = 'SWUForge',
-    KyberDecks = 'KyberDecks',
-    CardCore = 'CardCore',
-    HoloScan = 'HoloScan'
-}
-
-export interface IDeckData {
-    metadata: IDeckMetadata;
-    leader: IDeckCard;
-    secondleader: IDeckCard | null;
-    base: IDeckCard;
-    deck: IDeckCard[];
-    sideboard: IDeckCard[];
-    deckSource: DeckSource;
-    deckID: string;
-    deckLink: string;
-    isPresentInDb?: boolean;
-}
+// Re-export so consumers keep a single import path. Note: `DeckSource`,
+// `IDeckMetadata`, `IDeckCard`, and `IDeckData` actually live in
+// `./deckTypes` to avoid a circular import with `./deckProviders/*`.
+export { DeckSource, DeckFetchError, DeckFetchErrorReason };
+export type { IDeckMetadata, IDeckCard, IDeckData } from './deckTypes';
 
 export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) => {
     try {
@@ -45,24 +16,40 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
         let data: IDeckData;
 
         if (source === DeckSource.SWUDB) {
-            // swudb.com deck resolution lives on the BE; the Amplify
-            // `/api/swudbdeck` route still handles other deck-builders.
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_ROOT_URL}/api/resolve-deck-link`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deckLink }),
-                    credentials: 'include'
-                }
-            );
+            const SWUDB_NAME = 'swudb.com';
+            // swudb.com deck resolution lives on the BE; all other
+            // deck-builders are now resolved directly in the browser via the
+            // per-provider modules under `_utils/deckProviders`.
+            let response: Response;
+            try {
+                response = await fetch(
+                    `${process.env.NEXT_PUBLIC_ROOT_URL}/api/resolve-deck-link`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ deckLink }),
+                        credentials: 'include'
+                    }
+                );
+            } catch (e) {
+                const message = e instanceof Error ? e.message : 'Network error';
+                throw new DeckFetchError(
+                    DeckFetchErrorReason.NetworkError,
+                    `Network error: ${message}`,
+                    undefined,
+                    SWUDB_NAME,
+                );
+            }
             if (!response.ok) {
                 const errorData = await response.json().catch(() => null);
                 const message = errorData?.error ?? `Failed to fetch deck: ${response.status}`;
                 if (response.status === 403) {
-                    throw new Error(`403: ${message}`);
+                    throw new DeckFetchError(DeckFetchErrorReason.Private, message, response.status, SWUDB_NAME);
                 }
-                throw new Error(message);
+                if (response.status === 404) {
+                    throw new DeckFetchError(DeckFetchErrorReason.NotFound, message, response.status, SWUDB_NAME);
+                }
+                throw new DeckFetchError(DeckFetchErrorReason.ProviderError, message, response.status, SWUDB_NAME);
             }
             const body = await response.json();
             data = {
@@ -70,22 +57,7 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
                 deckSource: DeckSource.SWUDB,
             };
         } else {
-            const response = await fetch(
-                `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
-            );
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                if (errorData && errorData.error) {
-                    if (response.status === 403) {
-                        throw new Error(`403: ${errorData.error}`);
-                    } else {
-                        throw new Error(errorData.error);
-                    }
-                } else {
-                    throw new Error(`Failed to fetch deck: ${response.status}`);
-                }
-            }
-            data = await response.json();
+            data = await fetchExternalDeckListAsync(deckLink);
         }
 
         if (!fetchAll){
@@ -106,7 +78,7 @@ export const determineDeckSource = (deckLink: string): DeckSource => {
         return DeckSource.SWUStats;
     } else if (deckLink.includes('swudb.com')) {
         return DeckSource.SWUDB;
-    } else if (deckLink.includes('swunlimiteddb.com')) {
+    } else if (deckLink.includes('sw-unlimited-db.com')) {
         return DeckSource.SWUnlimitedDB;
     } else if (deckLink.includes('swubase.com')) {
         return DeckSource.SWUBase;
