@@ -86,27 +86,16 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'A Lawless Time Premier Format',
+        title: 'Ashes cards now available in Queue!',
         content: `
-        <p>Set 7, A Lawless Time, is now legal in Premier! Year 1 sets can still be played in Open format.</p>
+        <p>You can now test out newly spoiled cards from Ashes of the Empire in the queue! To get started, just set the Card Pool to "Next Set" when queuing up for a Premier or Eternal match.</p>
     
-        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always open to new contributors.</p><p></p>
+        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we're always looking for new contributors.</p><p></p>
 	  `,
-        date: '3/7/26',
-        image: s3ImageURL('ui/law-news-banner.webp'),
+        date: '5/21/26',
+        image: s3ImageURL('ui/ash-news-banner.webp'),
         imageAlt: 'News Announcement',
     },
-    {
-        title: 'Best of Three Format Available!',
-        content: `
-        <p>Best of three matches are now available! Logged-in players can now compete in a best of three series to determine the winner. Just choose "Premier Best-of-Three" or "Open Best-of-Three" from the format dropdown. Anonymous accounts can participate in best-of-three private lobbies only.</p>
-    
-        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we are always seeking new contributors.</p><p></p>
-	  `,
-        date: '12/18/25',
-        image: '/bo3-news.png',
-        imageAlt: 'News Announcement',
-    }
 ];
 
 export const announcement: IAnnouncement = {
