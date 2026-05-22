@@ -1,19 +1,17 @@
 import React, { useState, ChangeEvent } from 'react';
-import { Box, Link, Typography, IconButton, Tooltip } from '@mui/material';
+import { Box, Typography, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { DeckSource, fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
+import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { v4 as uuid } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
 import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/ServerAndLocalStorageUtils';
-import { SupportedDeckSources } from '@/app/_constants/constants';
-import { parseInputAsDeckData } from '@/app/_utils/checkJson';
+import DeckImportInput from '@/app/_components/_sharedcomponents/DeckImportInput/DeckImportInput';
+import { resolveDeckImportInput } from '@/app/_utils/deckImport';
 
 interface AddDeckDialogProps {
     open: boolean;
@@ -35,15 +33,7 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
     const handleSubmit = async () => {
         if (!deckLink) return;
         try {
-            const deckType = parseInputAsDeckData(deckLink)
-            if(deckType.type === 'json'){
-                setErrorTitle('Deck Validation Error');
-                setDeckErrorSummary('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
-                setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.')
-                setErrorModalOpen(true);
-                return;
-            }
-            const deckData = await fetchDeckData(deckLink, false);
+            const { deckData } = await resolveDeckImportInput(deckLink);
             if (deckData) {
                 deckData.deckID = user ? await saveDeckToServer(deckData, deckLink, user) : saveDeckToLocalStorage(deckData,deckLink);
                 if(!deckData.deckID){
@@ -127,6 +117,10 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
             display: 'flex',
             flexDirection: 'column',
         },
+        labelTextStyle: {
+            color: 'white',
+            marginBottom: '0.75rem',
+        },
         errorTextStyle: {
             color: 'var(--initiative-red)',
             fontSize: '0.875rem',
@@ -147,35 +141,16 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
 
                     <Typography sx={styles.titleStyle}>Add New Deck</Typography>
 
-                    <Typography sx={{ color: 'white', marginBottom: '0.75rem' }}>
-                        Deck link (
-                        <Tooltip
-                            arrow={true}
-                            title={
-                                <Box sx={{ whiteSpace: 'pre-line' }}>
-                                    {SupportedDeckSources.join('\n')}
-                                </Box>
-                            }
-                        >
-                            <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
-                                supported deckbuilders
-                            </Link>
-                        </Tooltip>
-                        )
-                        <br />
-                        We do <strong>not</strong> support direct JSON input
-                    </Typography>
-
                     <Box sx={styles.inputContainerStyle}>
                         <Box sx={styles.textFieldContainerStyle}>
-                            <StyledTextField
+                            <DeckImportInput
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                     setDeckLink(e.target.value);
                                     setDeckErrorSummary(null);
                                 }}
                                 placeholder="https://swudb.com/deck/xxxxxx"
-                                fullWidth
+                                labelSx={styles.labelTextStyle}
                             />
 
                             {deckErrorSummary && (

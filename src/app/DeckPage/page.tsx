@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Grid from '@mui/material/Grid2';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
+import { DeckSource, determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
@@ -110,7 +110,7 @@ const DeckPage: React.FC = () => {
             base: { id: deckData.base.id, types:['base'] },
             metadata: { name: deckData.metadata?.name || 'Untitled Deck' },
             favourite: false,
-            source: determineDeckSource(deckLink),
+            source: deckData.deckSource || determineDeckSource(deckLink),
             deckLink: deckLink,
         };
 
@@ -132,9 +132,9 @@ const DeckPage: React.FC = () => {
         router.push(`/DeckPage/${deckId}`);
     };
 
-    const handleRedirect = (deckLink: string, e:React.MouseEvent) => {
+    const handleRedirect = (deckLink: string, deckSource: DeckSource, e:React.MouseEvent) => {
         e.stopPropagation();
-        if (deckLink) {
+        if (deckLink && deckSource !== DeckSource.JSON && deckSource !== DeckSource.NotSupported) {
             window.open(deckLink, '_blank');
         }
     }
@@ -573,7 +573,7 @@ const DeckPage: React.FC = () => {
                                                 ...styles.sourceTag,
                                                 ...getDeckSourceStyle(deck.source)
                                             }}
-                                            onClick={(e) => handleRedirect(deck.deckLink, e)}
+                                            onClick={(e) => handleRedirect(deck.deckLink, deck.source, e)}
                                         >
                                             {deck.source.toUpperCase()}
                                         </Typography>

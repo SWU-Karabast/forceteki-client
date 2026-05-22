@@ -14,7 +14,7 @@ import {
 import Grid from '@mui/material/Grid2';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
-import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
+import { IDeckData } from '@/app/_utils/fetchDeckData';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/PercentageCircle';
 import AnimatedStatsTable from '@/app/_components/DeckPage/DeckComponent/AnimatedStatsTable';
@@ -41,6 +41,7 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import { resolveDeckImportInput } from '@/app/_utils/deckImport';
 
 
 const DeckDetails: React.FC = () => {
@@ -228,7 +229,7 @@ const DeckDetails: React.FC = () => {
                         throw new Error('Unknown deck data');
                     }
                 }
-                const data = await fetchDeckData(deckDataServer.deck.deckLink, false);
+                const { deckData: data } = await resolveDeckImportInput(deckDataServer.deck.deckLink);
                 setDeckData(data);
                 setDisplayDeck(deckDataServer);
             } catch (error) {

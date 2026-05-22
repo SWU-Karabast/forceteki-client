@@ -22,7 +22,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { fetchDeckData, determineDeckSource, DeckSource } from '@/app/_utils/fetchDeckData';
+import { determineDeckSource, DeckSource } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures,
     DeckValidationFailureReason,
@@ -36,9 +36,11 @@ import {
     saveDeckToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
-import { GamesToWinMode, IMatchConfiguration, SupportedDeckSources, SwuGameFormat } from '@/app/_constants/constants';
+import { GamesToWinMode, IMatchConfiguration } from '@/app/_constants/constants';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
+import DeckImportInput from '@/app/_components/_sharedcomponents/DeckImportInput/DeckImportInput';
+import { resolveDeckImportInput } from '@/app/_utils/deckImport';
 
 const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     readyStatus,
@@ -169,28 +171,29 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         }
         try {
             let deckData;
-            const parsedInput = parseInputAsDeckData(userDeck);
-            deckType = parsedInput.type
-            if(parsedInput.type === 'url') {
-                deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
-                if(favoriteDeck && deckData && showSavedDecks) {
-                    deckData.deckID = favoriteDeck;
-                    deckData.deckLink = userDeck;
-                    // SWU Stats decks are not stored in our DB
-                    deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
-                } else if(!showSavedDecks && userDeck && deckData) {
-                    deckData.deckLink = userDeck;
-                    deckData.isPresentInDb = false;
+            try {
+                const resolvedDeck = await resolveDeckImportInput(userDeck);
+                deckData = resolvedDeck.deckData;
+                deckType = resolvedDeck.inputType;
+            } catch (error) {
+                if (!(error instanceof Error) || error.message !== 'Invalid deck input') {
+                    throw error;
                 }
-            }else if(parsedInput.type === 'json') {
-                deckData = parsedInput.data
-            }else{
                 setError('Couldn\'t import. Deck is invalid or unsupported deckbuilder',
                     'Incorrect deck format or unsupported deckbuilder.',
                     undefined,
                     'error')
                 setModalOpen(true);
                 return;
+            }
+            if(favoriteDeck && deckData && showSavedDecks) {
+                deckData.deckID = favoriteDeck;
+                deckData.deckLink = userDeck;
+                // SWU Stats decks are not stored in our DB
+                deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
+            } else if(!showSavedDecks && userDeck && deckData) {
+                deckData.deckLink = userDeck;
+                deckData.isPresentInDb = false;
             }
             // save deck to local storage
             if (saveDeck && deckData && deckLink && deckType === 'url'){
@@ -653,28 +656,8 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     )}
                     {!showSavedDecks && (
                         <>
-                            {/* Deck Link Input */}
                             <FormControl fullWidth sx={styles.formControlStyle}>
-                                <Typography variant="body1" sx={styles.labelTextStyle}>
-                                    Deck link (
-                                    <Tooltip
-                                        arrow={true}
-                                        title={
-                                            <Box sx={{ whiteSpace: 'pre-line' }}>
-                                                {SupportedDeckSources.join('\n')}
-                                            </Box>
-                                        }
-                                    >
-                                        <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
-                                            supported deckbuilders
-                                        </Link>
-                                    </Tooltip>
-                                    )
-                                    <br />
-                                    OR paste deck JSON directly
-                                </Typography>
-                                <StyledTextField
-                                    type="text"
+                                <DeckImportInput
                                     disabled={readyStatus}
                                     value={deckLink}
                                     onChange={(e: ChangeEvent<HTMLInputElement>) => {
@@ -693,6 +676,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                                         handleJsonDeck(e.target.value);
                                         setDeckLink(e.target.value);
                                     }}
+                                    labelSx={styles.labelTextStyle}
                                 />
                             </FormControl>
 

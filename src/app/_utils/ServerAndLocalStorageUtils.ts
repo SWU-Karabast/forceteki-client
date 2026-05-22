@@ -511,8 +511,8 @@ export const saveDeckToLocalStorage = (deckData:IDeckData | DeckJSON | undefined
     if(!deckData) return;
     try {
         // Save to localStorage
-        const deckKey = deckData.deckID;
-        const deckSource = determineDeckSource(deckLink);
+        const deckKey = deckData.deckID || uuid();
+        const deckSource = deckData.deckSource || determineDeckSource(deckLink);
         const simplifiedDeckData = {
             leader: { id: deckData.leader.id },
             base: { id: deckData.base.id },

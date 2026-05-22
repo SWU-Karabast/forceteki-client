@@ -12,17 +12,15 @@ import {
     RadioGroup,
     Link,
     Divider,
-    Tooltip,
 } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
 import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, LobbyFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, NewGameFormatCardPool } from '@/app/_constants/constants';
+import { SwuGameFormat, GamesToWinMode, LobbyFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, NewGameFormatCardPool } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -36,6 +34,8 @@ import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
 import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
 import { NewGameFormatAvailable } from '@/app/_constants/constants';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
+import DeckImportInput from '@/app/_components/_sharedcomponents/DeckImportInput/DeckImportInput';
+import { resolveDeckImportInput } from '@/app/_utils/deckImport';
 
 interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
@@ -171,26 +171,28 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
         let deckData = null;
         try {
-            const parsedInput = parseInputAsDeckData(userDeck);
-            deckType = parsedInput.type;
-            if(parsedInput.type === 'url') {
-                deckData = userDeck ? await fetchDeckData(userDeck, false) : null;
-                if(favoriteDeck && deckData && showSavedDecks) {
-                    deckData.deckID = favoriteDeck;
-                    deckData.deckLink = userDeck;
-                    // SWU Stats decks are not stored in our DB
-                    deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
-                }else if(!showSavedDecks && userDeck && deckData) {
-                    deckData.deckLink = userDeck
-                    deckData.isPresentInDb = false;
+            try {
+                const resolvedDeck = await resolveDeckImportInput(userDeck);
+                deckData = resolvedDeck.deckData;
+                deckType = resolvedDeck.inputType;
+            } catch (error) {
+                if (!(error instanceof Error) || error.message !== 'Invalid deck input') {
+                    throw error;
                 }
-            }else if(parsedInput.type === 'json') {
-                deckData = parsedInput.data
-            }else{
                 setError('Couldn\'t import. Deck is invalid or unsupported deckbuilder',
                     'Incorrect deck format or unsupported deckbuilder.',
                     'Deck Validation Error','error');
                 setModalOpen(true);
+                return;
+            }
+            if(favoriteDeck && deckData && showSavedDecks) {
+                deckData.deckID = favoriteDeck;
+                deckData.deckLink = userDeck;
+                // SWU Stats decks are not stored in our DB
+                deckData.isPresentInDb = (useSwuStatsDecks && isSwuStatsLinked) ? false : !!user;
+            }else if(!showSavedDecks && userDeck && deckData) {
+                deckData.deckLink = userDeck
+                deckData.isPresentInDb = false;
             }
         }catch (error){
             clearErrors();
@@ -545,34 +547,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 )}
                 {!showSavedDecks && (
                     <>
-                        {/* Deck Link Input */}
                         <FormControl fullWidth sx={styles.formControlStyle}>
-                            <Box sx={styles.labelTextStyle}>
-                                Deck link (
-                                <Tooltip
-                                    arrow={true}
-                                    title={
-                                        <Box sx={{ whiteSpace: 'pre-line' }}>
-                                            {SupportedDeckSources.join('\n')}
-                                        </Box>
-                                    }
-                                >
-                                    <Link sx={{ color: 'lightblue', textDecoration: 'underline', textDecorationStyle: 'dotted' }}>
-                                        supported deckbuilders
-                                    </Link>
-                                </Tooltip>
-                                )
-                                <br />
-                                OR paste deck JSON directly
-                            </Box>
-                            <StyledTextField
-                                type="text"
+                            <DeckImportInput
                                 value={deckLink}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>{
                                     clearErrors();
                                     setDeckLink(e.target.value);
                                     handleJsonDeck(e.target.value);
                                 }}
+                                labelSx={styles.labelTextStyle}
                             />
                         </FormControl>
                         {errorState.summary && (
