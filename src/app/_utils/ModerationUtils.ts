@@ -1,9 +1,9 @@
-import {IModerationAction} from '@/app/_contexts/UserTypes';
+import { IModerationAction } from '@/app/_contexts/UserTypes';
 import {
     IModActionResponse,
     IPlayerSearchResult,
     ModActionType
-} from "@/app/_components/_sharedcomponents/Preferences/Preferences.types";
+} from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 export const getMuteDisplayText = (moderation?: IModerationAction): string | null => {
     if (!moderation?.endDate) return '';
