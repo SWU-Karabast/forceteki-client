@@ -5,7 +5,7 @@ import { Stack, Typography } from '@mui/material';
 import { formatMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useUser } from '@/app/_contexts/User.context';
-import { TimerVisibility } from '@/app/_contexts/UserTypes';
+import { PlayerTimeRemainingStatus, TimerVisibility } from '@/app/_contexts/UserTypes';
 import { DEFAULT_TIMER_VISIBILITY } from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
 import TimerWarningIcon from './TimerWarningIcon';
 
@@ -92,9 +92,29 @@ const GameTimer: React.FC = ({ ...props }) => {
     const showOpponentMainTime = !playerIsActive && opponentIsActive && !isTurnTime;
 
     if (timerVisibility === TimerVisibility.HideAll) {
-        // Clock is hidden, but the warning icon still appears in this slot when main time
-        // is low so the player has a chance to react before timing out.
-        return <TimerWarningIcon />;
+        const timeStatus = playerState?.timeRemainingStatus;
+        const showWarning = timeStatus === PlayerTimeRemainingStatus.Warning || timeStatus === PlayerTimeRemainingStatus.Danger;
+
+        return (
+            <Timer
+                hideProgressIndicator
+                isRunning={false}
+                maxTime={MAX_MAIN_TIME}
+                timeRemaining={MAX_MAIN_TIME}
+                setTimeRemaining={() => {}}
+                tooltipTitle="Timer hidden"
+                {...props}
+            >
+                {showWarning ? <TimerWarningIcon /> : (
+                    <Typography
+                        variant="body2"
+                        sx={{ color: 'rgba(255, 255, 255, 0.35)', fontSize: '0.7rem', textAlign: 'center', lineHeight: 1.3 }}
+                    >
+                        Timer<br />hidden
+                    </Typography>
+                )}
+            </Timer>
+        );
     }
 
     return (

@@ -237,7 +237,7 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                 <Typography sx={styles.typographyContainer} variant={'h2'}>Timer Visibility</Typography>
                 <Divider sx={{ mb: '20px' }} />
                 <Typography sx={{ mb: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
-                    Customize the visibility of the game timer. These settings only affect what you see. Timers are always enabled in public games and always disabled in private games.
+                    Customize the visibility of the game timer. These settings only affect what you see. Timers are <strong>always enabled in public games</strong> and always disabled in private games.
                 </Typography>
                 <FormControl component="fieldset">
                     <RadioGroup
