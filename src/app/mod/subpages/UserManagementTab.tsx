@@ -1,18 +1,18 @@
 'use client';
-import React, {useState} from 'react';
-import {Alert, Box, MenuItem, Typography,} from '@mui/material';
+import React, { useState } from 'react';
+import { Alert, Box, MenuItem, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import {ServerApiService} from '@/app/_services/ServerApiService';
+import { ServerApiService } from '@/app/_services/ServerApiService';
 import {
     DurationUnit,
     IModActionResponse,
     IPlayerSearchResult,
     ModActionType
-} from "@/app/_components/_sharedcomponents/Preferences/Preferences.types";
-import ConfirmationDialog from "@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog";
-import {formatDate, formatDuration, getActionLabel, getActionStatus} from "@/app/_utils/ModerationUtils";
+} from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
+import { formatDate, formatDuration, getActionLabel, getActionStatus } from '@/app/_utils/ModerationUtils';
 
 const UserManagementTab: React.FC = () => {
     // Search state
@@ -30,7 +30,7 @@ const UserManagementTab: React.FC = () => {
     const [durationValue, setDurationValue] = useState<string>('');
     const [durationUnit, setDurationUnit] = useState<DurationUnit>(DurationUnit.Weeks);
     const [note, setNote] = useState('');
-    const [isNoteError, setIsNoteError] = useState<Boolean>(false);
+    const [isNoteError, setIsNoteError] = useState<boolean>(false);
     // Action history expanded state
     const [expandedActionId, setExpandedActionId] = useState<string | null>(null);
 
@@ -154,7 +154,7 @@ const UserManagementTab: React.FC = () => {
         setConfirmDialog({
             open: true,
             title: 'Cancel Mod Action',
-            message: `Are you sure you wish to cancel this moderation action?`,
+            message: 'Are you sure you wish to cancel this moderation action?',
             confirmText: 'Cancel Moderation Action',
             onConfirm: async () => {
                 setConfirmDialog((prev) => ({ ...prev, open: false }));
@@ -291,7 +291,7 @@ const UserManagementTab: React.FC = () => {
         },
         alertMessage: {
             mb: 2,
-            bgcolor: "rgba(0, 0, 0, 0.2)",
+            bgcolor: 'rgba(0, 0, 0, 0.2)',
             color: 'red',
             fontSize: '0.775rem',
         },
@@ -373,7 +373,7 @@ const UserManagementTab: React.FC = () => {
                                             <Typography sx={{ color: 'white', fontSize: '0.875rem', mb:'0px' }}>
                                                 Last active:
                                             </Typography>
-                                            <Typography sx={{ color: 'white', fontSize: '0.875rem'  }}>
+                                            <Typography sx={{ color: 'white', fontSize: '0.875rem' }}>
                                                 {formatDate(player.lastLogin)}
                                             </Typography>
                                         </Box>
@@ -399,7 +399,7 @@ const UserManagementTab: React.FC = () => {
                                 </Box>
                                 <Box sx={styles.userDetailRow}>
                                     <Typography sx={styles.userDetailLabel}>Player ID:</Typography>
-                                    <Typography sx={{ ...styles.userDetailValue}}>
+                                    <Typography sx={{ ...styles.userDetailValue }}>
                                         {selectedPlayer.id}
                                     </Typography>
                                 </Box>
