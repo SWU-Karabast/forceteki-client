@@ -49,6 +49,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const {
         aspectRatio,
         width,
+        isFlipped,
     } = useLeaderCardFlipPreview({
         anchorElement,
         cardId: anchorElement?.getAttribute('data-card-id') || undefined,
@@ -740,7 +741,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 {...popoverConfig()}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
-                {(card.printedType === 'leader') && !isTouchDevice && (
+                {(card.printedType === 'leader') && !isTouchDevice && !isFlipped && (
                     <Typography variant={'body1'} sx={styles.ctrlText}
                     >CTRL: View Flipside</Typography>
                 )}

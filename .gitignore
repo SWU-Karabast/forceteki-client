@@ -41,5 +41,6 @@ yarn.lock
 images-scripts/**/*.png
 images-scripts/**/*.webp
 images-scripts/downloaded_images/
+images-scripts/card-images/
 images-scripts/.venv/
 images-scripts/__pycache__/

@@ -329,9 +329,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             bottom: '0',
             left: '50%',
             transform: 'translateX(-50%)',
+            borderRadius: '0.5rem',
+            p: { xs: '2px 5px', md: '5px 10px' },
+            maxWidth: { xs: '100%', md: 'none' },
             backgroundColor: 'black',
-            borderRadius: '0.5rem 0.5rem 0 0',
-            p: '5px 10px',
         },
         unimplementedAlert: {
             display: notImplemented(card) && !isDeployed ? 'flex' : 'none',
@@ -345,6 +346,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             color: 'white',
             fontWeight: '600',
             fontSize: '1em',
+            textOverflow: 'ellipsis',
+            textWrap: 'nowrap',
+            overflow: { xs: 'hidden', md: 'visible' },
         },
         cardPreview: {
             borderRadius: '.38em',
@@ -544,7 +548,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         ...styles.cardPreview,backgroundImage: previewImage
                     }} >
                     </Box>
-                    {isLeader && !isTouchDevice && (
+                    {isLeader && !isTouchDevice && !leaderCardFlipPreview.isFlipped && (
                         <Typography variant={'body1'} sx={styles.ctrlText}
                         >CTRL: View Flipside</Typography>
                     )}
