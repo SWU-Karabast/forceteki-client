@@ -40,6 +40,52 @@ export interface IMatchConfiguration {
     gamesToWinMode: GamesToWinMode;
 }
 
+// Wire-format mirror of forceteki/server/gamenode/MatchmakingRules.ts.
+export enum Aspect {
+    Aggression = 'aggression',
+    Command = 'command',
+    Cunning = 'cunning',
+    Heroism = 'heroism',
+    Vigilance = 'vigilance',
+    Villainy = 'villainy',
+}
+
+export type BaseConstraint =
+    | { kind: 'aspect'; aspect: Aspect }
+    | { kind: 'baseType'; baseIds: string[] };
+
+export type BaseTypeKind = 'standard' | 'force' | 'splash' | 'unknown' | 'unique';
+
+interface IBaseTypeCommon {
+    id: string;
+    aspects: Aspect[] | null;
+    baseIds: string[];
+}
+
+export type IBaseTypeOption =
+    | (IBaseTypeCommon & { kind: 'unique'; name: string })
+    | (IBaseTypeCommon & { kind: 'standard' | 'force' | 'splash' | 'unknown' });
+
+export interface OpponentArchetype {
+    leaderId: string;
+    baseConstraint?: BaseConstraint;
+
+    /** Defaults to true; `false` keeps the archetype saved but excluded from the filter. */
+    enabled?: boolean;
+}
+
+export interface MatchPreferences {
+    enabled: boolean;
+    allowedArchetypes: OpponentArchetype[];
+}
+
+export const DefaultMatchPreferences: MatchPreferences = {
+    enabled: false,
+    allowedArchetypes: [],
+};
+
+export const MATCH_PREFERENCES_LOCALSTORAGE_KEY = 'matchPreferences';
+
 export const DefaultFormat: IMatchConfiguration = {
     format: SwuGameFormat.Premier,
     cardPool: CardPool.Current,

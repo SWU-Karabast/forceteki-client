@@ -36,6 +36,11 @@ import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
 import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
 import { NewGameFormatAvailable } from '@/app/_constants/constants';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
+import OpponentPreferencesModal from '../OpponentPreferences/OpponentPreferencesModal';
+import { loadMatchPreferences } from '@/app/_utils/matchPreferences';
+import PreferenceButton from '../Preferences/_subComponents/PreferenceButton';
+
+type LobbyType = 'public' | 'public-filtered' | 'private';
 
 interface IDeckPreferencesHandlers {
     setShowSavedDecks: (value: boolean) => void;
@@ -115,7 +120,16 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     }, [deckPreferences.matchConfig.format, deckPreferences.matchConfig.cardPool, deckPreferences.matchConfig.gamesToWinMode, formats, formatConfigs]);
 
     // Common State
-    const [privateGame, setPrivateGame] = useState<boolean>(false);
+    const [lobbyType, setLobbyType] = useState<LobbyType>('public');
+    const [showPrefsModal, setShowPrefsModal] = useState<boolean>(false);
+    const [activeFilterCount, setActiveFilterCount] = useState<number>(() => {
+        const prefs = loadMatchPreferences();
+        return prefs.allowedArchetypes.filter((a) => a.enabled !== false).length;
+    });
+    const refreshFilterCount = () => {
+        const prefs = loadMatchPreferences();
+        setActiveFilterCount(prefs.allowedArchetypes.filter((a) => a.enabled !== false).length);
+    };
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
@@ -222,14 +236,18 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     saveDeckToLocalStorage(deckData, deckLink);
                 }
             }
+            const archetypeFilter = lobbyType === 'public-filtered'
+                ? loadMatchPreferences().allowedArchetypes.filter((a) => a.enabled !== false)
+                : null;
             const payload = {
                 user: getUserPayload(user),
                 deck: deckData,
-                isPrivate: privateGame,
+                isPrivate: lobbyType === 'private',
                 format: lobbyConfig.format,
                 lobbyName: lobbyName,
                 cardPool: lobbyConfig.cardPool,
                 gamesToWinMode: lobbyConfig.gamesToWinMode,
+                ...(archetypeFilter && archetypeFilter.length > 0 ? { archetypeFilter } : {}),
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/create-lobby`,
                 {
@@ -348,7 +366,17 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
-        }
+        },
+        filteredHelperRow: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            flexWrap: 'wrap' as const,
+        },
+        filteredHelperText: {
+            color: '#cccccc',
+            fontSize: '0.9em',
+        },
     }
 
     // Render SWU Stats decks dropdown
@@ -640,14 +668,14 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 <FormControl component="fieldset" sx={styles.formControlStyle}>
                     <RadioGroup
                         row
-                        value={privateGame ? 'Private' : 'Public'}
+                        value={lobbyType}
                         onChange={(
                             e: ChangeEvent<HTMLInputElement>,
                             value: string
-                        ) => setPrivateGame(value === 'Private')}
+                        ) => setLobbyType(value as LobbyType)}
                     >
                         <FormControlLabel
-                            value="Public"
+                            value="public"
                             control={<Radio sx={styles.checkboxStyle} />}
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
@@ -656,7 +684,16 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             }
                         />
                         <FormControlLabel
-                            value="Private"
+                            value="public-filtered"
+                            control={<Radio sx={styles.checkboxStyle} />}
+                            label={
+                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                    Public (Filtered)
+                                </Typography>
+                            }
+                        />
+                        <FormControlLabel
+                            value="private"
                             control={<Radio sx={styles.checkboxStyle} />}
                             label={
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
@@ -667,10 +704,27 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     </RadioGroup>
                 </FormControl>
 
+                {lobbyType === 'public-filtered' && (
+                    <FormControl component="fieldset" sx={styles.formControlStyle}>
+                        <Box sx={styles.filteredHelperRow}>
+                            <PreferenceButton
+                                variant="standard"
+                                text="Manage Opponent Preferences"
+                                buttonFnc={() => setShowPrefsModal(true)}
+                            />
+                            <Typography sx={styles.filteredHelperText}>
+                                {activeFilterCount === 0
+                                    ? 'No allowed archetypes set — add at least one to create the lobby.'
+                                    : `${activeFilterCount} archetype${activeFilterCount === 1 ? '' : 's'} active.`}
+                            </Typography>
+                        </Box>
+                    </FormControl>
+                )}
+
                 {/* Beta Announcement */}
                 { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} cardPool={NewGameFormatCardPool}/>}
 
-                {!privateGame && (
+                {lobbyType !== 'private' && (
                     <>
                         <FormControl fullWidth sx={styles.formControlStyle}>
                             <Typography variant="body1" sx={styles.labelTextStyle}>
@@ -690,10 +744,22 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 )}
 
                 {/* Submit Button */}
-                <Button type="submit" variant="contained" sx={styles.submitButtonStyle}>
+                <Button
+                    type="submit"
+                    variant="contained"
+                    sx={styles.submitButtonStyle}
+                    disabled={lobbyType === 'public-filtered' && activeFilterCount === 0}
+                >
                     Create Game
                 </Button>
             </form>
+            <OpponentPreferencesModal
+                open={showPrefsModal}
+                onClose={() => {
+                    setShowPrefsModal(false);
+                    refreshFilterCount();
+                }}
+            />
         </Box>
     );
 };
