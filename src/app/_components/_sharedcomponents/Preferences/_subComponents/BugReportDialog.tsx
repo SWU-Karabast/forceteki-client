@@ -98,6 +98,17 @@ const StyledSuccessAlert = styled(Alert)(() => ({
     }
 }));
 
+const DiscordChannelLink: React.FC<{ children: string }> = ({ children }) => (
+    <Link
+        href="https://discord.com/channels/1220057752961814568/1345468050568380568"
+        target="_blank"
+        rel="noopener noreferrer"
+        sx={{ color: 'inherit', textDecoration: 'underline' }}
+    >
+        {children}
+    </Link>
+);
+
 const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
     const { sendLobbyMessage, lobbyState, connectedPlayer, bugReportState, isSpectator } = useGame();
     const [description, setDescription] = useState('');
@@ -195,30 +206,21 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
             <StyledDialogContent>
                 {isSpectator ? (
                     <StyledInfoAlert severity="info" sx={{ my: 1 }}>
-                        Bug reporting is disabled for spectators, feel free to report at our <Link
-                            href="https://discord.com/channels/1220057752961814568/1345468050568380568"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{ color: 'inherit', textDecoration: 'underline' }}
-                        >
+                        Bug reporting is disabled for spectators, feel free to report at our <DiscordChannelLink>
                             discord channel
-                        </Link>
+                        </DiscordChannelLink>
                     </StyledInfoAlert>
                 ): success ? (
                     <StyledSuccessAlert severity="success" sx={{ my: 1 }}>
-                        Bug report submitted successfully. Thank you for helping improve the game!
+                        Bug report submitted successfully. Thank you for helping improve the game!<br/>
+                        If you&#39;re noticing repeated issues, please reach out to us on our <DiscordChannelLink>
+                            discord channel
+                        </DiscordChannelLink>.
                     </StyledSuccessAlert>
                 ) : connectedUser?.reportedBugs >= 3 ? (
                     <StyledInfoAlert severity="info" sx={{ my: 1 }}>
                         You&#39;ve sent the maximum number of bug reports for this game session.
-                        Please report any additional bugs to our <Link
-                            href="https://discord.com/channels/1220057752961814568/1345468050568380568"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{ color: 'inherit', textDecoration: 'underline' }}
-                        >
-                            discord channel
-                        </Link>
+                        Please report any additional bugs to our <DiscordChannelLink>discord channel</DiscordChannelLink>
                     </StyledInfoAlert>
                 ) : (
                     <>
@@ -238,14 +240,7 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
                                 error ? (
                                     <span>
                                         {error} Please contact us via our{' '}
-                                        <Link
-                                            href="https://discord.com/channels/1220057752961814568/1345468050568380568"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            sx={{ color: 'inherit', textDecoration: 'underline' }}
-                                        >
-                                            Discord channel
-                                        </Link>{' '}
+                                        <DiscordChannelLink>Discord channel</DiscordChannelLink>{' '}
                                         if this issue persists.
                                     </span>
                                 ) : (
