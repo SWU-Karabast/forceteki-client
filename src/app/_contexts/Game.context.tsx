@@ -326,6 +326,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setStatsSubmitNotification(notification);
         });
 
+        // Server requests the player's screen resolution at game start for analytics logging.
+        newSocket.on('requestScreenResolution', () => {
+            if (typeof window === 'undefined' || !window.screen) return;
+            newSocket.emit('lobby', 'reportScreenResolution', {
+                width: window.screen.width,
+                height: window.screen.height,
+            });
+        });
+
         if (socket) {
             socket.disconnect();
         }

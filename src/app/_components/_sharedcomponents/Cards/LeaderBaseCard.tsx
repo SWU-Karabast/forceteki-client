@@ -544,7 +544,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         ...styles.cardPreview,backgroundImage: previewImage
                     }} >
                     </Box>
-                    {isLeader && !isTouchDevice && (
+                    {isLeader && !isTouchDevice && !leaderCardFlipPreview.isFlipped && (
                         <Typography variant={'body1'} sx={styles.ctrlText}
                         >CTRL: View Flipside</Typography>
                     )}
