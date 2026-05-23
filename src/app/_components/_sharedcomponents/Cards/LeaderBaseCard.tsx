@@ -326,14 +326,13 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         nameplateBox: {
             position: 'absolute',
-            bottom: { xs: '-2px', md: '0' },
+            bottom: '0',
             left: '50%',
             transform: 'translateX(-50%)',
             borderRadius: '0.5rem 0.5rem 0 0',
-            p: { xs: 0, md: '5px 10px' },
+            p: { xs: '2px 5px', md: '5px 10px' },
             maxWidth: { xs: '100%', md: 'none' },
-            backgroundColor: { xs: 'transparent', md: 'black' },
-            textShadow: { xs: '0 0 6px rgba(0, 0, 0, 0.9)', md: 'none' },
+            backgroundColor: 'black',
         },
         unimplementedAlert: {
             display: notImplemented(card) && !isDeployed ? 'flex' : 'none',
