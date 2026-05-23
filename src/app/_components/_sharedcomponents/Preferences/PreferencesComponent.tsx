@@ -33,13 +33,14 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
             height: '100%',
             backgroundColor: variant ==='gameBoard' ? 'rgba(0, 0, 0, 0.5)' : 'none',
             zIndex: variant === 'homePage' ? 1 : 999,
-            padding: variant === 'homePage' ? '7rem' : '2rem',
+            padding: variant === 'homePage' ? { xs: '7rem 2rem', md:'7rem' } : '2rem',
         },
         overlayStyle:{
             display: isPreferenceOpen ? 'block' : 'none',
             padding: '30px',
             maxWidth: '105em',
-            maxHeight: '65em',
+            // nothing should display outside the popup. use inner scrolls to display the content
+            overflow: 'hidden',
             zIndex: 10,
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
             border: '3px solid transparent',
