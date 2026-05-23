@@ -151,7 +151,7 @@ interface IButtonsProps {
 // disabling certain actions briefly to avoid double clicks:
 // - for a resource prompt, we disable the "done" button
 // - for the action window, we disable the "claim initiative" button
-const hasCooldown = (buttonType: string, prompType: string) => (buttonType === 'done' && prompType === 'resource') || (buttonType === 'claimInitiative' && prompType === 'actionWindow')
+const hasCooldown = (buttonType: string, prompType: string) => (buttonType === 'done' && prompType === 'resource') || (prompType === 'actionWindow' && ['pass', 'claimInitiative'].includes(buttonType));
 
 const CardActionTray: React.FC = () => {
     const { isPortrait } = useScreenOrientation();
