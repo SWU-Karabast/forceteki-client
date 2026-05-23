@@ -5,9 +5,9 @@ import {
     headerStyle,
     textStyle,
     titleStyle
-} from "@/app/_components/_sharedcomponents/Popup/Popup.styles";
-import {createPortal} from "react-dom";
-import {useEffect, useState} from "react";
+} from '@/app/_components/_sharedcomponents/Popup/Popup.styles';
+import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
 interface ButtonProps {
     title: string;
     message: string;
@@ -17,7 +17,6 @@ interface ButtonProps {
 }
 
 export const LobbyConfirmationPopupModule = ({ title, message, display, onConfirmation, handleCancel }: ButtonProps) => {
-
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
