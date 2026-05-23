@@ -19,7 +19,8 @@ export enum CardPool {
     Unlimited = 'unlimited',
 }
 
-export const NewGameFormatAvailable: SwuGameFormat | undefined = SwuGameFormat.Limited;
+export const NewGameFormatAvailable: SwuGameFormat | undefined = SwuGameFormat.Premier;
+export const NewGameFormatCardPool: CardPool | undefined = CardPool.NextSet;
 
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
@@ -53,15 +54,15 @@ export interface IFormatModeConfig {
 }
 
 export const LobbyFormatConfigs: IFormatModeConfig[] = [
-    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Open, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
 ];
 
 export const QueueFormatConfigs: IFormatModeConfig[] = [
-    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
 ];
 
 // Helper to get the list of formats from a config array

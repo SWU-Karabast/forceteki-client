@@ -1,6 +1,6 @@
-﻿import { NextResponse } from "next/server";
+﻿import { NextResponse } from 'next/server';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 /**
  * @deprecated This route is deprecated.
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
     return NextResponse.json(
-        { error: "This endpoint is deprecated. Please use the backend API directly." },
+        { error: 'This endpoint is deprecated. Please use the backend API directly.' },
         { status: 410 }
     );
 }
