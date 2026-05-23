@@ -6,6 +6,7 @@ interface UseLeaderCardFlipPreviewReturn {
     // style properties
     aspectRatio: string;
     width: string;
+    isFlipped: boolean;
 }
 
 interface UseLeaderCardFlipPreviewParams {
@@ -138,5 +139,6 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
         // Calculated style properties
         aspectRatio: styleSetter.aspectRatio,
         width: styleSetter.width,
+        isFlipped: internalIsCtrl,
     };
 }
