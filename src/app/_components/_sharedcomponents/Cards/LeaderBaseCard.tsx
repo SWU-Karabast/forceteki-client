@@ -347,7 +347,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             fontWeight: '600',
             fontSize: '1em',
             textOverflow: 'ellipsis',
-            textWrap: { xs: 'nowrap', md: 'wrap' },
+            textWrap: 'nowrap',
             overflow: { xs: 'hidden', md: 'visible' },
         },
         cardPreview: {
