@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Button, Box } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -7,6 +7,7 @@ import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
+import useTimeout from '@/app/_utils/useTimeout';
 
 const pulseBorder = keyframes`
   0% {
@@ -139,7 +140,6 @@ const createStyles = (isPortrait: boolean) => ({
     },
 });
 
-
 interface IButtonsProps {
     command: string;
     arg: string;
@@ -148,12 +148,15 @@ interface IButtonsProps {
     disabled?: boolean;
 }
 
+// disabling certain actions briefly to avoid double clicks:
+// - for a resource prompt, we disable the "done" button
+// - for the action window, we disable the "claim initiative" button
+const hasCooldown = (buttonType: string, prompType: string) => (buttonType === 'done' && prompType === 'resource') || (prompType === 'actionWindow' && ['pass', 'claimInitiative'].includes(buttonType));
+
 const CardActionTray: React.FC = () => {
     const { isPortrait } = useScreenOrientation();
-    const [ resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverride ] = useState<boolean | null>(null);
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
     const playerState = gameState.players[connectedPlayer];
-
     const styles = createStyles(isPortrait);
 
     const showTrayButtons = () => {
@@ -181,30 +184,11 @@ const CardActionTray: React.FC = () => {
                     return true;
                 }
             }
-
-            // for a resource prompt, we disable the "done" button briefly to avoid double clicks
-            if (getConnectedPlayerPrompt()?.promptType === 'resource') {
-                if (resourcePromptDoneButtonOverride == null) {
-                    setResourcePromptDoneButtonOverride(true);
-                    setTimeout(() => {
-                        setResourcePromptDoneButtonOverride(false);
-                    }, 500);
-
-                    return true;
-                }
-
-                return resourcePromptDoneButtonOverride;
-            }
         }
 
         return !!button.disabled;
     };
 
-    useEffect(() => {
-        if (getConnectedPlayerPrompt()?.promptType !== 'resource') {
-            setResourcePromptDoneButtonOverride(null);
-        }
-    }, [gameState]);
 
     return (
         <Grid
@@ -220,6 +204,7 @@ const CardActionTray: React.FC = () => {
               <PromptButton
                   key={button.arg}
                   button={button}
+                  cooldown={hasCooldown(button.arg, playerState.promptState.promptType)}
                   sendGameMessage={sendGameMessage}
                   disabled={buttonDisabled(button)}
               />
@@ -234,13 +219,21 @@ interface IPromptButtonProps {
     button: IButtonsProps;
     sendGameMessage: (args: [string, string, string]) => void;
     disabled?: boolean;
+    cooldown?: boolean;
 }
 
 
-const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled }) => {
+const PromptButton: React.FC<IPromptButtonProps> = (props) => {
+    const { button, sendGameMessage, cooldown } = props;
     const { isPortrait } = useScreenOrientation();
+    const [hasCooldown, setCooldown] = useState<boolean>(cooldown === true);
+    const disabled = hasCooldown || props.disabled;
     const styles = createStyles(isPortrait);
-    
+
+    useTimeout(() => {
+        setCooldown(false);
+    }, cooldown === true ? 500 : null);
+
     const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
         if (button.arg === 'claimInitiative' || button.text === 'Draw') {
             return disabled ? {} : {
