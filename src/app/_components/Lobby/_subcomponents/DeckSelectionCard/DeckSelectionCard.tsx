@@ -88,11 +88,103 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
     // Lobby settings
     const requestUndo = lobbyState?.settings.requestUndo || false;
     const allowSpectators = lobbyState?.settings.allowSpectators || false;
+    const customSetup = lobbyState?.settings.customSetup || null;
+    const customSetupServerJson: string | null = customSetup?.json ?? null;
+    const customSetupErrors: { path: string; message: string }[] = customSetup?.errors ?? [];
+    const customSetupValid: boolean = !!customSetup?.valid;
 
     // For deck error display
     const { errorState, setError, clearErrorsFunc, setIsJsonDeck, setModalOpen } = useDeckErrors();
     const [displayError, setDisplayError] = useState(false);
     const [blockError, setBlockError] = useState(false);
+
+    // Custom setup textarea (owner only; mirrors server state but allows local edits before applying).
+    // Pre-populated with a skeleton so users only have to fill card names — they don't have to remember the shape.
+    const customSetupTemplate = JSON.stringify({
+        phase: 'action',
+        player1: {
+            hand: [],
+            groundArena: [],
+            spaceArena: [],
+            discard: [],
+            resources: [],
+        },
+        player2: {
+            hand: [],
+            groundArena: [],
+            spaceArena: [],
+            discard: [],
+            resources: [],
+        },
+    }, null, 2);
+
+    // A fully-populated reference JSON showing every supported field with
+    // realistic values. Read-only; surfaced behind a "Show syntax" toggle so
+    // owners can see what each property does without leaving the lobby.
+    //
+    // Card identifiers are internalName slugs. Cards with a subtitle (most
+    // unique units and all leaders) use the format `title#subtitle`, e.g.
+    // `maul#revenge-at-last`. Cards without a subtitle are just the slug,
+    // e.g. `pyke-sentinel`.
+    const customSetupExample = JSON.stringify({
+        phase: 'action',
+        player1: {
+            hasInitiative: true,
+            hasForceToken: true,
+            credits: 3,
+            leader: {
+                deployed: true,
+                damage: 0,
+                exhausted: false,
+                flipped: false,
+            },
+            base: {
+                damage: 5,
+            },
+            hand: ['pyke-sentinel', 'maul#revenge-at-last'],
+            groundArena: [
+                'pyke-sentinel',
+                {
+                    card: 'maul#revenge-at-last',
+                    damage: 2,
+                    exhausted: true,
+                    upgrades: ['academy-training', 'shield', 'experience'],
+                },
+            ],
+            spaceArena: [
+                { card: 'cartel-spacer', damage: 0, exhausted: false },
+            ],
+            discard: ['the-emperors-legion'],
+            // Cards listed here remain on top of the deck (in order); anything
+            // mentioned elsewhere is moved to that zone; everything else is
+            // removed from play. Omit this key to keep the rest of the deck.
+            deck: ['wampa', 'atst'],
+            // Number of resource cards from the deck (or list specific cards).
+            resources: 5,
+        },
+        player2: {
+            hand: ['rebel-pathfinder'],
+            groundArena: [],
+            spaceArena: [],
+            discard: [],
+            // resources can also be an array of specific cards, optionally exhausted
+            resources: [
+                'wilderness-fighter',
+                { card: 'rebel-pathfinder', exhausted: true },
+            ],
+        },
+    }, null, 2);
+
+    const [customSetupDraft, setCustomSetupDraft] = useState<string>(customSetupServerJson ?? customSetupTemplate);
+    const [customSetupExpanded, setCustomSetupExpanded] = useState<boolean>(false);
+    const [showSyntax, setShowSyntax] = useState<boolean>(false);
+    useEffect(() => {
+        // Sync from server when the server value changes (e.g. another tab applied it, or it was cleared due to deck change).
+        // When the server has nothing saved, fall back to the template instead of an empty textarea.
+        setCustomSetupDraft(customSetupServerJson ?? customSetupTemplate);
+        // customSetupTemplate is a constant per render; no need to depend on it.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [customSetupServerJson]);
 
     const opponentReady = opponentUser?.ready;
     const disableSettings = !owner || readyStatus || opponentReady;
@@ -104,6 +196,15 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
 
     const handleChangeAllowSpectators = (checked: boolean) => {
         sendLobbyMessage(['updateSetting', 'allowSpectators', checked]);
+    };
+
+    const handleApplyCustomSetup = () => {
+        sendLobbyMessage(['setCustomSetupState', customSetupDraft]);
+    };
+
+    const handleClearCustomSetup = () => {
+        setCustomSetupDraft('');
+        sendLobbyMessage(['setCustomSetupState', null]);
     };
 
     useEffect(() => {
@@ -809,7 +910,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                                 sx={styles.settingsCheckboxStyle}
                                 checked={allowSpectators}
                                 disabled={!owner || readyStatus || opponentReady}
-                                onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) => 
+                                onChange={(e: ChangeEvent<HTMLInputElement>, checked: boolean) =>
                                     handleChangeAllowSpectators(checked)
                                 }
                             />
@@ -820,20 +921,173 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                                     Allow Spectators
                                 </span>
                                 <Tooltip title="When enabled, allows other players to spectate your game using a shareable link. Find the link in the settings menu when the game starts.">
-                                    <Info 
-                                        sx={{ 
+                                    <Info
+                                        sx={{
                                             fontSize: '14px',
                                             color: '#1976d2',
                                             backgroundColor: '#fff',
                                             borderRadius: '50%',
                                             cursor: 'help',
                                             opacity: disableSettings ? 0.5 : 1
-                                        }} 
+                                        }}
                                     />
                                 </Tooltip>
                             </Box>
                         }
                     />
+                    <Box sx={{ mt: 1 }}>
+                        <Box
+                            onClick={() => setCustomSetupExpanded((v) => !v)}
+                            sx={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }}
+                        >
+                            <span style={{ ...styles.settingsCheckboxAndRadioGroupTextStyle }}>
+                                {customSetupExpanded ? '▾' : '▸'} Custom Starting Board (JSON)
+                            </span>
+                            {customSetupValid && (
+                                <span style={{ color: '#4caf50', fontSize: '0.8rem' }}>● active</span>
+                            )}
+                            <Tooltip title="Optional. Owner-only. Define the exact starting board state with a JSON blob (player1 = lobby owner, player2 = opponent). When set, the mulligan and resource-2 prompts are skipped. Cards must come from each player's loaded deck.">
+                                <Info sx={{ fontSize: '14px', color: '#1976d2', backgroundColor: '#fff', borderRadius: '50%', cursor: 'help' }} />
+                            </Tooltip>
+                        </Box>
+                        {customSetupExpanded && (
+                            <Box sx={{ mt: 1, ml: 1 }}>
+                                {owner ? (
+                                    <>
+                                        <TextField
+                                            multiline
+                                            minRows={12}
+                                            maxRows={24}
+                                            fullWidth
+                                            value={customSetupDraft}
+                                            disabled={readyStatus || opponentReady}
+                                            onChange={(e) => setCustomSetupDraft(e.target.value)}
+                                            sx={{
+                                                '& .MuiInputBase-root': {
+                                                    fontFamily: 'monospace',
+                                                    fontSize: '0.8rem',
+                                                    color: '#fff',
+                                                    backgroundColor: 'rgba(0,0,0,0.3)',
+                                                },
+                                            }}
+                                        />
+                                        <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                disabled={readyStatus || opponentReady}
+                                                onClick={handleApplyCustomSetup}
+                                            >
+                                                Apply
+                                            </Button>
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                disabled={readyStatus || opponentReady || (!customSetupValid && !customSetupServerJson)}
+                                                onClick={handleClearCustomSetup}
+                                            >
+                                                Clear
+                                            </Button>
+                                            <Button
+                                                variant="text"
+                                                size="small"
+                                                onClick={() => setShowSyntax((v) => !v)}
+                                                sx={{ color: '#90caf9' }}
+                                            >
+                                                {showSyntax ? 'Hide syntax' : 'Show syntax'}
+                                            </Button>
+                                        </Box>
+                                        {showSyntax && (
+                                            <Box sx={{ mt: 1 }}>
+                                                <Box
+                                                    component="dl"
+                                                    sx={{
+                                                        m: 0,
+                                                        mb: 0.5,
+                                                        display: 'grid',
+                                                        gridTemplateColumns: 'max-content 1fr',
+                                                        columnGap: 1.5,
+                                                        rowGap: 0.5,
+                                                        color: '#bbb',
+                                                        fontSize: '0.75rem',
+                                                        lineHeight: 1.4,
+                                                        '& dt': { fontWeight: 600, color: '#e0e0e0', m: 0 },
+                                                        '& dd': { m: 0 },
+                                                        '& code': { color: '#cfd8dc' },
+                                                    }}
+                                                >
+                                                    <Box component="dt">Required</Box>
+                                                    <Box component="dd">
+                                                        <code>player1</code> and <code>player2</code>. All other fields are optional.
+                                                    </Box>
+
+                                                    <Box component="dt">Card names</Box>
+                                                    <Box component="dd">
+                                                        <code>"pyke-sentinel"</code> or <code>"maul#revenge-at-last"</code> for subtitled units.
+                                                    </Box>
+
+                                                    <Box component="dt">String form</Box>
+                                                    <Box component="dd">
+                                                        Just the card name. Used in <code>hand</code>, <code>discard</code>, <code>deck</code>, and as a shorthand in arenas/resources for default state.
+                                                    </Box>
+
+                                                    <Box component="dt">Object form</Box>
+                                                    <Box component="dd">
+                                                        Usable in <code>groundArena</code>, <code>spaceArena</code>, and <code>resources</code> to override defaults: 
+                                                        <br/><code>{'{ "card": "pyke-sentinel", "damage": 2, "exhausted": true, "upgrades": ["shield"] }'}</code>
+                                                    </Box>
+                                                    
+                                                    <Box component="dt">Resources</Box>
+                                                    <Box component="dd">
+                                                        If given a number, will resource top N cards of deck. Accepts an array of cards as well.
+                                                    </Box>
+                                                </Box>
+                                                <TextField
+                                                    multiline
+                                                    minRows={12}
+                                                    maxRows={28}
+                                                    fullWidth
+                                                    value={customSetupExample}
+                                                    InputProps={{ readOnly: true }}
+                                                    sx={{
+                                                        '& .MuiInputBase-root': {
+                                                            fontFamily: 'monospace',
+                                                            fontSize: '0.75rem',
+                                                            color: '#cfd8dc',
+                                                            backgroundColor: 'rgba(0,0,0,0.45)',
+                                                        },
+                                                    }}
+                                                />
+                                            </Box>
+                                        )}
+                                        {customSetupErrors.length > 0 && (
+                                            <Box sx={{ mt: 1, p: 1, backgroundColor: 'rgba(244,67,54,0.15)', borderRadius: 1 }}>
+                                                <Typography sx={{ color: '#f44336', fontSize: '0.8rem', fontWeight: 600 }}>
+                                                    {customSetupErrors.length} validation error{customSetupErrors.length === 1 ? '' : 's'}:
+                                                </Typography>
+                                                {customSetupErrors.slice(0, 20).map((err, i) => (
+                                                    <Typography key={i} sx={{ color: '#ffcdd2', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                                                        {err.path ? `${err.path}: ` : ''}{err.message}
+                                                    </Typography>
+                                                ))}
+                                                {customSetupErrors.length > 20 && (
+                                                    <Typography sx={{ color: '#ffcdd2', fontSize: '0.75rem' }}>
+                                                        ...and {customSetupErrors.length - 20} more
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        )}
+                                    </>
+                                ) : (
+                                    <Typography sx={{ color: '#bbb', fontSize: '0.8rem' }}>
+                                        {customSetupValid
+                                            ? 'The lobby owner has configured a custom starting board. The mulligan and resource phase will be skipped.'
+                                            : 'No custom starting board configured.'}
+                                    </Typography>
+                                )}
+                            </Box>
+                        )}
+                    </Box>
                 </>
             )}
         </Card>
