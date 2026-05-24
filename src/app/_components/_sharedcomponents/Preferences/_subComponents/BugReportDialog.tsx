@@ -211,12 +211,12 @@ const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
                         </DiscordChannelLink>
                     </StyledInfoAlert>
                 ): success ? (
-                  <StyledSuccessAlert severity="success" sx={{my: 1}}>
-                      Bug report submitted successfully. Thank you for helping improve the game!<br/><br/>
-                      If you&#39;re noticing repeated issues, please reach out to us on our <DiscordChannelLink>
-                      discord channel
-                  </DiscordChannelLink>.
-                  </StyledSuccessAlert>
+                    <StyledSuccessAlert severity="success" sx={{ my: 1 }}>
+                        Bug report submitted successfully. Thank you for helping improve the game!<br/><br/>
+                        If you&#39;re noticing repeated issues, please reach out to us on our <DiscordChannelLink>
+                            discord channel
+                        </DiscordChannelLink>.
+                    </StyledSuccessAlert>
                 ) : connectedUser?.reportedBugs >= 3 ? (
                     <StyledInfoAlert severity="info" sx={{ my: 1 }}>
                         You&#39;ve sent the maximum number of bug reports for this game session.
