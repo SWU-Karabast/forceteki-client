@@ -160,6 +160,18 @@ const GameCard: React.FC<IGameCardProps> = ({
         return true;
     };
 
+    // Compute card image URL + load status before any early return so hooks
+    // are called in a stable order.
+    const cardbackPath = getCardback(cardback).path;
+    const styledCardUrl = card
+        ? s3CardImageURL(
+            { ...card, setId: card.clonedCardId ?? card.setId },
+            cardStyle,
+            cardbackPath,
+        )
+        : '';
+    const { status: cardImageStatus, imgProps: cardImgProps } = useImageLoadStatus(styledCardUrl);
+
     if (!card) {
         return null;
     }
@@ -245,12 +257,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const isIndirectDamage = getConnectedPlayerPrompt()?.distributeAmongTargets?.isIndirectDamage;
     const updatedCardId = card.clonedCardId ?? card.setId;
-    const cardbackPath = getCardback(cardback).path;
-    const styledCardUrl = s3CardImageURL(
-        { ...card, setId: updatedCardId },
-        cardStyle,
-        cardbackPath);
-    const { status: cardImageStatus, imgProps: cardImgProps } = useImageLoadStatus(styledCardUrl);
     const showSelectedGradient = card.selected && (phase === 'setup' || phase === 'regroup');
     // Styles
     const styles = {

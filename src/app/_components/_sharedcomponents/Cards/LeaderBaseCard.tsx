@@ -72,6 +72,11 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         return () => document.removeEventListener('touchstart', onTouchStart);
     }, [open, isTouchDevice]);
 
+    // Compute card image URL + load status before any early return so hooks
+    // are called in a stable order.
+    const mainCardImageUrl = card ? s3CardImageURL(card, cardStyle) : '';
+    const { status: mainCardImageStatus, imgProps: mainCardImgProps } = useImageLoadStatus(mainCardImageUrl);
+
     if (!card) {
         return null
     }
@@ -170,9 +175,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
     const isConnectedPlayer = card.controllerId === connectedPlayer;
-
-    const mainCardImageUrl = s3CardImageURL(card, cardStyle);
-    const { status: mainCardImageStatus, imgProps: mainCardImgProps } = useImageLoadStatus(mainCardImageUrl);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getForceTokenIconStyle = (player: any, isSelectable: boolean = false) => {
