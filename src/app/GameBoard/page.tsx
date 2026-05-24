@@ -125,11 +125,14 @@ const GameBoard = () => {
             alignItems: 'center',
             width: '50vw',
             pointerEvents: 'none',
-            zIndex: '1',
+            zIndex: { xs: '2', md: '1' },
         },
         promptStyle: {
             textAlign: 'center',
             fontSize: '1.3em',
+            // media query to detect mobile in landscape mode. be aware that most devices will have 800px wide on landscape
+            // for this case we want to save as much space as possible
+            '@media (orientation: landscape) and (max-width:932px)': { fontSize: '1rem' },
             textShadow: '1px 1px 6px black',
             padding: '0.5rem',
             position: 'relative',

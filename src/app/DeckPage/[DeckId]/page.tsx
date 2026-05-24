@@ -152,6 +152,7 @@ const DeckDetails: React.FC = () => {
     const {
         aspectRatio,
         width,
+        isFlipped,
     } = useLeaderCardFlipPreview({
         anchorElement,
         cardId: deckData?.leader.id,
@@ -612,7 +613,7 @@ const DeckDetails: React.FC = () => {
                     >
                         <Box sx={{ ...styles.cardPreview, backgroundImage:`${previewImage}` }} >
                         </Box>
-                        {anchorElement?.getAttribute('data-card-type') === 'leader' && (
+                        {anchorElement?.getAttribute('data-card-type') === 'leader' && !isFlipped && (
                             <Typography variant={'body1'} sx={styles.ctrlText}
                             >CTRL: View Flipside</Typography>
                         )}
