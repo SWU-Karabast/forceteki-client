@@ -14,6 +14,22 @@ import { IPreviewCard } from '@/app/_components/_sharedcomponents/Cards/CardType
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
 
+interface IUnimplementedCardsResponse {
+    cards: IPreviewCard[];
+    lastUpdated?: string | null;
+}
+
+const formatLastUpdated = (lastUpdated: string) => {
+    const lastUpdatedDate = new Date(lastUpdated);
+    if (Number.isNaN(lastUpdatedDate.getTime())) {
+        return null;
+    }
+
+    return new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+    }).format(lastUpdatedDate);
+}
+
 const UnimplementedPage = () => {
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -21,6 +37,7 @@ const UnimplementedPage = () => {
     const [unimplementedCards, setUnimplementedCards] = React.useState<IPreviewCard[]>([]);
     const [filteredCards, setFilteredCards] = React.useState<IPreviewCard[]>([]);
     const [availableSets, setAvailableSets] = React.useState<string[]>([]);
+    const [lastUpdated, setLastUpdated] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
     const router = useRouter();
@@ -37,19 +54,22 @@ const UnimplementedPage = () => {
                 if (!response.ok) {
                     throw new Error(`Error fetching cards: ${response.statusText}`);
                 }
-                const data = await response.json();
+                const data: IUnimplementedCardsResponse = await response.json();
+                const cards = data.cards ?? [];
 
-                const sortedData = data.sort((a: IPreviewCard, b: IPreviewCard) => {
+                const sortedData = cards.sort((a: IPreviewCard, b: IPreviewCard) => {
                     if (a.setId && b.setId) {
                         return a.setId.number - b.setId.number;
                     }
+                    return 0;
                 });
 
                 setUnimplementedCards(sortedData);
                 setFilteredCards(sortedData);
+                setLastUpdated(data.lastUpdated ?? null);
 
                 // Extract unique sets for the filter dropdown
-                const sets = data.reduce((acc: string[], card: IPreviewCard) => {
+                const sets = cards.reduce((acc: string[], card: IPreviewCard) => {
                     if (card.setId && card.setId.set && !acc.includes(card.setId.set)) {
                         acc.push(card.setId.set.toUpperCase());
                     }
@@ -229,6 +249,12 @@ const UnimplementedPage = () => {
             color: 'white',
             textAlign: 'center',
             margin: '0.5rem 0',
+        },
+        lastUpdated: {
+            color: 'white',
+            textAlign: 'center',
+            marginBottom: '0.5rem',
+            opacity: 0.8,
         }
     };
 
@@ -281,6 +307,11 @@ const UnimplementedPage = () => {
             <Typography variant="body1" sx={styles.resultsCount}>
                 Showing {filteredCards.length} of {unimplementedCards.length} cards
             </Typography>
+            {lastUpdated && (
+                <Typography variant="body2" sx={styles.lastUpdated}>
+                    Last updated: {formatLastUpdated(lastUpdated)}
+                </Typography>
+            )}
 
             {/* Main card area */}
             <Box sx={styles.cardOuter}>
