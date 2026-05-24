@@ -17,7 +17,7 @@ import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/Preferen
 import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
 import CosmeticsTab from '../PreferencesSubElementVariants/CosmeticsTab';
 import GameOptionsTab from '../PreferencesSubElementVariants/GameOptionsTab';
-import {useMediaQuery} from "@mui/material";
+import { useMediaQuery } from '@mui/material';
 
 function tabProps(index: number) {
     return {
