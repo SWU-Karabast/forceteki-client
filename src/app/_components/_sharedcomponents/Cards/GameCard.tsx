@@ -6,6 +6,7 @@ import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { getBorderColor } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
@@ -29,6 +30,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
     const { clearPopups } = usePopup();
     const { getCardback } = useCosmetics();
+    const locale = useCardImageLocale();
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
@@ -166,6 +168,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const styledCardUrl = card
         ? s3CardImageURL(
             { ...card, setId: card.clonedCardId ?? card.setId },
+            locale,
             cardStyle,
             cardbackPath,
         )
@@ -654,7 +657,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     sx={styles.cloneIcon}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
-                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
+                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId }, locale)}
                     data-card-type="clone"
                     data-card-id={card.setId.set + '_' + card.setId.number}
                 >
@@ -676,14 +679,14 @@ const GameCard: React.FC<IGameCardProps> = ({
                 />
                 {showSelectedGradient && <Box sx={styles.selectedGradient} />}
                 {cardImageStatus === 'error' && (
-                    <CardImageMissingOverlay label={cardImageLabel({ ...card, setId: updatedCardId })} />
+                    <CardImageMissingOverlay label={cardImageLabel({ ...card, setId: updatedCardId }, locale)} />
                 )}
                 <Box
                     sx={styles.cardOverlay}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     {...longPressHandlers}
-                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
+                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId }, locale)}
                     data-card-type={card.printedType}
                     data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
                 >
@@ -787,6 +790,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     {...longPressHandlers}
                     data-card-url={s3CardImageURL(
                         { ...subcard, setId: subcard.clonedCardId ?? subcard.setId },
+                        locale,
                         CardStyle.Plain,
                         cardbackPath)
                     }
@@ -826,6 +830,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 {...longPressHandlers}
                                 data-card-url={s3CardImageURL(
                                     { ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId },
+                                    locale,
                                     CardStyle.Plain,
                                     cardbackPath)
                                 }

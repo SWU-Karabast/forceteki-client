@@ -4,6 +4,7 @@ import {
     savePreferencesToLocalStorage,
     savePreferencesToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { CardImageLocale } from '@/app/_utils/s3Utils';
 
 /**
  * Generic function to save preferences based on user authentication status
@@ -95,6 +96,12 @@ export const savePreferencesGeneric = async (
                     ...currentPreferences.cosmetics,
                     ...partialPreferences.cosmetics
                 }
+            }),
+            ...(partialPreferences.gameOptions && {
+                gameOptions: {
+                    ...currentPreferences.gameOptions,
+                    ...partialPreferences.gameOptions
+                }
             })
         };
 
@@ -119,5 +126,6 @@ const getDefaultPreferences = (): IPreferences => ({
     },
     gameOptions: {
         muteChat: false,
+        cardLanguage: CardImageLocale.English,
     }
 });

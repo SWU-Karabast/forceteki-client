@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { Alert, Divider } from '@mui/material';
+import { Alert, Divider, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import PreferenceOption from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceOption';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useUser } from '@/app/_contexts/User.context';
 import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
+import { CardImageLocale, SUPPORTED_CARD_IMAGE_LOCALES } from '@/app/_utils/s3Utils';
+import { loadPreferencesFromLocalStorage } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { useCardImageLocaleContext } from '@/app/_contexts/CardImageLocale.context';
 
 enum SaveStatus {
     NoChange = 'noChange',
@@ -13,31 +16,60 @@ enum SaveStatus {
     Error = 'error',
 }
 
+const LOCALE_LABELS: Record<CardImageLocale, string> = {
+    [CardImageLocale.English]: 'English',
+    [CardImageLocale.French]: 'Français',
+    [CardImageLocale.German]: 'Deutsch',
+    [CardImageLocale.Spanish]: 'Español',
+    [CardImageLocale.Italian]: 'Italiano',
+};
+
 function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean) => void }) {
     const { user, updateUserPreferences } = useUser();
+    const { setLocale } = useCardImageLocaleContext();
+
     const [muteChatEnabled, setMuteChatEnabled] = useState<boolean>(false);
     const [originalMuteChat, setOriginalMuteChat] = useState<boolean>(false);
+
+    const [cardLanguage, setCardLanguage] = useState<CardImageLocale>(CardImageLocale.English);
+    const [originalCardLanguage, setOriginalCardLanguage] = useState<CardImageLocale>(CardImageLocale.English);
+
     const [hasChanges, setHasChanges] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NoChange);
     const [saveMessage, setSaveMessage] = useState('');
 
     useEffect(() => {
-        const currentValue = user?.preferences?.gameOptions?.muteChat ?? false;
-        setMuteChatEnabled(currentValue);
-        setOriginalMuteChat(currentValue);
+        const currentMuteChat = user?.preferences?.gameOptions?.muteChat ?? false;
+        setMuteChatEnabled(currentMuteChat);
+        setOriginalMuteChat(currentMuteChat);
+
+        let currentLanguage: CardImageLocale;
+        if (user?.preferences?.gameOptions?.cardLanguage) {
+            currentLanguage = user.preferences.gameOptions.cardLanguage;
+        } else {
+            currentLanguage = loadPreferencesFromLocalStorage().gameOptions?.cardLanguage
+                ?? CardImageLocale.English;
+        }
+        setCardLanguage(currentLanguage);
+        setOriginalCardLanguage(currentLanguage);
     }, [user]);
 
     useEffect(() => {
-        const unsaved = muteChatEnabled !== originalMuteChat;
+        const unsaved = muteChatEnabled !== originalMuteChat || cardLanguage !== originalCardLanguage;
         setHasChanges(unsaved);
         if (setHasNewChanges) {
             setHasNewChanges(unsaved);
         }
-    }, [muteChatEnabled, originalMuteChat]);
+    }, [muteChatEnabled, originalMuteChat, cardLanguage, originalCardLanguage]);
 
     const handleMuteChatChange = (value: boolean) => {
         setMuteChatEnabled(value);
+        setSaveStatus(SaveStatus.NoChange);
+    };
+
+    const handleCardLanguageChange = (event: SelectChangeEvent<CardImageLocale>) => {
+        setCardLanguage(event.target.value as CardImageLocale);
         setSaveStatus(SaveStatus.NoChange);
     };
 
@@ -47,11 +79,16 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
         try {
             const result = await savePreferencesGeneric(
                 user,
-                { gameOptions: { muteChat: muteChatEnabled } },
+                { gameOptions: { muteChat: muteChatEnabled, cardLanguage } },
                 updateUserPreferences
             );
             if (result.success) {
                 setOriginalMuteChat(muteChatEnabled);
+                setOriginalCardLanguage(cardLanguage);
+                // Flip the live image locale immediately so all cards re-render
+                // without waiting on the UserContext round-trip (also covers the
+                // anonymous path, which doesn't go through UserContext at all).
+                setLocale(cardLanguage);
                 setSaveStatus(SaveStatus.Success);
                 setSaveMessage('Game options saved successfully.');
                 setTimeout(() => setSaveStatus(SaveStatus.NoChange), 3000);
@@ -83,6 +120,27 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
         functionContainer: {
             mb: '3.5rem',
         },
+        rowContainer: {
+            mb: '1.5rem',
+        },
+        languageRow: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            mb: '1.5rem',
+        },
+        languageLabel: {
+            flex: 1,
+        },
+        languageSelect: {
+            minWidth: '180px',
+        },
+        languageDescription: {
+            color: '#aaa',
+            fontSize: '0.85rem',
+            mb: '1rem',
+        },
         saveButtonContainer: {
             display: 'flex',
             alignItems: 'center',
@@ -96,6 +154,28 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
 
     return (
         <>
+            <Box sx={styles.functionContainer}>
+                <Typography sx={styles.typographyContainer} variant={'h2'}>Card Language</Typography>
+                <Divider sx={{ mb: '20px' }} />
+                <Typography sx={styles.languageDescription}>
+                    Language used to render card images
+                </Typography>
+                <Box sx={styles.languageRow}>
+                    <Select
+                        value={cardLanguage}
+                        onChange={handleCardLanguageChange}
+                        size="small"
+                        sx={styles.languageSelect}
+                    >
+                        {SUPPORTED_CARD_IMAGE_LOCALES.map((loc) => (
+                            <MenuItem key={loc} value={loc}>
+                                {LOCALE_LABELS[loc]}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </Box>
+            </Box>
+
             <Box sx={styles.functionContainer}>
                 <Typography sx={styles.typographyContainer} variant={'h2'}>Chat</Typography>
                 <Divider sx={{ mb: '20px' }} />
@@ -111,7 +191,7 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
                 </Box>
                 {!user && (
                     <Typography sx={{ ml: '1rem', color: '#888', fontSize: '0.85rem' }}>
-                        Log in to save game options.
+                        Log in to save chat options.
                     </Typography>
                 )}
             </Box>

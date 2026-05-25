@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { IJoinableGameProps } from '../../HomePageTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { ILobbyCardData } from '../../HomePageTypes';
 import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
@@ -18,6 +19,7 @@ import Bo3Icon from '/public/bo3.svg';
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
     const { user } = useUser();
+    const locale = useCardImageLocale();
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -307,12 +309,12 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                     <Box 
                                         sx={{
                                             ...styles.cardPreview,
-                                            backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)})`
+                                            backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), locale, CardStyle.Plain)})`
                                         }}
                                         title={`Base: ${lobby.host.base.id}`}
                                         onMouseEnter={handlePreviewOpen}
                                         onMouseLeave={handlePreviewClose}
-                                        data-card-url={s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)}
+                                        data-card-url={s3CardImageURL(createCardObject(lobby.host.base), locale, CardStyle.Plain)}
                                     >
                                     </Box>
                                 </Box>
@@ -320,12 +322,12 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                                     <Box 
                                         sx={{
                                             ...styles.cardPreview,
-                                            backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)})`
+                                            backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), locale, CardStyle.PlainLeader)})`
                                         }}
                                         title={`Leader: ${lobby.host.leader.id}`}
                                         onMouseEnter={handlePreviewOpen}
                                         onMouseLeave={handlePreviewClose}
-                                        data-card-url={s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)}
+                                        data-card-url={s3CardImageURL(createCardObject(lobby.host.leader), locale, CardStyle.PlainLeader)}
                                     >
                                     </Box>
                                 </Box>
