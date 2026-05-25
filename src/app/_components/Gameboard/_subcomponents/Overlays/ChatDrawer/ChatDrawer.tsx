@@ -77,7 +77,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 color: '#fff',
                 display: 'flex',
                 flexDirection: 'column',
-                width: 'min(20%, 280px)',
+                width: { xs: '200px', md: 'min(20%, 280px)' },
                 padding: '0.75em',
                 overflow: 'hidden',
             },
