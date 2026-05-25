@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Divider, IconButton, Typography } from '@mui/material';
-import { GitHub } from '@mui/icons-material';
+import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
+import { GitHub, PublicOutlined } from '@mui/icons-material';
 import { FaDiscord } from 'react-icons/fa6';
 import NextLinkMui from './_subcomponents/NextLinkMui/NextLinkMui';
 import { IControlHubProps } from './ControlHubTypes';
@@ -150,6 +150,13 @@ const ControlHub: React.FC<IControlHubProps> = ({
                             <GitHub />
                         </IconButton>
                     </NextLinkMui>
+                    <Tooltip title="Choose card language">
+                        <NextLinkMui href="/Preferences?tab=gameOptions">
+                            <IconButton sx={styles.iconButton}>
+                                <PublicOutlined />
+                            </IconButton>
+                        </NextLinkMui>
+                    </Tooltip>
                 </Box>
             </Box>
         </Box>

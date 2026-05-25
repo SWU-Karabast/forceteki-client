@@ -14,6 +14,7 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     title,
     variant = 'gameBoard',
     subtitle = undefined,
+    initialTab,
 }) => {
     const [attemptingClose, setAttemptingClose] = useState(false);
     const [closePreferencesHandler, setClosePreferencesHandler] = useState<() => void>(() => () => undefined);
@@ -116,7 +117,7 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
                         <CloseOutlined onClick={attemptCloseFromBoard} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
                     )}
                     <Box sx={styles.tabContainer}>
-                        <VerticalTabs tabs={tabs} variant={variant} attemptingClose={attemptingClose} closeHandler={closePreferencesHandler} cancelCloseHandler={cancelClosePreferences} />
+                        <VerticalTabs tabs={tabs} variant={variant} attemptingClose={attemptingClose} closeHandler={closePreferencesHandler} cancelCloseHandler={cancelClosePreferences} initialTab={initialTab} />
                     </Box>
                 </Box>
             </Box>
