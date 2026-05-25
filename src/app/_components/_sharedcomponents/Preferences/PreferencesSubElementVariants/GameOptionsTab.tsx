@@ -176,25 +176,21 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
                 </Box>
             </Box>
 
-            <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h2'}>Chat</Typography>
-                <Divider sx={{ mb: '20px' }} />
-                <Box sx={{ mb: '10px' }}>
-                    <PreferenceOption
-                        option={'Mute Chat'}
-                        optionDescription={'Mute chat in all games.'}
-                        iconType="checkbox"
-                        onChange={handleMuteChatChange}
-                        defaultChecked={muteChatEnabled}
-                        disabled={!user}
-                    />
+            {user && (
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h2'}>Chat</Typography>
+                    <Divider sx={{ mb: '20px' }} />
+                    <Box sx={{ mb: '10px' }}>
+                        <PreferenceOption
+                            option={'Mute Chat'}
+                            optionDescription={'Mute chat in all games.'}
+                            iconType="checkbox"
+                            onChange={handleMuteChatChange}
+                            defaultChecked={muteChatEnabled}
+                        />
+                    </Box>
                 </Box>
-                {!user && (
-                    <Typography sx={{ ml: '1rem', color: '#888', fontSize: '0.85rem' }}>
-                        Log in to save chat options.
-                    </Typography>
-                )}
-            </Box>
+            )}
 
             <Box sx={styles.saveButtonContainer}>
                 <PreferenceButton
