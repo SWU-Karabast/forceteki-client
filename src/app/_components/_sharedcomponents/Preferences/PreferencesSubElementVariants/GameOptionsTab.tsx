@@ -4,6 +4,8 @@ import Typography from '@mui/material/Typography';
 import { Alert, Divider, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import PreferenceOption from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceOption';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { DiscordChannelLink } from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
+import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { useUser } from '@/app/_contexts/User.context';
 import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
 import { CardImageLocale, SUPPORTED_CARD_IMAGE_LOCALES } from '@/app/_utils/s3Utils';
@@ -38,6 +40,7 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>(SaveStatus.NoChange);
     const [saveMessage, setSaveMessage] = useState('');
+    const [showLanguageInfo, setShowLanguageInfo] = useState(false);
 
     useEffect(() => {
         const currentMuteChat = user?.preferences?.gameOptions?.muteChat ?? false;
@@ -76,6 +79,7 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
     const handleSave = async () => {
         setIsSaving(true);
         setSaveStatus(SaveStatus.NoChange);
+        const previousCardLanguage = originalCardLanguage;
         try {
             const result = await savePreferencesGeneric(
                 user,
@@ -95,6 +99,12 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
                 setHasChanges(false);
                 if (setHasNewChanges) {
                     setHasNewChanges(false);
+                }
+                if (
+                    cardLanguage !== previousCardLanguage
+                    && cardLanguage !== CardImageLocale.English
+                ) {
+                    setShowLanguageInfo(true);
                 }
             } else {
                 setSaveStatus(SaveStatus.Error);
@@ -211,6 +221,33 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
                     </Alert>
                 )}
             </Box>
+
+            <ConfirmationDialog
+                open={showLanguageInfo}
+                title="Notice on Preview Card Languages"
+                message={
+                    <>
+                        <Box component="p" sx={{ mt: 0, mb: '1rem' }}>
+                            During preview season for a new set, new cards usually become available in English before other languages. As a result, some preview cards <b>may appear in English for a period of days or weeks</b>.
+                        </Box>
+                        <Box sx={{ fontWeight: 'bold', fontSize: '1.1rem', mb: '0.25rem', color: 'white' }}>
+                            Details
+                        </Box>
+                        <Box component="p" sx={{ mt: 0, mb: '1rem' }}>
+                            Our English images come from swudb.com, which typically updates day-of with new previews. Other card languages come from the FFG card database, which is updated at a slower rate and often does not show new cards for days or weeks after they are spoiled.
+                        </Box>
+                        <Box component="p" sx={{ mt: 0, mb: 0 }}>
+                            If you notice card previews appearing in English for an extended period of time or for cards not in a preview set, please contact us via our{' '}
+                            <DiscordChannelLink>Discord channel</DiscordChannelLink>.
+                        </Box>
+                    </>
+                }
+                hideCancel
+                confirmButtonText="Got it"
+                confirmButtonVariant="standard"
+                onCancel={() => setShowLanguageInfo(false)}
+                onConfirm={() => setShowLanguageInfo(false)}
+            />
         </>
     );
 }

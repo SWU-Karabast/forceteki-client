@@ -109,6 +109,8 @@ const DiscordChannelLink: React.FC<{ children: string }> = ({ children }) => (
     </Link>
 );
 
+export { DiscordChannelLink };
+
 const BugReportDialog: React.FC<BugReportDialogProps> = ({ open, onClose }) => {
     const { sendLobbyMessage, lobbyState, connectedPlayer, bugReportState, isSpectator } = useGame();
     const [description, setDescription] = useState('');
