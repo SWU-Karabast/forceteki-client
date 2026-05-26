@@ -28,7 +28,8 @@ const UserContext = createContext<IUserContextType>({
     updateReportingDisabledSeen: () => {},
     updateUserPreferences: () => {},
     updateModerationSeenStatus: () => {},
-    updateUndoPopupSeenDate: () => {}
+    updateUndoPopupSeenDate: () => {},
+    updateTimerPopupSeenDate: () => {}
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
@@ -74,6 +75,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         reportingDisabled: serverUser.reportingDisabled,
                         moderation: serverUser.moderation,
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
+                        timerPopupSeenDate: serverUser.timerPopupSeenDate,
                     });
                     await update({ userId: serverUser.id });
                     // Fetch mod status
@@ -180,6 +182,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         })
     }
 
+    const updateTimerPopupSeenDate = () => {
+        setUser((prevUser) => {
+            if(!prevUser) return null;
+            return {
+                ...prevUser,
+                timerPopupSeenDate: new Date()
+            }
+        })
+    }
+
     const updateNeedsUsernameChange = () => {
         setUser((prevUser) => {
             if(!prevUser) return null;
@@ -262,6 +274,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             updateUsername,
             updateWelcomeMessage,
             updateUndoPopupSeenDate,
+            updateTimerPopupSeenDate,
             updateNeedsUsernameChange,
             updateMustRequestUsernameChangeSeen,
             updateReportingDisabledSeen,
