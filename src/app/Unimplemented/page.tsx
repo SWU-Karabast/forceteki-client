@@ -8,11 +8,51 @@ import {
     PopoverOrigin,
     MenuItem, Divider
 } from '@mui/material';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { IPreviewCard } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay, cardImageFillSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
+
+interface IUnimplementedCardTileProps {
+    card: IPreviewCard;
+    styleCardSx: object;
+    leaderStyleCardSx: object;
+    onMouseEnter: (event: React.MouseEvent<HTMLElement>, cardType: string) => void;
+    onMouseLeave: () => void;
+}
+
+const UnimplementedCardTile: React.FC<IUnimplementedCardTileProps> = ({
+    card,
+    styleCardSx,
+    leaderStyleCardSx,
+    onMouseEnter,
+    onMouseLeave,
+}) => {
+    const url = s3CardImageURL(card);
+    const { status, imgProps } = useImageLoadStatus(url);
+    const baseSx = card.types === 'base' ? leaderStyleCardSx : styleCardSx;
+    return (
+        <Box
+            sx={{ ...baseSx, position: 'relative' }}
+            onMouseEnter={(e) => onMouseEnter(e, card.types)}
+            onMouseLeave={onMouseLeave}
+            data-card-url={url}
+        >
+            <Box
+                component="img"
+                src={url}
+                alt=""
+                draggable={false}
+                {...imgProps}
+                sx={cardImageFillSx}
+            />
+            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(card)} />}
+        </Box>
+    );
+};
 
 interface IUnimplementedCardsResponse {
     cards: IPreviewCard[];
@@ -319,17 +359,12 @@ const UnimplementedPage = () => {
                     <Box sx={styles.mainContainerStyle}>
                         {filteredCards.map((card: IPreviewCard) => (
                             <Box sx={styles.cardContainer} key={card.id}>
-                                <Box
-                                    sx={card.types === 'base' ? {
-                                        ...styles.leaderStyleCard,
-                                        backgroundImage: `url(${s3CardImageURL(card)})`,
-                                    } : {
-                                        ...styles.styleCard,
-                                        backgroundImage: `url(${s3CardImageURL(card)})`,
-                                    }}
-                                    onMouseEnter={(e) => handlePreviewOpen(e, card.types)}
+                                <UnimplementedCardTile
+                                    card={card}
+                                    styleCardSx={styles.styleCard}
+                                    leaderStyleCardSx={styles.leaderStyleCard}
+                                    onMouseEnter={handlePreviewOpen}
                                     onMouseLeave={handlePreviewClose}
-                                    data-card-url={s3CardImageURL(card)}
                                 />
                             </Box>
                         ))}
