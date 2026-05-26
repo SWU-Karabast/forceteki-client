@@ -498,7 +498,8 @@ export const convertToDisplayDecks = (storedDecks: StoredDeck[]): DisplayDeck[] 
         metadata: { name: deck.name },
         favourite: deck.favourite,
         deckLink: deck.deckLink,
-        source: deck.source
+        source: deck.source,
+        stats: deck.stats
     }));
 };
 
