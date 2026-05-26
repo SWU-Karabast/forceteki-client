@@ -126,6 +126,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'cardcore.gg';
             case DeckSource.HoloScan:
                 return 'holoscan.net';
+            case DeckSource.Melee:
+                return 'melee.gg';
             default:
                 return source;
         }

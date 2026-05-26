@@ -192,7 +192,7 @@ export const validateDeckJSON = (jsonString: string): DeckJSON | null => {
 
         // If we got here, the JSON structure is valid with normalized keys
         return deckData as DeckJSON;
-    } catch (error) {
+    } catch {
         // JSON parsing failed
         return null;
     }
@@ -215,6 +215,7 @@ export const parseInputAsDeckData = (input: string): {
     if(
         input.includes('swustats.net') ||
         input.includes('swudb.com') ||
+        input.includes('melee.gg') ||
         input.includes('sw-unlimited-db.com') ||
         input.includes('swucardhub.fr') ||
         input.includes('swubase.com') ||

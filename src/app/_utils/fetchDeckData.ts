@@ -23,7 +23,8 @@ export enum DeckSource {
     SWUForge = 'SWUForge',
     KyberDecks = 'KyberDecks',
     CardCore = 'CardCore',
-    HoloScan = 'HoloScan'
+    HoloScan = 'HoloScan',
+    Melee = 'Melee'
 }
 
 export interface IDeckData {
@@ -44,8 +45,8 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
         const source = determineDeckSource(deckLink);
         let data: IDeckData;
 
-        if (source === DeckSource.SWUDB) {
-            // swudb.com deck resolution lives on the BE; the Amplify
+        if (source === DeckSource.SWUDB || source === DeckSource.Melee) {
+            // Deck resolution for sources that need Karabast card-data mapping lives on the BE; the Amplify
             // `/api/swudbdeck` route still handles other deck-builders.
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_ROOT_URL}/api/resolve-deck-link`,
@@ -67,7 +68,7 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
             const body = await response.json();
             data = {
                 ...(body.deck as IDeckData),
-                deckSource: DeckSource.SWUDB,
+                deckSource: source,
             };
         } else {
             const response = await fetch(
@@ -106,6 +107,8 @@ export const determineDeckSource = (deckLink: string): DeckSource => {
         return DeckSource.SWUStats;
     } else if (deckLink.includes('swudb.com')) {
         return DeckSource.SWUDB;
+    } else if (deckLink.includes('melee.gg')) {
+        return DeckSource.Melee;
     } else if (deckLink.includes('swunlimiteddb.com')) {
         return DeckSource.SWUnlimitedDB;
     } else if (deckLink.includes('swubase.com')) {
