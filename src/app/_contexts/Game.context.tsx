@@ -45,6 +45,7 @@ interface IGameContextType {
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
+    gameIsEnded: () => boolean;
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -325,6 +326,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setStatsSubmitNotification(notification);
         });
 
+        // Server requests the player's screen resolution at game start for analytics logging.
+        newSocket.on('requestScreenResolution', () => {
+            if (typeof window === 'undefined' || !window.screen) return;
+            newSocket.emit('lobby', 'reportScreenResolution', {
+                width: window.screen.width,
+                height: window.screen.height,
+            });
+        });
+
         if (socket) {
             socket.disconnect();
         }
@@ -408,6 +418,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setDistributionPrompt(uuid, amount, promptData);
     };
 
+    const gameIsEnded = () => !!gameState?.winners?.length
+
     return (
         <GameContext.Provider
             value={{
@@ -431,6 +443,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 isAnonymousPlayer,
                 hasChatDisabled,
                 createNewSocket,
+                gameIsEnded,
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,

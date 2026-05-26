@@ -21,6 +21,23 @@ interface ButtonProps {
 }
 
 const styles = {
+    modalContainer: {
+        maxHeight: 'calc(100dvh - 6rem)',
+        minHeight: 0,
+        overflow: 'hidden',
+    },
+    header: {
+        flexShrink: 0,
+    },
+    scrollBody: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%',
+        flex: '1 1 auto',
+        minHeight: 0,
+        overflowY: 'auto',
+    },
     selectableCardsContainer: {
         display: 'grid',
         gap: '10px',
@@ -31,8 +48,16 @@ const styles = {
             xl: 'repeat(auto-fit, minmax(5rem, 7rem))',
         },
         width: '100%',
-        overflowY: 'auto',
         justifyContent: 'center',
+    },
+    actionFooter: {
+        display: 'flex',
+        gap: '1rem',
+        marginTop: '2rem',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        flexShrink: 0,
     },
     selectionDot: {
         height: '1rem',
@@ -86,46 +111,49 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                 {data.description && (
                     <RichText text={data.description} sx={textStyle} component={Typography}/>
                 )}
-                <Box sx={styles.selectableCardsContainer}>
-                    {selectableCards.map((card) => {
-                        return (
-                            <Box key={card.uuid} sx={{ ...styles.selectableCard, filter: card.selectionState === 'unselectable' ? 'brightness(0.75)' : '' }}>
-                                <GameCard 
-                                    key={card.uuid}
-                                    cardStyle={CardStyle.Prompt}
-                                    card={{ ...card, selectable: card.selectionState === 'selectable' || card.selectionState === 'selected', selected: card.selectionState === 'selected' }}
-                                    onClick={() => handleCardClick(card.uuid)}
-                                    disabled={clickDisabled()}
-                                />
-                                <Typography>{card.displayText}</Typography>
-                                {selectingCards && (
-                                    <Box
-                                        sx={{
-                                            ...styles.selectionDot,
-                                            '&::before': {
-                                                backgroundColor: card.selectionState === 'selected' ? 'var(--selection-blue)' : 'var(--selection-grey)',
-                                            }
-                                        }}
+                <Box sx={styles.scrollBody}>
+                    <Box sx={styles.selectableCardsContainer}>
+                        {selectableCards.map((card) => {
+                            return (
+                                <Box key={card.uuid} sx={{ ...styles.selectableCard, filter: card.selectionState === 'unselectable' ? 'brightness(0.75)' : '' }}>
+                                    <GameCard 
+                                        key={card.uuid}
+                                        cardStyle={CardStyle.Prompt}
+                                        card={{ ...card, selectable: card.selectionState === 'selectable' || card.selectionState === 'selected', selected: card.selectionState === 'selected' }}
+                                        onClick={() => handleCardClick(card.uuid)}
+                                        disabled={clickDisabled()}
                                     />
-                                )}
-                                {renderButtons(card.uuid, data.perCardButtons)}
-                            </Box>
-                        )
-                    })}
-                    {invalidCards.map((card) => {
-                        return (
-                            <Box key={card.uuid} sx={styles.invalidCard}>
-                                <GameCard key={card.uuid} disabled={true} cardStyle={CardStyle.Prompt} card={{ ...card, selectable: false, selected: false }} />
-                            </Box>
-                        )
-                    })}
+                                    <Typography>{card.displayText}</Typography>
+                                    {selectingCards && (
+                                        <Box
+                                            sx={{
+                                                ...styles.selectionDot,
+                                                '&::before': {
+                                                    backgroundColor: card.selectionState === 'selected' ? 'var(--selection-blue)' : 'var(--selection-grey)',
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                    {renderButtons(card.uuid, data.perCardButtons)}
+                                </Box>
+                            )
+                        })}
+                        {invalidCards.map((card) => {
+                            return (
+                                <Box key={card.uuid} sx={styles.invalidCard}>
+                                    <GameCard key={card.uuid} disabled={true} cardStyle={CardStyle.Prompt} card={{ ...card, selectable: false, selected: false }} />
+                                </Box>
+                            )
+                        })}
+                    </Box>
                 </Box>
-                <Box>
+                <Box sx={styles.actionFooter}>
                     {data.buttons.map((button, index) => 
                         <Button
                             key={`${button.arg}:${index}`}
                             sx={perCardButtonStyle}
                             variant="contained"
+                            disabled={button.disabled}
                             onClick={() => {
                                 sendGameMessage([button.command, button.arg, data.uuid]);
                             }}
@@ -163,8 +191,8 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
 
 
     return (
-        <Box sx={containerStyle}>
-            <Box sx={headerStyle(isMinimized)}>
+        <Box sx={{ ...containerStyle, ...styles.modalContainer }}>
+            <Box sx={{ ...headerStyle(isMinimized), ...styles.header }}>
                 <RichText text={data.title} sx={titleStyle} component={Typography}/>
                 <IconButton
                     sx={minimizeButtonStyle}

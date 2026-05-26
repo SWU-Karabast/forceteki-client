@@ -21,7 +21,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, NewGameFormatCardPool } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -104,10 +104,12 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         }
         const fmt = valueOrDefault(deckPreferences.matchConfig.format, formats, DefaultFormat.format);
         const config = getFormatConfig(formatConfigs, fmt);
+        const cardPools = config?.cardPools ?? [CardPool.Current];
+        const gamesToWinModes = config?.gamesToWinModes ?? [GamesToWinMode.BestOfOne];
         return {
             format: fmt,
-            cardPool: valueOrDefault(deckPreferences.matchConfig.cardPool, config?.cardPools ?? [CardPool.Current], DefaultFormat.cardPool),
-            gamesToWinMode: valueOrDefault(deckPreferences.matchConfig.gamesToWinMode, config?.gamesToWinModes ?? [GamesToWinMode.BestOfOne], DefaultFormat.gamesToWinMode),
+            cardPool: valueOrDefault(deckPreferences.matchConfig.cardPool, cardPools, cardPools[0]),
+            gamesToWinMode: valueOrDefault(deckPreferences.matchConfig.gamesToWinMode, gamesToWinModes, gamesToWinModes[0]),
         }
     }, [deckPreferences.matchConfig.format, deckPreferences.matchConfig.cardPool, deckPreferences.matchConfig.gamesToWinMode, formats, formatConfigs]);
 
@@ -593,7 +595,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 />
 
                 {/* Beta Announcement */}
-                { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} />}
+                { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} cardPool={NewGameFormatCardPool}/>}
 
                 {/* Submit Button */}
                 <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,
