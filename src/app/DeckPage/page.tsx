@@ -6,7 +6,9 @@ import Grid from '@mui/material/Grid2';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay, cardImageFillContainSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { CardStyle, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -19,6 +21,31 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
+
+interface IDeckSummaryCardTileProps {
+    cardId: string;
+    cardStyle?: CardStyle;
+    boxGeneralStyling: object;
+}
+
+const DeckSummaryCardTile: React.FC<IDeckSummaryCardTileProps> = ({ cardId, cardStyle, boxGeneralStyling }) => {
+    const cardArg = { id: cardId, count: 0 };
+    const url = cardStyle !== undefined ? s3CardImageURL(cardArg, cardStyle) : s3CardImageURL(cardArg);
+    const { status, imgProps } = useImageLoadStatus(url);
+    return (
+        <Box sx={{ ...boxGeneralStyling, position: 'relative' }}>
+            <Box
+                component="img"
+                src={url}
+                alt=""
+                draggable={false}
+                {...imgProps}
+                sx={cardImageFillContainSx}
+            />
+            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(cardArg)} />}
+        </Box>
+    );
+};
 
 
 const sortByOptions: string[] = [
@@ -567,10 +594,17 @@ const DeckPage: React.FC = () => {
                                 <Box sx={styles.leaderBaseHolder}>
                                     <Box sx={styles.CardSetContainerStyle}>
                                         <Box>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: deck.base.id, count:0 })})` }} />
+                                            <DeckSummaryCardTile
+                                                cardId={deck.base.id}
+                                                boxGeneralStyling={styles.boxGeneralStyling}
+                                            />
                                         </Box>
                                         <Box sx={{ ...styles.parentBoxStyling, left: '-15px', top: '26px' }}>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: deck.leader.id, count:0 }, CardStyle.PlainLeader)})` }} />
+                                            <DeckSummaryCardTile
+                                                cardId={deck.leader.id}
+                                                cardStyle={CardStyle.PlainLeader}
+                                                boxGeneralStyling={styles.boxGeneralStyling}
+                                            />
                                         </Box>
                                     </Box>
                                 </Box>
