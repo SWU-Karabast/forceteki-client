@@ -204,12 +204,18 @@ export const validateDeckJSON = (jsonString: string): DeckJSON | null => {
  * @returns Object with the input type and the parsed deck if valid
  */
 export const parseInputAsDeckData = (input: string): {
-    type: 'url' | 'json' | 'invalid',
+    type: 'url' | 'json' | 'melee' | 'invalid',
     data: DeckJSON | null
 } => {
-    const jsonData = validateDeckJSON(input);
-    if (jsonData) {
-        return { type: 'json', data: jsonData };
+    const trimmedInput = input.trim();
+
+    if (trimmedInput.startsWith('{')) {
+        const jsonData = validateDeckJSON(trimmedInput);
+        if (jsonData) {
+            return { type: 'json', data: jsonData };
+        }
+
+        return { type: 'invalid', data: null };
     }
 
     if(
@@ -228,5 +234,10 @@ export const parseInputAsDeckData = (input: string): {
     ) {
         return { type: 'url', data: null };
     }
+
+    if (trimmedInput.length > 0) {
+        return { type: 'melee', data: null };
+    }
+
     return { type: 'invalid', data:null }
 };

@@ -36,10 +36,10 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
         if (!deckLink) return;
         try {
             const deckType = parseInputAsDeckData(deckLink)
-            if(deckType.type === 'json'){
+            if(deckType.type === 'json' || deckType.type === 'melee'){
                 setErrorTitle('Deck Validation Error');
-                setDeckErrorSummary('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
-                setDeckErrorDetails('We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.')
+                setDeckErrorSummary('We do not support saving JSON/Melee format decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.');
+                setDeckErrorDetails('We do not support saving JSON/Melee format decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.')
                 setErrorModalOpen(true);
                 return;
             }

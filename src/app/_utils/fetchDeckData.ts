@@ -101,6 +101,37 @@ export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) 
     }
 };
 
+export const fetchMeleeDeckData = async (deckText: string): Promise<IDeckData> => {
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/resolve-melee-deck`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deckText }),
+                credentials: 'include'
+            }
+        );
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.error ?? `Failed to parse Melee deck: ${response.status}`);
+        }
+        const body = await response.json();
+
+        return {
+            ...(body.deck as IDeckData),
+            deckSource: DeckSource.NotSupported,
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error('Error parsing Melee deck:', error.message);
+        } else {
+            console.error('Unexpected error:', error);
+        }
+        throw error;
+    }
+};
+
 export const determineDeckSource = (deckLink: string): DeckSource => {
     if (deckLink.includes('swustats.net')) {
         return DeckSource.SWUStats;

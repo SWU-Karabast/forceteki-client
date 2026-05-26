@@ -22,7 +22,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { fetchDeckData, determineDeckSource, DeckSource } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, fetchMeleeDeckData, determineDeckSource, DeckSource } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures,
     DeckValidationFailureReason,
@@ -112,10 +112,10 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
 
     const handleJsonDeck = (deckLink: string) => {
         const parsedInput = parseInputAsDeckData(deckLink);
-        if(parsedInput.type === 'json'){
+        if(parsedInput.type === 'json' || parsedInput.type === 'melee'){
             setIsJsonDeck(true);
             setSaveDeck(false);
-            setError(null, 'We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.', 'JSON Decks Notice', 'warning');
+            setError(null, 'We do not support saving JSON/Melee format decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.', 'Pasted Deck Notice', 'warning');
             return;
         }
         setIsJsonDeck(false);
@@ -184,6 +184,8 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
+            }else if(parsedInput.type === 'melee') {
+                deckData = userDeck ? await fetchMeleeDeckData(userDeck) : null;
             }else{
                 setError('Couldn\'t import. Deck is invalid or unsupported deckbuilder',
                     'Incorrect deck format or unsupported deckbuilder.',
@@ -671,13 +673,15 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                                     </Tooltip>
                                     )
                                     <br />
-                                    OR paste deck JSON directly
+                                    OR paste deck JSON/Melee directly
                                 </Typography>
                                 <StyledTextField
-                                    type="text"
+                                    multiline
+                                    minRows={1}
+                                    maxRows={6}
                                     disabled={readyStatus}
                                     value={deckLink}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                    onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
                                         if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
                                             setDisplayError(true);
 
@@ -714,7 +718,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                                     <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
                                         {errorState.isJsonDeck ? (
                                             <Box>
-                                                JSON format cannot be saved.
+                                                JSON/Melee format cannot be saved.
                                                 <Link
                                                     sx={styles.errorMessageLinkPlain}
                                                     onClick={() => setModalOpen(true)}

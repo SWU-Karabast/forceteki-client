@@ -16,7 +16,7 @@ import {
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, fetchMeleeDeckData } from '@/app/_utils/fetchDeckData';
 import {
     DeckValidationFailureReason,
     IDeckValidationFailures
@@ -138,10 +138,10 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     const handleJsonDeck = (deckLink: string) => {
         const parsedInput = parseInputAsDeckData(deckLink);
-        if(parsedInput.type === 'json'){
+        if(parsedInput.type === 'json' || parsedInput.type === 'melee'){
             setIsJsonDeck(true)
             setSaveDeck(false);
-            setError(null,'We do not support saving JSON decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.','JSON Decks Notice','warning')
+            setError(null,'We do not support saving JSON/Melee format decks at this time. Please import the deck into a deckbuilder such as SWUDB and use link import.','Pasted Deck Notice','warning')
             return;
         }
         clearErrors()
@@ -189,6 +189,8 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 }
             }else if(parsedInput.type === 'json') {
                 deckData = parsedInput.data
+            }else if(parsedInput.type === 'melee') {
+                deckData = userDeck ? await fetchMeleeDeckData(userDeck) : null;
             }else{
                 setQueueState(false);
                 setError('Couldn\'t import. Deck is invalid or unsupported deckbuilder','Incorrect deck format or unsupported deckbuilder.','Deck Validation Error','error');
@@ -526,12 +528,14 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                                 </Tooltip>
                                 )
                                 <br />
-                                OR paste deck JSON directly
+                                OR paste deck JSON/Melee directly
                             </Box>
                             <StyledTextField
-                                type="text"
+                                multiline
+                                minRows={1}
+                                maxRows={6}
                                 value={deckLink}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                onChange={(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
                                     clearErrors()
                                     setDeckLink(e.target.value);
                                     handleJsonDeck(e.target.value);
@@ -557,7 +561,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                                 <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
                                     {errorState.isJsonDeck ? (
                                         <Box>
-                                            JSON format cannot be saved.
+                                            JSON/Melee format cannot be saved.
                                             <Link
                                                 sx={styles.errorMessageLinkPlain}
                                                 onClick={() => setModalOpen(true)}
