@@ -300,7 +300,7 @@ const DeckPage: React.FC = () => {
         },
         deckContainer: (isSelected: boolean) => ({
             background: isSelected ? '#2F7DB680' : '#20344280',
-            width: { xs: '29rem', md: '31rem' },
+            width: { xs: '30rem', md: '33rem' },
             //height: { xs: 'auto', md: '13rem' },
             height: '13rem',
             minHeight: '13rem',
@@ -309,6 +309,7 @@ const DeckPage: React.FC = () => {
             display:'flex',
             flexDirection: 'row',
             border: '2px solid transparent',
+            paddingRight:'1.3rem',
             '&:hover': {
                 backgroundColor: '#2F7DB680',
             },
