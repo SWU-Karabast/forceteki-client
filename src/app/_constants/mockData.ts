@@ -111,6 +111,6 @@ export const announcement: IAnnouncement = {
     - We'll be actively monitoring the values for both the per-action timer and the time bank, and may adjust them based on how games play out.<br/>
     <br/>
     Have feedback? Let us know in our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>!`,
-    endDate: '2027-05-06', // The date should be year-month-day
+    endDate: '2026-05-24', // The date should be year-month-day
     image:'/timerexplainer.png'
 }
