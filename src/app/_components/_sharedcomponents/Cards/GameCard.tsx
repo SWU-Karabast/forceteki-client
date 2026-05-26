@@ -47,6 +47,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
     const isHoveredInChat = hoveredChatCard.id === card.uuid;
+    const isPreviewingLeaderCard = anchorElement?.getAttribute('data-card-type') === 'leader';
 
     const {
         aspectRatio,
@@ -58,7 +59,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         setPreviewImage,
         frontCardStyle: CardStyle.Plain,
         backCardStyle: CardStyle.PlainLeader,
-        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
+        isLeader: isPreviewingLeaderCard,
         isDeployed: true,
     });
 
@@ -767,7 +768,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 {...popoverConfig()}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
-                {(card.printedType === 'leader') && !isTouchDevice && !isFlipped && (
+                {isPreviewingLeaderCard && !isTouchDevice && !isFlipped && (
                     <Typography variant={'body1'} sx={styles.ctrlText}
                     >CTRL: View Flipside</Typography>
                 )}
