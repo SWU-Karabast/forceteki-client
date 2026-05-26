@@ -1,5 +1,5 @@
 'use client';
-import {Box, MenuItem, Typography, useMediaQuery, useTheme} from '@mui/material';
+import { Box, MenuItem, Typography, useMediaQuery, useTheme } from '@mui/material';
 import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import Grid from '@mui/material/Grid2';
@@ -312,7 +312,7 @@ const DeckPage: React.FC = () => {
         deckContainer: (isSelected: boolean) => ({
             background: isSelected ? '#2F7DB680' : '#20344280',
             width: { xs: '30rem', md: '33rem' },
-            //height: { xs: 'auto', md: '13rem' },
+            // height: { xs: 'auto', md: '13rem' },
             height: '13rem',
             minHeight: '13rem',
             borderRadius: '5px',
@@ -347,8 +347,8 @@ const DeckPage: React.FC = () => {
             backgroundColor: 'transparent',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
-            width: {xs: '12rem', md:'14rem'},
-            height: {xs: '8.18rem', md:'10.18rem'},
+            width: { xs: '12rem', md:'14rem' },
+            height: { xs: '8.18rem', md:'10.18rem' },
             backgroundImage: 'url(/leaders/boba.webp)',
             backgroundRepeat: 'no-repeat',
             textAlign: 'center' as const,
@@ -436,7 +436,7 @@ const DeckPage: React.FC = () => {
         sourceTag: {
             padding: '4px 10px',
             borderRadius: '15px',
-            fontSize: { xs:'1rem', md:'0.75rem'},
+            fontSize: { xs:'1rem', md:'0.75rem' },
             fontWeight: '500',
             display: 'inline-block',
             marginTop: '8px',
@@ -567,7 +567,7 @@ const DeckPage: React.FC = () => {
                         ))}
                     </StyledTextField>
                     <Box sx={styles.addNewDeck}>
-                        <PreferenceButton variant={'standard'} sx={isMobile ? { fontSize: '14px', pt: '6px', pb: '6px', minWidth: '36px' } : {}}  text={isMobile ? '+' : 'Add New Deck'} buttonFnc={() => setAddDeckDialogOpen(true)}/>
+                        <PreferenceButton variant={'standard'} sx={isMobile ? { fontSize: '14px', pt: '6px', pb: '6px', minWidth: '36px' } : {}} text={isMobile ? '+' : 'Add New Deck'} buttonFnc={() => setAddDeckDialogOpen(true)}/>
                     </Box>
                 </Box>
                 <Box>
@@ -639,7 +639,7 @@ const DeckPage: React.FC = () => {
                                         <PreferenceButton
                                             variant="standard"
                                             text="View Deck"
-                                            sx={{fontSize: '1rem', padding:'0.5rem' }}
+                                            sx={{ fontSize: '1rem', padding:'0.5rem' }}
                                             buttonFnc={() => handleViewDeck(deck.deckID)}
                                         />
                                     </Box>
