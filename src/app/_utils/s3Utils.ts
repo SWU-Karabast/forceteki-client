@@ -45,6 +45,14 @@ export enum CardImageLocale {
 
 export const SUPPORTED_CARD_IMAGE_LOCALES: readonly CardImageLocale[] = Object.values(CardImageLocale);
 
+export const CARD_IMAGE_LOCALE_LABELS: Record<CardImageLocale, string> = {
+    [CardImageLocale.English]: 'English',
+    [CardImageLocale.French]: 'Français',
+    [CardImageLocale.German]: 'Deutsch',
+    [CardImageLocale.Spanish]: 'Español',
+    [CardImageLocale.Italian]: 'Italiano',
+};
+
 export function s3CardImageURL(
     card: ICardData | ISetCode | IServerCardData | IPreviewCard,
     locale: CardImageLocale,

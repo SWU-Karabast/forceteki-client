@@ -4,11 +4,10 @@ import Typography from '@mui/material/Typography';
 import { Alert, Divider, MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import PreferenceOption from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceOption';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { DiscordChannelLink } from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
-import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
+import CardLanguageNoticeDialog from '@/app/_components/_sharedcomponents/CardLanguageNoticeDialog';
 import { useUser } from '@/app/_contexts/User.context';
 import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
-import { CardImageLocale, SUPPORTED_CARD_IMAGE_LOCALES } from '@/app/_utils/s3Utils';
+import { CARD_IMAGE_LOCALE_LABELS, CardImageLocale, SUPPORTED_CARD_IMAGE_LOCALES } from '@/app/_utils/s3Utils';
 import { loadPreferencesFromLocalStorage } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useCardImageLocaleContext } from '@/app/_contexts/CardImageLocale.context';
 
@@ -17,14 +16,6 @@ enum SaveStatus {
     Success = 'success',
     Error = 'error',
 }
-
-const LOCALE_LABELS: Record<CardImageLocale, string> = {
-    [CardImageLocale.English]: 'English',
-    [CardImageLocale.French]: 'Français',
-    [CardImageLocale.German]: 'Deutsch',
-    [CardImageLocale.Spanish]: 'Español',
-    [CardImageLocale.Italian]: 'Italiano',
-};
 
 function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean) => void }) {
     const { user, updateUserPreferences } = useUser();
@@ -179,7 +170,7 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
                     >
                         {SUPPORTED_CARD_IMAGE_LOCALES.map((loc) => (
                             <MenuItem key={loc} value={loc}>
-                                {LOCALE_LABELS[loc]}
+                                {CARD_IMAGE_LOCALE_LABELS[loc]}
                             </MenuItem>
                         ))}
                     </Select>
@@ -222,31 +213,9 @@ function GameOptionsTab({ setHasNewChanges }: { setHasNewChanges?: (has: boolean
                 )}
             </Box>
 
-            <ConfirmationDialog
+            <CardLanguageNoticeDialog
                 open={showLanguageInfo}
-                title="Notice on Preview Card Languages"
-                message={
-                    <>
-                        <Box component="p" sx={{ mt: 0, mb: '1rem' }}>
-                            During preview season for a new set, new cards usually become available in English before other languages. As a result, some preview cards <b>may appear in English for a period of days or weeks</b>.
-                        </Box>
-                        <Box sx={{ fontWeight: 'bold', fontSize: '1.1rem', mb: '0.25rem', color: 'white' }}>
-                            Details
-                        </Box>
-                        <Box component="p" sx={{ mt: 0, mb: '1rem' }}>
-                            Our English images come from swudb.com, which typically updates day-of with new previews. Other card languages come from the FFG card database, which is updated at a slower rate and often does not show new cards for days or weeks after they are spoiled.
-                        </Box>
-                        <Box component="p" sx={{ mt: 0, mb: 0 }}>
-                            If you notice card previews appearing in English for an extended period of time or for cards not in a preview set, please contact us via our{' '}
-                            <DiscordChannelLink>Discord channel</DiscordChannelLink>.
-                        </Box>
-                    </>
-                }
-                hideCancel
-                confirmButtonText="Got it"
-                confirmButtonVariant="standard"
-                onCancel={() => setShowLanguageInfo(false)}
-                onConfirm={() => setShowLanguageInfo(false)}
+                onClose={() => setShowLanguageInfo(false)}
             />
         </>
     );
