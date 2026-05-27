@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';

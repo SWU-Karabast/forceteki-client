@@ -1,5 +1,5 @@
 'use client';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { Typography } from '@mui/material';
 import KarabastBanner from './_components/_sharedcomponents/Banner/Banner';
 import PublicGames from './_components/HomePage/PublicGames/PublicGames';
