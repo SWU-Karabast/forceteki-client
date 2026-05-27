@@ -2,7 +2,7 @@
 import { Box, MenuItem, Typography } from '@mui/material';
 import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
@@ -51,7 +51,8 @@ const DeckSummaryCardTile: React.FC<IDeckSummaryCardTileProps> = ({ cardId, card
 const sortByOptions: string[] = [
     'Favourites',
     'Deck Builder',
-    'Name'
+    'Name',
+    'Most Played'
 ];
 
 const DeckPage: React.FC = () => {
@@ -81,9 +82,13 @@ const DeckPage: React.FC = () => {
         }
     };
 
-    // sort function
-    const sortDecks = (sort:string) => {
-        const sortedDecks = [...decks]; // Create a new array to avoid modifying state directly
+    const getDeckGamesPlayed = (deck: DisplayDeck) => {
+        const stats = deck.stats;
+        return stats ? stats.wins + stats.losses + stats.draws : 0;
+    };
+
+    const sortDeckList = (decksToSort: DisplayDeck[], sort:string) => {
+        const sortedDecks = [...decksToSort]; // Create a new array to avoid modifying state directly
 
         switch (sort) {
             case 'Favourites':
@@ -92,6 +97,14 @@ const DeckPage: React.FC = () => {
                     if (a.favourite && !b.favourite) return -1;
                     if (!a.favourite && b.favourite) return 1;
                     // Then sort by name
+                    return a.metadata.name.localeCompare(b.metadata.name);
+                });
+                break;
+
+            case 'Most Played':
+                sortedDecks.sort((a, b) => {
+                    const gamesPlayedCompare = getDeckGamesPlayed(b) - getDeckGamesPlayed(a);
+                    if (gamesPlayedCompare !== 0) return gamesPlayedCompare;
                     return a.metadata.name.localeCompare(b.metadata.name);
                 });
                 break;
@@ -122,6 +135,12 @@ const DeckPage: React.FC = () => {
                     return 0;
                 });
         }
+        return sortedDecks;
+    };
+
+    // sort function
+    const sortDecks = (sort:string) => {
+        const sortedDecks = sortDeckList(decks, sort);
         setDecks(sortedDecks);
     };
 
@@ -146,11 +165,7 @@ const DeckPage: React.FC = () => {
             if(prevDecks.some(deck => deck.deckID === newDeck.deckID)) return prevDecks;
 
             const updatedDecks = [...prevDecks, newDeck];
-            return updatedDecks.sort((a, b) => {
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-                return 0;
-            });
+            return sortDeckList(updatedDecks, sortBy);
         });
     };
 
@@ -198,12 +213,8 @@ const DeckPage: React.FC = () => {
                     : deck
             );
 
-            // Re-sort to ensure favorites appear first
-            const sortedDecks = [...updatedDecks].sort((a, b) => {
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-                return 0;
-            });
+            // Re-sort to preserve the selected sort order
+            const sortedDecks = sortDeckList(updatedDecks, sortBy);
 
             setDecks(sortedDecks);
         }catch(error){
