@@ -26,7 +26,8 @@ export const getPopupPosition = (type: PopupType, data: PopupData, index: number
         left:'50%',
         top: '50%',
         transform: 'translate(-50%, -50%)',
-        minWidth: '80%'
+        minWidth: '80%',
+        width: { xs: 'calc(100dvw - 2rem)', md: '80%' }
     };
 
     // const pilePosition = {
