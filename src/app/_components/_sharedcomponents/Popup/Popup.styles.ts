@@ -41,7 +41,7 @@ export const concedeButtonStyle = {
 };
 
 export const contentStyle = (index: number) => ({
-    padding: '2rem',
+    padding: '1rem 2rem',
     borderRadius: '15px',
     position: 'absolute',
     border: '2px solid transparent',
@@ -49,6 +49,7 @@ export const contentStyle = (index: number) => ({
     'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
     zIndex: 11 + index,
     width: 'inherit',
+    maxHeight: 'calc(100dvh - 2rem)',
 });
 
 export const containerStyle = {
@@ -68,7 +69,6 @@ export const headerStyle = (isMinimized: boolean) => ({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: '-10px',
     marginBottom: isMinimized ? '-20px' : '0',
     position: 'relative',
 });

@@ -3,13 +3,9 @@ import React from 'react';
 import {
     Box,
     Typography,
-    Dialog,
-    DialogContent,
-    DialogActions,
 } from '@mui/material';
 import Image from 'next/image';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { announcement } from '@/app/_constants/mockData';
+import TutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/TutorialPopup';
 
 interface IUndoTutorialPopupProps {
     open: boolean;
@@ -18,30 +14,6 @@ interface IUndoTutorialPopupProps {
 
 const UndoTutorialPopup: React.FC<IUndoTutorialPopupProps> = ({ open, onClose }) => {
     const styles = {
-        dialog: {
-            '& .MuiDialog-paper': {
-                backgroundColor: '#1E2D32',
-                borderRadius: '20px',
-                maxWidth: '720px',
-                width: '100%',
-                padding: '20px',
-                border: '2px solid transparent',
-                background:
-                    'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
-            },
-        },
-        title: {
-            color: '#018DC1',
-            fontSize: '2rem',
-            textAlign: 'left',
-            marginBottom: '16px',
-        },
-        subtitle: {
-            fontSize: '1.2rem',
-            color: '#fff',
-            marginTop: '0.5rem',
-            marginBottom: '0.5rem',
-        },
         whatsNewList: {
             pl: '16px',
             mt: '4px',
@@ -67,17 +39,6 @@ const UndoTutorialPopup: React.FC<IUndoTutorialPopupProps> = ({ open, onClose })
             borderRadius: '8px',
             overflow: 'hidden',
         },
-        actions: {
-            justifyContent: 'center',
-            padding: '16px 0',
-            gap: '16px',
-        },
-        closeButton: {
-            backgroundColor: '#2F7DB6',
-            color: '#fff',
-            '&:hover': { backgroundColor: '#3590D2' },
-            minWidth: '120px',
-        },
         infoItem: {
             color: '#B8860B',
             fontSize: '0.85rem',
@@ -86,81 +47,68 @@ const UndoTutorialPopup: React.FC<IUndoTutorialPopupProps> = ({ open, onClose })
     } as const;
 
     return (
-        <Dialog
+        <TutorialPopup
             open={open}
-            onClose={(event, reason) => {
-                if (reason === 'backdropClick') return; // disable backdrop closing
-                onClose();
-            }}
-            disableEscapeKeyDown
-            aria-labelledby="whats-new-dialog-title"
-            sx={styles.dialog}
+            onClose={onClose}
+            titleId="undo-tutorial-dialog-title"
+            title={<>✨ Undo in Public Games</>}
         >
-            <DialogContent>
-                <Typography variant="h4" sx={styles.title} id="whats-new-dialog-title">
-                    ✨ Undo in Public Games
+            <Box component="ul" sx={styles.whatsNewList}>
+                <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
+                    Undo in public games (queue and public lobbies) has special rules to prevent abuse.
                 </Typography>
+                <br/>
+                <br/>
 
-                <Box component="ul" sx={styles.whatsNewList}>
-                    <Typography component="span" variant="body2" sx={styles.whatsNewItem}>
-                        Undo in public games (queue and public lobbies) has special rules to prevent abuse.
+                <li>
+                    <Typography component="span" variant="body2" sx={styles.infoItem}>
+                        You receive <strong>one &quot;free&quot; undo per game</strong>. After it is used, every undo will <strong>send a request to the opponent 
+                            for approval</strong>. They can allow or deny the request.
                     </Typography>
-                    <br/>
-                    <br/>
+                </li>
+                <br/>
 
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            You receive <strong>one &quot;free&quot; undo per game</strong>. After it is used, every undo will <strong>send a request to the opponent 
-                                for approval</strong>. They can allow or deny the request.
-                        </Typography>
-                    </li>
-                    <br/>
+                <li>
+                    <Typography component="span" variant="body2" sx={styles.infoItem}>
+                        Undo in certain game situations, <strong>such as after drawing or revealing cards</strong>, will <strong>always </strong>
+                        require opponent approval (even if you have a free undo available).
+                    </Typography>
+                </li>
+                <br/>
 
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            Undo in certain game situations, <strong>such as after drawing or revealing cards</strong>, will <strong>always </strong>
-                            require opponent approval (even if you have a free undo available).
-                        </Typography>
-                    </li>
-                    <br/>
-
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            If enough undo requests are rejected, a player will have the option to <strong>block any further undo requests in that game</strong>.
-                        </Typography>
-                    </li>
+                <li>
+                    <Typography component="span" variant="body2" sx={styles.infoItem}>
+                        If enough undo requests are rejected, a player will have the option to <strong>block any further undo requests in that game</strong>.
+                    </Typography>
+                </li>
+            </Box>
+            <Box sx={styles.screenshotWrapper}>
+                <Box sx={styles.imageContainer}>
+                    <Image
+                        src="/undo-button.png"
+                        alt="Undo Button"
+                        fill
+                        style={{ objectFit: 'contain' }}
+                    />
                 </Box>
-                <Box sx={styles.screenshotWrapper}>
-                    <Box sx={styles.imageContainer}>
-                        <Image
-                            src="/undo-button.png"
-                            alt="Undo Button"
-                            fill
-                            style={{ objectFit: 'contain' }}
-                        />
-                    </Box>
-                    <Box sx={styles.imageContainer}>
-                        <Image
-                            src="/request-undo.png"
-                            alt="Request Undo Button"
-                            fill
-                            style={{ objectFit: 'contain' }}
-                        />
-                    </Box>
-                    <Box sx={styles.imageContainer}>
-                        <Image
-                            src="/blocked-undo.png"
-                            alt="Blocked Undo Button"
-                            fill
-                            style={{ objectFit: 'contain' }}
-                        />
-                    </Box>
+                <Box sx={styles.imageContainer}>
+                    <Image
+                        src="/request-undo.png"
+                        alt="Request Undo Button"
+                        fill
+                        style={{ objectFit: 'contain' }}
+                    />
                 </Box>
-            </DialogContent>
-            <DialogActions sx={styles.actions}>
-                <PreferenceButton buttonFnc={onClose} text="Got it" variant="standard" />
-            </DialogActions>
-        </Dialog>
+                <Box sx={styles.imageContainer}>
+                    <Image
+                        src="/blocked-undo.png"
+                        alt="Blocked Undo Button"
+                        fill
+                        style={{ objectFit: 'contain' }}
+                    />
+                </Box>
+            </Box>
+        </TutorialPopup>
     );
 };
 
