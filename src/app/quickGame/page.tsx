@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect } from 'react';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { Box, Typography } from '@mui/material';
 import FoundGame from '@/app/_components/QuickGame/FoundGame/FoundGame';
 import { useGame } from '@/app/_contexts/Game.context';

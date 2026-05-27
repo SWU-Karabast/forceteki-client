@@ -11,7 +11,7 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
