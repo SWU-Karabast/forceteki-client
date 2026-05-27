@@ -1,5 +1,6 @@
 'use client';
 import { Box, MenuItem, Typography, useMediaQuery, useTheme } from '@mui/material';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import Grid from '@mui/material/Grid2';
@@ -574,7 +575,7 @@ const DeckPage: React.FC = () => {
                     <PreferenceButton
                         variant={'concede'}
                         sx={isMobile ? { fontSize: '14px', pt: '6px', pb: '6px', minWidth: '36px' } : {}}
-                        text={isMobile ? '−' : 'Delete deck(s)'}
+                        text={isMobile ? <DeleteOutlineIcon fontSize="small"/> : 'Delete deck(s)'}
                         buttonFnc={openDeleteDialog}
                         disabled={selectedDecks.length === 0}
                     />
