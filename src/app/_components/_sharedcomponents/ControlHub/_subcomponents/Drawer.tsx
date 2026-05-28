@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
     Box,
-    Divider,
     IconButton,
     Typography,
     Drawer as MuiDrawer,
@@ -11,25 +10,41 @@ import {
     ListItemText,
     ListItemIcon,
 } from '@mui/material';
-import { GitHub, Menu as MenuIcon, Extension, Style, Settings, Gavel, Logout, Login, AdminPanelSettings } from '@mui/icons-material';
+import { GitHub, Menu as MenuIcon, Close, Logout, Login, AdminPanelSettings } from '@mui/icons-material';
 import NextLinkMui from './NextLinkMui/NextLinkMui';
 import { FaDiscord } from 'react-icons/fa6';
+import DecksIcon from '@/assets/custom-icons/decks-icon.svg';
+import UnimplementedIcon from '@/assets/custom-icons/unimplemented-icon.svg';
+import PreferencesIcon from '@/assets/custom-icons/preferences-icon.svg';
+import TermsIcon from '@/assets/custom-icons/terms-icon.svg';
 import { AVAILABLE_MENU_ACTIONS, HIDE_LOGIN, MenuAction } from '../ControlHub';
 import { useUser } from '@/app/_contexts/User.context';
+import NextLink, { LinkProps as NextLinkProps } from 'next/link';
 
 const styles = {
-    karabastText: {
-        mb: 3,
+    logoContainer: {
+        borderBottom: '1px solid #2F2F2F',
+        mt: 0.5,
+        py: 2,
+        display: 'flex',
+        justifyContent: 'space-between',
         px: 3,
+    },
+    karabastText: {
         fontFamily: 'var(--font-barlow)',
-        fontWeight: 'bold',
-        letterSpacing: '0.2rem',
-        color: '#FFD700',
-        textShadow: '0 0 10px rgba(255, 215, 0, 0.5)'
+        fontWeight: '600',
+        color: '#FFF',
+        fontSize: '35px',
+        letterSpacing: '-4%'
+    },
+    closeIcon: {
+        color: '#FFF',
+
+        '& > svg': { fontSize: '30px' }
     },
     mobileLink: {
         fontWeight: '600',
-        fontSize: '1.8rem',
+        fontSize: '16px',
         color: '#fff',
         textDecoration: 'none',
         display: 'flex',
@@ -38,7 +53,7 @@ const styles = {
     },
     listItemIcon: {
         color: '#E0E0E0',
-        minWidth: '45px',
+        minWidth: 'auto',
         '& svg': {
             fontSize: '2.2rem',
         }
@@ -49,10 +64,9 @@ const styles = {
         px: 3,
         borderRadius: '12px',
         mx: 1,
-        transition: 'all 0.2s ease-in-out',
+        gap: 2,
         '&:hover': {
-            backgroundColor: 'rgba(255, 215, 0, 0.1)',
-            transform: 'translateX(8px)',
+            backgroundColor: '#1B74A7',
         },
     },
     hamburgerIcon: {
@@ -63,46 +77,44 @@ const styles = {
         borderRadius: '50%',
         p: '12px',
         marginRight: '10px',
+        '& > svg': { fontSize: '20px' },
     },
     drawer: {
         display: { xs: 'block', md: 'none' },
     },
     drawerPaper: {
-        backgroundColor: 'rgba(15, 15, 15, 0.85)',
+        backgroundColor: '#090f18',
         backdropFilter: 'blur(15px)',
         color: 'white',
-        width: 300,
-        borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+        width: 280,
         boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.5)',
     },
     drawerInnerContainer: {
         height: '100%', 
         display: 'flex', 
-        flexDirection: 'column', 
-        pt: 3, 
-        pb: 2 
-    },
-    iconButton: {
-        color: '#fff',
-        '&:hover': { color: '#00ffff' },
-    },
-    divider: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        mx: 2,
-        mb: 2
+        flexDirection: 'column',
     },
     list: {
         display: 'flex',
         flexDirection: 'column',
         gap: 1.5,
-        flexGrow: 1
+        flexGrow: 1,
+        px: 1,
+        py: 2,
     },
     socialContainer: {
+        borderTop: '1px solid #2F2F2F',
         display: 'flex',
-        justifyContent: 'center',
-        gap: 4,
-        mt: 4,
-        mb: 2
+        gap: 2,
+        p: 2
+    },
+    socialIconButton: {
+        padding: '12px',
+        color: '#fff',
+        '& svg': { fontSize: '2rem' },
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
     },
 }
 
@@ -116,16 +128,16 @@ export default function Drawer({ actions }: { actions: MenuAction[] }) {
     };
     const additionalMobileMenuProps: Record<MenuAction, AdditionalMobileMenuProps> = {
         UNIMPLEMENTED: {
-            icon: <Extension />
+            icon: <UnimplementedIcon />
         },
         DECKS: {
-            icon: <Style />
+            icon: <DecksIcon />
         },
         PREFERENCES: {
-            icon: <Settings />
+            icon: <PreferencesIcon />
         },
         TERMS: {
-            icon: <Gavel />
+            icon: <TermsIcon />
         },
         MODS: {
             icon: <AdminPanelSettings />,
@@ -152,7 +164,6 @@ export default function Drawer({ actions }: { actions: MenuAction[] }) {
         </IconButton>
         {/* Mobile Drawer */}
         <MuiDrawer
-            variant="temporary"
             anchor="right"
             open={mobileOpen}
             onClose={handleDrawerToggle}
@@ -162,11 +173,13 @@ export default function Drawer({ actions }: { actions: MenuAction[] }) {
                 '& .MuiDrawer-paper': styles.drawerPaper,
             }}
         >
-            <Box onClick={handleDrawerToggle} sx={styles.drawerInnerContainer}>
-                <Typography variant="h5" sx={styles.karabastText}>
-                    KARABAST
-                </Typography>
-                <Divider sx={styles.divider} />
+            <Box sx={styles.drawerInnerContainer}>
+                <Box sx={styles.logoContainer}>
+                    <Typography variant="h5" sx={styles.karabastText}>
+                        KARABAST
+                    </Typography>
+                    <IconButton sx={styles.closeIcon} onClick={handleDrawerToggle}><Close /></IconButton>
+                </Box>
                 <List sx={styles.list}>
                     {
                         actions.map(( menuAction, idx) => {
@@ -175,18 +188,17 @@ export default function Drawer({ actions }: { actions: MenuAction[] }) {
 
                             return (
                                 <ListItem disablePadding key={`mobile-item-${idx}`}>
-                                    <ListItemButton sx={styles.listItemButton}>
-                                        <ListItemIcon sx={{ ...styles.listItemIcon, ...colorStyles }}>{icon}</ListItemIcon>
-                                        <NextLinkMui href={href} sx={{ ...styles.mobileLink, ...colorStyles }}>
-                                            {label}
-                                        </NextLinkMui>
-                                    </ListItemButton>
+                                    <NextLink href={href} passHref legacyBehavior>
+                                        <ListItemButton sx={styles.listItemButton} component="a" onClick={handleDrawerToggle}>
+                                            <ListItemIcon sx={{ ...styles.listItemIcon, ...colorStyles }}>{icon}</ListItemIcon>
+                                            <ListItemText primary={label} slotProps={{ primary: { sx: { ...styles.mobileLink, ...colorStyles } } }} />
+                                        </ListItemButton>
+                                    </NextLink>
                                 </ListItem>
                             );} )
                     }
 
                     <Box sx={{ mt: 'auto' }}>
-                        <Divider sx={styles.divider} />
                         {user ? (
                             <ListItem disablePadding>
                                 <ListItemButton sx={styles.listItemButton} onClick={logout}>
@@ -196,24 +208,25 @@ export default function Drawer({ actions }: { actions: MenuAction[] }) {
                             </ListItem>
                         ) : (!HIDE_LOGIN && (
                             <ListItem disablePadding>
-                                <ListItemButton sx={styles.listItemButton}>
-                                    <ListItemIcon sx={styles.listItemIcon}><Login /></ListItemIcon>
-                                    <NextLinkMui href="/auth" sx={styles.mobileLink}>
-                                        Log In
-                                    </NextLinkMui>
-                                </ListItemButton>
+                                <NextLink href="/auth" passHref legacyBehavior>
+                                    <ListItemButton sx={styles.listItemButton} onClick={handleDrawerToggle}>
+                                        <ListItemIcon sx={styles.listItemIcon}><Login /></ListItemIcon>
+                                        <ListItemText primary="Log In" slotProps={{ primary: { sx: styles.mobileLink } }} />
+                                    </ListItemButton>
+                                </NextLink>
                             </ListItem>
                         ))}
-                        <Box sx={styles.socialContainer}>
-                            <NextLinkMui href="https://discord.gg/hKRaqHND4v" target="_blank" rel="noopener noreferrer">
-                                <IconButton sx={{ ...styles.iconButton, '& svg': { fontSize: '4rem' } }}><FaDiscord /></IconButton>
-                            </NextLinkMui>
-                            <NextLinkMui href="https://github.com/SWU-Karabast" target="_blank" rel="noopener noreferrer">
-                                <IconButton sx={{ ...styles.iconButton, '& svg': { fontSize: '4rem' } }}><GitHub /></IconButton>
-                            </NextLinkMui>
-                        </Box>
+
                     </Box>
                 </List>
+                <Box sx={styles.socialContainer}>
+                    <NextLinkMui href="https://discord.gg/hKRaqHND4v" target="_blank" rel="noopener noreferrer">
+                        <IconButton sx={styles.socialIconButton}><FaDiscord /></IconButton>
+                    </NextLinkMui>
+                    <NextLinkMui href="https://github.com/SWU-Karabast" target="_blank" rel="noopener noreferrer">
+                        <IconButton sx={styles.socialIconButton}><GitHub /></IconButton>
+                    </NextLinkMui>
+                </Box>
             </Box>
         </MuiDrawer>
     </>
