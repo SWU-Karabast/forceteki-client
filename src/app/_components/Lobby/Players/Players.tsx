@@ -1,7 +1,7 @@
 // Players.tsx
 import React, { useEffect, useRef } from 'react';
 import { Card, Box, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { ILobbyUserProps, IPlayersProps } from '../LobbyTypes';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { useGame } from '@/app/_contexts/Game.context';

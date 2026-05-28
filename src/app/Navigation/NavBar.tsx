@@ -1,6 +1,6 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
-import { Typography, Grid2 as Grid } from '@mui/material';
+import { Typography, Grid } from '@mui/material';
 import ControlHub from '../_components/_sharedcomponents/ControlHub/ControlHub';
 import React from 'react';
 

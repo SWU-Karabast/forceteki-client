@@ -77,7 +77,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 color: '#fff',
                 display: 'flex',
                 flexDirection: 'column',
-                width: 'min(20%, 280px)',
+                width: { xs: '200px', md: 'min(20%, 280px)' },
                 padding: '0.75em',
                 overflow: 'hidden',
             },
@@ -200,18 +200,21 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             </Box>
 
             {(isDev || gameState.undoEnabled) && (!isSpectator) && (<Box sx={styles.quickUndoBox}>
-                <Image
-                    src="/porg1.png"
-                    alt="Highlighted Stats Panel"
-                    width={50}
-                    height={50}
-                    style={{
-                        position:'relative',
-                        left:'35px',
-                        bottom:'28px',
-                        visibility: isUndoHovered ? 'visible' : 'hidden',
-                    }}
-                />
+                <Box sx={{
+                    position:'relative',
+                    left:'35px',
+                    bottom:'28px',
+                    visibility: isUndoHovered ? 'visible' : 'hidden',
+                    '@media (max-width:800px)': { display: 'none' },
+                }}>
+                    <Image
+                        src="/porg1.png"
+                        alt="Highlighted Stats Panel"
+                        width={50}
+                        height={50}
+                    />
+                </Box>
+               
                 <Button
                     variant="contained"
                     onClick={handleUndoButton}
