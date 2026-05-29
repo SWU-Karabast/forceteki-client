@@ -46,6 +46,7 @@ export interface ICardData {
     cost?: number;
     exhausted?: boolean;
     damage?: number;
+    aspectPenaltyCost?: number;
     setId: ICardSetId;
     type: string;
     subcards?: ICardData[];
