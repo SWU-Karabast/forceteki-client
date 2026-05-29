@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import NextLink, { LinkProps as NextLinkProps } from 'next/link';
 import MuiLink, { LinkProps as MuiLinkProps } from '@mui/material/Link';
 
-type CombinedLinkProps = NextLinkProps & MuiLinkProps;
+export type CombinedLinkProps = NextLinkProps & MuiLinkProps;
 
 /**
  * A combined Next.js and Material-UI Link component.
