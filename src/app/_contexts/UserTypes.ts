@@ -46,6 +46,7 @@ export interface IGetUser {
     reportingDisabled?: ModerationFieldState | null;
     moderation?: IModerationAction | null,
     undoPopupSeenDate?: Date | null
+    timerPopupSeenDate?: Date | null
 }
 
 export interface ISoundPreferences {
@@ -93,6 +94,7 @@ export interface IUserContextType {
     updateUserPreferences: (preferences: IPreferences) => void;
     updateModerationSeenStatus: (moderation: IModerationAction | null) => void;
     updateUndoPopupSeenDate: () => void;
+    updateTimerPopupSeenDate: () => void;
 }
 
 export enum AdminRole {

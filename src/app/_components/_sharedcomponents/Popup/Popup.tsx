@@ -26,7 +26,8 @@ export const getPopupPosition = (type: PopupType, data: PopupData, index: number
         left:'50%',
         top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: '80%'
+        minWidth: '80%',
+        width: { xs: 'calc(100dvw - 2rem)', md: '80%' }
     };
 
     // const pilePosition = {
@@ -103,7 +104,7 @@ const PopupShell: React.FC<IPopupShellProps> = ({
 
     const overlayStyle = {
         position: 'absolute',
-        width: sidebarOpen ? 'calc(100% - 250px)' : '100%',
+        width: sidebarOpen ? 'calc(100% - min(20%, 280px))' : '100%',
         height: '100%',
         pointerEvents: 'none',
         display: 'flex',

@@ -221,6 +221,7 @@ export interface StoredDeck {
     deckID:string;
     deckLinkID: string;
     source: DeckSource;
+    stats?: IDeckStats;
 }
 
 export interface DisplayDeck {
@@ -231,4 +232,5 @@ export interface DisplayDeck {
     favourite: boolean;
     deckLink: string;
     source: DeckSource;
+    stats?: IDeckStats;
 }

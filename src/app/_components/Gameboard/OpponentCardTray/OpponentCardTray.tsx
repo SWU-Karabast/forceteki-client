@@ -1,6 +1,6 @@
 import React from 'react';
 import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
-import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
+import { Box, Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import Credits from '../_subcomponents/PlayerTray/Credits';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
