@@ -117,8 +117,7 @@ function filterNulls<T>(arr: Array<T | null>): Array<T> {
 }
 
 const ControlHub: React.FC = () => {
-    const { user, logout } = useUser();
-    const isMod = true;
+    const { user, logout, isMod } = useUser();
 
     // Links to be rendered on the desktop control hub
     const menuActions: Array<MenuAction> = filterNulls([
