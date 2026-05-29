@@ -11,63 +11,59 @@ const styles = {
         borderRadius: '12px',
     },
     image: {
+        '@keyframes imageCycle': {
+            '0%': {
+                opacity: 0,
+                transform: 'scale(0.05)',
+            },
+            '8%': {
+                opacity: 1,
+                transform: 'scale(0.55)',
+            },
+            '18%': {
+                opacity: 1,
+                transform: 'scale(1.15)',
+            },
+            '28%': {
+                opacity: 1,
+                transform: 'scale(0.96)',
+            },
+            '38%': {
+                opacity: 1,
+                transform: 'scale(1.02)',
+            },
+            '44%': {
+                opacity: 1,
+                transform: 'scale(1)',
+            },
+            '49%': {
+                opacity: 0,
+                transform: 'scale(0.96)',
+            },
+            '100%': {
+                opacity: 0,
+                transform: 'scale(0.96)',
+            },
+        },
         position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
+        inset: 0,
+        opacity: 0,
+        transform: 'scale(0.05)',
         backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        opacity: 0 /* Hidden by default */
+        animationTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        willChange: 'transform, opacity',
+        animation: 'imageCycle 2.4s infinite',
     },
     heroismImg: {
-        '@keyframes zoomFadeFirst': {
-            '0%': {
-                opacity: 1,
-                transform: 'scale(0.85)',
-            },
-            '45%': {
-                opacity: 1,
-            },
-            '50%': {
-                opacity: 0,
-                transform: 'scale(1.1)',
-            },
-            '95%': {
-                opacity: 0,
-            },
-            '100%': {
-                opacity: 1,
-                transform: 'scale(0.85)',
-            },
-        },
         backgroundImage: 'url("/aspect-icons/aspect-heroism.webp")',
-        animation: 'zoomFadeFirst 1.5s infinite ease-in-out',
+        // animation: 'zoomFadeFirst 1.5s infinite ease-in-out',
     },
     villainyImg: {
-        '@keyframes zoomFadeSecond': {
-            '0%': {
-                opacity: 0,
-                transform: 'scale(0.85)',
-            },
-            '45%': {
-                opacity: 0,
-            },
-            '50%': {
-                opacity: 1,
-                transform: 'scale(0.85)',
-            },
-            '95%': {
-                opacity: 1,
-            },
-            '100%': {
-                opacity: 0,
-                transform: 'scale(1.1)',
-            },
-        },
         backgroundImage: 'url("/aspect-icons/aspect-villainy.webp")',
-        animation: 'zoomFadeSecond 1.5s infinite ease-in-out',
+        animationDelay: '1.2s',
+        // animation: 'zoomFadeSecond 1.5s infinite ease-in-out',
     },
 
 }
