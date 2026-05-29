@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Divider, IconButton, Typography } from '@mui/material';
+import { Box, Divider, IconButton } from '@mui/material';
 import { GitHub } from '@mui/icons-material';
 import { FaDiscord } from 'react-icons/fa6';
 import NextLinkMui, { CombinedLinkProps } from './_subcomponents/NextLinkMui/NextLinkMui';
@@ -51,9 +51,6 @@ const styles = {
         p: '0.5rem',
         textDecoration: 'none',
         color: '#fff',
-        '&:hover': {
-            color: '#00ffff',
-        },
     },
     socialIconsBox: {
         display: { xs: 'none', md: 'flex' },
@@ -66,9 +63,7 @@ const styles = {
     },
     iconButton: {
         color: '#fff',
-        '&:hover': { color: '#00ffff' },
     },
-
 }
 
 /**
@@ -123,10 +118,10 @@ function filterNulls<T>(arr: Array<T | null>): Array<T> {
 
 const ControlHub: React.FC = () => {
     const { user, logout } = useUser();
-    const { isMod } = useUser();
+    const isMod = true;
 
     // Links to be rendered on the desktop control hub
-    const desktopMenuActions: Array<MenuAction> = filterNulls([
+    const menuActions: Array<MenuAction> = filterNulls([
         'UNIMPLEMENTED',
         'DECKS',
         'PREFERENCES',
@@ -155,11 +150,11 @@ const ControlHub: React.FC = () => {
             <Box sx={styles.defaultMainContainer}>
                 <Box sx={styles.profileBox}>
                     {
-                        desktopMenuActions.map((menuAction, idx) => {
+                        menuActions.map((menuAction) => {
                             const { href, label } = AVAILABLE_MENU_ACTIONS[menuAction];
                             const { prefixDivider = false, sx, ...otherProps } = additionalDesktopMenuProps[menuAction] || {};
                             return (
-                                <React.Fragment key={`desktop-menu-item-${idx}`}>
+                                <React.Fragment key={`desktop-item-${menuAction}`}>
                                     {prefixDivider && (<Divider
                                         orientation="vertical"
                                         flexItem
@@ -193,15 +188,7 @@ const ControlHub: React.FC = () => {
                         </IconButton>
                     </NextLinkMui>
                 </Box>
-                <Drawer 
-                    actions={filterNulls([
-                        'UNIMPLEMENTED',
-                        'DECKS',
-                        'PREFERENCES',
-                        'TERMS',
-                        user && isMod ? 'MODS' : null,
-                    ])}
-                />
+                <Drawer actions={menuActions} />
             </Box>
         </Box>
     );

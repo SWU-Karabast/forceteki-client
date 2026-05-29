@@ -19,7 +19,9 @@ import PreferencesIcon from '@/assets/custom-icons/preferences-icon.svg';
 import TermsIcon from '@/assets/custom-icons/terms-icon.svg';
 import { AVAILABLE_MENU_ACTIONS, HIDE_LOGIN, MenuAction } from '../ControlHub';
 import { useUser } from '@/app/_contexts/User.context';
-import NextLink, { LinkProps as NextLinkProps } from 'next/link';
+import NextLink from 'next/link';
+import { SxProps } from '@mui/system';
+import { Theme } from '@mui/material/styles';
 
 const styles = {
     logoContainer: {
@@ -118,10 +120,15 @@ const styles = {
     },
 }
 
-type AdditionalMobileMenuProps = { icon: React.ReactElement; color?: string; };
+type AdditionalMobileMenuProps = {
+    icon: React.ReactElement;
+    color?: string;
+    sx?: SxProps<Theme> | undefined;
+    onClick?: React.MouseEventHandler<HTMLAnchorElement>;
+};
 
 export default function Drawer({ actions }: { actions: MenuAction[] }) {
-    const { user, logout } = useUser();
+    const { logout } = useUser();
     const [mobileOpen, setMobileOpen] = useState(false);
     const handleDrawerToggle = () => {
         setMobileOpen((prevState) => !prevState);
@@ -146,9 +153,16 @@ export default function Drawer({ actions }: { actions: MenuAction[] }) {
         LOGOUT: {
             icon: <Logout />,
             color: '#ff4d4d',
+            sx: {
+                marginTop: 'auto'
+            },
+            onClick: logout
         },
         LOGIN: {
-            icon: <Login />
+            icon: <Login />,
+            sx: {
+                marginTop: 'auto'
+            }
         }
     }
     return <>
@@ -182,14 +196,20 @@ export default function Drawer({ actions }: { actions: MenuAction[] }) {
                 </Box>
                 <List sx={styles.list}>
                     {
-                        actions.map(( menuAction, idx) => {
+                        actions.map(( menuAction) => {
                             const { label, href } = AVAILABLE_MENU_ACTIONS[menuAction];
-                            const { icon, ...colorStyles } = additionalMobileMenuProps[menuAction];
+                            const { icon, sx, onClick, ...colorStyles } = additionalMobileMenuProps[menuAction];
 
                             return (
-                                <ListItem disablePadding key={`mobile-item-${idx}`}>
+                                <ListItem disablePadding key={`mobile-item-${menuAction}`} sx={sx}>
                                     <NextLink href={href} passHref legacyBehavior>
-                                        <ListItemButton sx={styles.listItemButton} component="a" onClick={handleDrawerToggle}>
+                                        <ListItemButton
+                                            sx={styles.listItemButton}
+                                            component="a"
+                                            onClick={(ev) => {
+                                                onClick?.(ev);
+                                                handleDrawerToggle();
+                                            }}>
                                             <ListItemIcon sx={{ ...styles.listItemIcon, ...colorStyles }}>{icon}</ListItemIcon>
                                             <ListItemText primary={label} slotProps={{ primary: { sx: { ...styles.mobileLink, ...colorStyles } } }} />
                                         </ListItemButton>
@@ -197,27 +217,6 @@ export default function Drawer({ actions }: { actions: MenuAction[] }) {
                                 </ListItem>
                             );} )
                     }
-
-                    <Box sx={{ mt: 'auto' }}>
-                        {user ? (
-                            <ListItem disablePadding>
-                                <ListItemButton sx={styles.listItemButton} onClick={logout}>
-                                    <ListItemIcon sx={{ ...styles.listItemIcon, color: '#ff4d4d' }}><Logout /></ListItemIcon>
-                                    <ListItemText primary="Log Out" primaryTypographyProps={{ ...styles.mobileLink, color: '#ff4d4d' }} />
-                                </ListItemButton>
-                            </ListItem>
-                        ) : (!HIDE_LOGIN && (
-                            <ListItem disablePadding>
-                                <NextLink href="/auth" passHref legacyBehavior>
-                                    <ListItemButton sx={styles.listItemButton} onClick={handleDrawerToggle}>
-                                        <ListItemIcon sx={styles.listItemIcon}><Login /></ListItemIcon>
-                                        <ListItemText primary="Log In" slotProps={{ primary: { sx: styles.mobileLink } }} />
-                                    </ListItemButton>
-                                </NextLink>
-                            </ListItem>
-                        ))}
-
-                    </Box>
                 </List>
                 <Box sx={styles.socialContainer}>
                     <NextLinkMui href="https://discord.gg/hKRaqHND4v" target="_blank" rel="noopener noreferrer">
