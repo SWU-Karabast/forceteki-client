@@ -6,7 +6,6 @@ const styles = {
         position: 'relative',
         width: '200px',
         height: '200px',
-        overflow: 'hidden',
         backgroundColor: '#0b071a',
         borderRadius: '12px',
     },
