@@ -123,7 +123,7 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                                         onClick={() => handleCardClick(card.uuid)}
                                         disabled={clickDisabled()}
                                     />
-                                    <Typography>{card.displayText}</Typography>
+                                    {card.displayText && <Typography>{card.displayText}</Typography>}
                                     {selectingCards && (
                                         <Box
                                             sx={{
@@ -172,6 +172,9 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
     };
 
     const renderButtons = (cardUuid: string, buttons: PerCardButton[]) => {
+        if (buttons.length === 0) {
+            return null;
+        }
         return (
             <Box sx={{ gap: '1rem', flexDirection: 'column', display: 'flex' }}>
                 {buttons.map((button, index) =>
