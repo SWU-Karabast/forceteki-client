@@ -116,7 +116,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 playSound('yourTurn');
             }
 
-            const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
+            const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards, selectNumber } = promptState;
             prunePromptStatePopups(promptUuid);
             if (promptType === 'actionWindow') {
                 clearDistributionPrompt();
@@ -154,7 +154,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
-            else if (dropdownListOptions.length > 0 && menuTitle && promptUuid && !selectCardMode) {
+            else if (promptType === 'number' && selectNumber && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('number', {
+                    uuid: promptUuid,
+                    title: promptTitle,
+                    description: menuTitle,
+                    min: selectNumber.min,
+                    max: selectNumber.max,
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (dropdownListOptions?.length > 0 && menuTitle && promptUuid && !selectCardMode) {
                 return openPopup('dropdown', {
                     uuid: promptUuid,
                     title: promptTitle,
