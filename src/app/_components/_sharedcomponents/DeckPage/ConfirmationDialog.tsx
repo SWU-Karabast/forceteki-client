@@ -13,6 +13,7 @@ interface ConfirmationDialogProps {
     hideCancel?: boolean;
     confirmButtonVariant?: 'standard' | 'concede';
     zIndex?: number;
+    width?: string;
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -26,6 +27,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     hideCancel = false,
     confirmButtonVariant = 'concede',
     zIndex = 1000,
+    width = '400px',
 }) => {
     if (!open) return null;
 
@@ -48,7 +50,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             borderRadius: '15px',
             border: '2px solid transparent',
             background: 'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
-            width: '400px',
+            width,
             maxWidth: '90%',
         },
         titleStyle: {

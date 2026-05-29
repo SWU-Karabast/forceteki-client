@@ -39,6 +39,7 @@ const CardLanguageNoticeDialog: React.FC<CardLanguageNoticeDialogProps> = ({
         hideCancel
         confirmButtonText="Got it"
         confirmButtonVariant="standard"
+        width="600px"
         zIndex={zIndex}
         onCancel={onClose}
         onConfirm={onClose}

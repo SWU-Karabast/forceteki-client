@@ -99,7 +99,7 @@ const WhatsNewPopupAnnouncement: React.FC<IWhatsNewPopupProps> = ({ open, onClos
                             alt="Highlighted Stats Panel"
                             width={546}
                             height={204}
-                            style={{ borderRadius: '8px', width: '20em', height: 'auto' }}
+                            style={{ borderRadius: '8px', width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '16em' }}
                         />
 
                     </Box>
