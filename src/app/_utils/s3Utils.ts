@@ -12,6 +12,7 @@ import {
     isSetCodeCard,
     parseSetId
 } from '@/app/_components/_sharedcomponents/Cards/cardUtils';
+import { CARD_IMAGE_CACHE_VERSION } from '@/app/_constants/constants';
 
 export const s3ImageURL = (path: string) => {
     const s3Bucket = 'https://karabast-data.s3.amazonaws.com/';
@@ -79,7 +80,7 @@ export function s3CardImageURL(
     const isToken = cardType?.includes('token')
         || (!isGameCard(card) && isTokenCardId(card.id));
     if (isToken) {
-        return s3ImageURL(`cards/_tokens/${locale}/${format}/${card.id}.webp?v=3`);
+        return s3ImageURL(`cards/_tokens/${locale}/${format}/${card.id}.webp?v=${CARD_IMAGE_CACHE_VERSION}`);
     }
 
     let cardNumber = setId.number.toString().padStart(3, '0')
@@ -92,7 +93,7 @@ export function s3CardImageURL(
         cardNumber += '2';
     }
 
-    return s3ImageURL(`cards/${setId.set}/${locale}/${format}/large/${cardNumber}.webp?v=3`);
+    return s3ImageURL(`cards/${setId.set}/${locale}/${format}/large/${cardNumber}.webp?v=${CARD_IMAGE_CACHE_VERSION}`);
 };
 
 /**
