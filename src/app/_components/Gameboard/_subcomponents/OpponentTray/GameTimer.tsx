@@ -145,6 +145,13 @@ const TooltipContent = (
     )
 }
 
+const labelDefaultStyles = {
+    marginBottom: 0,
+    cursor: 'pointer',
+    fontWeight: 600,
+    fontSize: { xs: '1.5rem', md: '1rem' }
+};
+
 const MainTimerLabel = ({
     playerIsActive,
     opponentIsActive,
@@ -165,24 +172,20 @@ const MainTimerLabel = ({
             <Typography
                 variant="body1"
                 sx={{
+                    ...labelDefaultStyles,
                     color: 'var(--initiative-red)',
-                    marginBottom: 0,
-                    cursor: 'pointer',
                     opacity: opponentIsActive && !opponentIsTurnTime ? 1 : 0.65,
-                    fontWeight:600,
                 }}
-            >{`${formatMilliseconds(opponentTimeRemaining)}`}</Typography>
+            >{formatMilliseconds(opponentTimeRemaining)}</Typography>
             <Divider />
             <Typography
                 variant="body1"
                 sx={{
+                    ...labelDefaultStyles,
                     color: 'var(--initiative-blue)',
-                    marginBottom: 0,
-                    cursor: 'pointer',
                     opacity: playerIsActive && !playerIsTurnTime ? 1 : 0.65,
-                    fontWeight:600,
                 }}
-            >{`${formatMilliseconds(playerTimeRemaining)}`}</Typography>
+            >{formatMilliseconds(playerTimeRemaining)}</Typography>
         </Stack>
     )
 }
