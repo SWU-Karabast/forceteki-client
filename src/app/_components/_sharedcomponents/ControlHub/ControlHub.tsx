@@ -186,13 +186,6 @@ const ControlHub: React.FC = () => {
                             <GitHub />
                         </IconButton>
                     </NextLinkMui>
-                    <Tooltip title="Choose card language">
-                        <NextLinkMui href="/Preferences?tab=gameOptions">
-                            <IconButton sx={styles.iconButton}>
-                                <PublicOutlined />
-                            </IconButton>
-                        </NextLinkMui>
-                    </Tooltip>
                 </Box>
                 <Drawer actions={menuActions} />
             </Box>
