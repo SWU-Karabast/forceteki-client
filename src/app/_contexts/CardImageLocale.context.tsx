@@ -6,6 +6,7 @@ import React, {
     useCallback,
     useContext,
     useEffect,
+    useMemo,
     useState,
 } from 'react';
 import { CardImageLocale } from '@/app/_utils/s3Utils';
@@ -64,8 +65,10 @@ export const CardImageLocaleProvider: React.FC<{ children: ReactNode }> = ({ chi
         }
     }, [user]);
 
+    const contextValue = useMemo(() => ({ locale, setLocale }), [locale, setLocale]);
+
     return (
-        <CardImageLocaleContext.Provider value={{ locale, setLocale }}>
+        <CardImageLocaleContext.Provider value={contextValue}>
             {children}
         </CardImageLocaleContext.Provider>
     );
