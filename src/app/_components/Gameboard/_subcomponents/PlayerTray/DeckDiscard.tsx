@@ -8,6 +8,7 @@ import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.typ
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
+import { getDiscardPileHighlightSx } from '@/app/_hooks/ConstantEffectHelpers';
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     const { gameState, connectedPlayer } = useGame();
@@ -21,7 +22,10 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     // Individual ratio states
     const [isDiscardWiderThanTall, setIsDiscardWiderThanTall] = useState(false);
     const [isDeckWiderThanTall, setIsDeckWiderThanTall] = useState(false);
-    
+
+    const { highlightedEffect } = useGame();  // add to existing destructure
+    const discardPulseSx = getDiscardPileHighlightSx(highlightedEffect, trayPlayer);
+
     // Use a more stable layout effect for dimension measurements
     useLayoutEffect(() => {
         let debounceTimer: number;
@@ -178,6 +182,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
                 backgroundPosition: 'center',
                 backgroundSize: 'cover',
                 backgroundImage: topDiscardCardUrl,
+                ...discardPulseSx,
                 backgroundRepeat: 'no-repeat',
                 border: selectableDiscardCard ? '2px solid var(--selection-green)' : 'none',
             },

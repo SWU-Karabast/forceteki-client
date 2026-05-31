@@ -15,6 +15,7 @@ import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
+import { getEffectHighlightSx } from '@/app/_hooks/ConstantEffectHelpers';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -29,6 +30,9 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
     const { clearPopups } = usePopup();
     const { getCardback } = useCosmetics();
+    const { highlightedEffect } = useGame();
+    const highlightSx = getEffectHighlightSx(card.uuid, highlightedEffect);
+
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
@@ -270,8 +274,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            ...highlightSx,
             transform: card.exhausted && card.zone !== 'resource' ? 'rotate(4deg)' : 'none',
-            transition: 'transform 0.15s ease',
+            transition: 'box-shadow 0.25s ease, transform 0.15s ease',
             '&:hover': {
                 cursor: clickDisabled() ? 'normal' : 'pointer',
             },

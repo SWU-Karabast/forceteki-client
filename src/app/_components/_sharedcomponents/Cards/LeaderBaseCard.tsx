@@ -11,6 +11,7 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
+import { getEffectHighlightSx } from '@/app/_hooks/ConstantEffectHelpers';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -25,6 +26,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+    const { highlightedEffect } = useGame();
+    const highlightSx = getEffectHighlightSx(card?.uuid, highlightedEffect);
+
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
     const isHoveredInChat = hoveredChatCard.id === card?.uuid;
@@ -242,6 +246,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            ...highlightSx,
+            transition: 'box-shadow 0.25s ease',
             cursor: clickDisabled() ? 'default' : 'pointer',
             position: 'relative',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',

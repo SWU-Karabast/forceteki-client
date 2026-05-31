@@ -1,5 +1,46 @@
 import { DeckSource } from '@/app/_utils/fetchDeckData';
 
+// just for mock TODO delete when ready
+export interface IConstantEffectMetadata {
+    effectTitle: string;
+    effectSubtitle?: string;       // unit subtitle, undefined for events
+    effectDescription?: string;
+    effectType?: 'static' | 'dynamic' | 'detached';
+    effectName?: string;
+    isOpponentEffect?: boolean;
+}
+
+export interface IConstantEffectSourceCard {
+    uuid: string;
+    setId: ICardSetId;
+    id?: string;
+    name?: string;
+    type?: string;
+    controllerId: string;
+    ownerId?: string;
+    sourceZone?: string;
+    effectMetadata: IConstantEffectMetadata;
+}
+
+export interface IConstantEffectTarget {
+    uuid: string;
+    setId: ICardSetId;
+    id?: string;
+    name?: string;
+    type?: string;
+    controllerId: string;
+    zone?: string;
+}
+
+export interface IConstantEffect {
+    sourceCardUuid: string;
+    sourceZone?: string;           // mirrors cardData.sourceZone for helpers
+    cardData: IConstantEffectSourceCard;
+    targets: IConstantEffectTarget[];
+}
+
+// End constant effects
+
 export enum CardType {
     Base = 'base',
 
