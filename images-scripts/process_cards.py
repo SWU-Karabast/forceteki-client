@@ -141,6 +141,31 @@ PER_SET_LANDSCAPE_DOUBLE_LEADERS: dict[str, set[int]] = {
     "TWI": {17},
 }
 
+# Cache-Control headers applied at upload time.
+#
+# Default (stable sets): 1 year + immutable. Browsers never re-request
+# these objects until the URL changes (the client's `?v=N` cache-buster
+# in src/app/_utils/s3Utils.ts is the global escape hatch).
+#
+# Preview (sets in PREVIEW_SETS): 1 week + immutable. Browsers serve from
+# cache for a week, then pick up any new bytes on the next request. Used
+# during preview season when card images can still change (low-res
+# upgrades, locale fill-ins as FFG catches up to swudb).
+#
+# Workflow: add a set to PREVIEW_SETS when it goes into preview; remove it
+# once images have stabilized. The next pipeline run will detect the
+# Cache-Control mismatch on S3 and rewrite each object's header in-place
+# via S3 CopyObject (no body re-upload, no data-transfer cost).
+CACHE_CONTROL_DEFAULT = "public, max-age=31536000, immutable"
+CACHE_CONTROL_PREVIEW = "public, max-age=604800, immutable"
+PREVIEW_SETS: set[str] = {"ASH"}
+
+
+def cache_control_for(set_code: str) -> str:
+    """Return the Cache-Control string to apply to objects for `set_code`."""
+    return CACHE_CONTROL_PREVIEW if set_code in PREVIEW_SETS else CACHE_CONTROL_DEFAULT
+
+
 # Retry tuning for flaky upstreams (matches fetchdata.js policy).
 HTTP_RETRY_ATTEMPTS = 3
 HTTP_RETRY_BASE_DELAY = 1.0  # seconds
@@ -958,6 +983,11 @@ def _enforce_strict_locales(
 class UploadJob:
     local_path: Path
     s3_key: str
+    # The Cache-Control string this object should have on S3. Determined
+    # at job-collection time from PREVIEW_SETS (see cache_control_for).
+    # Compared to the live S3 header in _classify_one so that flipping a
+    # set in or out of PREVIEW_SETS triggers a header refresh.
+    cache_control: str
 
 
 def _md5_hex(path: Path) -> str:
@@ -968,43 +998,64 @@ def _md5_hex(path: Path) -> str:
     return h.hexdigest()
 
 
-def _s3_etag_md5(client, bucket: str, key: str) -> Optional[str]:
-    """Return the local-md5 equivalent of the S3 object ETag, or None if missing.
+def _s3_head(client, bucket: str, key: str) -> tuple[Optional[str], Optional[str]]:
+    """Return `(etag_md5, cache_control)` for the S3 object.
 
-    For single-part uploads (which all our small webps are), the ETag is the
-    hex MD5 of the object wrapped in quotes. Multi-part uploads use a
-    different format with a `-N` suffix; in that case we return None to force
-    re-upload. We do not use SSE-KMS, so this is reliable.
+    `etag_md5` is the local-md5 equivalent of the S3 object ETag (None if
+    the object is missing OR if it's a multipart upload, since multipart
+    ETags have the form `"hex-N"` and cannot be compared to a local md5).
+    `cache_control` is the value of the object's `Cache-Control` header,
+    or None if the object is missing (or the header was never set).
+
+    The two return slots are independent: a missing object yields
+    `(None, None)`, while a multipart object yields `(None, cc)`. The
+    classifier uses this distinction to tell `new` apart from `changed`.
     """
     try:
         head = client.head_object(Bucket=bucket, Key=key)
     except botocore.exceptions.ClientError as e:
         if e.response.get("Error", {}).get("Code") in ("404", "NoSuchKey", "NotFound"):
-            return None
+            return None, None
         raise
     etag = head.get("ETag", "").strip('"')
-    if "-" in etag:
-        return None  # multipart; cannot compare
-    return etag
+    md5 = None if "-" in etag else etag
+    return md5, head.get("CacheControl")
 
 
 def _upload_one(client, bucket: str, classified: "ClassifiedJob") -> tuple[str, str]:
-    """PUT a previously-classified new/changed job. Returns (status, message).
+    """Apply a previously-classified job's intended state to S3.
 
-    Status is one of: 'uploaded_new', 'uploaded_changed', 'failed'. Only
-    called for `classified.status in ('new', 'changed')` — up-to-date and
-    check-failed entries are filtered out before this runs.
+    Status is one of: 'uploaded_new', 'uploaded_changed', 'rewrote_header',
+    'failed'. Only called for `classified.status in ('new', 'changed',
+    'header_changed')` — up-to-date and check-failed entries are filtered
+    out before this runs.
+
+    For 'new' and 'changed' we PUT the local body with the desired headers.
+    For 'header_changed' (bytes already match S3) we use a server-side
+    CopyObject with MetadataDirective=REPLACE to rewrite Cache-Control in
+    place — no body transfer, no bandwidth cost.
     """
     job = classified.job
-    detail = classified.status  # 'new' or 'changed'
     try:
+        if classified.status == "header_changed":
+            client.copy_object(
+                Bucket=bucket,
+                Key=job.s3_key,
+                CopySource={"Bucket": bucket, "Key": job.s3_key},
+                MetadataDirective="REPLACE",
+                ContentType="image/webp",
+                CacheControl=job.cache_control,
+            )
+            return ("rewrote_header", f"+ header: {job.s3_key} -> {job.cache_control!r}")
+
+        detail = classified.status  # 'new' or 'changed'
         with job.local_path.open("rb") as body:
             client.put_object(
                 Bucket=bucket,
                 Key=job.s3_key,
                 Body=body,
                 ContentType="image/webp",
-                CacheControl="public, max-age=31536000, immutable",
+                CacheControl=job.cache_control,
             )
     except Exception as e:
         return ("failed", f"! upload failed {job.s3_key}: {e}")
@@ -1016,11 +1067,20 @@ class ClassifiedJob:
     """Result of HEAD-ing a candidate UploadJob against S3.
 
     Produced by `stage_check_exists`; consumed by `stage_upload`. Status
-    determines whether the upload stage will PUT this file:
-      'up_to_date'   — remote ETag matches local MD5; skip.
-      'new'          — no remote object exists yet; PUT.
-      'changed'      — remote ETag differs from local MD5; PUT (overwrite).
-      'check_failed' — HEAD or local MD5 raised; skip and report.
+    determines what the upload stage will do with this file:
+      'up_to_date'     — remote ETag matches local MD5 AND Cache-Control
+                         matches the desired value; skip.
+      'new'            — no remote object exists yet; PUT.
+      'changed'        — remote ETag differs from local MD5 (or the
+                         object was uploaded multipart); PUT (overwrite).
+                         Bytes ALWAYS take priority over header — any md5
+                         mismatch is classified here, never as
+                         'header_changed', so a content change is
+                         guaranteed to do a full PUT.
+      'header_changed' — bytes match S3, but Cache-Control differs from
+                         the desired value; rewrite headers in place via
+                         CopyObject (no body transfer).
+      'check_failed'   — HEAD or local MD5 raised; skip and report.
     """
     job: UploadJob
     status: str
@@ -1030,24 +1090,38 @@ class ClassifiedJob:
 
 
 def _classify_one(client, bucket: str, job: UploadJob) -> ClassifiedJob:
-    """HEAD + local-MD5 compare for a single job. No S3 writes."""
+    """HEAD + local-MD5 + Cache-Control compare for a single job. No S3 writes."""
     try:
         local_md5 = _md5_hex(job.local_path)
-        remote_md5 = _s3_etag_md5(client, bucket, job.s3_key)
+        remote_md5, remote_cc = _s3_head(client, bucket, job.s3_key)
     except Exception as e:
         return ClassifiedJob(job, "check_failed", None, None,
                              f"! error checking {job.s3_key}: {e}")
-    if remote_md5 == local_md5:
-        return ClassifiedJob(job, "up_to_date", local_md5, remote_md5,
-                             f"= up-to-date: {job.s3_key}")
-    if remote_md5 is None:
+    # Missing object: HEAD returned 404. _s3_head signals this with both
+    # slots None (a multipart object would yield (None, cc)).
+    if remote_md5 is None and remote_cc is None:
         return ClassifiedJob(job, "new", local_md5, None,
                              f"~ new: {job.s3_key}")
-    return ClassifiedJob(job, "changed", local_md5, remote_md5,
-                         f"~ changed: {job.s3_key}")
+    # Bytes don't match (or remote is multipart and we can't tell): full
+    # re-upload. This branch fires BEFORE the header check so any byte
+    # change is guaranteed to do a full PUT regardless of header state.
+    if remote_md5 != local_md5:
+        return ClassifiedJob(job, "changed", local_md5, remote_md5,
+                             f"~ changed (bytes): {job.s3_key}")
+    # Bytes match. Compare headers; if they differ, schedule an in-place
+    # CopyObject header rewrite (cheap — no body transfer).
+    if remote_cc != job.cache_control:
+        return ClassifiedJob(job, "header_changed", local_md5, remote_md5,
+                             f"~ header: {job.s3_key} "
+                             f"({remote_cc!r} -> {job.cache_control!r})")
+    return ClassifiedJob(job, "up_to_date", local_md5, remote_md5,
+                         f"= up-to-date: {job.s3_key}")
 
 
 def _collect_set_jobs(cfg: "Config") -> list[UploadJob]:
+    # Tokens of a preview set inherit the preview header: they're just as
+    # volatile during preview season as the cards themselves.
+    cc = cache_control_for(cfg.set_code)
     jobs: list[UploadJob] = []
     for locale in cfg.locales:
         prefix = cfg.key_prefix.format(set=cfg.set_code, locale=locale).rstrip("/")
@@ -1063,7 +1137,7 @@ def _collect_set_jobs(cfg: "Config") -> list[UploadJob]:
                     if entry.suffix.lower() != ".webp":
                         continue
                     key = f"{prefix}/{fmt}/{size}/{entry.name}"
-                    jobs.append(UploadJob(entry, key))
+                    jobs.append(UploadJob(entry, key, cc))
     return jobs
 
 
@@ -1076,6 +1150,7 @@ def _collect_token_jobs(cfg: "Config") -> list[UploadJob]:
     tokens left over in the local folder are ignored.
     """
     allowed = {f"{s3_id}.webp" for _, s3_id in (cfg.tokens or [])}
+    cc = cache_control_for(cfg.set_code)
     jobs: list[UploadJob] = []
     for locale in cfg.locales:
         prefix = TOKEN_KEY_PREFIX.format(locale=locale).rstrip("/")
@@ -1089,7 +1164,7 @@ def _collect_token_jobs(cfg: "Config") -> list[UploadJob]:
                 if entry.name not in allowed:
                     continue
                 key = f"{prefix}/{fmt}/{entry.name}"
-                jobs.append(UploadJob(entry, key))
+                jobs.append(UploadJob(entry, key, cc))
     return jobs
 
 
@@ -1222,13 +1297,14 @@ def stage_check_exists(cfg: "Config", *, tokens: bool = False) -> list[Classifie
             vprint(c.message)
 
     print(f"\n── Check summary ({label}) ──")
-    print(f"  up-to-date:    {counts.get('up_to_date', 0)}")
-    print(f"  new:           {counts.get('new', 0)}")
-    print(f"  changed:       {counts.get('changed', 0)}")
+    print(f"  up-to-date:     {counts.get('up_to_date', 0)}")
+    print(f"  new:            {counts.get('new', 0)}")
+    print(f"  changed:        {counts.get('changed', 0)}")
+    print(f"  header-changed: {counts.get('header_changed', 0)}")
     cf_count = counts.get('check_failed', 0)
     if cf_count:
-        print(f"  check-failed:  {cf_count}")
-    print(f"  total:         {len(jobs)}")
+        print(f"  check-failed:   {cf_count}")
+    print(f"  total:          {len(jobs)}")
     return classified
 
 
@@ -1243,9 +1319,10 @@ def stage_upload(
     In `--dry-run` mode this is a single informational line — no PUTs.
     """
     label = "tokens" if tokens else f"set={cfg.set_code}"
-    to_upload = [c for c in classified if c.status in ("new", "changed")]
+    to_upload = [c for c in classified if c.status in ("new", "changed", "header_changed")]
     n_new = sum(1 for c in to_upload if c.status == "new")
-    n_changed = len(to_upload) - n_new
+    n_changed = sum(1 for c in to_upload if c.status == "changed")
+    n_header = sum(1 for c in to_upload if c.status == "header_changed")
 
     print(f"\n── Stage: Upload ({label}, dry_run={cfg.dry_run}, "
           f"files={len(to_upload)}) ──")
@@ -1255,8 +1332,9 @@ def stage_upload(
         return
 
     if cfg.dry_run:
-        print(f"  · dry-run: would PUT {len(to_upload)} files "
-              f"({n_new} new + {n_changed} changed) — no S3 writes")
+        print(f"  · dry-run: would write {len(to_upload)} objects "
+              f"({n_new} new + {n_changed} changed + {n_header} header-only) "
+              "— no S3 writes")
         return
 
     session = ensure_aws_credentials(cfg)
@@ -1275,12 +1353,13 @@ def stage_upload(
             vprint(msg)
 
     print(f"\n── Upload summary ({label}) ──")
-    print(f"  uploaded (new):     {counts.get('uploaded_new', 0)}")
-    print(f"  uploaded (changed): {counts.get('uploaded_changed', 0)}")
+    print(f"  uploaded (new):       {counts.get('uploaded_new', 0)}")
+    print(f"  uploaded (changed):   {counts.get('uploaded_changed', 0)}")
+    print(f"  rewrote header only:  {counts.get('rewrote_header', 0)}")
     failed = counts.get('failed', 0)
     if failed:
-        print(f"  failed:             {failed}")
-    print(f"  total:              {len(to_upload)}")
+        print(f"  failed:               {failed}")
+    print(f"  total:                {len(to_upload)}")
 
 
 # ──────────────────────────────── Tokens ──────────────────────────────────

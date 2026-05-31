@@ -9,6 +9,7 @@ import {
     MenuItem, Divider
 } from '@mui/material';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { IPreviewCard } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
@@ -31,7 +32,8 @@ const UnimplementedCardTile: React.FC<IUnimplementedCardTileProps> = ({
     onMouseEnter,
     onMouseLeave,
 }) => {
-    const url = s3CardImageURL(card);
+    const locale = useCardImageLocale();
+    const url = s3CardImageURL(card, locale);
     const { status, imgProps } = useImageLoadStatus(url);
     const baseSx = card.types === 'base' ? leaderStyleCardSx : styleCardSx;
     return (
@@ -49,7 +51,7 @@ const UnimplementedCardTile: React.FC<IUnimplementedCardTileProps> = ({
                 {...imgProps}
                 sx={cardImageFillSx}
             />
-            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(card)} />}
+            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(card, locale)} />}
         </Box>
     );
 };

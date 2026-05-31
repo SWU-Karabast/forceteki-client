@@ -12,6 +12,7 @@ import {
     isSetCodeCard,
     parseSetId
 } from '@/app/_components/_sharedcomponents/Cards/cardUtils';
+import { CARD_IMAGE_CACHE_VERSION } from '@/app/_constants/constants';
 
 export const s3ImageURL = (path: string) => {
     const s3Bucket = 'https://karabast-data.s3.amazonaws.com/';
@@ -35,41 +36,29 @@ const isTokenCardId = (id: string | undefined): boolean =>
  * locale lacks a localized image, the pipeline fills the gap with a copy of
  * the English webp, so every locale URL is guaranteed to resolve.
  */
-export type CardImageLocale = 'en' | 'fr' | 'de' | 'es' | 'it';
-
-const SUPPORTED_CARD_IMAGE_LOCALES: readonly CardImageLocale[] = ['en', 'fr', 'de', 'es', 'it'];
-
-function resolveDefaultCardImageLocale(): CardImageLocale {
-    // `NEXT_PUBLIC_*` env vars are inlined at build time and so are safe to
-    // read on both server and client. Falls back to 'en' when unset or set
-    // to an unsupported value (with a console warning in the latter case so
-    // a typo in the deployment config is visible).
-    const raw = process.env.NEXT_PUBLIC_CARD_IMAGE_LOCALE?.trim().toLowerCase();
-    if (!raw) {
-        return 'en';
-    }
-    if ((SUPPORTED_CARD_IMAGE_LOCALES as readonly string[]).includes(raw)) {
-        return raw as CardImageLocale;
-    }
-    if (typeof console !== 'undefined') {
-        console.warn(
-            `NEXT_PUBLIC_CARD_IMAGE_LOCALE="${raw}" is not a supported locale ` +
-            `(${SUPPORTED_CARD_IMAGE_LOCALES.join(', ')}); falling back to 'en'.`
-        );
-    }
-    return 'en';
+export enum CardImageLocale {
+    English = 'en',
+    French = 'fr',
+    German = 'de',
+    Spanish = 'es',
+    Italian = 'it',
 }
 
-// TODO: wire this to a user preference (locale selector in settings) so
-// callers can resolve the active locale from context instead of relying on
-// the default.
-export const DEFAULT_CARD_IMAGE_LOCALE: CardImageLocale = resolveDefaultCardImageLocale();
+export const SUPPORTED_CARD_IMAGE_LOCALES: readonly CardImageLocale[] = Object.values(CardImageLocale);
+
+export const CARD_IMAGE_LOCALE_LABELS: Record<CardImageLocale, string> = {
+    [CardImageLocale.English]: 'English',
+    [CardImageLocale.French]: 'Français',
+    [CardImageLocale.German]: 'Deutsch',
+    [CardImageLocale.Spanish]: 'Español',
+    [CardImageLocale.Italian]: 'Italiano',
+};
 
 export function s3CardImageURL(
     card: ICardData | ISetCode | IServerCardData | IPreviewCard,
+    locale: CardImageLocale,
     cardStyle: CardStyle | LeaderBaseCardStyle = CardStyle.Plain,
     cardback?: string,
-    locale: CardImageLocale = DEFAULT_CARD_IMAGE_LOCALE,
 ): string {
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
     if ((isGameOrSetCard && !card?.setId) && !card?.id) {
@@ -92,7 +81,7 @@ export function s3CardImageURL(
     const isToken = cardType?.includes('token')
         || (!isGameOrSetCard && isTokenCardId(card.id));
     if (isToken) {
-        return s3ImageURL(`cards/_tokens/${locale}/${format}/${card.id}.webp?v=3`);
+        return s3ImageURL(`cards/_tokens/${locale}/${format}/${card.id}.webp?v=${CARD_IMAGE_CACHE_VERSION}`);
     }
 
     let cardNumber = setId.number.toString().padStart(3, '0')
@@ -105,7 +94,7 @@ export function s3CardImageURL(
         cardNumber += '2';
     }
 
-    return s3ImageURL(`cards/${setId.set}/${locale}/${format}/large/${cardNumber}.webp?v=3`);
+    return s3ImageURL(`cards/${setId.set}/${locale}/${format}/large/${cardNumber}.webp?v=${CARD_IMAGE_CACHE_VERSION}`);
 };
 
 /**
@@ -117,7 +106,7 @@ export function s3CardImageURL(
  */
 export function cardImageLabel(
     card: ICardData | ISetCode | IServerCardData | IPreviewCard,
-    locale: CardImageLocale = DEFAULT_CARD_IMAGE_LOCALE,
+    locale: CardImageLocale,
 ): string {
     const localeSuffix = locale.toUpperCase();
     const isGameOrSetCard = isGameCard(card) || isSetCodeCard(card) || isPreviewCard(card);
