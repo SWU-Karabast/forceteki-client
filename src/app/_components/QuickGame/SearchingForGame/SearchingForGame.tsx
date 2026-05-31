@@ -3,7 +3,7 @@ import { Box, Card, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-
+import MatchLoader from './MatchLoader';
 const styles = {
     searchBox: {
         width: '35rem',
@@ -72,18 +72,7 @@ const SearchingForGame: React.FC = () => {
 
     return (
         <Card sx={styles.searchBox}>
-            <Box>
-                <video
-                    autoPlay
-                    loop
-                    muted
-                    style={{ width: '80px', height: '80px' }} // Adjust sizing/styling as needed
-                >
-                    <source src="/loader.mp4" type="video/mp4"/>
-                    {/* Fallback text if video is not supported */}
-                    Your browser does not support the video tag.
-                </video>
-            </Box>
+            <MatchLoader sx={{ width: '80px', height: '80px' }} />
             <Box>
                 <Typography sx={styles.connectingText}>
                     Connecting
