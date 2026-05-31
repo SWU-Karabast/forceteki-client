@@ -109,8 +109,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            padding: '1rem 2rem 1rem 0',
-            gap: '1rem',
+            py: '1rem',
+            pr: { xs: '1rem', md: '2rem' },
+            gap: { xs: hasLastPlayedCard ? '1rem' : '0', md: '1rem' },
         },
         lastPlayed: {
             ...debugBorder('yellow'),

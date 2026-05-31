@@ -74,11 +74,12 @@ export function s3CardImageURL(
     }
     const format = cardStyle === CardStyle.InPlay ? 'truncated' : 'standard';
 
-    // Game cards carry a numeric engine `id` alongside their `setId`, so the
-    // shape-based fallback is only safe for non-game cards (e.g. deck-builder
-    // rows of shape `{ id, count }` that lack a `type` field).
+    // Game/preview/set-coded cards carry a numeric engine `id` alongside
+    // their `setId`, so the shape-based fallback is only safe for cards
+    // that have no `setId` (e.g. deck-builder rows of shape `{ id, count }`
+    // that lack a `type` field).
     const isToken = cardType?.includes('token')
-        || (!isGameCard(card) && isTokenCardId(card.id));
+        || (!isGameOrSetCard && isTokenCardId(card.id));
     if (isToken) {
         return s3ImageURL(`cards/_tokens/${locale}/${format}/${card.id}.webp?v=${CARD_IMAGE_CACHE_VERSION}`);
     }
@@ -120,7 +121,7 @@ export function cardImageLabel(
         cardType = Array.isArray(card.types) ? card.types.join() : card.types;
     }
 
-    if (cardType?.includes('token') || (!isGameCard(card) && isTokenCardId(card.id))) {
+    if (cardType?.includes('token') || (!isGameOrSetCard && isTokenCardId(card.id))) {
         return `TOKEN_${card.id}_${localeSuffix}`;
     }
 

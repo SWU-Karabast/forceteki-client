@@ -63,7 +63,7 @@ const Timer: React.FC<TimerProps> = ({
                     )
             }
         >
-            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+            <Box sx={{ position: 'relative', display: 'inline-flex', transform: { xs: 'scale(0.7)', md: 'none' } }}>
                 <CircularProgress
                     variant='determinate'
                     size={80}
