@@ -184,18 +184,18 @@ const CardActionTray: React.FC = () => {
             }
 
             if (getConnectedPlayerPrompt()?.promptType === 'resource') {
-                if (resourcePromptDoneButtonOverride == null) {
+                if (setResourcePromptDoneButtonOverride == null) {
                     setResourcePromptDoneButtonOverride(true);
                     setTimeout(() => {
                         setResourcePromptDoneButtonOverride(false);
                     }, 500);
                     return true;
                 }
-                return resourcePromptDoneButtonOverride;
+                return setResourcePromptDoneButtonOverride;
             }
         }
         return !!(button as IButtonsProps).disabled;
-    }, [playerState.promptState, distributionPromptData, getConnectedPlayerPrompt, resourcePromptDoneButtonOverride]);
+    }, [playerState.promptState, distributionPromptData, getConnectedPlayerPrompt]);
 
     // --- KEYBOARD HANDLERS ---
     const handlePassTurn = useCallback(() => {
@@ -369,3 +369,7 @@ const PromptButton: React.FC<IPromptButtonProps> = (props) => {
 };
 
 export default CardActionTray;
+
+function setResourcePromptDoneButtonOverride(arg0: boolean) {
+    throw new Error('Function not implemented.');
+}
