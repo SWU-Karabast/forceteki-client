@@ -232,8 +232,8 @@ function VerticalTabs({
                 onCancel={handleDialogCancel}
                 customMessage={`You have unsaved ${
                     tabs[value] === 'soundOptions' ? 'sound ' : 
-                    tabs[value] === 'keyboardShortcuts' ? 'keyboard shortcut ' : 
-                    tabs[value] === 'gameOptions' ? 'game option ' : ''
+                        tabs[value] === 'keyboardShortcuts' ? 'keyboard shortcut ' : 
+                            tabs[value] === 'gameOptions' ? 'game option ' : ''
                 }changes.`}
             />
         </Box>

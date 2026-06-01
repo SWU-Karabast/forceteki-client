@@ -191,7 +191,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
         if (!editingKey) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            
             const isModifierHeld = e.ctrlKey || e.metaKey || e.altKey;
             const isJustModifierKey = ['Control', 'Meta', 'Alt', 'Shift'].includes(e.key);
             
