@@ -11,6 +11,7 @@ import { CARD_IMAGE_LOCALE_LABELS, CardImageLocale, SUPPORTED_CARD_IMAGE_LOCALES
 import { loadPreferencesFromLocalStorage } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useCardImageLocaleContext } from '@/app/_contexts/CardImageLocale.context';
 import { TimerVisibility } from '@/app/_contexts/UserTypes';
+import TimerPreview from '@/app/_components/_sharedcomponents/Timer/TimerPreview';
 
 enum SaveStatus {
     NoChange = 'noChange',
@@ -24,7 +25,7 @@ const TIMER_VISIBILITY_OPTIONS: Array<{ value: TimerVisibility, label: string, d
     {
         value: TimerVisibility.Standard,
         label: 'Standard',
-        description: 'Show both the animated turn timer and each player\'s main time.',
+        description: 'Show the animated turn timer and each player\'s main times.',
     },
     {
         value: TimerVisibility.HideTurnTimer,
@@ -34,7 +35,7 @@ const TIMER_VISIBILITY_OPTIONS: Array<{ value: TimerVisibility, label: string, d
     {
         value: TimerVisibility.HideAll,
         label: 'Hide all timers',
-        description: 'Hide the whole timer interface.',
+        description: 'Hide everything. A warning icon appears when your main time is low and actively running.',
     },
 ];
 
@@ -204,8 +205,20 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
         },
         radioRow: {
             display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1.5rem',
+            mb: '1rem',
+        },
+        radioRowText: {
+            display: 'flex',
             flexDirection: 'column',
-            mb: '0.5rem',
+            flex: 1,
+            minWidth: 0,
+        },
+        radioPreview: {
+            flexShrink: 0,
         },
     };
 
@@ -233,31 +246,6 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                 </Box>
             </Box>
 
-            <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h2'}>Timer Visibility</Typography>
-                <Divider sx={{ mb: '20px' }} />
-                <Typography sx={{ mb: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
-                    Customize the visibility of the game timer. These settings only affect what you see. Timers are <strong>always enabled in public games</strong> and always disabled in private games.
-                </Typography>
-                <FormControl component="fieldset">
-                    <RadioGroup
-                        value={timerVisibility}
-                        onChange={handleTimerVisibilityChange}
-                    >
-                        {TIMER_VISIBILITY_OPTIONS.map((opt) => (
-                            <Box key={opt.value} sx={styles.radioRow}>
-                                <FormControlLabel
-                                    value={opt.value}
-                                    control={<Radio sx={styles.radio} />}
-                                    label={<Typography sx={styles.radioLabel}>{opt.label}</Typography>}
-                                />
-                                <Typography sx={styles.radioDescription}>{opt.description}</Typography>
-                            </Box>
-                        ))}
-                    </RadioGroup>
-                </FormControl>
-            </Box>
-
             {variant !== 'gameBoard' && (
                 <Box sx={styles.functionContainer}>
                     <Typography sx={styles.typographyContainer} variant={'h2'}>Chat</Typography>
@@ -279,6 +267,36 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                     )}
                 </Box>
             )}
+
+            <Box sx={styles.functionContainer}>
+                <Typography sx={styles.typographyContainer} variant={'h2'}>Timer Visibility</Typography>
+                <Divider sx={{ mb: '20px' }} />
+                <Typography sx={{ mb: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
+                    Customize the visibility of the game timer. These settings only affect what you see. Timers are <strong>always enabled in public games</strong> and always disabled in private games.
+                </Typography>
+                <FormControl component="fieldset">
+                    <RadioGroup
+                        value={timerVisibility}
+                        onChange={handleTimerVisibilityChange}
+                    >
+                        {TIMER_VISIBILITY_OPTIONS.map((opt) => (
+                            <Box key={opt.value} sx={styles.radioRow}>
+                                <Box sx={styles.radioRowText}>
+                                    <FormControlLabel
+                                        value={opt.value}
+                                        control={<Radio sx={styles.radio} />}
+                                        label={<Typography sx={styles.radioLabel}>{opt.label}</Typography>}
+                                    />
+                                    <Typography sx={styles.radioDescription}>{opt.description}</Typography>
+                                </Box>
+                                <Box sx={styles.radioPreview}>
+                                    <TimerPreview visibility={opt.value} />
+                                </Box>
+                            </Box>
+                        ))}
+                    </RadioGroup>
+                </FormControl>
+            </Box>
 
             <Box sx={styles.saveButtonContainer}>
                 <PreferenceButton
