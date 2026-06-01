@@ -939,7 +939,7 @@ export const unlinkSwubaseAsync = async(
     }
 };
 
-
+const isEnglishUser = () => (navigator?.language || 'en').includes('en');
 
 export const shouldShowAnnouncement = (announcement: IAnnouncement): boolean =>{
     try {
@@ -954,6 +954,12 @@ export const shouldShowAnnouncement = (announcement: IAnnouncement): boolean =>{
             return false; // Past end date, don't show
         }
         const hasSeenIt = localStorage.getItem(`swu-announcement-${announcement.key}`) !== null;
+
+        // TODO remove this hardcoded logic once we have some i18n support
+        if (announcement.key === 'cardLanguageSupport' && !hasSeenIt) {
+            return !isEnglishUser();
+        }
+
         return !hasSeenIt;
     }catch(error){
         console.error('Error checking if announcement should be shown:', error);
