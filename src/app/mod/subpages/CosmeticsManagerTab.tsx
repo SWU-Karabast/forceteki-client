@@ -23,7 +23,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { v4 as uuidv4 } from 'uuid';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
-import {ServerApiService} from "@/app/_services/ServerApiService";
+import { ServerApiService } from '@/app/_services/ServerApiService';
 
 interface ImageDimensions {
     width: number;

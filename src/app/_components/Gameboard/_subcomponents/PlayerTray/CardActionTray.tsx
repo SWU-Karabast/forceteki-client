@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Button, Box } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useUser } from '@/app/_contexts/User.context';
 import { keyframes } from '@mui/system';
@@ -10,6 +10,7 @@ import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
 import { PerCardButton } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { useKeyboardShortcuts } from '@/app/_hooks/useKeyboardShortcuts';
+import useTimeout from '@/app/_utils/useTimeout';
 
 const pulseBorder = keyframes`
   0% {
@@ -149,12 +150,15 @@ interface IButtonsProps {
     disabled?: boolean;
 }
 
+// disabling certain actions briefly to avoid double clicks:
+// - for a resource prompt, we disable the "done" button
+// - for the action window, we disable the "claim initiative" button
+const hasCooldown = (buttonType: string, prompType: string) => (buttonType === 'done' && prompType === 'resource') || (prompType === 'actionWindow' && ['pass', 'claimInitiative'].includes(buttonType));
+
 const CardActionTray: React.FC = () => {
     const { isPortrait } = useScreenOrientation();
-    const [ resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverride ] = useState<boolean | null>(null);
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
     const playerState = gameState.players[connectedPlayer];
-
     const styles = createStyles(isPortrait);
 
     // Wrapped in useCallback so it can be safely used as a dependency in our keyboard handlers
@@ -246,6 +250,7 @@ const CardActionTray: React.FC = () => {
               <PromptButton
                   key={button.arg}
                   button={button}
+                  cooldown={hasCooldown(button.arg, playerState.promptState.promptType)}
                   sendGameMessage={sendGameMessage}
                   disabled={buttonDisabled(button)}
               />
@@ -260,13 +265,21 @@ interface IPromptButtonProps {
     button: IButtonsProps;
     sendGameMessage: (args: [string, string, string]) => void;
     disabled?: boolean;
+    cooldown?: boolean;
 }
 
 
-const PromptButton: React.FC<IPromptButtonProps> = ({ button, sendGameMessage, disabled }) => {
+const PromptButton: React.FC<IPromptButtonProps> = (props) => {
+    const { button, sendGameMessage, cooldown } = props;
     const { isPortrait } = useScreenOrientation();
+    const [hasCooldown, setCooldown] = useState<boolean>(cooldown === true);
+    const disabled = hasCooldown || props.disabled;
     const styles = createStyles(isPortrait);
-    
+
+    useTimeout(() => {
+        setCooldown(false);
+    }, cooldown === true ? 500 : null);
+
     const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
         if (button.arg === 'claimInitiative' || button.text === 'Draw') {
             return disabled ? {} : {

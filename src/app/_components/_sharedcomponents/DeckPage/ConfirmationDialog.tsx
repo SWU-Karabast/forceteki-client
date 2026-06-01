@@ -5,11 +5,15 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 interface ConfirmationDialogProps {
     open: boolean;
     title: string;
-    message: string;
+    message: React.ReactNode;
     onCancel: () => void;
     onConfirm: () => void;
     confirmButtonText?: string;
     cancelButtonText?: string;
+    hideCancel?: boolean;
+    confirmButtonVariant?: 'standard' | 'concede';
+    zIndex?: number;
+    width?: string;
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -19,7 +23,11 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     onCancel,
     onConfirm,
     confirmButtonText = 'Delete',
-    cancelButtonText = 'Cancel'
+    cancelButtonText = 'Cancel',
+    hideCancel = false,
+    confirmButtonVariant = 'concede',
+    zIndex = 1000,
+    width = '400px',
 }) => {
     if (!open) return null;
 
@@ -32,7 +40,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             right: 0,
             bottom: 0,
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 1000,
+            zIndex,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -42,7 +50,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             borderRadius: '15px',
             border: '2px solid transparent',
             background: 'linear-gradient(#0F1F27, #030C13) padding-box, linear-gradient(to top, #30434B, #50717D) border-box',
-            width: '400px',
+            width,
             maxWidth: '90%',
         },
         titleStyle: {
@@ -55,7 +63,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         messageStyle: {
             color: '#C7C7C7',
             marginBottom: '2rem',
-            textAlign: 'center',
+            textAlign: 'left',
         },
         buttonContainerStyle: {
             display: 'flex',
@@ -67,10 +75,12 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         <Box sx={styles.overlayStyle}>
             <Box sx={styles.dialogStyle}>
                 <Typography sx={styles.titleStyle}>{title}</Typography>
-                <Typography sx={styles.messageStyle}>{message}</Typography>
+                <Typography sx={styles.messageStyle} component="div">{message}</Typography>
                 <Box sx={styles.buttonContainerStyle}>
-                    <PreferenceButton text={cancelButtonText} buttonFnc={onCancel} variant={'standard'}/>
-                    <PreferenceButton text={confirmButtonText} buttonFnc={onConfirm} variant={'concede'}/>
+                    {!hideCancel && (
+                        <PreferenceButton text={cancelButtonText} buttonFnc={onCancel} variant={'standard'}/>
+                    )}
+                    <PreferenceButton text={confirmButtonText} buttonFnc={onConfirm} variant={confirmButtonVariant}/>
                 </Box>
             </Box>
         </Box>

@@ -14,6 +14,7 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     title,
     variant = 'gameBoard',
     subtitle = undefined,
+    initialTab,
 }) => {
     const [attemptingClose, setAttemptingClose] = useState(false);
     const [closePreferencesHandler, setClosePreferencesHandler] = useState<() => void>(() => () => undefined);
@@ -29,17 +30,18 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
         containerStyle:{
             display: isPreferenceOpen ? 'block' : 'none',
             position: 'absolute',
-            width: sidebarOpen ? 'calc(100% - min(20%, 280px))' : '100%',
+            width: sidebarOpen ? { xs: '100%', md: 'calc(100% - min(20%, 280px))' } : '100%',
             height: '100%',
             backgroundColor: variant ==='gameBoard' ? 'rgba(0, 0, 0, 0.5)' : 'none',
             zIndex: variant === 'homePage' ? 1 : 999,
-            padding: variant === 'homePage' ? '7rem' : '2rem',
+            padding: variant === 'homePage' ? { xs: '7rem 2rem', md:'7rem' } : '2rem',
         },
         overlayStyle:{
             display: isPreferenceOpen ? 'block' : 'none',
             padding: '30px',
             maxWidth: '105em',
-            maxHeight: '65em',
+            // nothing should display outside the popup. use inner scrolls to display the content
+            overflow: 'hidden',
             zIndex: 10,
             backgroundColor: 'rgba(0, 0, 0, 0.8)',
             border: '3px solid transparent',
@@ -115,7 +117,7 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
                         <CloseOutlined onClick={attemptCloseFromBoard} sx={{ ...styles.closeButton, cursor:'pointer' }}/>
                     )}
                     <Box sx={styles.tabContainer}>
-                        <VerticalTabs tabs={tabs} variant={variant} attemptingClose={attemptingClose} closeHandler={closePreferencesHandler} cancelCloseHandler={cancelClosePreferences} />
+                        <VerticalTabs tabs={tabs} variant={variant} attemptingClose={attemptingClose} closeHandler={closePreferencesHandler} cancelCloseHandler={cancelClosePreferences} initialTab={initialTab} />
                     </Box>
                 </Box>
             </Box>

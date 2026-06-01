@@ -1,12 +1,10 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
-import { Typography, Grid2 as Grid } from '@mui/material';
+import { Typography, Grid } from '@mui/material';
 import ControlHub from '../_components/_sharedcomponents/ControlHub/ControlHub';
-import { useUser } from '../_contexts/User.context';
 import React from 'react';
 
 const Navbar = () => {
-    const { user, logout } = useUser();
     const pathname = usePathname();
     const router = useRouter();
     const handleExit = () => {
@@ -55,11 +53,7 @@ const Navbar = () => {
                 <Typography sx={navbarStyles.lobbyTextStyle} onClick={handleExit}>KARABAST</Typography>
             )
             }
-            <ControlHub
-                path={pathname}
-                user={user}
-                logout={logout}
-            />
+            <ControlHub />
         </Grid>
     );
 };

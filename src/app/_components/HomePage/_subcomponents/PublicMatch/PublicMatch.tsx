@@ -3,6 +3,7 @@ import { Box, Button, Typography, Popover, PopoverOrigin } from '@mui/material';
 import GameInProgressPlayer from '../GameInProgressPlayer/GameInProgressPlayer';
 import { IPublicGameInProgressProps } from '../../HomePageTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -10,6 +11,7 @@ import { LeaderBaseCardStyle } from '@/app/_components/_sharedcomponents/Cards/C
 const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
     const router = useRouter();
     const { user } = useUser();
+    const locale = useCardImageLocale();
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -102,18 +104,18 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                     <Box sx={{ position:'relative' }}>
                         <Box>
                             <Box 
-                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Base)})` }}
+                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Base, locale)})` }}
                                 onMouseEnter={handlePreviewOpen}
                                 onMouseLeave={handlePreviewClose}
-                                data-card-url={s3CardImageURL(match.player1Base)}
+                                data-card-url={s3CardImageURL(match.player1Base, locale)}
                             />
                         </Box>
                         <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
                             <Box 
-                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Leader, LeaderBaseCardStyle.PlainLeader)})` }}
+                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player1Leader, locale, LeaderBaseCardStyle.PlainLeader)})` }}
                                 onMouseEnter={handlePreviewOpen}
                                 onMouseLeave={handlePreviewClose}
-                                data-card-url={s3CardImageURL(match.player1Leader, LeaderBaseCardStyle.PlainLeader)}
+                                data-card-url={s3CardImageURL(match.player1Leader, locale, LeaderBaseCardStyle.PlainLeader)}
                             />
                         </Box>
                     </Box>
@@ -121,18 +123,18 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                     <Box sx={{ position:'relative' }}>
                         <Box>
                             <Box 
-                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Base)})` }}
+                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Base, locale)})` }}
                                 onMouseEnter={handlePreviewOpen}
                                 onMouseLeave={handlePreviewClose}
-                                data-card-url={s3CardImageURL(match.player2Base)}
+                                data-card-url={s3CardImageURL(match.player2Base, locale)}
                             />
                         </Box>
                         <Box sx={{ ...styles.parentBoxStyling,left:'-15px',top:'24px' }}>
                             <Box 
-                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Leader, LeaderBaseCardStyle.PlainLeader)})` }}
+                                sx={{ ...styles.leaderStyleCard,backgroundImage:`url(${s3CardImageURL(match.player2Leader, locale, LeaderBaseCardStyle.PlainLeader)})` }}
                                 onMouseEnter={handlePreviewOpen}
                                 onMouseLeave={handlePreviewClose}
-                                data-card-url={s3CardImageURL(match.player2Leader, LeaderBaseCardStyle.PlainLeader)}
+                                data-card-url={s3CardImageURL(match.player2Leader, locale, LeaderBaseCardStyle.PlainLeader)}
                             />
                         </Box>
                     </Box>

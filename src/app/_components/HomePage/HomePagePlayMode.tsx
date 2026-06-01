@@ -6,6 +6,7 @@ import { useUser } from '@/app/_contexts/User.context';
 import QuickGameForm from '@/app/_components/_sharedcomponents/QuickGameForm/QuickGameForm';
 import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/WelcomePopup';
 import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
+import WhatsNewPopupAnnouncement from '@/app/_components/_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UsernameChangeRestrictedPopup
@@ -20,14 +21,16 @@ import {
     setReportingDisabledSeenAsync,
     hasUserSeenUndoPopup, 
     markUndoPopupAsSeen,
-    markAnnouncementAsSeen, 
-    shouldShowAnnouncement 
+    hasUserSeenTimerPopup,
+    markTimerPopupAsSeen,
+    shouldShowAnnouncement,
+    markAnnouncementAsSeen,
 } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { announcement } from '@/app/_constants/mockData';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
 import { ModerationFieldState } from '@/app/_contexts/UserTypes';
-import NewFeaturePopup from '../_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
-import { announcement } from '@/app/_constants/mockData';
 import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/UndoTutorialPopup';
+import TimerTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/TimerTutorialPopup';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 import { ErrorModal } from '../_sharedcomponents/Error/ErrorModal';
 
@@ -37,15 +40,16 @@ const HomePagePlayMode: React.FC = () => {
     const [testGameList, setTestGameList] = React.useState([]);
     const [showWelcomePopup, setShowWelcomePopup] = useState(false);
     const [showUpdatePopup, setShowUpdatePopup] = useState(false);
-    const [showNewFeaturePopup, setShowNewFeaturePopup] = useState(false);
     const [showUsernameMustChangePopup, setUsernameMustChangePopup] = useState<boolean>(false);
     const [showUsernameRestrictedPopup, setShowUsernameRestrictedPopup] = useState<boolean>(false);
     const [showReportingDisabledPopup, setShowReportingDisabledPopup] = useState<boolean>(false);
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
     const [showUndoTutorialPopup, setShowUndoTutorialPopup] = useState<boolean>(false);
+    const [showTimerTutorialPopup, setShowTimerTutorialPopup] = useState<boolean>(false);
+    const [showAnnouncementPopup, setShowAnnouncementPopup] = useState<boolean>(false);
     const [pendingFormSubmission, setPendingFormSubmission] = useState<(() => void) | null>(null);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
-    const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate, updateMustRequestUsernameChangeSeen, updateReportingDisabledSeen } = useUser();
+    const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate, updateTimerPopupSeenDate, updateMustRequestUsernameChangeSeen, updateReportingDisabledSeen } = useUser();
 
     // Use shared deck management hook
     const {
@@ -90,30 +94,35 @@ const HomePagePlayMode: React.FC = () => {
         updateWelcomeMessage();
     }
 
-    const closeNewFeaturePopup = () => {
-        setShowNewFeaturePopup(false);
-        markAnnouncementAsSeen(announcement)
-    }
+    const closeAnnouncementPopup = () => {
+        setShowAnnouncementPopup(false);
+        markAnnouncementAsSeen(announcement);
+    };
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
 
-    // Undo Tutorial Popup handlers
+    // Tutorial popup handlers (undo + timer chained)
+    const tutorialDevGateOpen =
+        process.env.NODE_ENV !== 'development' ||
+        process.env.NEXT_PUBLIC_SHOW_LOCAL_ANNOUNCEMENTS === 'true';
+
     const handleFormSubmissionWithUndoCheck = useCallback((originalSubmissionFn: () => void) => {
-        // Check if user has seen the undo popup (works for both signed-in and anonymous users)
-        if (!hasUserSeenUndoPopup(user) && (process.env.NODE_ENV !== 'development' || process.env.NEXT_PUBLIC_SHOW_LOCAL_ANNOUNCEMENTS === 'true')) {
-            // User hasn't seen the popup, show it and store the submission function
+        if (!hasUserSeenUndoPopup(user) && tutorialDevGateOpen) {
             setPendingFormSubmission(() => originalSubmissionFn);
             setShowUndoTutorialPopup(true);
+        } else if (!hasUserSeenTimerPopup(user) && tutorialDevGateOpen) {
+            setPendingFormSubmission(() => originalSubmissionFn);
+            setShowTimerTutorialPopup(true);
         } else {
-            // User has seen the popup, proceed with normal submission
+            // User has seen all tutorials, proceed with normal submission
             originalSubmissionFn();
         }
-    }, [user]);
+    }, [user, tutorialDevGateOpen]);
 
     const handleUndoTutorialClose = useCallback(async () => {
         setShowUndoTutorialPopup(false);
-        
+
         // Mark the popup as seen (handles both signed-in and anonymous users)
         try {
             await markUndoPopupAsSeen(user, updateUndoPopupSeenDate);
@@ -121,12 +130,35 @@ const HomePagePlayMode: React.FC = () => {
             console.error('Failed to mark undo popup as seen:', error);
         }
 
+        // If the timer tutorial also needs to be shown, chain into it instead of submitting.
+        if (!hasUserSeenTimerPopup(user) && tutorialDevGateOpen) {
+            setShowTimerTutorialPopup(true);
+            return;
+        }
+
+        // Otherwise execute the pending form submission
+        if (pendingFormSubmission) {
+            pendingFormSubmission();
+            setPendingFormSubmission(null);
+        }
+    }, [user, pendingFormSubmission, updateUndoPopupSeenDate, tutorialDevGateOpen]);
+
+    const handleTimerTutorialClose = useCallback(async () => {
+        setShowTimerTutorialPopup(false);
+
+        // Mark the popup as seen (handles both signed-in and anonymous users)
+        try {
+            await markTimerPopupAsSeen(user, updateTimerPopupSeenDate);
+        } catch (error) {
+            console.error('Failed to mark timer popup as seen:', error);
+        }
+
         // Execute the pending form submission
         if (pendingFormSubmission) {
             pendingFormSubmission();
             setPendingFormSubmission(null);
         }
-    }, [user, pendingFormSubmission, updateUndoPopupSeenDate]);
+    }, [user, pendingFormSubmission, updateTimerPopupSeenDate]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -195,7 +227,6 @@ const HomePagePlayMode: React.FC = () => {
         if(user) {
             if (user.showWelcomeMessage && !showUpdatePopup) {
                 setShowMutedPopup(false);
-                setShowNewFeaturePopup(false);
                 setShowWelcomePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
@@ -208,7 +239,6 @@ const HomePagePlayMode: React.FC = () => {
             if(user.moderation){
                 setModerationDays(user.moderation.daysRemaining);
                 if(!user.moderation.hasSeen && (!user.showWelcomeMessage && !user.needsUsernameChange)) {
-                    setShowNewFeaturePopup(false);
                     setShowMutedPopup(true);
                 }
                 // check if moderation object still exists
@@ -217,10 +247,16 @@ const HomePagePlayMode: React.FC = () => {
                 setShowMutedPopup(false);
             }
         }
-        if (shouldShowAnnouncement(announcement) && (!user || (!user.showWelcomeMessage && (!user.moderation || (user.moderation.hasSeen))))) {
-            setShowNewFeaturePopup(true);
-        }
 
+        const blockingPopupActive =
+            (user?.showWelcomeMessage ?? false) ||
+            !!user?.needsUsernameChange ||
+            user?.mustRequestUsernameChange === ModerationFieldState.Enabled ||
+            user?.reportingDisabled === ModerationFieldState.Enabled ||
+            (!!user?.moderation && !user.moderation.hasSeen);
+        if (!blockingPopupActive && shouldShowAnnouncement(announcement)) {
+            setShowAnnouncementPopup(true);
+        }
 
         if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {
@@ -353,12 +389,13 @@ const HomePagePlayMode: React.FC = () => {
             </Card>
             <WelcomePopup open={showWelcomePopup} onClose={closeWelcomePopup} />
             <UpdatePopup open={showUpdatePopup} onClose={closeUpdatePopup} />
-            <NewFeaturePopup open={showNewFeaturePopup} onClose={closeNewFeaturePopup} />
             <UsernameChangeRequiredPopup open={showUsernameMustChangePopup}/>
             <UsernameChangeRestrictedPopup open={showUsernameRestrictedPopup} onClose={handleCloseUsernameRestrictedPopup} />
             <ReportingDisabledPopup open={showReportingDisabledPopup} onClose={handleCloseReportingDisabledPopup} />
             <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
             <UndoTutorialPopup open={showUndoTutorialPopup} onClose={handleUndoTutorialClose} />
+            <TimerTutorialPopup open={showTimerTutorialPopup} onClose={handleTimerTutorialClose} />
+            <WhatsNewPopupAnnouncement open={showAnnouncementPopup} onClose={closeAnnouncementPopup} />
         </>
     );
 };

@@ -1,8 +1,9 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid2';
-import { Typography, Alert } from '@mui/material';
-import { useState, useEffect, Dispatch, SetStateAction, useRef, useCallback } from 'react';
+import Grid from '@mui/material/Grid';
+import { Divider, Typography, Alert } from '@mui/material';
+import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
+import { ChangeEvent, useState, useEffect, Dispatch, SetStateAction, useRef, useCallback } from 'react';
 import KeyboardLayout from '@/app/_components/_sharedcomponents/Preferences/_subComponents/KeyboardLayout';
 import { useUser } from '@/app/_contexts/User.context';
 import { IKeyboardShortcuts, IPreferences } from '@/app/_contexts/UserTypes';

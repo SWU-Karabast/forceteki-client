@@ -15,6 +15,7 @@ import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/Preferen
 import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
 import CosmeticsTab from '../PreferencesSubElementVariants/CosmeticsTab';
 import GameOptionsTab from '../PreferencesSubElementVariants/GameOptionsTab';
+import { useMediaQuery } from '@mui/material';
 
 function tabProps(index: number) {
     return {
@@ -41,12 +42,18 @@ function VerticalTabs({
     attemptingClose = false,
     closeHandler = () => undefined,
     cancelCloseHandler = () => undefined,
-}: IVerticalTabsProps) {
-    const [value, setValue] = useState(0);
+    initialTab,
+}:IVerticalTabsProps) {
+    const [value, setValue] = useState(() => {
+        if (!initialTab) return 0;
+        const idx = tabs.indexOf(initialTab);
+        return idx >= 0 ? idx : 0;
+    });
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
     const [pendingTabIndex, setPendingTabIndex] = useState<number | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const { logout } = useUser();
+    const isSmallScreen = useMediaQuery('(max-width: 1280px)');
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -142,7 +149,7 @@ function VerticalTabs({
 
     const styles = {
         tabContainer: {
-            width: '20%',
+            width: { xs: 'auto', md: '20%' },
             backgroundColor: 'transparent',
             gap: '1rem',
         },
@@ -166,8 +173,8 @@ function VerticalTabs({
         },
         tabPanelContainer: {
             backgroundColor: 'transparent',
-            width: '80%',
-            pl: 9,
+            width: { xs: 'auto', md: '80%' },
+            pl: { xs: 0, md: 9 },
             gap: '20px',
             maxHeight: variant === 'gameBoard' ? 'calc(80vh - 1rem)' : 'calc(100vh - 14rem - 60px)',
             overflowY: 'auto',
@@ -179,9 +186,11 @@ function VerticalTabs({
     };
 
     return (
-        <Box sx={{ display: 'flex', background: 'transparent' }}>
+        <Box
+            sx={{ display: 'flex', background: 'transparent', flexDirection: { xs: 'column', md: 'row' } }}
+        >
             <Tabs
-                orientation="vertical"
+                orientation={isSmallScreen ? 'horizontal' : 'vertical'}
                 variant="scrollable"
                 value={value}
                 onChange={handleChange}

@@ -2,8 +2,11 @@ import React from 'react';
 import { Box, Popover, Typography } from '@mui/material';
 import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import { s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { getBorderColor } from './cardUtils';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
@@ -19,6 +22,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     isLeader = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, hoveredChatCard } = useGame();
+    const locale = useCardImageLocale();
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -69,6 +73,11 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         document.addEventListener('touchstart', onTouchStart);
         return () => document.removeEventListener('touchstart', onTouchStart);
     }, [open, isTouchDevice]);
+
+    // Compute card image URL + load status before any early return so hooks
+    // are called in a stable order.
+    const mainCardImageUrl = card ? s3CardImageURL(card, locale, cardStyle) : '';
+    const { status: mainCardImageStatus, imgProps: mainCardImgProps } = useImageLoadStatus(mainCardImageUrl);
 
     if (!card) {
         return null
@@ -229,9 +238,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const styles = {
         card: {
             backgroundColor: 'black',
-            backgroundImage: `url(${s3CardImageURL(card, cardStyle)})`,
             borderRadius: '0.5rem',
-            backgroundSize: 'cover',
             width: '100%',
             aspectRatio: '1.39',
             display: 'flex',
@@ -329,9 +336,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             bottom: '0',
             left: '50%',
             transform: 'translateX(-50%)',
+            borderRadius: '0.5rem',
+            p: { xs: '2px 5px', md: '5px 10px' },
+            maxWidth: { xs: '100%', md: 'none' },
             backgroundColor: 'black',
-            borderRadius: '0.5rem 0.5rem 0 0',
-            p: '5px 10px',
         },
         unimplementedAlert: {
             display: notImplemented(card) && !isDeployed ? 'flex' : 'none',
@@ -345,6 +353,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             color: 'white',
             fontWeight: '600',
             fontSize: '1em',
+            textOverflow: 'ellipsis',
+            textWrap: 'nowrap',
+            overflow: { xs: 'hidden', md: 'visible' },
         },
         cardPreview: {
             borderRadius: '.38em',
@@ -457,7 +468,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     {...longPressHandlers}
-                    data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.setId })}
+                    data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.setId }, locale)}
                     data-card-type={capturedCard.printedType}
                     data-card-id={capturedCard.setId ? capturedCard.setId.set + '_' + capturedCard.setId.number : capturedCard.id}
                 >
@@ -492,12 +503,25 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 onClick={handleClick}
                 aria-owns={open ? 'mouse-over-popover' : undefined}
                 aria-haspopup="true"
-                data-card-url={s3CardImageURL(card)}
+                data-card-url={s3CardImageURL(card, locale)}
                 data-card-type={isLeader ? 'leader' : 'base'}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
                 {...longPressHandlers}
             >
+                {!isDeployed && (
+                    <Box
+                        component="img"
+                        src={mainCardImageUrl}
+                        alt=""
+                        draggable={false}
+                        {...mainCardImgProps}
+                        sx={cardImageFillSx}
+                    />
+                )}
+                {mainCardImageStatus === 'error' && !isDeployed && (
+                    <CardImageMissingOverlay label={cardImageLabel(card, locale)} />
+                )}
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
                 </Box>
@@ -544,7 +568,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         ...styles.cardPreview,backgroundImage: previewImage
                     }} >
                     </Box>
-                    {isLeader && !isTouchDevice && (
+                    {isLeader && !isTouchDevice && !leaderCardFlipPreview.isFlipped && (
                         <Typography variant={'body1'} sx={styles.ctrlText}
                         >CTRL: View Flipside</Typography>
                     )}

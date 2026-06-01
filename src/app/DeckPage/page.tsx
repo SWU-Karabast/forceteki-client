@@ -2,11 +2,14 @@
 import { Box, MenuItem, Typography } from '@mui/material';
 import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay, cardImageFillContainSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { CardStyle, DisplayDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -20,11 +23,38 @@ import {
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
 
+interface IDeckSummaryCardTileProps {
+    cardId: string;
+    cardStyle?: CardStyle;
+    boxGeneralStyling: object;
+}
+
+const DeckSummaryCardTile: React.FC<IDeckSummaryCardTileProps> = ({ cardId, cardStyle, boxGeneralStyling }) => {
+    const cardArg = { id: cardId, count: 0 };
+    const locale = useCardImageLocale();
+    const url = cardStyle !== undefined ? s3CardImageURL(cardArg, locale, cardStyle) : s3CardImageURL(cardArg, locale);
+    const { status, imgProps } = useImageLoadStatus(url);
+    return (
+        <Box sx={{ ...boxGeneralStyling, position: 'relative' }}>
+            <Box
+                component="img"
+                src={url}
+                alt=""
+                draggable={false}
+                {...imgProps}
+                sx={cardImageFillContainSx}
+            />
+            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(cardArg, locale)} />}
+        </Box>
+    );
+};
+
 
 const sortByOptions: string[] = [
     'Favourites',
     'Deck Builder',
-    'Name'
+    'Name',
+    'Most Played'
 ];
 
 const DeckPage: React.FC = () => {
@@ -54,9 +84,13 @@ const DeckPage: React.FC = () => {
         }
     };
 
-    // sort function
-    const sortDecks = (sort:string) => {
-        const sortedDecks = [...decks]; // Create a new array to avoid modifying state directly
+    const getDeckGamesPlayed = (deck: DisplayDeck) => {
+        const stats = deck.stats;
+        return stats ? stats.wins + stats.losses + stats.draws : 0;
+    };
+
+    const sortDeckList = (decksToSort: DisplayDeck[], sort:string) => {
+        const sortedDecks = [...decksToSort]; // Create a new array to avoid modifying state directly
 
         switch (sort) {
             case 'Favourites':
@@ -65,6 +99,14 @@ const DeckPage: React.FC = () => {
                     if (a.favourite && !b.favourite) return -1;
                     if (!a.favourite && b.favourite) return 1;
                     // Then sort by name
+                    return a.metadata.name.localeCompare(b.metadata.name);
+                });
+                break;
+
+            case 'Most Played':
+                sortedDecks.sort((a, b) => {
+                    const gamesPlayedCompare = getDeckGamesPlayed(b) - getDeckGamesPlayed(a);
+                    if (gamesPlayedCompare !== 0) return gamesPlayedCompare;
                     return a.metadata.name.localeCompare(b.metadata.name);
                 });
                 break;
@@ -95,6 +137,12 @@ const DeckPage: React.FC = () => {
                     return 0;
                 });
         }
+        return sortedDecks;
+    };
+
+    // sort function
+    const sortDecks = (sort:string) => {
+        const sortedDecks = sortDeckList(decks, sort);
         setDecks(sortedDecks);
     };
 
@@ -119,11 +167,7 @@ const DeckPage: React.FC = () => {
             if(prevDecks.some(deck => deck.deckID === newDeck.deckID)) return prevDecks;
 
             const updatedDecks = [...prevDecks, newDeck];
-            return updatedDecks.sort((a, b) => {
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-                return 0;
-            });
+            return sortDeckList(updatedDecks, sortBy);
         });
     };
 
@@ -171,12 +215,8 @@ const DeckPage: React.FC = () => {
                     : deck
             );
 
-            // Re-sort to ensure favorites appear first
-            const sortedDecks = [...updatedDecks].sort((a, b) => {
-                if (a.favourite && !b.favourite) return -1;
-                if (!a.favourite && b.favourite) return 1;
-                return 0;
-            });
+            // Re-sort to preserve the selected sort order
+            const sortedDecks = sortDeckList(updatedDecks, sortBy);
 
             setDecks(sortedDecks);
         }catch(error){
@@ -556,10 +596,17 @@ const DeckPage: React.FC = () => {
                                 <Box sx={styles.leaderBaseHolder}>
                                     <Box sx={styles.CardSetContainerStyle}>
                                         <Box>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: deck.base.id, count:0 })})` }} />
+                                            <DeckSummaryCardTile
+                                                cardId={deck.base.id}
+                                                boxGeneralStyling={styles.boxGeneralStyling}
+                                            />
                                         </Box>
                                         <Box sx={{ ...styles.parentBoxStyling, left: '-15px', top: '26px' }}>
-                                            <Box sx={{ ...styles.boxGeneralStyling, backgroundImage:`url(${s3CardImageURL({ id: deck.leader.id, count:0 }, CardStyle.PlainLeader)})` }} />
+                                            <DeckSummaryCardTile
+                                                cardId={deck.leader.id}
+                                                cardStyle={CardStyle.PlainLeader}
+                                                boxGeneralStyling={styles.boxGeneralStyling}
+                                            />
                                         </Box>
                                     </Box>
                                 </Box>

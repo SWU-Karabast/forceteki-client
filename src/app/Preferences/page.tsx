@@ -1,14 +1,16 @@
 'use client';
 import { Box, Typography } from '@mui/material';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '../_contexts/User.context';
 
-const Preferences: React.FC = () => {
+const PreferencesInner: React.FC = () => {
     const router = useRouter();
     const { user } = useUser();
+    const searchParams = useSearchParams();
+    const initialTab = searchParams?.get('tab') ?? undefined;
     const handleExit = () => {
         router.push('/');
     }
@@ -49,8 +51,9 @@ const Preferences: React.FC = () => {
             <PreferencesComponent
                 sidebarOpen={false}
                 isPreferenceOpen={true}
-                tabs={user ? ['general','gameOptions', 'keyboardShortcuts','soundOptions','cosmetics'] : ['general','soundOptions']}
+                tabs={user ? ['general','gameOptions', 'keyboardShortcuts','soundOptions','cosmetics'] : ['general','gameOptions','soundOptions']}
                 variant={'homePage'}
+                initialTab={initialTab}
             />
             <Typography variant="body1" sx={styles.disclaimer}>
                 Karabast is in no way affiliated with Disney or Fantasy Flight Games.
@@ -60,5 +63,11 @@ const Preferences: React.FC = () => {
         </Box>
     );
 };
+
+const Preferences: React.FC = () => (
+    <Suspense fallback={null}>
+        <PreferencesInner />
+    </Suspense>
+);
 
 export default Preferences;
