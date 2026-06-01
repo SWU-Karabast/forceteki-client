@@ -160,6 +160,7 @@ const CardActionTray: React.FC = () => {
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
     const playerState = gameState.players[connectedPlayer];
     const styles = createStyles(isPortrait);
+    const [resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverrideState] = useState<boolean>(false);
 
     // Wrapped in useCallback so it can be safely used as a dependency in our keyboard handlers
     const showTrayButtons = useCallback(() => {
@@ -184,18 +185,18 @@ const CardActionTray: React.FC = () => {
             }
 
             if (getConnectedPlayerPrompt()?.promptType === 'resource') {
-                if (setResourcePromptDoneButtonOverride == null) {
-                    setResourcePromptDoneButtonOverride(true);
+                if (!resourcePromptDoneButtonOverride) {
+                    setResourcePromptDoneButtonOverrideState(true);
                     setTimeout(() => {
-                        setResourcePromptDoneButtonOverride(false);
+                        setResourcePromptDoneButtonOverrideState(false);
                     }, 500);
                     return true;
                 }
-                return setResourcePromptDoneButtonOverride;
+                return resourcePromptDoneButtonOverride;
             }
         }
         return !!(button as IButtonsProps).disabled;
-    }, [playerState.promptState, distributionPromptData, getConnectedPlayerPrompt]);
+    }, [playerState.promptState, distributionPromptData, getConnectedPlayerPrompt, resourcePromptDoneButtonOverride]);
 
     // --- KEYBOARD HANDLERS ---
     const handlePassTurn = useCallback(() => {
@@ -232,7 +233,7 @@ const CardActionTray: React.FC = () => {
 
     useEffect(() => {
         if (getConnectedPlayerPrompt()?.promptType !== 'resource') {
-            setResourcePromptDoneButtonOverride(null);
+            setResourcePromptDoneButtonOverrideState(false);
         }
     }, [gameState, getConnectedPlayerPrompt]);
 
