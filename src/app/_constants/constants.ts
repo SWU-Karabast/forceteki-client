@@ -106,7 +106,7 @@ export const FormatTagLabels: Record<SwuGameFormat, string> = {
 };
 
 export const SupportedDeckSources = Object.values(DeckSource)
-    .filter((source) => source !== DeckSource.NotSupported)
+    .filter((source) => source !== DeckSource.NotSupported && source !== DeckSource.Melee)
     .map((source) => {
         switch (source) {
             case DeckSource.SWUStats:
@@ -133,6 +133,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'cardcore.gg';
             case DeckSource.HoloScan:
                 return 'holoscan.net';
+            // case DeckSource.Melee:
+            //     return 'melee.gg';
             default:
                 return source;
         }
