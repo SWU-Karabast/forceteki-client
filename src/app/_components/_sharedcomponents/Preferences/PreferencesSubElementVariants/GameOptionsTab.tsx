@@ -268,35 +268,37 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                 </Box>
             )}
 
-            <Box sx={styles.functionContainer}>
-                <Typography sx={styles.typographyContainer} variant={'h2'}>Timer Visibility</Typography>
-                <Divider sx={{ mb: '20px' }} />
-                <Typography sx={{ mb: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
-                    Customize the visibility of the game timer. These settings only affect what you see. Timers are <strong>always enabled in public games</strong> and always disabled in private games.
-                </Typography>
-                <FormControl component="fieldset">
-                    <RadioGroup
-                        value={timerVisibility}
-                        onChange={handleTimerVisibilityChange}
-                    >
-                        {TIMER_VISIBILITY_OPTIONS.map((opt) => (
-                            <Box key={opt.value} sx={styles.radioRow}>
-                                <Box sx={styles.radioRowText}>
-                                    <FormControlLabel
-                                        value={opt.value}
-                                        control={<Radio sx={styles.radio} />}
-                                        label={<Typography sx={styles.radioLabel}>{opt.label}</Typography>}
-                                    />
-                                    <Typography sx={styles.radioDescription}>{opt.description}</Typography>
+            {user && (
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h2'}>Timer Visibility</Typography>
+                    <Divider sx={{ mb: '20px' }} />
+                    <Typography sx={{ mb: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
+                        Customize the visibility of the game timer. These settings only affect what you see. Timers are <strong>always enabled in public games</strong> and always disabled in private games.
+                    </Typography>
+                    <FormControl component="fieldset">
+                        <RadioGroup
+                            value={timerVisibility}
+                            onChange={handleTimerVisibilityChange}
+                        >
+                            {TIMER_VISIBILITY_OPTIONS.map((opt) => (
+                                <Box key={opt.value} sx={styles.radioRow}>
+                                    <Box sx={styles.radioRowText}>
+                                        <FormControlLabel
+                                            value={opt.value}
+                                            control={<Radio sx={styles.radio} />}
+                                            label={<Typography sx={styles.radioLabel}>{opt.label}</Typography>}
+                                        />
+                                        <Typography sx={styles.radioDescription}>{opt.description}</Typography>
+                                    </Box>
+                                    <Box sx={styles.radioPreview}>
+                                        <TimerPreview visibility={opt.value} />
+                                    </Box>
                                 </Box>
-                                <Box sx={styles.radioPreview}>
-                                    <TimerPreview visibility={opt.value} />
-                                </Box>
-                            </Box>
-                        ))}
-                    </RadioGroup>
-                </FormControl>
-            </Box>
+                            ))}
+                        </RadioGroup>
+                    </FormControl>
+                </Box>
+            )}
 
             <Box sx={styles.saveButtonContainer}>
                 <PreferenceButton
