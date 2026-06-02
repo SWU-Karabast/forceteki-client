@@ -33,8 +33,12 @@ const styles = {
     },
     cardsContainer: {
         position: 'relative',
-        marginLeft: '7.5%',
-        marginBottom: '8%',
+        width: 'clamp(5rem, 100%, 8rem)'
+        // marginLeft: '7.5%',
+        // marginBottom: '8%',
+
+    },
+    container: {
         aspectRatio: '1.39',
         width: 'clamp(5rem, 100%, 8rem)', // Min 5rem, max 10rem, scales with viewport
     }
@@ -71,19 +75,22 @@ export default function OverlappingCards({ baseCard, leaderCard, ...boxProps }: 
         setPreviewImage(null);
     };
     return (
-        <Box sx={[styles.cardsContainer, ...(Array.isArray(sx) ? sx : [sx])]} {...otherBoxProps}>
-            <Box
-                sx={{ ...styles.leaderStyleCard, backgroundImage:`url(${s3CardImageURL(baseCard, locale)})` }}
-                onMouseEnter={handlePreviewOpen}
-                onMouseLeave={handlePreviewClose}
-                data-card-url={s3CardImageURL(baseCard, locale)}
-            />
-            <Box
-                sx={[styles.leaderStyleCard, styles.leaderContainer, { backgroundImage:`url(${s3CardImageURL(leaderCard, locale, LeaderBaseCardStyle.PlainLeader)})` }]}
-                onMouseEnter={handlePreviewOpen}
-                onMouseLeave={handlePreviewClose}
-                data-card-url={s3CardImageURL(leaderCard, locale, LeaderBaseCardStyle.PlainLeader)}
-            />
+        <Box sx={[styles.container, ...(Array.isArray(sx) ? sx : [sx])]} {...otherBoxProps}>
+            <Box sx={styles.cardsContainer}>
+                <Box
+                    sx={{ ...styles.leaderStyleCard, backgroundImage:`url(${s3CardImageURL(baseCard, locale)})` }}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    data-card-url={s3CardImageURL(baseCard, locale)}
+                />
+                <Box
+                    sx={[styles.leaderStyleCard, styles.leaderContainer, { backgroundImage:`url(${s3CardImageURL(leaderCard, locale, LeaderBaseCardStyle.PlainLeader)})` }]}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    data-card-url={s3CardImageURL(leaderCard, locale, LeaderBaseCardStyle.PlainLeader)}
+                />
+            </Box>
+
             <Popover
                 id="mouse-over-popover"
                 sx={{ pointerEvents: 'none' }}

@@ -56,7 +56,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             alignContent: 'center',
             alignItems: 'center',
             mb: '1.25rem',
-            gap: '1rem',
+            gap: { xs: '1rem', lg: '2rem' },
+            paddingLeft: '10px',
         },
         matchType: {
             margin: 0,
@@ -247,7 +248,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                         leaderCard={createCardObject(lobby.host.leader)}
                     />
                 )}
-                <Box sx={{ minWidth: '50%' }}>
+                <Box sx={{ minWidth: '50%', width: '50%' }}>
                     <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
                     <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px', marginBottom: '12px' }}>
                         <Box
