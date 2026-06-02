@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 
 interface UseLeaderCardFlipPreviewReturn {
     // style properties
@@ -38,6 +39,8 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
         isLeader = false,
         card,
     } = params;
+
+    const locale = useCardImageLocale();
 
     // set starting side internally (handles Chancellor Palpatine special case)
     const startingSide = useMemo(() => {
@@ -93,22 +96,22 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
                 count: 0,
                 types: 'leader',
                 onStartingSide: startingSide
-            }, frontCardStyle);
+            }, locale, frontCardStyle);
             backURL = s3CardImageURL({
                 id: cardId,
                 count: 0,
                 types: 'leader',
                 onStartingSide: !startingSide
-            }, frontCardStyle);
+            }, locale, frontCardStyle);
         } else {
             frontURL = s3CardImageURL({
                 id: cardId,
                 count: 0,
-            }, frontCardStyle);
+            }, locale, frontCardStyle);
             backURL = s3CardImageURL({
                 id: cardId,
                 count: 0,
-            }, backCardStyle);
+            }, locale, backCardStyle);
         }
 
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -133,7 +136,7 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [anchorElement, backCardStyle, cardId, frontCardStyle, isLeader, setPreviewImage, startingSide]);
+    }, [anchorElement, backCardStyle, cardId, frontCardStyle, isLeader, locale, setPreviewImage, startingSide]);
 
     return {
         // Calculated style properties

@@ -105,9 +105,43 @@ Run `python process_cards.py --help` for the full list of options.
 
 5. **upload** – syncs the per-locale output folders to
    `s3://karabast-data/cards/{SET}/{locale}/{format}/{size}/`. For each file:
-   - `HEAD` the object; compare ETag (MD5) to the local file's MD5.
-   - Skip if identical, otherwise upload with
-     `Content-Type: image/webp` and a 1-year immutable `Cache-Control`.
+   - `HEAD` the object; compare ETag (MD5) to the local file's MD5 *and*
+     compare the live `Cache-Control` header to the desired value for
+     this set (see [Preview-set caching](#preview-set-caching) below).
+   - If bytes differ → full PUT with the desired `Cache-Control`.
+   - If bytes match but `Cache-Control` differs → in-place
+     `CopyObject` with `MetadataDirective=REPLACE` rewrites the headers
+     without re-transferring the body.
+   - Otherwise skip.
+
+## Preview-set caching
+
+Stable sets are uploaded with `Cache-Control: public, max-age=31536000,
+immutable` (1 year). Preview sets are uploaded with `public,
+max-age=604800, immutable` (1 week) so browsers naturally pick up any
+mid-preview image updates (low-res replacements, locale fill-ins as FFG
+catches up to swudb) within a week of the change.
+
+The list of preview sets lives in `PREVIEW_SETS` near the top of
+`process_cards.py`. To rotate a set:
+
+1. **Promoting to preview**: add the set code to `PREVIEW_SETS` and run
+   the pipeline. New objects upload with the 1-week header; any existing
+   objects with the 1-year header are detected as `header-changed` and
+   their `Cache-Control` is rewritten in place via `CopyObject` (no body
+   re-upload, no bandwidth cost).
+2. **During preview**: ongoing pipeline runs continue normally. Any
+   image whose bytes change still does a full PUT — the bytes-vs-header
+   check is ordered so a content change always wins over a header
+   change.
+3. **Demoting after stabilization**: remove the set from `PREVIEW_SETS`
+   and run the pipeline once. Every object reclassifies as
+   `header-changed` and the headers are rewritten back to the 1-year
+   immutable value.
+
+The client-side `?v=N` cache-buster in `src/app/_utils/s3Utils.ts`
+remains the global escape hatch if a coarser cache invalidation is ever
+needed.
 
 ## Set rotation
 

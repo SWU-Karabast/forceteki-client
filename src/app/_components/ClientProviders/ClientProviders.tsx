@@ -1,5 +1,6 @@
 'use client';
 
+import { CardImageLocaleProvider } from '@/app/_contexts/CardImageLocale.context';
 import { CosmeticsProvider } from '@/app/_contexts/CosmeticsContext';
 import { PopupProvider } from '@/app/_contexts/Popup.context';
 import { ThemeContextProvider } from '@/app/_contexts/Theme.context';
@@ -14,11 +15,13 @@ const ClientProviders: React.FC<IClientProvidersProps> = ({ children }) => {
     return (
         <SessionProvider>
             <UserProvider>
-                <PopupProvider>
-                    <CosmeticsProvider>
-                        <ThemeContextProvider>{children}</ThemeContextProvider>
-                    </CosmeticsProvider>
-                </PopupProvider>
+                <CardImageLocaleProvider>
+                    <PopupProvider>
+                        <CosmeticsProvider>
+                            <ThemeContextProvider>{children}</ThemeContextProvider>
+                        </CosmeticsProvider>
+                    </PopupProvider>
+                </CardImageLocaleProvider>
             </UserProvider>
         </SessionProvider>
     );

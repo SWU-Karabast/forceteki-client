@@ -64,8 +64,11 @@ export interface ICosmeticsPreferences {
     // disablePlaymats?: boolean;
 }
 
+import type { CardImageLocale } from '@/app/_utils/s3Utils';
+
 export interface IGameOptions {
     muteChat?: boolean;
+    cardLanguage?: CardImageLocale;
 }
 
 export interface IPreferences {

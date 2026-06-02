@@ -16,6 +16,7 @@ import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponen
 import { useParams, useRouter } from 'next/navigation';
 import { fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillContainSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/PercentageCircle';
@@ -54,8 +55,9 @@ const DeckDetails: React.FC = () => {
     const params = useParams();
     const deckId = params?.DeckId;
 
-    const leaderImageUrl = deckData ? s3CardImageURL(deckData.leader, CardStyle.PlainLeader) : '';
-    const baseImageUrl = deckData ? s3CardImageURL(deckData.base) : '';
+    const locale = useCardImageLocale();
+    const leaderImageUrl = deckData ? s3CardImageURL(deckData.leader, locale, CardStyle.PlainLeader) : '';
+    const baseImageUrl = deckData ? s3CardImageURL(deckData.base, locale) : '';
     const { status: leaderImageStatus, imgProps: leaderImgProps } = useImageLoadStatus(leaderImageUrl);
     const { status: baseImageStatus, imgProps: baseImgProps } = useImageLoadStatus(baseImageUrl);
 
@@ -568,7 +570,7 @@ const DeckDetails: React.FC = () => {
                                 />
                             )}
                             {deckData && leaderImageStatus === 'error' && (
-                                <CardImageMissingOverlay label={cardImageLabel(deckData.leader)} />
+                                <CardImageMissingOverlay label={cardImageLabel(deckData.leader, locale)} />
                             )}
                         </Box>
                         <Box sx={{ ...styles.boxGeneralStylingBase, position: 'relative' }}
@@ -590,7 +592,7 @@ const DeckDetails: React.FC = () => {
                                 />
                             )}
                             {deckData && baseImageStatus === 'error' && (
-                                <CardImageMissingOverlay label={cardImageLabel(deckData.base)} />
+                                <CardImageMissingOverlay label={cardImageLabel(deckData.base, locale)} />
                             )}
                         </Box>
                     </Box>
