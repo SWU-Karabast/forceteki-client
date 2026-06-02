@@ -34,7 +34,7 @@ const styles = {
     cardsContainer: {
         position: 'relative',
         marginLeft: '7.5%',
-        marginBottom: '13%',
+        marginBottom: '8%',
         aspectRatio: '1.39',
         width: 'clamp(5rem, 100%, 8rem)', // Min 5rem, max 10rem, scales with viewport
     }

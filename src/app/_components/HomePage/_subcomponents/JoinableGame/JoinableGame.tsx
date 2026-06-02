@@ -56,7 +56,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             alignContent: 'center',
             alignItems: 'center',
             mb: '1.25rem',
-            padding: '0.5rem 0',
+            gap: '1rem',
         },
         matchType: {
             margin: 0,
@@ -67,31 +67,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         cardsContainer: {
             display: 'flex',
             alignItems: 'center',
-        },
-        parentBoxStyling: {
-            position: 'absolute',
-            left: '-15px',
-            top: '24px',
-        },
-        cardPreview: {
-            borderRadius: '0.5rem',
-            backgroundSize: 'cover',
-            width: 'clamp(3rem, 7vw, 10rem)',
-            aspectRatio: '1.39',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            position: 'relative',
-            border: '2px solid transparent',
-            boxSizing: 'border-box',
-            cursor: 'pointer'
-        },
-        cardPopover: {
-            borderRadius: '.38em',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            aspectRatio: '1.4 / 1',
-            width: '24rem',
         },
         lobbyInfo: {
             display: 'flex',

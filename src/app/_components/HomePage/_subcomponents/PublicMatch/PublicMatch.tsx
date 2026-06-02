@@ -13,7 +13,7 @@ const styles = {
         alignItems: 'center',
         mb: '2.5rem',
         pl: '10px',
-        gap: '1rem',
+        gap: '2rem',
     },
     matchItems: {
         display: 'flex',
@@ -25,9 +25,6 @@ const styles = {
         margin: 0,
         mr: '1rem',
     },
-    overlappingCard: {
-        width: 'clamp(5rem, 100%, 14rem)', // Min 5rem, max 10rem, scales with viewport
-    }
 };
 
 const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
@@ -44,11 +41,11 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
         <Box sx={styles.box}>
             <Box sx={styles.matchItems}>
                 <Box sx={{ position:'relative', flex: 1 }}>
-                    <OverlappingCards sx={styles.overlappingCard} baseCard={match.player1Base} leaderCard={match.player1Leader} />
+                    <OverlappingCards baseCard={match.player1Base} leaderCard={match.player1Leader} />
                 </Box>
                 <Typography variant="body1" sx={styles.matchType}>vs</Typography>
                 <Box sx={{ position:'relative', flex: 1 }}>
-                    <OverlappingCards sx={styles.overlappingCard} baseCard={match.player2Base} leaderCard={match.player2Leader} />
+                    <OverlappingCards baseCard={match.player2Base} leaderCard={match.player2Leader} />
                 </Box>
             </Box>
             {!match.isPrivate && (
