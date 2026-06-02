@@ -106,7 +106,7 @@ export const FormatTagLabels: Record<SwuGameFormat, string> = {
 };
 
 export const SupportedDeckSources = Object.values(DeckSource)
-    .filter((source) => source !== DeckSource.NotSupported)
+    .filter((source) => source !== DeckSource.NotSupported && source !== DeckSource.Melee)
     .map((source) => {
         switch (source) {
             case DeckSource.SWUStats:
