@@ -36,7 +36,7 @@ const styles = {
         marginLeft: '7.5%',
         marginBottom: '13%',
         aspectRatio: '1.39',
-        width: 'clamp(5rem, 100%, 10rem)', // Min 5rem, max 10rem, scales with viewport
+        width: 'clamp(5rem, 100%, 8rem)', // Min 5rem, max 10rem, scales with viewport
     }
 };
 
