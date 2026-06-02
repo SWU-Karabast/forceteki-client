@@ -364,6 +364,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('power-badge')})`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
@@ -378,6 +381,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('hp-badge')})`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
