@@ -5,9 +5,8 @@ import { MAX_MAIN_TIME, MAX_TURN_TIME, secondsToMilliseconds } from '@/app/_comp
 import { Stack, Typography } from '@mui/material';
 import { formatMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
 import { useGame } from '@/app/_contexts/Game.context';
-import { useUser } from '@/app/_contexts/User.context';
 import { PlayerTimeRemainingStatus, TimerVisibility } from '@/app/_contexts/UserTypes';
-import { DEFAULT_TIMER_VISIBILITY } from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GameOptionsTab';
+import { useTimerVisibilityContext } from '@/app/_contexts/TimerVisibility.context';
 import TimerWarningIcon from './TimerWarningIcon';
 
 const TIMER_STEP = 100;
@@ -16,8 +15,7 @@ const Divider = () => <div style={{ height: '1px', width: '100%', background: 'w
 
 const GameTimer: React.FC = ({ ...props }) => {
     const { gameState, connectedPlayer, getOpponent } = useGame();
-    const { user } = useUser();
-    const timerVisibility: TimerVisibility = user?.preferences?.gameOptions?.timerVisibility ?? DEFAULT_TIMER_VISIBILITY;
+    const { timerVisibility } = useTimerVisibilityContext();
     const playerState = gameState?.players[connectedPlayer];
     const opponentState = gameState?.players[getOpponent(connectedPlayer)];
 

@@ -766,6 +766,7 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
                 gameOptions: {
                     muteChat: preferences.gameOptions?.muteChat ?? false,
                     cardLanguage: preferences.gameOptions?.cardLanguage ?? CardImageLocale.English,
+                    timerVisibility: preferences.gameOptions?.timerVisibility,
                 },
             };
         }
@@ -791,6 +792,7 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
         gameOptions: {
             muteChat: false,
             cardLanguage: CardImageLocale.English,
+            timerVisibility: undefined,
         },
     };
 };

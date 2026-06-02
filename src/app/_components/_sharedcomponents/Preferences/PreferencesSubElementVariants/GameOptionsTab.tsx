@@ -11,6 +11,7 @@ import { CARD_IMAGE_LOCALE_LABELS, CardImageLocale, SUPPORTED_CARD_IMAGE_LOCALES
 import { loadPreferencesFromLocalStorage } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useCardImageLocaleContext } from '@/app/_contexts/CardImageLocale.context';
 import { TimerVisibility } from '@/app/_contexts/UserTypes';
+import { DEFAULT_TIMER_VISIBILITY, useTimerVisibilityContext } from '@/app/_contexts/TimerVisibility.context';
 import TimerPreview from '@/app/_components/_sharedcomponents/Timer/TimerPreview';
 
 enum SaveStatus {
@@ -18,8 +19,6 @@ enum SaveStatus {
     Success = 'success',
     Error = 'error',
 }
-
-export const DEFAULT_TIMER_VISIBILITY: TimerVisibility = TimerVisibility.Standard;
 
 const TIMER_VISIBILITY_OPTIONS: Array<{ value: TimerVisibility, label: string, description: string }> = [
     {
@@ -42,6 +41,7 @@ const TIMER_VISIBILITY_OPTIONS: Array<{ value: TimerVisibility, label: string, d
 function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' | 'homePage', setHasNewChanges?: (has: boolean) => void }) {
     const { user, updateUserPreferences } = useUser();
     const { setLocale } = useCardImageLocaleContext();
+    const { setTimerVisibility: setTimerVisibilityContext } = useTimerVisibilityContext();
 
     const [muteChatEnabled, setMuteChatEnabled] = useState<boolean>(false);
     const [originalMuteChat, setOriginalMuteChat] = useState<boolean>(false);
@@ -60,9 +60,16 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
 
     useEffect(() => {
         const currentMuteChat = user?.preferences?.gameOptions?.muteChat ?? false;
-        const currentTimerVisibility = user?.preferences?.gameOptions?.timerVisibility ?? DEFAULT_TIMER_VISIBILITY;
         setMuteChatEnabled(currentMuteChat);
         setOriginalMuteChat(currentMuteChat);
+
+        let currentTimerVisibility: TimerVisibility;
+        if (user?.preferences?.gameOptions?.timerVisibility) {
+            currentTimerVisibility = user.preferences.gameOptions.timerVisibility;
+        } else {
+            currentTimerVisibility = loadPreferencesFromLocalStorage().gameOptions?.timerVisibility
+                ?? DEFAULT_TIMER_VISIBILITY;
+        }
         setTimerVisibility(currentTimerVisibility);
         setOriginalTimerVisibility(currentTimerVisibility);
 
@@ -117,6 +124,10 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                 // without waiting on the UserContext round-trip (also covers the
                 // anonymous path, which doesn't go through UserContext at all).
                 setLocale(cardLanguage);
+                // Flip the live timer visibility immediately so the game
+                // timer re-renders without waiting on the UserContext
+                // round-trip (also covers the anonymous path).
+                setTimerVisibilityContext(timerVisibility);
                 setOriginalTimerVisibility(timerVisibility);
                 setSaveStatus(SaveStatus.Success);
                 setSaveMessage('Game options saved successfully.');
@@ -268,37 +279,35 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                 </Box>
             )}
 
-            {user && (
-                <Box sx={styles.functionContainer}>
-                    <Typography sx={styles.typographyContainer} variant={'h2'}>Timer Visibility</Typography>
-                    <Divider sx={{ mb: '20px' }} />
-                    <Typography sx={{ mb: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
-                        Customize the visibility of the game timer. These settings only affect what you see. Timers are <strong>always enabled in public games</strong> and always disabled in private games.
-                    </Typography>
-                    <FormControl component="fieldset">
-                        <RadioGroup
-                            value={timerVisibility}
-                            onChange={handleTimerVisibilityChange}
-                        >
-                            {TIMER_VISIBILITY_OPTIONS.map((opt) => (
-                                <Box key={opt.value} sx={styles.radioRow}>
-                                    <Box sx={styles.radioRowText}>
-                                        <FormControlLabel
-                                            value={opt.value}
-                                            control={<Radio sx={styles.radio} />}
-                                            label={<Typography sx={styles.radioLabel}>{opt.label}</Typography>}
-                                        />
-                                        <Typography sx={styles.radioDescription}>{opt.description}</Typography>
-                                    </Box>
-                                    <Box sx={styles.radioPreview}>
-                                        <TimerPreview visibility={opt.value} />
-                                    </Box>
+            <Box sx={styles.functionContainer}>
+                <Typography sx={styles.typographyContainer} variant={'h2'}>Timer Visibility</Typography>
+                <Divider sx={{ mb: '20px' }} />
+                <Typography sx={{ mb: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
+                    Customize the visibility of the game timer. These settings only affect what you see. Timers are <strong>always enabled in public games</strong> and always disabled in private games.
+                </Typography>
+                <FormControl component="fieldset">
+                    <RadioGroup
+                        value={timerVisibility}
+                        onChange={handleTimerVisibilityChange}
+                    >
+                        {TIMER_VISIBILITY_OPTIONS.map((opt) => (
+                            <Box key={opt.value} sx={styles.radioRow}>
+                                <Box sx={styles.radioRowText}>
+                                    <FormControlLabel
+                                        value={opt.value}
+                                        control={<Radio sx={styles.radio} />}
+                                        label={<Typography sx={styles.radioLabel}>{opt.label}</Typography>}
+                                    />
+                                    <Typography sx={styles.radioDescription}>{opt.description}</Typography>
                                 </Box>
-                            ))}
-                        </RadioGroup>
-                    </FormControl>
-                </Box>
-            )}
+                                <Box sx={styles.radioPreview}>
+                                    <TimerPreview visibility={opt.value} />
+                                </Box>
+                            </Box>
+                        ))}
+                    </RadioGroup>
+                </FormControl>
+            </Box>
 
             <Box sx={styles.saveButtonContainer}>
                 <PreferenceButton
