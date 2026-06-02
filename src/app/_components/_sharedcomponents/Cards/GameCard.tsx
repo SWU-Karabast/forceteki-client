@@ -406,6 +406,24 @@ const GameCard: React.FC<IGameCardProps> = ({
             height: '100%',
             userSelect: 'none',
         },
+        aspectPenaltyIcon: {
+            position: 'absolute',
+            width: '100%',
+            height: '14%',
+            display: 'flex',
+            top: 0,
+            left: '16%',
+            background: 'linear-gradient(270deg, rgba(255, 0, 0, 0) 40.44%, rgba(255, 0, 0, 0.911111) 65%, #FF0000 102.56%)',
+            fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
+        },
+        aspectPenaltyNumber: {
+            fontSize: '0.5em',
+            fontWeight: '700',
+            position: 'relative',
+            display: 'flex',
+            height: '100%',
+            userSelect: 'none',
+        },
         shieldContainer: {
             position:'absolute',
             top:'-5%',
@@ -715,6 +733,13 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 {card.isBlanked && (
                     <Box sx={styles.blankIcon}/>
+                )}
+                {cardInPlayersHand && Number(card.aspectPenaltyCost) > 0 && (
+                    <Box sx={styles.aspectPenaltyIcon}>
+                        <Typography sx={styles.aspectPenaltyNumber}>
+                            +{card.aspectPenaltyCost}
+                        </Typography>
+                    </Box>
                 )}
                 {cardStyle === CardStyle.InPlay && (
                     <>
