@@ -3,6 +3,7 @@ import { NumberField as BaseNumberField } from '@base-ui/react/number-field';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
+import FormHelperText from '@mui/material/FormHelperText';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import OutlinedInput from '@mui/material/OutlinedInput';
@@ -52,12 +53,17 @@ export default function NumberSpinner({
     id: idProp,
     label,
     error,
+    helperText,
+    onInputValueChange,
+    onValueChange,
     size = 'medium',
     ...other
 }: BaseNumberField.Root.Props & {
     label?: React.ReactNode;
     size?: 'small' | 'medium';
     error?: boolean;
+    helperText?: React.ReactNode;
+    onInputValueChange?: (value: string) => void;
 }) {
     let id = React.useId();
     if (idProp) {
@@ -66,6 +72,13 @@ export default function NumberSpinner({
     return (
         <BaseNumberField.Root
             {...other}
+            onValueChange={(value, eventDetails) => {
+                if (eventDetails.reason !== 'input-change' && eventDetails.reason !== 'input-paste') {
+                    onInputValueChange?.(value === null ? '' : String(value));
+                }
+
+                onValueChange?.(value, eventDetails);
+            }}
             render={(props, state) => (
                 <FormControl
                     size={size}
@@ -101,10 +114,14 @@ export default function NumberSpinner({
                             inputRef={props.ref}
                             value={state.inputValue}
                             onBlur={props.onBlur}
-                            onChange={props.onChange}
+                            onChange={(event) => {
+                                onInputValueChange?.(event.target.value);
+                                props.onChange?.(event);
+                            }}
                             onKeyUp={props.onKeyUp}
                             onKeyDown={props.onKeyDown}
                             onFocus={props.onFocus}
+                            aria-describedby={helperText ? `${id}-helper-text` : undefined}
                             slotProps={{
                                 input: {
                                     ...props,
@@ -130,6 +147,9 @@ export default function NumberSpinner({
                     <AddIcon fontSize={size} />
                 </BaseNumberField.Increment>
             </Box>
+            {helperText && (
+                <FormHelperText id={`${id}-helper-text`}>{helperText}</FormHelperText>
+            )}
         </BaseNumberField.Root>
     );
 }

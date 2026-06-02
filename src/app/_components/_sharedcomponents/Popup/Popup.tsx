@@ -79,7 +79,7 @@ const PopupShell: React.FC<IPopupShellProps> = ({
                 return <SelectCardsPopupModal data={data as SelectCardsPopup} />;
             case 'dropdown':
                 return <DropdownPopupModal data={data as DropdownPopup} />;
-            case 'chooseNumber':
+            case 'number':
                 return <NumberPopupModal data={data as NumberPopup} />;
             case 'leaveGame':
                 return <LeaveGamePopupModule uuid={data.uuid} />;

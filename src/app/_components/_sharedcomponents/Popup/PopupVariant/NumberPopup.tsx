@@ -31,10 +31,39 @@ export const NumberPopupModal = ({ data }: NumberPopupModalProps) => {
     const { sendGameMessage } = useGame();
     const { closePopup } = usePopup();
     const [isMinimized, setIsMinimized] = useState(false);
-    const [selectedNumber, setSelectedNumber] = useState(Math.min(data.min, data.max));
+    const [selectedNumber, setSelectedNumber] = useState<number | null>(Math.min(data.min, data.max));
+    const [inputValue, setInputValue] = useState(String(Math.min(data.min, data.max)));
+
+    const validationMessage = (() => {
+        const normalizedInput = inputValue.trim();
+
+        if (normalizedInput === '') {
+            return 'Enter a number.';
+        }
+
+        if (!/^-?\d+$/.test(normalizedInput)) {
+            return 'Enter a whole number.';
+        }
+
+        const parsedValue = Number(normalizedInput);
+
+        if (parsedValue < data.min) {
+            return `Must be at least ${data.min}.`;
+        }
+
+        if (parsedValue > data.max) {
+            return `Must be at most ${data.max}.`;
+        }
+
+        return null;
+    })();
 
     const handleDone = () => {
-        sendGameMessage(['menuButton', selectedNumber, data.uuid]);
+        if (validationMessage || selectedNumber === null) {
+            return;
+        }
+
+        sendGameMessage(['menuButton', Number(inputValue.trim()), data.uuid]);
         closePopup(data.uuid);
     };
 
@@ -50,16 +79,17 @@ export const NumberPopupModal = ({ data }: NumberPopupModalProps) => {
                 <NumberSpinner
                     min={data.min}
                     max={data.max}
+                    allowOutOfRange
                     value={selectedNumber}
-                    onValueChange={(value) => {
-                        if (value !== null) {
-                            setSelectedNumber(value);
-                        }
-                    }}
+                    error={!!validationMessage}
+                    helperText={validationMessage}
+                    onValueChange={(value) => setSelectedNumber(value)}
+                    onInputValueChange={setInputValue}
                 />
 
                 <Box sx={footerStyle}>
                     <Button
+                        disabled={!!validationMessage}
                         onClick={handleDone}
                         sx={buttonStyle}
                         variant="contained"

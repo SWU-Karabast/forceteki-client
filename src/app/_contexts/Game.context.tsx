@@ -117,6 +117,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             }
 
             const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards, selectNumber } = promptState;
+
             prunePromptStatePopups(promptUuid);
             if (promptType === 'actionWindow') {
                 clearDistributionPrompt();
@@ -154,8 +155,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
-            else if (promptType === 'chooseNumber' && selectNumber && menuTitle && promptUuid && !selectCardMode) {
-                return openPopup('chooseNumber', {
+            else if (promptType === 'number' && selectNumber && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('number', {
                     uuid: promptUuid,
                     title: promptTitle,
                     description: menuTitle,
