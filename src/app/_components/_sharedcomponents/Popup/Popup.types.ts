@@ -60,7 +60,7 @@ export type DropdownPopup = {
 };
 
 export type NumberPopup = {
-    type: 'number';
+    type: 'chooseNumber';
     uuid: string;
     title: string;
     description?: string;

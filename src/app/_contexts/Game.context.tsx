@@ -154,8 +154,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
-            else if (promptType === 'number' && selectNumber && menuTitle && promptUuid && !selectCardMode) {
-                return openPopup('number', {
+            else if (promptType === 'chooseNumber' && selectNumber && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('chooseNumber', {
                     uuid: promptUuid,
                     title: promptTitle,
                     description: menuTitle,
