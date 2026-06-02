@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, Popover, Typography, useMediaQuery} from '@mui/material';
+import { Box, Popover, Typography, useMediaQuery } from '@mui/material';
 import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
