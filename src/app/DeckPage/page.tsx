@@ -281,6 +281,8 @@ const DeckPage: React.FC = () => {
                 return styles.protectThePodTag;
             case 'CARDCORE':
                 return styles.cardCoreTag;
+            case 'MELEE':
+                return styles.meleeGgTag;
             default:
                 console.log(`Unknown deck source: ${deckSource}`);
                 return styles.unknownTag;
@@ -514,6 +516,15 @@ const DeckPage: React.FC = () => {
             color: '#FF6B35',
             '&:hover': {
                 backgroundColor: '#FF6B35',
+                color: '#000000',
+            },
+            boxShadow: '0 0 5px #FF6B35',
+        },
+        meleeGgTag: {
+            borderColor: '#ffa800',
+            color: '#ffa800',
+            '&:hover': {
+                backgroundColor: '#ffa800',
                 color: '#000000',
             },
             boxShadow: '0 0 5px #FF6B35',
