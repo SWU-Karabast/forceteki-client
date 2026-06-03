@@ -52,6 +52,7 @@ interface ICreateGameFormProps {
     deckLink: string;
     setDeckLink: (value: string) => void;
     savedDecks: StoredDeck[];
+    isLoadingSavedDecks?: boolean;
     handleDeckManagement: () => void;
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
     errorState: DeckErrorState;
@@ -75,6 +76,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     deckLink,
     setDeckLink,
     savedDecks,
+    isLoadingSavedDecks = false,
     handleDeckManagement,
     handleFormSubmissionWithUndoCheck,
     errorState,
@@ -119,6 +121,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
+    const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
+    const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
+    const isCreateGameDisabled = isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading;
 
     useEffect(() => {
         handleJsonDeck(deckLink);
@@ -277,6 +282,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (isCreateGameDisabled) {
+            return;
+        }
         setFormat(lobbyConfig.format);
         setCardPool(lobbyConfig.cardPool);
         setGamesToWinMode(lobbyConfig.gamesToWinMode);
@@ -421,7 +429,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setFavoriteDeck(e.target.value as string)
                 }
-                disabled={userLoading}
+                disabled={userLoading || isLoadingSavedDecks}
                 placeholder="Favorite Decks"
             >
                 {savedDecks.length === 0 ? (
@@ -690,7 +698,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 )}
 
                 {/* Submit Button */}
-                <Button type="submit" variant="contained" sx={styles.submitButtonStyle}>
+                <Button type="submit" disabled={isCreateGameDisabled} variant="contained" sx={styles.submitButtonStyle}>
                     Create Game
                 </Button>
             </form>

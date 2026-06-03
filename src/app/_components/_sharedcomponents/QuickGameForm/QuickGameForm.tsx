@@ -51,6 +51,7 @@ interface IQuickGameFormProps {
     deckLink: string;
     setDeckLink: (value: string) => void;
     savedDecks: StoredDeck[];
+    isLoadingSavedDecks: boolean;
     handleDeckManagement: () => void;
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
     errorState: DeckErrorState;
@@ -74,6 +75,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     deckLink,
     setDeckLink,
     savedDecks,
+    isLoadingSavedDecks,
     handleDeckManagement,
     handleFormSubmissionWithUndoCheck,
     errorState,
@@ -115,6 +117,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+    const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
+    const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
+    const isJoinQueueDisabled = queueState || isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading;
 
     // Timer ref for clearing the inline text after 5s
 
@@ -279,6 +284,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     const handleJoinGameQueue = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (isJoinQueueDisabled) {
+            return;
+        }
         setFormat(queueConfig.format);
         setCardPool(queueConfig.cardPool);
         setGamesToWinMode(queueConfig.gamesToWinMode)
@@ -413,7 +421,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setFavoriteDeck(e.target.value as string)
             }
-            disabled={userLoading}
+            disabled={userLoading || isLoadingSavedDecks}
             placeholder="Favorite Decks"
         >
             {savedDecks.length === 0 ? (
@@ -598,7 +606,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} cardPool={NewGameFormatCardPool}/>}
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,
+                <Button type="submit" disabled={isJoinQueueDisabled} variant="contained" sx={{ ...styles.submitButtonStyle,
                     '&.Mui-disabled': {
                         backgroundColor: '#404040',
                         color: 'var(--variant-containedColor)',
