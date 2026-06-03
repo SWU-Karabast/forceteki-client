@@ -4,6 +4,7 @@ import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { IDeckCard, IDeckData } from '@/app/_utils/fetchDeckData';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 
 interface IDeckCardTileProps {
     card: IDeckCard;
@@ -13,7 +14,8 @@ interface IDeckCardTileProps {
 }
 
 const DeckCardTile: React.FC<IDeckCardTileProps> = ({ card, styleCardSx, onMouseEnter, onMouseLeave }) => {
-    const url = s3CardImageURL(card);
+    const locale = useCardImageLocale();
+    const url = s3CardImageURL(card, locale);
     const { status, imgProps } = useImageLoadStatus(url);
     return (
         <Box
@@ -30,7 +32,7 @@ const DeckCardTile: React.FC<IDeckCardTileProps> = ({ card, styleCardSx, onMouse
                 {...imgProps}
                 sx={cardImageFillSx}
             />
-            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(card)} />}
+            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(card, locale)} />}
         </Box>
     );
 };

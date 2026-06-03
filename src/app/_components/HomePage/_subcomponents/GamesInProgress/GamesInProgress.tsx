@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Autocomplete, Box, Divider, FilterOptionsState, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Divider, FilterOptionsState, MenuItem, TextField, Typography } from '@mui/material';
 import PublicMatch from '../PublicMatch/PublicMatch';
 import { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { CardPool, FormatLabels, GamesToWinMode, SwuGameFormat } from '@/app/_constants/constants';
@@ -34,6 +34,9 @@ interface FormatOptionData {
     label: string;
     ongoingGamesCount: number;
 }
+
+const getFormatOptionKey = (option: Pick<FormatOptionData, 'value' | 'cardPool'>) =>
+    `${option.value}|${option.cardPool}`;
 
 const fetchOngoingGames = async (setGamesData: (games: OngoingGamesData | null) => void, setLeaderData: (leaders: LeaderNameData[] | null) => void) => {
     try {
@@ -206,6 +209,12 @@ const GamesInProgress: React.FC = () => {
         return options;
     }, [gamesData, sortByLeader]);
 
+    const activeFormatOptions = formatOptions.filter((option) => option.ongoingGamesCount > 0);
+    const formatSelectOptions = sortByFormat && !activeFormatOptions.some((option) => getFormatOptionKey(option) === getFormatOptionKey(sortByFormat))
+        ? [sortByFormat, ...activeFormatOptions]
+        : activeFormatOptions;
+    const formatSelectValue = sortByFormat ? getFormatOptionKey(sortByFormat) : '';
+
     const filterByActiveLeader = (options: LeaderNameData[], state: FilterOptionsState<LeaderNameData>) => {
         // Show all options when typing, but only those with ongoingGamesCount > 0 in dropdown
         if (!state.inputValue) {
@@ -340,41 +349,37 @@ const GamesInProgress: React.FC = () => {
                 />
             </Box>
             <Box sx={styles.sortFilterRow}>
-                <Autocomplete
+                <TextField
+                    select
                     fullWidth
-                    value={sortByFormat}
-                    options={formatOptions}
-                    getOptionLabel={(option) => option.label}
-                    filterOptions={(options, state) => {
-                        if (!state.inputValue) {
-                            return options.filter((o) => o.ongoingGamesCount > 0);
-                        }
-                        return options.filter((o) =>
-                            o.label.toLowerCase().includes(state.inputValue.toLowerCase())
-                        );
+                    label="Filter by Format"
+                    variant="outlined"
+                    value={formatSelectValue}
+                    onChange={(event) => {
+                        const selectedKey = event.target.value;
+                        setSortByFormat(formatSelectOptions.find((option) => getFormatOptionKey(option) === selectedKey) ?? null);
                     }}
-                    renderOption={(props, option) => {
-                        const { key, ...optionProps } = props;
-                        return (
-                            <li key={key} {...optionProps}>
-                                <Box sx={{ flexGrow: 1 }}>{option.label}</Box>
-                                <Box sx={styles.leaderActiveGamesCount}>{option.ongoingGamesCount}</Box>
-                            </li>
-                        );
-                    }}
-                    onChange={(_, newValue) => setSortByFormat(newValue)}
-                    isOptionEqualToValue={(option, value) => option.value === value.value && option.cardPool === value.cardPool}
                     sx={styles.filterByLeaderAutoComplete}
-                    slotProps={styles.autocompleteSlotProps}
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            label="Filter by Format"
-                            variant="outlined"
-                            slotProps={styles.filterByLeaderSlotProps}
-                        />
-                    )}
-                />
+                    slotProps={{
+                        ...styles.filterByLeaderSlotProps,
+                        select: {
+                            renderValue: (selected) => {
+                                if (!selected) return 'All Formats';
+                                return formatSelectOptions.find((option) => getFormatOptionKey(option) === selected)?.label ?? '';
+                            },
+                        },
+                    }}
+                >
+                    <MenuItem value="">
+                        All Formats
+                    </MenuItem>
+                    {formatSelectOptions.map((option) => (
+                        <MenuItem key={getFormatOptionKey(option)} value={getFormatOptionKey(option)}>
+                            <Box sx={{ flexGrow: 1 }}>{option.label}</Box>
+                            <Box sx={styles.leaderActiveGamesCount}>{option.ongoingGamesCount}</Box>
+                        </MenuItem>
+                    ))}
+                </TextField>
             </Box>
 
             <Divider sx={styles.divider} />

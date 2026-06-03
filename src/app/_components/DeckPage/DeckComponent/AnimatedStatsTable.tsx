@@ -14,6 +14,7 @@ import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle, IMatchTableStats } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillContainSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 
 interface IMatchupCardCellProps {
     cardId: string;
@@ -31,7 +32,8 @@ const MatchupCardCell: React.FC<IMatchupCardCellProps> = ({
     onMouseLeave,
 }) => {
     const cardArg = { id: cardId, count: 0 };
-    const url = cardStyle !== undefined ? s3CardImageURL(cardArg, cardStyle) : s3CardImageURL(cardArg);
+    const locale = useCardImageLocale();
+    const url = cardStyle !== undefined ? s3CardImageURL(cardArg, locale, cardStyle) : s3CardImageURL(cardArg, locale);
     const { status, imgProps } = useImageLoadStatus(url);
     return (
         <Box
@@ -51,7 +53,7 @@ const MatchupCardCell: React.FC<IMatchupCardCellProps> = ({
                 {...imgProps}
                 sx={cardImageFillContainSx}
             />
-            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(cardArg)} />}
+            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(cardArg, locale)} />}
         </Box>
     );
 };

@@ -6,6 +6,7 @@ import { useUser } from '@/app/_contexts/User.context';
 import QuickGameForm from '@/app/_components/_sharedcomponents/QuickGameForm/QuickGameForm';
 import WelcomePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/WelcomePopup';
 import UpdatePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/UpdatePopup';
+import WhatsNewPopupAnnouncement from '@/app/_components/_sharedcomponents/HomescreenWelcome/NewFeaturePopup';
 import UsernameChangeRequiredPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UsernameChangeRequiredPopup';
 import UsernameChangeRestrictedPopup
@@ -22,7 +23,10 @@ import {
     markUndoPopupAsSeen,
     hasUserSeenTimerPopup,
     markTimerPopupAsSeen,
+    shouldShowAnnouncement,
+    markAnnouncementAsSeen,
 } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { announcement } from '@/app/_constants/mockData';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
 import { ModerationFieldState } from '@/app/_contexts/UserTypes';
 import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/UndoTutorialPopup';
@@ -42,6 +46,7 @@ const HomePagePlayMode: React.FC = () => {
     const [showMutedPopup, setShowMutedPopup] = useState<boolean>(false);
     const [showUndoTutorialPopup, setShowUndoTutorialPopup] = useState<boolean>(false);
     const [showTimerTutorialPopup, setShowTimerTutorialPopup] = useState<boolean>(false);
+    const [showAnnouncementPopup, setShowAnnouncementPopup] = useState<boolean>(false);
     const [pendingFormSubmission, setPendingFormSubmission] = useState<(() => void) | null>(null);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
     const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate, updateTimerPopupSeenDate, updateMustRequestUsernameChangeSeen, updateReportingDisabledSeen } = useUser();
@@ -88,6 +93,11 @@ const HomePagePlayMode: React.FC = () => {
         setShowUpdatePopup(false);
         updateWelcomeMessage();
     }
+
+    const closeAnnouncementPopup = () => {
+        setShowAnnouncementPopup(false);
+        markAnnouncementAsSeen(announcement);
+    };
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
@@ -238,6 +248,15 @@ const HomePagePlayMode: React.FC = () => {
             }
         }
 
+        const blockingPopupActive =
+            (user?.showWelcomeMessage ?? false) ||
+            !!user?.needsUsernameChange ||
+            user?.mustRequestUsernameChange === ModerationFieldState.Enabled ||
+            user?.reportingDisabled === ModerationFieldState.Enabled ||
+            (!!user?.moderation && !user.moderation.hasSeen);
+        if (!blockingPopupActive && shouldShowAnnouncement(announcement)) {
+            setShowAnnouncementPopup(true);
+        }
 
         if (process.env.NODE_ENV !== 'development') return;
         const fetchGameList = async () => {
@@ -376,6 +395,7 @@ const HomePagePlayMode: React.FC = () => {
             <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
             <UndoTutorialPopup open={showUndoTutorialPopup} onClose={handleUndoTutorialClose} />
             <TimerTutorialPopup open={showTimerTutorialPopup} onClose={handleTimerTutorialClose} />
+            <WhatsNewPopupAnnouncement open={showAnnouncementPopup} onClose={closeAnnouncementPopup} />
         </>
     );
 };
