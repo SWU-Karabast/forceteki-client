@@ -117,9 +117,12 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+    const [deckLinkTouched, setDeckLinkTouched] = useState<boolean>(false);
     const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
     const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
-    const isJoinQueueDisabled = queueState || isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading;
+    const isNewDeckInputEmpty = !showSavedDecks && deckLink.trim().length === 0;
+    const isJoinQueueDisabled = queueState || isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty;
+    const showDeckLinkRequiredError = deckLinkTouched && isNewDeckInputEmpty;
 
     // Timer ref for clearing the inline text after 5s
 
@@ -138,6 +141,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             setShowSavedDecks(false);
             setSwuStatsDeckSource(false);
         }
+        setDeckLinkTouched(false);
         clearErrors();
     }
 
@@ -539,12 +543,21 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             <StyledTextField
                                 type="text"
                                 value={deckLink}
+                                onBlur={() => setDeckLinkTouched(true)}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                     clearErrors()
+                                    if (e.target.value.trim().length > 0) {
+                                        setDeckLinkTouched(false);
+                                    }
                                     setDeckLink(e.target.value);
                                     handleJsonDeck(e.target.value);
                                 }}
                             />
+                            {showDeckLinkRequiredError && (
+                                <Typography variant="body1" sx={styles.errorMessageStyle}>
+                                    Enter a deck link or paste deck JSON.
+                                </Typography>
+                            )}
                         </FormControl>
 
                         {/* Save Deck To Favourites Checkbox */}
@@ -609,7 +622,8 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 <Button type="submit" disabled={isJoinQueueDisabled} variant="contained" sx={{ ...styles.submitButtonStyle,
                     '&.Mui-disabled': {
                         backgroundColor: '#404040',
-                        color: 'var(--variant-containedColor)',
+                        color: '#9e9e9e',
+                        opacity: 1,
                     },
                     mb: '1rem',
                 }}>
