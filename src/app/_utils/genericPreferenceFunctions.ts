@@ -1,4 +1,4 @@
-import { IPreferences, IUser } from '@/app/_contexts/UserTypes';
+import { IPreferences, IUser, TimerVisibility } from '@/app/_contexts/UserTypes';
 import {
     loadPreferencesFromLocalStorage,
     savePreferencesToLocalStorage,
@@ -127,5 +127,6 @@ const getDefaultPreferences = (): IPreferences => ({
     gameOptions: {
         muteChat: false,
         cardLanguage: CardImageLocale.English,
+        timerVisibility: TimerVisibility.Standard,
     }
 });

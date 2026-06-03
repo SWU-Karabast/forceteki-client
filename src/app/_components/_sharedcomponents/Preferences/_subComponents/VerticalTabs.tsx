@@ -119,7 +119,7 @@ function VerticalTabs({
             case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
             case TabType.GameOptions:
-                return <GameOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
+                return <GameOptionsTab variant={variant} setHasNewChanges={setHasUnsavedChanges}/>;
             case TabType.Cosmetics:
                 return <CosmeticsTab />;
             case TabType.SoundOptions:
