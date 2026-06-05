@@ -14,6 +14,7 @@ import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } 
 import { useCosmetics } from '../_contexts/CosmeticsContext';
 import { Play } from 'next/font/google';
 import RichText from '../_components/_sharedcomponents/RichText/RichText';
+import PlayedCardAnimationOverlay from '../_components/Gameboard/_subcomponents/Overlays/PlayedCardAnimationOverlay';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
@@ -222,6 +223,7 @@ const GameBoard = () => {
                         toggleSidebar={toggleSidebar}
                     />
                 </Box>
+                <PlayedCardAnimationOverlay />
             </Box>
 
 

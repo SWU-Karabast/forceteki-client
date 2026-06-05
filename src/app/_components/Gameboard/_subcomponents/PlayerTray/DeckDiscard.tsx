@@ -263,6 +263,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
         <Box sx={styles.containerStyle}>
             <Box
                 ref={discardRef}
+                data-zone-target={`${trayPlayer}:discard`}
                 sx={styles.discard.discardCardStyle}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose} 

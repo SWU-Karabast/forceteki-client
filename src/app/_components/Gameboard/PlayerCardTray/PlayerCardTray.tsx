@@ -135,7 +135,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             >
                 <CardActionTray />
                 <Box ml={2} sx={styles.chatColumn}>
-                    <ChatBubbleOutline onClick={toggleSidebar} />
+                    <ChatBubbleOutline data-gameboard-right-control-line="true" onClick={toggleSidebar} />
                 </Box>
             </Grid>
         </Grid>

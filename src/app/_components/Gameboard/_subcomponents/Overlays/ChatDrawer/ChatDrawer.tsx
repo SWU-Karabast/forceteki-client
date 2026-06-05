@@ -194,6 +194,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             open={sidebarOpen}
             variant="persistent"
             sx={styles.drawerStyle}
+            slotProps={{ paper: { 'data-chat-drawer-paper': 'true' } as React.HTMLAttributes<HTMLDivElement> }}
         >
             <Box sx={styles.headerBoxStyle}>
                 <ChevronRightIcon onClick={toggleSidebar} />
