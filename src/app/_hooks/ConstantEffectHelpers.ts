@@ -3,24 +3,20 @@ import type { SystemStyleObject } from '@mui/system';
 import { keyframes } from '@mui/system';
 import { IConstantEffect } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
-// ─── Pulse keyframes ───────────────────────────────────────────────────────
-// Blue = SOURCE (the card emitting the effect)
-// Red  = TARGET (the cards being affected)
-
-const BLUE = '#00BAFF';
-const RED = '#FF3231';
-
-const bluePulse = keyframes`
-  0%   { box-shadow: 0 0 0 2px ${BLUE}, 0 0 8px  ${BLUE}; }
-  50%  { box-shadow: 0 0 0 3px ${BLUE}, 0 0 22px ${BLUE}; }
-  100% { box-shadow: 0 0 0 2px ${BLUE}, 0 0 8px  ${BLUE}; }
+const pulse = (color: string) => keyframes`
+  0%   { box-shadow: 0 0 0 2px ${color}, 0 0 8px  ${color}; }
+  50%  { box-shadow: 0 0 0 3px ${color}, 0 0 22px ${color}; }
+  100% { box-shadow: 0 0 0 2px ${color}, 0 0 8px  ${color}; }
 `;
 
-const redPulse = keyframes`
-  0%   { box-shadow: 0 0 0 2px ${RED}, 0 0 8px  ${RED}; }
-  50%  { box-shadow: 0 0 0 3px ${RED}, 0 0 22px ${RED}; }
-  100% { box-shadow: 0 0 0 2px ${RED}, 0 0 8px  ${RED}; }
-`;
+const bluePulse = pulse('var(--initiative-blue)');
+const redPulse = pulse('var(--initiative-red)');
+
+const highlightSx = (animationName: typeof bluePulse): SystemStyleObject<Theme> => ({
+    animation: `${animationName} 1.4s ease-in-out infinite`,
+    position: 'relative',
+    zIndex: 3,
+});
 
 export type EffectHighlightRole = 'source' | 'target' | null;
 
@@ -38,15 +34,10 @@ export const getCardHighlightRole = (
 export const getEffectHighlightSx = (
     cardUuid: string | undefined,
     highlightedEffect: IConstantEffect | null,
-): Record<string, unknown> => {
+): SystemStyleObject<Theme> => {
     const role = getCardHighlightRole(cardUuid, highlightedEffect);
     if (!role) return {};
-    const animationName = role === 'source' ? bluePulse : redPulse;
-    return {
-        animation: `${animationName} 1.4s ease-in-out infinite`,
-        position: 'relative',
-        zIndex: 3,
-    };
+    return highlightSx(role === 'source' ? bluePulse : redPulse);
 };
 
 /** True if the highlighted effect's source lives in this player's discard. */
@@ -55,7 +46,7 @@ export const isDiscardPileHighlightedByEffect = (
     trayPlayer: string,
 ): boolean => {
     if (!highlightedEffect) return false;
-    if (highlightedEffect.sourceZone !== 'discard') return false;
+    if (highlightedEffect.cardData.sourceZone !== 'discard') return false;
     return highlightedEffect.cardData.controllerId === trayPlayer;
 };
 
@@ -67,10 +58,5 @@ export const getDiscardPileHighlightSx = (
     if (!isDiscardPileHighlightedByEffect(highlightedEffect, trayPlayer)) {
         return {};
     }
-    return {
-        animation: `${bluePulse} 1.4s ease-in-out infinite`,
-        position: 'relative',
-        zIndex: 3,
-        borderRadius: '6px',
-    };
+    return { ...highlightSx(bluePulse), borderRadius: '6px' };
 };

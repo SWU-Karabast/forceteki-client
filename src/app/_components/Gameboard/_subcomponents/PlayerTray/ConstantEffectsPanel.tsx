@@ -4,8 +4,8 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import {
     CardStyle,
+    ICardData,
     IConstantEffect,
-    IConstantEffectTarget,
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { debugBorder } from '@/app/_utils/debug';
 
@@ -176,7 +176,7 @@ const ConstantEffectsPanel: React.FC<IConstantEffectsPanelProps> = ({ trayPlayer
             <Box sx={styles.panel} data-testid={`constant-effects-${trayPlayer}`}>
                 {effects.map((effect) => {
                     const imageUrl = s3CardImageURL(
-                        { ...effect.cardData } as any,
+                        { ...effect.cardData } as unknown as ICardData,
                         CardStyle.Plain,
                     );
                     const targetCount = effect.targets.length;

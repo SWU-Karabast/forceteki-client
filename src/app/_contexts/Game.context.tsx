@@ -23,7 +23,6 @@ import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferen
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
-import { getMockConstantEffects } from '@/app/_utils/MockConstantEffects';
 import { IConstantEffect } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface IGameContextType {
@@ -112,13 +111,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return zones
     }
 
-    const constantEffects: IConstantEffect[] = React.useMemo(() => {
-        const raw = gameState?.constantEffects ?? [];
-        return raw.map((e: IConstantEffect) => ({
-            ...e,
-            sourceZone: e.cardData?.sourceZone, // mirror up for helper convenience
-        }));
-    }, [gameState?.constantEffects]);
+    const constantEffects: IConstantEffect[] = React.useMemo(
+        () => gameState?.constantEffects ?? [],
+        [gameState?.constantEffects],
+    );
 
 
     const handleGameStatePopups = (gameState: any, connectedPlayerId: string, isSpectatorMode: boolean) => {
