@@ -77,10 +77,11 @@ const TermsOfService: React.FC = () => {
             width: '100%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
             marginBottom: '1rem',
             position: 'relative' as const,
-            padding: '0 32px 24px 32px',
+            pb: '24px',
+            px: { xs: '15px', md: '32px' },
+            pt: { xs: '10px', md: 0 },
             zIndex: 2,
         },
         backButton: {
@@ -93,7 +94,6 @@ const TermsOfService: React.FC = () => {
             fontSize: '3.0em',
             fontWeight: 600,
             color: 'white',
-            letterSpacing: 1,
             cursor: 'pointer',
         },
         container: {
