@@ -56,7 +56,7 @@ function VerticalTabs({
     const [pendingTabIndex, setPendingTabIndex] = useState<number | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const { logout } = useUser();
-    const isSmallScreen = useMediaQuery('(max-width: 1280px)');
+    const isSmallScreen = useMediaQuery('(max-width: 899px)');
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {

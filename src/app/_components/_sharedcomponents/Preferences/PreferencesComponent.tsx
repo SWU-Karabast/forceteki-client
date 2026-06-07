@@ -29,12 +29,13 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     const styles = {
         containerStyle:{
             display: isPreferenceOpen ? 'block' : 'none',
-            position: 'absolute',
+            position: variant === 'homePage' ? { xs: 'relative', md: 'absolute' } : 'absolute',
             width: sidebarOpen ? { xs: '100%', md: 'calc(100% - min(20%, 280px))' } : '100%',
-            height: '100%',
+            height: variant === 'homePage' ? { xs: 'auto', md: '100%' } : '100%',
             backgroundColor: variant ==='gameBoard' ? 'rgba(0, 0, 0, 0.5)' : 'none',
             zIndex: variant === 'homePage' ? 1 : 999,
             padding: variant === 'homePage' ? { xs: '7rem 2rem', md:'7rem' } : '2rem',
+            maxWidth: { xs: '100vw', md: '100%' },
         },
         overlayStyle:{
             display: isPreferenceOpen ? 'flex' : 'none',
@@ -51,7 +52,7 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
             ...(variant === 'homePage' ? {
                 width: '100%',
                 justifySelf:'center',
-                height: '81vh',
+                height: { xs: 'auto', md: '81vh' },
             } : {
                 borderColor: '#30434B',
                 height: '100%',
