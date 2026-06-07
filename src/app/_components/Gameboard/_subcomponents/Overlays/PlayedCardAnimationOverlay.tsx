@@ -209,6 +209,7 @@ const PlayedCardAnimationOverlay = () => {
         previousGameState.current = gameState;
 
         if (!destination || !lastPlayedCard) {
+            lastAnimationKey.current = null;
             previousCardRects.current = cacheCardRects();
             return;
         }
