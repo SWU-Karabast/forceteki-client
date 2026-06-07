@@ -109,6 +109,9 @@ const GameBoard = () => {
             height: '100dvh',
             position: 'relative',
             backgroundImage: `url(${background.path}?v=2)`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
