@@ -187,9 +187,11 @@ function VerticalTabs({
         tabPanelContainer:{
             backgroundColor: 'transparent',
             width: { xs: 'auto', md: '80%' },
+            flex: 1,
+            minHeight: 0,
             pl: { xs: 0, md: 9 },
             gap: '20px',
-            maxHeight: variant === 'gameBoard' ? 'calc(80vh - 1rem)' : 'calc(100vh - 14rem - 60px)',
+            maxHeight: '100%',
             overflowY: 'auto',
             '::-webkit-scrollbar': {
                 width: '0.2vw',
@@ -207,7 +209,7 @@ function VerticalTabs({
 
     return (
         <Box
-            sx={{ display: 'flex', background: 'transparent', flexDirection: { xs: 'column', md: 'row' } }}
+            sx={{ display: 'flex', background: 'transparent', flexDirection: { xs: 'column', md: 'row' }, height: '100%', minHeight: 0 }}
         >
             <Tabs
                 orientation={isSmallScreen ? 'horizontal' : 'vertical'}

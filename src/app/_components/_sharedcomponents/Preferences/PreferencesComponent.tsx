@@ -37,7 +37,8 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
             padding: variant === 'homePage' ? { xs: '7rem 2rem', md:'7rem' } : '2rem',
         },
         overlayStyle:{
-            display: isPreferenceOpen ? 'block' : 'none',
+            display: isPreferenceOpen ? 'flex' : 'none',
+            flexDirection: 'column',
             padding: '30px',
             maxWidth: '105em',
             // nothing should display outside the popup. use inner scrolls to display the content
@@ -71,7 +72,8 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
             top:'30px',
         },
         tabContainer:{
-            height:'30rem',
+            flex: 1,
+            minHeight: 0,
             background: 'transparent',
         },
         titleContainer:{
