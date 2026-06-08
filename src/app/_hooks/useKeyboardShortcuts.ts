@@ -22,6 +22,9 @@ type ShortcutCallbacks = {
 export const useKeyboardShortcuts = (callbacks: ShortcutCallbacks) => {
     const { user } = useUser();
     
+    // Define the guest check
+    const isAnonymous = !user || !user.email;
+
     // Use a ref so we don't constantly re-bind the event listener on every render
     const callbacksRef = useRef(callbacks);
 
@@ -30,6 +33,9 @@ export const useKeyboardShortcuts = (callbacks: ShortcutCallbacks) => {
     }, [callbacks]);
 
     useEffect(() => {
+        // THE KILL SWITCH: If they are a guest, abort immediately. Do not attach the listener.
+        if (isAnonymous) return;
+
         const handleKeyDown = (event: KeyboardEvent) => {
             // 1. Ignore shortcuts if typing in a chat box or text area
             const isTyping = event.target instanceof HTMLInputElement || 
@@ -73,5 +79,5 @@ export const useKeyboardShortcuts = (callbacks: ShortcutCallbacks) => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [user]);
+    }, [user, isAnonymous]); // Added isAnonymous to dependencies
 };

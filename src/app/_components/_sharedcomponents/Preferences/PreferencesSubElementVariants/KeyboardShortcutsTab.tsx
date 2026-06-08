@@ -65,7 +65,7 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     const [conflictError, setConflictError] = useState<string | undefined>();
     
     const keyboardShortcutsRef = useRef<IKeyboardShortcuts>(keyboardShortcuts);
-    const containerRef = useRef<HTMLDivElement>(null); // Added for click-outside detection
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         keyboardShortcutsRef.current = keyboardShortcuts;
@@ -273,7 +273,6 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     };
 
     const handleStartRecording = (key: keyof IKeyboardShortcuts) => {
-        // Treat both undefined and empty string as unbound
         if (keyboardShortcuts[key] === undefined || keyboardShortcuts[key] === '') {
             setEditingKey(key);
         } else {
@@ -315,10 +314,16 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                             <Box
                                 sx={{
                                     ...styles.keyPadsStyle,
-                                    cursor: 'pointer',
+                                    // 👇 Show "not-allowed" cursor if they are a guest
+                                    cursor: isAnonymous ? 'not-allowed' : 'pointer',
                                     backgroundColor: editingKey === key ? '#038FC3' : '#1C2933',
                                 }}
-                                onClick={() => handleStartRecording(key as keyof IKeyboardShortcuts)}
+                                onClick={() => {
+                                    // 👇 Only fire the recording logic if they are logged in
+                                    if (!isAnonymous) {
+                                        handleStartRecording(key as keyof IKeyboardShortcuts);
+                                    }
+                                }}
                             >
                                 <Typography variant={'h3'}>
                                     {editingKey === key ? 'Press key...' : (keyboardShortcuts[key as keyof IKeyboardShortcuts] || 'Unbound')}
@@ -347,7 +352,8 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                     <PreferenceButton
                         variant="standard"
                         buttonFnc={handleResetShortcuts}
-                        disabled={!keybindIsNotDefault || isSaving} 
+                        // 👇 Block the Reset button for guests
+                        disabled={!keybindIsNotDefault || isSaving || isAnonymous} 
                         text={'Reset to Defaults'}
                         sx={styles.saveButton}
                     />
@@ -361,7 +367,8 @@ function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
                             setKeyboardShortcuts(cleared);
                             setEditingKey(null);
                         }}
-                        disabled={isSaving || !hasBoundKeys}
+                        // 👇 Block the Unbind button for guests
+                        disabled={isSaving || !hasBoundKeys || isAnonymous}
                         text={'Unbind all'}
                         sx={styles.saveButton}
                     />
