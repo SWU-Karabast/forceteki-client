@@ -1,4 +1,4 @@
-import type { CardImageLocale } from '@/app/_utils/s3Utils';
+
 
 export interface IUser extends IGetUser{
     email?: string;
