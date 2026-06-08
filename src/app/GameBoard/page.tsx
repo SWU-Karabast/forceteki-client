@@ -66,8 +66,8 @@ const GameBoard = () => {
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','soundOptions']
-        : ['currentGame','soundOptions'];
+        ? ['endGame','soundOptions','gameOptions']
+        : ['currentGame','soundOptions','gameOptions'];
 
     // Get game number from winHistory for Bo3 mode
     const winHistory = lobbyState?.winHistory;
@@ -109,6 +109,9 @@ const GameBoard = () => {
             height: '100dvh',
             position: 'relative',
             backgroundImage: `url(${background.path}?v=2)`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',

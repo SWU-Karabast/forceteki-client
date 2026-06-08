@@ -1,3 +1,5 @@
+import type { CardImageLocale } from '@/app/_utils/s3Utils';
+
 export interface IUser extends IGetUser{
     email?: string;
     provider?: string;
@@ -66,13 +68,26 @@ export interface ICosmeticsPreferences {
 
 export interface IGameOptions {
     muteChat?: boolean;
+    cardLanguage?: CardImageLocale;
+    timerVisibility?: TimerVisibility;
+}
+
+export enum TimerVisibility {
+    Standard = 'standard',
+    HideTurnTimer = 'hideTurnTimer',
+    HideAll = 'hideAll',
+}
+
+export enum PlayerTimeRemainingStatus {
+    NoAlert = 'NoAlert',
+    Warning = 'Warning',
+    Danger = 'Danger',
 }
 
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
     gameOptions?: IGameOptions;
-
 }
 
 export interface IUserContextType {

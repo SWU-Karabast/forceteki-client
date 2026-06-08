@@ -2,11 +2,9 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { Typography, Grid } from '@mui/material';
 import ControlHub from '../_components/_sharedcomponents/ControlHub/ControlHub';
-import { useUser } from '../_contexts/User.context';
 import React from 'react';
 
 const Navbar = () => {
-    const { user, logout } = useUser();
     const pathname = usePathname();
     const router = useRouter();
     const handleExit = () => {
@@ -30,7 +28,8 @@ const Navbar = () => {
             ml: '.5vw',
         },
         lobbyTextStyle:{
-            ml:'60px',
+            ml: { md: '30px', xs: '15px' },
+            mt: { xs: '10px', md: 0 },
             fontSize: '3.0em',
             fontWeight: '600',
             color: 'white',
@@ -55,11 +54,7 @@ const Navbar = () => {
                 <Typography sx={navbarStyles.lobbyTextStyle} onClick={handleExit}>KARABAST</Typography>
             )
             }
-            <ControlHub
-                path={pathname}
-                user={user}
-                logout={logout}
-            />
+            <ControlHub />
         </Grid>
     );
 };

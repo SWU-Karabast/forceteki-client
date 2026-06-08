@@ -1,8 +1,10 @@
 'use client';
 
+import { CardImageLocaleProvider } from '@/app/_contexts/CardImageLocale.context';
 import { CosmeticsProvider } from '@/app/_contexts/CosmeticsContext';
 import { PopupProvider } from '@/app/_contexts/Popup.context';
 import { ThemeContextProvider } from '@/app/_contexts/Theme.context';
+import { TimerVisibilityProvider } from '@/app/_contexts/TimerVisibility.context';
 import { UserProvider } from '@/app/_contexts/User.context';
 import { SessionProvider } from 'next-auth/react';
 
@@ -14,11 +16,15 @@ const ClientProviders: React.FC<IClientProvidersProps> = ({ children }) => {
     return (
         <SessionProvider>
             <UserProvider>
-                <PopupProvider>
-                    <CosmeticsProvider>
-                        <ThemeContextProvider>{children}</ThemeContextProvider>
-                    </CosmeticsProvider>
-                </PopupProvider>
+                <CardImageLocaleProvider>
+                    <TimerVisibilityProvider>
+                        <PopupProvider>
+                            <CosmeticsProvider>
+                                <ThemeContextProvider>{children}</ThemeContextProvider>
+                            </CosmeticsProvider>
+                        </PopupProvider>
+                    </TimerVisibilityProvider>
+                </CardImageLocaleProvider>
             </UserProvider>
         </SessionProvider>
     );

@@ -8,6 +8,7 @@ import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponen
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillContainSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 import AddDeckDialog from '@/app/_components/_sharedcomponents/DeckPage/AddDeckDialog';
@@ -31,7 +32,8 @@ interface IDeckSummaryCardTileProps {
 
 const DeckSummaryCardTile: React.FC<IDeckSummaryCardTileProps> = ({ cardId, cardStyle, boxGeneralStyling }) => {
     const cardArg = { id: cardId, count: 0 };
-    const url = cardStyle !== undefined ? s3CardImageURL(cardArg, cardStyle) : s3CardImageURL(cardArg);
+    const locale = useCardImageLocale();
+    const url = cardStyle !== undefined ? s3CardImageURL(cardArg, locale, cardStyle) : s3CardImageURL(cardArg, locale);
     const { status, imgProps } = useImageLoadStatus(url);
     return (
         <Box sx={{ ...boxGeneralStyling, position: 'relative' }}>
@@ -43,7 +45,7 @@ const DeckSummaryCardTile: React.FC<IDeckSummaryCardTileProps> = ({ cardId, card
                 {...imgProps}
                 sx={cardImageFillContainSx}
             />
-            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(cardArg)} />}
+            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(cardArg, locale)} />}
         </Box>
     );
 };
@@ -281,6 +283,8 @@ const DeckPage: React.FC = () => {
                 return styles.protectThePodTag;
             case 'CARDCORE':
                 return styles.cardCoreTag;
+            case 'MELEE':
+                return styles.meleeGgTag;
             default:
                 console.log(`Unknown deck source: ${deckSource}`);
                 return styles.unknownTag;
@@ -524,6 +528,15 @@ const DeckPage: React.FC = () => {
             color: '#FF6B35',
             '&:hover': {
                 backgroundColor: '#FF6B35',
+                color: '#000000',
+            },
+            boxShadow: '0 0 5px #FF6B35',
+        },
+        meleeGgTag: {
+            borderColor: '#ffa800',
+            color: '#ffa800',
+            '&:hover': {
+                backgroundColor: '#ffa800',
                 color: '#000000',
             },
             boxShadow: '0 0 5px #FF6B35',

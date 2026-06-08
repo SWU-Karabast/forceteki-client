@@ -32,6 +32,7 @@ export interface IVerticalTabsProps {
     attemptingClose?: boolean,
     closeHandler?: () => void,
     cancelCloseHandler?: () => void,
+    initialTab?: string,
 }
 
 export type IBlockedUser = {
@@ -46,6 +47,7 @@ export interface IPreferenceProps {
     variant?: 'gameBoard' | 'homePage'
     title?: string,
     subtitle?: string,
+    initialTab?: string,
 }
 
 export interface IStatsNotification {

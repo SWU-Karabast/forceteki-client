@@ -45,8 +45,13 @@ function VerticalTabs({
     attemptingClose = false,
     closeHandler = () => undefined,
     cancelCloseHandler = () => undefined,
+    initialTab,
 }:IVerticalTabsProps) {
-    const [value, setValue] = useState(0);
+    const [value, setValue] = useState(() => {
+        if (!initialTab) return 0;
+        const idx = tabs.indexOf(initialTab);
+        return idx >= 0 ? idx : 0;
+    });
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
     const [pendingTabIndex, setPendingTabIndex] = useState<number | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -114,7 +119,7 @@ function VerticalTabs({
             case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
             case TabType.GameOptions:
-                return <GameOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
+                return <GameOptionsTab variant={variant} setHasNewChanges={setHasUnsavedChanges}/>;
             case TabType.Cosmetics:
                 return <CosmeticsTab />;
             case TabType.SoundOptions:

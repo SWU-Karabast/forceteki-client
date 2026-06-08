@@ -1,8 +1,9 @@
 import React from 'react';
-import { Box, Popover, Typography } from '@mui/material';
+import { Box, Popover, Typography, useMediaQuery } from '@mui/material';
 import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { getBorderColor } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
@@ -21,10 +22,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     isLeader = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, hoveredChatCard } = useGame();
+    const locale = useCardImageLocale();
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+    const isMobilePortrait = useMediaQuery('(orientation: portrait) and (max-width:932px)');
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
     const isHoveredInChat = hoveredChatCard.id === card?.uuid;
@@ -74,7 +77,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     // Compute card image URL + load status before any early return so hooks
     // are called in a stable order.
-    const mainCardImageUrl = card ? s3CardImageURL(card, cardStyle) : '';
+    const mainCardImageUrl = card ? s3CardImageURL(card, locale, cardStyle) : '';
     const { status: mainCardImageStatus, imgProps: mainCardImgProps } = useImageLoadStatus(mainCardImageUrl);
 
     if (!card) {
@@ -466,7 +469,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     {...longPressHandlers}
-                    data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.setId })}
+                    data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.setId }, locale)}
                     data-card-type={capturedCard.printedType}
                     data-card-id={capturedCard.setId ? capturedCard.setId.set + '_' + capturedCard.setId.number : capturedCard.id}
                 >
@@ -501,7 +504,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 onClick={handleClick}
                 aria-owns={open ? 'mouse-over-popover' : undefined}
                 aria-haspopup="true"
-                data-card-url={s3CardImageURL(card)}
+                data-card-url={s3CardImageURL(card, locale)}
                 data-card-type={isLeader ? 'leader' : 'base'}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
@@ -518,7 +521,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     />
                 )}
                 {mainCardImageStatus === 'error' && !isDeployed && (
-                    <CardImageMissingOverlay label={cardImageLabel(card)} />
+                    <CardImageMissingOverlay label={cardImageLabel(card, locale)} />
                 )}
                 <Box sx={styles.cardOverlay}>
                     <Box sx={styles.unimplementedAlert}></Box>
@@ -550,11 +553,17 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     sx={{ pointerEvents: 'none' }}
                     open={open}
                     anchorEl={anchorElement}
-                    anchorOrigin={{
+                    anchorOrigin={isMobilePortrait ? {
+                        vertical: isConnectedPlayer ? -5 : 'bottom',
+                        horizontal: 'center',
+                    } : {
                         vertical: 'center',
                         horizontal: -5,
                     }}
-                    transformOrigin={{
+                    transformOrigin={isMobilePortrait ? {
+                        vertical: isConnectedPlayer ? 'bottom' : -5,
+                        horizontal: 'center',
+                    } : {
                         vertical: 'center',
                         horizontal: 'right',
                     }}
