@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Popover, Typography } from '@mui/material';
+import { Box, Popover, Typography, useMediaQuery } from '@mui/material';
 import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
@@ -27,6 +27,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+    const isMobilePortrait = useMediaQuery('(orientation: portrait) and (max-width:932px)');
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
     const isHoveredInChat = hoveredChatCard.id === card?.uuid;
@@ -552,11 +553,17 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     sx={{ pointerEvents: 'none' }}
                     open={open}
                     anchorEl={anchorElement}
-                    anchorOrigin={{
+                    anchorOrigin={isMobilePortrait ? {
+                        vertical: isConnectedPlayer ? -5 : 'bottom',
+                        horizontal: 'center',
+                    } : {
                         vertical: 'center',
                         horizontal: -5,
                     }}
-                    transformOrigin={{
+                    transformOrigin={isMobilePortrait ? {
+                        vertical: isConnectedPlayer ? 'bottom' : -5,
+                        horizontal: 'center',
+                    } : {
                         vertical: 'center',
                         horizontal: 'right',
                     }}

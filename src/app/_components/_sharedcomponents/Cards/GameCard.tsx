@@ -14,8 +14,43 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
+import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
+
+
+const usePopoverConfig = (card: ICardData): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+    const { connectedPlayer } = useGame();
+    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
+    const arena = card.zone;
+
+    if (cardInPlayersHand) {
+        return {
+            anchorOrigin:{
+                vertical: -5,
+                horizontal: 'center',
+            },
+            transformOrigin: {
+                vertical: 'bottom',
+                horizontal: 'center',
+            }
+        };
+    }
+
+    // if the unit is on the left side, we display the popover to the right.
+    // if the unit is on the right side, we display the popover to the left
+    // we want to avoid displaying the popover on the same place as the card if there's no remaining screen left
+    return {
+        anchorOrigin:{
+            vertical: 'center',
+            horizontal: arena === ZoneName.SpaceArena ? 'right' : -5,
+        },
+        transformOrigin: {
+            vertical: 'center',
+            horizontal: arena === ZoneName.SpaceArena ? -5 : 'right',
+        }
+    };
+}
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -37,9 +72,9 @@ const GameCard: React.FC<IGameCardProps> = ({
     const phase = gameState?.phase;
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
-    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
     const isHiddenHandCard = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
+    const popoverConfig = usePopoverConfig(card);
     
     // Check if card is blocked from play by opponent's effect (e.g., Regional Governor, Trade Route Taxation)
     const isBlockedFromPlay = !!card.blockedFromPlayReason;
@@ -120,29 +155,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         return () => document.removeEventListener('touchstart', onTouchStart);
     }, [open, isTouchDevice]);
 
-    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
-        if (cardInPlayersHand) {
-            return {
-                anchorOrigin:{
-                    vertical: -5,
-                    horizontal: 'center',
-                },
-                transformOrigin: {
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                } };
-        }
 
-        return {
-            anchorOrigin:{
-                vertical: 'center',
-                horizontal: -5,
-            },
-            transformOrigin: {
-                vertical: 'center',
-                horizontal: 'right',
-            } };
-    }
 
     const showValueAdjuster = () => {
         const prompt = getConnectedPlayerPrompt();
@@ -364,6 +377,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('power-badge')})`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
@@ -378,6 +394,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('hp-badge')})`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
@@ -768,7 +787,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 onClose={handlePreviewClose}
                 disableRestoreFocus
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' }, tabIndex: -1 } }}
-                {...popoverConfig()}
+                {...popoverConfig}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
                 {isPreviewingLeaderCard && !isTouchDevice && !isFlipped && (

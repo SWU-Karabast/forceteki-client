@@ -67,8 +67,8 @@ const GameBoard = () => {
 
     const winners = !!gameState?.winners.length ? gameState.winners : undefined;
     const preferenceTabs = winners
-        ? ['endGame','keyboardShortcuts','soundOptions']
-        : ['currentGame','keyboardShortcuts','soundOptions'];
+        ? ['endGame','keyboardShortcuts','soundOptions', 'gameOptions']
+        : ['currentGame','keyboardShortcuts','soundOptions', 'gameOptions'];
 
     // Bo3 Logic
     const winHistory = lobbyState?.winHistory;
@@ -108,6 +108,9 @@ const GameBoard = () => {
             height: '100dvh',
             position: 'relative',
             backgroundImage: `url(${background.path}?v=2)`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',

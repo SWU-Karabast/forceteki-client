@@ -19,9 +19,6 @@ export enum CardPool {
     Unlimited = 'unlimited',
 }
 
-export const NewGameFormatAvailable: SwuGameFormat | undefined = SwuGameFormat.Premier;
-export const NewGameFormatCardPool: CardPool | undefined = CardPool.NextSet;
-
 /**
  * Cache-bust version appended to S3 card/token image URLs as `?v=N`.
  * Bump this any time we need browsers to re-fetch cached images.
@@ -133,6 +130,8 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'cardcore.gg';
             case DeckSource.HoloScan:
                 return 'holoscan.net';
+            case DeckSource.Melee:
+                return 'melee.gg';
             default:
                 return source;
         }

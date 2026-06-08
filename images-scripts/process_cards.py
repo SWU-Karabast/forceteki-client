@@ -263,9 +263,10 @@ _FFG_INDEX_CACHE: dict[tuple[str, str], dict[int, dict[str, Optional[str]]]] = {
 def _ffg_index(session: requests.Session, set_code: str, locale: str) -> dict[int, dict[str, Optional[str]]]:
     """Fetch (and cache) `{cardNumber -> {front_url, back_url}}` for (set, locale).
 
-    Only called for non-English locales. Hits the FFG API filtered by
-    `expansion.code` and `locale`. Uses pageSize=100 so most sets fit in
-    one or two pages.
+    Hits the FFG API filtered by `expansion.code` and `locale`. Uses
+    pageSize=100 so most sets fit in one or two pages. Normally called for
+    non-English locales, but is also invoked with locale='en' when
+    `--ffg-en-fallback` is set so swudb gaps can be filled from FFG.
     """
     key = (set_code, locale)
     if key in _FFG_INDEX_CACHE:
@@ -591,6 +592,61 @@ def _download_card_ffg(
         return False
 
 
+def _ffg_en_fallback_fill(
+    session: requests.Session,
+    cfg: "Config",
+    numbers: list[int],
+) -> None:
+    """For each card swudb didn't supply an English image for, try the FFG en API.
+
+    Runs only when `--ffg-en-fallback` is set. Quality caveat: FFG English
+    artwork is typically lower resolution than swudb's, so this is a
+    'make do' substitute used while swudb catches up on preview cards.
+    """
+    en_dir = downloads_dir(cfg.set_code, "en")
+    # Landscape-double leaders never write NNN.png — their primary sentinel
+    # is NNN-base.png. For every other card NNN.png is the sentinel.
+    def is_missing(n: int) -> bool:
+        nn = str(n).zfill(3)
+        if _is_landscape_double_leader(cfg, n):
+            return not (en_dir / f"{nn}-base.png").exists()
+        return not (en_dir / f"{nn}.png").exists()
+
+    missing = [n for n in numbers if is_missing(n)]
+    if not missing:
+        return
+
+    print(f"  · FFG-en fallback: {len(missing)} card(s) missing from swudb; querying FFG…")
+    index = _ffg_index(session, cfg.set_code, "en")
+    if not index:
+        print("  · FFG-en index is empty; nothing to substitute")
+        return
+
+    filled: list[int] = []
+    with cf.ThreadPoolExecutor(max_workers=cfg.workers) as ex:
+        futures = {
+            ex.submit(_download_card_ffg, session, cfg, "en", n, index): n
+            for n in missing
+        }
+        iterator = _maybe_progress(
+            cf.as_completed(futures), total=len(futures),
+            desc=f"FFG-en fallback {cfg.set_code}", unit="card",
+        )
+        for fut in iterator:
+            n = futures[fut]
+            if fut.result():
+                filled.append(n)
+                print(f"+ FFG-en fallback: en/{str(n).zfill(3)}.png")
+
+    still_missing = sorted(set(missing) - set(filled))
+    summary = f"… FFG-en fallback: substituted {len(filled)}/{len(missing)} card(s) (set={cfg.set_code})"
+    if filled:
+        summary += f"; numbers={sorted(filled)}"
+    if still_missing:
+        summary += f"; still missing={still_missing}"
+    print(summary)
+
+
 def stage_download(cfg: "Config") -> None:
     print(f"\n── Stage: Download (set={cfg.set_code}, locales={','.join(cfg.locales)}, "
           f"max={cfg.max_attempts}) ──")
@@ -610,6 +666,8 @@ def stage_download(cfg: "Config") -> None:
                     )
                     for fut in iterator:
                         fut.result()
+                if cfg.ffg_en_fallback:
+                    _ffg_en_fallback_fill(session, cfg, numbers)
             else:
                 print(f"  · Downloading {locale} from FFG (building index…)")
                 index = _ffg_index(session, cfg.set_code, locale)
@@ -1495,8 +1553,17 @@ def stage_tokens_download(cfg: "Config", mapping: list[tuple[str, str]]) -> None
             vprint(f"- HTTP {r.status_code} {url}")
 
         # Tokens are expected to always exist on swudb (unlike preview
-        # cards on FFG), so a complete miss is a hard error: abort the run
-        # before later stages silently produce an empty token upload set.
+        # cards on FFG), so a complete miss is normally a hard error.
+        # `--ffg-en-fallback` opts into substituting the FFG English token
+        # art when swudb has none (e.g. brand-new spoiler tokens).
+        if cfg.ffg_en_fallback:
+            if _download_token_ffg(
+                session, s3_id, "en", en_out, overwrite=cfg.overwrite_downloads,
+            ):
+                print(f"+ FFG-en fallback: en/{dest.name} (swu={swu_id})")
+                return
+            print(f"! FFG-en fallback also missing for token swudbId={swu_id} (s3Id={s3_id})")
+
         tried_lines = "\n      ".join(tried)
         raise SystemExit(
             f"\n! Token swudbId={swu_id} (s3Id={s3_id}) not found on swudb.\n"
@@ -1572,6 +1639,7 @@ class Config:
     webp_quality: int
     tokens: Optional[list[tuple[str, str]]]
     strict_locales: bool
+    ffg_en_fallback: bool
 
 
 def parse_locales(raw: str) -> list[str]:
@@ -1651,6 +1719,15 @@ def build_parser() -> argparse.ArgumentParser:
                          "is missing card/token images that would otherwise be substituted "
                          "with the English variant by the fallback stage. Useful for CI / "
                          "release runs where you want to guarantee fully-localized coverage."))
+    p.add_argument("--ffg-en-fallback", action="store_true",
+                   help=("For English only: if swudb is missing a card (or token, when "
+                         "--tokens is used), substitute the FFG API's English image. Off by "
+                         "default; FFG English images are typically lower resolution than "
+                         "swudb's, so this is a 'make do' substitute for preview cards "
+                         "that swudb has not yet ingested. Substitutions are logged and "
+                         "summarized at the end of the download stage. The resulting PNG "
+                         "is cached on disk like any other download; re-run with "
+                         "--overwrite-downloads once swudb publishes the real image."))
     p.add_argument("--verbose", action="store_true",
                    help="Show per-item logs (default: stage headers + progress bars only).")
     return p
@@ -1710,6 +1787,7 @@ def cfg_from_args(args: argparse.Namespace, set_code: str) -> Config:
         webp_quality=args.webp_quality,
         tokens=tokens,
         strict_locales=bool(args.strict_locales),
+        ffg_en_fallback=bool(args.ffg_en_fallback),
     )
 
 

@@ -18,7 +18,8 @@ const PreferencesInner: React.FC = () => {
     // ----------------------Styles-----------------------------//
     const styles = {
         lobbyTextStyle:{
-            ml:'30px',
+            ml: { xs: '15px', md: '30px' },
+            mt: { xs: '10px', md: 0 },
             fontSize: '3.0em',
             fontWeight: '600',
             color: 'white',
