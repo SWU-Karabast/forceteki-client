@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button, Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useUser } from '@/app/_contexts/User.context';
 import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
+import { PerCardButton } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { useKeyboardShortcuts } from '@/app/_hooks/useKeyboardShortcuts';
 import useTimeout from '@/app/_utils/useTimeout';
 
 const pulseBorder = keyframes`
@@ -126,7 +129,6 @@ const createStyles = (isPortrait: boolean) => ({
         '&:not(:disabled)': {
             transition: 'box-shadow 0.3s ease-in-out',
         },
-        // Improve touch target size for mobile
         touchAction: 'manipulation',
     },
     promptButtonText: {
@@ -158,13 +160,10 @@ const CardActionTray: React.FC = () => {
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
     const playerState = gameState.players[connectedPlayer];
     const styles = createStyles(isPortrait);
+    const [resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverrideState] = useState<boolean>(false);
 
-    const showTrayButtons = () => {
-        if (playerState.promptState.promptType === 'displayCards') {
-            // Buttons for the display cards prompt are rendered within the popup itself, not in the action tray
-            return false;
-        }
-
+    // Wrapped in useCallback so it can be safely used as a dependency in our keyboard handlers
+    const showTrayButtons = useCallback(() => {
         if ( playerState.promptState.promptType === 'actionWindow' ||
              playerState.promptState.promptType === 'resource' ||
              playerState.promptState.promptType === 'distributeAmongTargets' ||
@@ -173,9 +172,9 @@ const CardActionTray: React.FC = () => {
             return true;
         }
         return false;
-    };
+    }, [playerState.promptState, gameState]);
 
-    const buttonDisabled = (button: IButtonsProps) => {
+    const buttonDisabled = useCallback((button: IButtonsProps | PerCardButton) => {
         if (button.arg === 'done') {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
@@ -184,11 +183,59 @@ const CardActionTray: React.FC = () => {
                     return true;
                 }
             }
+
+            if (getConnectedPlayerPrompt()?.promptType === 'resource') {
+                if (!resourcePromptDoneButtonOverride) {
+                    setResourcePromptDoneButtonOverrideState(true);
+                    setTimeout(() => {
+                        setResourcePromptDoneButtonOverrideState(false);
+                    }, 500);
+                    return true;
+                }
+                return resourcePromptDoneButtonOverride;
+            }
         }
+        return !!(button as IButtonsProps).disabled;
+    }, [playerState.promptState, distributionPromptData, getConnectedPlayerPrompt, resourcePromptDoneButtonOverride]);
 
-        return !!button.disabled;
-    };
+    // --- KEYBOARD HANDLERS ---
+    const handlePassTurn = useCallback(() => {
+        // 1. Only allow the shortcut if the tray is actually visible to the user
+        if (!showTrayButtons()) return;
 
+        // 2. Find the pass button in the current state
+        const passBtn = playerState.promptState.buttons.find(
+            (b: IButtonsProps) => b.arg === 'pass' || b.arg === 'passAbility' || b.text === 'Pass'
+        );
+        
+        // 3. Fire if found and not disabled
+        if (passBtn && !buttonDisabled(passBtn)) {
+            sendGameMessage([passBtn.command, passBtn.arg, passBtn.uuid]);
+        }
+    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage, showTrayButtons]);
+
+    /* const handleClaimInitiative = useCallback(() => {
+        if (!showTrayButtons()) return;
+
+        const claimBtn = playerState.promptState.buttons.find(
+            (b: IButtonsProps) => b.arg === 'claimInitiative'
+        );
+        if (claimBtn && !buttonDisabled(claimBtn)) {
+            sendGameMessage([claimBtn.command, claimBtn.arg, claimBtn.uuid]);
+        }
+    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage, showTrayButtons]); */
+
+    // Register our actions with the global handler
+    useKeyboardShortcuts({
+        passTurn: handlePassTurn,
+        // claimInitiative: handleClaimInitiative
+    });
+
+    useEffect(() => {
+        if (getConnectedPlayerPrompt()?.promptType !== 'resource') {
+            setResourcePromptDoneButtonOverrideState(false);
+        }
+    }, [gameState, getConnectedPlayerPrompt]);
 
     return (
         <Grid
@@ -323,3 +370,7 @@ const PromptButton: React.FC<IPromptButtonProps> = (props) => {
 };
 
 export default CardActionTray;
+
+function setResourcePromptDoneButtonOverride(arg0: boolean) {
+    throw new Error('Function not implemented.');
+}
