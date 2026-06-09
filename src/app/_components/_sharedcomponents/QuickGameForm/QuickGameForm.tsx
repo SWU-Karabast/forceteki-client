@@ -21,7 +21,7 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, NewGameFormatCardPool } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -32,8 +32,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
-import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
-import { NewGameFormatAvailable } from '@/app/_constants/constants';
+import GameAnnouncementBanner, { CurrentGameAnnouncement } from '../../GameAnnouncementBanner/GameAnnouncementBanner';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
 interface IDeckPreferencesHandlers {
@@ -616,7 +615,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 />
 
                 {/* Beta Announcement */}
-                { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} cardPool={NewGameFormatCardPool}/>}
+                {CurrentGameAnnouncement && <GameAnnouncementBanner announcement={CurrentGameAnnouncement} />}
 
                 {/* Submit Button */}
                 <Button type="submit" disabled={isJoinQueueDisabled} variant="contained" sx={{ ...styles.submitButtonStyle,
