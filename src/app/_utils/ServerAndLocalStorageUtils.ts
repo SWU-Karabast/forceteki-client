@@ -9,6 +9,7 @@ import { v4 as uuid } from 'uuid';
 import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
+import { CardImageLocale } from '@/app/_utils/s3Utils';
 
 /* Secondary functions */
 /**
@@ -761,7 +762,12 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
                     background: preferences.cosmetics?.background,
                     // playmat: preferences.cosmetics?.playmat,
                     // disablePlaymats: preferences.cosmetics?.disablePlaymats ?? false,
-                }
+                },
+                gameOptions: {
+                    muteChat: preferences.gameOptions?.muteChat ?? false,
+                    cardLanguage: preferences.gameOptions?.cardLanguage ?? CardImageLocale.English,
+                    timerVisibility: preferences.gameOptions?.timerVisibility,
+                },
             };
         }
     } catch (error) {
@@ -782,7 +788,12 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
             background: undefined,
             // playmat: undefined,
             // disablePlaymats: false,
-        }
+        },
+        gameOptions: {
+            muteChat: false,
+            cardLanguage: CardImageLocale.English,
+            timerVisibility: undefined,
+        },
     };
 };
 

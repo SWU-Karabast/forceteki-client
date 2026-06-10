@@ -59,6 +59,16 @@ export type DropdownPopup = {
     source: PopupSource;
 };
 
+export type NumberPopup = {
+    type: 'number';
+    uuid: string;
+    title: string;
+    description?: string;
+    min: number;
+    max: number;
+    source: PopupSource;
+};
+
 export type LeaveGamePopup = {
     type: 'leaveGame';
     uuid: string;

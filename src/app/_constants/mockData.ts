@@ -99,18 +99,14 @@ export const articles: IArticle[] = [
 ];
 
 export const announcement: IAnnouncement = {
-    key:'updatedTimers01',
-    title: 'Updated Game Timers',
+    key:'cardLanguageSupport',
+    title: 'Card Language Support',
     content:`
-    We've reworked how game timers work to help keep matches moving and prevent indefinite stalling.<br/><br/>
+    We are very happy to announce that players can now select their preferred language for card text in the settings menu! The official languages for SWU are <b>Italian, French, Spanish, German, and English</b>.<br/><br/>
 
-    <b>What's changed:</b> Previously, each player had a per-action timer that reset on any button click or chat message. Now, each player has <b>20 seconds per action</b> backed by a <b>2 minute time bank</b>. When a player's 20 seconds runs out, their timer begins drawing from their bank. The bank does not refill — if a player's bank runs out, that player concedes the game.<br/><br/>
+    To change your card language, go to the <a href="/Preferences?tab=gameOptions" style="color:lightblue;">"Game Options" tab in the Preferences page</a>.<br/><br/>
 
-    <b>A few things to note:</b><br/>
-    - This only applies to <b>public games</b>. Private games remain untimed.<br/>
-    - We'll be actively monitoring the values for both the per-action timer and the time bank, and may adjust them based on how games play out.<br/>
-    <br/>
     Have feedback? Let us know in our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>!`,
-    endDate: '2026-05-24', // The date should be year-month-day
-    image:'/timerexplainer.png'
+    endDate: '2026-07-01', // The date should be year-month-day
+    image:'/card-language-support.png'
 }

@@ -60,6 +60,13 @@ python process_cards.py --from resize --to truncate
 # Dry-run upload to preview changes
 python process_cards.py --dry-run
 
+# Fill swudb gaps with FFG's English images (off by default; FFG English
+# art is typically lower-res than swudb's, so this is a 'make do' for
+# preview cards that swudb has not ingested yet). Also applies to tokens
+# when --tokens is used. Re-run with --overwrite-downloads once swudb
+# publishes the real image.
+python process_cards.py --set ASH --ffg-en-fallback
+
 # Common tunables
 python process_cards.py --max-attempts 280 --leader-attempts 35 --webp-quality 92
 
@@ -76,7 +83,10 @@ Run `python process_cards.py --help` for the full list of options.
 1. **download** – fetches `NNN.png` into `card-images/downloaded/{SET}/{locale}/`.
    - `en`: from swudb. For card numbers within `--leader-attempts`, also
      fetches `-portrait` / `-back` and stores it as `NNN.png`, while the
-     regular card image is stored as `NNN-base.png`.
+     regular card image is stored as `NNN-base.png`. If
+     `--ffg-en-fallback` is set, any card swudb didn't supply is
+     additionally probed against the FFG `en` API and substituted when
+     available (see [FFG English fallback](#ffg-english-fallback) below).
    - other locales: from the FFG card data API. The script fetches a
      per-(set, locale) index from
      `https://admin.starwarsunlimited.com/api/cards?filters[expansion][code]={SET}&locale={LANG}`
@@ -105,9 +115,67 @@ Run `python process_cards.py --help` for the full list of options.
 
 5. **upload** – syncs the per-locale output folders to
    `s3://karabast-data/cards/{SET}/{locale}/{format}/{size}/`. For each file:
-   - `HEAD` the object; compare ETag (MD5) to the local file's MD5.
-   - Skip if identical, otherwise upload with
-     `Content-Type: image/webp` and a 1-year immutable `Cache-Control`.
+   - `HEAD` the object; compare ETag (MD5) to the local file's MD5 *and*
+     compare the live `Cache-Control` header to the desired value for
+     this set (see [Preview-set caching](#preview-set-caching) below).
+   - If bytes differ → full PUT with the desired `Cache-Control`.
+   - If bytes match but `Cache-Control` differs → in-place
+     `CopyObject` with `MetadataDirective=REPLACE` rewrites the headers
+     without re-transferring the body.
+   - Otherwise skip.
+
+## FFG English fallback
+
+By default the English download stage treats a swudb 404 as "card not
+yet published" and moves on; the locale fallback stage then propagates
+the (missing) English to no one, leaving the card absent from every
+locale. Pass `--ffg-en-fallback` to instead query the FFG API's
+`locale=en` index for any card swudb didn't supply and substitute its
+`artFront` (and `artBack` for leaders, with the same FFG→swudb
+orientation swap used for non-English locales).
+
+Caveats:
+
+- FFG English images are typically lower resolution than swudb's. This
+  flag is a "make do" substitute intended for preview cards that swudb
+  has not ingested yet, not a permanent replacement.
+- Substituted PNGs are cached on disk like any other download. To
+  re-attempt swudb on the next run (e.g. after swudb publishes the real
+  image), pass `--overwrite-downloads`.
+- When `--tokens` is used, the flag also routes a missing-from-swudb
+  token through the same FFG English path (`cardUid` lookup) instead of
+  aborting with the standard "token not found on swudb" error.
+- The download stage prints both per-card substitution lines and a
+  summary count at the end, so substitutions are never silent.
+
+## Preview-set caching
+
+Stable sets are uploaded with `Cache-Control: public, max-age=31536000,
+immutable` (1 year). Preview sets are uploaded with `public,
+max-age=604800, immutable` (1 week) so browsers naturally pick up any
+mid-preview image updates (low-res replacements, locale fill-ins as FFG
+catches up to swudb) within a week of the change.
+
+The list of preview sets lives in `PREVIEW_SETS` near the top of
+`process_cards.py`. To rotate a set:
+
+1. **Promoting to preview**: add the set code to `PREVIEW_SETS` and run
+   the pipeline. New objects upload with the 1-week header; any existing
+   objects with the 1-year header are detected as `header-changed` and
+   their `Cache-Control` is rewritten in place via `CopyObject` (no body
+   re-upload, no bandwidth cost).
+2. **During preview**: ongoing pipeline runs continue normally. Any
+   image whose bytes change still does a full PUT — the bytes-vs-header
+   check is ordered so a content change always wins over a header
+   change.
+3. **Demoting after stabilization**: remove the set from `PREVIEW_SETS`
+   and run the pipeline once. Every object reclassifies as
+   `header-changed` and the headers are rewritten back to the 1-year
+   immutable value.
+
+The client-side `?v=N` cache-buster in `src/app/_utils/s3Utils.ts`
+remains the global escape hatch if a coarser cache invalidation is ever
+needed.
 
 ## Set rotation
 

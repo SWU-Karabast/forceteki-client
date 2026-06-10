@@ -6,6 +6,7 @@ import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { getBorderColor } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
@@ -14,8 +15,43 @@ import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 import { useEffectHighlightSx } from '@/app/_contexts/ConstantEffectHighlight.context';
+import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
+
+
+const usePopoverConfig = (card: ICardData): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
+    const { connectedPlayer } = useGame();
+    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
+    const arena = card.zone;
+
+    if (cardInPlayersHand) {
+        return {
+            anchorOrigin:{
+                vertical: -5,
+                horizontal: 'center',
+            },
+            transformOrigin: {
+                vertical: 'bottom',
+                horizontal: 'center',
+            }
+        };
+    }
+
+    // if the unit is on the left side, we display the popover to the right.
+    // if the unit is on the right side, we display the popover to the left
+    // we want to avoid displaying the popover on the same place as the card if there's no remaining screen left
+    return {
+        anchorOrigin:{
+            vertical: 'center',
+            horizontal: arena === ZoneName.SpaceArena ? 'right' : -5,
+        },
+        transformOrigin: {
+            vertical: 'center',
+            horizontal: arena === ZoneName.SpaceArena ? -5 : 'right',
+        }
+    };
+}
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -32,16 +68,17 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { getCardback } = useCosmetics();
     const highlightSx = useEffectHighlightSx(card?.uuid);
 
+    const locale = useCardImageLocale();
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
     const phase = gameState?.phase;
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
 
-    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
     const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
     const isHiddenHandCard = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
-    
+    const popoverConfig = usePopoverConfig(card);
+
     // Check if card is blocked from play by opponent's effect (e.g., Regional Governor, Trade Route Taxation)
     const isBlockedFromPlay = !!card.blockedFromPlayReason;
 
@@ -121,29 +158,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         return () => document.removeEventListener('touchstart', onTouchStart);
     }, [open, isTouchDevice]);
 
-    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
-        if (cardInPlayersHand) {
-            return {
-                anchorOrigin:{
-                    vertical: -5,
-                    horizontal: 'center',
-                },
-                transformOrigin: {
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                } };
-        }
 
-        return {
-            anchorOrigin:{
-                vertical: 'center',
-                horizontal: -5,
-            },
-            transformOrigin: {
-                vertical: 'center',
-                horizontal: 'right',
-            } };
-    }
 
     const showValueAdjuster = () => {
         const prompt = getConnectedPlayerPrompt();
@@ -170,6 +185,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const styledCardUrl = card
         ? s3CardImageURL(
             { ...card, setId: card.clonedCardId ?? card.setId },
+            locale,
             cardStyle,
             cardbackPath,
         )
@@ -364,6 +380,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('power-badge')})`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
@@ -378,6 +397,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('hp-badge')})`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
@@ -658,7 +680,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     sx={styles.cloneIcon}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
-                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
+                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId }, locale)}
                     data-card-type="clone"
                     data-card-id={card.setId.set + '_' + card.setId.number}
                 >
@@ -680,14 +702,14 @@ const GameCard: React.FC<IGameCardProps> = ({
                 />
                 {showSelectedGradient && <Box sx={styles.selectedGradient} />}
                 {cardImageStatus === 'error' && (
-                    <CardImageMissingOverlay label={cardImageLabel({ ...card, setId: updatedCardId })} />
+                    <CardImageMissingOverlay label={cardImageLabel({ ...card, setId: updatedCardId }, locale)} />
                 )}
                 <Box
                     sx={styles.cardOverlay}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     {...longPressHandlers}
-                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId })}
+                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId }, locale)}
                     data-card-type={card.printedType}
                     data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
                 >
@@ -768,7 +790,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                 onClose={handlePreviewClose}
                 disableRestoreFocus
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' }, tabIndex: -1 } }}
-                {...popoverConfig()}
+                {...popoverConfig}
             >
                 <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
                 {isPreviewingLeaderCard && !isTouchDevice && !isFlipped && (
@@ -791,6 +813,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                     {...longPressHandlers}
                     data-card-url={s3CardImageURL(
                         { ...subcard, setId: subcard.clonedCardId ?? subcard.setId },
+                        locale,
                         CardStyle.Plain,
                         cardbackPath)
                     }
@@ -830,6 +853,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 {...longPressHandlers}
                                 data-card-url={s3CardImageURL(
                                     { ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId },
+                                    locale,
                                     CardStyle.Plain,
                                     cardbackPath)
                                 }
