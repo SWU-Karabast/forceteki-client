@@ -34,6 +34,7 @@ export interface IDeckManagementState {
     savedDecks: StoredDeck[];
     setSavedDecks: (decks: StoredDeck[]) => void;
     fetchDecks: () => Promise<void>;
+    isLoadingSavedDecks: boolean;
     isBo3Allowed: boolean;
     // SWU Stats integration
     swuStatsDecks: ISwuStatsDeckItem[];
@@ -100,6 +101,7 @@ export const useDeckManagement = (): IDeckManagementState => {
     const [deckLink, setDeckLink] = useState<string>('');
     const [saveDeck, setSaveDeck] = useState<boolean>(false);
     const [savedDecks, setSavedDecks] = useState<StoredDeck[]>([]);
+    const [isLoadingSavedDecks, setIsLoadingSavedDecks] = useState<boolean>(true);
 
     // SWU Stats integration state
     const [swuStatsDecks, setSwuStatsDecks] = useState<ISwuStatsDeckItem[]>([]);
@@ -282,6 +284,7 @@ export const useDeckManagement = (): IDeckManagementState => {
     }, [favoriteDeck]);
 
     const fetchDecks = useCallback(async () => {
+        setIsLoadingSavedDecks(true);
         try {
             await retrieveDecksForUser(session?.user, user, { 
                 setDecks: setSavedDecks, 
@@ -290,6 +293,8 @@ export const useDeckManagement = (): IDeckManagementState => {
         } catch (error) {
             console.error('Error fetching decks:', error);
             alert('Server error when fetching decks');
+        } finally {
+            setIsLoadingSavedDecks(false);
         }
     }, [session?.user, user, handleInitializeDeckSelection]);
 
@@ -349,6 +354,7 @@ export const useDeckManagement = (): IDeckManagementState => {
         savedDecks,
         setSavedDecks,
         fetchDecks,
+        isLoadingSavedDecks,
         isBo3Allowed,
         // SWU Stats integration
         swuStatsDecks,
