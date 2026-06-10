@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Box } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { useGame } from '@/app/_contexts/Game.context';
 import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';

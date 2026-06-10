@@ -2,7 +2,7 @@
 import { Box, MenuItem, Typography } from '@mui/material';
 import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';

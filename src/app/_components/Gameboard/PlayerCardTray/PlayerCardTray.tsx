@@ -1,6 +1,6 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import { ChatBubbleOutline } from '@mui/icons-material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import Credits from '../_subcomponents/PlayerTray/Credits';

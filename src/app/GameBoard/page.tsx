@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Box, Grid2 as Grid, Typography } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
@@ -103,7 +103,7 @@ const GameBoard = () => {
     // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
-            pr: sidebarOpen ? 'min(20%, 280px)' : '0',
+            pr: sidebarOpen ? { xs: 0, md: 'min(20%, 280px)' } : '0',
             width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
             height: '100dvh',
@@ -117,7 +117,7 @@ const GameBoard = () => {
         centralPromptContainer: {
             position: 'absolute',
             top: '48.6%',
-            left: sidebarOpen ? 'calc(50vw - min(10%, 140px))' : '50vw',
+            left: sidebarOpen ? { xs: '50vw', md: 'calc(50vw - min(10%, 140px))' } : '50vw',
             transform: 'translate(-50%, -50%)',
             transition: 'left 0.3s ease-in-out',
             display: 'flex',
@@ -156,7 +156,7 @@ const GameBoard = () => {
             position: 'absolute',
             bottom: 0, // Touch bottom edge
             left: '2rem', // Add left margin to constrain width
-            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
+            right: sidebarOpen ? { xs: '2rem', md: 'calc(min(20%, 280px) + 2rem)' } : '2rem', // Add right margin to match
             height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
@@ -170,7 +170,7 @@ const GameBoard = () => {
             position: 'absolute',
             top: 0, // Touch top edge
             left: '2rem', // Add left margin to constrain width
-            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
+            right: sidebarOpen ? { xs: '2rem', md: 'calc(min(20%, 280px) + 2rem)' } : '2rem', // Add right margin to match
             height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
