@@ -13,9 +13,9 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
+import { useEffectHighlightSx } from '@/app/_contexts/ConstantEffectHighlight.context';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
-import { getEffectHighlightSx } from '@/app/_hooks/ConstantEffectHelpers';
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -30,8 +30,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
     const { clearPopups } = usePopup();
     const { getCardback } = useCosmetics();
-    const { highlightedEffect } = useGame();
-    const highlightSx = getEffectHighlightSx(card.uuid, highlightedEffect);
+    const highlightSx = useEffectHighlightSx(card?.uuid);
 
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
@@ -274,7 +273,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            ...highlightSx,
             transform: card.exhausted && card.zone !== 'resource' ? 'rotate(4deg)' : 'none',
             transition: 'box-shadow 0.25s ease, transform 0.15s ease',
             '&:hover': {
@@ -654,7 +652,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
     }
     return (
-        <Box sx={styles.cardContainer}>
+        <Box sx={[styles.cardContainer, highlightSx]}>
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
                 <Box
                     sx={styles.cloneIcon}

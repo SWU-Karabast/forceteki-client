@@ -1,31 +1,20 @@
 import { DeckSource } from '@/app/_utils/fetchDeckData';
 
-export interface IConstantEffectMetadata {
-    effectTitle: string;
-    effectSubtitle?: string;
-    effectDescription?: string;
-}
-
-export interface IConstantEffectSourceCard {
+export interface IConstantEffectSource {
     setId: ICardSetId;
-    name?: string;
     type?: string;
     controllerId: string;
     sourceZone?: string;
-    effectMetadata: IConstantEffectMetadata;
-}
-
-export interface IConstantEffectTarget {
-    uuid: string;
+    sourceTitle: string;
+    sourceSubtitle?: string;
+    effectDescription?: string;
 }
 
 export interface IConstantEffect {
     sourceCardUuid: string;
-    cardData: IConstantEffectSourceCard;
-    targets: IConstantEffectTarget[];
+    source: IConstantEffectSource;
+    targets: string[];
 }
-
-// End constant effects
 
 export enum CardType {
     Base = 'base',

@@ -48,8 +48,6 @@ interface IGameContextType {
     createNewSocket: () => Socket | undefined;
     gameIsEnded: () => boolean;
     constantEffects: IConstantEffect[];
-    highlightedEffect: IConstantEffect | null;
-    setHighlightedEffect: (effect: IConstantEffect | null) => void;
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -78,7 +76,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
     const { messages: gameMessages, processMessageDeltas, processMessageRetransmit, resetMessages } = useGameMessages();
-    const [highlightedEffect, setHighlightedEffect] = useState<IConstantEffect | null>(null);
 
     // Initialize sound handler with user preferences
     const { playSound } = useSoundHandler({
@@ -456,8 +453,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 createNewSocket,
                 gameIsEnded,
                 constantEffects,
-                highlightedEffect,
-                setHighlightedEffect,
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,

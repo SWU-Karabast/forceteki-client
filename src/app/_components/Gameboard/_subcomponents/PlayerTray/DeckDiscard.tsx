@@ -8,7 +8,8 @@ import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.typ
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
-import { getDiscardPileHighlightSx } from '@/app/_hooks/ConstantEffectHelpers';
+import { useDiscardPileHighlightSx } from '@/app/_contexts/ConstantEffectHighlight.context';
+
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     const { gameState, connectedPlayer } = useGame();
@@ -22,9 +23,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     // Individual ratio states
     const [isDiscardWiderThanTall, setIsDiscardWiderThanTall] = useState(false);
     const [isDeckWiderThanTall, setIsDeckWiderThanTall] = useState(false);
-
-    const { highlightedEffect } = useGame();  // add to existing destructure
-    const discardPulseSx = getDiscardPileHighlightSx(highlightedEffect, trayPlayer);
+    const discardHighlightSx = useDiscardPileHighlightSx(trayPlayer);
 
     // Use a more stable layout effect for dimension measurements
     useLayoutEffect(() => {
@@ -182,7 +181,6 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
                 backgroundPosition: 'center',
                 backgroundSize: 'cover',
                 backgroundImage: topDiscardCardUrl,
-                ...discardPulseSx,
                 backgroundRepeat: 'no-repeat',
                 border: selectableDiscardCard ? '2px solid var(--selection-green)' : 'none',
             },
@@ -266,7 +264,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
         <Box sx={styles.containerStyle}>
             <Box
                 ref={discardRef}
-                sx={styles.discard.discardCardStyle}
+                sx={[styles.discard.discardCardStyle, discardHighlightSx]}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose} 
                 onClick={handleDiscardToggle}

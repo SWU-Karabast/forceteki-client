@@ -11,7 +11,7 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
-import { getEffectHighlightSx } from '@/app/_hooks/ConstantEffectHelpers';
+import { useEffectHighlightSx } from '@/app/_contexts/ConstantEffectHighlight.context';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -26,9 +26,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    const { highlightedEffect } = useGame();
-    const highlightSx = getEffectHighlightSx(card?.uuid, highlightedEffect);
-
+    const highlightSx = useEffectHighlightSx(card?.uuid);
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
     const isHoveredInChat = hoveredChatCard.id === card?.uuid;
@@ -246,7 +244,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            ...highlightSx,
             transition: 'box-shadow 0.25s ease',
             cursor: clickDisabled() ? 'default' : 'pointer',
             position: 'relative',
@@ -503,7 +500,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         <Box sx={{ width: '100%' }}>
             {capturedCards.length > 0 && isConnectedPlayer && capturedCardsDecoration}
             <Box
-                sx={isDeployed ? styles.deployedPlaceholder : styles.card}
+                sx={isDeployed ? styles.deployedPlaceholder : [styles.card, highlightSx]}
                 onClick={handleClick}
                 aria-owns={open ? 'mouse-over-popover' : undefined}
                 aria-haspopup="true"
