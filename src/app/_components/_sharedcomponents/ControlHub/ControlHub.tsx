@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Divider, IconButton } from '@mui/material';
-import { GitHub } from '@mui/icons-material';
+import { Box, Divider, IconButton, Tooltip } from '@mui/material';
+import { GitHub, PublicOutlined } from '@mui/icons-material';
 import { FaDiscord } from 'react-icons/fa6';
 import NextLinkMui, { CombinedLinkProps } from './_subcomponents/NextLinkMui/NextLinkMui';
 import Drawer from './_subcomponents/Drawer';
