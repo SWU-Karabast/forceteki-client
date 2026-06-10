@@ -32,8 +32,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
-import NewFormatAvailableAnnouncement from '../../NewFormatAvailableAnnouncement/NewFormatAvailableAnnouncement';
-import { NewGameFormatAvailable } from '@/app/_constants/constants';
+import GameAnnouncementBanner, { CurrentGameAnnouncement } from '../../GameAnnouncementBanner/GameAnnouncementBanner';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
 interface IDeckPreferencesHandlers {
@@ -51,6 +50,7 @@ interface IQuickGameFormProps {
     deckLink: string;
     setDeckLink: (value: string) => void;
     savedDecks: StoredDeck[];
+    isLoadingSavedDecks: boolean;
     handleDeckManagement: () => void;
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
     errorState: DeckErrorState;
@@ -74,6 +74,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     deckLink,
     setDeckLink,
     savedDecks,
+    isLoadingSavedDecks,
     handleDeckManagement,
     handleFormSubmissionWithUndoCheck,
     errorState,
@@ -115,6 +116,12 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+    const [deckLinkTouched, setDeckLinkTouched] = useState<boolean>(false);
+    const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
+    const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
+    const isNewDeckInputEmpty = !showSavedDecks && deckLink.trim().length === 0;
+    const isJoinQueueDisabled = queueState || isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty;
+    const showDeckLinkRequiredError = deckLinkTouched && isNewDeckInputEmpty;
 
     // Timer ref for clearing the inline text after 5s
 
@@ -133,6 +140,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             setShowSavedDecks(false);
             setSwuStatsDeckSource(false);
         }
+        setDeckLinkTouched(false);
         clearErrors();
     }
 
@@ -296,6 +304,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     const handleJoinGameQueue = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (isJoinQueueDisabled) {
+            return;
+        }
         setFormat(queueConfig.format);
         setCardPool(queueConfig.cardPool);
         setGamesToWinMode(queueConfig.gamesToWinMode)
@@ -430,7 +441,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setFavoriteDeck(e.target.value as string)
             }
-            disabled={userLoading}
+            disabled={userLoading || isLoadingSavedDecks}
             placeholder="Favorite Decks"
         >
             {savedDecks.length === 0 ? (
@@ -548,12 +559,21 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             <StyledTextField
                                 type="text"
                                 value={deckLink}
+                                onBlur={() => setDeckLinkTouched(true)}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                     clearErrors()
+                                    if (e.target.value.trim().length > 0) {
+                                        setDeckLinkTouched(false);
+                                    }
                                     setDeckLink(e.target.value);
                                     handleJsonDeck(e.target.value);
                                 }}
                             />
+                            {showDeckLinkRequiredError && (
+                                <Typography variant="body1" sx={styles.errorMessageStyle}>
+                                    Enter a deck link or paste deck JSON.
+                                </Typography>
+                            )}
                         </FormControl>
 
                         {/* Save Deck To Favourites Checkbox */}
@@ -612,13 +632,14 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 />
 
                 {/* Beta Announcement */}
-                { NewGameFormatAvailable && <NewFormatAvailableAnnouncement format={NewGameFormatAvailable} />}
+                {CurrentGameAnnouncement && <GameAnnouncementBanner announcement={CurrentGameAnnouncement} />}
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,
+                <Button type="submit" disabled={isJoinQueueDisabled} variant="contained" sx={{ ...styles.submitButtonStyle,
                     '&.Mui-disabled': {
                         backgroundColor: '#404040',
-                        color: 'var(--variant-containedColor)',
+                        color: '#9e9e9e',
+                        opacity: 1,
                     },
                     mb: '1rem',
                 }}>

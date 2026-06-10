@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect } from 'react';
-import { Grid2 as Grid } from '@mui/material';
+import { Grid } from '@mui/material';
 import { usePathname, useRouter } from 'next/navigation';
 import Players from '../_components/Lobby/Players/Players';
 import Deck from '../_components/Lobby/Deck/Deck';

@@ -4,6 +4,7 @@ import { CardcoreDeckProvider } from './CardcoreDeckProvider';
 import { DeckProviderBase } from './DeckProviderBase';
 import { HoloscanDeckProvider } from './HoloscanDeckProvider';
 import { KyberdecksDeckProvider } from './KyberdecksDeckProvider';
+import { MeleeDeckProvider } from './MeleeDeckProvider';
 import { MySwuDeckProvider } from './MySwuDeckProvider';
 import { ProtectThePodDeckProvider } from './ProtectThePodDeckProvider';
 import { SwubaseDeckProvider } from './SwubaseDeckProvider';
@@ -31,6 +32,7 @@ import { DeckFetchError, DeckFetchErrorReason } from './types';
 const providers: readonly DeckProviderBase[] = [
     new SwustatsDeckProvider(),
     new SwudbDeckProvider(),
+    new MeleeDeckProvider(),
     new SwUnlimitedDbDeckProvider(),
     new SwucardhubDeckProvider(),
     new SwubaseDeckProvider(),

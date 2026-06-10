@@ -1,13 +1,18 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Typography, Dialog, DialogContent, DialogActions, TextField, Link
+    Box, Typography, Dialog, DialogContent, DialogActions, TextField,
+    MenuItem, Select, SelectChangeEvent
 } from '@mui/material';
 
 import { useUser } from '@/app/_contexts/User.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import CardLanguageNoticeDialog from '@/app/_components/_sharedcomponents/CardLanguageNoticeDialog';
 import { setUsernameOnServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
+import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
+import { CARD_IMAGE_LOCALE_LABELS, CardImageLocale, SUPPORTED_CARD_IMAGE_LOCALES } from '@/app/_utils/s3Utils';
+import { useCardImageLocaleContext } from '@/app/_contexts/CardImageLocale.context';
 
 interface WelcomePopupProps {
     open: boolean;
@@ -15,11 +20,14 @@ interface WelcomePopupProps {
 }
 
 const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
-    const { user, updateUsername } = useUser();
+    const { user, updateUsername, updateUserPreferences } = useUser();
+    const { setLocale } = useCardImageLocaleContext();
     // Initialize username from user context or empty string
     const [username, setUsername] = useState<string>('');
     const [userErrorSummary, setUserErrorSummary] = useState<string | null>(null);
     const [canSubmitUsername, setCanSubmitUsername] = useState(false);
+    const [cardLanguage, setCardLanguage] = useState<CardImageLocale>(CardImageLocale.English);
+    const [showLanguageNotice, setShowLanguageNotice] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -27,6 +35,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
             const validationError = validateDiscordUsername(initialUsername);
             setUserErrorSummary(validationError);
             setCanSubmitUsername(validationError === null && initialUsername.trim() !== '');
+            setCardLanguage(CardImageLocale.English);
         } else {
             // Reset states when dialog is closed
             setUserErrorSummary(null);
@@ -34,7 +43,33 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         }
     }, [open, user?.username]); // Rerun when dialog opens or the initial username changes
 
+    const handleCardLanguageChange = (event: SelectChangeEvent<CardImageLocale>) => {
+        const next = event.target.value as CardImageLocale;
+        setCardLanguage(next);
+        if (next !== CardImageLocale.English) {
+            setShowLanguageNotice(true);
+        }
+    };
+
+    // Best-effort: persist a non-English card language selection silently.
+    const persistCardLanguageIfNonEnglish = async (): Promise<void> => {
+        if (cardLanguage === CardImageLocale.English) return;
+        try {
+            const result = await savePreferencesGeneric(
+                user,
+                { gameOptions: { cardLanguage } },
+                updateUserPreferences
+            );
+            if (result.success) {
+                setLocale(cardLanguage);
+            }
+        } catch (error) {
+            console.error('Failed to save card language during onboarding:', error);
+        }
+    };
+
     const handleSkip = async () => {
+        await persistCardLanguageIfNonEnglish();
         onClose();
     };
 
@@ -51,6 +86,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         try {
             const newUsernameFromServer = await setUsernameOnServer(user, username.trim());
             updateUsername(newUsernameFromServer);
+            await persistCardLanguageIfNonEnglish();
             onClose();
         } catch (error) {
             console.log(error);
@@ -175,79 +211,124 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         preferenceAddedStyle: {
             backgroundColor: '#3590D2',
             '&:hover':{ backgroundColor: '#4BA3E8' }
+        },
+        cardLanguageLabel: {
+            fontSize: '1rem',
+            color: '#fff',
+            marginBottom: '0.25rem',
+        },
+        cardLanguageDescription: {
+            color: '#B0B0B0',
+            fontSize: '0.85rem',
+            marginBottom: '0.5rem',
+        },
+        cardLanguageRow: {
+            display: 'flex',
+            alignItems: 'center',
+        },
+        cardLanguageSelect: {
+            minWidth: '180px',
+            backgroundColor: '#3B4252',
+            color: '#fff',
+            '& .MuiSelect-icon': { color: '#fff' },
         }
     } as const;
 
     return (
-        <Dialog
-            open={open}
-            onClose={(event, reason) => {
-                if (reason === 'backdropClick') return; // disable backdrop closing
-            }}
-            disableEscapeKeyDown
-            aria-labelledby="welcome-dialog-title"
-            sx={styles.dialog}
-        >
-            <DialogContent>
-                <Typography variant="h4" sx={styles.title} id="welcome-dialog-title">
-                    Welcome to Karabast!
-                </Typography>
-                <Typography variant="body1" sx={styles.message}>
-                    Before you start playing, we recommend setting a username that other players will see during games.
-                </Typography>
+        <>
+            <Dialog
+                open={open}
+                onClose={(event, reason) => {
+                    if (reason === 'backdropClick') return; // disable backdrop closing
+                }}
+                disableEscapeKeyDown
+                aria-labelledby="welcome-dialog-title"
+                sx={styles.dialog}
+            >
+                <DialogContent>
+                    <Typography variant="h4" sx={styles.title} id="welcome-dialog-title">
+                        Welcome to Karabast!
+                    </Typography>
 
-                <Typography variant="body1" sx={styles.message}>
-                    Would you like to set your username now?
-                </Typography>
+                    <Typography variant="body1" sx={styles.message}>
+                        Choose what language you would like cards displayed in. This can be changed at any time in the Preferences page.
+                    </Typography>
+                    <Box sx={{ ...styles.cardLanguageRow, mb: '1.5rem' }}>
+                        <Select
+                            value={cardLanguage}
+                            onChange={handleCardLanguageChange}
+                            size="small"
+                            sx={styles.cardLanguageSelect}
+                        >
+                            {SUPPORTED_CARD_IMAGE_LOCALES.map((loc) => (
+                                <MenuItem key={loc} value={loc}>
+                                    {CARD_IMAGE_LOCALE_LABELS[loc]}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </Box>
 
-                <Box sx={styles.textFieldContainer}>
-                    <TextField
-                        placeholder={user?.username || 'Enter your username'}
-                        value={username}
-                        onChange={handleUsernameChange}
-                        sx={styles.textField}
-                        error={!!userErrorSummary}
-                        fullWidth
+                    <Typography variant="body1" sx={styles.message}>
+                        Before you start playing, we recommend setting a username that other players will see during games.
+                    </Typography>
+
+                    <Typography variant="body1" sx={styles.message}>
+                        Would you like to set your username now?
+                    </Typography>
+
+                    <Box sx={styles.textFieldContainer}>
+                        <TextField
+                            placeholder={user?.username || 'Enter your username'}
+                            value={username}
+                            onChange={handleUsernameChange}
+                            sx={styles.textField}
+                            error={!!userErrorSummary}
+                            fullWidth
+                        />
+                    </Box>
+
+                    <Box sx={styles.validationMessagesContainer}>
+                        {userErrorSummary && (
+                            <Typography variant={'body2'} sx={styles.errorMessageStyle}>
+                                {userErrorSummary}
+                            </Typography>
+                        )}
+                    </Box>
+                    <Box component="ul" sx={styles.infoList}>
+                        <li>
+                            <Typography component="span" variant="body2" sx={styles.infoItem}>
+                                You can change your username <strong>freely for 1 week</strong>. After that, changes are allowed <strong>once per 
+                                    month</strong>.
+                            </Typography>
+                        </li>
+                        <li>
+                            <Typography component="span" variant="body2" sx={styles.infoItem}>
+                                Usernames must be <strong>respectful and non-offensive</strong>
+                            </Typography>
+                        </li>
+                        <li>
+                            <Typography component="span" variant="body2" sx={styles.infoItem}>
+                                You can also change your username later in the <strong>Preferences</strong> tab
+                            </Typography>
+                        </li>
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={styles.actions}>
+                    <PreferenceButton buttonFnc={handleSkip} text="Skip" variant="standard" />
+                    <PreferenceButton
+                        buttonFnc={handleSetUsername}
+                        text="Set Username"
+                        variant="standard"
+                        sx={canSubmitUsername ? { backgroundColor: '#3590D2', '&:hover': { backgroundColor: '#4BA3E8' } } : {}}
+                        disabled={!canSubmitUsername}
                     />
-                </Box>
-
-                <Box sx={styles.validationMessagesContainer}>
-                    {userErrorSummary && (
-                        <Typography variant={'body2'} sx={styles.errorMessageStyle}>
-                            {userErrorSummary}
-                        </Typography>
-                    )}
-                </Box>
-                <Box component="ul" sx={styles.infoList}>
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            You can change your username <strong>freely for 1 week</strong>. After that, changes are allowed <strong>once per 
-                                month</strong>.
-                        </Typography>
-                    </li>
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            Usernames must be <strong>respectful and non-offensive</strong>
-                        </Typography>
-                    </li>
-                    <li>
-                        <Typography component="span" variant="body2" sx={styles.infoItem}>
-                            You can also change your username later in the <strong>Preferences</strong> tab
-                        </Typography>
-                    </li>
-                </Box>
-            </DialogContent>
-            <DialogActions sx={styles.actions}>
-                <PreferenceButton buttonFnc={handleSkip} text="Skip" variant="standard" />
-                <PreferenceButton
-                    buttonFnc={handleSetUsername}
-                    text="Set Username"
-                    variant="standard"
-                    sx={canSubmitUsername ? { backgroundColor: '#3590D2', '&:hover': { backgroundColor: '#4BA3E8' } } : {}}
-                    disabled={!canSubmitUsername}
-                />
-            </DialogActions>
-        </Dialog>
+                </DialogActions>
+            </Dialog>
+            <CardLanguageNoticeDialog
+                open={showLanguageNotice}
+                onClose={() => setShowLanguageNotice(false)}
+            />
+        </>
     );
 };
 

@@ -29,7 +29,8 @@ export enum DeckSource {
     SWUForge = 'SWUForge',
     KyberDecks = 'KyberDecks',
     CardCore = 'CardCore',
-    HoloScan = 'HoloScan'
+    HoloScan = 'HoloScan',
+    Melee = 'Melee'
 }
 
 export interface IDeckData {

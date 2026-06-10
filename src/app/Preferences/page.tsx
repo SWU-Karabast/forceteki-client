@@ -1,14 +1,16 @@
 'use client';
 import { Box, Typography } from '@mui/material';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '../_contexts/User.context';
 
-const Preferences: React.FC = () => {
+const PreferencesInner: React.FC = () => {
     const router = useRouter();
     const { user } = useUser();
+    const searchParams = useSearchParams();
+    const initialTab = searchParams?.get('tab') ?? undefined;
     const handleExit = () => {
         router.push('/');
     }
@@ -16,7 +18,8 @@ const Preferences: React.FC = () => {
     // ----------------------Styles-----------------------------//
     const styles = {
         lobbyTextStyle:{
-            ml:'30px',
+            ml: { xs: '15px', md: '30px' },
+            mt: { xs: '10px', md: 0 },
             fontSize: '3.0em',
             fontWeight: '600',
             color: 'white',
@@ -26,16 +29,18 @@ const Preferences: React.FC = () => {
             zIndex: 2
         },
         mainContainer:{
-            height: '100vh',
-            overflow: 'hidden',
+            minHeight: '100vh',
+            height: { xs: 'auto', md: '100vh' },
+            overflowX: 'hidden',
+            overflowY: { xs: 'visible', md: 'hidden' },
             backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display:'grid',
         },
         disclaimer: {
-            position: 'absolute',
-            bottom: 0,
+            position: { xs: 'relative', md: 'absolute' },
+            bottom: { xs: 'auto', md: 0 },
             width: '100%',
             padding: '1rem',
             textAlign: 'center',
@@ -49,8 +54,9 @@ const Preferences: React.FC = () => {
             <PreferencesComponent
                 sidebarOpen={false}
                 isPreferenceOpen={true}
-                tabs={user ? ['general','gameOptions','soundOptions','cosmetics'] : ['general','soundOptions']}
+                tabs={user ? ['general','gameOptions','soundOptions','cosmetics'] : ['general','gameOptions','soundOptions']}
                 variant={'homePage'}
+                initialTab={initialTab}
             />
             <Typography variant="body1" sx={styles.disclaimer}>
                 Karabast is in no way affiliated with Disney or Fantasy Flight Games.
@@ -60,5 +66,11 @@ const Preferences: React.FC = () => {
         </Box>
     );
 };
+
+const Preferences: React.FC = () => (
+    <Suspense fallback={null}>
+        <PreferencesInner />
+    </Suspense>
+);
 
 export default Preferences;

@@ -11,11 +11,14 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
 import { fetchDeckData, IDeckData, DeckFetchError, DeckFetchErrorReason } from '@/app/_utils/fetchDeckData';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay, cardImageFillContainSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
 import PercentageCircle from '@/app/_components/DeckPage/DeckComponent/PercentageCircle';
 import AnimatedStatsTable from '@/app/_components/DeckPage/DeckComponent/AnimatedStatsTable';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
@@ -52,6 +55,12 @@ const DeckDetails: React.FC = () => {
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const params = useParams();
     const deckId = params?.DeckId;
+
+    const locale = useCardImageLocale();
+    const leaderImageUrl = deckData ? s3CardImageURL(deckData.leader, locale, CardStyle.PlainLeader) : '';
+    const baseImageUrl = deckData ? s3CardImageURL(deckData.base, locale) : '';
+    const { status: leaderImageStatus, imgProps: leaderImgProps } = useImageLoadStatus(leaderImageUrl);
+    const { status: baseImageStatus, imgProps: baseImgProps } = useImageLoadStatus(baseImageUrl);
 
     // Rename states
     const [isRenaming, setIsRenaming] = useState(false);
@@ -147,6 +156,7 @@ const DeckDetails: React.FC = () => {
     const {
         aspectRatio,
         width,
+        isFlipped,
     } = useLeaderCardFlipPreview({
         anchorElement,
         cardId: deckData?.leader.id,
@@ -376,21 +386,13 @@ const DeckDetails: React.FC = () => {
         },
         boxGeneralStylingLeader: {
             backgroundColor: 'transparent',
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundImage: deckData ? `url(${s3CardImageURL(deckData.leader, CardStyle.PlainLeader)})` : 'none',
             width: '14rem',
             height: '10.18rem',
-            backgroundRepeat: 'no-repeat',
         },
         boxGeneralStylingBase: {
             backgroundColor: 'transparent',
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundImage: deckData ? `url(${s3CardImageURL(deckData.base)})` : 'none',
             width: '14rem',
             height: '10.18rem',
-            backgroundRepeat: 'no-repeat',
         },
         titleContainer:{
             width:'40rem',
@@ -570,22 +572,50 @@ const DeckDetails: React.FC = () => {
 
                     {/* Leader + Base */}
                     <Box sx={styles.leaderBaseContainer}>
-                        <Box sx={styles.boxGeneralStylingLeader}
+                        <Box sx={{ ...styles.boxGeneralStylingLeader, position: 'relative' }}
                             aria-owns={open ? 'mouse-over-popover' : undefined}
                             aria-haspopup="true"
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-type="leader"
-                            data-card-url={deckData ? s3CardImageURL(deckData.leader, CardStyle.PlainLeader) : ''}
-                        />
-                        <Box sx={styles.boxGeneralStylingBase}
+                            data-card-url={leaderImageUrl}
+                        >
+                            {deckData && (
+                                <Box
+                                    component="img"
+                                    src={leaderImageUrl}
+                                    alt=""
+                                    draggable={false}
+                                    {...leaderImgProps}
+                                    sx={cardImageFillContainSx}
+                                />
+                            )}
+                            {deckData && leaderImageStatus === 'error' && (
+                                <CardImageMissingOverlay label={cardImageLabel(deckData.leader, locale)} />
+                            )}
+                        </Box>
+                        <Box sx={{ ...styles.boxGeneralStylingBase, position: 'relative' }}
                             aria-owns={open ? 'mouse-over-popover' : undefined}
                             aria-haspopup="true"
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-type="base"
-                            data-card-url={deckData ? s3CardImageURL(deckData.base) : ''}
-                        />
+                            data-card-url={baseImageUrl}
+                        >
+                            {deckData && (
+                                <Box
+                                    component="img"
+                                    src={baseImageUrl}
+                                    alt=""
+                                    draggable={false}
+                                    {...baseImgProps}
+                                    sx={cardImageFillContainSx}
+                                />
+                            )}
+                            {deckData && baseImageStatus === 'error' && (
+                                <CardImageMissingOverlay label={cardImageLabel(deckData.base, locale)} />
+                            )}
+                        </Box>
                     </Box>
                     <Popover
                         id="mouse-over-popover"
@@ -606,7 +636,7 @@ const DeckDetails: React.FC = () => {
                     >
                         <Box sx={{ ...styles.cardPreview, backgroundImage:`${previewImage}` }} >
                         </Box>
-                        {anchorElement?.getAttribute('data-card-type') === 'leader' && (
+                        {anchorElement?.getAttribute('data-card-type') === 'leader' && !isFlipped && (
                             <Typography variant={'body1'} sx={styles.ctrlText}
                             >CTRL: View Flipside</Typography>
                         )}

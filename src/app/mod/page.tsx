@@ -1,7 +1,8 @@
 import React from 'react';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/_utils/auth';
-import { Box, Alert } from '@mui/material';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
 import Link from 'next/link';
 import ModPageClient from './ModPageClient';
 import { ServerApiService } from '../_services/ServerApiService';
