@@ -59,6 +59,7 @@ const HomePagePlayMode: React.FC = () => {
         setDeckLink,
         savedDecks,
         fetchDecks,
+        isLoadingSavedDecks,
         isBo3Allowed,
         // SWU Stats integration
         swuStatsDecks,
@@ -320,6 +321,7 @@ const HomePagePlayMode: React.FC = () => {
                                 deckLink={deckLink}
                                 setDeckLink={setDeckLink}
                                 savedDecks={savedDecks}
+                                isLoadingSavedDecks={isLoadingSavedDecks}
                                 handleDeckManagement={handleDeckManagement}
                                 handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
                                 errorState={errorState}
@@ -343,6 +345,7 @@ const HomePagePlayMode: React.FC = () => {
                                 deckLink={deckLink}
                                 setDeckLink={setDeckLink}
                                 savedDecks={savedDecks}
+                                isLoadingSavedDecks={isLoadingSavedDecks}
                                 handleDeckManagement={handleDeckManagement}
                                 handleFormSubmissionWithUndoCheck={handleFormSubmissionWithUndoCheck}
                                 errorState={errorState}
