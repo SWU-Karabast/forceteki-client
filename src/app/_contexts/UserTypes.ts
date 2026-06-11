@@ -1,4 +1,4 @@
-import type { CardImageLocale } from '@/app/_utils/s3Utils';
+
 
 export interface IUser extends IGetUser{
     email?: string;
@@ -66,6 +66,16 @@ export interface ICosmeticsPreferences {
     // disablePlaymats?: boolean;
 }
 
+export interface IKeyboardShortcuts {
+    passTurn?: string;
+    undo?: string;
+}
+
+export interface KeyboardLayoutProps {
+    keyboardShortcuts?: IKeyboardShortcuts;
+}
+import type { CardImageLocale } from '@/app/_utils/s3Utils';
+
 export interface IGameOptions {
     muteChat?: boolean;
     cardLanguage?: CardImageLocale;
@@ -87,6 +97,7 @@ export enum PlayerTimeRemainingStatus {
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
+    keyboardShortcuts?: IKeyboardShortcuts;
     gameOptions?: IGameOptions;
 }
 

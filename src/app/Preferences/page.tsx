@@ -52,7 +52,7 @@ const PreferencesInner: React.FC = () => {
             <PreferencesComponent
                 sidebarOpen={false}
                 isPreferenceOpen={true}
-                tabs={user ? ['general','gameOptions','soundOptions','cosmetics'] : ['general','gameOptions','soundOptions']}
+                tabs={user ? ['general','gameOptions', 'keyboardShortcuts','soundOptions','cosmetics'] : ['general','gameOptions','soundOptions']}
                 variant={'homePage'}
                 initialTab={initialTab}
             />
