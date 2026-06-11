@@ -23,6 +23,7 @@ import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferen
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
+import { IConstantEffect } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface IGameContextType {
     gameState: any;
@@ -46,6 +47,7 @@ interface IGameContextType {
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
     gameIsEnded: () => boolean;
+    constantEffects: IConstantEffect[];
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -105,6 +107,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }
         return zones
     }
+
+    const constantEffects: IConstantEffect[] = React.useMemo(
+        () => gameState?.constantEffects ?? [],
+        [gameState?.constantEffects],
+    );
+
 
     const handleGameStatePopups = (gameState: any, connectedPlayerId: string, isSpectatorMode: boolean) => {
         if (!connectedPlayerId || isSpectatorMode) return;
@@ -455,6 +463,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 hasChatDisabled,
                 createNewSocket,
                 gameIsEnded,
+                constantEffects,
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,
