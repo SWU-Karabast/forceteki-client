@@ -1,88 +1,12 @@
-import React, { useState } from 'react';
-import { Button, Box } from '@mui/material';
+import React from 'react';
+import { Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useGame } from '@/app/_contexts/Game.context';
-import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
-import useTimeout from '@/app/_utils/useTimeout';
-
-const pulseBorder = keyframes`
-  0% {
-    border-color: rgba(0, 140, 255, 0.4);
-    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
-  }
-  50% {
-    border-color: rgba(0, 180, 255, 0.6);
-    box-shadow: 0 0 8px rgba(0, 180, 255, 0.6);
-  }
-  100% {
-    border-color: rgba(0, 140, 255, 0.4);
-    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
-  }
-`;
-
-const pulseYellowBorder = keyframes`
-  0% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 4px rgba(204, 172, 0, 0.4);
-  }
-  50% {
-    border-color: rgba(220, 185, 0, 0.6);
-    box-shadow: 0 0 8px rgba(220, 185, 0, 0.6);
-  }
-  100% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 4px rgba(204, 172, 0, 0.4);
-  }
-`;
-
-const pulseYellowBorderAbility = keyframes`
-  0% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 8px rgba(204, 172, 0, 0.6);
-  }
-  50% {
-    border-color: rgba(220, 185, 0, 0.6);
-    box-shadow: 0 0 16px rgba(220, 185, 0, 0.8);
-  }
-  100% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 8px rgba(204, 172, 0, 0.6);
-  }
-`;
-
-const pulseGreenBorder = keyframes`
-  0% {
-    border-color: rgba(0, 170, 70, 0.4);
-    box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
-  }
-  50% {
-    border-color: rgba(0, 200, 90, 0.6);
-    box-shadow: 0 0 8px rgba(0, 200, 90, 0.6);
-  }
-  100% {
-    border-color: rgba(0, 170, 70, 0.4);
-    box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
-  }
-`;
-
-const pulseRedBorder = keyframes`
-  0% {
-    border-color: rgba(230, 0, 60, 0.4);
-    box-shadow: 0 0 4px rgba(230, 0, 60, 0.4);
-  }
-  50% {
-    border-color: rgba(255, 0, 70, 0.6);
-    box-shadow: 0 0 8px rgba(255, 0, 70, 0.6);
-  }
-  100% {
-    border-color: rgba(230, 0, 60, 0.4);
-    box-shadow: 0 0 4px rgba(230, 0, 60, 0.4);
-  }
-`;
+import PulseButton from '@/app/components/Button/PulseButton';
 
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
@@ -106,37 +30,12 @@ const createStyles = (isPortrait: boolean) => ({
         maxWidth: '100%',
     },
     promptButton: {
-        transform: 'skew(-10deg)',
-        borderRadius: '1rem',
         height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
         minWidth: { xs: '1.5rem', md: '2.5rem' },
         maxWidth: { xs: '5rem', sm: '7rem', md: '9rem' },
-        flex: '1 1 auto', 
-        
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '1px solid transparent',
-        background: `linear-gradient(rgb(29, 29, 29),rgb(29, 29, 29)) padding-box, 
-        linear-gradient(to top, #404040, #404040) border-box`,
-        '&:hover': {
-            background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
-            linear-gradient(to top,rgb(50, 81, 93), #404040) border-box`,
-        },
-        '&:not(:disabled)': {
-            transition: 'box-shadow 0.3s ease-in-out',
-        },
-        // Improve touch target size for mobile
-        touchAction: 'manipulation',
     },
     promptButtonText: {
-        transform: 'skew(10deg)',
-        lineHeight: '1.2',
-        fontSize: { xs: '0.6rem', sm: '0.9rem', md: '1.05rem' },     
-        textAlign: 'center',
-        '& :disabled': {
-            brightness: '0.7',
-        },
+        fontSize: { xs: '0.6rem', sm: '0.9rem', md: '1.05rem' },
     },
 });
 
@@ -189,7 +88,6 @@ const CardActionTray: React.FC = () => {
         return !!button.disabled;
     };
 
-
     return (
         <Grid
             container
@@ -214,7 +112,6 @@ const CardActionTray: React.FC = () => {
     );
 };
 
-
 interface IPromptButtonProps {
     button: IButtonsProps;
     sendGameMessage: (args: [string, string, string]) => void;
@@ -222,103 +119,45 @@ interface IPromptButtonProps {
     cooldown?: boolean;
 }
 
-
 const PromptButton: React.FC<IPromptButtonProps> = (props) => {
-    const { button, sendGameMessage, cooldown } = props;
+    const { button, sendGameMessage, cooldown, disabled = false } = props;
     const { isPortrait } = useScreenOrientation();
-    const [hasCooldown, setCooldown] = useState<boolean>(cooldown === true);
-    const disabled = hasCooldown || props.disabled;
     const styles = createStyles(isPortrait);
+    const variant = (() => {
+        if (disabled) {
+            return 'default'
+        }
 
-    useTimeout(() => {
-        setCooldown(false);
-    }, cooldown === true ? 500 : null);
-
-    const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
         if (button.arg === 'claimInitiative' || button.text === 'Draw') {
-            return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
-                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
-                '&:hover': {
-                    background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
-                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
-                },
-                '&:not(:disabled)': {
-                    animation: `${pulseBorder} 4s infinite ease-in-out`,
-                    boxShadow: '0 0 6px rgba(0, 140, 255, 0.5)',
-                    border: '1px solid rgba(0, 140, 255, 0.5)',
-                },
-            };
+            return 'info';
         }
 
         if (button.arg === 'pass' || button.arg === 'passAbility' || button.text === 'Return' || button.text === 'Exhaust' || button.text === 'Discard') {
-            return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #3d3a0a) padding-box, 
-                    linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
-                '&:hover': {
-                    background: `linear-gradient(rgb(29, 29, 29),rgb(81, 77, 20)) padding-box, 
-                    linear-gradient(to top, #d4c82a, #3d3a0a) border-box`,
-                    boxShadow: '0 0 8px rgba(204, 172, 0, 0.7)',
-                    border: '1px solid rgba(220, 185, 0, 0.7)',
-                },
-                '&:not(:disabled)': {
-                    animation: button.arg === 'pass' ? `${pulseYellowBorder} 4s infinite ease-in-out` : `${pulseYellowBorderAbility} 3s infinite ease-in-out`,
-                    boxShadow: '0 0 6px rgba(204, 172, 0, 0.5)',
-                    border: '1px solid rgba(204, 172, 0, 0.5)',
-                },
-            };
+            return 'warning';
         }
         
         if (button.arg === 'done' || button.text === 'Pay' || button.text === 'Top' || button.text === 'Play') {
-            return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, 
-                    linear-gradient(to top, #1cb34a, #0a3d1e) border-box`,
-                '&:hover': {
-                    background: `linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, 
-                    linear-gradient(to top, #2ad44c, #0a3d1e) border-box`,
-                    boxShadow: '0 0 8px rgba(0, 170, 70, 0.7)',
-                    border: '1px solid rgba(0, 200, 90, 0.7)',
-                },
-                '&:not(:disabled)': {
-                    animation: `${pulseGreenBorder} 4s infinite ease-in-out`,
-                    boxShadow: '0 0 6px rgba(0, 170, 70, 0.5)',
-                    border: '1px solid rgba(0, 170, 70, 0.5)',
-                },
-            };
+            return 'success';
         }
 
         if (button.arg === 'cancel' || button.text === 'Damage' || button.text === 'Bottom') {
-            return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #641515) padding-box, 
-                    linear-gradient(to top, #b82121, #641515) border-box`,
-                '&:hover': {
-                    background: `linear-gradient(rgb(29, 29, 29),rgb(110, 25, 25)) padding-box, 
-                    linear-gradient(to top, #e02929, #641515) border-box`,
-                    boxShadow: '0 0 8px rgba(230, 0, 60, 0.7)',
-                    border: '1px solid rgba(255, 0, 70, 0.7)',
-                },
-                '&:not(:disabled)': {
-                    animation: `${pulseRedBorder} 4s infinite ease-in-out`,
-                    boxShadow: '0 0 6px rgba(230, 0, 60, 0.5)',
-                    border: '1px solid rgba(230, 0, 60, 0.5)',
-                },
-            };
+            return 'danger';
         }
         
-        return {};
-    }
+        return 'default';
+    })();
 
     return (
-        <Button
-            variant="contained"
-            sx={{ ...styles.promptButton, ...actionTrayStyles(button, button.disabled) }}
+        <PulseButton
+            variant={variant}
+            sx={styles.promptButton}
+            textSx={styles.promptButtonText}
+            text={button.text}
+            pulse={button.arg === 'pass' ? 'big' : 'small'}
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
             disabled={disabled}
-        >
-            <Box sx={styles.promptButtonText}>
-                {button.text}
-            </Box>
-        </Button>
+            cooldown={cooldown}
+        />
     );
 };
 

@@ -6,14 +6,17 @@ import { useState } from 'react';
 import useTimeout from '@/app/_utils/useTimeout';
 import { deepmerge } from '@mui/utils';
 
-type PulseButtonVariant = 'success' | 'info' | 'warning' | 'danger';
+export type PulseButtonVariant = 'default' | 'success' | 'info' | 'warning' | 'danger';
+
+type PulseButtonAnimatedVariants = Exclude<PulseButtonVariant, 'default'>;
 
 export type ButtonProps = Omit<MuiButtonProps, 'sx' | 'variant'> & {
-    variant: PulseButtonVariant,
+    variant?: PulseButtonVariant,
     text: string,
     cooldown?: boolean;
     pulse?: 'small' | 'big';
-    sx?: SxProps<Theme>,
+    sx?: SxProps<Theme>;
+    textSx?: SxProps<Theme>;
 };
 
 const INFO_FROM_COLOR = '#008CFF';
@@ -28,7 +31,7 @@ const SUCCESS_TO_COLOR = '#00C85A';
 const DANGER_FROM_COLOR = '#E6003C';
 const DANGER_TO_COLOR = '#FF0046';
 
-const variantColors: Record<PulseButtonVariant, Record<'from' | 'to', string>> = {
+const variantColors: Record<PulseButtonAnimatedVariants, Record<'from' | 'to', string>> = {
     info: {
         from: INFO_FROM_COLOR,
         to: INFO_TO_COLOR,
@@ -84,6 +87,7 @@ const styles = {
 }
 
 const bgStyles = {
+    default: {},
     info: {
         background: `linear-gradient(#1d1d1d, #0a3b4d) padding-box, 
                     linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
@@ -118,34 +122,25 @@ const bgStyles = {
     }
 }
 
-export default function Button(props: ButtonProps) {
-    const {
-        variant = 'info',
-        text,
-        sx = {},
-        cooldown = false,
-        pulse = 'small',
-        disabled: disabledProp,
-        ...muiSharedProps
-    } = props;
-    const [hasCooldown, setCooldown] = useState<boolean>(cooldown === true);
-    const disabled = hasCooldown || disabledProp;
-    const isBigPulse = pulse === 'big';
-    const pulseAnimation = keyframes`
-      0% {
-        border-color: rgb(from ${variantColors[variant].from} r g b / 0.4);
-        box-shadow: 0 0 ${isBigPulse ? 8 : 4}px rgb(from ${variantColors[variant].from} r g b / ${isBigPulse ? 0.6 : 0.4});
-      }
-      50% {
-        border-color: rgb(from ${variantColors[variant].to} r g b / 0.6);
-        box-shadow: 0 0 ${isBigPulse ? 16 : 8}px rgb(from ${variantColors[variant].to} r g b / ${isBigPulse ? 0.8 : 0.6});
-      }
-      100% {
-        border-color: rgb(from ${variantColors[variant].from} r g b / 0.4);
-        box-shadow: 0 0 ${isBigPulse ? 8 : 4}px rgb(from ${variantColors[variant].from} r g b / ${isBigPulse ? 0.6 : 0.4});
-      }
-    `;
-    const variantStyles: SxProps<Theme> = disabled ? {} : deepmerge(bgStyles[variant], {
+const getPulseAnimation = (fromColor: string, toColor: string, isBigPulse: boolean) => keyframes`
+  0% {
+    border-color: rgb(from ${fromColor} r g b / 0.4);
+    box-shadow: 0 0 ${isBigPulse ? 8 : 4}px rgb(from ${fromColor} r g b / ${isBigPulse ? 0.6 : 0.4});
+  }
+  50% {
+    border-color: rgb(from ${toColor} r g b / 0.6);
+    box-shadow: 0 0 ${isBigPulse ? 16 : 8}px rgb(from ${toColor} r g b / ${isBigPulse ? 0.8 : 0.6});
+  }
+  100% {
+    border-color: rgb(from ${fromColor} r g b / 0.4);
+    box-shadow: 0 0 ${isBigPulse ? 8 : 4}px rgb(from ${fromColor} r g b / ${isBigPulse ? 0.6 : 0.4});
+  }
+`;
+
+const getAnimatedVariantStyles = (variant: PulseButtonAnimatedVariants, isBigPulse: boolean) => {
+    const pulseAnimation = getPulseAnimation(variantColors[variant].from, variantColors[variant].to, isBigPulse);
+
+    return deepmerge(bgStyles[variant], {
         animationName: `${pulseAnimation}`,
         animationTimingFunction: 'ease-in-out',
         animationIterationCount: 'infinite',
@@ -157,6 +152,22 @@ export default function Button(props: ButtonProps) {
             border: `1px solid rgb(from ${variantColors[variant].to} r g b / 0.7)`,
         },
     });
+}
+
+export default function PulseButton(props: ButtonProps) {
+    const {
+        variant = 'default',
+        text,
+        sx = {},
+        textSx,
+        cooldown = false,
+        pulse = 'small',
+        disabled: disabledProp,
+        ...muiSharedProps
+    } = props;
+    const [hasCooldown, setCooldown] = useState<boolean>(cooldown === true);
+    const disabled = hasCooldown || disabledProp;
+    const variantStyles: SxProps<Theme> = disabled || variant === 'default' ? {} : getAnimatedVariantStyles(variant, pulse === 'big');
 
     useTimeout(() => {
         setCooldown(false);
@@ -169,7 +180,7 @@ export default function Button(props: ButtonProps) {
             disabled={disabled}
             {...muiSharedProps}
         >
-            <Box sx={styles.buttonText}>
+            <Box sx={[styles.buttonText, ...(Array.isArray(textSx) ? textSx : [textSx])]}>
                 {text}
             </Box>
         </MuiButton>

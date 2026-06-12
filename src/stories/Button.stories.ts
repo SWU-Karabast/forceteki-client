@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/nextjs';
-import Button from '@/app/components/Button/Button';
+import PulseButton from '@/app/components/Button/PulseButton';
 
 const meta = {
-    title: 'Design/Button',
-    component: Button,
+    title: 'Design/PulseButton',
+    component: PulseButton,
     parameters: {
         layout: 'centered',
     },
-} satisfies Meta<typeof Button>;
+} satisfies Meta<typeof PulseButton>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
