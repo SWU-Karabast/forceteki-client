@@ -47,3 +47,6 @@ images-scripts/__pycache__/
 
 *storybook.log
 storybook-static
+
+# devs IDEs
+.idea/
