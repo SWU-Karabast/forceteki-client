@@ -50,11 +50,11 @@ interface IButtonsProps {
 // disabling certain actions briefly to avoid double clicks:
 // - for a resource prompt, we disable the "done" button
 // - for the action window, we disable the "claim initiative" button
-const hasCooldown = (buttonType: string, prompType: string) => (buttonType === 'done' && prompType === 'resource') || (prompType === 'actionWindow' && ['pass', 'claimInitiative'].includes(buttonType));
+const hasCooldown = (buttonType: string, promptType: string) => (buttonType === 'done' && promptType === 'resource') || (promptType === 'actionWindow' && ['pass', 'claimInitiative'].includes(buttonType));
 
 const CardActionTray: React.FC = () => {
     const { isPortrait } = useScreenOrientation();
-    const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
+    const { sendGameMessage, gameState, connectedPlayer, distributionPromptData } = useGame();
     const playerState = gameState.players[connectedPlayer];
     const styles = createStyles(isPortrait);
 
@@ -119,33 +119,31 @@ interface IPromptButtonProps {
     cooldown?: boolean;
 }
 
+const getPulseButtonVariant = (button: IButtonsProps) => {
+    if (button.arg === 'claimInitiative' || button.text === 'Draw') {
+        return 'info';
+    }
+
+    if (button.arg === 'pass' || button.arg === 'passAbility' || button.text === 'Return' || button.text === 'Exhaust' || button.text === 'Discard') {
+        return 'warning';
+    }
+
+    if (button.arg === 'done' || button.text === 'Pay' || button.text === 'Top' || button.text === 'Play') {
+        return 'success';
+    }
+
+    if (button.arg === 'cancel' || button.text === 'Damage' || button.text === 'Bottom') {
+        return 'danger';
+    }
+
+    return 'default';
+}
+
 const PromptButton: React.FC<IPromptButtonProps> = (props) => {
     const { button, sendGameMessage, cooldown, disabled = false } = props;
     const { isPortrait } = useScreenOrientation();
     const styles = createStyles(isPortrait);
-    const variant = (() => {
-        if (disabled) {
-            return 'default'
-        }
-
-        if (button.arg === 'claimInitiative' || button.text === 'Draw') {
-            return 'info';
-        }
-
-        if (button.arg === 'pass' || button.arg === 'passAbility' || button.text === 'Return' || button.text === 'Exhaust' || button.text === 'Discard') {
-            return 'warning';
-        }
-        
-        if (button.arg === 'done' || button.text === 'Pay' || button.text === 'Top' || button.text === 'Play') {
-            return 'success';
-        }
-
-        if (button.arg === 'cancel' || button.text === 'Damage' || button.text === 'Bottom') {
-            return 'danger';
-        }
-        
-        return 'default';
-    })();
+    const variant = disabled ? 'default' : getPulseButtonVariant(button);
 
     return (
         <PulseButton
