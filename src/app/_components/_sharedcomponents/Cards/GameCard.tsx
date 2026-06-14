@@ -228,11 +228,11 @@ const GameCard: React.FC<IGameCardProps> = ({
 
     const subcardClick = (event: React.MouseEvent, subCard: ICardData) => {
         if (subCard.selectable) {
-            // Shield widgets render on top of their parent card, which is itself
-            // clickable. Without stopping propagation, a single click on a selectable
-            // shield also bubbles to the card's onClick and emits a second cardClicked
+            // Widgets can render on top of their parent card, which themselves are
+            // clickable (like Shield). Without stopping propagation, a single click on a selectable
+            // subcard widget also bubbles to the parent card's onClick and emits a second cardClicked
             // for the underlying unit. With Alliance Outpost that buffered second click
-            // auto-applies the buff to the token whose shield was just defeated.
+            // auto-applies the buff to the token whose shield was just defeated, for example.
             event.stopPropagation();
             setAnchorElement(null);
             setPreviewImage(null);
