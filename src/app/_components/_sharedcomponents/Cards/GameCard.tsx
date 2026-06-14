@@ -226,8 +226,14 @@ const GameCard: React.FC<IGameCardProps> = ({
         (onClick || defaultClickFunction)();
     }
 
-    const subcardClick = (subCard: ICardData) => {
+    const subcardClick = (event: React.MouseEvent, subCard: ICardData) => {
         if (subCard.selectable) {
+            // Shield widgets render on top of their parent card, which is itself
+            // clickable. Without stopping propagation, a single click on a selectable
+            // shield also bubbles to the card's onClick and emits a second cardClicked
+            // for the underlying unit. With Alliance Outpost that buffered second click
+            // auto-applies the buff to the token whose shield was just defeated.
+            event.stopPropagation();
             setAnchorElement(null);
             setPreviewImage(null);
             sendGameMessage(['cardClicked', subCard.uuid]);
@@ -752,7 +758,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                         border: shieldCard.selectable ? `2px solid ${getBorderColor({ card: shieldCard, player: connectedPlayer })}` : 'none',
                                         cursor: shieldCard.selectable ? 'pointer' : 'normal'
                                     }}
-                                    onClick={() => subcardClick(shieldCard)}
+                                    onClick={(e) => subcardClick(e, shieldCard)}
                                 />
                             ))}
                         </Grid>
@@ -804,7 +810,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                         border: subcard.selectable ? `2px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',
                         cursor: subcard.selectable ? 'pointer' : 'normal'
                     }}
-                    onClick={() => subcardClick(subcard)}
+                    onClick={(e) => subcardClick(e, subcard)}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     {...longPressHandlers}
@@ -844,7 +850,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                     border: capturedCard.selectable ? `2px solid ${getBorderColor({ card:capturedCard, player:connectedPlayer })}` : 'none',
                                     cursor: capturedCard.selectable ? 'pointer' : 'normal'
                                 }}
-                                onClick={() => subcardClick(capturedCard)}
+                                onClick={(e) => subcardClick(e, capturedCard)}
                                 onMouseEnter={handlePreviewOpen}
                                 onMouseLeave={handlePreviewClose}
                                 {...longPressHandlers}
