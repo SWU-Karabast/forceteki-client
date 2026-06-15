@@ -37,7 +37,7 @@ export function useReplay(): IReplayContextType {
     return context;
 }
 
-const SPEED_INTERVALS: Record<number, number> = {
+export const SPEED_INTERVALS: Record<number, number> = {
     0.5: 4000,
     1: 2000,
     2: 1000,
@@ -48,8 +48,8 @@ const SPEED_INTERVALS: Record<number, number> = {
 // each segment numerically if both are numbers, otherwise lexicographically.
 // e.g., "R10.A.2" > "R2.A.9" (because 10 > 2 in the first numeric segment)
 function compareSeq(a: string, b: string): number {
-    const partsA = a.split(/([.\-])/);
-    const partsB = b.split(/([.\-])/);
+    const partsA = (a ?? '').split(/([.\-])/);
+    const partsB = (b ?? '').split(/([.\-])/);
     const len = Math.max(partsA.length, partsB.length);
     for (let i = 0; i < len; i++) {
         const pa = partsA[i] ?? '';
@@ -93,8 +93,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
     }, [replay]);
 
     const getSnapshot = useCallback((index: number): any => {
-        const cached = snapshotCache.current.get(index);
-        if (cached) return cached;
+        if (snapshotCache.current.has(index)) return snapshotCache.current.get(index);
 
         const snap = snapshots[index];
         if (!snap) return null;
@@ -136,7 +135,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
         const prevSeq = snapshots[currentIndex - 1]?.seq ?? '';
         const currSeq = snapshots[currentIndex]?.seq ?? '';
 
-        const relevantEvents = events.filter((e) => compareSeq(e.seq, prevSeq) > 0 && compareSeq(e.seq, currSeq) <= 0);
+        const relevantEvents = events.filter((e) => e.seq && compareSeq(e.seq, prevSeq) > 0 && compareSeq(e.seq, currSeq) <= 0);
 
         return relevantEvents.map((e) => ({
             date: e.seq,

@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Box, Grid, Typography, IconButton } from '@mui/material';
+import { Box, Card, Grid, Typography, IconButton } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ReplayProvider, ParsedReplay, useReplay } from '@/app/_contexts/Replay.context';
@@ -61,10 +61,10 @@ function ReplayHeader({ header }: { header: Record<string, string> }) {
             </IconButton>
             <Box sx={{ textAlign: 'right', minWidth: '120px' }}>
                 <Typography variant="body1" sx={{
-                    color: isP1Winner ? '#4fc3f7' : 'white',
+                    color: isP1Winner ? 'var(--initiative-blue)' : 'white',
                     fontWeight: 'bold',
                     fontSize: '1.1rem',
-                    textShadow: isP1Winner ? '0 0 10px rgba(79,195,247,0.5)' : 'none',
+                    textShadow: isP1Winner ? '0 0 10px rgba(0,186,255,0.5)' : 'none',
                 }}>
                     {player1}
                 </Typography>
@@ -84,10 +84,10 @@ function ReplayHeader({ header }: { header: Record<string, string> }) {
             </Typography>
             <Box sx={{ textAlign: 'left', minWidth: '120px' }}>
                 <Typography variant="body1" sx={{
-                    color: isP2Winner ? '#4fc3f7' : 'white',
+                    color: isP2Winner ? 'var(--initiative-blue)' : 'white',
                     fontWeight: 'bold',
                     fontSize: '1.1rem',
-                    textShadow: isP2Winner ? '0 0 10px rgba(79,195,247,0.5)' : 'none',
+                    textShadow: isP2Winner ? '0 0 10px rgba(0,186,255,0.5)' : 'none',
                 }}>
                     {player2}
                 </Typography>
@@ -103,11 +103,11 @@ function ReplayHeader({ header }: { header: Record<string, string> }) {
                     px: 1.5,
                     py: 0.5,
                     borderRadius: '4px',
-                    backgroundColor: 'rgba(79,195,247,0.15)',
-                    border: '1px solid rgba(79,195,247,0.3)',
+                    backgroundColor: 'rgba(0,186,255,0.15)',
+                    border: '1px solid rgba(0,186,255,0.3)',
                 }}>
                     <Typography variant="body2" sx={{
-                        color: '#4fc3f7',
+                        color: 'var(--initiative-blue)',
                         fontWeight: 'bold',
                         letterSpacing: '0.05em',
                     }}>
@@ -147,16 +147,20 @@ function ReplayBoardContent({ header }: { header: Record<string, string> }) {
                     }}
                 >
                     <ReplayHeader header={header} />
-                    <Box sx={{ height: '13dvh' }}>
+                    {/* Trays mirror the live GameBoard ratios (opponent 15dvh /
+                        player 18dvh); the board flexes to fill whatever remains
+                        after the header and the 60px transport bar, so the column
+                        can never overflow 100dvh and clip the player tray. */}
+                    <Box sx={{ height: '15dvh' }}>
                         <OpponentCardTray
                             trayPlayer={getOpponent(connectedPlayer)}
                             preferenceToggle={() => {}}
                         />
                     </Box>
-                    <Box sx={{ height: 'calc(74dvh - 60px)', position: 'relative', zIndex: 2 }}>
+                    <Box sx={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 2 }}>
                         <Board sidebarOpen={false} />
                     </Box>
-                    <Box sx={{ height: '13dvh', mb: '60px' }}>
+                    <Box sx={{ height: '18dvh', mb: '60px' }}>
                         <PlayerCardTray
                             trayPlayer={connectedPlayer}
                             toggleSidebar={() => {}}
@@ -231,13 +235,11 @@ export default function ReplayPage() {
                 pb: 4,
             }}
         >
-            <Box
+            <Card
+                variant="blue"
                 sx={{
                     width: '100%',
                     maxWidth: '560px',
-                    backgroundColor: '#18325199',
-                    backdropFilter: 'blur(20px)',
-                    borderRadius: '.8rem',
                     border: '1px solid rgba(255,255,255,0.1)',
                     padding: '2rem',
                     display: 'flex',
@@ -245,12 +247,7 @@ export default function ReplayPage() {
                     gap: 2,
                 }}
             >
-                <Typography variant="h1" sx={{
-                    fontSize: '2.2rem',
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    mb: 0,
-                }}>
+                <Typography variant="h1" sx={{ mb: 0 }}>
                     Replay Viewer
                 </Typography>
                 <Typography variant="body1" sx={{
@@ -265,7 +262,7 @@ export default function ReplayPage() {
                     }
                 </Typography>
                 <FileUpload onReplayLoaded={handleReplayLoaded} />
-            </Box>
+            </Card>
         </Box>
     );
 }

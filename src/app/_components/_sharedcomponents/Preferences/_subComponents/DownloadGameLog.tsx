@@ -40,6 +40,7 @@ function DownloadGameLog() {
                 const blob = new Blob([zipped], { type: 'application/zip' });
                 triggerBlobDownload(blob, `game-${date}.zip`);
             } catch (err) {
+                console.error('Failed to create game-files zip', err);
                 setError('Failed to create zip file');
             } finally {
                 setLoadingZip(false);

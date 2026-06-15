@@ -16,7 +16,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
     const { gameState, connectedPlayer, isSpectator } = useBoardState();
     const { isPortrait } = useScreenOrientation();
 
-    const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
+    const activePlayer = gameState.players[connectedPlayer]?.isActionPhaseActivePlayer;
     const connectedUserCardback = isSpectator ? undefined : gameState?.players[connectedPlayer].user?.cosmetics?.cardback;
     const phase = gameState.phase;
 

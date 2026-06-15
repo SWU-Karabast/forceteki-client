@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useCallback } from 'react';
-import { Box, IconButton, Slider, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, IconButton, Slider, Tooltip, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import {
     PlayArrow,
     Pause,
@@ -8,9 +8,11 @@ import {
     SkipNext,
     SwapHoriz,
 } from '@mui/icons-material';
-import { useReplay } from '@/app/_contexts/Replay.context';
+import { useReplay, SPEED_INTERVALS } from '@/app/_contexts/Replay.context';
 
-const SPEEDS = [0.5, 1, 2, 4];
+// Single source of truth — derived from the playback interval map so the two
+// can never drift (a speed without a matching interval would silently fall back).
+const SPEEDS = Object.keys(SPEED_INTERVALS).map(Number).sort((a, b) => a - b);
 
 function parseRoundFromSeq(seq: string): string {
     const match = seq.match(/^R(\d+)\.([A-Z])/);
@@ -106,17 +108,27 @@ const TransportControls: React.FC = () => {
                 borderTop: '1px solid rgba(255,255,255,0.1)',
             }}
         >
-            <IconButton onClick={handlePlayPause} sx={{ color: 'white' }}>
-                {isPlaying ? <Pause /> : <PlayArrow />}
-            </IconButton>
+            <Tooltip title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}>
+                <IconButton onClick={handlePlayPause} sx={{ color: 'white' }}>
+                    {isPlaying ? <Pause /> : <PlayArrow />}
+                </IconButton>
+            </Tooltip>
 
-            <IconButton onClick={stepBack} disabled={currentIndex === 0} sx={{ color: 'white' }}>
-                <SkipPrevious />
-            </IconButton>
+            <Tooltip title="Step back (←)">
+                <span>
+                    <IconButton onClick={stepBack} disabled={currentIndex === 0} sx={{ color: 'white' }}>
+                        <SkipPrevious />
+                    </IconButton>
+                </span>
+            </Tooltip>
 
-            <IconButton onClick={stepForward} disabled={currentIndex >= totalSnapshots - 1} sx={{ color: 'white' }}>
-                <SkipNext />
-            </IconButton>
+            <Tooltip title="Step forward (→)">
+                <span>
+                    <IconButton onClick={stepForward} disabled={currentIndex >= totalSnapshots - 1} sx={{ color: 'white' }}>
+                        <SkipNext />
+                    </IconButton>
+                </span>
+            </Tooltip>
 
             <Slider
                 value={currentIndex}
@@ -126,7 +138,7 @@ const TransportControls: React.FC = () => {
                 sx={{
                     flex: 1,
                     mx: 1,
-                    color: '#90caf9',
+                    color: 'var(--initiative-blue)',
                     '& .MuiSlider-thumb': { width: 14, height: 14 },
                 }}
             />
@@ -154,8 +166,8 @@ const TransportControls: React.FC = () => {
                         py: 0.25,
                         fontSize: '0.75rem',
                         '&.Mui-selected': {
-                            color: '#90caf9',
-                            backgroundColor: 'rgba(144,202,249,0.15)',
+                            color: 'var(--initiative-blue)',
+                            backgroundColor: 'rgba(0,186,255,0.15)',
                         },
                     },
                 }}
@@ -167,13 +179,17 @@ const TransportControls: React.FC = () => {
                 ))}
             </ToggleButtonGroup>
 
-            <IconButton
-                onClick={togglePerspective}
-                sx={{ color: 'white' }}
-                title={`Viewing as ${currentPerspective}`}
-            >
-                <SwapHoriz />
-            </IconButton>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', minWidth: '64px', textAlign: 'right' }}>
+                {currentPerspective}
+            </Typography>
+            <Tooltip title={`Viewing as ${currentPerspective} — swap perspective`}>
+                <IconButton
+                    onClick={togglePerspective}
+                    sx={{ color: 'white' }}
+                >
+                    <SwapHoriz />
+                </IconButton>
+            </Tooltip>
         </Box>
     );
 };

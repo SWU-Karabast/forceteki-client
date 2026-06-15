@@ -537,5 +537,8 @@ export const useGame = () => {
         } as IGameContextType;
     }
 
-    return FALLBACK_GAME_CONTEXT;
+    // No GameProvider AND no ReplayContext — this is genuine misuse. Fail loudly
+    // rather than silently returning a no-op fallback (which would turn every
+    // consumer into a dead, click-swallowing spectator view).
+    throw new Error('useGame must be used within a GameProvider (or a ReplayProvider for the replay viewer)');
 };
