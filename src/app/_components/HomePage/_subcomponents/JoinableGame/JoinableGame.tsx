@@ -1,56 +1,24 @@
 import React from 'react';
-import { Box, Button, Typography, Popover, PopoverOrigin } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { IJoinableGameProps } from '../../HomePageTypes';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import { CardStyle, ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import OverlappingCards from '../OverlappingCards/OverlappingCards';
 import { ILobbyCardData } from '../../HomePageTypes';
 import { getUserPayload } from '@/app/_utils/ServerAndLocalStorageUtils';
-import { FormatLabels, FormatTagLabels, SwuGameFormat, GamesToWinMode } from '@/app/_constants/constants';
+import { FormatTagLabels, SwuGameFormat, GamesToWinMode, CardPool, CardPoolLabels } from '@/app/_constants/constants';
 import PremierIcon from '/public/premier.svg';
+import EternalIcon from '/public/eternal.svg';
 import OpenIcon from '/public/open.svg';
+import NextSetIcon from '/public/next_set.svg';
 import Bo1Icon from '/public/bo1.svg';
 import Bo3Icon from '/public/bo3.svg';
 
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
     const { user } = useUser();
-    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
-    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const hoverTimeout = React.useRef<number | undefined>(undefined);
-    const open = Boolean(anchorElement);
 
-    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
-        const target = event.currentTarget;
-        const imageUrl = target.getAttribute('data-card-url');
-
-        if (!imageUrl) return;
-
-        hoverTimeout.current = window.setTimeout(() => {
-            setAnchorElement(target);
-            setPreviewImage(`url(${imageUrl})`);
-        }, 300);
-    };
-
-    const handlePreviewClose = () => {
-        clearTimeout(hoverTimeout.current);
-        setAnchorElement(null);
-        setPreviewImage(null);
-    };
-
-    const popoverConfig = (): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
-        return {
-            anchorOrigin: {
-                vertical: 'center',
-                horizontal: 'right',
-            },
-            transformOrigin: {
-                vertical: 'center',
-                horizontal: 'left',
-            }
-        };
-    };
     const joinLobby = async (lobbyId: string) => {
         try {
             const payload = {
@@ -88,7 +56,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             alignContent: 'center',
             alignItems: 'center',
             mb: '1.25rem',
-            padding: '0.5rem 0',
+            gap: { xs: '1rem', lg: '2rem' },
+            paddingLeft: '10px',
         },
         matchType: {
             margin: 0,
@@ -99,35 +68,10 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         cardsContainer: {
             display: 'flex',
             alignItems: 'center',
-            paddingLeft: '10px',
-        },
-        parentBoxStyling: {
-            position: 'absolute',
-            left: '-15px',
-            top: '24px',
-        },
-        cardPreview: {
-            borderRadius: '0.5rem',
-            backgroundSize: 'cover',
-            width: 'clamp(3rem, 7vw, 10rem)',
-            aspectRatio: '1.39',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            position: 'relative',
-            border: '2px solid transparent',
-            boxSizing: 'border-box',
-            cursor: 'pointer'
-        },
-        cardPopover: {
-            borderRadius: '.38em',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            aspectRatio: '1.4 / 1',
-            width: '24rem',
         },
         lobbyInfo: {
             display: 'flex',
+            flex: 1,
             alignItems: 'flex-start',
             gap: '1rem',
         },
@@ -140,8 +84,6 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px',
-                marginTop: '8px',
-                marginBottom: '12px',
                 backgroundColor: 'rgba(0, 0, 0, 0.6)',
                 border: '1px solid',
                 boxShadow: '0 0 5px',
@@ -167,6 +109,18 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     borderColor: '#ffdd57',
                     color: '#ffdd57',
                     boxShadow: '0 0 5px #ffdd57',
+                }
+            },
+            cardPool: {
+                current: {
+                    borderColor: '#ff5526',
+                    color: '#ff5526',
+                    boxShadow: '0 0 5px #ff5526',
+                },
+                nextSet: {
+                    borderColor: '#bc63dc',
+                    color: '#bc63dc',
+                    boxShadow: '0 0 5px #bc63dc',
                 }
             },
             gamesToWin: {
@@ -204,12 +158,36 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
         switch (format) {
             case SwuGameFormat.Premier:
                 return <PremierIcon style={iconStyle} />;
+            case SwuGameFormat.Eternal:
+                return <EternalIcon style={iconStyle} />;
             case SwuGameFormat.Open:
                 return <OpenIcon style={iconStyle} />;
             default:
                 return null;
         }
     };
+
+    const getCardPoolTagStyle = (cardPool: CardPool) => {
+        switch (cardPool) {
+            case CardPool.Current:
+                return styles.tags.cardPool.current;
+            case CardPool.NextSet:
+                return styles.tags.cardPool.nextSet;
+            default:
+                return {};
+        }
+    };
+
+    const getCardPoolIcon = (cardPool: CardPool) => {
+        const iconStyle = { height: '0.75rem', width: 'auto' };
+        switch (cardPool) {
+            case CardPool.NextSet:
+                return <NextSetIcon style={iconStyle} />;
+            default:
+                return null;
+        }
+    };
+
 
     const getGamesToWinTagStyle = (mode: GamesToWinMode) => {
         switch (mode) {
@@ -261,80 +239,54 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     };
 
     return (
-        <>
-            <Box sx={styles.box} key={lobby.id}>
-                <Box sx={styles.lobbyInfo}>
-                    {lobby.host && (
-                        <Box sx={styles.cardsContainer}>
-                            <Box sx={{ position: 'relative' }}>
-                                <Box>
-                                    <Box 
-                                        sx={{
-                                            ...styles.cardPreview,
-                                            backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)})`
-                                        }}
-                                        title={`Base: ${lobby.host.base.id}`}
-                                        onMouseEnter={handlePreviewOpen}
-                                        onMouseLeave={handlePreviewClose}
-                                        data-card-url={s3CardImageURL(createCardObject(lobby.host.base), CardStyle.Plain)}
-                                    >
-                                    </Box>
-                                </Box>
-                                <Box sx={styles.parentBoxStyling}>
-                                    <Box 
-                                        sx={{
-                                            ...styles.cardPreview,
-                                            backgroundImage: `url(${s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)})`
-                                        }}
-                                        title={`Leader: ${lobby.host.leader.id}`}
-                                        onMouseEnter={handlePreviewOpen}
-                                        onMouseLeave={handlePreviewClose}
-                                        data-card-url={s3CardImageURL(createCardObject(lobby.host.leader), CardStyle.PlainLeader)}
-                                    >
-                                    </Box>
-                                </Box>
-                            </Box>
+        <Box sx={styles.box} key={lobby.id}>
+            <Box sx={styles.lobbyInfo}>
+                {lobby.host && (
+                    <OverlappingCards
+                        sx={styles.cardsContainer}
+                        baseCard={createCardObject(lobby.host.base)}
+                        leaderCard={createCardObject(lobby.host.leader)}
+                    />
+                )}
+                <Box sx={{ minWidth: '50%', width: '50%' }}>
+                    <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
+                    <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px', marginBottom: '12px' }}>
+                        <Box
+                            sx={{
+                                ...styles.tags.lobbySetting,
+                                ...getGameFormatTagStyle(lobby.format),
+                            }}
+                        >
+                            {getFormatIcon(lobby.format)}
+                            { FormatTagLabels[lobby.format] || lobby.format.toUpperCase() }
                         </Box>
-                    )}
-                    <Box>
-                        <Typography variant="body1" sx={styles.matchType}>{lobby.name}</Typography>
-                        <Box sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {lobby.cardPool !== 'unlimited' && (
+                        // Don't show unlimited card pool tag because it's never selectable
+                        // It's just the default card pool for Open lobbies
                             <Box
                                 sx={{
                                     ...styles.tags.lobbySetting,
-                                    ...getGameFormatTagStyle(lobby.format),
+                                    ...getCardPoolTagStyle(lobby.cardPool),
                                 }}
                             >
-                                {getFormatIcon(lobby.format)}
-                                { FormatTagLabels[lobby.format] || lobby.format.toUpperCase() }
+                                {getCardPoolIcon(lobby.cardPool)}
+                                { CardPoolLabels[lobby.cardPool] || lobby.cardPool.toUpperCase() }
                             </Box>
-                            <Box
-                                sx={{
-                                    ...styles.tags.lobbySetting,
-                                    ...getGamesToWinTagStyle(lobby.gamesToWinMode),
-                                }}
-                            >
-                                {getGamesToWinIcon(lobby.gamesToWinMode)}
-                                {getGamesToWinLabel(lobby.gamesToWinMode)}
-                            </Box>
+                        )}
+                        <Box
+                            sx={{
+                                ...styles.tags.lobbySetting,
+                                ...getGamesToWinTagStyle(lobby.gamesToWinMode),
+                            }}
+                        >
+                            {getGamesToWinIcon(lobby.gamesToWinMode)}
+                            {getGamesToWinLabel(lobby.gamesToWinMode)}
                         </Box>
                     </Box>
                 </Box>
-                <Button onClick={() => joinLobby(lobby.id)}>Join</Button>
             </Box>
-            <Popover
-                id="mouse-over-popover"
-                sx={{ pointerEvents: 'none' }}
-                open={open}
-                anchorEl={anchorElement}
-                onClose={handlePreviewClose}
-                disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
-                {...popoverConfig()}
-            >
-                <Box sx={{ ...styles.cardPopover, backgroundImage: previewImage }} />
-            </Popover>
-        </>
+            <Button onClick={() => joinLobby(lobby.id)}>Join</Button>
+        </Box>
     );
 };
 

@@ -45,6 +45,7 @@ interface IGameContextType {
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
+    gameIsEnded: () => boolean;
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -115,7 +116,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 playSound('yourTurn');
             }
 
-            const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards } = promptState;
+            const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards, selectNumber } = promptState;
+
             prunePromptStatePopups(promptUuid);
             if (promptType === 'actionWindow') {
                 clearDistributionPrompt();
@@ -153,7 +155,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
-            else if (dropdownListOptions.length > 0 && menuTitle && promptUuid && !selectCardMode) {
+            else if (promptType === 'number' && selectNumber && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('number', {
+                    uuid: promptUuid,
+                    title: promptTitle,
+                    description: menuTitle,
+                    min: selectNumber.min,
+                    max: selectNumber.max,
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (dropdownListOptions?.length > 0 && menuTitle && promptUuid && !selectCardMode) {
                 return openPopup('dropdown', {
                     uuid: promptUuid,
                     title: promptTitle,
@@ -325,6 +337,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             setStatsSubmitNotification(notification);
         });
 
+        // Server requests the player's screen resolution at game start for analytics logging.
+        newSocket.on('requestScreenResolution', () => {
+            if (typeof window === 'undefined' || !window.screen) return;
+            newSocket.emit('lobby', 'reportScreenResolution', {
+                width: window.screen.width,
+                height: window.screen.height,
+            });
+        });
+
         if (socket) {
             socket.disconnect();
         }
@@ -408,6 +429,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setDistributionPrompt(uuid, amount, promptData);
     };
 
+    const gameIsEnded = () => !!gameState?.winners?.length
+
     return (
         <GameContext.Provider
             value={{
@@ -431,6 +454,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 isAnonymousPlayer,
                 hasChatDisabled,
                 createNewSocket,
+                gameIsEnded,
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,
@@ -486,6 +510,7 @@ const FALLBACK_GAME_CONTEXT: IGameContextType = {
     lastQueueHeartbeat: 0,
     isAnonymousPlayer: noopBoolFn,
     hasChatDisabled: noopBoolFn,
+    gameIsEnded: noopBoolFn,
     createNewSocket: noopFn,
     hoveredChatCard: { id: null, hover: noopFn, clear: noopFn },
 } as IGameContextType;

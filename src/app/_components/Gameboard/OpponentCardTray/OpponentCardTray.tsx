@@ -1,6 +1,6 @@
 import React from 'react';
-import { CloseOutlined, SettingsOutlined, AccessAlarm } from '@mui/icons-material';
-import { Box, Grid2 as Grid, Popover, PopoverOrigin } from '@mui/material';
+import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
+import { Box, Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import Credits from '../_subcomponents/PlayerTray/Credits';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
@@ -8,18 +8,20 @@ import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useBoardState } from '@/app/_hooks/useBoardState';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { v4 as uuidv4 } from 'uuid';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { useRouter } from 'next/navigation';
-import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
-    const { gameState, connectedPlayer, getOpponent, isSpectator } = useBoardState();
+    const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useBoardState();
     const { openPopup } = usePopup();
     const { isPortrait } = useScreenOrientation();
+    const locale = useCardImageLocale();
     const router = useRouter();
     const handleExitButton = () => {
         if (isSpectator){
@@ -35,12 +37,10 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
-    const warning = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Warning';
-    const danger = gameState?.players[connectedPlayer]?.timeRemainingStatus === 'Danger';
     const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
 
     const hasLastPlayedCard = !!gameState.clientUIProperties?.lastPlayedCard
-    const lastPlayedCardUrl = hasLastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' })})` : 'none';
+    const lastPlayedCardUrl = hasLastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' }, locale)})` : 'none';
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -69,32 +69,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             }
         };
     }
-
-    const pulseYellowTimer = keyframes`
-      0% {
-        background: transparent;
-      }
-      50% {
-        background: rgba(220, 185, 0, 0.3);
-        box-shadow: 0 0 16px rgba(220, 185, 0, 0.7);
-      }
-      100% {
-        background: transparent;
-      }
-    `;
-
-    const pulseRedTimer = keyframes`
-      0% {
-        background: transparent;
-      }
-      50% {
-        background: rgba(255, 0, 0, 0.3);
-        box-shadow: 0 0 16px rgba(255, 0, 0, 0.7);
-      }
-      100% {
-        background: transparent;
-      }
-    `;
 
     // ---------------Styles------------------- //
     const styles = {
@@ -135,14 +109,23 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            padding: '1rem 2rem 1rem 0',
-            gap: '2rem',
+            py: '1rem',
+            pr: { xs: '1rem', md: '2rem' },
+            gap: { xs: hasLastPlayedCard ? '1rem' : '0', md: '1rem' },
         },
         lastPlayed: {
             ...debugBorder('yellow'),
-            height: '100%',
-            width: 'auto',
-            maxWidth: '50%',
+            ...(isPortrait
+                ? {
+                    maxHeight: '100%',
+                    height: 'auto',
+                    width: '50%',
+                }
+                : {
+                    height: '100%',
+                    width: 'auto',
+                    maxWidth: '50%',
+                }),
             aspectRatio: '1 / 1.4',
             borderRadius: '5px',
             display: 'flex',
@@ -184,16 +167,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             aspectRatio: '1 / 1.4',
             width: '16rem',
         },
-        timerBox: {
-            display: !warning && !danger ? 'none' : 'block',
-            borderRadius: '50%',
-            animation: warning ? `${pulseYellowTimer} 3s infinite ease-in-out` : danger ? `${pulseRedTimer} 3s infinite ease-in-out` : 'transparent',
-        },
-        timer: {
-            display: 'block',
-            fontSize: '4rem',
-            color: warning ? 'rgba(220, 185, 0, 1)' : danger ? 'rgba(255, 0, 0, 1)' : 'transparent',
-        }
     };
 
     return (
@@ -248,9 +221,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.rightColumn,
                 }}
             >
-                <Box sx={styles.timerBox}>
-                    <AccessAlarm sx={styles.timer}/>
-                </Box>
+                {!gameIsEnded() && !lobbyState?.isPrivate && <GameTimer />}
                 {!isSpectator && (
                     <>
                         <Box

@@ -195,6 +195,8 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
         getOpponent,
         isSpectator: true,
         gameMessages,
+        gameIsEnded: () => true,
+        lobbyState: null,
 
         snapshots,
         events,

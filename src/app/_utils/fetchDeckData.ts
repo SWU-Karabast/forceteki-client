@@ -22,6 +22,9 @@ export enum DeckSource {
     ProtectThePod = 'ProtectThePod',
     SWUForge = 'SWUForge',
     KyberDecks = 'KyberDecks',
+    CardCore = 'CardCore',
+    HoloScan = 'HoloScan',
+    Melee = 'Melee'
 }
 
 export interface IDeckData {
@@ -39,23 +42,53 @@ export interface IDeckData {
 
 export const fetchDeckData = async (deckLink: string, fetchAll: boolean = true) => {
     try {
-        const response = await fetch(
-            `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
-        );
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            if (errorData && errorData.error) {
-                if (response.status === 403) {
-                    throw new Error(`403: ${errorData.error}`);
-                } else {
-                    throw new Error(errorData.error);
+        const source = determineDeckSource(deckLink);
+        let data: IDeckData;
+
+        if (source === DeckSource.SWUDB || source === DeckSource.Melee) {
+            // Some deck resolution lives on the BE; the Amplify
+            // `/api/swudbdeck` route still handles other deck-builders.
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_ROOT_URL}/api/resolve-deck-link`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deckLink }),
+                    credentials: 'include'
                 }
-            } else {
-                throw new Error(`Failed to fetch deck: ${response.status}`);
+            );
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                const message = errorData?.error ?? `Failed to fetch deck: ${response.status}`;
+                if (response.status === 403) {
+                    throw new Error(`403: ${message}`);
+                }
+                throw new Error(message);
             }
+            const body = await response.json();
+            data = {
+                ...(body.deck as IDeckData),
+                deckSource: source,
+            };
+        } else {
+            const response = await fetch(
+                `/api/swudbdeck?deckLink=${encodeURIComponent(deckLink)}`
+            );
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                if (errorData && errorData.error) {
+                    if (response.status === 403) {
+                        throw new Error(`403: ${errorData.error}`);
+                    } else {
+                        throw new Error(errorData.error);
+                    }
+                } else {
+                    throw new Error(`Failed to fetch deck: ${response.status}`);
+                }
+            }
+            data = await response.json();
         }
 
-        const data: IDeckData = await response.json();
         if (!fetchAll){
             return data;
         }
@@ -90,6 +123,12 @@ export const determineDeckSource = (deckLink: string): DeckSource => {
         return DeckSource.SWUForge;
     } else if (deckLink.includes('kyberdecks.com')) {
         return DeckSource.KyberDecks;
+    } else if (deckLink.includes('cardcore.gg')) {
+        return DeckSource.CardCore;
+    } else if (deckLink.includes('holoscan.net')) {
+        return DeckSource.HoloScan;
+    } else if (deckLink.includes('melee.gg')) {
+        return DeckSource.Melee;
     }
 
     // Default fallback

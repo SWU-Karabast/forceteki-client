@@ -1,3 +1,5 @@
+import type { CardImageLocale } from '@/app/_utils/s3Utils';
+
 export interface IUser extends IGetUser{
     email?: string;
     provider?: string;
@@ -46,6 +48,7 @@ export interface IGetUser {
     reportingDisabled?: ModerationFieldState | null;
     moderation?: IModerationAction | null,
     undoPopupSeenDate?: Date | null
+    timerPopupSeenDate?: Date | null
 }
 
 export interface ISoundPreferences {
@@ -63,9 +66,28 @@ export interface ICosmeticsPreferences {
     // disablePlaymats?: boolean;
 }
 
+export interface IGameOptions {
+    muteChat?: boolean;
+    cardLanguage?: CardImageLocale;
+    timerVisibility?: TimerVisibility;
+}
+
+export enum TimerVisibility {
+    Standard = 'standard',
+    HideTurnTimer = 'hideTurnTimer',
+    HideAll = 'hideAll',
+}
+
+export enum PlayerTimeRemainingStatus {
+    NoAlert = 'NoAlert',
+    Warning = 'Warning',
+    Danger = 'Danger',
+}
+
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
+    gameOptions?: IGameOptions;
 }
 
 export interface IUserContextType {
@@ -84,6 +106,7 @@ export interface IUserContextType {
     updateUserPreferences: (preferences: IPreferences) => void;
     updateModerationSeenStatus: (moderation: IModerationAction | null) => void;
     updateUndoPopupSeenDate: () => void;
+    updateTimerPopupSeenDate: () => void;
 }
 
 export enum AdminRole {

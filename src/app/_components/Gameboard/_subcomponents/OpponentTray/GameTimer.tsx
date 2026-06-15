@@ -1,0 +1,182 @@
+import React, { useEffect } from 'react';
+import Timer from '@/app/_components/_sharedcomponents/Timer/Timer';
+import MainTimerLabel from '@/app/_components/_sharedcomponents/Timer/MainTimerLabel';
+import { MAX_MAIN_TIME, MAX_TURN_TIME, secondsToMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
+import { Stack, Typography } from '@mui/material';
+import { formatMilliseconds } from '@/app/_components/_sharedcomponents/Timer/timerUtils';
+import { useGame } from '@/app/_contexts/Game.context';
+import { PlayerTimeRemainingStatus, TimerVisibility } from '@/app/_contexts/UserTypes';
+import { useTimerVisibilityContext } from '@/app/_contexts/TimerVisibility.context';
+import TimerWarningIcon from './TimerWarningIcon';
+
+const TIMER_STEP = 100;
+
+const Divider = () => <div style={{ height: '1px', width: '100%', background: 'white', opacity: 0.3, marginTop: '2px' }} />;
+
+const GameTimer: React.FC = ({ ...props }) => {
+    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { timerVisibility } = useTimerVisibilityContext();
+    const playerState = gameState?.players[connectedPlayer];
+    const opponentState = gameState?.players[getOpponent(connectedPlayer)];
+
+    const playerIsActive = playerState?.timerIsRunning ?? false;
+    const opponentIsActive = opponentState?.timerIsRunning ?? false;
+
+    // Per-player turn time state derived from server values
+    const playerIsTurnTime = (playerState?.turnTimeRemainingSeconds ?? 0) > 0;
+    const opponentIsTurnTime = (opponentState?.turnTimeRemainingSeconds ?? 0) > 0;
+
+    // Circular timer countdown state (tracks connected player's timer, falls back to opponent)
+    const [turnTimeRemainingMs, setTurnTimeRemainingMs] = React.useState(MAX_TURN_TIME);
+    const isTurnTime = turnTimeRemainingMs > 0;
+    const [playerMainTimeRemainingMs, setPlayerMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
+    const [opponentMainTimeRemainingMs, setOpponentMainTimeRemainingMs] = React.useState(MAX_MAIN_TIME);
+
+    // Wall-clock expiry timestamps — updated on each server sync, used to correct drift on tab focus
+    const playerMainTimeExpiryRef = React.useRef<number | null>(null);
+    const opponentMainTimeExpiryRef = React.useRef<number | null>(null);
+
+    // Refs so the visibility handler (empty deps) can read current turn time state without stale closures
+    const playerIsTurnTimeRef = React.useRef(playerIsTurnTime);
+    const opponentIsTurnTimeRef = React.useRef(opponentIsTurnTime);
+    useEffect(() => {
+        playerIsTurnTimeRef.current = playerIsTurnTime;
+        opponentIsTurnTimeRef.current = opponentIsTurnTime;
+    }, [playerIsTurnTime, opponentIsTurnTime]);
+
+    // Sync both timers from server state
+    useEffect(() => {
+        const opponentTurnTimeRemainingMs = secondsToMilliseconds(opponentState?.turnTimeRemainingSeconds || 0);
+        const playerTurnTimeRemainingMs = secondsToMilliseconds(playerState?.turnTimeRemainingSeconds || 0);
+        const playerMs = secondsToMilliseconds(playerState?.mainTimeRemainingSeconds || 0);
+        const opponentMs = secondsToMilliseconds(opponentState?.mainTimeRemainingSeconds || 0);
+
+        // Prefer the connected player's turn timer; fall back to opponent's if only they are active
+        setTurnTimeRemainingMs(playerIsActive ? playerTurnTimeRemainingMs : opponentTurnTimeRemainingMs);
+        setPlayerMainTimeRemainingMs(playerMs);
+        setOpponentMainTimeRemainingMs(opponentMs);
+
+        // Only record expiry when actively consuming main time — null means skip correction on tab focus
+        playerMainTimeExpiryRef.current = playerIsActive && !playerIsTurnTime ? Date.now() + playerMs : null;
+        opponentMainTimeExpiryRef.current = opponentIsActive && !opponentIsTurnTime ? Date.now() + opponentMs : null;
+    }, [playerIsActive, opponentIsActive, playerIsTurnTime, opponentIsTurnTime, opponentState?.turnTimeRemainingSeconds, opponentState?.mainTimeRemainingSeconds, playerState?.turnTimeRemainingSeconds, playerState?.mainTimeRemainingSeconds])
+
+    // Correct main time drift caused by browser throttling setInterval in background tabs
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                if (playerMainTimeExpiryRef.current !== null && !playerIsTurnTimeRef.current) {
+                    setPlayerMainTimeRemainingMs(Math.max(0, playerMainTimeExpiryRef.current - Date.now()));
+                }
+                if (opponentMainTimeExpiryRef.current !== null && !opponentIsTurnTimeRef.current) {
+                    setOpponentMainTimeRemainingMs(Math.max(0, opponentMainTimeExpiryRef.current - Date.now()));
+                }
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [])
+
+    // When opponent is on main time and player is inactive, the circle handles the countdown.
+    // Only run the manual countdown when the player is also active (circle is showing player's time).
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (opponentIsActive && !opponentIsTurnTime && playerIsActive) {
+                setOpponentMainTimeRemainingMs((prev) => prev > 0 ? prev - TIMER_STEP : 0);
+            }
+        }, TIMER_STEP);
+        return () => clearInterval(interval);
+    }, [opponentIsActive, opponentIsTurnTime, playerIsActive]);
+
+    const activeTurn = playerIsActive ? 'player' : opponentIsActive ? 'opponent' : undefined;
+    // Show opponent's main time in the circle when they are active on main time and player is not active
+    const showOpponentMainTime = !playerIsActive && opponentIsActive && !isTurnTime;
+
+    if (timerVisibility === TimerVisibility.HideAll) {
+        const timeStatus = playerState?.timeRemainingStatus;
+        const showWarning = timeStatus === PlayerTimeRemainingStatus.Warning || timeStatus === PlayerTimeRemainingStatus.Danger;
+
+        return (
+            <Timer
+                hideProgressIndicator
+                isRunning={false}
+                maxTime={MAX_MAIN_TIME}
+                timeRemaining={MAX_MAIN_TIME}
+                setTimeRemaining={() => {}}
+                tooltipTitle="Timer hidden"
+                {...props}
+            >
+                {showWarning ? <TimerWarningIcon /> : (
+                    <Typography
+                        variant="body2"
+                        sx={{ color: 'rgba(255, 255, 255, 0.35)', fontSize: '0.7rem', textAlign: 'center', lineHeight: 1.3 }}
+                    >
+                        Timer<br />hidden
+                    </Typography>
+                )}
+            </Timer>
+        );
+    }
+
+    return (
+        <Timer
+            activeTurn={activeTurn}
+            hideProgressIndicator={timerVisibility === TimerVisibility.HideTurnTimer}
+            isTurnTime={isTurnTime}
+            isRunning={isTurnTime ? (playerIsActive || opponentIsActive) : (playerIsActive || showOpponentMainTime)}
+            maxTime={isTurnTime ? MAX_TURN_TIME : MAX_MAIN_TIME}
+            setTimeRemaining={isTurnTime ? setTurnTimeRemainingMs : showOpponentMainTime ? setOpponentMainTimeRemainingMs : setPlayerMainTimeRemainingMs}
+            timeRemaining={isTurnTime ? turnTimeRemainingMs : showOpponentMainTime ? opponentMainTimeRemainingMs : playerMainTimeRemainingMs}
+            tooltipTitle={<TooltipContent
+                turnTimeRemainingSeconds={turnTimeRemainingMs}
+                playerIsActive={playerIsActive}
+            />}
+            {...props}
+        >
+            <MainTimerLabel
+                playerIsActive={playerIsActive}
+                opponentIsActive={opponentIsActive}
+                playerIsTurnTime={playerIsTurnTime}
+                opponentIsTurnTime={opponentIsTurnTime}
+                playerTimeRemaining={playerMainTimeRemainingMs}
+                opponentTimeRemaining={opponentMainTimeRemainingMs}
+            />
+        </Timer>
+    );
+}
+
+const TooltipContent = (
+    { turnTimeRemainingSeconds, playerIsActive }:
+    { turnTimeRemainingSeconds: number, playerIsActive?: boolean }
+) => {
+    const playerLabel = playerIsActive ? 'Your' : 'Opponent\'s';
+
+    return (
+        <Stack spacing={1}>
+            <Stack>
+                <Typography variant="body2" fontWeight={600}>
+                    Game Timer
+                </Typography>
+                <Typography variant="body2">
+                    Once turn time reaches zero, main time will be used. Once a player&apos;s main time reaches zero, that player conceeds the game.
+                </Typography>
+            </Stack>
+
+            <Stack width='fit-content'>
+                <Typography variant="body2">
+                    Opp. Main Time
+                </Typography>
+                <Divider />
+                <Typography variant="body2">
+                    Your Main Time
+                </Typography>
+            </Stack>
+
+            <Typography variant="body2">
+                {playerLabel} turn time remaining: {formatMilliseconds(turnTimeRemainingSeconds)}
+            </Typography>
+        </Stack>
+    )
+}
+
+export default GameTimer;

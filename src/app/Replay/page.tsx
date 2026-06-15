@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Box, Grid2 as Grid, Typography, IconButton } from '@mui/material';
+import { Box, Grid, Typography, IconButton } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ReplayProvider, ParsedReplay, useReplay } from '@/app/_contexts/Replay.context';

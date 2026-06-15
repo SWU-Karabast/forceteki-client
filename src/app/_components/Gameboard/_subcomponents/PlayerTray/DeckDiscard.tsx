@@ -4,6 +4,7 @@ import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useBoardState } from '@/app/_hooks/useBoardState';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
@@ -14,6 +15,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     const { togglePopup, popups } = usePopup();
     const { isPortrait } = useScreenOrientation();
     const { getCardback } = useCosmetics();
+    const locale = useCardImageLocale();
     // Refs for individual card containers
     const discardRef = useRef<HTMLDivElement>(null);
     const deckRef = useRef<HTMLDivElement>(null);
@@ -67,11 +69,11 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     }, [isPortrait]); // Re-run when portrait mode changes
 
     const topDiscardCard = gameState?.players[trayPlayer]?.cardPiles['discard'].at(-1);
-    const topDiscardCardUrl = topDiscardCard && typeof topDiscardCard === 'object' ? `url(${s3CardImageURL(topDiscardCard)})` : 'none';
+    const topDiscardCardUrl = topDiscardCard && typeof topDiscardCard === 'object' ? `url(${s3CardImageURL(topDiscardCard, locale)})` : 'none';
     const selectableDiscardCard = gameState.players[trayPlayer].cardPiles.discard.some((item: { selectable: boolean }) => item.selectable === true);
 
     const topDeckCard = gameState?.players[trayPlayer]?.topCardOfDeck;
-    const topDeckCardUrl = topDeckCard && typeof topDeckCard === 'object' ? `url(${s3CardImageURL(topDeckCard)})` : 'none';
+    const topDeckCardUrl = topDeckCard && typeof topDeckCard === 'object' ? `url(${s3CardImageURL(topDeckCard, locale)})` : 'none';
     const canSeeTopCard = topDeckCard && topDeckCardUrl !== 'none';
 
     const handleDiscardToggle = () => {

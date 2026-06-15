@@ -31,6 +31,7 @@ export interface IVerticalTabsProps {
     attemptingClose?: boolean,
     closeHandler?: () => void,
     cancelCloseHandler?: () => void,
+    initialTab?: string,
 }
 
 export type IBlockedUser = {
@@ -45,6 +46,7 @@ export interface IPreferenceProps {
     variant?: 'gameBoard' | 'homePage'
     title?: string,
     subtitle?: string,
+    initialTab?: string,
 }
 
 export interface IStatsNotification {
@@ -104,4 +106,55 @@ export interface IReportTypeConfig {
 export interface IPlayerReportDialogProps {
     open: boolean;
     onClose: () => void;
+}
+
+export enum ModActionType {
+    Mute = 'Mute',
+    Warning = 'Warning',
+    Rename = 'Rename',
+}
+
+export interface IModActionResponse {
+    id: string;
+    playerId: string;
+    actionType: ModActionType;
+    durationDays?: number;
+    note?: string;
+    moderatorId: string;
+    moderatorUsername: string;
+    createdAt: string;
+    startedAt?: string;
+    expiresAt?: string;
+    cancelledAt?: string;
+    cancelledById?: string;
+    cancelledByUsername?: string;
+}
+
+export interface IPlayerSearchResult {
+    id: string;
+    username: string;
+    createdAt: string;
+    lastLogin: string;
+    isMuted: boolean;
+    activeRename?: IActiveModActionCacheEntry;
+}
+
+export interface IActiveModActionCacheEntry {
+    id: string;
+    actionType: ModActionType;
+    durationDays?: number;
+    startedAt?: string;
+    expiresAt?: string;
+    modActionId: string;
+}
+
+export interface IFindUserResponse {
+    success: boolean;
+    players: IPlayerSearchResult[];
+    modActions: IModActionResponse[];
+}
+
+export enum DurationUnit {
+    Days = 'Days',
+    Weeks = 'Weeks',
 }

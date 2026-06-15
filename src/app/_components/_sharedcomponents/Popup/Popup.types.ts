@@ -11,6 +11,7 @@ export type PopupButton = {
     command: string;
     arg: string;
     selected?: boolean;
+    disabled?: boolean;
 };
 
 export type PerCardButton = {
@@ -55,6 +56,16 @@ export type DropdownPopup = {
     title: string;
     description?: string;
     options: string[];
+    source: PopupSource;
+};
+
+export type NumberPopup = {
+    type: 'number';
+    uuid: string;
+    title: string;
+    description?: string;
+    min: number;
+    max: number;
     source: PopupSource;
 };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Box, Grid2 as Grid } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import { debugBorder } from '@/app/_utils/debug';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';

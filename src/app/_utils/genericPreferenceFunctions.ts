@@ -1,9 +1,10 @@
-import { IPreferences, IUser } from '@/app/_contexts/UserTypes';
+import { IPreferences, IUser, TimerVisibility } from '@/app/_contexts/UserTypes';
 import {
     loadPreferencesFromLocalStorage,
     savePreferencesToLocalStorage,
     savePreferencesToServer
 } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { CardImageLocale } from '@/app/_utils/s3Utils';
 
 /**
  * Generic function to save preferences based on user authentication status
@@ -38,6 +39,12 @@ export const savePreferencesGeneric = async (
                         ...user.preferences.cosmetics,
                         ...partialPreferences.cosmetics
                     }
+                }),
+                ...(partialPreferences.gameOptions && {
+                    gameOptions: {
+                        ...user.preferences.gameOptions,
+                        ...partialPreferences.gameOptions
+                    }
                 })
             }
             updateUserPreferences(updatedUserPreferences);
@@ -57,6 +64,12 @@ export const savePreferencesGeneric = async (
                     cosmetics: {
                         ...currentLocalPreferences.cosmetics,
                         ...partialPreferences.cosmetics
+                    }
+                }),
+                ...(partialPreferences.gameOptions && {
+                    gameOptions: {
+                        ...currentLocalPreferences.gameOptions,
+                        ...partialPreferences.gameOptions
                     }
                 })
             };
@@ -83,6 +96,12 @@ export const savePreferencesGeneric = async (
                     ...currentPreferences.cosmetics,
                     ...partialPreferences.cosmetics
                 }
+            }),
+            ...(partialPreferences.gameOptions && {
+                gameOptions: {
+                    ...currentPreferences.gameOptions,
+                    ...partialPreferences.gameOptions
+                }
             })
         };
 
@@ -104,5 +123,10 @@ const getDefaultPreferences = (): IPreferences => ({
         background: undefined,
         // playmat: undefined,
         // disablePlaymats: false,
+    },
+    gameOptions: {
+        muteChat: false,
+        cardLanguage: CardImageLocale.English,
+        timerVisibility: TimerVisibility.Standard,
     }
 });

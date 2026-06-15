@@ -222,7 +222,10 @@ export const parseInputAsDeckData = (input: string): {
         input.includes('my-swu.com') ||
         input.includes('protectthepod.com') ||
         input.includes('swuforge.com') ||
-        input.includes('kyberdecks.com')
+        input.includes('kyberdecks.com') ||
+        input.includes('cardcore.gg') ||
+        input.includes('holoscan.net') ||
+        input.includes('melee.gg')
     ) {
         return { type: 'url', data: null };
     }

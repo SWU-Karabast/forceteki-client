@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Box, Grid2 as Grid, Typography } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
@@ -66,8 +66,8 @@ const GameBoard = () => {
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','soundOptions']
-        : ['currentGame','soundOptions'];
+        ? ['endGame','soundOptions','gameOptions']
+        : ['currentGame','soundOptions','gameOptions'];
 
     // Get game number from winHistory for Bo3 mode
     const winHistory = lobbyState?.winHistory;
@@ -103,12 +103,15 @@ const GameBoard = () => {
     // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
-            pr: sidebarOpen ? 'min(20%, 280px)' : '0',
+            pr: sidebarOpen ? { xs: 0, md: 'min(20%, 280px)' } : '0',
             width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
             height: '100dvh',
             position: 'relative',
             backgroundImage: `url(${background.path}?v=2)`,
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
+            userSelect: 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
@@ -117,7 +120,7 @@ const GameBoard = () => {
         centralPromptContainer: {
             position: 'absolute',
             top: '48.6%',
-            left: sidebarOpen ? 'calc(50vw - min(10%, 140px))' : '50vw',
+            left: sidebarOpen ? { xs: '50vw', md: 'calc(50vw - min(10%, 140px))' } : '50vw',
             transform: 'translate(-50%, -50%)',
             transition: 'left 0.3s ease-in-out',
             display: 'flex',
@@ -125,11 +128,14 @@ const GameBoard = () => {
             alignItems: 'center',
             width: '50vw',
             pointerEvents: 'none',
-            zIndex: '1',
+            zIndex: { xs: '2', md: '1' },
         },
         promptStyle: {
             textAlign: 'center',
             fontSize: '1.3em',
+            // media query to detect mobile in landscape mode. be aware that most devices will have 800px wide on landscape
+            // for this case we want to save as much space as possible
+            '@media (orientation: landscape) and (max-width:932px)': { fontSize: '1rem' },
             textShadow: '1px 1px 6px black',
             padding: '0.5rem',
             position: 'relative',
@@ -153,7 +159,7 @@ const GameBoard = () => {
             position: 'absolute',
             bottom: 0, // Touch bottom edge
             left: '2rem', // Add left margin to constrain width
-            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
+            right: sidebarOpen ? { xs: '2rem', md: 'calc(min(20%, 280px) + 2rem)' } : '2rem', // Add right margin to match
             height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
@@ -167,7 +173,7 @@ const GameBoard = () => {
             position: 'absolute',
             top: 0, // Touch top edge
             left: '2rem', // Add left margin to constrain width
-            right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem', // Add right margin to match
+            right: sidebarOpen ? { xs: '2rem', md: 'calc(min(20%, 280px) + 2rem)' } : '2rem', // Add right margin to match
             height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',

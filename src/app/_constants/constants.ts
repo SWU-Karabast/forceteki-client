@@ -19,7 +19,12 @@ export enum CardPool {
     Unlimited = 'unlimited',
 }
 
-export const NewGameFormatAvailable: SwuGameFormat | undefined = SwuGameFormat.Limited;
+/**
+ * Cache-bust version appended to S3 card/token image URLs as `?v=N`.
+ * Bump this any time we need browsers to re-fetch cached images.
+ * See images-scripts/process_cards.py for the server-side upload story.
+ */
+export const CARD_IMAGE_CACHE_VERSION = 4;
 
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
@@ -53,15 +58,15 @@ export interface IFormatModeConfig {
 }
 
 export const LobbyFormatConfigs: IFormatModeConfig[] = [
-    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Open, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.NextSet, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
 ];
 
 export const QueueFormatConfigs: IFormatModeConfig[] = [
-    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
 ];
 
 // Helper to get the list of formats from a config array
@@ -121,6 +126,12 @@ export const SupportedDeckSources = Object.values(DeckSource)
                 return 'swuforge.com';
             case DeckSource.KyberDecks:
                 return 'kyberdecks.com';
+            case DeckSource.CardCore:
+                return 'cardcore.gg';
+            case DeckSource.HoloScan:
+                return 'holoscan.net';
+            case DeckSource.Melee:
+                return 'melee.gg';
             default:
                 return source;
         }

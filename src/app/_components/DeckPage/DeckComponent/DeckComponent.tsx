@@ -1,7 +1,41 @@
 import React from 'react';
 import { Card, Box, Typography, Divider, Popover, PopoverOrigin } from '@mui/material';
-import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import { IDeckData } from '@/app/_utils/fetchDeckData';
+import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
+import { IDeckCard, IDeckData } from '@/app/_utils/fetchDeckData';
+import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
+import { CardImageMissingOverlay, cardImageFillSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
+
+interface IDeckCardTileProps {
+    card: IDeckCard;
+    styleCardSx: object;
+    onMouseEnter: (event: React.MouseEvent<HTMLElement>) => void;
+    onMouseLeave: () => void;
+}
+
+const DeckCardTile: React.FC<IDeckCardTileProps> = ({ card, styleCardSx, onMouseEnter, onMouseLeave }) => {
+    const locale = useCardImageLocale();
+    const url = s3CardImageURL(card, locale);
+    const { status, imgProps } = useImageLoadStatus(url);
+    return (
+        <Box
+            sx={styleCardSx}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            data-card-url={url}
+        >
+            <Box
+                component="img"
+                src={url}
+                alt=""
+                draggable={false}
+                {...imgProps}
+                sx={cardImageFillSx}
+            />
+            {status === 'error' && <CardImageMissingOverlay label={cardImageLabel(card, locale)} />}
+        </Box>
+    );
+};
 
 interface DeckComponentProps {
     mainDeck: IDeckData | undefined
@@ -169,12 +203,11 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
                     <Box sx={styles.mainContainerStyle}>
                         {mainDeck?.deck.map((card) => (
                             <Box sx={styles.cardContainer} key={card.id}>
-                                <Box
-                                    key={card.id}
-                                    sx={{ ...styles.styleCard, backgroundImage:`url(${s3CardImageURL(card)})` }}
+                                <DeckCardTile
+                                    card={card}
+                                    styleCardSx={styles.styleCard}
                                     onMouseEnter={handlePreviewOpen}
                                     onMouseLeave={handlePreviewClose}
-                                    data-card-url={s3CardImageURL(card)}
                                 />
                                 <Box sx={styles.counterIcon}>
                                     <Typography sx={styles.numberFont}>
@@ -212,12 +245,11 @@ const DeckComponent: React.FC<DeckComponentProps> = ({
                             <Box sx={styles.mainContainerStyle}>
                                 {mainDeck?.sideboard.map((card) => (
                                     <Box sx={styles.cardContainer} key={card.id}>
-                                        <Box
-                                            key={card.id}
-                                            sx={{ ...styles.styleCard, backgroundImage:`url(${s3CardImageURL(card)})` }}
+                                        <DeckCardTile
+                                            card={card}
+                                            styleCardSx={styles.styleCard}
                                             onMouseEnter={handlePreviewOpen}
                                             onMouseLeave={handlePreviewClose}
-                                            data-card-url={s3CardImageURL(card)}
                                         />
                                         <Box sx={styles.counterIcon}>
                                             <Typography sx={styles.numberFont}>

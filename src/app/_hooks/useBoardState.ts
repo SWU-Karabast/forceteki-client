@@ -10,6 +10,8 @@ export interface IBoardState {
     getOpponent: (player: string) => string;
     isSpectator: boolean;
     gameMessages: IChatEntry[];
+    gameIsEnded: () => boolean;
+    lobbyState: any;
 }
 
 export function useBoardState(): IBoardState {
@@ -23,6 +25,8 @@ export function useBoardState(): IBoardState {
             getOpponent: replayContext.getOpponent,
             isSpectator: replayContext.isSpectator,
             gameMessages: replayContext.gameMessages,
+            gameIsEnded: replayContext.gameIsEnded,
+            lobbyState: replayContext.lobbyState,
         };
     }
 
@@ -33,6 +37,8 @@ export function useBoardState(): IBoardState {
             getOpponent: gameContext.getOpponent,
             isSpectator: gameContext.isSpectator,
             gameMessages: gameContext.gameMessages,
+            gameIsEnded: gameContext.gameIsEnded,
+            lobbyState: gameContext.lobbyState,
         };
     }
 

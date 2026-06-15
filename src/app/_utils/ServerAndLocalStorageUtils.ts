@@ -9,6 +9,7 @@ import { v4 as uuid } from 'uuid';
 import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
+import { CardImageLocale } from '@/app/_utils/s3Utils';
 
 /* Secondary functions */
 /**
@@ -498,7 +499,8 @@ export const convertToDisplayDecks = (storedDecks: StoredDeck[]): DisplayDeck[] 
         metadata: { name: deck.name },
         favourite: deck.favourite,
         deckLink: deck.deckLink,
-        source: deck.source
+        source: deck.source,
+        stats: deck.stats
     }));
 };
 
@@ -760,7 +762,12 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
                     background: preferences.cosmetics?.background,
                     // playmat: preferences.cosmetics?.playmat,
                     // disablePlaymats: preferences.cosmetics?.disablePlaymats ?? false,
-                }
+                },
+                gameOptions: {
+                    muteChat: preferences.gameOptions?.muteChat ?? false,
+                    cardLanguage: preferences.gameOptions?.cardLanguage ?? CardImageLocale.English,
+                    timerVisibility: preferences.gameOptions?.timerVisibility,
+                },
             };
         }
     } catch (error) {
@@ -781,7 +788,12 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
             background: undefined,
             // playmat: undefined,
             // disablePlaymats: false,
-        }
+        },
+        gameOptions: {
+            muteChat: false,
+            cardLanguage: CardImageLocale.English,
+            timerVisibility: undefined,
+        },
     };
 };
 
@@ -1061,6 +1073,85 @@ export const markUndoPopupAsSeen = async (user: IUser | null, updateCachedLocalS
 
     // save to local storage for both signed-in and anonymous so that a signed-in user doesn't get a repeat
     saveUndoPopupSeenToLocalStorage(currentDate);
+};
+
+/**
+ * Saves the timer popup seen date to localStorage for anonymous users
+ * @param date The date string when the popup was seen
+ */
+export const saveTimerPopupSeenToLocalStorage = (date: string): void => {
+    try {
+        localStorage.setItem('timerPopupSeenDate', date);
+    } catch (error) {
+        console.error('Error saving timer popup seen date to localStorage:', error);
+    }
+};
+
+/**
+ * Gets the timer popup seen date from localStorage for anonymous users
+ * @returns The date string when the popup was seen, or null if not seen
+ */
+export const getTimerPopupSeenFromLocalStorage = (): string | null => {
+    try {
+        return localStorage.getItem('timerPopupSeenDate');
+    } catch (error) {
+        console.error('Error getting timer popup seen date from localStorage:', error);
+        return null;
+    }
+};
+
+/**
+ * Checks if the user has seen the timer popup, handling both signed-in and anonymous users
+ * @param user The current user (or null if anonymous)
+ * @returns True if the user has seen the popup, false otherwise
+ */
+export const hasUserSeenTimerPopup = (user: IUser | null): boolean => {
+    if (user) {
+        // Signed-in user: check server data
+        if (!!user.timerPopupSeenDate) {
+            saveTimerPopupSeenToLocalStorage(user.timerPopupSeenDate.toString());
+            return true;
+        }
+
+        return false;
+    } else {
+        // Anonymous user: check localStorage
+        return !!getTimerPopupSeenFromLocalStorage();
+    }
+};
+
+/**
+ * Marks the timer popup as seen, handling both signed-in and anonymous users
+ * @param user The current user (or null if anonymous)
+ * @param updateCachedLocalState Optional callback to update local user context state for signed-in users
+ * @returns Promise that resolves when the operation is complete (for server calls)
+ */
+export const markTimerPopupAsSeen = async (user: IUser | null, updateCachedLocalState: () => void): Promise<void> => {
+    const currentDate = new Date().toISOString();
+
+    if (user) {
+        // Signed-in user: update local state first for immediate UI update
+        if (updateCachedLocalState) {
+            updateCachedLocalState();
+        }
+
+        // Then save to server
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/timer-popup-seen`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+        } catch (error) {
+            console.error('Failed to mark timer popup as seen on server:', error);
+            throw error;
+        }
+    }
+
+    // save to local storage for both signed-in and anonymous so that a signed-in user doesn't get a repeat
+    saveTimerPopupSeenToLocalStorage(currentDate);
 };
 
 /**

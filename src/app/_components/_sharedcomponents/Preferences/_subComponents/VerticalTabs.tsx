@@ -16,6 +16,8 @@ import { useUser } from '@/app/_contexts/User.context';
 import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
 import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
 import CosmeticsTab from '../PreferencesSubElementVariants/CosmeticsTab';
+import GameOptionsTab from '../PreferencesSubElementVariants/GameOptionsTab';
+import { useMediaQuery } from '@mui/material';
 
 function tabProps(index: number) {
     return {
@@ -28,6 +30,7 @@ function tabProps(index: number) {
 enum TabType {
     CurrentGame = 'currentGame',
     KeyboardShortcuts = 'keyboardShortcuts',
+    GameOptions = 'gameOptions',
     Cosmetics = 'cosmetics',
     SoundOptions = 'soundOptions',
     EndGame = 'endGame',
@@ -42,18 +45,24 @@ function VerticalTabs({
     attemptingClose = false,
     closeHandler = () => undefined,
     cancelCloseHandler = () => undefined,
+    initialTab,
 }:IVerticalTabsProps) {
-    const [value, setValue] = useState(0);
+    const [value, setValue] = useState(() => {
+        if (!initialTab) return 0;
+        const idx = tabs.indexOf(initialTab);
+        return idx >= 0 ? idx : 0;
+    });
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
     const [pendingTabIndex, setPendingTabIndex] = useState<number | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const { logout } = useUser();
+    const isSmallScreen = useMediaQuery('(max-width: 899px)');
 
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (tabs[value] === 'soundOptions' && hasUnsavedChanges) {
+            if ((tabs[value] === 'soundOptions' || tabs[value] === 'gameOptions') && hasUnsavedChanges) {
                 e.preventDefault();
-                e.returnValue = 'You have unsaved sound preferences. Are you sure you want to leave?';
+                e.returnValue = 'You have unsaved preferences. Are you sure you want to leave?';
             }
         };
 
@@ -73,7 +82,7 @@ function VerticalTabs({
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         // Check if leaving sound options with unsaved changes
-        if (tabs[value] === 'soundOptions' && hasUnsavedChanges && newValue !== value) {
+        if ((tabs[value] === 'soundOptions' || tabs[value] === 'gameOptions') && hasUnsavedChanges && newValue !== value) {
             setPendingTabIndex(newValue);
             setShowUnsavedDialog(true);
         } else {
@@ -109,6 +118,8 @@ function VerticalTabs({
                 return <CurrentGameTab/>;
             case TabType.KeyboardShortcuts:
                 return <KeyboardShortcutsTab/>;
+            case TabType.GameOptions:
+                return <GameOptionsTab variant={variant} setHasNewChanges={setHasUnsavedChanges}/>;
             case TabType.Cosmetics:
                 return <CosmeticsTab />;
             case TabType.SoundOptions:
@@ -129,6 +140,8 @@ function VerticalTabs({
                 return 'Current Game';
             case TabType.KeyboardShortcuts:
                 return 'Keyboard Shortcuts';
+            case TabType.GameOptions:
+                return 'Game Options';
             case TabType.Cosmetics:
                 return 'Cosmetics';
             case TabType.SoundOptions:
@@ -149,7 +162,7 @@ function VerticalTabs({
     // ------------------------STYLES------------------------//
     const styles = {
         tabContainer: {
-            width: '20%',
+            width: { xs: 'auto', md: '20%' },
             backgroundColor: 'transparent',
             gap:'1rem',
         },
@@ -173,10 +186,12 @@ function VerticalTabs({
         },
         tabPanelContainer:{
             backgroundColor: 'transparent',
-            width: '80%',
-            pl:9,
+            width: { xs: 'auto', md: '80%' },
+            flex: 1,
+            minHeight: 0,
+            pl: { xs: 0, md: 9 },
             gap: '20px',
-            maxHeight: variant === 'gameBoard' ? 'calc(80vh - 1rem)' : 'calc(100vh - 14rem - 60px)',
+            maxHeight: '100%',
             overflowY: 'auto',
             '::-webkit-scrollbar': {
                 width: '0.2vw',
@@ -194,10 +209,10 @@ function VerticalTabs({
 
     return (
         <Box
-            sx={{ display: 'flex', background: 'transparent' }}
+            sx={{ display: 'flex', background: 'transparent', flexDirection: { xs: 'column', md: 'row' }, height: '100%', minHeight: 0 }}
         >
             <Tabs
-                orientation="vertical"
+                orientation={isSmallScreen ? 'horizontal' : 'vertical'}
                 variant="scrollable"
                 value={value}
                 onChange={handleChange}
