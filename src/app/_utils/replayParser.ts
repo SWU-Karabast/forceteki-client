@@ -14,17 +14,23 @@ export interface ParsedReplay {
     header: Record<string, string>;
     events: ReplayEvent[];
     snapshots: ReplaySnapshot[];
+
+    /** Map of card id (SET#NUM) → human card name, parsed from the CARD INDEX. */
+    cardNames: Record<string, string>;
 }
 
 const CARD_INDEX_SEPARATOR = '═══ CARD INDEX ═══';
 const REPLAY_SEPARATOR = '=== REPLAY ===';
 const HEADER_TAG_REGEX = /^\[(\w+)\s+"(.*)"\]$/;
+// Card index entries look like:  "Leader: Ezra Bridger = ASH#013" or "  3x Aggressive Negotiations = SEC#179"
+const CARD_INDEX_REGEX = /^(?:\d+x\s+)?(.+?)\s+=\s+([A-Z0-9]+#\d+)$/;
 
 export function parseReplayFile(content: string): ParsedReplay {
     const lines = content.split(/\r?\n/);
     const header: Record<string, string> = {};
     const events: ReplayEvent[] = [];
     const snapshots: ReplaySnapshot[] = [];
+    const cardNames: Record<string, string> = {};
 
     let section: 'header' | 'cardIndex' | 'replay' = 'header';
 
@@ -49,6 +55,15 @@ export function parseReplayFile(content: string): ParsedReplay {
         }
 
         if (section === 'cardIndex') {
+            // Strip the leader name from "Leader: Name = SET#NUM" / "Base: Name = SET#NUM"
+            const entry = trimmed.replace(/^(?:Leader|Base):\s*/, '');
+            const match = entry.match(CARD_INDEX_REGEX);
+            if (match) {
+                const name = match[1].trim();
+                const id = match[2];
+                // First name wins (decklist lists each id once; leaders/bases first).
+                if (!cardNames[id]) cardNames[id] = name;
+            }
             continue;
         }
 
@@ -83,5 +98,6 @@ export function parseReplayFile(content: string): ParsedReplay {
         header,
         events,
         snapshots,
+        cardNames,
     };
 }

@@ -6,6 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ReplayProvider, ParsedReplay, useReplay } from '@/app/_contexts/Replay.context';
 import FileUpload from '@/app/_components/Replay/FileUpload';
 import TransportControls from '@/app/_components/Replay/TransportControls';
+import MoveList from '@/app/_components/Replay/MoveList';
+import LastActionCaption from '@/app/_components/Replay/LastActionCaption';
+import RecentReplays from '@/app/_components/Replay/RecentReplays';
+import ShareControls from '@/app/_components/Replay/ShareControls';
 import OpponentCardTray from '@/app/_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '@/app/_components/Gameboard/Board/Board';
 import PlayerCardTray from '@/app/_components/Gameboard/PlayerCardTray/PlayerCardTray';
@@ -169,14 +173,22 @@ function ReplayBoardContent({ header }: { header: Record<string, string> }) {
                 </Box>
                 <PopupShell sidebarOpen={false} />
             </Grid>
+            <ShareControls />
+            <MoveList />
+            <LastActionCaption />
             <TransportControls />
         </>
     );
 }
 
-function ReplayBoard({ replay }: { replay: ParsedReplay }) {
+function ReplayBoard({ replay, rawContent, replayId, initialFrame }: {
+    replay: ParsedReplay;
+    rawContent: string | null;
+    replayId: string | null;
+    initialFrame: number;
+}) {
     return (
-        <ReplayProvider replay={replay}>
+        <ReplayProvider replay={replay} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame}>
             <ReplayBoardContent header={replay.header} />
         </ReplayProvider>
     );
@@ -184,10 +196,12 @@ function ReplayBoard({ replay }: { replay: ParsedReplay }) {
 
 export default function ReplayPage() {
     const [replay, setReplay] = useState<ParsedReplay | null>(null);
+    const [rawContent, setRawContent] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
     const replayId = searchParams.get('id');
+    const initialFrame = Number(searchParams.get('t')) || 0;
 
     // On mount, if URL has ?id=, try to load from IndexedDB
     useEffect(() => {
@@ -195,11 +209,12 @@ export default function ReplayPage() {
 
         setLoading(true);
         loadReplay(replayId)
-            .then((rawContent) => {
-                if (rawContent) {
-                    const parsed = parseReplayFile(rawContent);
+            .then((content) => {
+                if (content) {
+                    const parsed = parseReplayFile(content);
                     if (parsed.snapshots.length > 0) {
                         setReplay(parsed);
+                        setRawContent(content);
                     }
                 }
             })
@@ -208,11 +223,17 @@ export default function ReplayPage() {
     }, [replayId]);
 
     // When a file is uploaded, store it and update the URL
-    const handleReplayLoaded = async (parsed: ParsedReplay, rawContent: string) => {
+    const handleReplayLoaded = async (parsed: ParsedReplay, content: string) => {
         setReplay(parsed);
+        setRawContent(content);
         try {
-            const id = await generateReplayId(parsed.header, rawContent);
-            await storeReplay(id, rawContent);
+            const id = await generateReplayId(parsed.header, content);
+            await storeReplay(id, content, {
+                player1: parsed.header.Player1 || 'Player 1',
+                player2: parsed.header.Player2 || 'Player 2',
+                result: parsed.header.Result || '',
+                savedAt: Date.now(),
+            });
             router.replace(`/Replay?id=${id}`, { scroll: false });
         } catch {
             // Storage failed, replay still works — just won't survive refresh
@@ -220,7 +241,7 @@ export default function ReplayPage() {
     };
 
     if (replay) {
-        return <ReplayBoard replay={replay} />;
+        return <ReplayBoard replay={replay} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} />;
     }
 
     return (
@@ -262,6 +283,7 @@ export default function ReplayPage() {
                     }
                 </Typography>
                 <FileUpload onReplayLoaded={handleReplayLoaded} />
+                <RecentReplays />
             </Card>
         </Box>
     );

@@ -37,11 +37,19 @@ const TransportControls: React.FC = () => {
         togglePerspective,
         currentPerspective,
         snapshots,
+        chapters,
     } = useReplay();
 
     const currentRound = snapshots[currentIndex]
         ? parseRoundFromSeq(snapshots[currentIndex].seq)
         : '';
+
+    // Tick marks at round/phase boundaries; thumb tooltip shows the round/phase.
+    const marks = chapters.map((c) => ({ value: c.snapshotIndex }));
+    const formatPosition = (value: number) => {
+        const seq = snapshots[value]?.seq;
+        return (seq && parseRoundFromSeq(seq)) || `${value + 1} / ${totalSnapshots}`;
+    };
 
     const handlePlayPause = useCallback(() => {
         if (isPlaying) pause();
@@ -133,13 +141,27 @@ const TransportControls: React.FC = () => {
             <Slider
                 value={currentIndex}
                 min={0}
-                max={totalSnapshots - 1}
+                max={Math.max(0, totalSnapshots - 1)}
+                marks={marks}
                 onChange={handleSliderChange}
+                valueLabelDisplay="auto"
+                valueLabelFormat={formatPosition}
                 sx={{
                     flex: 1,
                     mx: 1,
                     color: 'var(--initiative-blue)',
                     '& .MuiSlider-thumb': { width: 14, height: 14 },
+                    '& .MuiSlider-mark': {
+                        width: 3,
+                        height: 10,
+                        borderRadius: 1,
+                        backgroundColor: 'rgba(255,255,255,0.5)',
+                    },
+                    '& .MuiSlider-markActive': { backgroundColor: 'var(--selection-blue)' },
+                    '& .MuiSlider-valueLabel': {
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        fontSize: '0.7rem',
+                    },
                 }}
             />
 

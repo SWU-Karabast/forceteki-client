@@ -4,6 +4,8 @@ import Grid from '@mui/material/Grid';
 import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
+import { useReplayHighlightSet } from '@/app/_contexts/Replay.context';
+import { formatCardRef } from '@/app/_utils/replayMoves';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
@@ -66,6 +68,11 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { clearPopups } = usePopup();
     const { getCardback } = useCosmetics();
     const locale = useCardImageLocale();
+    // Replay-only: glow cards touched by the current frame's events. Empty (no
+    // glow) in the live game, where there is no ReplayProvider.
+    const replayHighlight = useReplayHighlightSet();
+    const isReplayHighlighted = !!card?.setId
+        && replayHighlight.has(formatCardRef(card.setId.set, card.setId.number));
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
@@ -311,7 +318,9 @@ const GameCard: React.FC<IGameCardProps> = ({
                         ? `4px solid ${borderColor}`
                         : `2px solid ${borderColor}`
                     : '2px solid transparent',
-            boxShadow: borderColor && card.selected && card.zone !== 'hand' ? `0 0 7px 3px ${borderColor}` : 'none',
+            boxShadow: isReplayHighlighted
+                ? '0 0 11px 4px var(--initiative-blue)'
+                : borderColor && card.selected && card.zone !== 'hand' ? `0 0 7px 3px ${borderColor}` : 'none',
             boxSizing: 'border-box',
         },
         cardImage: cardImageFillSx,
