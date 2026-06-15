@@ -38,7 +38,7 @@ export default function DeckLayout({
             width: '100%',
             padding: { xs:'0', md: '1rem' },
             textAlign: 'center',
-            fontSize: { xs: '0.9rem', md: '0.90rem' },
+            fontSize: '0.9rem',
         },
     }
     return (
