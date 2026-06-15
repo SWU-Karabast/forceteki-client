@@ -82,6 +82,10 @@ export const SPEED_INTERVALS: Record<number, number> = {
     4: 500,
 };
 
+// Stable reference for frames with no events, so the derived memos below keep a
+// constant dependency identity instead of allocating a fresh [] each render.
+const EMPTY_EVENTS: ReplayEvent[] = [];
+
 interface ReplayProviderProps {
     replay: ParsedReplay;
     children: ReactNode;
@@ -163,16 +167,38 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children
         return playerKeys.find((id) => id !== player) || '';
     }, [playerKeys]);
 
-    // Events whose outcome resolves in the current frame (after the previous
-    // snapshot, up to and including this one). Drives the caption, chat, and
-    // board highlight. Numeric-aware comparator handles multi-digit seqs
-    // (e.g., "R10.A.12" sorts after "R2.A.9").
-    const currentFrameEvents: ReplayEvent[] = useMemo(() => {
-        if (currentIndex === 0 || events.length === 0) return [];
-        const prevSeq = snapshots[currentIndex - 1]?.seq ?? '';
-        const currSeq = snapshots[currentIndex]?.seq ?? '';
-        return events.filter((e) => e.seq && compareSeq(e.seq, prevSeq) > 0 && compareSeq(e.seq, currSeq) <= 0);
-    }, [currentIndex, events, snapshots]);
+    // Bucket every event into the frame where its outcome resolves, so reading
+    // the current frame's events during playback is an O(1) lookup instead of an
+    // O(n) re-scan of the whole event list on every step. Each event is
+    // binary-searched (snapshot seqs are sorted) to the first snapshot at/after
+    // its seq — i.e. frame i covers seqs after snapshot[i-1] up to and including
+    // snapshot[i]. Frame 0 shows nothing (the initial board state precedes the
+    // first recorded beat) and events past the last snapshot are dropped, exactly
+    // matching the prior per-frame range filter. The numeric-aware comparator
+    // handles multi-digit seqs (e.g. "R10.A.12" sorts after "R2.A.9") and
+    // event-array order is preserved within each bucket (the caption leads with
+    // the latest beat). Total cost O(n log m) vs the old O(n) every frame.
+    const eventsByFrame: ReplayEvent[][] = useMemo(() => {
+        const buckets: ReplayEvent[][] = snapshots.map(() => []);
+        if (snapshots.length < 2) return buckets;
+        const frameFor = (seq: string): number => {
+            let lo = 0, hi = snapshots.length - 1, ans = -1;
+            while (lo <= hi) {
+                const mid = (lo + hi) >> 1;
+                if (compareSeq(snapshots[mid].seq, seq) >= 0) { ans = mid; hi = mid - 1; }
+                else lo = mid + 1;
+            }
+            return ans;
+        };
+        for (const e of events) {
+            if (typeof e.seq !== 'string') continue;
+            const i = frameFor(e.seq);
+            if (i >= 1) buckets[i].push(e);
+        }
+        return buckets;
+    }, [events, snapshots]);
+
+    const currentFrameEvents: ReplayEvent[] = eventsByFrame[currentIndex] ?? EMPTY_EVENTS;
 
     const gameMessages: IChatEntry[] = useMemo(
         () => currentFrameEvents.map((e) => ({ date: e.seq, message: [describeEvent(e, cardNames)] })),

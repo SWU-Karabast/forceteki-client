@@ -9,18 +9,11 @@ import {
     SwapHoriz,
 } from '@mui/icons-material';
 import { useReplay, SPEED_INTERVALS } from '@/app/_contexts/Replay.context';
+import { formatRoundPhase } from '@/app/_utils/replayMoves';
 
 // Single source of truth — derived from the playback interval map so the two
 // can never drift (a speed without a matching interval would silently fall back).
 const SPEEDS = Object.keys(SPEED_INTERVALS).map(Number).sort((a, b) => a - b);
-
-function parseRoundFromSeq(seq: string): string {
-    const match = seq.match(/^R(\d+)\.([A-Z])/);
-    if (!match) return '';
-    const round = match[1];
-    const phase = match[2] === 'A' ? 'Action' : match[2] === 'R' ? 'Regroup' : match[2];
-    return `Round ${round}, ${phase} Phase`;
-}
 
 const TransportControls: React.FC = () => {
     const {
@@ -41,14 +34,14 @@ const TransportControls: React.FC = () => {
     } = useReplay();
 
     const currentRound = snapshots[currentIndex]
-        ? parseRoundFromSeq(snapshots[currentIndex].seq)
+        ? formatRoundPhase(snapshots[currentIndex].seq)
         : '';
 
     // Tick marks at round/phase boundaries; thumb tooltip shows the round/phase.
     const marks = chapters.map((c) => ({ value: c.snapshotIndex }));
     const formatPosition = (value: number) => {
         const seq = snapshots[value]?.seq;
-        return (seq && parseRoundFromSeq(seq)) || `${value + 1} / ${totalSnapshots}`;
+        return (seq && formatRoundPhase(seq)) || `${value + 1} / ${totalSnapshots}`;
     };
 
     const handlePlayPause = useCallback(() => {

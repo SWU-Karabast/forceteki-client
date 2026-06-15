@@ -4,10 +4,7 @@ import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import { PlayArrow, DeleteOutline } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { listReplays, deleteReplay, StoredReplayMeta } from '@/app/_utils/replayStorage';
-
-function formatResult(result: string): string {
-    return result.replace(/\bP1\b/g, 'Player 1').replace(/\bP2\b/g, 'Player 2');
-}
+import { formatResult } from '@/app/_utils/replayMoves';
 
 function formatSavedAt(ts: number): string {
     if (!ts) return '';

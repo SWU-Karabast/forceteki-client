@@ -6,8 +6,10 @@ import { ReplayEvent, ReplaySnapshot } from '@/app/_utils/replayParser';
  * e.g., "R10.A.2" > "R2.A.9" (because 10 > 2 in the first numeric segment).
  */
 export function compareSeq(a: string, b: string): number {
-    const partsA = (a ?? '').split(/([.\-])/);
-    const partsB = (b ?? '').split(/([.\-])/);
+    // Coerce to string: event seqs come from JSON.parse of an uploaded file and
+    // can be a number/object on a malformed line — .split would throw otherwise.
+    const partsA = String(a ?? '').split(/([.\-])/);
+    const partsB = String(b ?? '').split(/([.\-])/);
     const len = Math.max(partsA.length, partsB.length);
     for (let i = 0; i < len; i++) {
         const pa = partsA[i] ?? '';
@@ -31,6 +33,11 @@ export function compareSeq(a: string, b: string): number {
  */
 export function formatCardRef(set: string, number: number | string): string {
     return `${String(set).toUpperCase()}#${String(number).padStart(3, '0')}`;
+}
+
+/** Expand the terse P1/P2 result tokens into full player labels. */
+export function formatResult(result: string): string {
+    return result.replace(/\bP1\b/g, 'Player 1').replace(/\bP2\b/g, 'Player 2');
 }
 
 /** Resolve a card reference (SET#NUM or TOKEN:name) to a human name. */
@@ -139,7 +146,7 @@ export function buildMoveList(
     let frame = 0;
     for (let i = 0; i < events.length; i++) {
         const e = events[i];
-        if (!e.seq || !MOVE_TYPES.has(e.type)) continue;
+        if (typeof e.seq !== 'string' || !MOVE_TYPES.has(e.type)) continue;
         // Advance the frame pointer to the first snapshot at/after this event.
         while (frame < lastFrame && compareSeq(snapshots[frame].seq, e.seq) < 0) {
             frame++;
@@ -168,6 +175,18 @@ function parseRoundPhase(seq: string): { round: string; phase: string } | null {
     if (!m) return null;
     const phase = m[2] === 'A' ? 'Action' : m[2] === 'G' ? 'Regroup' : m[2] === 'S' ? 'Setup' : m[2];
     return { round: m[1], phase };
+}
+
+/**
+ * Human label for a seq's round + phase, e.g. "Round 1, Action Phase".
+ * Empty string when the seq doesn't carry a round/phase. Single source of truth
+ * for phase decoding so the scrub bar and transport label can't drift — the
+ * server emits A=Action, G=Regroup, S=Setup.
+ */
+export function formatRoundPhase(seq: string): string {
+    const rp = parseRoundPhase(seq);
+    if (!rp) return '';
+    return `Round ${rp.round}, ${rp.phase} Phase`;
 }
 
 /**

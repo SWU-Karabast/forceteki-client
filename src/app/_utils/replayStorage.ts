@@ -1,12 +1,35 @@
 const DB_NAME = 'karabast-replays';
-const STORE_NAME = 'replays';
-const DB_VERSION = 1;
+const STORE_NAME = 'replays';        // full records (id, rawContent, meta)
+const META_STORE = 'replayMeta';     // lightweight metadata only, for the list view
+const DB_VERSION = 2;
 
 function openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
-        request.onupgradeneeded = () => {
-            request.result.createObjectStore(STORE_NAME);
+        request.onupgradeneeded = (event) => {
+            const db = request.result;
+            const tx = request.transaction;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+            // v2: split metadata into its own store so listReplays() never has to
+            // deserialize every replay's full rawContent. Backfill from existing
+            // v1 records via the version-change transaction.
+            if (!db.objectStoreNames.contains(META_STORE)) {
+                db.createObjectStore(META_STORE);
+                if (tx && event.oldVersion >= 1 && db.objectStoreNames.contains(STORE_NAME)) {
+                    const cursorReq = tx.objectStore(STORE_NAME).openCursor();
+                    cursorReq.onsuccess = () => {
+                        const cursor = cursorReq.result;
+                        if (!cursor) return;
+                        const rec = cursor.value;
+                        if (rec && typeof rec === 'object' && rec.meta && rec.id) {
+                            tx.objectStore(META_STORE).put({ id: rec.id, ...rec.meta }, rec.id);
+                        }
+                        cursor.continue();
+                    };
+                }
+            }
         };
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
@@ -87,9 +110,11 @@ export async function storeReplay(
             savedAt: meta?.savedAt ?? 0,
         },
     };
+    const metaRecord: StoredReplayMeta = { id, ...record.meta };
     return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const tx = db.transaction([STORE_NAME, META_STORE], 'readwrite');
         tx.objectStore(STORE_NAME).put(record, id);
+        tx.objectStore(META_STORE).put(metaRecord, id);
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
     });
@@ -110,18 +135,21 @@ export async function loadReplay(id: string): Promise<string | null> {
     });
 }
 
-/** List stored replays, newest first. Legacy string-only records are skipped. */
+/**
+ * List stored replays, newest first. Reads only the lightweight meta store, so
+ * the full rawContent of each replay is never deserialized for the list view.
+ * Legacy string-only records (no meta) never had a meta entry and are skipped.
+ */
 export async function listReplays(): Promise<StoredReplayMeta[]> {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const request = tx.objectStore(STORE_NAME).getAll();
+        const tx = db.transaction(META_STORE, 'readonly');
+        const request = tx.objectStore(META_STORE).getAll();
         request.onsuccess = () => {
-            const records: StoredReplay[] = (request.result ?? []).filter(
-                (r: unknown): r is StoredReplay =>
-                    !!r && typeof r === 'object' && 'meta' in r && 'rawContent' in r
+            const metas: StoredReplayMeta[] = (request.result ?? []).filter(
+                (r: unknown): r is StoredReplayMeta =>
+                    !!r && typeof r === 'object' && 'id' in r && 'savedAt' in r
             );
-            const metas = records.map((r) => ({ id: r.id, ...r.meta }));
             metas.sort((a, b) => b.savedAt - a.savedAt);
             resolve(metas);
         };
@@ -132,8 +160,9 @@ export async function listReplays(): Promise<StoredReplayMeta[]> {
 export async function deleteReplay(id: string): Promise<void> {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const tx = db.transaction([STORE_NAME, META_STORE], 'readwrite');
         tx.objectStore(STORE_NAME).delete(id);
+        tx.objectStore(META_STORE).delete(id);
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
     });

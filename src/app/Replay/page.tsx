@@ -17,10 +17,7 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
 import { parseReplayFile } from '@/app/_utils/replayParser';
 import { generateReplayId, storeReplay, loadReplay } from '@/app/_utils/replayStorage';
-
-function formatResult(result: string): string {
-    return result.replace(/\bP1\b/g, 'Player 1').replace(/\bP2\b/g, 'Player 2');
-}
+import { formatResult } from '@/app/_utils/replayMoves';
 
 function ReplayHeader({ header }: { header: Record<string, string> }) {
     const router = useRouter();
