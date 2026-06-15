@@ -30,7 +30,7 @@ export default function DeckLayout({
             width: { xs: '100vw', md: '95vw' },
             justifySelf:'center',
             height: '81vh',
-            overflow: { xs: 'hidden', md: 'hidden' },
+            overflow: 'hidden',
         },
         disclaimer: {
             position: 'absolute',
