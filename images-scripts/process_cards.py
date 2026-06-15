@@ -1046,6 +1046,10 @@ class UploadJob:
     # Compared to the live S3 header in _classify_one so that flipping a
     # set in or out of PREVIEW_SETS triggers a header refresh.
     cache_control: str
+    # Locale this job belongs to. Set at job-collection time so the
+    # check-exists / upload summaries can break their counts down per
+    # locale without re-parsing the s3_key.
+    locale: str
 
 
 def _md5_hex(path: Path) -> str:
@@ -1195,7 +1199,7 @@ def _collect_set_jobs(cfg: "Config") -> list[UploadJob]:
                     if entry.suffix.lower() != ".webp":
                         continue
                     key = f"{prefix}/{fmt}/{size}/{entry.name}"
-                    jobs.append(UploadJob(entry, key, cc))
+                    jobs.append(UploadJob(entry, key, cc, locale))
     return jobs
 
 
@@ -1222,7 +1226,7 @@ def _collect_token_jobs(cfg: "Config") -> list[UploadJob]:
                 if entry.name not in allowed:
                     continue
                 key = f"{prefix}/{fmt}/{entry.name}"
-                jobs.append(UploadJob(entry, key, cc))
+                jobs.append(UploadJob(entry, key, cc, locale))
     return jobs
 
 
@@ -1322,6 +1326,62 @@ def ensure_aws_credentials(cfg: "Config") -> boto3.Session:
     raise SystemExit(2)
 
 
+def _print_per_locale_summary(
+    locales: Iterable[str],
+    columns: list[tuple[tuple[str, ...], str, bool]],
+    counts_by_locale: dict[str, dict[str, int]],
+) -> None:
+    """Render a per-locale breakdown table.
+
+    `columns` is an ordered list of (status_keys, header_label, always_show)
+    tuples. Each column sums the counts of every status key in its tuple
+    (used to fold related statuses like 'changed' + 'header_changed' into
+    one column). A column with always_show=False is omitted entirely when
+    every locale reports zero across all its keys — matches the prior
+    behavior of hiding `check-failed` / `failed` when unused. A `TOTAL`
+    row sums each visible column across locales.
+    """
+    locales = list(locales)
+
+    def cell(loc: str, keys: tuple[str, ...]) -> int:
+        row = counts_by_locale.get(loc, {})
+        return sum(row.get(k, 0) for k in keys)
+
+    visible = [
+        (keys, label) for keys, label, always in columns
+        if always or any(cell(loc, keys) for loc in locales)
+    ]
+
+    totals = {label: sum(cell(loc, keys) for loc in locales)
+              for keys, label in visible}
+    grand_total = sum(totals.values())
+
+    rows: list[list[str]] = []
+    header = ["locale"] + [label for _, label in visible] + ["total"]
+    rows.append(header)
+    for loc in locales:
+        row_total = sum(cell(loc, keys) for keys, _ in visible)
+        rows.append([loc] + [str(cell(loc, keys)) for keys, _ in visible]
+                    + [str(row_total)])
+    rows.append(["TOTAL"] + [str(totals[label]) for _, label in visible]
+                + [str(grand_total)])
+
+    widths = [max(len(r[i]) for r in rows) for i in range(len(header))]
+
+    def fmt_row(r: list[str]) -> str:
+        # First column left-aligned, numeric columns right-aligned.
+        cells = [r[0].ljust(widths[0])]
+        cells += [r[i].rjust(widths[i]) for i in range(1, len(r))]
+        return "  " + "  ".join(cells)
+
+    print(fmt_row(rows[0]))
+    print("  " + "  ".join("-" * w for w in widths))
+    for r in rows[1:-1]:
+        print(fmt_row(r))
+    print("  " + "  ".join("-" * w for w in widths))
+    print(fmt_row(rows[-1]))
+
+
 def stage_check_exists(cfg: "Config", *, tokens: bool = False) -> list[ClassifiedJob]:
     """HEAD every candidate S3 key and diff against local MD5.
 
@@ -1341,7 +1401,7 @@ def stage_check_exists(cfg: "Config", *, tokens: bool = False) -> list[Classifie
     print(f"… {len(jobs)} candidate files in s3://{cfg.bucket}/")
 
     classified: list[ClassifiedJob] = []
-    counts: dict[str, int] = {}
+    counts_by_locale: dict[str, dict[str, int]] = {loc: {} for loc in cfg.locales}
     with cf.ThreadPoolExecutor(max_workers=cfg.workers) as ex:
         futures = [ex.submit(_classify_one, client, cfg.bucket, j) for j in jobs]
         iterator = _maybe_progress(
@@ -1351,18 +1411,25 @@ def stage_check_exists(cfg: "Config", *, tokens: bool = False) -> list[Classifie
         for fut in iterator:
             c = fut.result()
             classified.append(c)
-            counts[c.status] = counts.get(c.status, 0) + 1
+            bucket_counts = counts_by_locale.setdefault(c.job.locale, {})
+            bucket_counts[c.status] = bucket_counts.get(c.status, 0) + 1
             vprint(c.message)
 
     print(f"\n── Check summary ({label}) ──")
-    print(f"  up-to-date:     {counts.get('up_to_date', 0)}")
-    print(f"  new:            {counts.get('new', 0)}")
-    print(f"  changed:        {counts.get('changed', 0)}")
-    print(f"  header-changed: {counts.get('header_changed', 0)}")
-    cf_count = counts.get('check_failed', 0)
-    if cf_count:
-        print(f"  check-failed:   {cf_count}")
-    print(f"  total:          {len(jobs)}")
+    _print_per_locale_summary(
+        cfg.locales,
+        [
+            (("up_to_date",), "up-to-date", True),
+            (("new",), "new", True),
+            # `header_changed` is a strict subset of "the object on S3
+            # differs from what we want", so report it under the same
+            # column as byte-level `changed`. The upload stage still
+            # handles the two distinctly (PUT vs CopyObject).
+            (("changed", "header_changed"), "changed", True),
+            (("check_failed",), "check-failed", False),
+        ],
+        counts_by_locale,
+    )
     return classified
 
 
@@ -1398,26 +1465,37 @@ def stage_upload(
     session = ensure_aws_credentials(cfg)
     client = session.client("s3")
 
-    counts: dict[str, int] = {}
+    counts_by_locale: dict[str, dict[str, int]] = {loc: {} for loc in cfg.locales}
+    # Map each in-flight future back to its classified job so we can
+    # attribute the result to the right locale even though _upload_one
+    # returns only (status, msg).
     with cf.ThreadPoolExecutor(max_workers=cfg.workers) as ex:
-        futures = [ex.submit(_upload_one, client, cfg.bucket, c) for c in to_upload]
+        future_to_job = {
+            ex.submit(_upload_one, client, cfg.bucket, c): c for c in to_upload
+        }
         iterator = _maybe_progress(
-            cf.as_completed(futures), total=len(futures),
+            cf.as_completed(future_to_job), total=len(future_to_job),
             desc=f"upload {label}", unit="file",
         )
         for fut in iterator:
             status, msg = fut.result()
-            counts[status] = counts.get(status, 0) + 1
+            locale = future_to_job[fut].job.locale
+            bucket_counts = counts_by_locale.setdefault(locale, {})
+            bucket_counts[status] = bucket_counts.get(status, 0) + 1
             vprint(msg)
 
     print(f"\n── Upload summary ({label}) ──")
-    print(f"  uploaded (new):       {counts.get('uploaded_new', 0)}")
-    print(f"  uploaded (changed):   {counts.get('uploaded_changed', 0)}")
-    print(f"  rewrote header only:  {counts.get('rewrote_header', 0)}")
-    failed = counts.get('failed', 0)
-    if failed:
-        print(f"  failed:               {failed}")
-    print(f"  total:                {len(to_upload)}")
+    _print_per_locale_summary(
+        cfg.locales,
+        [
+            (("uploaded_new",), "uploaded-new", True),
+            # Mirror the check summary: header-only rewrites fold into
+            # the same "changed" column as full byte re-uploads.
+            (("uploaded_changed", "rewrote_header"), "uploaded-changed", True),
+            (("failed",), "failed", False),
+        ],
+        counts_by_locale,
+    )
 
 
 # ──────────────────────────────── Tokens ──────────────────────────────────
