@@ -10,7 +10,7 @@ export type PopupButton = {
     uuid: string;
     command: string;
     arg: string;
-    relatedCardId?: string;
+    sourceCardSetId?: ICardData['setId'];
     selected?: boolean;
     disabled?: boolean;
 };

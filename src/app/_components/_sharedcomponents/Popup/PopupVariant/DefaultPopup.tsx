@@ -13,20 +13,13 @@ import {
 } from '../Popup.styles';
 import { DefaultPopup, PopupButton } from '../Popup.types';
 import RichText from '../../RichText/RichText';
-import { ICardData, CardStyle } from '../../Cards/CardTypes';
+import { CardStyle } from '../../Cards/CardTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 
 interface ButtonProps {
     data: DefaultPopup;
 }
-
-type PlayerCardContainers = {
-    leader?: ICardData;
-    base?: ICardData;
-    forceToken?: ICardData;
-    cardPiles?: Record<string, ICardData[]>;
-};
 
 export const DefaultPopupModal = ({ data }: ButtonProps) => {
     const { sendGameMessage, gameState, connectedPlayer } = useGame();
@@ -35,53 +28,13 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
 
     const triggerWindow = gameState?.players[connectedPlayer]?.promptState?.promptType === 'triggerWindow';
 
-    const findCardByUuid = (uuid?: string): ICardData | null => {
-        if (!uuid || !gameState?.players) {
-            return null;
-        }
-
-        const visitCard = (card?: ICardData | null): ICardData | null => {
-            if (!card) {
-                return null;
-            }
-            if (card.uuid === uuid) {
-                return card;
-            }
-            for (const child of [...(card.subcards ?? []), ...(card.capturedCards ?? [])]) {
-                const found = visitCard(child);
-                if (found) {
-                    return found;
-                }
-            }
-            return null;
-        };
-
-        for (const player of Object.values(gameState.players) as PlayerCardContainers[]) {
-            const playerCards = [
-                player.leader,
-                player.base,
-                player.forceToken,
-                ...Object.values(player.cardPiles ?? {}).flat(),
-            ];
-            for (const card of playerCards) {
-                const found = visitCard(card as ICardData);
-                if (found) {
-                    return found;
-                }
-            }
-        }
-
-        return null;
-    };
-
     const getButtonBackgroundImage = (button: PopupButton): string | undefined => {
-        const card = findCardByUuid(button.relatedCardId);
-        if (!card) {
+        if (!button.sourceCardSetId) {
             return undefined;
         }
 
         return s3CardImageURL(
-            { ...card, setId: card.clonedCardId ?? card.setId },
+            { setId: button.sourceCardSetId, type: '', id: '' },
             locale,
             CardStyle.Plain
         );
