@@ -76,4 +76,11 @@ describe('adaptState (full assembly)', () => {
         expect(gs.players.p1.leader.setId).toEqual({ set: 'SOR', number: 10 }); // P1Leader SOR#010
         expect(gs.players.p1.base.setId).toEqual({ set: 'SOR', number: 27 });   // P1Base SOR#027
     });
+
+    it('provides a promptState object (board reads promptState.* unguarded)', () => {
+        // LeaderBaseCard/GameCard read players[x].promptState.distributeAmongTargets
+        // without null-checking promptState — it must exist or the board throws.
+        expect(gs.players.p1.promptState).toBeDefined();
+        expect(gs.players.p2.promptState).toBeDefined();
+    });
 });

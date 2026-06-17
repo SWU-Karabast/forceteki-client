@@ -114,6 +114,11 @@ function adaptPlayer(
         base,
         hasInitiative: false, // set by adaptState from ReducedState.initiative
         isActionPhaseActivePlayer: false,
+        // The live board reads `promptState.<field>` WITHOUT null-guarding promptState
+        // (e.g. LeaderBaseCard/GameCard read promptState.distributeAmongTargets). Replay
+        // has no prompts, but the object must exist so those reads return undefined
+        // instead of throwing.
+        promptState: {},
         availableResources: ps.resourcesReady,
         numCardsInDeck,
         forceToken: { active: ps.hasForce, uuid: `${playerId}:force` },
