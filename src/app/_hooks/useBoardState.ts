@@ -1,4 +1,7 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// gameState/lobbyState mirror the live board state, which is typed `any`
+// (same as Game.context.tsx which disables this rule).
 import { useContext } from 'react';
 import { GameContext } from '@/app/_contexts/Game.context';
 import { ReplayContext } from '@/app/_contexts/Replay.context';

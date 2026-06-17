@@ -1,4 +1,7 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// gameState mirrors the live board's gameState, which is typed `any`
+// (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState } from '@/lib/swupgn';
 import { fold, serialize } from '@/lib/swupgn';
@@ -23,6 +26,7 @@ export interface IReplayContextType {
     currentMoveIndex: number;
     replayId: string | null;
     downloadReplay: () => void;
+
     /** Resolve a SET#NUM[:copy] card id to a display name (falls back to the raw id). */
     nameOf: (id: string) => string;
 

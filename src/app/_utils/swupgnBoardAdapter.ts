@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// This adapter produces the live board's gameState, which is typed `any`
+// (IBoardState.gameState: any, see Game.context.tsx which disables the same rule).
+// Typing these returns would mean typing the entire live board state — out of scope.
 import type { CardInstanceState, ReducedState, Seat, SwuPgnDocument, PlayerState, SetupInitRecord } from '@/lib/swupgn';
 
 /** Minimal card shape the board reads. Replay is read-only, so selection/prompt
