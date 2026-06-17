@@ -1,12 +1,13 @@
-import { Button } from '@mui/material';
+import { Button, SxProps, Theme } from '@mui/material';
 
 interface IGradientBorderButtonProps {
     fillColor?: string;
+    sx?: SxProps<Theme>;
     onClickHandler: () => void;
     children: React.ReactNode;
 }
 
-const GradientBorderButton: React.FC<IGradientBorderButtonProps> = ({ fillColor = '#1E2D32', onClickHandler, children }) => {
+const GradientBorderButton: React.FC<IGradientBorderButtonProps> = ({ fillColor = '#1E2D32', sx, onClickHandler, children }) => {
     return (
         <Button
             sx={{
@@ -25,6 +26,7 @@ const GradientBorderButton: React.FC<IGradientBorderButtonProps> = ({ fillColor 
                     cursor: 'default',
                 },
                 cursor: 'pointer',
+                ...sx,
             }}
             onClick={onClickHandler}
         >
