@@ -1,320 +1,154 @@
 'use client';
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
-import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
-import { IBoardState } from '@/app/_hooks/useBoardState';
-import { ParsedReplay, ReplayEvent, ReplaySnapshot } from '@/app/_utils/replayParser';
-import {
-    compareSeq, buildMoveList, buildChapters, describeEvent, eventCardRefs,
-    ReplayMove, ReplayChapter,
-} from '@/app/_utils/replayMoves';
+import type { SwuPgnDocument, ReducedState } from '@/lib/swupgn';
+import { fold, serialize } from '@/lib/swupgn';
+import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
+import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
+import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 
-// Re-export for convenience
-export type { ParsedReplay, ReplayEvent, ReplaySnapshot };
-export type { ReplayMove, ReplayChapter };
+export interface IReplayContextType {
+    gameState: any;
+    connectedPlayer: string;
+    getOpponent: (p: string) => string;
+    isSpectator: boolean;
+    gameMessages: { date: string; message: string[] }[];
+    gameIsEnded: () => boolean;
+    lobbyState: null;
 
-export interface IReplayContextType extends IBoardState {
-    snapshots: ReplaySnapshot[];
-    events: ReplayEvent[];
+    doc: SwuPgnDocument;
     currentIndex: number;
-    totalSnapshots: number;
-    header: Record<string, string>;
-    cardNames: Record<string, string>;
-
-    /** Discrete human-readable beats across the whole replay (for the move list). */
+    totalFrames: number;
+    header: SwuPgnDocument['header'];
     moves: ReplayMove[];
-
-    /** Index into `moves` of the latest beat at/before the current frame, or -1. */
     currentMoveIndex: number;
-
-    /** Round/phase jump points for the scrub bar. */
-    chapters: ReplayChapter[];
-
-    /** Human descriptions of the events resolved in the current frame. */
-    currentEvents: string[];
-
-    /** Card refs (SET#NUM / TOKEN:name) touched in the current frame, for board highlighting. */
-    highlightedCardRefs: string[];
-
-    /** Stored id of this replay (for share links), or null if not persisted. */
     replayId: string | null;
-
-    /** Re-download the loaded .swureplay file. */
     downloadReplay: () => void;
 
-    play: () => void;
-    pause: () => void;
-    isPlaying: boolean;
-    speed: number;
-    setSpeed: (s: number) => void;
-    stepForward: () => void;
-    stepBack: () => void;
-    seekTo: (index: number) => void;
-
-    togglePerspective: () => void;
-    currentPerspective: string;
+    play: () => void; pause: () => void; isPlaying: boolean;
+    speed: number; setSpeed: (s: number) => void;
+    stepForward: () => void; stepBack: () => void; seekTo: (i: number) => void;
+    seekToSeq: (seq: string) => void;
+    currentEvents: string[];
+    togglePerspective: () => void; currentPerspective: string;
 }
 
 export const ReplayContext = createContext<IReplayContextType | null>(null);
 
 export function useReplay(): IReplayContextType {
-    const context = useContext(ReplayContext);
-    if (!context) {
-        throw new Error('useReplay must be used within a ReplayProvider');
-    }
-    return context;
+    const ctx = useContext(ReplayContext);
+    if (!ctx) throw new Error('useReplay must be used within a ReplayProvider');
+    return ctx;
 }
 
-/**
- * Set of card refs (SET#NUM) to highlight on the board for the current replay
- * frame. Safe to call from shared components (e.g. GameCard) that also render
- * in the live game — returns an empty set when there is no ReplayProvider, so
- * the live game is never affected.
- */
-export function useReplayHighlightSet(): Set<string> {
-    const context = useContext(ReplayContext);
-    return useMemo(() => new Set(context?.highlightedCardRefs ?? []), [context?.highlightedCardRefs]);
-}
+export const SPEED_INTERVALS: Record<number, number> = { 0.5: 4000, 1: 2000, 2: 1000, 4: 500 };
 
-export const SPEED_INTERVALS: Record<number, number> = {
-    0.5: 4000,
-    1: 2000,
-    2: 1000,
-    4: 500,
-};
-
-// Stable reference for frames with no events, so the derived memos below keep a
-// constant dependency identity instead of allocating a fresh [] each render.
-const EMPTY_EVENTS: ReplayEvent[] = [];
+const P1 = 'Player 1';
+const P2 = 'Player 2';
+const SEAT_TO_ID: SeatToPlayerId = { 1: P1, 2: P2 };
 
 interface ReplayProviderProps {
-    replay: ParsedReplay;
+    doc: SwuPgnDocument;
     children: ReactNode;
-
-    /** Frame to open on first load (deep-link ?t=N). */
-    initialFrame?: number;
-
-    /** Stored id of this replay, for building share links. */
-    replayId?: string | null;
-
-    /** Raw .swureplay content, kept so the viewer can re-download the file. */
     rawContent?: string | null;
+    replayId?: string | null;
+    initialFrame?: number;
+    nameMap?: Record<string, string>;
 }
 
-export const ReplayProvider: React.FC<ReplayProviderProps> = ({ replay, children, initialFrame = 0, replayId = null, rawContent = null }) => {
+export const ReplayProvider: React.FC<ReplayProviderProps> = ({
+    doc, children, rawContent = null, replayId = null, initialFrame = 0, nameMap = {},
+}) => {
+    const events = doc.events;
+    const totalFrames = events.length;
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [speed, setSpeed] = useState(1);
+    const [perspective, setPerspective] = useState(P1);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const snapshotCache = useRef<Map<number, any>>(new Map());
 
-    const { snapshots, events, header, cardNames } = replay;
-    const totalSnapshots = snapshots.length;
+    const resolver = useMemo(() => makeNameResolver(nameMap), [nameMap]);
+    const decks = useMemo(() => deckOrderLengths(doc), [doc]);
+    const moves = useMemo(() => buildMoveList(events, resolver), [events, resolver]);
 
-    const [perspective, setPerspective] = useState('Player 1');
+    // Per-frame ReducedState, computed once per document load (fold is O(n); this is O(n^2)
+    // at load for an n-event game, acceptable for P0 — optimize with incremental fold later).
+    const frameStates = useMemo<ReducedState[]>(() => {
+        const out: ReducedState[] = [];
+        for (let i = 0; i < events.length; i++) out.push(fold(events.slice(0, i + 1)));
+        return out;
+    }, [events]);
 
-    // Reset state when a new replay is loaded; honor the deep-link initial frame.
     useEffect(() => {
-        setCurrentIndex(Math.max(0, Math.min(initialFrame, snapshots.length - 1)));
+        setCurrentIndex(Math.max(0, Math.min(initialFrame, totalFrames - 1)));
         setIsPlaying(false);
-        setPerspective('Player 1');
-        snapshotCache.current.clear();
-    }, [replay, initialFrame, snapshots.length]);
+        setPerspective(P1);
+    }, [doc, initialFrame, totalFrames]);
 
-    const downloadReplay = useCallback(() => {
-        if (!rawContent) return;
-        const p1 = (header.Player1 || 'Player 1').replace(/[^a-z0-9]+/gi, '-');
-        const p2 = (header.Player2 || 'Player 2').replace(/[^a-z0-9]+/gi, '-');
-        const blob = new Blob([rawContent], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${p1}-vs-${p2}.swureplay`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-    }, [rawContent, header]);
-
-    const getSnapshot = useCallback((index: number): any => {
-        if (snapshotCache.current.has(index)) return snapshotCache.current.get(index);
-
-        const snap = snapshots[index];
-        if (!snap) return null;
-
-        const raw = snap.rawJson ?? snap.snapshot;
-        if (!raw) return null;
-
-        try {
-            const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
-            const resolved = data.snapshot ?? data;
-            snapshotCache.current.set(index, resolved);
-            return resolved;
-        } catch {
-            console.error(`Failed to parse snapshot at index ${index}`);
-            return null;
-        }
-    }, [snapshots]);
-
-    // Derive player keys once from the first snapshot for a stable getOpponent
-    const playerKeys = useMemo(() => {
-        const first = getSnapshot(0);
-        return first?.players ? Object.keys(first.players) : [];
-    }, [getSnapshot]);
-
-    const gameState = getSnapshot(currentIndex);
-
-    const getOpponent = useCallback((player: string): string => {
-        return playerKeys.find((id) => id !== player) || '';
-    }, [playerKeys]);
-
-    // Bucket every event into the frame where its outcome resolves, so reading
-    // the current frame's events during playback is an O(1) lookup instead of an
-    // O(n) re-scan of the whole event list on every step. Each event is
-    // binary-searched (snapshot seqs are sorted) to the first snapshot at/after
-    // its seq — i.e. frame i covers seqs after snapshot[i-1] up to and including
-    // snapshot[i]. Frame 0 shows nothing (the initial board state precedes the
-    // first recorded beat) and events past the last snapshot are dropped, exactly
-    // matching the prior per-frame range filter. The numeric-aware comparator
-    // handles multi-digit seqs (e.g. "R10.A.12" sorts after "R2.A.9") and
-    // event-array order is preserved within each bucket (the caption leads with
-    // the latest beat). Total cost O(n log m) vs the old O(n) every frame.
-    const eventsByFrame: ReplayEvent[][] = useMemo(() => {
-        const buckets: ReplayEvent[][] = snapshots.map(() => []);
-        if (snapshots.length < 2) return buckets;
-        const frameFor = (seq: string): number => {
-            let lo = 0, hi = snapshots.length - 1, ans = -1;
-            while (lo <= hi) {
-                const mid = (lo + hi) >> 1;
-                if (compareSeq(snapshots[mid].seq, seq) >= 0) { ans = mid; hi = mid - 1; }
-                else lo = mid + 1;
-            }
-            return ans;
-        };
-        for (const e of events) {
-            if (typeof e.seq !== 'string') continue;
-            const i = frameFor(e.seq);
-            if (i >= 1) buckets[i].push(e);
-        }
-        return buckets;
-    }, [events, snapshots]);
-
-    const currentFrameEvents: ReplayEvent[] = eventsByFrame[currentIndex] ?? EMPTY_EVENTS;
-
-    const gameMessages: IChatEntry[] = useMemo(
-        () => currentFrameEvents.map((e) => ({ date: e.seq, message: [describeEvent(e, cardNames)] })),
-        [currentFrameEvents, cardNames]
+    const gameState = useMemo(
+        () => (frameStates[currentIndex] ? adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID) : null),
+        [frameStates, currentIndex, doc, decks],
     );
 
-    const currentEvents: string[] = useMemo(
-        () => currentFrameEvents.map((e) => describeEvent(e, cardNames)),
-        [currentFrameEvents, cardNames]
-    );
-
-    const highlightedCardRefs: string[] = useMemo(
-        () => Array.from(new Set(currentFrameEvents.flatMap(eventCardRefs))),
-        [currentFrameEvents]
-    );
-
-    const moves = useMemo(() => buildMoveList(events, snapshots, cardNames), [events, snapshots, cardNames]);
-    const chapters = useMemo(() => buildChapters(snapshots), [snapshots]);
     const currentMoveIndex = useMemo(() => {
         let idx = -1;
         for (let i = 0; i < moves.length; i++) {
-            if (moves[i].snapshotIndex <= currentIndex) idx = i;
-            else break;
+            const moveFrame = events.findIndex((e) => e.seq === moves[i].seq);
+            if (moveFrame <= currentIndex) idx = i; else break;
         }
         return idx;
-    }, [moves, currentIndex]);
+    }, [moves, events, currentIndex]);
 
-    const togglePerspective = useCallback(() => {
-        setPerspective((prev) => (prev === 'Player 1' ? 'Player 2' : 'Player 1'));
-    }, []);
+    const currentEvents = useMemo(() => {
+        const e = events[currentIndex];
+        if (!e) return [];
+        const m = moves.find((mv) => mv.seq === e.seq);
+        return m ? [m.label] : [];
+    }, [events, currentIndex, moves]);
 
-    const stepForward = useCallback(() => {
-        setCurrentIndex((prev) => Math.min(prev + 1, totalSnapshots - 1));
-    }, [totalSnapshots]);
+    const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);
+    const downloadReplay = useCallback(() => {
+        const content = rawContent ?? serialize(doc);
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${doc.header.p1}-vs-${doc.header.p2}.swupgn`.replace(/[^a-z0-9.-]+/gi, '-');
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+    }, [rawContent, doc]);
 
-    const stepBack = useCallback(() => {
-        setCurrentIndex((prev) => Math.max(prev - 1, 0));
-    }, []);
-
-    const seekTo = useCallback((index: number) => {
-        setCurrentIndex(Math.max(0, Math.min(index, totalSnapshots - 1)));
-    }, [totalSnapshots]);
-
-    const play = useCallback(() => {
-        setIsPlaying(true);
-    }, []);
-
-    const pause = useCallback(() => {
-        setIsPlaying(false);
-    }, []);
+    const stepForward = useCallback(() => setCurrentIndex((p) => Math.min(p + 1, totalFrames - 1)), [totalFrames]);
+    const stepBack = useCallback(() => setCurrentIndex((p) => Math.max(p - 1, 0)), []);
+    const seekTo = useCallback((i: number) => setCurrentIndex(Math.max(0, Math.min(i, totalFrames - 1))), [totalFrames]);
+    const seekToSeq = useCallback((seq: string) => {
+        const i = events.findIndex((e) => e.seq === seq);
+        if (i >= 0) setCurrentIndex(i);
+    }, [events]);
+    const play = useCallback(() => setIsPlaying(true), []);
+    const pause = useCallback(() => setIsPlaying(false), []);
+    const togglePerspective = useCallback(() => setPerspective((p) => (p === P1 ? P2 : P1)), []);
 
     useEffect(() => {
-        if (isPlaying) {
-            intervalRef.current = setInterval(() => {
-                setCurrentIndex((prev) => {
-                    if (prev >= totalSnapshots - 1) {
-                        setIsPlaying(false);
-                        return prev;
-                    }
-                    return prev + 1;
-                });
-            }, SPEED_INTERVALS[speed] ?? 2000);
-        }
-
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
-        };
-    }, [isPlaying, speed, totalSnapshots]);
+        if (!isPlaying) return;
+        intervalRef.current = setInterval(() => {
+            setCurrentIndex((prev) => {
+                if (prev >= totalFrames - 1) { setIsPlaying(false); return prev; }
+                return prev + 1;
+            });
+        }, SPEED_INTERVALS[speed] ?? 2000);
+        return () => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } };
+    }, [isPlaying, speed, totalFrames]);
 
     const value: IReplayContextType = useMemo(() => ({
-        gameState,
-        connectedPlayer: perspective,
-        getOpponent,
-        isSpectator: true,
-        gameMessages,
-        gameIsEnded: () => true,
-        lobbyState: null,
+        gameState, connectedPlayer: perspective, getOpponent, isSpectator: true,
+        gameMessages: [], gameIsEnded: () => true, lobbyState: null,
+        doc, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
+        replayId, downloadReplay,
+        play, pause, isPlaying, speed, setSpeed, stepForward, stepBack, seekTo,
+        seekToSeq, currentEvents, togglePerspective, currentPerspective: perspective,
+    }), [gameState, perspective, getOpponent, doc, currentIndex, totalFrames, moves,
+        currentMoveIndex, replayId, downloadReplay, play, pause, isPlaying, speed,
+        stepForward, stepBack, seekTo, seekToSeq, currentEvents, togglePerspective]);
 
-        snapshots,
-        events,
-        currentIndex,
-        totalSnapshots,
-        header,
-        cardNames,
-
-        moves,
-        currentMoveIndex,
-        chapters,
-        currentEvents,
-        highlightedCardRefs,
-        replayId,
-        downloadReplay,
-
-        play,
-        pause,
-        isPlaying,
-        speed,
-        setSpeed,
-        stepForward,
-        stepBack,
-        seekTo,
-
-        togglePerspective,
-        currentPerspective: perspective,
-    }), [gameState, perspective, getOpponent, gameMessages, snapshots, events,
-        currentIndex, totalSnapshots, header, cardNames, moves, currentMoveIndex,
-        chapters, currentEvents, highlightedCardRefs, replayId, downloadReplay,
-        play, pause, isPlaying, speed,
-        setSpeed, stepForward, stepBack, seekTo, togglePerspective]);
-
-    return (
-        <ReplayContext.Provider value={value}>
-            {children}
-        </ReplayContext.Provider>
-    );
+    return <ReplayContext.Provider value={value}>{children}</ReplayContext.Provider>;
 };
