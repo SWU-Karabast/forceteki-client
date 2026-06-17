@@ -6,7 +6,7 @@ import Credits from '../_subcomponents/PlayerTray/Credits';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useGame } from '@/app/_contexts/Game.context';
+import { useBoardState } from '@/app/_hooks/useBoardState';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,7 +18,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
-    const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useGame();
+    const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useBoardState();
     const { openPopup } = usePopup();
     const { isPortrait } = useScreenOrientation();
     const locale = useCardImageLocale();
@@ -204,7 +204,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             >
                 <Box sx={styles.opponentHandWrapper}>
                     <PlayerHand
-                        clickDisabled={true}
+                        clickDisabled={!isSpectator}
+                        allowHover={isSpectator}
                         maxCardOverlapPercent={0.95}
                         scrollbarEnabled={false}
                         cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []}
@@ -221,27 +222,31 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 }}
             >
                 {!gameIsEnded() && !lobbyState?.isPrivate && <GameTimer />}
-                <Box
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    sx={styles.lastPlayed}>
-                </Box>
-                <Popover
-                    id="mouse-over-popover"
-                    sx={{ pointerEvents: 'none' }}
-                    open={hasLastPlayedCard && open}
-                    anchorEl={anchorElement}
-                    onClose={handlePreviewClose}
-                    disableRestoreFocus
-                    slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
-                    {...popoverConfig()}
-                >
-                    <Box sx={{ ...styles.lastCardPlayedPreview }} />
-                </Popover>
-                <Box sx={styles.menuStyles}>
-                    <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
-                    <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
-                </Box>
+                {!isSpectator && (
+                    <>
+                        <Box
+                            onMouseEnter={handlePreviewOpen}
+                            onMouseLeave={handlePreviewClose}
+                            sx={styles.lastPlayed}>
+                        </Box>
+                        <Popover
+                            id="mouse-over-popover"
+                            sx={{ pointerEvents: 'none' }}
+                            open={hasLastPlayedCard && open}
+                            anchorEl={anchorElement}
+                            onClose={handlePreviewClose}
+                            disableRestoreFocus
+                            slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                            {...popoverConfig()}
+                        >
+                            <Box sx={{ ...styles.lastCardPlayedPreview }} />
+                        </Popover>
+                        <Box sx={styles.menuStyles}>
+                            <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
+                            <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
+                        </Box>
+                    </>
+                )}
             </Grid>
         </Grid>
     );

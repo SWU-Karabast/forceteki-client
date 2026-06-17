@@ -44,3 +44,11 @@ images-scripts/downloaded_images/
 images-scripts/card-images/
 images-scripts/.venv/
 images-scripts/__pycache__/
+
+/.claude
+.gstack/
+
+# local dev planning/spec docs (superpowers) — not shared in the repo
+docs/superpowers/
+
+.superpowers/

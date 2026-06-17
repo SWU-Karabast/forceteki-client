@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { debugBorder } from '@/app/_utils/debug';
 import { IResourcesProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useGame } from '@/app/_contexts/Game.context';
+import { useBoardState } from '@/app/_hooks/useBoardState';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
@@ -12,7 +12,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
 }) => {
-    const { gameState, connectedPlayer } = useGame();
+    const { gameState, connectedPlayer } = useBoardState();
     const { togglePopup, popups } = usePopup();
     const containerRef = useRef<HTMLDivElement>(null);
     const { isPortrait } = useScreenOrientation();

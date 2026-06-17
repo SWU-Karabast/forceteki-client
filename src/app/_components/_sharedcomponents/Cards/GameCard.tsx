@@ -66,7 +66,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { clearPopups } = usePopup();
     const { getCardback } = useCosmetics();
     const locale = useCardImageLocale();
-
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
     const phase = gameState?.phase;

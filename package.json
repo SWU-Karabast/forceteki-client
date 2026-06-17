@@ -8,7 +8,10 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "npx tsc --noemit && next lint",
-		"lint:fix": "npx tsc --noemit && next lint --fix"
+		"lint:fix": "npx tsc --noemit && next lint --fix",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"gen:card-data": "node scripts/gen-card-data.mjs"
 	},
 	"dependencies": {
 		"@aws-sdk/client-dynamodb": "^3.917.0",
@@ -21,6 +24,7 @@
 		"@mui/icons-material": "^7.3.11",
 		"@mui/material": "^7.3.11",
 		"@svgr/webpack": "^8.1.0",
+		"fflate": "^0.8.2",
 		"html-react-parser": "^5.1.18",
 		"jsonwebtoken": "^9.0.2",
 		"next": "14.2.35",
@@ -42,7 +46,8 @@
 		"eslint": "^8",
 		"eslint-config-next": "14.2.14",
 		"eslint-plugin-next": "^0.0.0",
-		"typescript": "^5"
+		"typescript": "^5",
+		"vitest": "^2.1.9"
 	},
 	"overrides": {
 		"react-is": "^18.3.1"
