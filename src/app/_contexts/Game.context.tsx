@@ -148,7 +148,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 });
             }
             else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
-                return openPopup('default', {
+                const promptPopupType = promptType === 'triggerWindow' ? 'actionTrigger' : 'default';
+                return openPopup(promptPopupType, {
                     uuid: promptUuid,
                     title: menuTitle,
                     buttons,

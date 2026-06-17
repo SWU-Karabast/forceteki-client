@@ -5,12 +5,21 @@ export enum PopupSource {
     User = 'user'
 }
 
+export type PopupSourceCard = {
+    id: string;
+    uuid: string;
+    name: string;
+    setId?: Partial<ICardData['setId']>;
+    type: string;
+    printedType?: string;
+};
+
 export type PopupButton = {
     text: string;
     uuid: string;
     command: string;
     arg: string;
-    sourceCardSetId?: ICardData['setId'];
+    sourceCard?: PopupSourceCard;
     selected?: boolean;
     disabled?: boolean;
 };
@@ -23,6 +32,15 @@ export type PerCardButton = {
 
 export type DefaultPopup = {
     type: 'default';
+    uuid: string;
+    title: string;
+    description?: string;
+    buttons: PopupButton[];
+    source: PopupSource;
+};
+
+export type ActionTriggerPopup = {
+    type: 'actionTrigger';
     uuid: string;
     title: string;
     description?: string;
