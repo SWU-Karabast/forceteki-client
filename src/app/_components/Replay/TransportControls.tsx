@@ -25,23 +25,18 @@ const TransportControls: React.FC = () => {
         speed,
         setSpeed,
         currentIndex,
-        totalSnapshots,
+        totalFrames,
+        doc,
         seekTo,
         togglePerspective,
         currentPerspective,
-        snapshots,
-        chapters,
     } = useReplay();
 
-    const currentRound = snapshots[currentIndex]
-        ? formatRoundPhase(snapshots[currentIndex].seq)
-        : '';
+    const currentRound = formatRoundPhase(doc.events[currentIndex]?.seq ?? '');
 
-    // Tick marks at round/phase boundaries; thumb tooltip shows the round/phase.
-    const marks = chapters.map((c) => ({ value: c.snapshotIndex }));
     const formatPosition = (value: number) => {
-        const seq = snapshots[value]?.seq;
-        return (seq && formatRoundPhase(seq)) || `${value + 1} / ${totalSnapshots}`;
+        const seq = doc.events[value]?.seq;
+        return (seq && formatRoundPhase(seq)) || `${value + 1} / ${totalFrames}`;
     };
 
     const handlePlayPause = useCallback(() => {
@@ -125,7 +120,7 @@ const TransportControls: React.FC = () => {
 
             <Tooltip title="Step forward (→)">
                 <span>
-                    <IconButton onClick={stepForward} disabled={currentIndex >= totalSnapshots - 1} sx={{ color: 'white' }}>
+                    <IconButton onClick={stepForward} disabled={currentIndex >= totalFrames - 1} sx={{ color: 'white' }}>
                         <SkipNext />
                     </IconButton>
                 </span>
@@ -134,8 +129,8 @@ const TransportControls: React.FC = () => {
             <Slider
                 value={currentIndex}
                 min={0}
-                max={Math.max(0, totalSnapshots - 1)}
-                marks={marks}
+                max={Math.max(0, totalFrames - 1)}
+                marks={[]}
                 onChange={handleSliderChange}
                 valueLabelDisplay="auto"
                 valueLabelFormat={formatPosition}
@@ -159,7 +154,7 @@ const TransportControls: React.FC = () => {
             />
 
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', minWidth: '70px', textAlign: 'center' }}>
-                {currentIndex + 1} / {totalSnapshots}
+                {currentIndex + 1} / {totalFrames}
             </Typography>
 
             {currentRound && (

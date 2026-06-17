@@ -10,7 +10,7 @@ const PLAYER_COLORS: Record<string, string> = {
 };
 
 const MoveList: React.FC = () => {
-    const { moves, currentMoveIndex, seekTo, snapshots } = useReplay();
+    const { moves, currentMoveIndex, seekToSeq, totalFrames } = useReplay();
     const [open, setOpen] = useState(true);
     const activeRef = useRef<HTMLDivElement | null>(null);
 
@@ -19,7 +19,7 @@ const MoveList: React.FC = () => {
         activeRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }, [currentMoveIndex]);
 
-    if (snapshots.length === 0) return null;
+    if (totalFrames === 0) return null;
 
     if (!open) {
         return (
@@ -75,9 +75,9 @@ const MoveList: React.FC = () => {
                     const isCurrent = i === currentMoveIndex;
                     return (
                         <Box
-                            key={`${move.seq}-${move.eventIndex}`}
+                            key={`${move.seq}-${i}`}
                             ref={isCurrent ? activeRef : undefined}
-                            onClick={() => seekTo(move.snapshotIndex)}
+                            onClick={() => seekToSeq(move.seq)}
                             sx={{
                                 display: 'flex',
                                 alignItems: 'baseline',
@@ -108,7 +108,7 @@ const MoveList: React.FC = () => {
                                 sx={{
                                     fontSize: '0.82rem',
                                     color: isCurrent ? 'white' : 'rgba(255,255,255,0.7)',
-                                    fontWeight: move.weight >= 3 ? 700 : 400,
+                                    fontWeight: 400,
                                 }}
                             >
                                 {move.label}
