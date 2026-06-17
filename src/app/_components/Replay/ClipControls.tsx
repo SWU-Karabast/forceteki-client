@@ -1,19 +1,45 @@
 'use client';
-import React, { useState } from 'react';
-import { Box, IconButton, Tooltip, Button, Typography, Snackbar } from '@mui/material';
-import { ContentCut, FirstPage, LastPage, LinkOutlined, Close } from '@mui/icons-material';
+import React, { useMemo, useState } from 'react';
+import { Box, IconButton, Tooltip, Button, Typography, Snackbar, CircularProgress } from '@mui/material';
+import { ContentCut, FirstPage, LastPage, LinkOutlined, Close, MovieCreationOutlined } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
+import { downloadClipWebm } from '@/app/_utils/exportClipWebm';
 
 /**
  * P4 clips (light): mark an in/out frame range and copy a deep-link that auto-plays just
  * that range (?id=X&from=N&to=M). Playback loops within an active clip.
  */
 const ClipControls: React.FC = () => {
-    const { clip, setClipStart, setClipEnd, clearClip, currentIndex, replayId, totalFrames } = useReplay();
+    const { clip, setClipStart, setClipEnd, clearClip, currentIndex, replayId, totalFrames, doc, moves, nameOf } = useReplay();
     const [open, setOpen] = useState(false);
     const [snack, setSnack] = useState('');
+    const [recording, setRecording] = useState(false);
+
+    const labelBySeq = useMemo(() => {
+        const m = new Map<string, string>();
+        for (const mv of moves) m.set(mv.seq, mv.label);
+        return m;
+    }, [moves]);
 
     if (totalFrames === 0) return null;
+
+    const exportWebm = async () => {
+        if (!clip || recording) return;
+        setRecording(true);
+        setSnack('Recording clip…');
+        try {
+            await downloadClipWebm({
+                doc, start: clip.start, end: clip.end,
+                labelForSeq: (seq) => labelBySeq.get(seq),
+                nameOf,
+            });
+            setSnack('Clip saved (.webm)');
+        } catch (err) {
+            setSnack(err instanceof Error ? err.message : 'Clip export failed');
+        } finally {
+            setRecording(false);
+        }
+    };
 
     const copyClipLink = async () => {
         if (!clip) return;
@@ -59,6 +85,11 @@ const ClipControls: React.FC = () => {
             </Tooltip>
             <Tooltip title="Copy clip link">
                 <span><IconButton size="small" onClick={copyClipLink} disabled={!clip} sx={{ color: 'var(--initiative-blue)' }}><LinkOutlined fontSize="small" /></IconButton></span>
+            </Tooltip>
+            <Tooltip title="Export clip as .webm video">
+                <span><IconButton size="small" onClick={exportWebm} disabled={!clip || recording} sx={{ color: 'white' }}>
+                    {recording ? <CircularProgress size={16} sx={{ color: 'white' }} /> : <MovieCreationOutlined fontSize="small" />}
+                </IconButton></span>
             </Tooltip>
             {clip && (
                 <Button size="small" onClick={clearClip} sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 0 }}>Clear</Button>
