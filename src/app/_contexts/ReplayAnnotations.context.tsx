@@ -6,6 +6,7 @@ import {
     loadAnnotations, saveAnnotations, mergeForExport, type WorkingAnnotation,
 } from '@/app/_utils/replayAnnotations';
 import { getAnnotationAuthor, setAnnotationAuthor } from '@/app/_utils/annotationAuthor';
+import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 
 export interface IReplayAnnotationsContext {
     // Session-authored notes (the editable working copy).
@@ -63,7 +64,14 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
     }, [replayId]);
 
     // Each mutation persists the working copy to IndexedDB (no-op without a replayId —
-    // an un-saved upload stays in-memory but is still exportable).
+    // an un-saved upload stays in-memory but is still exportable). A failed write (e.g.
+    // QuotaExceededError) is logged rather than silently dropped, so the on-disk copy
+    // diverging from the in-memory notes is at least visible in the console.
+    const persist = useCallback((next: WorkingAnnotation[]) => {
+        saveAnnotations(replayId, next, Date.now()).catch((err) =>
+            console.warn('Failed to persist replay annotations', err));
+    }, [replayId]);
+
     const addAnnotation = useCallback((ref: string, fields: { nag?: string; text?: string }) => {
         const note: WorkingAnnotation = {
             _id: makeId(),
@@ -74,28 +82,28 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
         };
         setWorking((prev) => {
             const next = [...prev, note];
-            void saveAnnotations(replayId, next, Date.now());
+            persist(next);
             return next;
         });
-    }, [author, replayId]);
+    }, [author, replayId, persist]);
 
     const updateAnnotation = useCallback((id: string, patch: { nag?: string; text?: string }) => {
         setWorking((prev) => {
             const next = prev.map((w) => (w._id === id
                 ? { ...w, nag: patch.nag ?? w.nag, text: patch.text ?? w.text }
                 : w));
-            void saveAnnotations(replayId, next, Date.now());
+            persist(next);
             return next;
         });
-    }, [replayId]);
+    }, [persist]);
 
     const deleteAnnotation = useCallback((id: string) => {
         setWorking((prev) => {
             const next = prev.filter((w) => w._id !== id);
-            void saveAnnotations(replayId, next, Date.now());
+            persist(next);
             return next;
         });
-    }, [replayId]);
+    }, [persist]);
 
     const setAuthor = useCallback((name: string) => {
         setAuthorState(name);
@@ -117,14 +125,8 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
     const exportDoc = useCallback(() => mergeForExport(doc, working), [doc, working]);
 
     const downloadWithAnnotations = useCallback(() => {
-        const content = serialize(exportDoc());
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${doc.header.p1}-vs-${doc.header.p2}.swupgn`.replace(/[^a-z0-9.-]+/gi, '-');
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        const blob = new Blob([serialize(exportDoc())], { type: 'text/plain' });
+        triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.swupgn`));
     }, [doc, exportDoc]);
 
     const value = useMemo<IReplayAnnotationsContext>(() => ({

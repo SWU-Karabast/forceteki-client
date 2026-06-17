@@ -3,17 +3,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import PreferenceButton from './PreferenceButton';
 import { useGame } from '@/app/_contexts/Game.context';
-
-function triggerBlobDownload(blob: Blob, filename: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 100);
-}
+import { triggerBlobDownload } from '@/app/_utils/downloadBlob';
 
 function DownloadGameLog() {
     const { sendLobbyMessage } = useGame();

@@ -28,11 +28,18 @@ function buildHeader(raw: Record<string, string>): Header {
         p1Leader: req('P1Leader'), p1Base: req('P1Base'),
         p2Leader: req('P2Leader'), p2Base: req('P2Base'),
         result: req('Result') as Header['result'], reason: req('Reason'),
-        rounds: Number(req('Rounds')),
+        // Guard against a non-numeric [Rounds] tag: Number('x') is NaN, which would
+        // propagate into round-based UI. Fall back to 0 when not a finite number.
+        rounds: (() => { const n = Number(req('Rounds')); return Number.isFinite(n) ? n : 0; })(),
     };
 }
 
 type Section = 'NONE' | 'UNKNOWN' | 'DECKS' | 'SETUP' | 'EVENTS' | 'ANNOTATIONS';
+
+// Safety ceiling on event count. A real game is a few thousand events; this bounds
+// the per-frame fold (O(n) per frame) and the snapshot array so a malformed or
+// hostile file — replays are shared between users — can't freeze/OOM the tab.
+const MAX_EVENTS = 200_000;
 
 export function parse(text: string): SwuPgnDocument {
     const raw: Record<string, string> = {};
@@ -66,7 +73,12 @@ export function parse(text: string): SwuPgnDocument {
         switch (section) {
             case 'DECKS': decks.push(rec as DeckRecord); break;
             case 'SETUP': setup.push(rec as SetupInitRecord | GameEvent); break;
-            case 'EVENTS': events.push(rec as GameEvent); break;
+            case 'EVENTS':
+                if (events.length >= MAX_EVENTS) {
+                    throw new Error(`SWU-PGN: too many events (limit ${MAX_EVENTS})`);
+                }
+                events.push(rec as GameEvent);
+                break;
             case 'ANNOTATIONS': annotations.push(rec as Annotation); break;
             case 'UNKNOWN': throw new Error(`SWU-PGN: JSON record in unrecognized section on line ${i + 1}`);
             default: throw new Error(`SWU-PGN: record before any %%% section on line ${i + 1}`);

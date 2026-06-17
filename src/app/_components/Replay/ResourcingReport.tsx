@@ -6,7 +6,7 @@ import {
 import { Close } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useCardCostMap } from '@/app/_utils/swupgnCardCosts';
-import { resourcingReport, type PlayerRoundResourcing } from '@/app/_utils/resourcingReport';
+import { resourcingReport, type PlayerRoundResourcing, type ResourcingReport as ResourcingReportData } from '@/app/_utils/resourcingReport';
 import type { Seat } from '@/lib/swupgn';
 
 const fmtPct = (v: number | null) => (v == null ? '—' : `${Math.round(v * 100)}%`);
@@ -48,10 +48,8 @@ const RoundTable: React.FC<{ rows: PlayerRoundResourcing[]; onSeek: (round: numb
     </Box>
 );
 
-const PlayerColumn: React.FC<{ seat: Seat; name: string }> = ({ seat, name }) => {
+const PlayerColumn: React.FC<{ seat: Seat; name: string; report: ResourcingReportData }> = ({ seat, name, report }) => {
     const { doc, nameOf, seekToSeq } = useReplay();
-    const costMap = useCardCostMap();
-    const report = useMemo(() => resourcingReport(doc, costMap), [doc, costMap]);
 
     const rows = report.byRound.filter((b) => b.seat === seat);
     const s = report.summary[seat];
@@ -98,7 +96,10 @@ const Stat: React.FC<{ label: string; value: string | number }> = ({ label, valu
 const ResourcingReport: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
     const { doc } = useReplay();
     const costMap = useCardCostMap();
-    const hasCost = useMemo(() => resourcingReport(doc, costMap).hasCostData, [doc, costMap]);
+    // Compute the report once and share it across both player columns and the
+    // cost-data notice, instead of recomputing the full O(events) pass 3x per render.
+    const report = useMemo(() => resourcingReport(doc, costMap), [doc, costMap]);
+    const hasCost = report.hasCostData;
 
     return (
         <Dialog
@@ -119,8 +120,8 @@ const ResourcingReport: React.FC<{ open: boolean; onClose: () => void }> = ({ op
                     </Typography>
                 )}
                 <Box sx={{ display: 'flex', gap: 3 }}>
-                    <PlayerColumn seat={1} name={doc.header.p1 || 'Player 1'} />
-                    <PlayerColumn seat={2} name={doc.header.p2 || 'Player 2'} />
+                    <PlayerColumn seat={1} name={doc.header.p1 || 'Player 1'} report={report} />
+                    <PlayerColumn seat={2} name={doc.header.p2 || 'Player 2'} report={report} />
                 </Box>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', display: 'block', mt: 2 }}>
                     Red rows left ≥2 resources unspent. Click a row to jump to that round.

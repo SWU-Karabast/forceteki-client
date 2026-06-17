@@ -193,17 +193,46 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
     return s;
 }
 
+function clone(s: ReducedState): ReducedState {
+    return JSON.parse(JSON.stringify(s));
+}
+
 export function fold(events: GameEvent[]): ReducedState {
     let s = emptyState();
     for (const e of events) {
         // A keyframe is authoritative: snap to it, then continue folding.
         if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe) {
-            s = JSON.parse(JSON.stringify(e.keyframe));
+            s = clone(e.keyframe);
             continue;
         }
         s = reduce(s, e);
     }
     return s;
+}
+
+/**
+ * Snapshot of state after each event, produced in a single O(n) forward pass.
+ * The replay scrubber needs the state at every frame; computing that as
+ * `events.map((_, i) => fold(events.slice(0, i + 1)))` re-folds every prefix and
+ * is O(n^2). This folds once and clones a snapshot per step instead. Memory is the
+ * same N retained snapshots as the naive precompute; the win is CPU. (Lazy
+ * fold-from-nearest-keyframe would also bound memory — revisit if profiling shows
+ * heap pressure at realistic game sizes; the parser's event cap bounds N meanwhile.)
+ */
+export function foldFrames(events: GameEvent[]): ReducedState[] {
+    const out: ReducedState[] = new Array(events.length);
+    let s = emptyState();
+    for (let i = 0; i < events.length; i++) {
+        const e = events[i];
+        if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe) {
+            s = clone(e.keyframe);
+        } else {
+            s = reduce(s, e);
+        }
+        // Clone so a later in-place reduce() can't mutate an already-emitted frame.
+        out[i] = clone(s);
+    }
+    return out;
 }
 
 /** Fold up to and including `seq`. */

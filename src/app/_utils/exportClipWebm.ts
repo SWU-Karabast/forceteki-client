@@ -1,5 +1,6 @@
 import type { SwuPgnDocument, ReducedState, Seat } from '@/lib/swupgn';
 import { fold } from '@/lib/swupgn';
+import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 
 // P4 heavy stretch: export a clip [start,end] as a real downloadable .webm. We CANNOT
 // capture the live DOM board to a canvas — the card images come from an S3 bucket with no
@@ -120,6 +121,11 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
     const events = doc.events;
     const lo = Math.max(0, Math.min(start, end));
     const hi = Math.min(events.length - 1, Math.max(start, end));
+    // An empty range (no events, or start/end out of bounds) would record zero frames
+    // and yield a 0-byte, unplayable .webm with no error. Fail clearly instead.
+    if (events.length === 0 || hi < lo) {
+        throw new Error('Clip export needs at least one frame in range.');
+    }
 
     const canvas = document.createElement('canvas');
     canvas.width = W;
@@ -142,16 +148,15 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
     }
     recorder.stop();
     await stopped;
+    if (chunks.length === 0) {
+        throw new Error('Clip export produced no video data.');
+    }
     return new Blob(chunks, { type: 'video/webm' });
 }
 
 /** Export the clip and trigger a download. */
 export async function downloadClipWebm(opts: ClipExportOpts & { filename?: string }): Promise<void> {
     const blob = await exportClipWebm(opts);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = opts.filename ?? `${opts.doc.header.p1}-vs-${opts.doc.header.p2}-clip.webm`.replace(/[^a-z0-9.-]+/gi, '-');
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 100);
+    const filename = opts.filename ?? sanitizeFilename(`${opts.doc.header.p1}-vs-${opts.doc.header.p2}-clip.webm`);
+    triggerBlobDownload(blob, filename);
 }

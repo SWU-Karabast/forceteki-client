@@ -35,10 +35,12 @@ export interface Bookmark {
 export function decisionPoints(doc: SwuPgnDocument): DecisionPoint[] {
     const out: DecisionPoint[] = [];
     for (const e of doc.events) {
+        // `offered` is cast from unvalidated file JSON; coerce to an array so the UI's
+        // offered.map() can't throw on a malformed (shared) replay.
         if (e.t === 'CHOICE') {
-            out.push({ seq: e.seq, p: e.p, type: 'CHOICE', prompt: e.prompt, offered: e.offered, chose: e.chose });
+            out.push({ seq: e.seq, p: e.p, type: 'CHOICE', prompt: e.prompt, offered: Array.isArray(e.offered) ? e.offered : [], chose: e.chose });
         } else if (e.t === 'MODAL_CHOICE') {
-            out.push({ seq: e.seq, p: e.p, type: 'MODAL_CHOICE', offered: e.offered, chose: e.chose });
+            out.push({ seq: e.seq, p: e.p, type: 'MODAL_CHOICE', offered: Array.isArray(e.offered) ? e.offered : [], chose: e.chose });
         }
     }
     return out;

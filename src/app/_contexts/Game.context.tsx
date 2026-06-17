@@ -23,6 +23,7 @@ import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferen
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
+import { ReplayContext } from '@/app/_contexts/Replay.context';
 
 interface IGameContextType {
     gameState: any;
@@ -471,22 +472,6 @@ const noopFn = () => {};
 const noopStringFn = () => '';
 const noopBoolFn = () => false;
 
-// Import ReplayContext lazily to avoid circular dependency at module level
-let _ReplayContext: React.Context<any> | null = null;
-function getReplayContext(): React.Context<any> {
-    if (!_ReplayContext) {
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            _ReplayContext = require('@/app/_contexts/Replay.context').ReplayContext;
-        } catch {
-            // ReplayContext not available — use a dummy context so the
-            // useContext call below is always executed (Rules of Hooks).
-            _ReplayContext = React.createContext(null);
-        }
-    }
-    return _ReplayContext!;
-}
-
 // Default fallback object for when no GameProvider or ReplayContext is present.
 // Hoisted to module scope so consumers get a stable reference and avoid
 // unnecessary re-renders.
@@ -517,8 +502,10 @@ const FALLBACK_GAME_CONTEXT: IGameContextType = {
 
 export const useGame = () => {
     const context = useContext(GameContext);
-    // Always call useContext for ReplayContext (Rules of Hooks — same order every render)
-    const replayContext = useContext(getReplayContext());
+    // Always call useContext for ReplayContext (Rules of Hooks — same order every render).
+    // Static import is safe: Replay.context does not import Game.context, so there is no
+    // module-level cycle (useBoardState imports both statically the same way).
+    const replayContext = useContext(ReplayContext);
 
     if (context) {
         return context;

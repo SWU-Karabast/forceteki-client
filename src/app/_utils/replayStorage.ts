@@ -42,7 +42,16 @@ export function openDB(): Promise<IDBDatabase> {
                 db.createObjectStore(ANNOTATIONS_STORE, { keyPath: 'replayId' });
             }
         };
-        request.onsuccess = () => resolve(request.result);
+        // Another tab holding an older version open blocks this upgrade. Surface it
+        // instead of hanging silently; that tab's onversionchange (below) closes it.
+        request.onblocked = () => console.warn('Replay DB upgrade blocked by another open tab');
+        request.onsuccess = () => {
+            const db = request.result;
+            // If another tab requests a newer version, close this connection so its
+            // upgrade isn't blocked (prevents a cross-tab deadlock).
+            db.onversionchange = () => db.close();
+            resolve(db);
+        };
         request.onerror = () => reject(request.error);
     });
 }

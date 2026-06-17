@@ -234,7 +234,11 @@ export default function ReplayPage() {
                     }
                 }
             })
-            .catch(() => {})
+            .catch((err) => {
+                // Load/parse of a stored replay failed; the page falls back to the
+                // upload prompt. Log so the failure isn't silently swallowed.
+                console.warn('Failed to load stored replay', replayId, err);
+            })
             .finally(() => setLoading(false));
     }, [replayId]);
 
@@ -261,8 +265,10 @@ export default function ReplayPage() {
                 savedAt: Date.now(),
             });
             router.replace(`/Replay?id=${id}`, { scroll: false });
-        } catch {
-            // Storage failed, replay still works — just won't survive refresh
+        } catch (err) {
+            // Storage failed (e.g. QuotaExceededError); replay still works in-memory,
+            // it just won't survive a refresh. Log so the failure isn't invisible.
+            console.warn('Failed to persist replay to IndexedDB', err);
         }
     };
 

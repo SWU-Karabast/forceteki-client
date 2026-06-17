@@ -4,10 +4,11 @@
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat } from '@/lib/swupgn';
-import { fold, serialize, render } from '@/lib/swupgn';
+import { foldFrames, serialize, render } from '@/lib/swupgn';
 import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
+import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 
 export interface IReplayContextType {
     gameState: any;
@@ -93,13 +94,18 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const decks = useMemo(() => deckOrderLengths(doc), [doc]);
     const moves = useMemo(() => buildMoveList(events, resolver), [events, resolver]);
 
-    // Per-frame ReducedState, computed once per document load (fold is O(n); this is O(n^2)
-    // at load for an n-event game, acceptable for P0 — optimize with incremental fold later).
-    const frameStates = useMemo<ReducedState[]>(() => {
-        const out: ReducedState[] = [];
-        for (let i = 0; i < events.length; i++) out.push(fold(events.slice(0, i + 1)));
-        return out;
+    // Per-frame ReducedState, computed once per document load via a single O(n) forward
+    // pass (foldFrames) instead of re-folding every prefix (which was O(n^2)).
+    const frameStates = useMemo<ReducedState[]>(() => foldFrames(events), [events]);
+
+    // seq -> frame index, built once, so currentMoveIndex is a cheap lookup rather than
+    // an events.findIndex() per move on every frame change (was O(moves x events)).
+    const seqToFrame = useMemo(() => {
+        const m = new Map<string, number>();
+        for (let i = 0; i < events.length; i++) m.set(events[i].seq, i);
+        return m;
     }, [events]);
+    const moveFrames = useMemo(() => moves.map((mv) => seqToFrame.get(mv.seq) ?? -1), [moves, seqToFrame]);
 
     useEffect(() => {
         setPerspective(P1);
@@ -127,13 +133,15 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective]);
 
     const currentMoveIndex = useMemo(() => {
+        // moveFrames is ascending (moves are in timeline order), so stop at the first
+        // move that lands after the current frame.
         let idx = -1;
-        for (let i = 0; i < moves.length; i++) {
-            const moveFrame = events.findIndex((e) => e.seq === moves[i].seq);
-            if (moveFrame <= currentIndex) idx = i; else break;
+        for (let i = 0; i < moveFrames.length; i++) {
+            const f = moveFrames[i];
+            if (f >= 0 && f <= currentIndex) idx = i; else if (f > currentIndex) break;
         }
         return idx;
-    }, [moves, events, currentIndex]);
+    }, [moveFrames, currentIndex]);
 
     const currentEvents = useMemo(() => {
         const e = events[currentIndex];
@@ -144,24 +152,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
 
     const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);
     const downloadReplay = useCallback(() => {
-        const content = rawContent ?? serialize(doc);
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${doc.header.p1}-vs-${doc.header.p2}.swupgn`.replace(/[^a-z0-9.-]+/gi, '-');
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        const blob = new Blob([rawContent ?? serialize(doc)], { type: 'text/plain' });
+        triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.swupgn`));
     }, [rawContent, doc]);
 
     const downloadTextLog = useCallback(() => {
         const blob = new Blob([render(doc, resolver)], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${doc.header.p1}-vs-${doc.header.p2}.txt`.replace(/[^a-z0-9.-]+/gi, '-');
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.txt`));
     }, [doc, resolver]);
 
     const toggleFogOfWar = useCallback(() => setFogOfWar((f) => !f), []);
