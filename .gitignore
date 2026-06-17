@@ -50,3 +50,5 @@ images-scripts/__pycache__/
 
 # local dev planning/spec docs (superpowers) — not shared in the repo
 docs/superpowers/
+
+.superpowers/
