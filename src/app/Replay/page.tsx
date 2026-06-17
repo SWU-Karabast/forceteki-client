@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Card, Grid, Typography, IconButton } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ReplayProvider, ParsedReplay, useReplay } from '@/app/_contexts/Replay.context';
+import { ReplayProvider, useReplay } from '@/app/_contexts/Replay.context';
 import FileUpload from '@/app/_components/Replay/FileUpload';
 import TransportControls from '@/app/_components/Replay/TransportControls';
 import MoveList from '@/app/_components/Replay/MoveList';
@@ -15,21 +15,21 @@ import Board from '@/app/_components/Gameboard/Board/Board';
 import PlayerCardTray from '@/app/_components/Gameboard/PlayerCardTray/PlayerCardTray';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
-import { parseReplayFile } from '@/app/_utils/replayParser';
+import { parse, SwuPgnDocument } from '@/lib/swupgn';
 import { generateReplayId, storeReplay, loadReplay } from '@/app/_utils/replayStorage';
 import { formatResult } from '@/app/_utils/replayMoves';
 
-function ReplayHeader({ header }: { header: Record<string, string> }) {
+function ReplayHeader({ header }: { header: SwuPgnDocument['header'] }) {
     const router = useRouter();
-    const player1 = header.Player1 || 'Player 1';
-    const player2 = header.Player2 || 'Player 2';
-    const leader1 = header.P1Leader || header.Leader1 || '';
-    const leader2 = header.P2Leader || header.Leader2 || '';
-    const result = header.Result || '';
+    const player1 = header.p1 || 'Player 1';
+    const player2 = header.p2 || 'Player 2';
+    const leader1 = header.p1Leader || '';
+    const leader2 = header.p2Leader || '';
+    const result = header.result || '';
     const formattedResult = formatResult(result);
 
-    const isP1Winner = result.includes('P1');
-    const isP2Winner = result.includes('P2');
+    const isP1Winner = result === 'P1';
+    const isP2Winner = result === 'P2';
 
     return (
         <Box
@@ -120,7 +120,7 @@ function ReplayHeader({ header }: { header: Record<string, string> }) {
     );
 }
 
-function ReplayBoardContent({ header }: { header: Record<string, string> }) {
+function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
     const { gameState, connectedPlayer, getOpponent } = useReplay();
 
     if (!gameState?.players) {
@@ -178,21 +178,23 @@ function ReplayBoardContent({ header }: { header: Record<string, string> }) {
     );
 }
 
-function ReplayBoard({ replay, rawContent, replayId, initialFrame }: {
-    replay: ParsedReplay;
+function ReplayBoard({ doc, rawContent, replayId, initialFrame }: {
+    doc: SwuPgnDocument;
     rawContent: string | null;
     replayId: string | null;
     initialFrame: number;
 }) {
+    // TODO(card-names): source SET#NUM→name map; P0 ships id-fallback (see migration plan).
+    const cardNameMap: Record<string, string> = {};
     return (
-        <ReplayProvider replay={replay} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame}>
-            <ReplayBoardContent header={replay.header} />
+        <ReplayProvider doc={doc} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} nameMap={cardNameMap}>
+            <ReplayBoardContent header={doc.header} />
         </ReplayProvider>
     );
 }
 
 export default function ReplayPage() {
-    const [replay, setReplay] = useState<ParsedReplay | null>(null);
+    const [doc, setDoc] = useState<SwuPgnDocument | null>(null);
     const [rawContent, setRawContent] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -202,15 +204,15 @@ export default function ReplayPage() {
 
     // On mount, if URL has ?id=, try to load from IndexedDB
     useEffect(() => {
-        if (!replayId || replay) return;
+        if (!replayId || doc) return;
 
         setLoading(true);
         loadReplay(replayId)
             .then((content) => {
                 if (content) {
-                    const parsed = parseReplayFile(content);
-                    if (parsed.snapshots.length > 0) {
-                        setReplay(parsed);
+                    const parsed = parse(content);
+                    if (parsed.events.length > 0) {
+                        setDoc(parsed);
                         setRawContent(content);
                     }
                 }
@@ -220,15 +222,25 @@ export default function ReplayPage() {
     }, [replayId]);
 
     // When a file is uploaded, store it and update the URL
-    const handleReplayLoaded = async (parsed: ParsedReplay, content: string) => {
-        setReplay(parsed);
+    const handleReplayLoaded = async (loaded: SwuPgnDocument, content: string) => {
+        setDoc(loaded);
         setRawContent(content);
         try {
-            const id = await generateReplayId(parsed.header, content);
+            // generateReplayId expects old PascalCase Record<string,string>; pass a shim
+            // so the stable id logic (Player1/Player2/Date/Result/Leader1/Leader2) still works.
+            const headerShim: Record<string, string> = {
+                Player1: loaded.header.p1,
+                Player2: loaded.header.p2,
+                Date: loaded.header.date,
+                Result: loaded.header.result,
+                Leader1: loaded.header.p1Leader,
+                Leader2: loaded.header.p2Leader,
+            };
+            const id = await generateReplayId(headerShim, content);
             await storeReplay(id, content, {
-                player1: parsed.header.Player1 || 'Player 1',
-                player2: parsed.header.Player2 || 'Player 2',
-                result: parsed.header.Result || '',
+                player1: loaded.header.p1,
+                player2: loaded.header.p2,
+                result: loaded.header.result,
                 savedAt: Date.now(),
             });
             router.replace(`/Replay?id=${id}`, { scroll: false });
@@ -237,8 +249,8 @@ export default function ReplayPage() {
         }
     };
 
-    if (replay) {
-        return <ReplayBoard replay={replay} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} />;
+    if (doc) {
+        return <ReplayBoard doc={doc} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} />;
     }
 
     return (

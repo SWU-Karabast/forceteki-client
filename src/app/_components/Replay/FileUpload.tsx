@@ -2,11 +2,10 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { parseReplayFile } from '@/app/_utils/replayParser';
-import { ParsedReplay } from '@/app/_contexts/Replay.context';
+import { parse, SwuPgnDocument } from '@/lib/swupgn';
 
 interface FileUploadProps {
-    onReplayLoaded: (replay: ParsedReplay, rawContent: string) => void;
+    onReplayLoaded: (doc: SwuPgnDocument, content: string) => void;
 }
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB (compressed upload cap)
@@ -32,11 +31,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
 
         try {
             let rawContent: string;
-            let replay: ParsedReplay;
+            let doc: SwuPgnDocument;
 
-            if (file.name.endsWith('.swureplay')) {
+            if (file.name.endsWith('.swupgn')) {
                 rawContent = await file.text();
-                replay = parseReplayFile(rawContent);
+                doc = parse(rawContent);
             } else if (file.name.endsWith('.zip')) {
                 const buffer = await file.arrayBuffer();
                 const { unzip, strFromU8 } = await import('fflate');
@@ -45,9 +44,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
                 const unzipped = await new Promise<Record<string, Uint8Array>>((resolve, reject) => {
                     unzip(new Uint8Array(buffer), (err, data) => (err ? reject(err) : resolve(data)));
                 });
-                const replayFilename = Object.keys(unzipped).find((name) => name.endsWith('.swureplay'));
+                const replayFilename = Object.keys(unzipped).find((name) => name.endsWith('.swupgn'));
                 if (!replayFilename) {
-                    setError('No .swureplay file found in zip.');
+                    setError('No .swupgn file found in zip.');
                     return;
                 }
                 const decompressed = unzipped[replayFilename];
@@ -56,17 +55,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
                     return;
                 }
                 rawContent = strFromU8(decompressed);
-                replay = parseReplayFile(rawContent);
+                doc = parse(rawContent);
             } else {
-                setError('Please upload a .swureplay or .zip file.');
+                setError('Please upload a .swupgn or .zip file.');
                 return;
             }
 
-            if (replay.snapshots.length === 0) {
-                setError('No snapshots found in replay file.');
+            if (doc.events.length === 0) {
+                setError('No events found in replay file.');
                 return;
             }
-            onReplayLoaded(replay, rawContent);
+            onReplayLoaded(doc, rawContent);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to parse file.');
         } finally {
@@ -128,7 +127,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
                 <input
                     ref={inputRef}
                     type="file"
-                    accept=".swureplay,.zip"
+                    accept=".swupgn,.zip"
                     onChange={handleFileChange}
                     style={{ display: 'none' }}
                 />
@@ -139,7 +138,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
                 ) : (
                     <>
                         <Typography variant="h3" sx={{ color: 'rgba(255,255,255,0.8)', mb: 0, fontWeight: 700 }}>
-                            Drop a .swureplay or .zip file here
+                            Drop a .swupgn or .zip file here
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)' }}>
                             or click to browse
