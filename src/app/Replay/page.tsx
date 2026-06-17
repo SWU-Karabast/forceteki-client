@@ -9,6 +9,7 @@ import FileUpload from '@/app/_components/Replay/FileUpload';
 import TransportControls from '@/app/_components/Replay/TransportControls';
 import MoveList from '@/app/_components/Replay/MoveList';
 import ReviewPanel from '@/app/_components/Replay/ReviewPanel';
+import ClipControls from '@/app/_components/Replay/ClipControls';
 import LastActionCaption from '@/app/_components/Replay/LastActionCaption';
 import RecentReplays from '@/app/_components/Replay/RecentReplays';
 import ShareControls from '@/app/_components/Replay/ShareControls';
@@ -177,6 +178,7 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
             </Grid>
             <ShareControls />
             <ReviewPanel />
+            <ClipControls />
             <MoveList />
             <LastActionCaption />
             <TransportControls />
@@ -184,17 +186,19 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
     );
 }
 
-function ReplayBoard({ doc, rawContent, replayId, initialFrame }: {
+function ReplayBoard({ doc, rawContent, replayId, initialFrame, clipStart, clipEnd }: {
     doc: SwuPgnDocument;
     rawContent: string | null;
     replayId: string | null;
     initialFrame: number;
+    clipStart: number | null;
+    clipEnd: number | null;
 }) {
     // SET#NUM→name map from public/card-names.json (npm run gen:card-data). Empty until
     // it loads, then the move list / captions re-render with names; unknown ids fall back.
     const cardNameMap = useCardNameMap();
     return (
-        <ReplayProvider doc={doc} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} nameMap={cardNameMap}>
+        <ReplayProvider doc={doc} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} nameMap={cardNameMap} clipStart={clipStart} clipEnd={clipEnd}>
             <ReplayAnnotationsProvider doc={doc} replayId={replayId}>
                 <ReplayBoardContent header={doc.header} />
             </ReplayAnnotationsProvider>
@@ -209,7 +213,11 @@ export default function ReplayPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const replayId = searchParams.get('id');
-    const initialFrame = Number(searchParams.get('t')) || 0;
+    const fromParam = searchParams.get('from');
+    const toParam = searchParams.get('to');
+    const clipStart = fromParam != null ? Number(fromParam) : null;
+    const clipEnd = toParam != null ? Number(toParam) : null;
+    const initialFrame = Number(searchParams.get('t')) || clipStart || 0;
 
     // On mount, if URL has ?id=, try to load from IndexedDB
     useEffect(() => {
@@ -259,7 +267,7 @@ export default function ReplayPage() {
     };
 
     if (doc) {
-        return <ReplayBoard doc={doc} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} />;
+        return <ReplayBoard doc={doc} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} clipStart={clipStart} clipEnd={clipEnd} />;
     }
 
     return (

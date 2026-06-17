@@ -35,6 +35,11 @@ export interface IReplayContextType {
     // Fog-of-war: when true, the non-perspective player's hand renders face-down.
     fogOfWar: boolean;
     toggleFogOfWar: () => void;
+    // Clip range [start,end] (frame indices); playback loops within it. Null = whole game.
+    clip: { start: number; end: number } | null;
+    setClipStart: () => void;
+    setClipEnd: () => void;
+    clearClip: () => void;
 
     play: () => void; pause: () => void; isPlaying: boolean;
     speed: number; setSpeed: (s: number) => void;
@@ -65,10 +70,14 @@ interface ReplayProviderProps {
     replayId?: string | null;
     initialFrame?: number;
     nameMap?: Record<string, string>;
+    // Deep-linked clip range (?from&to): seek to start and auto-play the range on load.
+    clipStart?: number | null;
+    clipEnd?: number | null;
 }
 
 export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     doc, children, rawContent = null, replayId = null, initialFrame = 0, nameMap = {},
+    clipStart = null, clipEnd = null,
 }) => {
     const events = doc.events;
     const totalFrames = events.length;
@@ -77,6 +86,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const [speed, setSpeed] = useState(1);
     const [perspective, setPerspective] = useState(P1);
     const [fogOfWar, setFogOfWar] = useState(false);
+    const [clip, setClipState] = useState<{ start: number; end: number } | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const resolver = useMemo(() => makeNameResolver(nameMap), [nameMap]);
@@ -92,11 +102,21 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     }, [events]);
 
     useEffect(() => {
-        setCurrentIndex(Math.max(0, Math.min(initialFrame, totalFrames - 1)));
-        setIsPlaying(false);
         setPerspective(P1);
         setFogOfWar(false);
-    }, [doc, initialFrame, totalFrames]);
+        // A deep-linked clip range (?from&to) seeks to its start and auto-plays; otherwise
+        // honor ?t (initialFrame) and start paused.
+        const hasClip = clipStart != null && clipEnd != null && clipEnd >= clipStart;
+        if (hasClip) {
+            setClipState({ start: clipStart!, end: clipEnd! });
+            setCurrentIndex(Math.max(0, Math.min(clipStart!, totalFrames - 1)));
+            setIsPlaying(true);
+        } else {
+            setClipState(null);
+            setCurrentIndex(Math.max(0, Math.min(initialFrame, totalFrames - 1)));
+            setIsPlaying(false);
+        }
+    }, [doc, initialFrame, totalFrames, clipStart, clipEnd]);
 
     const gameState = useMemo(() => {
         if (!frameStates[currentIndex]) return null;
@@ -157,16 +177,27 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const pause = useCallback(() => setIsPlaying(false), []);
     const togglePerspective = useCallback(() => setPerspective((p) => (p === P1 ? P2 : P1)), []);
 
+    // Clip authoring: set the in/out point to the current frame; clear to drop the clip.
+    const setClipStart = useCallback(() => setClipState((c) => ({ start: currentIndex, end: Math.max(currentIndex, c?.end ?? currentIndex) })), [currentIndex]);
+    const setClipEnd = useCallback(() => setClipState((c) => ({ start: Math.min(currentIndex, c?.start ?? currentIndex), end: currentIndex })), [currentIndex]);
+    const clearClip = useCallback(() => setClipState(null), []);
+
     useEffect(() => {
         if (!isPlaying) return;
+        // A clip loops within [start, end]; normal playback runs to the end and stops.
+        const lastFrame = clip ? clip.end : totalFrames - 1;
         intervalRef.current = setInterval(() => {
             setCurrentIndex((prev) => {
-                if (prev >= totalFrames - 1) { setIsPlaying(false); return prev; }
+                if (prev >= lastFrame) {
+                    if (clip) return clip.start; // loop the clip
+                    setIsPlaying(false);
+                    return prev;
+                }
                 return prev + 1;
             });
         }, SPEED_INTERVALS[speed] ?? 2000);
         return () => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } };
-    }, [isPlaying, speed, totalFrames]);
+    }, [isPlaying, speed, totalFrames, clip]);
 
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent, isSpectator: true,
@@ -174,10 +205,12 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         doc, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
         replayId, downloadReplay, nameOf: resolver.nameOf,
         downloadTextLog, fogOfWar, toggleFogOfWar,
+        clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, stepForward, stepBack, seekTo,
         seekToSeq, currentEvents, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, downloadReplay, resolver, downloadTextLog, fogOfWar, toggleFogOfWar,
+        clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed,
         stepForward, stepBack, seekTo, seekToSeq, currentEvents, togglePerspective]);
 
