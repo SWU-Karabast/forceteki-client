@@ -10,6 +10,7 @@ export * from './types';
 export { parse } from './parse';
 export { fold, reduce, stateAt } from './fold';
 export { render } from './render';
+export { serialize } from './serialize';
 export type { NameResolver } from './cardNames';
 export { checkKeyframes } from './integrity';
 export type { IntegrityResult, KeyframeMismatch } from './integrity';
