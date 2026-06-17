@@ -6,7 +6,7 @@ import { useReplay } from '@/app/_contexts/Replay.context';
 
 /**
  * Client-only sharing: copy a deep-link to the current moment (?id=X&t=N) and
- * download the .swureplay file. The recipient opens the link and loads the file
+ * download the .swupgn file. The recipient opens the link and loads the file
  * (no server-side replay storage).
  */
 const ShareControls: React.FC = () => {

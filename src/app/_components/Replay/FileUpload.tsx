@@ -9,7 +9,7 @@ interface FileUploadProps {
 }
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB (compressed upload cap)
-// Ceiling on the DECOMPRESSED .swureplay so a zip bomb can't expand to
+// Ceiling on the DECOMPRESSED .swupgn so a zip bomb can't expand to
 // gigabytes and OOM/freeze the tab after passing the compressed-size check.
 const MAX_DECOMPRESSED_SIZE = 250 * 1024 * 1024; // 250 MB
 

@@ -24,24 +24,19 @@ function DownloadGameLog() {
         setLoadingZip(true);
         setError(null);
 
-        sendLobbyMessage(['getGameLog', async (data: { rawLog?: string; swuPgn?: string; swuReplay?: string; error?: string }) => {
+        sendLobbyMessage(['getGameLog', async (data: { swuPgnFile?: string; error?: string }) => {
             try {
-                if (data.error || !data.swuPgn || !data.swuReplay) {
+                if (data.error || !data.swuPgnFile) {
                     setError(data.error || 'Game files not available');
                     return;
                 }
 
-                const { zipSync, strToU8 } = await import('fflate');
-                const zipped = zipSync({
-                    'game.swupgn': strToU8(data.swuPgn),
-                    'game.swureplay': strToU8(data.swuReplay),
-                });
-                const date = new Date().toISOString().split('T')[0];
-                const blob = new Blob([zipped], { type: 'application/zip' });
-                triggerBlobDownload(blob, `game-${date}.zip`);
+                const date = new Date().toISOString().slice(0, 10);
+                const blob = new Blob([data.swuPgnFile], { type: 'text/plain' });
+                triggerBlobDownload(blob, `game-${date}.swupgn`);
             } catch (err) {
-                console.error('Failed to create game-files zip', err);
-                setError('Failed to create zip file');
+                console.error('Failed to download game file', err);
+                setError('Failed to download game file');
             } finally {
                 setLoadingZip(false);
             }
@@ -73,7 +68,7 @@ function DownloadGameLog() {
                 disabled={loadingZip}
             />
             <Typography sx={styles.typeographyStyle}>
-                {error || 'Download game notation and replay data as a zip file.'}
+                {error || 'Download game notation as a .swupgn file.'}
             </Typography>
         </Box>
     );
