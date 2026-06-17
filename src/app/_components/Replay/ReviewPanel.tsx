@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Box, IconButton, Typography, Tooltip, TextField, Button } from '@mui/material';
 import {
     RateReviewOutlined, ChevronLeft, SkipPrevious, SkipNext, DeleteOutline, BarChartOutlined, CallSplitOutlined,
+    ViewDayOutlined,
 } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
@@ -12,6 +13,7 @@ import type { WorkingAnnotation } from '@/app/_utils/replayAnnotations';
 import AnnotationBadge from './AnnotationBadge';
 import ResourcingReport from './ResourcingReport';
 import DecisionReview from './DecisionReview';
+import TurnDigests from './TurnDigests';
 
 const ReviewPanel: React.FC = () => {
     const { doc, currentIndex, totalFrames, seekTo } = useReplay();
@@ -21,6 +23,7 @@ const ReviewPanel: React.FC = () => {
     const [open, setOpen] = useState(false);
     const [reportOpen, setReportOpen] = useState(false);
     const [decisionsOpen, setDecisionsOpen] = useState(false);
+    const [digestsOpen, setDigestsOpen] = useState(false);
     const [draftNag, setDraftNag] = useState<string>('');
     const [draftText, setDraftText] = useState('');
 
@@ -87,6 +90,9 @@ const ReviewPanel: React.FC = () => {
                     </Tooltip>
                     <Tooltip title="Decisions & key moments">
                         <IconButton size="small" onClick={() => setDecisionsOpen(true)} sx={{ color: 'rgba(255,255,255,0.7)' }}><CallSplitOutlined fontSize="small" /></IconButton>
+                    </Tooltip>
+                    <Tooltip title="Turn-by-turn digest">
+                        <IconButton size="small" onClick={() => setDigestsOpen(true)} sx={{ color: 'rgba(255,255,255,0.7)' }}><ViewDayOutlined fontSize="small" /></IconButton>
                     </Tooltip>
                     <Tooltip title="Previous note">
                         <span><IconButton size="small" onClick={goPrev} disabled={prevTag(eventSeqs, annotatedRefs, currentIndex) === null} sx={{ color: 'rgba(255,255,255,0.7)' }}><SkipPrevious fontSize="small" /></IconButton></span>
@@ -189,6 +195,7 @@ const ReviewPanel: React.FC = () => {
             </Box>
             <ResourcingReport open={reportOpen} onClose={() => setReportOpen(false)} />
             <DecisionReview open={decisionsOpen} onClose={() => setDecisionsOpen(false)} />
+            <TurnDigests open={digestsOpen} onClose={() => setDigestsOpen(false)} />
         </Box>
     );
 };
