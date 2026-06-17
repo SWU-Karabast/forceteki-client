@@ -3,14 +3,18 @@ import React, { useState } from 'react';
 import { Box, IconButton, Tooltip, Snackbar } from '@mui/material';
 import { Share, Check, FileDownloadOutlined } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
+import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
 
 /**
  * Client-only sharing: copy a deep-link to the current moment (?id=X&t=N) and
- * download the .swupgn file. The recipient opens the link and loads the file
- * (no server-side replay storage).
+ * download the .swupgn file (including any review notes from this session). The
+ * recipient opens the link and loads the file (no server-side replay storage).
  */
 const ShareControls: React.FC = () => {
-    const { replayId, currentIndex, downloadReplay } = useReplay();
+    const { replayId, currentIndex } = useReplay();
+    // Annotation-aware download so the single canonical download button never drops the
+    // session's notes (it folds file + working annotations; a no-note replay is unchanged).
+    const { downloadWithAnnotations } = useReplayAnnotations();
     const [copied, setCopied] = useState(false);
     const [snack, setSnack] = useState('');
 
@@ -42,8 +46,8 @@ const ShareControls: React.FC = () => {
                     {copied ? <Check sx={{ color: 'var(--initiative-blue)' }} /> : <Share />}
                 </IconButton>
             </Tooltip>
-            <Tooltip title="Download replay file">
-                <IconButton onClick={downloadReplay} sx={btnSx}>
+            <Tooltip title="Download replay file (with notes)">
+                <IconButton onClick={downloadWithAnnotations} sx={btnSx}>
                     <FileDownloadOutlined />
                 </IconButton>
             </Tooltip>

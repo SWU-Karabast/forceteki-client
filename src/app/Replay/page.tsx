@@ -4,9 +4,11 @@ import { Box, Card, Grid, Typography, IconButton } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ReplayProvider, useReplay } from '@/app/_contexts/Replay.context';
+import { ReplayAnnotationsProvider } from '@/app/_contexts/ReplayAnnotations.context';
 import FileUpload from '@/app/_components/Replay/FileUpload';
 import TransportControls from '@/app/_components/Replay/TransportControls';
 import MoveList from '@/app/_components/Replay/MoveList';
+import ReviewPanel from '@/app/_components/Replay/ReviewPanel';
 import LastActionCaption from '@/app/_components/Replay/LastActionCaption';
 import RecentReplays from '@/app/_components/Replay/RecentReplays';
 import ShareControls from '@/app/_components/Replay/ShareControls';
@@ -174,6 +176,7 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
                 <PopupShell sidebarOpen={false} />
             </Grid>
             <ShareControls />
+            <ReviewPanel />
             <MoveList />
             <LastActionCaption />
             <TransportControls />
@@ -192,7 +195,9 @@ function ReplayBoard({ doc, rawContent, replayId, initialFrame }: {
     const cardNameMap = useCardNameMap();
     return (
         <ReplayProvider doc={doc} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} nameMap={cardNameMap}>
-            <ReplayBoardContent header={doc.header} />
+            <ReplayAnnotationsProvider doc={doc} replayId={replayId}>
+                <ReplayBoardContent header={doc.header} />
+            </ReplayAnnotationsProvider>
         </ReplayProvider>
     );
 }

@@ -1,9 +1,15 @@
 const DB_NAME = 'karabast-replays';
 const STORE_NAME = 'replays';        // full records (id, rawContent, meta)
 const META_STORE = 'replayMeta';     // lightweight metadata only, for the list view
-const DB_VERSION = 2;
+export const ANNOTATIONS_STORE = 'replayAnnotations'; // working-copy notes, keyed by replayId
+const DB_VERSION = 3;
 
-function openDB(): Promise<IDBDatabase> {
+/**
+ * Open the shared replay DB. Exported so the annotations layer
+ * (replayAnnotations.ts) shares one DB + version line — IndexedDB versions are
+ * per-database, so every store this app uses must be created in this one opener.
+ */
+export function openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
         request.onupgradeneeded = (event) => {
@@ -29,6 +35,11 @@ function openDB(): Promise<IDBDatabase> {
                         cursor.continue();
                     };
                 }
+            }
+            // v3: working-copy annotations store, keyed by replayId. Additive; existing
+            // replays/meta survive the upgrade untouched.
+            if (!db.objectStoreNames.contains(ANNOTATIONS_STORE)) {
+                db.createObjectStore(ANNOTATIONS_STORE, { keyPath: 'replayId' });
             }
         };
         request.onsuccess = () => resolve(request.result);
