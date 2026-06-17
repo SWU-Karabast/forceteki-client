@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { Box, IconButton, Typography, Tooltip, TextField, Button } from '@mui/material';
 import {
-    RateReviewOutlined, ChevronLeft, SkipPrevious, SkipNext, DeleteOutline,
+    RateReviewOutlined, ChevronLeft, SkipPrevious, SkipNext, DeleteOutline, BarChartOutlined,
 } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
@@ -10,6 +10,7 @@ import { NAG_ORDER, nagInfo, NAG_TONE_COLOR } from '@/app/_utils/nagGlyphs';
 import { nextTag, prevTag } from '@/app/_utils/annotationNav';
 import type { WorkingAnnotation } from '@/app/_utils/replayAnnotations';
 import AnnotationBadge from './AnnotationBadge';
+import ResourcingReport from './ResourcingReport';
 
 const ReviewPanel: React.FC = () => {
     const { doc, currentIndex, totalFrames, seekTo } = useReplay();
@@ -17,6 +18,7 @@ const ReviewPanel: React.FC = () => {
         threadFor, annotatedRefs, addAnnotation, deleteAnnotation, working, author, setAuthor,
     } = useReplayAnnotations();
     const [open, setOpen] = useState(false);
+    const [reportOpen, setReportOpen] = useState(false);
     const [draftNag, setDraftNag] = useState<string>('');
     const [draftText, setDraftText] = useState('');
 
@@ -44,12 +46,13 @@ const ReviewPanel: React.FC = () => {
     };
 
     if (!open) {
+        // Stacked below ShareControls (top:76) on the left edge so the toggles never overlap.
         return (
             <Tooltip title="Review & annotate">
                 <IconButton
                     onClick={() => setOpen(true)}
                     sx={{
-                        position: 'fixed', top: 76, left: 64, zIndex: 1305,
+                        position: 'fixed', top: 124, left: 12, zIndex: 1305,
                         color: 'white', backgroundColor: 'rgba(0,0,0,0.6)',
                         '&:hover': { backgroundColor: 'rgba(0,0,0,0.8)' },
                     }}
@@ -77,6 +80,9 @@ const ReviewPanel: React.FC = () => {
                     REVIEW
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <Tooltip title="Resourcing report">
+                        <IconButton size="small" onClick={() => setReportOpen(true)} sx={{ color: 'rgba(255,255,255,0.7)' }}><BarChartOutlined fontSize="small" /></IconButton>
+                    </Tooltip>
                     <Tooltip title="Previous note">
                         <span><IconButton size="small" onClick={goPrev} disabled={prevTag(eventSeqs, annotatedRefs, currentIndex) === null} sx={{ color: 'rgba(255,255,255,0.7)' }}><SkipPrevious fontSize="small" /></IconButton></span>
                     </Tooltip>
@@ -176,6 +182,7 @@ const ReviewPanel: React.FC = () => {
                     </Button>
                 </Box>
             </Box>
+            <ResourcingReport open={reportOpen} onClose={() => setReportOpen(false)} />
         </Box>
     );
 };

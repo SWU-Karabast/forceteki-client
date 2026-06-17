@@ -190,7 +190,7 @@ function ReplayBoard({ doc, rawContent, replayId, initialFrame }: {
     replayId: string | null;
     initialFrame: number;
 }) {
-    // SET#NUM→name map from public/card-names.json (npm run gen:card-names). Empty until
+    // SET#NUM→name map from public/card-names.json (npm run gen:card-data). Empty until
     // it loads, then the move list / captions re-render with names; unknown ids fall back.
     const cardNameMap = useCardNameMap();
     return (

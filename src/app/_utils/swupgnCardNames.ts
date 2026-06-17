@@ -17,7 +17,7 @@ export function makeNameResolver(map: Record<string, string>): NameResolver {
 }
 
 // public/card-names.json is a static SET#NUM -> title map generated from forceteki's
-// card data (npm run gen:card-names). We fetch it once and module-cache the promise so
+// card data (npm run gen:card-data). We fetch it once and module-cache the promise so
 // every replay that loads in this session shares one network round-trip.
 const CARD_NAMES_URL = '/card-names.json';
 let cardNameMapPromise: Promise<Record<string, string>> | null = null;
