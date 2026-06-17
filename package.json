@@ -8,7 +8,9 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "npx tsc --noemit && next lint",
-		"lint:fix": "npx tsc --noemit && next lint --fix"
+		"lint:fix": "npx tsc --noemit && next lint --fix",
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"dependencies": {
 		"@aws-sdk/client-dynamodb": "^3.917.0",
@@ -43,7 +45,8 @@
 		"eslint": "^8",
 		"eslint-config-next": "14.2.14",
 		"eslint-plugin-next": "^0.0.0",
-		"typescript": "^5"
+		"typescript": "^5",
+		"vitest": "^2.1.9"
 	},
 	"overrides": {
 		"react-is": "^18.3.1"
