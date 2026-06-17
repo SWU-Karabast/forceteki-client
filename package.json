@@ -10,7 +10,8 @@
 		"lint": "npx tsc --noemit && next lint",
 		"lint:fix": "npx tsc --noemit && next lint --fix",
 		"test": "vitest run",
-		"test:watch": "vitest"
+		"test:watch": "vitest",
+		"gen:card-names": "node scripts/gen-card-names.mjs"
 	},
 	"dependencies": {
 		"@aws-sdk/client-dynamodb": "^3.917.0",

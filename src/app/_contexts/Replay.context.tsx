@@ -23,6 +23,8 @@ export interface IReplayContextType {
     currentMoveIndex: number;
     replayId: string | null;
     downloadReplay: () => void;
+    /** Resolve a SET#NUM[:copy] card id to a display name (falls back to the raw id). */
+    nameOf: (id: string) => string;
 
     play: () => void; pause: () => void; isPlaying: boolean;
     speed: number; setSpeed: (s: number) => void;
@@ -143,11 +145,11 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         gameState, connectedPlayer: perspective, getOpponent, isSpectator: true,
         gameMessages: [], gameIsEnded: () => true, lobbyState: null,
         doc, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
-        replayId, downloadReplay,
+        replayId, downloadReplay, nameOf: resolver.nameOf,
         play, pause, isPlaying, speed, setSpeed, stepForward, stepBack, seekTo,
         seekToSeq, currentEvents, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, currentIndex, totalFrames, moves,
-        currentMoveIndex, replayId, downloadReplay, play, pause, isPlaying, speed,
+        currentMoveIndex, replayId, downloadReplay, resolver, play, pause, isPlaying, speed,
         stepForward, stepBack, seekTo, seekToSeq, currentEvents, togglePerspective]);
 
     return <ReplayContext.Provider value={value}>{children}</ReplayContext.Provider>;
