@@ -92,6 +92,7 @@ function facedownStack(count: number, zone: string, owner: string): AdaptedCard[
 
 function adaptPlayer(
     ps: PlayerState, playerId: string, deckOrderLen: number,
+    leaderId: string, baseId: string,
 ): any {
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId));
     const ground = inPlay.filter((c) => c.zone === 'groundArena');
@@ -103,10 +104,14 @@ function adaptPlayer(
         0,
         deckOrderLen - hand.length - resourcesTotal - discard.length - inPlay.length,
     );
+    const leader = cardFromId(leaderId, 'leader', playerId, playerId);
+    leader.type = 'leader';
+    const base = cardFromId(baseId, 'base', playerId, playerId);
+    base.type = 'base';
     return {
         user: { username: playerId },
-        leader: null,
-        base: null,
+        leader,
+        base,
         hasInitiative: false, // set by adaptState from ReducedState.initiative
         isActionPhaseActivePlayer: false,
         availableResources: ps.resourcesReady,
@@ -134,7 +139,9 @@ export function adaptState(
         const ps = s.players[seat];
         const playerId = seatToId[seat];
         if (!ps) { continue; }
-        const adapted = adaptPlayer(ps, playerId, decks[seat]);
+        const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
+        const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
+        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId);
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }

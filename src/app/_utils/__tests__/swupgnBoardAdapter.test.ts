@@ -71,4 +71,9 @@ describe('adaptState (full assembly)', () => {
         expect(typeof gs.phase).toBe('string');
         expect(typeof gs.initiativeClaimed).toBe('boolean');
     });
+
+    it('fills leader and base from the header', () => {
+        expect(gs.players.p1.leader.setId).toEqual({ set: 'SOR', number: 10 }); // P1Leader SOR#010
+        expect(gs.players.p1.base.setId).toEqual({ set: 'SOR', number: 27 });   // P1Base SOR#027
+    });
 });
