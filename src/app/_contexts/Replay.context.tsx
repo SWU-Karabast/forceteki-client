@@ -3,8 +3,8 @@
 // gameState mirrors the live board's gameState, which is typed `any`
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
-import type { SwuPgnDocument, ReducedState } from '@/lib/swupgn';
-import { fold, serialize } from '@/lib/swupgn';
+import type { SwuPgnDocument, ReducedState, Seat } from '@/lib/swupgn';
+import { fold, serialize, render } from '@/lib/swupgn';
 import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
@@ -29,6 +29,12 @@ export interface IReplayContextType {
 
     /** Resolve a SET#NUM[:copy] card id to a display name (falls back to the raw id). */
     nameOf: (id: string) => string;
+
+    // Download a human-readable text log of the game (reader's render()).
+    downloadTextLog: () => void;
+    // Fog-of-war: when true, the non-perspective player's hand renders face-down.
+    fogOfWar: boolean;
+    toggleFogOfWar: () => void;
 
     play: () => void; pause: () => void; isPlaying: boolean;
     speed: number; setSpeed: (s: number) => void;
@@ -70,6 +76,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const [isPlaying, setIsPlaying] = useState(false);
     const [speed, setSpeed] = useState(1);
     const [perspective, setPerspective] = useState(P1);
+    const [fogOfWar, setFogOfWar] = useState(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const resolver = useMemo(() => makeNameResolver(nameMap), [nameMap]);
@@ -88,12 +95,16 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         setCurrentIndex(Math.max(0, Math.min(initialFrame, totalFrames - 1)));
         setIsPlaying(false);
         setPerspective(P1);
+        setFogOfWar(false);
     }, [doc, initialFrame, totalFrames]);
 
-    const gameState = useMemo(
-        () => (frameStates[currentIndex] ? adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID) : null),
-        [frameStates, currentIndex, doc, decks],
-    );
+    const gameState = useMemo(() => {
+        if (!frameStates[currentIndex]) return null;
+        // Fog-of-war hides the hand of whoever is NOT the current perspective.
+        const oppSeat: Seat = perspective === P1 ? 2 : 1;
+        const opts = fogOfWar ? { hideHandFor: oppSeat } : {};
+        return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts);
+    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective]);
 
     const currentMoveIndex = useMemo(() => {
         let idx = -1;
@@ -123,6 +134,18 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         setTimeout(() => URL.revokeObjectURL(url), 100);
     }, [rawContent, doc]);
 
+    const downloadTextLog = useCallback(() => {
+        const blob = new Blob([render(doc, resolver)], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${doc.header.p1}-vs-${doc.header.p2}.txt`.replace(/[^a-z0-9.-]+/gi, '-');
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+    }, [doc, resolver]);
+
+    const toggleFogOfWar = useCallback(() => setFogOfWar((f) => !f), []);
+
     const stepForward = useCallback(() => setCurrentIndex((p) => Math.min(p + 1, totalFrames - 1)), [totalFrames]);
     const stepBack = useCallback(() => setCurrentIndex((p) => Math.max(p - 1, 0)), []);
     const seekTo = useCallback((i: number) => setCurrentIndex(Math.max(0, Math.min(i, totalFrames - 1))), [totalFrames]);
@@ -150,10 +173,12 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         gameMessages: [], gameIsEnded: () => true, lobbyState: null,
         doc, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
         replayId, downloadReplay, nameOf: resolver.nameOf,
+        downloadTextLog, fogOfWar, toggleFogOfWar,
         play, pause, isPlaying, speed, setSpeed, stepForward, stepBack, seekTo,
         seekToSeq, currentEvents, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, currentIndex, totalFrames, moves,
-        currentMoveIndex, replayId, downloadReplay, resolver, play, pause, isPlaying, speed,
+        currentMoveIndex, replayId, downloadReplay, resolver, downloadTextLog, fogOfWar, toggleFogOfWar,
+        play, pause, isPlaying, speed,
         stepForward, stepBack, seekTo, seekToSeq, currentEvents, togglePerspective]);
 
     return <ReplayContext.Provider value={value}>{children}</ReplayContext.Provider>;

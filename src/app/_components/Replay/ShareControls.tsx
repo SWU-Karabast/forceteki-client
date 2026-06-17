@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Box, IconButton, Tooltip, Snackbar } from '@mui/material';
-import { Share, Check, FileDownloadOutlined } from '@mui/icons-material';
+import { Share, Check, FileDownloadOutlined, DescriptionOutlined, VisibilityOutlined, VisibilityOffOutlined } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
 
@@ -11,7 +11,7 @@ import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context'
  * recipient opens the link and loads the file (no server-side replay storage).
  */
 const ShareControls: React.FC = () => {
-    const { replayId, currentIndex } = useReplay();
+    const { replayId, currentIndex, downloadTextLog, fogOfWar, toggleFogOfWar } = useReplay();
     // Annotation-aware download so the single canonical download button never drops the
     // session's notes (it folds file + working annotations; a no-note replay is unchanged).
     const { downloadWithAnnotations } = useReplayAnnotations();
@@ -49,6 +49,16 @@ const ShareControls: React.FC = () => {
             <Tooltip title="Download replay file (with notes)">
                 <IconButton onClick={downloadWithAnnotations} sx={btnSx}>
                     <FileDownloadOutlined />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Download text log">
+                <IconButton onClick={downloadTextLog} sx={btnSx}>
+                    <DescriptionOutlined />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title={fogOfWar ? 'Fog of war: ON (opponent hand hidden)' : 'Fog of war: OFF (both hands shown)'}>
+                <IconButton onClick={toggleFogOfWar} sx={btnSx}>
+                    {fogOfWar ? <VisibilityOffOutlined sx={{ color: 'var(--initiative-blue)' }} /> : <VisibilityOutlined />}
                 </IconButton>
             </Tooltip>
             <Snackbar

@@ -96,12 +96,16 @@ function facedownStack(count: number, zone: string, owner: string): AdaptedCard[
 
 function adaptPlayer(
     ps: PlayerState, playerId: string, deckOrderLen: number,
-    leaderId: string, baseId: string,
+    leaderId: string, baseId: string, hideHand = false,
 ): any {
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId));
     const ground = inPlay.filter((c) => c.zone === 'groundArena');
     const space = inPlay.filter((c) => c.zone === 'spaceArena');
-    const hand = ps.hand.map((id) => cardFromId(id, 'hand', playerId, playerId));
+    // Fog-of-war: render this player's hand as face-down placeholders (count preserved,
+    // identities hidden) instead of the omniscient known cards.
+    const hand = hideHand
+        ? facedownStack(ps.hand.length, 'hand', playerId)
+        : ps.hand.map((id) => cardFromId(id, 'hand', playerId, playerId));
     const discard = ps.discard.map((id) => cardFromId(id, 'discard', playerId, playerId));
     const resourcesTotal = ps.resourcesReady + ps.resourcesExhausted;
     const numCardsInDeck = Math.max(
@@ -142,6 +146,7 @@ function adaptPlayer(
 export function adaptState(
     s: ReducedState, doc: SwuPgnDocument,
     decks: Record<Seat, number>, seatToId: SeatToPlayerId,
+    opts: { hideHandFor?: Seat } = {},
 ): any {
     const players: Record<string, any> = {};
     for (const seat of [1, 2] as Seat[]) {
@@ -150,7 +155,7 @@ export function adaptState(
         if (!ps) { continue; }
         const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
-        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId);
+        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat);
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }
