@@ -1,4 +1,4 @@
-import type { CardInstanceState, ReducedState, Seat } from '@/lib/swupgn';
+import type { CardInstanceState, ReducedState, Seat, SwuPgnDocument, PlayerState, SetupInitRecord } from '@/lib/swupgn';
 
 /** Minimal card shape the board reads. Replay is read-only, so selection/prompt
  *  fields are defaulted to inert values. Kept loose to match the codebase's
@@ -66,6 +66,83 @@ export function cardFromInstance(inst: CardInstanceState, ownerId: string): Adap
     };
 }
 
-// ReducedState and Seat are imported for use in Tasks 6-7 which extend this file.
-// They are referenced here to satisfy type-only usage until then.
 export type { ReducedState, Seat };
+
+export type SeatToPlayerId = Record<Seat, string>;
+
+/** Pull each seat's starting deck-order length from the INIT setup record. */
+export function deckOrderLengths(doc: SwuPgnDocument): Record<Seat, number> {
+    const init = doc.setup.find((r): r is SetupInitRecord => (r as SetupInitRecord).t === 'INIT');
+    return {
+        1: init?.p1DeckOrder.length ?? 0,
+        2: init?.p2DeckOrder.length ?? 0,
+    };
+}
+
+function facedownStack(count: number, zone: string, owner: string): AdaptedCard[] {
+    // Resource/credit identities aren't in ReducedState; render N inert placeholders.
+    return Array.from({ length: Math.max(0, count) }, (_, i) => ({
+        uuid: `${owner}:${zone}:${i}`,
+        setId: { set: '', number: 0 },
+        zone, controllerId: owner, ownerId: owner, type: 'token',
+        damage: 0, exhausted: false,
+        selected: false, selectable: false,
+    }));
+}
+
+function adaptPlayer(
+    ps: PlayerState, playerId: string, deckOrderLen: number,
+): any {
+    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId));
+    const ground = inPlay.filter((c) => c.zone === 'groundArena');
+    const space = inPlay.filter((c) => c.zone === 'spaceArena');
+    const hand = ps.hand.map((id) => cardFromId(id, 'hand', playerId, playerId));
+    const discard = ps.discard.map((id) => cardFromId(id, 'discard', playerId, playerId));
+    const resourcesTotal = ps.resourcesReady + ps.resourcesExhausted;
+    const numCardsInDeck = Math.max(
+        0,
+        deckOrderLen - hand.length - resourcesTotal - discard.length - inPlay.length,
+    );
+    return {
+        user: { username: playerId },
+        leader: null,
+        base: null,
+        hasInitiative: false, // set by adaptState from ReducedState.initiative
+        isActionPhaseActivePlayer: false,
+        availableResources: ps.resourcesReady,
+        numCardsInDeck,
+        forceToken: { active: ps.hasForce, uuid: `${playerId}:force` },
+        cardPiles: {
+            hand,
+            discard,
+            groundArena: ground,
+            spaceArena: space,
+            resources: facedownStack(resourcesTotal, 'resources', playerId),
+            credits: facedownStack(ps.credits, 'credits', playerId),
+            capturedZone: [] as AdaptedCard[],
+        },
+    };
+}
+
+/** Map a folded ReducedState + document context into the board's gameState shape. */
+export function adaptState(
+    s: ReducedState, doc: SwuPgnDocument,
+    decks: Record<Seat, number>, seatToId: SeatToPlayerId,
+): any {
+    const players: Record<string, any> = {};
+    for (const seat of [1, 2] as Seat[]) {
+        const ps = s.players[seat];
+        const playerId = seatToId[seat];
+        if (!ps) { continue; }
+        const adapted = adaptPlayer(ps, playerId, decks[seat]);
+        adapted.hasInitiative = s.initiative === seat;
+        players[playerId] = adapted;
+    }
+    return {
+        players,
+        phase: s.phase,
+        initiativeClaimed: s.initiative != null,
+        clientUIProperties: {},
+        winners: [],
+    };
+}

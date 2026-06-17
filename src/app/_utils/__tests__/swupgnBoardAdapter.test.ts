@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { cardFromId, cardFromInstance, ZONE_MAP } from '../swupgnBoardAdapter';
+import { cardFromId, cardFromInstance, ZONE_MAP, adaptState, deckOrderLengths } from '../swupgnBoardAdapter';
+import { parse, stateAt } from '@/lib/swupgn';
+import { readFileSync } from 'fs';
+import path from 'path';
+
+const SAMPLE = readFileSync(
+    path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/sample-game.swupgn'),
+    'utf-8',
+);
 
 describe('cardFromId', () => {
     it('parses SET#NUM into setId and assigns owner/zone', () => {
@@ -26,5 +34,41 @@ describe('cardFromInstance', () => {
         expect(c.zone).toBe(ZONE_MAP.ground);
         expect(c.damage).toBe(2);
         expect(c.exhausted).toBe(true);
+    });
+});
+
+describe('adaptState (full assembly)', () => {
+    const doc = parse(SAMPLE);
+    const decks = deckOrderLengths(doc);
+    // R1.G.3 is after P1's regroup draw — at this seq, ps.hand[] (populated by DRAW
+    // events) and ps.handSize (driven by MOVE events) both reflect 4 cards for P1.
+    // Using ps.hand.length throughout to avoid any handSize/hand divergence.
+    const reduced = stateAt(doc.events, 'R1.G.3');
+    const gs = adaptState(reduced, doc, decks, { 1: 'p1', 2: 'p2' });
+
+    it('keys players by playerId', () => {
+        expect(Object.keys(gs.players)).toEqual(['p1', 'p2']);
+    });
+
+    it('puts hand cards in cardPiles.hand with parsed setIds', () => {
+        const p1 = reduced.players[1]!;
+        expect(gs.players.p1.cardPiles.hand.length).toBe(p1.hand.length);
+        expect(gs.players.p1.cardPiles.hand[0].setId.set).toBeDefined();
+    });
+
+    it('renders resources as a face-down stack sized by ready+exhausted', () => {
+        const p1 = reduced.players[1]!;
+        expect(gs.players.p1.cardPiles.resources.length)
+            .toBe(p1.resourcesReady + p1.resourcesExhausted);
+        expect(gs.players.p1.availableResources).toBe(p1.resourcesReady);
+    });
+
+    it('derives a non-negative deck count', () => {
+        expect(gs.players.p1.numCardsInDeck).toBeGreaterThanOrEqual(0);
+    });
+
+    it('maps phase and initiative', () => {
+        expect(typeof gs.phase).toBe('string');
+        expect(typeof gs.initiativeClaimed).toBe('boolean');
     });
 });
