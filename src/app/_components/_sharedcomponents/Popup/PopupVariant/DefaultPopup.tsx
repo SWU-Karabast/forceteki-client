@@ -30,19 +30,17 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
                     <RichText text={data.description} sx={textStyle} component={Typography}/>
                 )}
                 <Box sx={footerStyle}>
-                    {data.buttons.map((button: PopupButton, index: number) => {
-                        return (
-                            <GradientBorderButton
-                                key={`${button.uuid}:${index}`}
-                                fillColor={button.selected ? 'rgba(102, 229, 255, 0.2)' : undefined}
-                                onClickHandler={() => {
-                                    sendGameMessage([button.command, button.arg, button.uuid]);
-                                }}
-                            >
-                                <RichText text={button.text} />
-                            </GradientBorderButton>
-                        );
-                    })}
+                    {data.buttons.map((button: PopupButton, index: number) => (
+                        <GradientBorderButton
+                            key={`${button.uuid}:${index}`}
+                            fillColor={button.selected ? 'rgba(102, 229, 255, 0.2)' : undefined}
+                            onClick={() => {
+                                sendGameMessage([button.command, button.arg, button.uuid]);
+                            }}
+                        >
+                            <RichText text={button.text} />
+                        </GradientBorderButton>
+                    ))}
                 </Box>
             </>
         );
