@@ -39,18 +39,29 @@ function newCard(id: string, zone: string): CardInstanceState {
     return { id, zone, damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {} };
 }
 
+/**
+ * Place a card into a player's in-play set, idempotent by id. A unit can be added by
+ * either the PLAY/DEPLOY event or the paired hand->arena MOVE, in EITHER order (real
+ * logs emit the MOVE first, then PLAY). Pushing unconditionally created a second
+ * instance of the same id → duplicate React keys and a unit rendered twice.
+ */
+function placeInArena(ps: PlayerState, id: string, zone: string): void {
+    const existing = ps.cards.find((c) => c.id === id);
+    if (existing) { existing.zone = zone; } else { ps.cards.push(newCard(id, zone)); }
+}
+
 const ARENA_ZONES = new Set(['ground', 'space']);
 
 /**
- * Engine truth: every zone transition is an OnCardMoved → MOVE event. handSize,
- * resourcesReady and the in-play `cards[]` set are therefore reconstructed from MOVE
- * (the single source of truth), NOT from DRAW/RESOURCE/PLAY, which are higher-level
- * summary records that always coincide with the underlying MOVEs (a DRAW carries the
- * cumulative count of the deck→hand MOVEs just emitted; double-counting them would
- * diverge from the keyframe). DRAW still records the omniscient `hand[]` contents and
- * PLAY/PLAY_UPGRADE still place a card so unit-level fold tests that drive PLAY without
- * a paired MOVE keep working; MOVE placement is idempotent by id so PLAY+MOVE in real
- * streams does not double-add.
+ * Engine truth: every zone transition is an OnCardMoved → MOVE event. handSize, the
+ * hand[] contents, resourcesReady, the discard pile, and the in-play `cards[]` set are
+ * reconstructed from MOVE (the single source of truth), NOT from DRAW/RESOURCE/PLAY,
+ * which are higher-level summary records that always coincide with the underlying MOVEs
+ * (a DRAW carries the cumulative count of the deck→hand MOVEs just emitted; re-adding
+ * them double-counts). DRAW therefore no longer mutates hand[]. PLAY/DEPLOY/PLAY_UPGRADE
+ * still place a card (so unit-level fold tests that drive PLAY without a paired MOVE keep
+ * working), but placement is idempotent by id — via placeInArena here and applyMoveCounts
+ * below — so PLAY+MOVE in EITHER order does not create a second instance.
  */
 function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: string; p?: Seat }): void {
     if (e.p == null) {
@@ -62,11 +73,17 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
     }
     const ps = player(s, e.p);
 
-    // Hand membership count.
+    // Hand membership: count AND contents, both driven by MOVE (the single source of
+    // truth for zone transitions). hand[] therefore reflects the ACTUAL current hand —
+    // DRAW does NOT also push, which previously double-added what the paired deck->hand
+    // MOVE already added and produced duplicate React keys when a card was re-drawn.
     if (e.to === 'hand' && e.from !== 'hand') {
         ps.handSize += 1;
+        if (!ps.hand.includes(e.card)) ps.hand.push(e.card);
     } else if (e.from === 'hand' && e.to !== 'hand') {
         ps.handSize = Math.max(0, ps.handSize - 1);
+        const hi = ps.hand.indexOf(e.card);
+        if (hi >= 0) ps.hand.splice(hi, 1);
     }
 
     // Ready-resource membership count. (Resources enter ready; exhaustion is tracked
@@ -75,6 +92,15 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         ps.resourcesReady += 1;
     } else if (e.from === 'resource' && e.to !== 'resource') {
         ps.resourcesReady = Math.max(0, ps.resourcesReady - 1);
+    }
+
+    // Discard membership: a card entering discard is added (deduped), one leaving is
+    // removed. DEFEAT/DISCARD also add (guarded) for paths with no discard MOVE.
+    if (e.to === 'discard' && e.from !== 'discard') {
+        if (!ps.discard.includes(e.card)) ps.discard.push(e.card);
+    } else if (e.from === 'discard' && e.to !== 'discard') {
+        const di = ps.discard.indexOf(e.card);
+        if (di >= 0) ps.discard.splice(di, 1);
     }
 
     // In-play (arena) membership. Place on entry (idempotent by id so a PLAY that already
@@ -108,20 +134,24 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         // zone transitions); see applyMoveCounts. PLAY only places the card in its zone —
         // the matching hand->zone MOVE accounts for the hand decrement.
         case 'PLAY': case 'PLAY_SMUGGLE':
-            player(s, e.p).cards.push(newCard(e.card, e.zone ?? 'ground')); break;
-        case 'PLAY_EVENT':
-            player(s, e.p).discard.push(e.card); break;
+            placeInArena(player(s, e.p), e.card, e.zone ?? 'ground'); break;
+        case 'PLAY_EVENT': {
+            // Event resolves to discard; guard against the paired hand->discard MOVE.
+            const ps = player(s, e.p);
+            if (!ps.discard.includes(e.card)) ps.discard.push(e.card);
+            break;
+        }
         case 'PLAY_UPGRADE': {
             if (e.target) {
                 const host = findCard(s, e.target);
                 if (host) { host.upgrades.push(e.card); break; }
             }
             // Fallback when the host is unknown: track the upgrade as its own instance.
-            player(s, e.p).cards.push(newCard(e.card, e.zone ?? 'ground'));
+            placeInArena(player(s, e.p), e.card, e.zone ?? 'ground');
             break;
         }
         case 'DEPLOY_LEADER':
-            player(s, e.p).cards.push(newCard(e.card, e.zone ?? 'ground')); break;
+            placeInArena(player(s, e.p), e.card, e.zone ?? 'ground'); break;
         case 'CREATE_TOKEN':
             player(s, e.p).cards.push(newCard(e.token, e.zone)); break;
         case 'DAMAGE': {
@@ -163,7 +193,8 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
                 }
                 const idx = ps.cards.findIndex((c) => c.id === e.card);
                 if (idx >= 0) {
-                    ps.discard.push(ps.cards[idx].id);
+                    // Guarded: a paired ground->discard MOVE may also add it.
+                    if (!ps.discard.includes(ps.cards[idx].id)) ps.discard.push(ps.cards[idx].id);
                     ps.cards.splice(idx, 1);
                 }
             }
@@ -175,8 +206,14 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         // membership (see applyMoveCounts). DRAW/DISCARD/RESOURCE no longer mutate those
         // counts — they coincide with the underlying MOVEs and would double-count.
         case 'MOVE': applyMoveCounts(s, e); break;
-        case 'DRAW': { player(s, e.p).hand.push(...e.cards); break; }
-        case 'DISCARD': { player(s, e.p).discard.push(...e.cards); break; }
+        // hand contents come from the paired deck->hand MOVE (see applyMoveCounts); DRAW
+        // is a summary record and must NOT re-add (that caused duplicate hand entries).
+        case 'DRAW': break;
+        case 'DISCARD': {
+            const ps = player(s, e.p);
+            for (const id of e.cards) if (!ps.discard.includes(id)) ps.discard.push(id);
+            break;
+        }
         case 'RESOURCE': break;
         case 'SHIELD_GAIN': { const c = findCard(s, e.card); if (c) { c.shields += e.count ?? 1; } break; }
         case 'SHIELD_USE': { const c = findCard(s, e.card); if (c) { c.shields = Math.max(0, c.shields - (e.count ?? 1)); } break; }

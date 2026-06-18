@@ -46,12 +46,50 @@ describe('reduce — MOVE drives the gated counts', () => {
         expect(p1(s).cards.filter((c) => c.id === 'U')).toHaveLength(1);
     });
 
+    it('arena placement is idempotent in the real-log order: MOVE hand->arena THEN PLAY', () => {
+        // This is the order real engine streams emit (MOVE first, PLAY summary second);
+        // pushing in PLAY unconditionally used to create a duplicate in-play instance.
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'JTL#198', from: 'hand', to: 'space', p: 1 });
+        s = reduce(s, { seq: '2', t: 'PLAY', p: 1, card: 'JTL#198', zone: 'space' });
+        expect(p1(s).cards.filter((c) => c.id === 'JTL#198')).toHaveLength(1);
+    });
+
     it('removes a card when it exits the arena', () => {
         let s = base();
         s = reduce(s, { seq: '1', t: 'MOVE', card: 'U', from: 'hand', to: 'ground', p: 1 });
         expect(p1(s).cards.find((c) => c.id === 'U')).toBeTruthy();
         s = reduce(s, { seq: '2', t: 'MOVE', card: 'U', from: 'ground', to: 'discard', p: 1 });
         expect(p1(s).cards.find((c) => c.id === 'U')).toBeUndefined();
+    });
+});
+
+describe('reduce — hand & discard contents (MOVE-driven, no double-add)', () => {
+    it('hand[] reflects the current hand; a DRAW does NOT re-add a card the MOVE already added', () => {
+        let s = base();
+        // deck->hand MOVE adds the card; the paired DRAW summary lists the same id.
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'SEC#163', from: 'deck', to: 'hand', p: 1 });
+        s = reduce(s, { seq: '2', t: 'DRAW', p: 1, count: 1, cards: ['SEC#163'] });
+        // Exactly one copy — this is the duplicate-React-key regression.
+        expect(p1(s).hand.filter((id) => id === 'SEC#163')).toHaveLength(1);
+        expect(p1(s).handSize).toBe(1);
+    });
+
+    it('playing a card removes it from hand[] (MOVE hand->arena)', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'SEC#163', from: 'deck', to: 'hand', p: 1 });
+        s = reduce(s, { seq: '2', t: 'MOVE', card: 'SEC#163', from: 'hand', to: 'ground', p: 1 });
+        expect(p1(s).hand).not.toContain('SEC#163');
+        expect(p1(s).handSize).toBe(0);
+    });
+
+    it('discard membership follows MOVE and de-dupes a defeat that also moves to discard', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'U', from: 'deck', to: 'ground', p: 1 });
+        // Both a DEFEAT and a ground->discard MOVE reference the same card; no double-add.
+        s = reduce(s, { seq: '2', t: 'DEFEAT', card: 'U', reason: 'combat' });
+        s = reduce(s, { seq: '3', t: 'MOVE', card: 'U', from: 'ground', to: 'discard', p: 1 });
+        expect(p1(s).discard.filter((id) => id === 'U')).toHaveLength(1);
     });
 });
 

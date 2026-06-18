@@ -40,9 +40,8 @@ describe('cardFromInstance', () => {
 describe('adaptState (full assembly)', () => {
     const doc = parse(SAMPLE);
     const decks = deckOrderLengths(doc);
-    // R1.G.3 is after P1's regroup draw — at this seq, ps.hand[] (populated by DRAW
-    // events) and ps.handSize (driven by MOVE events) both reflect 4 cards for P1.
-    // Using ps.hand.length throughout to avoid any handSize/hand divergence.
+    // R1.G.3 is after P1's regroup draw. ps.hand[] and ps.handSize are both MOVE-driven,
+    // so they agree; the assertion uses ps.hand.length to stay independent of the count.
     const reduced = stateAt(doc.events, 'R1.G.3');
     const gs = adaptState(reduced, doc, decks, { 1: 'p1', 2: 'p2' });
 

@@ -58,7 +58,9 @@ export function useReplay(): IReplayContextType {
     return ctx;
 }
 
-export const SPEED_INTERVALS: Record<number, number> = { 0.5: 4000, 1: 2000, 2: 1000, 4: 500 };
+// ms per frame at each speed. 1x is 1000ms (was 2000) so playback visibly progresses
+// without feeling stuck; the other steps stay relative.
+export const SPEED_INTERVALS: Record<number, number> = { 0.5: 2000, 1: 1000, 2: 500, 4: 250 };
 
 const P1 = 'Player 1';
 const P2 = 'Player 2';
@@ -107,6 +109,37 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     }, [events]);
     const moveFrames = useMemo(() => moves.map((mv) => seqToFrame.get(mv.seq) ?? -1), [moves, seqToFrame]);
 
+    // Whether each frame actually changes the rendered board vs the previous frame.
+    // adaptState is a pure function of the ReducedState, so frames whose state is
+    // byte-identical render identically — those are the no-op frames (shuffles, hidden
+    // choices) that auto-playback skips so only visible changes hold on screen.
+    const boardChanged = useMemo<boolean[]>(() => {
+        const flags = new Array<boolean>(frameStates.length);
+        let prevKey = '';
+        for (let i = 0; i < frameStates.length; i++) {
+            const key = JSON.stringify(frameStates[i]);
+            flags[i] = i === 0 || key !== prevKey;
+            prevKey = key;
+        }
+        return flags;
+    }, [frameStates]);
+
+    // First "real action" frame = the start of round 1 (first ROUND_START). Playback opens
+    // here so the viewer lands on gameplay, not the setup/shuffle/mulligan prologue. The
+    // prologue is still scrubbable by dragging the slider back.
+    const firstActionFrame = useMemo(() => {
+        const i = events.findIndex((e) => e.t === 'ROUND_START');
+        return i >= 0 ? i : 0;
+    }, [events]);
+
+    // Next frame that visibly changes the board, capped at lastFrame. Used by auto-playback
+    // (NOT manual step) so the interval fast-forwards over visually-identical no-op frames.
+    const nextMeaningfulFrame = useCallback((from: number, lastFrame: number): number => {
+        let i = from + 1;
+        while (i < lastFrame && !boardChanged[i]) i++;
+        return Math.min(i, lastFrame);
+    }, [boardChanged]);
+
     useEffect(() => {
         setPerspective(P1);
         setFogOfWar(false);
@@ -119,10 +152,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             setIsPlaying(true);
         } else {
             setClipState(null);
-            setCurrentIndex(Math.max(0, Math.min(initialFrame, totalFrames - 1)));
+            // Honor an explicit ?t deep-link; otherwise skip the setup prologue and open
+            // on the first round's action.
+            const target = initialFrame > 0 ? initialFrame : firstActionFrame;
+            setCurrentIndex(Math.max(0, Math.min(target, totalFrames - 1)));
             setIsPlaying(false);
         }
-    }, [doc, initialFrame, totalFrames, clipStart, clipEnd]);
+    }, [doc, initialFrame, totalFrames, clipStart, clipEnd, firstActionFrame]);
 
     const gameState = useMemo(() => {
         if (!frameStates[currentIndex]) return null;
@@ -170,7 +206,15 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         const i = events.findIndex((e) => e.seq === seq);
         if (i >= 0) setCurrentIndex(i);
     }, [events]);
-    const play = useCallback(() => setIsPlaying(true), []);
+    const play = useCallback(() => {
+        setIsPlaying(true);
+        // Advance immediately so Play gives instant feedback instead of a dead wait for
+        // the first interval tick. Skips to the next visibly-meaningful frame.
+        setCurrentIndex((prev) => {
+            const lastFrame = clip ? clip.end : totalFrames - 1;
+            return prev < lastFrame ? nextMeaningfulFrame(prev, lastFrame) : prev;
+        });
+    }, [clip, totalFrames, nextMeaningfulFrame]);
     const pause = useCallback(() => setIsPlaying(false), []);
     const togglePerspective = useCallback(() => setPerspective((p) => (p === P1 ? P2 : P1)), []);
 
@@ -190,11 +234,12 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                     setIsPlaying(false);
                     return prev;
                 }
-                return prev + 1;
+                // Fast-forward over visually-identical no-op frames during auto-playback.
+                return nextMeaningfulFrame(prev, lastFrame);
             });
-        }, SPEED_INTERVALS[speed] ?? 2000);
+        }, SPEED_INTERVALS[speed] ?? 1000);
         return () => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } };
-    }, [isPlaying, speed, totalFrames, clip]);
+    }, [isPlaying, speed, totalFrames, clip, nextMeaningfulFrame]);
 
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent, isSpectator: true,
