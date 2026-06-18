@@ -20,6 +20,7 @@ export interface AdaptedCard {
     power?: number;
     hp?: number;
     entering?: boolean;
+    attacking?: boolean;
     damage: number;
     exhausted: boolean;
     selected: boolean;
@@ -109,6 +110,7 @@ function adaptPlayer(
     highlight?: Set<string>,
     leaderExhausted = false,
     entering?: Set<string>,
+    attacking?: Set<string>,
 ): any {
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap)));
     // Glow the card(s) that acted this frame (reuses GameCard's `selected` styling). The
@@ -120,6 +122,10 @@ function adaptPlayer(
     // Flag units that just entered play this frame so UnitsBoard animates them in.
     if (entering && entering.size) {
         for (const c of inPlay) if (entering.has(c.uuid)) c.entering = true;
+    }
+    // Flag the attacker of this frame's ATTACK so UnitsBoard lunges it toward the opponent.
+    if (attacking && attacking.size) {
+        for (const c of inPlay) if (attacking.has(c.uuid)) c.attacking = true;
     }
     const ground = inPlay.filter((c) => c.zone === 'groundArena');
     const space = inPlay.filter((c) => c.zone === 'spaceArena');
@@ -177,11 +183,12 @@ function adaptPlayer(
 export function adaptState(
     s: ReducedState, doc: SwuPgnDocument,
     decks: Record<Seat, number>, seatToId: SeatToPlayerId,
-    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; enteringIds?: string[] } = {},
+    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; enteringIds?: string[]; attackingIds?: string[] } = {},
     statMap: Record<string, CardStat> = {},
 ): any {
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
     const entering = opts.enteringIds && opts.enteringIds.length ? new Set(opts.enteringIds) : undefined;
+    const attacking = opts.attackingIds && opts.attackingIds.length ? new Set(opts.attackingIds) : undefined;
     const players: Record<string, any> = {};
     for (const seat of [1, 2] as Seat[]) {
         const ps = s.players[seat];
@@ -189,7 +196,7 @@ export function adaptState(
         if (!ps) { continue; }
         const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
-        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering);
+        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering, attacking);
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }

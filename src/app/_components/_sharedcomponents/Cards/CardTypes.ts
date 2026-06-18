@@ -72,6 +72,9 @@ export interface ICardData {
     // Replay-only: set by the SWU-PGN board adapter on a unit that just entered play this
     // frame, so UnitsBoard can animate it in. Never set by the live server gameState.
     entering?: boolean;
+    // Replay-only: set on the attacker of the current frame's ATTACK, so UnitsBoard lunges
+    // it toward the opponent. Never set by the live server gameState.
+    attacking?: boolean;
 }
 
 export interface IServerCardData {
