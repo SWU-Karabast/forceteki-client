@@ -106,6 +106,7 @@ function adaptPlayer(
     leaderId: string, baseSetId: string, hideHand = false,
     statMap: Record<string, CardStat> = {},
     highlight?: Set<string>,
+    leaderExhausted = false,
 ): any {
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap)));
     // Glow the card(s) that acted this frame (reuses GameCard's `selected` styling). The
@@ -134,6 +135,10 @@ function adaptPlayer(
     const leaderDeployed = ps.cards.some((c) => baseId(c.id) === baseId(leaderId));
     const leader = cardFromId(leaderId, leaderDeployed ? 'leader' : 'base', playerId, playerId, statOf(leaderId, statMap));
     leader.type = 'leader';
+    // An undeployed leader exhausts when it uses its action ability — show Karabast's
+    // dimming. Glow it on the frame it acts (same `selected` highlight as units).
+    if (!leaderDeployed && leaderExhausted) leader.exhausted = true;
+    if (highlight && highlight.has(leaderId)) leader.selected = true;
     const base = cardFromId(baseSetId, 'base', playerId, playerId);
     base.type = 'base';
     return {
@@ -166,7 +171,7 @@ function adaptPlayer(
 export function adaptState(
     s: ReducedState, doc: SwuPgnDocument,
     decks: Record<Seat, number>, seatToId: SeatToPlayerId,
-    opts: { hideHandFor?: Seat; highlightIds?: string[] } = {},
+    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>> } = {},
     statMap: Record<string, CardStat> = {},
 ): any {
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
@@ -177,7 +182,7 @@ export function adaptState(
         if (!ps) { continue; }
         const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
-        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight);
+        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false);
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }

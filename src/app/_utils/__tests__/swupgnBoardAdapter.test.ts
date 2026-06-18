@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { cardFromId, cardFromInstance, ZONE_MAP, adaptState, deckOrderLengths } from '../swupgnBoardAdapter';
-import { parse, stateAt } from '@/lib/swupgn';
+import { parse, stateAt, type ReducedState, type Seat, type CardInstanceState } from '@/lib/swupgn';
 import { readFileSync } from 'fs';
 import path from 'path';
 
@@ -81,5 +81,43 @@ describe('adaptState (full assembly)', () => {
         // without null-checking promptState — it must exist or the board throws.
         expect(gs.players.p1.promptState).toBeDefined();
         expect(gs.players.p2.promptState).toBeDefined();
+    });
+});
+
+describe('adaptState — leader state (deploy / exhaust / action highlight)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const doc = { header: { p1Leader: 'JTL#018', p1Base: 'JTL#026', p2Leader: 'SEC#010', p2Base: 'JTL#021' } } as any;
+    const decks = { 1: 50, 2: 50 } as Record<Seat, number>;
+    const ids = { 1: 'p1', 2: 'p2' } as Record<Seat, string>;
+    const mkPlayer = (seat: Seat, cards: CardInstanceState[] = []) => ({
+        seat, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
+        resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards,
+    });
+    const state = (cards1: CardInstanceState[] = []): ReducedState => ({
+        round: 1, phase: 'action', initiative: 1, players: { 1: mkPlayer(1, cards1), 2: mkPlayer(2) },
+    });
+
+    it('undeployed leader shows its art (zone base) and dims when exhausted', () => {
+        const gs = adaptState(state(), doc, decks, ids, { leaderExhausted: { 1: true } });
+        expect(gs.players.p1.leader.zone).toBe('base'); // isDeployed=false -> art renders
+        expect(gs.players.p1.leader.exhausted).toBe(true); // -> Karabast dimming
+        expect(gs.players.p2.leader.exhausted).toBeFalsy();
+    });
+
+    it('glows the leader on its action frame', () => {
+        const gs = adaptState(state(), doc, decks, ids, { highlightIds: ['JTL#018'] });
+        expect(gs.players.p1.leader.selected).toBe(true);
+        expect(gs.players.p2.leader.selected).toBe(false);
+    });
+
+    it('a deployed leader flips the slot to the placeholder and renders as an in-play unit', () => {
+        const leaderUnit: CardInstanceState = {
+            id: 'JTL#018', zone: 'space', damage: 0, exhausted: false, upgrades: [],
+            shields: 0, experience: 0, statusTokens: {},
+        };
+        const gs = adaptState(state([leaderUnit]), doc, decks, ids, { leaderExhausted: { 1: true } });
+        expect(gs.players.p1.leader.zone).not.toBe('base'); // deployed -> placeholder
+        expect(gs.players.p1.leader.exhausted).toBeFalsy(); // slot not dimmed while deployed
+        expect(gs.players.p1.cardPiles.spaceArena.some((c: { uuid: string }) => c.uuid === 'JTL#018')).toBe(true);
     });
 });

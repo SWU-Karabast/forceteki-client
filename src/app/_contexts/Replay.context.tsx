@@ -4,7 +4,7 @@
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat } from '@/lib/swupgn';
-import { foldFrames, serialize, render } from '@/lib/swupgn';
+import { foldFrames, serialize, render, baseId } from '@/lib/swupgn';
 import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
@@ -142,6 +142,24 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         return i >= 0 ? i : 0;
     }, [events]);
 
+    // Per-frame exhausted state of each leader, from EXHAUST/READY events for the leader id.
+    // A leader exhausts when it uses its action ability (Karabast then dims the leader). The
+    // undeployed leader isn't a folded card, so without this the board would never show it.
+    const leaderExhaustByFrame = useMemo<Array<Record<Seat, boolean>>>(() => {
+        const lead: Record<Seat, string> = { 1: baseId(doc.header.p1Leader), 2: baseId(doc.header.p2Leader) };
+        const cur: Record<Seat, boolean> = { 1: false, 2: false };
+        const out: Array<Record<Seat, boolean>> = new Array(events.length);
+        for (let i = 0; i < events.length; i++) {
+            const e = events[i];
+            if ((e.t === 'EXHAUST' || e.t === 'READY') && 'card' in e) {
+                const on = e.t === 'EXHAUST';
+                for (const seat of [1, 2] as Seat[]) if (baseId(e.card) === lead[seat]) cur[seat] = on;
+            }
+            out[i] = { ...cur };
+        }
+        return out;
+    }, [events, doc.header.p1Leader, doc.header.p2Leader]);
+
     // Next frame that visibly changes the board, capped at lastFrame. Used by auto-playback
     // (NOT manual step) so the interval fast-forwards over visually-identical no-op frames.
     const nextMeaningfulFrame = useCallback((from: number, lastFrame: number): number => {
@@ -179,12 +197,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         if (!frameStates[currentIndex]) return null;
         // Fog-of-war hides the hand of whoever is NOT the current perspective.
         const oppSeat: Seat = perspective === P1 ? 2 : 1;
-        const opts: { hideHandFor?: Seat; highlightIds?: string[] } = {
+        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>> } = {
             ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
             highlightIds: action.highlight,
+            leaderExhausted: leaderExhaustByFrame[currentIndex],
         };
         return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action]);
+    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first
