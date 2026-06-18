@@ -3,6 +3,8 @@
 // (IBoardState.gameState: any, see Game.context.tsx which disables the same rule).
 // Typing these returns would mean typing the entire live board state — out of scope.
 import type { CardInstanceState, ReducedState, Seat, SwuPgnDocument, PlayerState, SetupInitRecord } from '@/lib/swupgn';
+import { baseId } from '@/lib/swupgn';
+import { statOf, type CardStat } from '@/app/_utils/swupgnCardStats';
 
 /** Minimal card shape the board reads. Replay is read-only, so selection/prompt
  *  fields are defaulted to inert values. Kept loose to match the codebase's
@@ -15,6 +17,8 @@ export interface AdaptedCard {
     controllerId: string;
     ownerId: string;
     type: string;
+    power?: number;
+    hp?: number;
     damage: number;
     exhausted: boolean;
     selected: boolean;
@@ -41,7 +45,7 @@ export function parseSetId(id: string): { set: string; number: number } {
 
 /** Build a board card from a bare id (hand/discard piles carry only ids). */
 export function cardFromId(
-    id: string, zone: string, controllerId: string, ownerId: string,
+    id: string, zone: string, controllerId: string, ownerId: string, stat?: CardStat,
 ): AdaptedCard {
     return {
         uuid: id,
@@ -49,7 +53,9 @@ export function cardFromId(
         zone,
         controllerId,
         ownerId,
-        type: 'unit',
+        type: stat?.type ?? 'unit',
+        ...(typeof stat?.power === 'number' ? { power: stat.power } : {}),
+        ...(typeof stat?.hp === 'number' ? { hp: stat.hp } : {}),
         damage: 0,
         exhausted: false,
         selected: false,
@@ -57,10 +63,11 @@ export function cardFromId(
     };
 }
 
-/** Build a board card from a folded in-play instance. */
-export function cardFromInstance(inst: CardInstanceState, ownerId: string): AdaptedCard {
+/** Build a board card from a folded in-play instance. Printed power/HP come from the
+ *  static stat map (the .swupgn stream has no stats); damage is the folded value. */
+export function cardFromInstance(inst: CardInstanceState, ownerId: string, stat?: CardStat): AdaptedCard {
     return {
-        ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, ownerId, ownerId),
+        ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, ownerId, ownerId, stat),
         damage: inst.damage,
         exhausted: inst.exhausted,
         upgrades: inst.upgrades,
@@ -96,25 +103,31 @@ function facedownStack(count: number, zone: string, owner: string): AdaptedCard[
 
 function adaptPlayer(
     ps: PlayerState, playerId: string, deckOrderLen: number,
-    leaderId: string, baseId: string, hideHand = false,
+    leaderId: string, baseSetId: string, hideHand = false,
+    statMap: Record<string, CardStat> = {},
 ): any {
-    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId));
+    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap)));
     const ground = inPlay.filter((c) => c.zone === 'groundArena');
     const space = inPlay.filter((c) => c.zone === 'spaceArena');
     // Fog-of-war: render this player's hand as face-down placeholders (count preserved,
     // identities hidden) instead of the omniscient known cards.
     const hand = hideHand
         ? facedownStack(ps.hand.length, 'hand', playerId)
-        : ps.hand.map((id) => cardFromId(id, 'hand', playerId, playerId));
-    const discard = ps.discard.map((id) => cardFromId(id, 'discard', playerId, playerId));
+        : ps.hand.map((id) => cardFromId(id, 'hand', playerId, playerId, statOf(id, statMap)));
+    const discard = ps.discard.map((id) => cardFromId(id, 'discard', playerId, playerId, statOf(id, statMap)));
     const resourcesTotal = ps.resourcesReady + ps.resourcesExhausted;
     const numCardsInDeck = Math.max(
         0,
         deckOrderLen - hand.length - resourcesTotal - discard.length - inPlay.length,
     );
-    const leader = cardFromId(leaderId, 'leader', playerId, playerId);
+    // A deployed leader lives in an arena as a unit (folded into ps.cards). The leader slot
+    // then shows the "deployed" placeholder (zone != 'base'); otherwise it shows the leader
+    // art. LeaderBaseCard derives isDeployed from `zone !== 'base'`, so an undeployed leader
+    // MUST carry zone 'base' or it wrongly renders as deployed (the bug that hid leaders).
+    const leaderDeployed = ps.cards.some((c) => baseId(c.id) === baseId(leaderId));
+    const leader = cardFromId(leaderId, leaderDeployed ? 'leader' : 'base', playerId, playerId, statOf(leaderId, statMap));
     leader.type = 'leader';
-    const base = cardFromId(baseId, 'base', playerId, playerId);
+    const base = cardFromId(baseSetId, 'base', playerId, playerId);
     base.type = 'base';
     return {
         user: { username: playerId },
@@ -147,6 +160,7 @@ export function adaptState(
     s: ReducedState, doc: SwuPgnDocument,
     decks: Record<Seat, number>, seatToId: SeatToPlayerId,
     opts: { hideHandFor?: Seat } = {},
+    statMap: Record<string, CardStat> = {},
 ): any {
     const players: Record<string, any> = {};
     for (const seat of [1, 2] as Seat[]) {
@@ -155,7 +169,7 @@ export function adaptState(
         if (!ps) { continue; }
         const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
-        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat);
+        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap);
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }

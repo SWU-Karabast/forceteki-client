@@ -8,6 +8,7 @@ import { foldFrames, serialize, render } from '@/lib/swupgn';
 import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
+import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 
 export interface IReplayContextType {
@@ -94,6 +95,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
 
     const resolver = useMemo(() => makeNameResolver(nameMap), [nameMap]);
     const decks = useMemo(() => deckOrderLengths(doc), [doc]);
+    const statMap = useCardStatMap();
     const moves = useMemo(() => buildMoveList(events, resolver), [events, resolver]);
 
     // Per-frame ReducedState, computed once per document load via a single O(n) forward
@@ -124,6 +126,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         return flags;
     }, [frameStates]);
 
+    // Frames that are part of a "draw burst" — a DRAW summary or a deck->hand MOVE. A round
+    // starts with several of these back-to-back; we collapse the run so playback shows the
+    // whole drawn hand in one step instead of dealing card-by-card.
+    const isDrawBurst = useMemo<boolean[]>(() => events.map((e) =>
+        e.t === 'DRAW' || (e.t === 'MOVE' && e.to === 'hand' && e.from === 'deck')
+    ), [events]);
+
     // First "real action" frame = the start of round 1 (first ROUND_START). Playback opens
     // here so the viewer lands on gameplay, not the setup/shuffle/mulligan prologue. The
     // prologue is still scrubbable by dragging the slider back.
@@ -136,9 +145,11 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // (NOT manual step) so the interval fast-forwards over visually-identical no-op frames.
     const nextMeaningfulFrame = useCallback((from: number, lastFrame: number): number => {
         let i = from + 1;
-        while (i < lastFrame && !boardChanged[i]) i++;
+        // Skip frames that don't change the board, and skip mid-draw-burst frames (stop on
+        // the LAST draw of a run so the whole drawn hand appears at once).
+        while (i < lastFrame && (!boardChanged[i] || (isDrawBurst[i] && isDrawBurst[i + 1]))) i++;
         return Math.min(i, lastFrame);
-    }, [boardChanged]);
+    }, [boardChanged, isDrawBurst]);
 
     useEffect(() => {
         setPerspective(P1);
@@ -165,8 +176,8 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         // Fog-of-war hides the hand of whoever is NOT the current perspective.
         const oppSeat: Seat = perspective === P1 ? 2 : 1;
         const opts = fogOfWar ? { hideHandFor: oppSeat } : {};
-        return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts);
-    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective]);
+        return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts, statMap);
+    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first
