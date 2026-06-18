@@ -197,10 +197,23 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         if (!frameStates[currentIndex]) return null;
         // Fog-of-war hides the hand of whoever is NOT the current perspective.
         const oppSeat: Seat = perspective === P1 ? 2 : 1;
-        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>> } = {
+        // Units in play this frame that weren't in the previous one → animate them in.
+        const prev = frameStates[currentIndex - 1];
+        let enteringIds: string[] | undefined;
+        if (prev) {
+            const prevIds = new Set<string>();
+            for (const seat of [1, 2] as Seat[]) for (const c of prev.players[seat]?.cards ?? []) prevIds.add(c.id);
+            const cur = frameStates[currentIndex];
+            enteringIds = [];
+            for (const seat of [1, 2] as Seat[]) for (const c of cur.players[seat]?.cards ?? []) {
+                if (!prevIds.has(c.id)) enteringIds.push(c.id);
+            }
+        }
+        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; enteringIds?: string[] } = {
             ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
             highlightIds: action.highlight,
             leaderExhausted: leaderExhaustByFrame[currentIndex],
+            enteringIds,
         };
         return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts, statMap);
     }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame]);

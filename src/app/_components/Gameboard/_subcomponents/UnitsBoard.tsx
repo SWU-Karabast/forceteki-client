@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Grid } from '@mui/material';
+import { keyframes } from '@mui/system';
 import { debugBorder, isBreakpointOverlayEnabled } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
@@ -7,6 +8,14 @@ import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useBoardState } from '@/app/_hooks/useBoardState';
 import BreakpointOverlay from './BreakpointOverlay';
+
+// Replay: a unit that just entered play animates in (scale + fade). Gated on the
+// adapter-set `card.entering` flag, so the live game (which never sets it) is unaffected.
+const cardEnter = keyframes`
+  from { opacity: 0; transform: scale(0.82) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+`;
+const enterAnim = (card: ICardData) => (card.entering ? `${cardEnter} 0.32s ease-out` : 'none');
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -179,7 +188,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Opponent's Ground Units */}
                 <Box sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid}>
+                        <Box key={card.uuid} sx={{ animation: enterAnim(card) }}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
@@ -189,7 +198,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} >
+                        <Box key={card.uuid} sx={{ animation: enterAnim(card) }}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}

@@ -69,6 +69,9 @@ export interface ICardData {
     clonedCardId?: ICardSetId;
     clonedCardName?: string;
     blockedFromPlayReason?: string;
+    // Replay-only: set by the SWU-PGN board adapter on a unit that just entered play this
+    // frame, so UnitsBoard can animate it in. Never set by the live server gameState.
+    entering?: boolean;
 }
 
 export interface IServerCardData {

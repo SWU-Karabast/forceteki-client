@@ -19,6 +19,7 @@ export interface AdaptedCard {
     type: string;
     power?: number;
     hp?: number;
+    entering?: boolean;
     damage: number;
     exhausted: boolean;
     selected: boolean;
@@ -107,6 +108,7 @@ function adaptPlayer(
     statMap: Record<string, CardStat> = {},
     highlight?: Set<string>,
     leaderExhausted = false,
+    entering?: Set<string>,
 ): any {
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap)));
     // Glow the card(s) that acted this frame (reuses GameCard's `selected` styling). The
@@ -114,6 +116,10 @@ function adaptPlayer(
     // is safe and needs no new prop on the shared card component.
     if (highlight && highlight.size) {
         for (const c of inPlay) if (highlight.has(c.uuid)) c.selected = true;
+    }
+    // Flag units that just entered play this frame so UnitsBoard animates them in.
+    if (entering && entering.size) {
+        for (const c of inPlay) if (entering.has(c.uuid)) c.entering = true;
     }
     const ground = inPlay.filter((c) => c.zone === 'groundArena');
     const space = inPlay.filter((c) => c.zone === 'spaceArena');
@@ -171,10 +177,11 @@ function adaptPlayer(
 export function adaptState(
     s: ReducedState, doc: SwuPgnDocument,
     decks: Record<Seat, number>, seatToId: SeatToPlayerId,
-    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>> } = {},
+    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; enteringIds?: string[] } = {},
     statMap: Record<string, CardStat> = {},
 ): any {
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
+    const entering = opts.enteringIds && opts.enteringIds.length ? new Set(opts.enteringIds) : undefined;
     const players: Record<string, any> = {};
     for (const seat of [1, 2] as Seat[]) {
         const ps = s.players[seat];
@@ -182,7 +189,7 @@ export function adaptState(
         if (!ps) { continue; }
         const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
-        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false);
+        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering);
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }

@@ -104,6 +104,18 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
         expect(gs.players.p2.leader.exhausted).toBeFalsy();
     });
 
+    it('flags a unit as entering when its id is in enteringIds', () => {
+        const unit: CardInstanceState = {
+            id: 'AAA#001', zone: 'ground', damage: 0, exhausted: false, upgrades: [],
+            shields: 0, experience: 0, statusTokens: {},
+        };
+        const gs = adaptState(state([unit]), doc, decks, ids, { enteringIds: ['AAA#001'] });
+        const card = gs.players.p1.cardPiles.groundArena.find((c: { uuid: string }) => c.uuid === 'AAA#001');
+        expect(card.entering).toBe(true);
+        const gs2 = adaptState(state([unit]), doc, decks, ids, {});
+        expect(gs2.players.p1.cardPiles.groundArena[0].entering).toBeFalsy();
+    });
+
     it('glows the leader on its action frame', () => {
         const gs = adaptState(state(), doc, decks, ids, { highlightIds: ['JTL#018'] });
         expect(gs.players.p1.leader.selected).toBe(true);
