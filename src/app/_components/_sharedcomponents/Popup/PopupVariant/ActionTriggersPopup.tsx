@@ -6,7 +6,6 @@ import { BiMinus, BiPlus } from 'react-icons/bi';
 import GradientBorderButton from '@/app/_components/_sharedcomponents/_styledcomponents/GradientBorderButton';
 import {
     containerStyle,
-    footerStyle,
     headerStyle,
     minimizeButtonStyle,
     textStyle,
@@ -23,6 +22,21 @@ interface ButtonProps {
 }
 
 type SourceCardImageData = Parameters<typeof s3CardImageURL>[0];
+
+const styles = {
+    modalContent: {
+        display: 'flex',
+        gap: '1rem',
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'safe center',
+        overflowX: 'auto',
+        overflowY: 'hidden',
+        paddingBottom: '0.5rem',
+        marginTop: '1rem',
+        marginBottom: '2rem',
+    }
+};
 
 export const ActionTriggerPopupModal = ({ data }: ButtonProps) => {
     const { sendGameMessage } = useGame();
@@ -81,19 +95,7 @@ export const ActionTriggerPopupModal = ({ data }: ButtonProps) => {
                 {data.description && (
                     <RichText text={data.description} sx={textStyle} component={Typography}/>
                 )}
-                <Box sx={{
-                    ...footerStyle,
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'stretch',
-                    overflowX: 'auto',
-                    overflowY: 'hidden',
-                    maxWidth: 'min(80vw, 58rem)',
-                    paddingBottom: '0.5rem',
-                    marginTop: '1rem',
-                    marginBottom: '2rem',
-                    paddingRight: { xs: '2rem', md: 0 }
-                }}>
+                <Box sx={styles.modalContent}>
                     {data.buttons.map((button: PopupButton, index: number) => {
                         const backgroundImage = getButtonBackgroundImage(button);
                         const triggerButtonSx = {
