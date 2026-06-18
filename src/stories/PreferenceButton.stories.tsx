@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>;
 export const PreferenceButton: Story = {
     args: {
         variant: 'standard',
-        text: 'Some button',
+        text: 'Button text',
         disabled: false,
         buttonFnc: () => {},
     },
