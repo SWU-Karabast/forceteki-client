@@ -4,7 +4,7 @@ import { Box, SxProps, Theme } from '@mui/material';
 import React from 'react';
 import { ActionTriggerPopup, DefaultPopup, DropdownPopup, NumberPopup, PilePopup, SelectCardsPopup } from './Popup.types';
 import { DefaultPopupModal } from './PopupVariant/DefaultPopup';
-import { ActionTriggerPopupModal } from './PopupVariant/ActionTriggersPopup';
+import ActionTriggerPopupModal from './PopupVariant/ActionTriggerPopup';
 import { PilePopupModal } from './PopupVariant/PilePopup';
 import { SelectCardsPopupModal } from './PopupVariant/SelectCardsPopup';
 import { contentStyle } from './Popup.styles';
