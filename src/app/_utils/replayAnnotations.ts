@@ -57,11 +57,11 @@ export async function clearAnnotations(replayId: string | null): Promise<void> {
     });
 }
 
-/** Strip the client-only `_id` so a working note becomes a plain reader Annotation. */
+/** Convert a working note to a serializable Annotation. The client `_id` is emitted as the
+ *  stable `id` so threaded replies (which reference a parent id) survive export/import. */
 export function toAnnotation(w: WorkingAnnotation): Annotation {
     const { _id, ...rest } = w;
-    void _id;
-    return rest;
+    return { ...rest, id: rest.id ?? _id };
 }
 
 /**

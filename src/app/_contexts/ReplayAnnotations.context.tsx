@@ -15,7 +15,7 @@ export interface IReplayAnnotationsContext {
     threadFor: (seq: string) => Annotation[];
     // Every event seq that carries at least one note (file or working).
     annotatedRefs: Set<string>;
-    addAnnotation: (ref: string, fields: { nag?: string; text?: string }) => void;
+    addAnnotation: (ref: string, fields: { nag?: string; text?: string; parent?: string }) => void;
     updateAnnotation: (id: string, patch: { nag?: string; text?: string }) => void;
     deleteAnnotation: (id: string) => void;
     author: string;
@@ -72,12 +72,14 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
             console.warn('Failed to persist replay annotations', err));
     }, [replayId]);
 
-    const addAnnotation = useCallback((ref: string, fields: { nag?: string; text?: string }) => {
+    const addAnnotation = useCallback((ref: string, fields: { nag?: string; text?: string; parent?: string }) => {
         const note: WorkingAnnotation = {
             _id: makeId(),
             ref,
+            ts: Date.now(),
             ...(fields.nag ? { nag: fields.nag } : {}),
             ...(fields.text ? { text: fields.text } : {}),
+            ...(fields.parent ? { parent: fields.parent } : {}),
             ...(author ? { by: author } : {}),
         };
         setWorking((prev) => {
@@ -85,7 +87,7 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
             persist(next);
             return next;
         });
-    }, [author, replayId, persist]);
+    }, [author, persist]);
 
     const updateAnnotation = useCallback((id: string, patch: { nag?: string; text?: string }) => {
         setWorking((prev) => {

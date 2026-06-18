@@ -10,21 +10,23 @@ const SAMPLE = readFileSync(
 );
 
 describe('replayAnnotations merge/export', () => {
-    it('toAnnotation strips the client-only _id', () => {
+    it('toAnnotation replaces the client _id with a stable serialized id (for threading)', () => {
         const w: WorkingAnnotation = { _id: 'abc', ref: 'R1.P1.2', nag: '!', text: 'nice', by: 'Me' };
-        expect(toAnnotation(w)).toEqual({ ref: 'R1.P1.2', nag: '!', text: 'nice', by: 'Me' });
+        expect(toAnnotation(w)).toEqual({ ref: 'R1.P1.2', nag: '!', text: 'nice', by: 'Me', id: 'abc' });
         expect('_id' in toAnnotation(w)).toBe(false);
     });
 
-    it('working notes survive serialize -> parse with by/nag/text intact', () => {
+    it('working notes (incl. threaded replies) survive serialize -> parse', () => {
         const doc = parse(SAMPLE);
+        const ref = doc.events[3].seq;
         const working: WorkingAnnotation[] = [
-            { _id: '1', ref: doc.events[3].seq, nag: '!!', text: 'great line', by: 'Coach' },
-            { _id: '2', ref: doc.events[3].seq, text: 'reply, no glyph', by: 'Student' },
+            { _id: '1', ref, nag: '!!', text: 'great line', by: 'Coach', ts: 100 },
+            { _id: '2', ref, text: 'reply, no glyph', by: 'Student', parent: '1', ts: 200 },
         ];
         const reparsed = parse(serialize(mergeForExport(doc, working)));
-        expect(reparsed.annotations).toContainEqual({ ref: doc.events[3].seq, nag: '!!', text: 'great line', by: 'Coach' });
-        expect(reparsed.annotations).toContainEqual({ ref: doc.events[3].seq, text: 'reply, no glyph', by: 'Student' });
+        expect(reparsed.annotations).toContainEqual({ ref, nag: '!!', text: 'great line', by: 'Coach', ts: 100, id: '1' });
+        // the reply keeps its parent link so the thread reconstructs from a shared file
+        expect(reparsed.annotations).toContainEqual({ ref, text: 'reply, no glyph', by: 'Student', parent: '1', ts: 200, id: '2' });
         // no client-only field leaked into the file
         expect(reparsed.annotations.some((a) => '_id' in a)).toBe(false);
     });

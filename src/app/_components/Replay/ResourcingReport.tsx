@@ -1,9 +1,6 @@
 'use client';
 import React, { useMemo } from 'react';
-import {
-    Dialog, DialogTitle, DialogContent, IconButton, Box, Typography, Tooltip,
-} from '@mui/material';
-import { Close } from '@mui/icons-material';
+import { Box, Typography, Tooltip } from '@mui/material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useCardCostMap } from '@/app/_utils/swupgnCardCosts';
 import { resourcingReport, type PlayerRoundResourcing, type ResourcingReport as ResourcingReportData } from '@/app/_utils/resourcingReport';
@@ -93,7 +90,8 @@ const Stat: React.FC<{ label: string; value: string | number }> = ({ label, valu
     </Box>
 );
 
-const ResourcingReport: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
+/** Resourcing report, rendered inline as a panel tab body. */
+const ResourcingReport: React.FC = () => {
     const { doc } = useReplay();
     const costMap = useCardCostMap();
     // Compute the report once and share it across both player columns and the
@@ -102,32 +100,20 @@ const ResourcingReport: React.FC<{ open: boolean; onClose: () => void }> = ({ op
     const hasCost = report.hasCostData;
 
     return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            maxWidth="md"
-            fullWidth
-            PaperProps={{ sx: { backgroundColor: 'rgba(12,15,22,0.97)', backgroundImage: 'none', border: '1px solid rgba(255,255,255,0.12)' } }}
-        >
-            <DialogTitle sx={{ color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                Resourcing report
-                <IconButton onClick={onClose} sx={{ color: 'rgba(255,255,255,0.6)' }}><Close /></IconButton>
-            </DialogTitle>
-            <DialogContent>
-                {!hasCost && (
-                    <Typography variant="caption" sx={{ color: 'rgba(255,200,87,0.9)', display: 'block', mb: 1.5 }}>
-                        No card cost data resolved for this game — showing resourcing tempo only (spend/float unavailable).
-                    </Typography>
-                )}
-                <Box sx={{ display: 'flex', gap: 3 }}>
-                    <PlayerColumn seat={1} name={doc.header.p1 || 'Player 1'} report={report} />
-                    <PlayerColumn seat={2} name={doc.header.p2 || 'Player 2'} report={report} />
-                </Box>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', display: 'block', mt: 2 }}>
-                    Red rows left ≥2 resources unspent. Click a row to jump to that round.
+        <Box sx={{ p: 1.5 }}>
+            {!hasCost && (
+                <Typography variant="caption" sx={{ color: 'rgba(255,200,87,0.9)', display: 'block', mb: 1.5 }}>
+                    No card cost data resolved for this game — showing resourcing tempo only (spend/float unavailable).
                 </Typography>
-            </DialogContent>
-        </Dialog>
+            )}
+            <Box sx={{ display: 'flex', gap: 3 }}>
+                <PlayerColumn seat={1} name={doc.header.p1 || 'Player 1'} report={report} />
+                <PlayerColumn seat={2} name={doc.header.p2 || 'Player 2'} report={report} />
+            </Box>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', display: 'block', mt: 2 }}>
+                Red rows left ≥2 resources unspent. Click a row to jump to that round.
+            </Typography>
+        </Box>
     );
 };
 

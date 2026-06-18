@@ -7,12 +7,9 @@ import { ReplayProvider, useReplay } from '@/app/_contexts/Replay.context';
 import { ReplayAnnotationsProvider } from '@/app/_contexts/ReplayAnnotations.context';
 import FileUpload from '@/app/_components/Replay/FileUpload';
 import TransportControls from '@/app/_components/Replay/TransportControls';
-import MoveList from '@/app/_components/Replay/MoveList';
-import ReviewPanel from '@/app/_components/Replay/ReviewPanel';
-import ClipControls from '@/app/_components/Replay/ClipControls';
+import ReplayPanel from '@/app/_components/Replay/ReplayPanel';
 import LastActionCaption from '@/app/_components/Replay/LastActionCaption';
 import RecentReplays from '@/app/_components/Replay/RecentReplays';
-import ShareControls from '@/app/_components/Replay/ShareControls';
 import OpponentCardTray from '@/app/_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '@/app/_components/Gameboard/Board/Board';
 import PlayerCardTray from '@/app/_components/Gameboard/PlayerCardTray/PlayerCardTray';
@@ -176,10 +173,7 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
                 </Box>
                 <PopupShell sidebarOpen={false} />
             </Grid>
-            <ShareControls />
-            <ReviewPanel />
-            <ClipControls />
-            <MoveList />
+            <ReplayPanel />
             <LastActionCaption />
             <TransportControls />
         </>

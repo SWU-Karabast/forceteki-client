@@ -68,6 +68,9 @@ export type GameEvent =
 
 export interface Annotation {
     ref: string;                    // seq this annotates
+    id?: string;                    // stable id, for threaded replies (emitted on export)
+    parent?: string;                // id of the annotation this replies to (threading)
+    ts?: number;                    // author timestamp (epoch ms), for ordering a thread
     nag?: string;                   // chess-style glyph: "!", "?", "!!", "?!", ...
     text?: string;
     by?: string;                    // pseudonymous author
