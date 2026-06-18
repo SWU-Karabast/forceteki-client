@@ -9,6 +9,7 @@ import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
+import { frameAction } from '@/app/_utils/replayAction';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 
 export interface IReplayContextType {
@@ -171,13 +172,19 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         }
     }, [doc, initialFrame, totalFrames, clipStart, clipEnd, firstActionFrame]);
 
+    // What happened on the current frame: a caption + the in-play card(s) to glow.
+    const action = useMemo(() => frameAction(events[currentIndex], resolver), [events, currentIndex, resolver]);
+
     const gameState = useMemo(() => {
         if (!frameStates[currentIndex]) return null;
         // Fog-of-war hides the hand of whoever is NOT the current perspective.
         const oppSeat: Seat = perspective === P1 ? 2 : 1;
-        const opts = fogOfWar ? { hideHandFor: oppSeat } : {};
+        const opts: { hideHandFor?: Seat; highlightIds?: string[] } = {
+            ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
+            highlightIds: action.highlight,
+        };
         return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap]);
+    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first
@@ -190,12 +197,9 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         return idx;
     }, [moveFrames, currentIndex]);
 
-    const currentEvents = useMemo(() => {
-        const e = events[currentIndex];
-        if (!e) return [];
-        const m = moves.find((mv) => mv.seq === e.seq);
-        return m ? [m.label] : [];
-    }, [events, currentIndex, moves]);
+    // Caption text for the current frame (richer than the move list: includes ability
+    // activations, resourcing, draws, discards). Empty string when nothing noteworthy.
+    const currentEvents = useMemo(() => (action.label ? [action.label] : []), [action]);
 
     const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);
     const downloadReplay = useCallback(() => {

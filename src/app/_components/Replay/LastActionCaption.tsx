@@ -1,12 +1,19 @@
 'use client';
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { keyframes } from '@mui/system';
 import { useReplay } from '@/app/_contexts/Replay.context';
+
+// Slide-and-fade the caption in each time the action changes. The `key={headline}` below
+// remounts the bar on every new beat, so this replays per action instead of only on mount.
+const captionIn = keyframes`
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+`;
 
 /**
  * Caption bar that narrates the events resolved in the current frame, sitting
- * just above the transport bar. Surfaces the event stream the replay already
- * parses so each step reads as "what just happened" instead of a silent jump.
+ * just above the transport bar, so each step reads as "what just happened".
  */
 const LastActionCaption: React.FC = () => {
     const { currentEvents } = useReplay();
@@ -19,6 +26,7 @@ const LastActionCaption: React.FC = () => {
 
     return (
         <Box
+            key={headline}
             sx={{
                 position: 'fixed',
                 bottom: 68, // just above the 60px transport bar
@@ -36,6 +44,7 @@ const LastActionCaption: React.FC = () => {
                 alignItems: 'center',
                 gap: 1,
                 pointerEvents: 'none',
+                animation: `${captionIn} 0.22s ease-out`,
             }}
         >
             <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
