@@ -3,8 +3,6 @@ import { Box, Typography } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import VerticalTabs from '@/app/_components/_sharedcomponents/Preferences/_subComponents/VerticalTabs';
 import { IPreferenceProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { useRouter } from 'next/navigation';
 
 const PreferencesComponent: React.FC<IPreferenceProps> = ({
     isPreferenceOpen,
@@ -18,12 +16,6 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
 }) => {
     const [attemptingClose, setAttemptingClose] = useState(false);
     const [closePreferencesHandler, setClosePreferencesHandler] = useState<() => void>(() => () => undefined);
-
-    const router = useRouter();
-    const attemptBackButton = () => {
-        setClosePreferencesHandler(() => () => router.push('/'));
-        setAttemptingClose(true);
-    };
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -105,11 +97,6 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
         <>
             <Box sx={styles.containerStyle}>
                 <Box sx={styles.overlayStyle}>
-                    {variant === 'homePage' && (
-                        <Box sx={styles.titleContainer}>
-                            <PreferenceButton variant={'standard'} buttonFnc={attemptBackButton}/>
-                        </Box>
-                    )}
                     {title && (
                         <Box sx={styles.headerBox}>
                             <Typography variant="h1">{title}</Typography>
