@@ -13,16 +13,18 @@ const styles = {
         position: 'relative',
         overflow: 'hidden',
         aspectRatio: '1 / 1.4',
+        // to avoid cutoff when doing the Y translation on hover effect
+        mt: '1px',
         flex: '0 0 clamp(116px, 16vw, 10rem)',
         width: 'clamp(116px, 16vw, 10rem)',
         padding: '2px',
         borderRadius: '15px',
-        border: '1px solid #21313ac2',
-        boxShadow: '0 3px 8px rgba(3, 143, 195, 0.16), 0 1px 3px rgba(0, 0, 0, 0.38)',
+        border: '1px solid rgb(102, 229, 255)',
+        boxShadow: '0 3px 8px rgba(102, 229, 255, 0.16), 0 1px 3px rgba(0, 0, 0, 0.38)',
         transition: 'box-shadow 140ms ease, transform 140ms ease',
         '&:hover': {
-            boxShadow: '0 5px 12px rgba(3, 143, 195, 0.21), 0 2px 5px rgba(0, 0, 0, 0.46)',
-            transform: 'translateY(-1px)',
+            boxShadow: '0 5px 12px rgba(102, 229, 255, 0.21), 0 2px 5px rgba(0, 0, 0, 0.46)',
+            transform: 'translateY(-1px)'
         },
         '@media (hover: hover) and (pointer: fine)': {
             '& .trigger-card-preview-button': {
