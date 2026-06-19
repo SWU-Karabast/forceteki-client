@@ -29,7 +29,7 @@ interface ButtonProps {
 const styles = {
     autocomplete: {
         width: {
-            xs: '80%',
+            xs: '70%',
             md: '50%'
         },
         color: 'white',
@@ -69,7 +69,7 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
                     options={data.options}
                     onChange={handleChange}
                     renderInput={(params) => (
-                        <TextField {...params} />
+                        <TextField {...params} type="search" />
                     )}
                     noOptionsText="No results found"
                     sx={styles.autocomplete}
