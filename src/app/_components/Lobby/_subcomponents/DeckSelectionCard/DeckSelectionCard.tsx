@@ -216,17 +216,14 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
             if (!lobbyIdForRequest) {
                 throw new Error('Lobby id not available for change-deck request');
             }
-            const isSwudbUrl = deckType === 'url' && determineDeckSource(userDeck) === DeckSource.SWUDB;
-            const changeDeckBody = isSwudbUrl
-                ? { swudbLink: userDeck, user: getUserPayload(user) }
-                : { deck: deckData, user: getUserPayload(user) };
+
             const changeDeckResponse = await fetch(
                 `${process.env.NEXT_PUBLIC_ROOT_URL}/api/lobby/${lobbyIdForRequest}/change-deck`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify(changeDeckBody),
+                    body: JSON.stringify({ deck: deckData, user: getUserPayload(user) }),
                 }
             );
             if (!changeDeckResponse.ok) {
