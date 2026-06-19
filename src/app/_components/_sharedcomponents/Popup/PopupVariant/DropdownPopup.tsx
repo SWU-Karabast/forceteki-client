@@ -26,6 +26,22 @@ interface ButtonProps {
     data: DropdownPopup;
 }
 
+const styles = {
+    autocomplete: {
+        width: {
+            xs: '70%',
+            md: '50%'
+        },
+        color: 'white',
+    },
+    autocompletePopper: {
+        '& .MuiAutocomplete-noOptions': {
+            backgroundColor: '#394452',
+            color: 'rgba(255, 255, 255, 0.38)',
+        },
+    }
+}
+
 export const DropdownPopupModal = ({ data }: ButtonProps) => {
     const { sendGameMessage } = useGame();
     const { closePopup } = usePopup();
@@ -49,16 +65,18 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
                     <RichText text={data.description} sx={textStyle} component={Typography}/>
                 )}
 
-                <Autocomplete 
+                <Autocomplete
                     options={data.options}
                     onChange={handleChange}
                     renderInput={(params) => (
-                        <TextField {...params} />
+                        <TextField {...params} type="search" />
                     )}
-                    sx={{ width: '50%', color: 'white' }}
+                    noOptionsText="No results found"
+                    sx={styles.autocomplete}
                     slotProps={{ 
                         popupIndicator: { sx: { color: 'white' } },
                         clearIndicator: { sx: { color: 'white' } },
+                        popper: { sx: styles.autocompletePopper },
                     }}
                 />
 

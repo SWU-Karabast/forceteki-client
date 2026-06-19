@@ -12,7 +12,6 @@ import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { IPreviewCard } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { useRouter } from 'next/navigation';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from '@/app/_components/_sharedcomponents/Cards/CardImageMissingOverlay';
@@ -190,11 +189,6 @@ const UnimplementedPage = () => {
             marginBottom: '1rem',
             position: 'relative' as const,
         },
-        backButton: {
-            position: 'absolute' as const,
-            left: '10px',
-            height:'100%'
-        },
         cardOuter: {
             width: '100%',
             height: '100%',
@@ -278,13 +272,6 @@ const UnimplementedPage = () => {
         <Box sx={styles.pageContainer}>
             {/* Header with Back button */}
             <Box sx={styles.headerRow}>
-                <Box sx={styles.backButton}>
-                    <PreferenceButton
-                        variant={'standard'}
-                        text="Back"
-                        buttonFnc={handleBackClick}
-                    />
-                </Box>
                 <Typography variant={'h5'} color="white">
                     Unimplemented Cards
                 </Typography>
