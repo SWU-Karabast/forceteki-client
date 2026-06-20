@@ -30,7 +30,7 @@ const styles = {
     }
 }
 
-export default function ViewCardButton({ imageUrl }: { imageUrl: string }) {
+export default function ViewCardButton({ imageUrl, isLandscape = false }: { imageUrl: string; isLandscape?: boolean }) {
     const [previewAnchorElement, setPreviewAnchorElement] = useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const previewOpen = Boolean(previewAnchorElement);
@@ -78,7 +78,16 @@ export default function ViewCardButton({ imageUrl }: { imageUrl: string }) {
                     horizontal: 'left',
                 }}
             >
-                <Box sx={[styles.card, { backgroundImage: previewImage }]} />
+                <Box
+                    sx={[
+                        styles.card,
+                        isLandscape && {
+                            aspectRatio: '1.39',
+                            width: 'clamp(250px, 70vw, 24rem)',
+                        },
+                        { backgroundImage: previewImage },
+                    ]}
+                />
             </Popover>
         </>
 

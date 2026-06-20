@@ -4,7 +4,7 @@ import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 import ViewCardButton from '@/app/_components/_sharedcomponents/Popup/PopupVariant/ActionTriggerPopup/ViewCardButton';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
-import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { CardStyle, CardType } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 type SourceCardImageData = Parameters<typeof s3CardImageURL>[0];
 
@@ -75,8 +75,15 @@ const useCardImageURL = (sourceCard?: PopupSourceCard): string | null => {
     );
 }
 
+const isBaseSourceCard = (sourceCard?: PopupSourceCard): boolean => {
+    const sourceType = sourceCard?.printedType ?? sourceCard?.type;
+
+    return sourceType?.toLowerCase() === CardType.Base;
+};
+
 export default function TriggerButton({ onClick, sourceCard, text }: { onClick(): void; sourceCard?: PopupSourceCard, text: string }) {
     const backgroundImage = useCardImageURL(sourceCard);
+    const isLandscapePreview = isBaseSourceCard(sourceCard);
 
     return (
         <Box sx={styles.container}>
@@ -91,7 +98,7 @@ export default function TriggerButton({ onClick, sourceCard, text }: { onClick()
             >
                 <RichText text={text} />
             </Button>
-            {backgroundImage && <ViewCardButton imageUrl={backgroundImage} />}
+            {backgroundImage && <ViewCardButton imageUrl={backgroundImage} isLandscape={isLandscapePreview} />}
         </Box>
     );
 }
