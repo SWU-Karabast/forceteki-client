@@ -36,7 +36,7 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
                         <GradientBorderButton
                             key={`${button.uuid}:${index}`}
                             fillColor={button.selected ? 'rgba(102, 229, 255, 0.2)' : undefined}
-                            onClickHandler={() => {
+                            onClick={() => {
                                 sendGameMessage([button.command, button.arg, button.uuid]);
                             }}
                         >
