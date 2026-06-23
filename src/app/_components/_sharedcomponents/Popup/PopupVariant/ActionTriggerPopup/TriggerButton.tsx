@@ -49,7 +49,7 @@ const styles = {
         borderRadius: '13px',
         backgroundPosition: 'center top',
         backgroundSize: 'cover',
-        fontSize: { xs: '11px', md: '15px' },
+        fontSize: { xs: '11px', lg: '15px' },
         '&:hover': {
             filter: 'brightness(1.15)',
         },
