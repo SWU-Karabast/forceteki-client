@@ -10,14 +10,17 @@ import { useGame } from '../_contexts/Game.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
-import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
+import { GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 import { useCosmetics } from '../_contexts/CosmeticsContext';
-import { Play } from 'next/font/google';
 import RichText from '../_components/_sharedcomponents/RichText/RichText';
+import { usePopup } from '@/app/_contexts/Popup.context';
+import { v4 as uuidv4 } from 'uuid';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
     const router = useRouter();
+    const { openPopup } = usePopup();
     const { getBackground } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
@@ -58,6 +61,19 @@ const GameBoard = () => {
             setUserClosedWinScreen(true);
         }
         setPreferenceOpen(!isPreferenceOpen);
+    };
+
+    const handleQuitMatch = () => {
+        if (isSpectator){
+            router.push('/');
+            return;
+        }
+
+        const popupId = `${uuidv4()}`;
+        openPopup('leaveGame', {
+            uuid: popupId,
+            source: PopupSource.User
+        });
     };
 
     // check if game ended already.
@@ -213,7 +229,6 @@ const GameBoard = () => {
                 <Box sx={{ height: '15dvh' }}>
                     <OpponentCardTray
                         trayPlayer={getOpponent(connectedPlayer)}
-                        preferenceToggle={handlePreferenceToggle}
                     />
                 </Box>
                 <Box sx={{ height: '67dvh', position: 'relative', zIndex: 2 }}>
@@ -231,6 +246,8 @@ const GameBoard = () => {
             <ChatDrawer
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
+                preferenceToggle={handlePreferenceToggle}
+                quitMatch={handleQuitMatch}
             />
 
             <Box sx={styles.centralPromptContainer}>

@@ -553,6 +553,7 @@ const Chat: React.FC<IChatProps> = ({
                     </Box>
                 </Collapse>
             )}
+
             <Box sx={styles.chatBox}>
                 {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
                     return formatMessage(chatEntry?.message, index);

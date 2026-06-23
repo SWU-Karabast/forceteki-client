@@ -1,30 +1,32 @@
 import React, { useState } from 'react';
-import { Drawer, Box, Button, IconButton, Divider } from '@mui/material';
+import { Drawer, Box, Button, IconButton, Tooltip } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UndoIcon from '@mui/icons-material/Undo';
 import MessageIcon from '@mui/icons-material/Message';
 import BlockIcon from '@mui/icons-material/Block';
-import Image from 'next/image';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import { QuickUndoAvailableState } from '@/app/_constants/constants';
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
 
 // ------------------------STYLES------------------------//
 const quickUndoButtonBase = {
-    height: { xs: 'auto', md: '45px' },
-    mb: { xs: 0, md: '10px' },
+    height: { xs: '40px', md: '45px' },
+    mb: 0,
     lineHeight: '1.2',
     color: '#FFF',
     fontSize: { xs: '0.9rem', md: '20px' },
+    fontWeight: 700,
     border: '1px solid transparent',
     borderRadius: '10px',
     py: { xs: '6px', md: '10px' },
     justifyContent: 'space-between',
-    pl: { xs: '16px', md: '12px' },
-    pr: { xs: '16px', md: '35px' },
+    pl: { xs: '14px', md: '12px' },
+    pr: { xs: '18px', md: '35px' },
     position: 'relative',
+    textTransform: 'none',
     '& .MuiButton-startIcon': {
         marginRight: 0,
         marginLeft: 0,
@@ -47,24 +49,33 @@ const styles = {
             display: 'flex',
             flexDirection: 'column',
             width: { xs: '200px', md: 'min(20%, 280px)' },
-            padding: '0.75em',
+            padding: { xs: '0.6em', md: '0.85em' },
             overflow: 'hidden',
         },
     },
-    headerBoxStyle: {
+    matchActions: {
         display: 'flex',
         alignItems: 'center',
-        position: 'relative',
-        height: '1.5em',
+        justifyContent: 'space-between',
+        gap: 1,
+        py: { xs: 0.75, md: 1 },
+        mb: { xs: 1, md: 1.25 },
     },
-    quickUndoBox:{
-        display: 'inline-flex',
+    quickUndoBox: {
+        display: 'flex',
         justifyContent: 'flex-start',
-        paddingLeft: { xs: 0, md: '0.5em' },
+        flex: '1 1 auto',
+        minWidth: 0,
+    },
+    actionIconGroup: {
+        display: 'flex',
+        justifyContent: 'flex-end',
+        gap: { xs: 0.75, md: 1 },
+        flex: '0 0 auto',
     },
     quickUndoButtonEnabled: {
         ...quickUndoButtonBase,
-        width: 'min(55%, 200px)',
+        // width: 'min(55%, 200px)',
         background: 'linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, linear-gradient(to top, #1cb34a, #0a3d1e) border-box',
         '&:hover': {
             background: 'linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, linear-gradient(to top, #2ad44c, #0a3d1e) border-box',
@@ -74,10 +85,10 @@ const styles = {
     },
     quickUndoButtonDisabled: {
         ...quickUndoButtonBase,
-        width: 'min(55%, 200px)',
+        // width: 'min(55%, 200px)',
         '&:disabled': {
             backgroundColor: '#404040',
-            color: '#FFF'
+            color: '#FFF',
         },
     },
     quickUndoButtonBlocked: {
@@ -85,7 +96,7 @@ const styles = {
         width: 'min(65%, 240px)',
         '&:disabled': {
             backgroundColor: '#404040',
-            color: '#FFF'
+            color: '#FFF',
         },
     },
     quickUndoButtonRequest: {
@@ -96,16 +107,23 @@ const styles = {
             background: 'linear-gradient(#2C4046, #2C4046) padding-box, linear-gradient(#404040, #008FC4) border-box',
         },
     },
-    porgContainer: {
-        position:'relative',
-        left:'35px',
-        bottom:'28px',
-        display: { xs: 'none', md: 'block' },
+    actionIconButton: {
+        padding: { xs: '9px', md: '12px' },
+        color: '#fff',
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        '& svg': {
+            fontSize: { xs: '1.35rem', md: '1.65rem' },
+        },
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.16)',
+            borderColor: 'rgba(255, 255, 255, 0.24)',
+        },
     }
 }
 const UndoButton = () => {
     const { gameState, sendGameMessage, connectedPlayer } = useGame();
-    const [isUndoHovered, setIsUndoHovered] = useState(false);
     const correctPlayer = gameState.players[connectedPlayer];
     const quickUndoState: QuickUndoAvailableState | null = correctPlayer?.availableSnapshots?.quickSnapshotAvailable;
     const handleUndoButton = () => {
@@ -177,20 +195,9 @@ const UndoButton = () => {
 
     return (
         <Box sx={styles.quickUndoBox}>
-            <Box sx={[styles.porgContainer, { visibility: isUndoHovered ? 'visible' : 'hidden' } ]}>
-                <Image
-                    src="/porg1.png"
-                    alt="Highlighted Stats Panel"
-                    width={50}
-                    height={50}
-                />
-            </Box>
-
             <Button
                 variant="contained"
                 onClick={handleUndoButton}
-                onMouseEnter={() => setIsUndoHovered(true)}
-                onMouseLeave={() => setIsUndoHovered(false)}
                 disabled={undoButtonDisabled}
                 startIcon={buttonIcon}
                 sx={undoButtonStyle}
@@ -201,12 +208,11 @@ const UndoButton = () => {
     )
 }
 
-const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
-    const { gameState, gameMessages, sendGameMessage, isSpectator } = useGame();
+const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, preferenceToggle, quitMatch }) => {
+    const { gameMessages, sendGameMessage, isSpectator } = useGame();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
     const [chatMessage, setChatMessage] = useState('')
-    const isDev = process.env.NODE_ENV === 'development';
-    const isUndoEnabled = (isDev || gameState.undoEnabled) && (!isSpectator);
+    const showUndoAction = !isSpectator;
 
     const handleChatOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         handleTypingStateOnChange(event.target.value);
@@ -221,6 +227,32 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         resetTypingState();
     }
 
+    const matchActions = (
+        <Box sx={styles.matchActions}>
+            {showUndoAction && (<UndoButton />)}
+            <Box sx={styles.actionIconGroup}>
+                <Tooltip title="Settings">
+                    <IconButton
+                        aria-label="Settings"
+                        onClick={preferenceToggle}
+                        sx={styles.actionIconButton}
+                    >
+                        <SettingsOutlinedIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Quit match">
+                    <IconButton
+                        aria-label="Quit match"
+                        onClick={quitMatch}
+                        sx={styles.actionIconButton}
+                    >
+                        <LogoutOutlinedIcon />
+                    </IconButton>
+                </Tooltip>
+            </Box>
+        </Box>
+    );
+
     return (
         <Drawer
             anchor="right"
@@ -228,17 +260,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             variant="persistent"
             sx={styles.drawerStyle}
         >
-            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                <Box sx={styles.headerBoxStyle}>
-                    <IconButton onClick={toggleSidebar}>
-                        <ChevronRightIcon sx={{ color: 'white', fontSize: '28px' }}/>
-                    </IconButton>
-                </Box>
-
-                {isUndoEnabled && (<UndoButton />)}
-            </Box>
-
-
+            {matchActions}
             {/* Use the ChatComponent here */}
             <Chat
                 chatHistory={gameMessages}
@@ -246,17 +268,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 handleChatOnChange={handleChatOnChange}
                 handleChatSubmit={handleGameChat}
             />
-
-            <Box sx={{ display: { xs: 'block', md: 'none' } } }>
-                <Divider sx={{ backgroundColor: '#fff', mx: '-0.75em', my: '0.75em' }} />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    {isUndoEnabled && (<UndoButton />)}
-                    <IconButton onClick={toggleSidebar}>
-                        <ChevronRightIcon sx={{ color: 'white', fontSize: '28px' }}/>
-                    </IconButton>
-                </Box>
-            </Box>
-
 
         </Drawer>
     );
