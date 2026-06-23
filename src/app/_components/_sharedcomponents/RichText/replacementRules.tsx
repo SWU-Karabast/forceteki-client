@@ -108,9 +108,7 @@ export const resourceReplacementRule: TextReplacementRule = {
 const keywordBaseStyle: React.CSSProperties = {
     fontFamily: 'var(--font-barlow), sans-serif',
     fontWeight: 900,
-    color: '#DC2626', 
-    // color: '#8B1E17',
-    // WebkitTextStroke: '0.03em white',
+    color: '#e4951e'
 };
 
 const keywordSmallStyle: React.CSSProperties = {
