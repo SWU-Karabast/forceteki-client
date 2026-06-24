@@ -148,10 +148,6 @@ const DeckPage: React.FC = () => {
         setDecks(sortedDecks);
     };
 
-    const handleBackButton = () => {
-        router.push('/');
-    };
-
     // Handle successful deck addition
     const handleAddDeckSuccess = (deckData: IDeckData, deckLink: string) => {
         const newDeck: DisplayDeck = {
@@ -563,9 +559,6 @@ const DeckPage: React.FC = () => {
         <>
             <Box sx={styles.header}>
                 <Box sx={styles.sortByContainer}>
-                    <Box sx={styles.titleContainer}>
-                        <PreferenceButton variant={'standard'} buttonFnc={handleBackButton}/>
-                    </Box>
                     <Typography variant={'h3'} sx={styles.sortBy}>Sort by</Typography>
                     <StyledTextField
                         select
