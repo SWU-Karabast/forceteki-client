@@ -7,6 +7,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { ICardData, LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import ConstantEffectsPanel from '@/app/_components/Gameboard/_subcomponents/PlayerTray/ConstantEffectsPanel';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
@@ -239,6 +240,8 @@ const Board: React.FC<IBoardProps> = ({
     return (
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
         <Box sx={styles.boardWrapper} data-testid="gameboard-board-wrapper">
+            <ConstantEffectsPanel trayPlayer={opponentId} />
+            <ConstantEffectsPanel trayPlayer={connectedPlayer} />
             <Box sx={styles.columnStyle}>
                 <Box sx={styles.borderLayer}>
                     <Box sx={styles.leftColumnBorderLeft} />

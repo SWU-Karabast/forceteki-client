@@ -12,7 +12,6 @@ import { IPlayerCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes
 import { useGame } from '@/app/_contexts/Game.context';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
-import ConstantEffectsPanel from '@/app/_components/Gameboard/_subcomponents/PlayerTray/ConstantEffectsPanel';
 
 const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSidebar }) => {
     const { gameState, connectedPlayer, isSpectator } = useGame();
@@ -106,7 +105,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             }}
             className="playerCardTrayWrapper"
         >
-            <ConstantEffectsPanel trayPlayer={trayPlayer} />
             <Grid
                 size={{ xs: 3, md: 3 }}
                 sx={styles.leftColumnStyle}

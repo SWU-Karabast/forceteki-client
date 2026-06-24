@@ -16,7 +16,6 @@ import { useRouter } from 'next/navigation';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
-import ConstantEffectsPanel from '@/app/_components/Gameboard/_subcomponents/PlayerTray/ConstantEffectsPanel';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useGame();
@@ -182,7 +181,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 zIndex: 3 // Above playmats
             }}
         >
-            <ConstantEffectsPanel trayPlayer={trayPlayer} />
             {/* Left column (fixed 360px) */}
             <Grid
                 size={3}
