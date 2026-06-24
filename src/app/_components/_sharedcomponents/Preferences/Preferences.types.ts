@@ -148,10 +148,27 @@ export interface IActiveModActionCacheEntry {
     modActionId: string;
 }
 
+export enum UsernameChangeSource {
+    Initial = 'Initial',
+    UserInitiated = 'UserInitiated',
+    ForcedRename = 'ForcedRename',
+}
+
+export interface IUsernameChangeResponse {
+    id: string;
+    playerId: string;
+    previousUsername: string | null;
+    newUsername: string;
+    source: UsernameChangeSource;
+    relatedModActionId?: string;
+    createdAt: string;
+}
+
 export interface IFindUserResponse {
     success: boolean;
     players: IPlayerSearchResult[];
     modActions: IModActionResponse[];
+    usernameChanges: IUsernameChangeResponse[];
 }
 
 export enum DurationUnit {

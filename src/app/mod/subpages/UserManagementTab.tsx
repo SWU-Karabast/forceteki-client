@@ -9,10 +9,11 @@ import {
     DurationUnit,
     IModActionResponse,
     IPlayerSearchResult,
+    IUsernameChangeResponse,
     ModActionType
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
-import { formatDate, formatDuration, getActionLabel, getActionStatus } from '@/app/_utils/ModerationUtils';
+import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionLabel, getActionStatus, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
 
 const UserManagementTab: React.FC = () => {
     // Search state
@@ -24,6 +25,7 @@ const UserManagementTab: React.FC = () => {
     const [players, setPlayers] = useState<IPlayerSearchResult[]>([]);
     const [selectedPlayer, setSelectedPlayer] = useState<IPlayerSearchResult | null>(null);
     const [modActions, setModActions] = useState<IModActionResponse[]>([]);
+    const [usernameChanges, setUsernameChanges] = useState<IUsernameChangeResponse[]>([]);
 
     // Action form state
     const [actionType, setActionType] = useState<ModActionType>(ModActionType.Mute);
@@ -55,6 +57,7 @@ const UserManagementTab: React.FC = () => {
         setSearchError(null);
         setSelectedPlayer(null);
         setModActions([]);
+        setUsernameChanges([]);
         setPlayers([]);
         setSuccessMessage(null);
 
@@ -62,6 +65,7 @@ const UserManagementTab: React.FC = () => {
             const result = await ServerApiService.findUserAsync(searchQuery.trim());
             setPlayers(result.players);
             setModActions(result.modActions || []);
+            setUsernameChanges(result.usernameChanges || []);
 
             // Auto-select if single result
             if (result.players.length === 1) {
@@ -83,6 +87,7 @@ const UserManagementTab: React.FC = () => {
             try {
                 const result = await ServerApiService.getModActionsForPlayerAsync(player.id);
                 setModActions(result.modActions || []);
+                setUsernameChanges(result.usernameChanges || []);
             } catch (error) {
                 console.error('Failed to fetch mod actions:', error);
             }
@@ -304,6 +309,7 @@ const UserManagementTab: React.FC = () => {
 
     };
     // ==================== Render ====================
+    const history = selectedPlayer ? buildUserHistory(modActions, usernameChanges) : [];
     return (
         <Box>
             {/* Messages */}
@@ -524,17 +530,70 @@ const UserManagementTab: React.FC = () => {
                 {/* ==================== Right Column ==================== */}
                 {selectedPlayer && (
                     <Box sx={styles.rightColumn}>
-                        <Typography sx={styles.sectionTitle}>Previous mod actions</Typography>
+                        <Typography sx={styles.sectionTitle}>History</Typography>
 
-                        {modActions.length === 0 ? (
+                        {history.length === 0 ? (
                             <Typography sx={{ color: '#8C8C8C', fontSize: '0.875rem' }}>
-                                No previous mod actions for this user.
+                                No history for this user.
                             </Typography>
                         ) : (
                             <Box sx={styles.actionHistoryContainer}>
-                                {modActions.map((action) => {
+                                {history.map((entry) => {
+                                    const isExpanded = expandedActionId === entry.id;
+
+                                    // Standalone username change entry (forced renames are merged into their mod action)
+                                    if (entry.kind === 'usernameChange' && entry.usernameChange) {
+                                        const change = entry.usernameChange;
+                                        const sourceLabel = getUsernameChangeSourceLabel(change.source);
+                                        return (
+                                            <Box key={entry.id} sx={styles.actionHistoryItem}>
+                                                <Box
+                                                    sx={styles.actionHistoryHeader}
+                                                    onClick={() => setExpandedActionId(isExpanded ? null : entry.id)}
+                                                >
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                                        <ExpandMoreIcon
+                                                            sx={{
+                                                                color: 'white',
+                                                                fontSize: '1.2rem',
+                                                                mr: '0.5rem',
+                                                                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                transition: 'transform 0.2s',
+                                                            }}
+                                                        />
+                                                        <Typography sx={{ color: 'white', fontSize: '0.85rem', mb:'0px' }}>
+                                                            {getUsernameChangeLabel(change)}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                                {isExpanded && (
+                                                    <Box sx={styles.actionHistoryDetails}>
+                                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                                                            <Box>
+                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
+                                                                    Source
+                                                                </Typography>
+                                                                <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
+                                                                    {sourceLabel}
+                                                                </Typography>
+                                                            </Box>
+                                                            <Box>
+                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
+                                                                    Name change
+                                                                </Typography>
+                                                                <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
+                                                                    {formatUsernameTransition(change)}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        );
+                                    }
+
+                                    const action = entry.modAction!;
                                     const status = getActionStatus(action, selectedPlayer);
-                                    const isExpanded = expandedActionId === action.id;
                                     const isCancellable = (!action.cancelledAt
                                         && action.actionType !== ModActionType.Warning
                                         && !(action.expiresAt && new Date(action.expiresAt) <= new Date())
@@ -542,7 +601,7 @@ const UserManagementTab: React.FC = () => {
                                         || selectedPlayer.activeRename?.modActionId === action.id;
 
                                     return (
-                                        <Box key={action.id} sx={styles.actionHistoryItem}>
+                                        <Box key={entry.id} sx={styles.actionHistoryItem}>
                                             {/* Header row */}
                                             <Box
                                                 sx={styles.actionHistoryHeader}
@@ -560,6 +619,7 @@ const UserManagementTab: React.FC = () => {
                                                     />
                                                     <Typography sx={{ color: 'white', fontSize: '0.85rem', mb:'0px' }}>
                                                         {getActionLabel(action)}
+                                                        {entry.mergedUsernameChange ? `: ${formatUsernameTransition(entry.mergedUsernameChange)}` : ''}
                                                     </Typography>
                                                     {status.label && (
                                                         <Typography sx={styles.statusBadge(status.color)}>
@@ -603,6 +663,16 @@ const UserManagementTab: React.FC = () => {
                                                                 {action.moderatorUsername}
                                                             </Typography>
                                                         </Box>
+                                                        {entry.mergedUsernameChange && (
+                                                            <Box>
+                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
+                                                                    Name change
+                                                                </Typography>
+                                                                <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
+                                                                    {formatUsernameTransition(entry.mergedUsernameChange)}
+                                                                </Typography>
+                                                            </Box>
+                                                        )}
                                                         {action.startedAt && (
                                                             <Box>
                                                                 <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
