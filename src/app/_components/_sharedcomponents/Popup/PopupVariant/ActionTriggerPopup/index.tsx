@@ -64,6 +64,7 @@ export default function ActionTriggerPopupModal({ data }: ButtonProps) {
                                 key={`${button.uuid}:${index}`}
                                 text={button.text}
                                 sourceCard={button.sourceCard}
+                                hasLegalEffects={button.hasLegalEffects}
                                 onClick={() => {
                                     sendGameMessage([button.command, button.arg, button.uuid]);
                                 }}

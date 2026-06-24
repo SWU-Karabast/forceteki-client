@@ -140,10 +140,10 @@ const isBaseSourceCard = (sourceCard?: PopupSourceCard): boolean => {
     return sourceType?.toLowerCase() === CardType.Base;
 };
 
-export default function TriggerButton({ onClick, sourceCard, text }: { onClick(): void; sourceCard?: PopupSourceCard, text: string }) {
+export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffects }: { onClick(): void; sourceCard?: PopupSourceCard, text: string, hasLegalEffects?: boolean }) {
     const backgroundImage = useCardImageURL(sourceCard);
     const isLandscapePreview = isBaseSourceCard(sourceCard);
-    const isNoEffect = text.startsWith('(No effect)');
+    const isNoEffect = !hasLegalEffects;
 
     return (
         <Box sx={[styles.container, isNoEffect && styles.noEffectContainer]}>

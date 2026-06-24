@@ -20,6 +20,7 @@ export type PopupButton = {
     command: string;
     arg: string;
     sourceCard?: PopupSourceCard;
+    hasLegalEffects?: boolean;
     selected?: boolean;
     disabled?: boolean;
 };
