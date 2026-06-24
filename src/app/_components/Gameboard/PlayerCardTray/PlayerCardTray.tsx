@@ -1,6 +1,7 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
 import { ChatBubbleOutline } from '@mui/icons-material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import Credits from '../_subcomponents/PlayerTray/Credits';
@@ -48,6 +49,9 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
         rightColumnStyle: {
             ...debugBorder('red'),
             display: 'flex',
+            '@media (orientation: portrait) and (max-width:932px)': {
+                flexDirection: 'column',
+            },
             alignItems: 'flex-end',
             justifyContent: 'flex-end',
             padding: {
@@ -69,6 +73,9 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             alignItems: 'center',
             alignSelf: 'flex-end',
             height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
+            '@media (orientation: portrait) and (max-width:900px)': {
+                height: 'auto !important'
+            },
             width: 'auto',
             marginBottom: { xs: '0.25rem', md: '0.5rem' }, // Match the padding of actionContainer
         },
@@ -102,9 +109,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             <ConstantEffectsPanel trayPlayer={trayPlayer} />
             <Grid
                 size={{ xs: 3, md: 3 }}
-                sx={{
-                    ...styles.leftColumnStyle,
-                }}
+                sx={styles.leftColumnStyle}
             >
                 <DeckDiscard trayPlayer={trayPlayer} cardback={connectedUserCardback} />
                 <Box sx={styles.creditsResourcesStack}>
@@ -116,9 +121,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             {/* Middle column: expands to fill space */}
             <Grid
                 size={{ xs: 6, md: 6 }}
-                sx={{
-                    ...styles.centerColumnStyle,
-                }}
+                sx={styles.centerColumnStyle}
             >
                 <Box sx={styles.playerHandWrapper}>
                     <PlayerHand
@@ -131,13 +134,15 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             </Grid>
             <Grid
                 size={{ xs: 3, md: 3 }}
-                sx={{
-                    ...styles.rightColumnStyle,
-                }}
+                sx={styles.rightColumnStyle}
             >
                 <CardActionTray />
                 <Box ml={2} sx={styles.chatColumn}>
-                    <ChatBubbleOutline onClick={toggleSidebar} />
+                    <IconButton
+                        onClick={toggleSidebar}
+                    >
+                        <ChatBubbleOutline sx={{ color: '#FFFFFF', fontSize: '28px' }}/>
+                    </IconButton>
                 </Box>
             </Grid>
         </Grid>
