@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useContext, useCallback, useState } from 'react';
 import {
+    ActionTriggerPopup,
     DefaultPopup,
     DropdownPopup,
     PilePopup,
@@ -9,6 +10,7 @@ import {
 } from '../_components/_sharedcomponents/Popup/Popup.types';
 
 export type PopupData =
+  | ActionTriggerPopup
   | DefaultPopup
   | SelectCardsPopup
   | PilePopup
