@@ -1,6 +1,6 @@
 import { DeckSource } from '@/app/_utils/fetchDeckData';
 
-export interface IConstantEffectSource {
+export interface IOngoingEffectSourceSummary {
     setId: ICardSetId;
     type?: string;
     controllerId: string;
@@ -10,9 +10,9 @@ export interface IConstantEffectSource {
     effectDescription?: string;
 }
 
-export interface IConstantEffect {
+export interface IOngoingEffectSummary {
     sourceCardUuid: string;
-    source: IConstantEffectSource;
+    source: IOngoingEffectSourceSummary;
     targets: string[];
 }
 

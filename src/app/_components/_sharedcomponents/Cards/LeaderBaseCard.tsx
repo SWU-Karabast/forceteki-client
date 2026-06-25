@@ -12,7 +12,7 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
-import { useEffectHighlightSx } from '@/app/_contexts/ConstantEffectHighlight.context';
+import { useEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,

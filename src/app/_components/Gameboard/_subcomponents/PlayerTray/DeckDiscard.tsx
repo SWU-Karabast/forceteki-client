@@ -9,7 +9,7 @@ import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.typ
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
-import { useDiscardPileHighlightSx } from '@/app/_contexts/ConstantEffectHighlight.context';
+import { useDiscardPileHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
 
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {

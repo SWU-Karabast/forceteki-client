@@ -1,34 +1,35 @@
 import React from 'react';
 import { Box, Popover, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
-import { useConstantEffectHighlight } from '@/app/_contexts/ConstantEffectHighlight.context';
+import { useOngoingEffectHighlight } from '@/app/_contexts/OngoingEffectHighlight.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import {
     CardStyle,
     ICardData,
-    IConstantEffect,
+    IOngoingEffectSummary,
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 
 
-interface IConstantEffectsPanelProps {
+interface IOngoingEffectsPanelProps {
     trayPlayer: string;
 }
 
-const ConstantEffectsPanel: React.FC<IConstantEffectsPanelProps> = ({ trayPlayer }) => {
-    const { connectedPlayer, constantEffects } = useGame();
-    const { setHighlightedEffects } = useConstantEffectHighlight();
+const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }) => {
+    const { connectedPlayer, ongoingEffects } = useGame();
+    const { setHighlightedEffects } = useOngoingEffectHighlight();
     const locale = useCardImageLocale();
-    const effects: IConstantEffect[] = React.useMemo(
-        () => (constantEffects || []).filter((e) => e.source.controllerId === trayPlayer),
-        [constantEffects, trayPlayer],
+    const effects: IOngoingEffectSummary[] = React.useMemo(
+        () => (ongoingEffects || []).filter((effect) => effect.source.controllerId === trayPlayer),
+        [ongoingEffects, trayPlayer],
     );
 
     const { isPortrait } = useScreenOrientation();
     // group effects by source card
-    const effectGroups: IConstantEffect[][] = React.useMemo(() => {
-        const bySource = new Map<string, IConstantEffect[]>();
+    const effectGroups: IOngoingEffectSummary[][] = React.useMemo(() => {
+        const bySource = new Map<string, IOngoingEffectSummary[]>();
         for (const effect of effects) {
             const group = bySource.get(effect.sourceCardUuid);
             if (group) {
@@ -46,10 +47,10 @@ const ConstantEffectsPanel: React.FC<IConstantEffectsPanelProps> = ({ trayPlayer
         : 'var(--initiative-red)';
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
-    const [hoveredGroup, setHoveredGroup] = React.useState<IConstantEffect[] | null>(null);
+    const [hoveredGroup, setHoveredGroup] = React.useState<IOngoingEffectSummary[] | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
 
-    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>, group: IConstantEffect[]) => {
+    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>, group: IOngoingEffectSummary[]) => {
         // Touch devices open via tap (handleTap)
         if (window.matchMedia('(pointer: coarse)').matches) return;
 
@@ -75,7 +76,7 @@ const ConstantEffectsPanel: React.FC<IConstantEffectsPanelProps> = ({ trayPlayer
         };
     }, [setHighlightedEffects]);
 
-    const handleTap = (event: React.MouseEvent<HTMLElement>, group: IConstantEffect[]) => {
+    const handleTap = (event: React.MouseEvent<HTMLElement>, group: IOngoingEffectSummary[]) => {
         // tap is touch-only.
         if (!window.matchMedia('(pointer: coarse)').matches) return;
 
@@ -88,7 +89,7 @@ const ConstantEffectsPanel: React.FC<IConstantEffectsPanelProps> = ({ trayPlayer
             setHighlightedEffects(group);
         }
     };
-    const countVisibleTargets = (group: IConstantEffect[]) => new Set(group.flatMap((e) => e.targets)).size;
+    const countVisibleTargets = (group: IOngoingEffectSummary[]) => new Set(group.flatMap((e) => e.targets)).size;
     const hoveredTargetsCount = hoveredGroup ? countVisibleTargets(hoveredGroup) : 0;
 
     const styles = {
@@ -254,10 +255,12 @@ const ConstantEffectsPanel: React.FC<IConstantEffectsPanelProps> = ({ trayPlayer
                             </Typography>
                         )}
                         {hoveredGroup.map((effect, i) => (
-                            <Typography key={i} sx={styles.previewDescription}>
-                                {hoveredGroup.length > 1 ? '\u2022 ' : ''}
-                                {effect.source.effectDescription ?? 'Active effect'}
-                            </Typography>
+                            <Box key={i} component="div" sx={styles.previewDescription}>
+                                {hoveredGroup.length > 1 && <Box component="span" sx={{ mr: '4px' }}>•</Box>}
+                                {effect.source.effectDescription
+                                    ? <RichText text={effect.source.effectDescription} sx={{ display: 'inline' }} />
+                                    : 'Active effect'}
+                            </Box>
                         ))}
                         <Typography sx={styles.previewTargetsHeader}>
                             {hoveredTargetsCount === 0 ? 'No visible targets' : `Targets (${hoveredTargetsCount})`}
@@ -269,4 +272,4 @@ const ConstantEffectsPanel: React.FC<IConstantEffectsPanelProps> = ({ trayPlayer
     );
 };
 
-export default ConstantEffectsPanel;
+export default OngoingEffectsPanel;

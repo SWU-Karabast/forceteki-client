@@ -3,7 +3,7 @@ import React, { createContext, useContext, useMemo, useState, ReactNode } from '
 import type { Theme } from '@mui/material';
 import type { SystemStyleObject } from '@mui/system';
 import { keyframes } from '@mui/system';
-import { IConstantEffect } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 type EffectHighlightRole = 'source' | 'target';
 
@@ -23,16 +23,16 @@ const roleSx: Record<EffectHighlightRole, SystemStyleObject<Theme>> = {
 
 const EMPTY_SX: SystemStyleObject<Theme> = {};
 
-interface IConstantEffectHighlightContext {
-    highlightedEffects: IConstantEffect[];
-    setHighlightedEffects: (effects: IConstantEffect[]) => void;   // pass [] to clear
+interface IOngoingEffectHighlightContext {
+    highlightedEffects: IOngoingEffectSummary[];
+    setHighlightedEffects: (effects: IOngoingEffectSummary[]) => void;   // pass [] to clear
     highlightRoles: ReadonlyMap<string, EffectHighlightRole>;
 }
 
-const Ctx = createContext<IConstantEffectHighlightContext | undefined>(undefined);
+const Ctx = createContext<IOngoingEffectHighlightContext | undefined>(undefined);
 
-export const ConstantEffectHighlightProvider = ({ children }: { children: ReactNode }) => {
-    const [highlightedEffects, setHighlightedEffects] = useState<IConstantEffect[]>([]);
+export const OngoingEffectHighlightProvider = ({ children }: { children: ReactNode }) => {
+    const [highlightedEffects, setHighlightedEffects] = useState<IOngoingEffectSummary[]>([]);
 
     const highlightRoles = useMemo(() => {
         const map = new Map<string, EffectHighlightRole>();
@@ -53,20 +53,20 @@ export const ConstantEffectHighlightProvider = ({ children }: { children: ReactN
     );
 };
 
-export const useConstantEffectHighlight = () => {
+export const useOngoingEffectHighlight = () => {
     const ctx = useContext(Ctx);
     if (!ctx) throw new Error('useConstantEffectHighlight must be used within ConstantEffectHighlightProvider');
     return ctx;
 };
 
 export const useEffectHighlightSx = (cardUuid?: string): SystemStyleObject<Theme> => {
-    const { highlightRoles } = useConstantEffectHighlight();
+    const { highlightRoles } = useOngoingEffectHighlight();
     const role = cardUuid ? highlightRoles.get(cardUuid) : undefined;
     return role ? roleSx[role] : EMPTY_SX;
 };
 
 export const useDiscardPileHighlightSx = (trayPlayer: string): SystemStyleObject<Theme> => {
-    const { highlightedEffects } = useConstantEffectHighlight();
+    const { highlightedEffects } = useOngoingEffectHighlight();
     const active = highlightedEffects.some(
         (e) => e.source.sourceZone === 'discard' && e.source.controllerId === trayPlayer,
     );

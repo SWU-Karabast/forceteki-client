@@ -7,7 +7,7 @@ import { ThemeContextProvider } from '@/app/_contexts/Theme.context';
 import { TimerVisibilityProvider } from '@/app/_contexts/TimerVisibility.context';
 import { UserProvider } from '@/app/_contexts/User.context';
 import { SessionProvider } from 'next-auth/react';
-import { ConstantEffectHighlightProvider } from '@/app/_contexts/ConstantEffectHighlight.context';
+import { OngoingEffectHighlightProvider } from '@/app/_contexts/OngoingEffectHighlight.context';
 
 interface IClientProvidersProps {
     children: React.ReactNode;
@@ -20,11 +20,11 @@ const ClientProviders: React.FC<IClientProvidersProps> = ({ children }) => {
                 <CardImageLocaleProvider>
                     <TimerVisibilityProvider>
                         <PopupProvider>
-                            <ConstantEffectHighlightProvider>
+                            <OngoingEffectHighlightProvider>
                                 <CosmeticsProvider>
                                     <ThemeContextProvider>{children}</ThemeContextProvider>
                                 </CosmeticsProvider>
-                            </ConstantEffectHighlightProvider>
+                            </OngoingEffectHighlightProvider>
                         </PopupProvider>
                     </TimerVisibilityProvider>
                 </CardImageLocaleProvider>
