@@ -10,13 +10,24 @@ import { DeckFetchError, DeckFetchErrorReason } from './types';
  * Content-Type`, which would fail the preflight even though the actual GET
  * would otherwise succeed.
  *
+ * In local dev the request is routed through `/api/deck-proxy` because
+ * several providers scope their CORS allowlist to `https://karabast.net`,
+ * which rejects the `http://localhost:3000` dev origin. The proxy is
+ * CORS-faithful: it still fails (502 `CORS_MISCONFIGURED`) when a provider
+ * would not allow the production origin, so genuine CORS misconfigurations
+ * are still caught during local testing rather than masked.
+ *
  * Throws {@link DeckFetchError} with reason `NetworkError` if `fetch` itself
  * rejects. Non-OK HTTP responses are returned as-is so providers can apply
  * their own status-specific error mapping.
  */
 export async function httpGetJson(url: string, providerName?: string): Promise<Response> {
+    const isDev = process.env.NODE_ENV === 'development';
+    const requestUrl = isDev ? `/api/deck-proxy?url=${encodeURIComponent(url)}` : url;
+
+    let response: Response;
     try {
-        return await fetch(url, {
+        response = await fetch(requestUrl, {
             method: 'GET',
             cache: 'no-store',
         });
@@ -29,4 +40,22 @@ export async function httpGetJson(url: string, providerName?: string): Promise<R
             providerName,
         );
     }
+
+    // Surface a clear error when the dev proxy detects that the provider's
+    // CORS config would block the production origin. Without this, the
+    // generic 502 would be mapped to an opaque ProviderError.
+    if (isDev && response.status === 502) {
+        const data = await response.clone().json().catch(() => null);
+        if (data?.error === 'CORS_MISCONFIGURED') {
+            throw new DeckFetchError(
+                DeckFetchErrorReason.ProviderError,
+                data.message ?? 'Provider CORS configuration would block production.',
+                502,
+                providerName,
+            );
+        }
+    }
+
+    return response;
 }
+

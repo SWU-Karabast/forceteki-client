@@ -7,7 +7,8 @@ export class SwumetastatsDeckProvider extends DeckProviderBase {
     public override readonly hostNameMatch = 'swumetastats.com';
     public override readonly tagColor = '#00DBCC';
     // Deck Links in the form: https://www.swumetastats.com/decklists/${deckId}
-    protected override readonly deckIdRegex = /swumetastats\.com\/decklists\/([^/]+)\/?$/;
+    // (may carry a ?format=…&meta=… query string, which must not be captured).
+    protected override readonly deckIdRegex = /swumetastats\.com\/decklists\/([^/?#]+)/;
 
     protected override buildApiUrl(deckId: string): string {
         return `https://www.swumetastats.com/api/decklists/${deckId}/json`;

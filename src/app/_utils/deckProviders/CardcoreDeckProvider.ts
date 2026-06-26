@@ -7,8 +7,8 @@ export class CardcoreDeckProvider extends DeckProviderBase {
     public override readonly displayName = 'cardcore.gg';
     public override readonly hostNameMatch = 'cardcore.gg';
     public override readonly tagColor = '#FF6B35';
-    // Deck Links in the form: https://store.cardcore.gg/decks/${deckId}
-    protected override readonly deckIdRegex = /cardcore\.gg\/decks\/(\d+)\/?$/;
+    // Deck Links in the form: https://store.cardcore.gg/swu/decks/${deckId}
+    protected override readonly deckIdRegex = /cardcore\.gg\/(?:[^/]+\/)?decks\/(\d+)\/?$/;
 
     protected override readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
         404: {
