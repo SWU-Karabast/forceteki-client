@@ -16,12 +16,12 @@ import {
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData, DeckFetchError, DeckFetchErrorReason } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
-    DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, DiscordInviteUrl } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -207,30 +207,8 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             setQueueState(false);
             clearErrors();
             if (error instanceof DeckFetchError) {
-                switch (error.reason) {
-                    case DeckFetchErrorReason.Private:
-                        setError('Couldn\'t import. The deck is set to private.',
-                            { [DeckValidationFailureReason.DeckSetToPrivate]: true },
-                            'Deck Validation Error', 'error');
-                        break;
-                    case DeckFetchErrorReason.NotFound:
-                        setError(error.message, error.message, 'Deck Not Found', 'error');
-                        break;
-                    case DeckFetchErrorReason.InvalidLink:
-                    case DeckFetchErrorReason.UnsupportedProvider:
-                        setError('Couldn\'t import. Deck link is invalid or unsupported.', undefined, 'Deck Validation Error', 'error');
-                        break;
-                    case DeckFetchErrorReason.NetworkError:
-                    case DeckFetchErrorReason.ProviderError: {
-                        const partnerMsg = `${error.providerName ?? 'The deck site'} failed to return a decklist. Try again later.`;
-                        setError(partnerMsg, partnerMsg, 'Deck Validation Error', 'error',
-                            { label: 'Report this issue in our Discord', href: DiscordInviteUrl });
-                        break;
-                    }
-                    default:
-                        setError('Couldn\'t import. Deck is invalid.', undefined, 'Deck Validation Error', 'error');
-                        break;
-                }
+                const content = getDeckFetchErrorContent(error);
+                setError(content.summary, content.details, content.title, content.modalType, content.footerLink);
                 setModalOpen(true);
             } else if(error instanceof Error){
                 setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');

@@ -14,7 +14,7 @@ import {
 import Grid from '@mui/material/Grid';
 import DeckComponent from '@/app/_components/DeckPage/DeckComponent/DeckComponent';
 import { useParams, useRouter } from 'next/navigation';
-import { fetchDeckData, IDeckData, DeckFetchError, DeckFetchErrorReason } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, IDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
@@ -24,9 +24,8 @@ import AnimatedStatsTable from '@/app/_components/DeckPage/DeckComponent/Animate
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
-import { DiscordInviteUrl } from '@/app/_constants/constants';
+import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import {
-    DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import {
@@ -245,29 +244,10 @@ const DeckDetails: React.FC = () => {
                 setDisplayDeck(deckDataServer);
             } catch (error) {
                 if (error instanceof DeckFetchError) {
+                    const content = getDeckFetchErrorContent(error);
                     setErrorModalOpen(true);
-                    switch (error.reason) {
-                        case DeckFetchErrorReason.Private:
-                            setDeckErrorDetails({
-                                [DeckValidationFailureReason.DeckSetToPrivate]: true,
-                            });
-                            break;
-                        case DeckFetchErrorReason.NotFound:
-                            setDeckErrorDetails(error.message);
-                            break;
-                        case DeckFetchErrorReason.InvalidLink:
-                        case DeckFetchErrorReason.UnsupportedProvider:
-                            setDeckErrorDetails('Couldn\'t import. Deck link is invalid or unsupported.');
-                            break;
-                        case DeckFetchErrorReason.NetworkError:
-                        case DeckFetchErrorReason.ProviderError:
-                            setDeckErrorDetails(`${error.providerName ?? 'The deck site'} failed to return a decklist. Try again later.`);
-                            setErrorFooterLink({ label: 'Report this issue in our Discord', href: DiscordInviteUrl });
-                            break;
-                        default:
-                            setDeckErrorDetails('Couldn\'t import. Deck is invalid.');
-                            break;
-                    }
+                    setDeckErrorDetails(content.details ?? content.summary);
+                    setErrorFooterLink(content.footerLink);
                     return;
                 } else if (error instanceof Error) {
                     setErrorModalOpen(true);

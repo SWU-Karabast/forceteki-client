@@ -1,10 +1,9 @@
 import React, { useState, ChangeEvent } from 'react';
 import { Box, Link, Typography, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { DeckSource, fetchDeckData, IDeckData, DeckFetchError, DeckFetchErrorReason } from '@/app/_utils/fetchDeckData';
+import { DeckSource, fetchDeckData, IDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
-    DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -12,7 +11,8 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { v4 as uuid } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
 import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/ServerAndLocalStorageUtils';
-import { SupportedDeckSources, DiscordInviteUrl } from '@/app/_constants/constants';
+import { SupportedDeckSources } from '@/app/_constants/constants';
+import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 
 interface AddDeckDialogProps {
@@ -59,33 +59,11 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
             setDeckErrorDetails(undefined);
             setErrorFooterLink(undefined);
             if (error instanceof DeckFetchError) {
-                setErrorTitle('Deck Validation Error');
-                switch (error.reason) {
-                    case DeckFetchErrorReason.Private:
-                        setDeckErrorSummary('Couldn\'t import. The deck is set to private');
-                        setDeckErrorDetails({
-                            [DeckValidationFailureReason.DeckSetToPrivate]: true,
-                        });
-                        break;
-                    case DeckFetchErrorReason.NotFound:
-                        setDeckErrorSummary(error.message);
-                        break;
-                    case DeckFetchErrorReason.InvalidLink:
-                    case DeckFetchErrorReason.UnsupportedProvider:
-                        setDeckErrorSummary('Couldn\'t import. Deck link is invalid or unsupported.');
-                        break;
-                    case DeckFetchErrorReason.NetworkError:
-                    case DeckFetchErrorReason.ProviderError: {
-                        const partnerMsg = `${error.providerName ?? 'The deck site'} failed to return a decklist. Try again later.`;
-                        setDeckErrorSummary(partnerMsg);
-                        setDeckErrorDetails(partnerMsg);
-                        setErrorFooterLink({ label: 'Report this issue in our Discord', href: DiscordInviteUrl });
-                        break;
-                    }
-                    default:
-                        setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-                        break;
-                }
+                const content = getDeckFetchErrorContent(error);
+                setErrorTitle(content.title);
+                setDeckErrorSummary(content.summary);
+                setDeckErrorDetails(content.details);
+                setErrorFooterLink(content.footerLink);
                 setErrorModalOpen(true);
             } else if (error instanceof Error) {
                 setErrorTitle('Deck Validation Error');
