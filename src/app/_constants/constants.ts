@@ -1,4 +1,4 @@
-import { supportedDeckHosts } from '../_utils/deckProviders/registry';
+import { supportedDeckHosts } from '../_utils/deckProviders/core/registry';
 
 export enum MatchmakingType {
     PublicLobby= 'publicLobby',

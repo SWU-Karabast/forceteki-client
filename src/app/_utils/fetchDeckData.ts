@@ -1,5 +1,5 @@
 // app/_utils/fetchDeckData.ts
-import { determineDeckSource, fetchExternalDeckListAsync } from './deckProviders/registry';
+import { determineDeckSource, fetchExternalDeckListAsync } from './deckProviders/core/registry';
 import { DeckFetchError, DeckFetchErrorReason } from './deckProviders/core/types';
 import { DeckSource } from './deckTypes';
 

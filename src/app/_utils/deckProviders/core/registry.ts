@@ -1,21 +1,21 @@
 import type { SxProps, Theme } from '@mui/material';
-import { DeckSource, IDeckData } from '../deckTypes';
-import { CardcoreDeckProvider } from './CardcoreDeckProvider';
-import { DeckProviderBase } from './core/DeckProviderBase';
-import { HoloscanDeckProvider } from './HoloscanDeckProvider';
-import { KyberdecksDeckProvider } from './KyberdecksDeckProvider';
-import { MeleeDeckProvider } from './MeleeDeckProvider';
-import { MySwuDeckProvider } from './MySwuDeckProvider';
-import { ProtectThePodDeckProvider } from './ProtectThePodDeckProvider';
-import { SwubaseDeckProvider } from './SwubaseDeckProvider';
-import { SwucardhubDeckProvider } from './SwucardhubDeckProvider';
-import { SwudbDeckProvider } from './SwudbDeckProvider';
-import { SwuforgeDeckProvider } from './SwuforgeDeckProvider';
-import { SwumetastatsDeckProvider } from './SwumetastatsDeckProvider';
-import { SwUnlimitedDbDeckProvider } from './SwUnlimitedDbDeckProvider';
-import { SwustatsDeckProvider } from './SwustatsDeckProvider';
-import { buildTagStyle } from './core/tagStyle';
-import { DeckFetchError, DeckFetchErrorReason } from './core/types';
+import { DeckSource, IDeckData } from '../../deckTypes';
+import { CardcoreDeckProvider } from '../CardcoreDeckProvider';
+import { DeckProviderBase } from './DeckProviderBase';
+import { HoloscanDeckProvider } from '../HoloscanDeckProvider';
+import { KyberdecksDeckProvider } from '../KyberdecksDeckProvider';
+import { MeleeDeckProvider } from '../MeleeDeckProvider';
+import { MySwuDeckProvider } from '../MySwuDeckProvider';
+import { ProtectThePodDeckProvider } from '../ProtectThePodDeckProvider';
+import { SwubaseDeckProvider } from '../SwubaseDeckProvider';
+import { SwucardhubDeckProvider } from '../SwucardhubDeckProvider';
+import { SwudbDeckProvider } from '../SwudbDeckProvider';
+import { SwuforgeDeckProvider } from '../SwuforgeDeckProvider';
+import { SwumetastatsDeckProvider } from '../SwumetastatsDeckProvider';
+import { SwUnlimitedDbDeckProvider } from '../SwUnlimitedDbDeckProvider';
+import { SwustatsDeckProvider } from '../SwustatsDeckProvider';
+import { buildTagStyle } from './tagStyle';
+import { DeckFetchError, DeckFetchErrorReason } from './types';
 
 /**
  * Ordered list of deck-builder providers consulted by

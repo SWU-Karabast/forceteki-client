@@ -6,7 +6,7 @@ import Grid from '@mui/material/Grid';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
-import { deckSourceTagStyles } from '@/app/_utils/deckProviders/registry';
+import { deckSourceTagStyles } from '@/app/_utils/deckProviders/core/registry';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
