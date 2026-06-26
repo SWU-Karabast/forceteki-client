@@ -1,4 +1,4 @@
-import { DeckSource, IDeckData } from '../deckTypes';
+import { DeckSource, IDeckData } from '../../deckTypes';
 import { httpGetJson } from './httpGetJson';
 import { DeckFetchError, DeckFetchErrorReason } from './types';
 

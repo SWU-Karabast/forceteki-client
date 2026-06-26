@@ -1,6 +1,6 @@
 import { DeckSource } from '../deckTypes';
-import { DeckProviderBase, IStatusErrorOverride } from './DeckProviderBase';
-import { DeckFetchError, DeckFetchErrorReason } from './types';
+import { DeckProviderBase, IStatusErrorOverride } from './core/DeckProviderBase';
+import { DeckFetchError, DeckFetchErrorReason } from './core/types';
 
 export class ProtectThePodDeckProvider extends DeckProviderBase {
     public override readonly source = DeckSource.ProtectThePod;

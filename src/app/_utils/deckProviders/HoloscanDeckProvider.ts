@@ -1,5 +1,5 @@
 import { DeckSource } from '../deckTypes';
-import { DeckProviderBase } from './DeckProviderBase';
+import { DeckProviderBase } from './core/DeckProviderBase';
 
 export class HoloscanDeckProvider extends DeckProviderBase {
     public override readonly source = DeckSource.HoloScan;

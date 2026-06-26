@@ -1,5 +1,5 @@
 import { DeckSource } from '../deckTypes';
-import { BackendResolvedDeckProvider } from './BackendResolvedDeckProvider';
+import { BackendResolvedDeckProvider } from './core/BackendResolvedDeckProvider';
 
 export class SwudbDeckProvider extends BackendResolvedDeckProvider {
     public override readonly source = DeckSource.SWUDB;

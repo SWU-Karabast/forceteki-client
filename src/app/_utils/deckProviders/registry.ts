@@ -1,7 +1,7 @@
 import type { SxProps, Theme } from '@mui/material';
 import { DeckSource, IDeckData } from '../deckTypes';
 import { CardcoreDeckProvider } from './CardcoreDeckProvider';
-import { DeckProviderBase } from './DeckProviderBase';
+import { DeckProviderBase } from './core/DeckProviderBase';
 import { HoloscanDeckProvider } from './HoloscanDeckProvider';
 import { KyberdecksDeckProvider } from './KyberdecksDeckProvider';
 import { MeleeDeckProvider } from './MeleeDeckProvider';
@@ -14,8 +14,8 @@ import { SwuforgeDeckProvider } from './SwuforgeDeckProvider';
 import { SwumetastatsDeckProvider } from './SwumetastatsDeckProvider';
 import { SwUnlimitedDbDeckProvider } from './SwUnlimitedDbDeckProvider';
 import { SwustatsDeckProvider } from './SwustatsDeckProvider';
-import { buildTagStyle } from './tagStyle';
-import { DeckFetchError, DeckFetchErrorReason } from './types';
+import { buildTagStyle } from './core/tagStyle';
+import { DeckFetchError, DeckFetchErrorReason } from './core/types';
 
 /**
  * Ordered list of deck-builder providers consulted by

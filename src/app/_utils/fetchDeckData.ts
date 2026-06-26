@@ -1,6 +1,6 @@
 // app/_utils/fetchDeckData.ts
 import { determineDeckSource, fetchExternalDeckListAsync } from './deckProviders/registry';
-import { DeckFetchError, DeckFetchErrorReason } from './deckProviders/types';
+import { DeckFetchError, DeckFetchErrorReason } from './deckProviders/core/types';
 import { DeckSource } from './deckTypes';
 
 // Re-export so consumers keep a single import path. Note: `DeckSource`,

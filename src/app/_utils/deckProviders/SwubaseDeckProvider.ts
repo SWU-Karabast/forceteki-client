@@ -1,6 +1,6 @@
 import { DeckSource } from '../deckTypes';
-import { DeckProviderBase, IStatusErrorOverride } from './DeckProviderBase';
-import { DeckFetchErrorReason } from './types';
+import { DeckProviderBase, IStatusErrorOverride } from './core/DeckProviderBase';
+import { DeckFetchErrorReason } from './core/types';
 
 export class SwubaseDeckProvider extends DeckProviderBase {
     public override readonly source = DeckSource.SWUBase;

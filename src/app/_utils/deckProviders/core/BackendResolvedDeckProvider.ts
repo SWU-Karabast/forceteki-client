@@ -1,4 +1,4 @@
-import { IDeckData } from '../deckTypes';
+import { IDeckData } from '../../deckTypes';
 import { DeckProviderBase } from './DeckProviderBase';
 import { DeckFetchError, DeckFetchErrorReason } from './types';
 
