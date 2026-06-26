@@ -9,7 +9,8 @@ export class SwucardhubDeckProvider extends DeckProviderBase {
     public override readonly tagColor = '#4F39F6';
     public override readonly hiddenFromPublicList = false;
     // Deck Links in the form: https://swucardhub.fr/Karabast/${deckId}
-    protected override readonly deckIdRegex = /swucardhub\.fr\/Karabast\/(\d+)\/?$/;
+    //                     or: https://swucardhub.fr/deckview?deckId=${deckId}
+    protected override readonly deckIdRegex = /swucardhub\.fr\/(?:Karabast\/|deckview\?deckId=)(\d+)/;
 
     protected override readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
         404: {

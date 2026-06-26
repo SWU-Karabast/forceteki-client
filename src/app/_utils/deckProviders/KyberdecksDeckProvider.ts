@@ -6,6 +6,7 @@ export class KyberdecksDeckProvider extends DeckProviderBase {
     public override readonly displayName = 'kyberdecks.com';
     public override readonly hostNameMatch = 'kyberdecks.com';
     public override readonly tagColor = '#9E9E9E';
+    // Currently the export APIs are not working, hiding Kyberdecks until it's fixed
     public override readonly hiddenFromPublicList = true;
     // Deck Links in the form: https://kyberdecks.com/decks/community/${deckId}
     protected override readonly deckIdRegex = /kyberdecks\.com\/decks\/(?:[^/]+\/)?([^/]+)\/?$/;
