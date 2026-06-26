@@ -7,6 +7,7 @@ export class MySwuDeckProvider extends DeckProviderBase {
     public override readonly displayName = 'my-swu.com';
     public override readonly hostNameMatch = 'my-swu.com';
     public override readonly tagColor = '#F65526';
+    public override readonly hiddenFromPublicList = false;
 
     // My-SWU returns 404 for private decks.
     protected override readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {

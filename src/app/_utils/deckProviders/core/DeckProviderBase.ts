@@ -44,6 +44,15 @@ export abstract class DeckProviderBase {
      */
     public abstract readonly tagColor: string;
 
+    /**
+     * When `true`, this provider's {@link displayName} is omitted from the
+     * public list of supported deck sites (`SupportedDeckSources`) while its
+     * link-import functionality keeps working. Use to temporarily hide a
+     * site that is broken/unavailable without dropping link support.
+     * Required (no default) so every provider must make an explicit choice.
+     */
+    public abstract readonly hiddenFromPublicList: boolean;
+
     /** Construct the JSON API URL that returns the deck for the given id. */
     protected abstract buildApiUrl(deckId: string): string;
 

@@ -6,4 +6,5 @@ export class MeleeDeckProvider extends BackendResolvedDeckProvider {
     public override readonly displayName = 'melee.gg';
     public override readonly hostNameMatch = 'melee.gg';
     public override readonly tagColor = '#ffa800';
+    public override readonly hiddenFromPublicList = false;
 }

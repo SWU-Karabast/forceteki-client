@@ -7,6 +7,7 @@ export class SwUnlimitedDbDeckProvider extends DeckProviderBase {
     public override readonly displayName = 'sw-unlimited-db.com';
     public override readonly hostNameMatch = 'sw-unlimited-db.com';
     public override readonly tagColor = '#4CFF85';
+    public override readonly hiddenFromPublicList = false;
     // Deck Links in the form: https://sw-unlimited-db.com/decks/${deckId}
     protected override readonly deckIdRegex = /sw-unlimited-db\.com\/decks\/(\d+)\/?$/;
 

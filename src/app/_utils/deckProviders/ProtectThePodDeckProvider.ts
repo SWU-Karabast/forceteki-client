@@ -7,6 +7,7 @@ export class ProtectThePodDeckProvider extends DeckProviderBase {
     public override readonly displayName = 'protectthepod.com';
     public override readonly hostNameMatch = 'protectthepod.com';
     public override readonly tagColor = '#B388FF';
+    public override readonly hiddenFromPublicList = false;
 
     protected override readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
         400: {

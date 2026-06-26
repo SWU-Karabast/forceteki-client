@@ -7,6 +7,7 @@ export class CardcoreDeckProvider extends DeckProviderBase {
     public override readonly displayName = 'cardcore.gg';
     public override readonly hostNameMatch = 'cardcore.gg';
     public override readonly tagColor = '#FF6B35';
+    public override readonly hiddenFromPublicList = false;
     // Deck Links in the form: https://store.cardcore.gg/swu/decks/${deckId}
     protected override readonly deckIdRegex = /cardcore\.gg\/(?:[^/]+\/)?decks\/(\d+)\/?$/;
 

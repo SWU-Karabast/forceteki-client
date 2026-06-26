@@ -6,4 +6,5 @@ export class SwudbDeckProvider extends BackendResolvedDeckProvider {
     public override readonly displayName = 'swudb.com';
     public override readonly hostNameMatch = 'swudb.com';
     public override readonly tagColor = '#4CB5FF';
+    public override readonly hiddenFromPublicList = false;
 }

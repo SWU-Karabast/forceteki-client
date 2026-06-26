@@ -6,6 +6,7 @@ export class SwumetastatsDeckProvider extends DeckProviderBase {
     public override readonly displayName = 'swumetastats.com';
     public override readonly hostNameMatch = 'swumetastats.com';
     public override readonly tagColor = '#00DBCC';
+    public override readonly hiddenFromPublicList = false;
     // Deck Links in the form: https://www.swumetastats.com/decklists/${deckId}
     // (may carry a ?format=…&meta=… query string, which must not be captured).
     protected override readonly deckIdRegex = /swumetastats\.com\/decklists\/([^/?#]+)/;

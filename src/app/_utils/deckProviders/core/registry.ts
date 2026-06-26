@@ -71,9 +71,9 @@ export function determineDeckSource(deckLink: string): DeckSource {
     return providers.find((p) => p.matches(deckLink))?.source ?? DeckSource.NotSupported;
 }
 
-/** Sorted list of supported host names (e.g. `swustats.net`). */
+/** Sorted list of supported host names (e.g. `swustats.net`), excluding providers marked `hiddenFromPublicList`. */
 export const supportedDeckHosts: readonly string[] =
-    [...providers.map((p) => p.displayName)].sort();
+    providers.filter((p) => !p.hiddenFromPublicList).map((p) => p.displayName).sort();
 
 /** Lookup from {@link DeckSource} -> per-provider tag SX block. */
 export const deckSourceTagStyles: Readonly<Record<string, SxProps<Theme>>> =

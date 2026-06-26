@@ -7,6 +7,7 @@ export class SwustatsDeckProvider extends DeckProviderBase {
     public override readonly displayName = 'swustats.net';
     public override readonly hostNameMatch = 'swustats.net';
     public override readonly tagColor = '#FFD700';
+    public override readonly hiddenFromPublicList = false;
 
     // swustats also returns 500 for missing decks.
     protected override readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
