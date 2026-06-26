@@ -8,13 +8,11 @@ import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
-import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
     const { isPortrait } = useScreenOrientation();
-    const { getCardback } = useCosmetics();
     const locale = useCardImageLocale();
     // Refs for individual card containers
     const discardRef = useRef<HTMLDivElement>(null);
@@ -212,7 +210,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
                 backgroundColor: 'black',
                 backgroundPosition: 'center',
                 backgroundSize: canSeeTopCard ? 'cover' : '100%',
-                backgroundImage: canSeeTopCard ? topDeckCardUrl : (cardback ? `url(${getCardback(cardback).path})` : 'url(\'/card-back.png\')'),
+                backgroundImage: canSeeTopCard ? topDeckCardUrl : (cardback ? `url(${cardback})` : 'url(\'/card-back.png\')'),
                 backgroundRepeat: 'no-repeat',
                 display: 'flex',
                 alignItems: 'center',

@@ -1,4 +1,5 @@
 import type { CardImageLocale } from '@/app/_utils/s3Utils';
+import type { IActiveCosmetics } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 export interface IUser extends IGetUser{
     email?: string;
@@ -43,6 +44,7 @@ export interface IGetUser {
     username: string;
     showWelcomeMessage: boolean;
     preferences: IPreferences,
+    activeCosmetics?: IActiveCosmetics,
     needsUsernameChange: boolean;
     mustRequestUsernameChange?: ModerationFieldState | null;
     reportingDisabled?: ModerationFieldState | null;

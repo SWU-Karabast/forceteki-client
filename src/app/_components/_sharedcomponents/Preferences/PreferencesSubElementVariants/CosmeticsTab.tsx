@@ -8,7 +8,7 @@ import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, FormCon
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
-import { IRegisteredCosmeticOption } from '../Preferences.types';
+import { ICosmeticEntity } from '../Preferences.types';
 
 function CosmeticsTab() {
     const { user, updateUserPreferences } = useUser();
@@ -104,7 +104,7 @@ function CosmeticsTab() {
         setExpandedAccordion(isExpanded ? panel : '');
     };
 
-    const filterSelectableCosmetics = (cosmeticsList: IRegisteredCosmeticOption[]): IRegisteredCosmeticOption[] => {
+    const filterSelectableCosmetics = (cosmeticsList: ICosmeticEntity[]): ICosmeticEntity[] => {
         if (isContributor) {
             return cosmeticsList;
         }
@@ -112,7 +112,7 @@ function CosmeticsTab() {
     };
 
     // Utility function to sort cosmetics by title, ignoring articles
-    const sortCosmeticsByTitle = (cosmetics: IRegisteredCosmeticOption[]) => {
+    const sortCosmeticsByTitle = (cosmetics: ICosmeticEntity[]) => {
         return [...cosmetics].sort((a, b) => {
             // Always put "Default" first
             if (a.title === 'Default') return -1;
@@ -131,7 +131,7 @@ function CosmeticsTab() {
     };
     // Create playmats list with 'None' option
     /* const getPlaymatOptions = () => {
-        const noneOption: IRegisteredCosmeticOption = {
+        const noneOption: ICosmeticEntity = {
             id: 'none',
             title: 'None',
             type: RegisteredCosmeticType.Playmat,

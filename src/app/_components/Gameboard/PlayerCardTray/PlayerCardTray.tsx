@@ -18,7 +18,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
     const { isPortrait } = useScreenOrientation();
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
-    const connectedUserCardback = isSpectator ? undefined : gameState?.players[connectedPlayer].user?.cosmetics?.cardback;
+    const connectedUserCardbackPath = isSpectator ? undefined : gameState?.players[connectedPlayer].user?.cosmetics?.cardback?.path;
     const phase = gameState.phase;
 
     const styles = {
@@ -109,7 +109,7 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                 size={{ xs: 3, md: 3 }}
                 sx={styles.leftColumnStyle}
             >
-                <DeckDiscard trayPlayer={trayPlayer} cardback={connectedUserCardback} />
+                <DeckDiscard trayPlayer={trayPlayer} cardback={connectedUserCardbackPath} />
                 <Box sx={styles.creditsResourcesStack}>
                     <Credits trayPlayer={trayPlayer} />
                     <Resources trayPlayer={trayPlayer} />
