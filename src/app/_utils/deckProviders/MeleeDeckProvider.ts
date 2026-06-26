@@ -2,8 +2,8 @@ import { DeckSource } from '../deckTypes';
 import { BackendResolvedDeckProvider } from './BackendResolvedDeckProvider';
 
 export class MeleeDeckProvider extends BackendResolvedDeckProvider {
-    public readonly source = DeckSource.Melee;
-    public readonly displayName = 'melee.gg';
-    public readonly hostNameMatch = 'melee.gg';
-    public readonly tagColor = '#ffa800';
+    public override readonly source = DeckSource.Melee;
+    public override readonly displayName = 'melee.gg';
+    public override readonly hostNameMatch = 'melee.gg';
+    public override readonly tagColor = '#ffa800';
 }

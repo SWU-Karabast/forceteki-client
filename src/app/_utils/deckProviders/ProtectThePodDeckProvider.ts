@@ -3,12 +3,12 @@ import { DeckProviderBase, IStatusErrorOverride } from './DeckProviderBase';
 import { DeckFetchError, DeckFetchErrorReason } from './types';
 
 export class ProtectThePodDeckProvider extends DeckProviderBase {
-    public readonly source = DeckSource.ProtectThePod;
-    public readonly displayName = 'protectthepod.com';
-    public readonly hostNameMatch = 'protectthepod.com';
-    public readonly tagColor = '#B388FF';
+    public override readonly source = DeckSource.ProtectThePod;
+    public override readonly displayName = 'protectthepod.com';
+    public override readonly hostNameMatch = 'protectthepod.com';
+    public override readonly tagColor = '#B388FF';
 
-    protected readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
+    protected override readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
         400: {
             reason: DeckFetchErrorReason.NotFound,
             message: 'No deck has been built for this pool yet. Build a deck on protectthepod.com first, then share the link.',
@@ -20,10 +20,11 @@ export class ProtectThePodDeckProvider extends DeckProviderBase {
     };
 
     // Protect the Pod deck links: https://protectthepod.com/pool/{shareId}/deck/play
-    protected parseDeckId(deckLink: string): string | null {
-        let url: URL;
+    protected override parseDeckId(deckLink: string): string | null {
         try {
-            url = new URL(deckLink);
+            // Parse-then-discard purely to validate it's a real URL; the
+            // host-aware regex below is what actually extracts the share id.
+            new URL(deckLink);
         } catch {
             throw new DeckFetchError(
                 DeckFetchErrorReason.InvalidLink,
@@ -32,7 +33,7 @@ export class ProtectThePodDeckProvider extends DeckProviderBase {
                 this.displayName,
             );
         }
-        const m = url.pathname.match(/\/pool\/([a-zA-Z0-9_-]+)/);
+        const m = deckLink.match(/protectthepod\.com\/pool\/([a-zA-Z0-9_-]+)/);
         if (!m || !m[1]) {
             throw new DeckFetchError(
                 DeckFetchErrorReason.InvalidLink,
@@ -47,7 +48,7 @@ export class ProtectThePodDeckProvider extends DeckProviderBase {
     // Hit the canonical `www.` host directly. The apex `protectthepod.com`
     // 301-redirects to `www.`, and browsers cannot follow cross-origin CORS
     // redirects.
-    protected buildApiUrl(shareId: string): string {
+    protected override buildApiUrl(shareId: string): string {
         return `https://www.protectthepod.com/api/pools/${encodeURIComponent(shareId)}/deck.json`;
     }
 }

@@ -3,20 +3,21 @@ import { DeckProviderBase, IStatusErrorOverride } from './DeckProviderBase';
 import { DeckFetchErrorReason } from './types';
 
 export class SwUnlimitedDbDeckProvider extends DeckProviderBase {
-    public readonly source = DeckSource.SWUnlimitedDB;
-    public readonly displayName = 'sw-unlimited-db.com';
-    public readonly hostNameMatch = 'sw-unlimited-db.com';
-    public readonly tagColor = '#4CFF85';
-    protected readonly deckIdRegex = /\/decks\/(\d+)\/?$/;
+    public override readonly source = DeckSource.SWUnlimitedDB;
+    public override readonly displayName = 'sw-unlimited-db.com';
+    public override readonly hostNameMatch = 'sw-unlimited-db.com';
+    public override readonly tagColor = '#4CFF85';
+    // Deck Links in the form: https://sw-unlimited-db.com/decks/${deckId}
+    protected override readonly deckIdRegex = /sw-unlimited-db\.com\/decks\/(\d+)\/?$/;
 
-    protected readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
+    protected override readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
         404: {
             reason: DeckFetchErrorReason.NotFound,
             message: 'Deck not found. Make sure it is set to Published on sw-unlimited-db.',
         },
     };
 
-    protected buildApiUrl(deckId: string): string {
+    protected override buildApiUrl(deckId: string): string {
         return `https://sw-unlimited-db.com/umbraco/api/deckapi/get?id=${deckId}`;
     }
 }

@@ -22,7 +22,7 @@ export abstract class BackendResolvedDeckProvider extends DeckProviderBase {
     // does not apply because resolution requires a credentialed POST to
     // our own BE. We override fetchAsync directly. `buildApiUrl` is still
     // required by the abstract base but is unused here.
-    protected buildApiUrl(): string {
+    protected override buildApiUrl(): string {
         throw new Error(
             `${this.displayName}: does not use buildApiUrl; fetchAsync is overridden.`,
         );

@@ -3,13 +3,13 @@ import { DeckProviderBase, IStatusErrorOverride } from './DeckProviderBase';
 import { DeckFetchErrorReason } from './types';
 
 export class MySwuDeckProvider extends DeckProviderBase {
-    public readonly source = DeckSource.MySWU;
-    public readonly displayName = 'my-swu.com';
-    public readonly hostNameMatch = 'my-swu.com';
-    public readonly tagColor = '#F65526';
+    public override readonly source = DeckSource.MySWU;
+    public override readonly displayName = 'my-swu.com';
+    public override readonly hostNameMatch = 'my-swu.com';
+    public override readonly tagColor = '#F65526';
 
     // My-SWU returns 404 for private decks.
-    protected readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
+    protected override readonly statusErrorOverrides: Partial<Record<number, IStatusErrorOverride>> = {
         404: {
             reason: DeckFetchErrorReason.Private,
             message: 'Deck not found. Make sure the deck is set to Public or Unlisted on my-swu.com.',
@@ -20,13 +20,13 @@ export class MySwuDeckProvider extends DeckProviderBase {
     //   https://my-swu.com/decks/${deckId}
     //   https://my-swu.com/decks/me/${deckId}
     //   https://my-swu.com/decks/explore/${category}/${deckId}
-    protected parseDeckId(deckLink: string): string | null {
+    protected override parseDeckId(deckLink: string): string | null {
         const withoutQuery = deckLink.split('?')[0];
-        const m = withoutQuery.match(/\/decks\/(?:me\/|explore\/[^/]+\/)?([^/]+)\/?$/);
+        const m = withoutQuery.match(/my-swu\.com\/decks\/(?:me\/|explore\/[^/]+\/)?([^/]+)\/?$/);
         return m ? m[1] : null;
     }
 
-    protected buildApiUrl(deckId: string): string {
+    protected override buildApiUrl(deckId: string): string {
         return `https://my-swu.com/api/decks/${deckId}/json`;
     }
 }
