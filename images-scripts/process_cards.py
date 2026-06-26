@@ -158,7 +158,7 @@ PER_SET_LANDSCAPE_DOUBLE_LEADERS: dict[str, set[int]] = {
 # via S3 CopyObject (no body re-upload, no data-transfer cost).
 CACHE_CONTROL_DEFAULT = "public, max-age=31536000, immutable"
 CACHE_CONTROL_PREVIEW = "public, max-age=604800, immutable"
-PREVIEW_SETS: set[str] = {"ASH"}
+PREVIEW_SETS: set[str] = {}
 
 
 def cache_control_for(set_code: str) -> str:
