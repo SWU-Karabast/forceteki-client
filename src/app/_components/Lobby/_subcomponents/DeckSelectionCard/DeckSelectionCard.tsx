@@ -22,12 +22,13 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
-import { fetchDeckData, determineDeckSource, DeckSource } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, determineDeckSource, DeckSource, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures,
     DeckValidationFailureReason,
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
+import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 
 import {
@@ -248,7 +249,10 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
             setDisplayError(true);
             clearErrorsFunc();
             setModalOpen(true)
-            if(error instanceof Error){
+            if (error instanceof DeckFetchError) {
+                const content = getDeckFetchErrorContent(error);
+                setError(content.summary, content.details, content.title, content.modalType, content.footerLink);
+            } else if (error instanceof Error) {
                 if(error.message.includes('NotLobbyMember')) {
                     setError('Couldn\'t change deck. Your lobby session was lost. Please refresh the page.',
                         undefined,
@@ -761,6 +765,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                     errors={errorState.details}
                     matchConfig={matchConfig}
                     modalType={errorState.modalType}
+                    footerLink={errorState.footerLink}
                 />
             )}
             {lobbyState.isPrivate && (
