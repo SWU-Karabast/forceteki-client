@@ -1,7 +1,8 @@
 'use client';
 import React from 'react';
-import { Box, Link, Modal, Typography } from '@mui/material';
+import { Box, Modal, Typography } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { DiscordChannelLink } from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 import { getReadableDeckErrors } from '@/app/_validators/DeckValidation/getReadableDeckErrors';
 import { IDeckValidationFailures } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { IMatchConfiguration } from '@/app/_constants/constants';
@@ -13,7 +14,7 @@ interface ErrorModalProps {
     errors?: IDeckValidationFailures | string;
     matchConfig?: IMatchConfiguration;
     modalType?: string;
-    footerLink?: { label: string; href: string };
+    footerLink?: { label: string };
 }
 
 export const ErrorModal: React.FC<ErrorModalProps> = ({
@@ -71,14 +72,7 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({
 
                 {footerLink && (
                     <Typography variant="body2" sx={{ color: 'white', mt: 1, textAlign: 'center' }}>
-                        <Link
-                            href={footerLink.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{ color: '#90caf9' }}
-                        >
-                            {footerLink.label}
-                        </Link>
+                        <DiscordChannelLink>{footerLink.label}</DiscordChannelLink>
                     </Typography>
                 )}
 

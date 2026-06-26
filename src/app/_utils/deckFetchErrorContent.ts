@@ -3,7 +3,6 @@ import {
     DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { DiscordInviteUrl } from '@/app/_constants/constants';
 import { IErrorFooterLink } from '@/app/_hooks/useDeckErrors';
 
 export interface IDeckFetchErrorContent {
@@ -50,7 +49,7 @@ export function getDeckFetchErrorContent(error: DeckFetchError): IDeckFetchError
                 details: partnerMsg,
                 title: 'Deck Validation Error',
                 modalType: 'error',
-                footerLink: { label: 'Report this issue in our Discord', href: DiscordInviteUrl },
+                footerLink: { label: 'Report this issue in our Discord' },
             };
         }
         default:

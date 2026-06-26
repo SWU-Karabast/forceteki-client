@@ -4,7 +4,6 @@ import { IDeckValidationFailures } from '@/app/_validators/DeckValidation/DeckVa
 
 export interface IErrorFooterLink {
     label: string;
-    href: string;
 }
 
 export interface DeckErrorState {

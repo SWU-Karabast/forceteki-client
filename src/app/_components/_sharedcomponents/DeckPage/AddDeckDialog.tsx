@@ -30,7 +30,7 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
-    const [errorFooterLink, setErrorFooterLink] = useState<{ label: string; href: string } | undefined>(undefined);
+    const [errorFooterLink, setErrorFooterLink] = useState<{ label: string } | undefined>(undefined);
     const { user } = useUser();
 
     const handleSubmit = async () => {

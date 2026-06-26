@@ -71,7 +71,7 @@ const DeckDetails: React.FC = () => {
 
     // For the raw/technical error details
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
-    const [errorFooterLink, setErrorFooterLink] = useState<{ label: string; href: string } | undefined>(undefined);
+    const [errorFooterLink, setErrorFooterLink] = useState<{ label: string } | undefined>(undefined);
 
     // preview states
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
