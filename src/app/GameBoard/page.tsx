@@ -11,20 +11,19 @@ import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
-import { useCosmetics } from '../_contexts/CosmeticsContext';
+import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { Play } from 'next/font/google';
 import RichText from '../_components/_sharedcomponents/RichText/RichText';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
     const router = useRouter();
-    const { getBackground } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer]?.user;
-    const background = getBackground(isSpectator ? null : user?.cosmetics?.background ?? null);
+    const backgroundPath = (isSpectator ? undefined : user?.cosmetics?.background?.path) ?? s3ImageURL('ui/board-background-1.webp');
     // const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
     // const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
     // const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
@@ -108,7 +107,7 @@ const GameBoard = () => {
             transition: 'padding-right 0.3s ease-in-out',
             height: '100dvh',
             position: 'relative',
-            backgroundImage: `url(${background.path}?v=2)`,
+            backgroundImage: `url(${backgroundPath}?v=2)`,
             '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
             '-webkit-user-select': 'none',   /* Prevents image selection */
             userSelect: 'none',

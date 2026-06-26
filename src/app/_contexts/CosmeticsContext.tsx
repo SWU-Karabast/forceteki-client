@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import {
-    IRegisteredCosmeticOption,
+    ICosmeticEntity,
     IRegisteredCosmetics,
     RegisteredCosmeticType
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
@@ -10,9 +10,9 @@ import { ServerApiService } from '../_services/ServerApiService';
 interface CosmeticsContextProps {
     cosmetics: IRegisteredCosmetics;
     setCosmetics: React.Dispatch<React.SetStateAction<IRegisteredCosmetics>>;
-    getCardback: (id?: string) => IRegisteredCosmeticOption;
-    getBackground: (id?: string) => IRegisteredCosmeticOption;
-    // getPlaymat: (id?: string) => IRegisteredCosmeticOption;
+    getCardback: (id?: string) => ICosmeticEntity;
+    getBackground: (id?: string) => ICosmeticEntity;
+    // getPlaymat: (id?: string) => ICosmeticEntity;
     fetchCosmetics: () => void;
     isContributor: boolean;
 }
@@ -38,7 +38,7 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
     const [cosmetics, setCosmetics] = React.useState<IRegisteredCosmetics>(defaultCosmetics);
     const [isContributor, setIsContributor] = React.useState<boolean>(false);
-    const getCosmeticDefault = (type: RegisteredCosmeticType): IRegisteredCosmeticOption => {
+    const getCosmeticDefault = (type: RegisteredCosmeticType): ICosmeticEntity => {
         switch(type) {
             case RegisteredCosmeticType.Cardback:
                 return cosmetics.cardbacks.find((cb) => cb.title === 'Default')!;
@@ -90,10 +90,6 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
             return acc;
         }, { cardbacks: [], backgrounds: [] }));
     };
-
-    React.useEffect(() => {
-        fetchCosmeticsAsync();
-    }, []);
 
     return (
         <CosmeticsContext.Provider value={{ cosmetics, setCosmetics,

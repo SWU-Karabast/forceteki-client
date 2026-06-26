@@ -70,6 +70,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         showWelcomeMessage: serverUser.showWelcomeMessage,
                         authenticated: true,
                         preferences: serverUser.preferences,
+                        activeCosmetics: serverUser.activeCosmetics,
                         needsUsernameChange: serverUser.needsUsernameChange,
                         mustRequestUsernameChange: serverUser.mustRequestUsernameChange,
                         reportingDisabled: serverUser.reportingDisabled,
