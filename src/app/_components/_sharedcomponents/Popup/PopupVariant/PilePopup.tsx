@@ -67,7 +67,7 @@ export const PilePopupModal = ({ data }: ButtonProps) => {
                             <GradientBorderButton
                                 key={`${button.uuid}:${index}`}
                                 fillColor={button.selected ? '#666' : undefined}
-                                onClickHandler={() => {
+                                onClick={() => {
                                     sendGameMessage([button.command, button.arg, button.uuid]);
                                 }}
                             >
