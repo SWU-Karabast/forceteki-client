@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Popover, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useOngoingEffectHighlight } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { useOverflow } from '@/app/_hooks/useOverflow';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import {
@@ -20,6 +21,7 @@ interface IOngoingEffectsPanelProps {
 const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }) => {
     const { connectedPlayer, ongoingEffects } = useGame();
     const { setHighlightedEffects } = useOngoingEffectHighlight();
+
     const locale = useCardImageLocale();
     const effects: IOngoingEffectSummary[] = React.useMemo(
         () => (ongoingEffects || []).filter((effect) => effect.source.controllerId === trayPlayer),
@@ -41,14 +43,24 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
         return [...bySource.values()];
     }, [effects]);
 
+    const { ref: panelRef, edges } = useOverflow<HTMLDivElement>(effectGroups.length);
     const isConnectedPlayerPanel = trayPlayer === connectedPlayer;
     const borderColor = isConnectedPlayerPanel
         ? 'var(--initiative-blue)'
         : 'var(--initiative-red)';
 
+
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [hoveredGroup, setHoveredGroup] = React.useState<IOngoingEffectSummary[] | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
+
+
+    const dedupedDescriptions = React.useMemo(() => {
+        if (!hoveredGroup) return [];
+        return [...new Set(
+            hoveredGroup.map((effect) => effect.source.effectDescription ?? 'Active effect'),
+        )];
+    }, [hoveredGroup]);
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>, group: IOngoingEffectSummary[]) => {
         // Touch devices open via tap (handleTap)
@@ -68,6 +80,15 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
         setHoveredGroup(null);
         setHighlightedEffects([]);
     };
+
+    const fadeMask = React.useMemo(() => {
+        const FADE = '1.5rem';
+        const top = edges.top ? `transparent 0, #000 ${FADE}` : '#000 0';
+        const bottom = edges.bottom
+            ? `#000 calc(100% - ${FADE}), transparent 100%`
+            : '#000 100%';
+        return `linear-gradient(to bottom, ${top}, ${bottom})`;
+    }, [edges.top, edges.bottom]);
 
     React.useEffect(() => {
         return () => {
@@ -98,6 +119,8 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
             position: 'absolute',
             left: '0.5rem',
             maxHeight: '42%',
+            maskImage: fadeMask,
+            WebkitMaskImage: fadeMask,
             ...(isConnectedPlayerPanel ? { top: '51%' } : { bottom: '51%' }),
             flexDirection: 'column',
             alignItems: 'center',
@@ -193,7 +216,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
 
     if (effectGroups.length === 0) {
         return (
-            <Box sx={styles.panel} data-testid={`constant-effects-${trayPlayer}`}>
+            <Box ref={panelRef} sx={styles.panel}>
                 <Typography sx={styles.emptyLabel}>No active effects</Typography>
             </Box>
         );
@@ -201,7 +224,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
 
     return (
         <>
-            <Box sx={styles.panel} data-testid={`constant-effects-${trayPlayer}`}>
+            <Box ref={panelRef} sx={styles.panel}>
                 {effectGroups.map((group) => {
                     const source = group[0].source;
                     const imageUrl = s3CardImageURL(
@@ -209,7 +232,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                         locale,
                         CardStyle.Plain,
                     );
-                    const uniqueTargetCount = new Set(group.flatMap((e) => e.targets)).size;
+                    const uniqueTargetCount = countVisibleTargets(group);
                     return (
                         <Box
                             key={group[0].sourceCardUuid}
@@ -222,7 +245,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                             onClick={(e) => handleTap(e, group)}
                             data-effect-uuid={group[0].sourceCardUuid}
                             data-card-name={source.sourceTitle}
-                            aria-label={`Constant effects from ${source.sourceTitle}: ${group.length} effect${group.length === 1 ? '' : 's'}, ${uniqueTargetCount} visible target${uniqueTargetCount === 1 ? '' : 's'}`}
+                            aria-label={`Ongoing effects from ${source.sourceTitle}: ${group.length} effect${group.length === 1 ? '' : 's'}, ${uniqueTargetCount} visible target${uniqueTargetCount === 1 ? '' : 's'}`}
                         >
                             {uniqueTargetCount > 0 && (
                                 <Box sx={styles.targetCountBadge}>{uniqueTargetCount}</Box>
@@ -236,8 +259,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                 open={Boolean(anchorElement) && Boolean(hoveredGroup)}
                 anchorEl={anchorElement}
                 onClose={handlePreviewClose}
-                // Tooltip content takes no focus
-                // to avoid aria-hidden warnings when it closes.
+                // Tooltip is non-interactive; suppress focus management to avoid aria-hidden warnings on close.
                 disableAutoFocus
                 sx={{ pointerEvents: isPortrait ? 'auto' : 'none' }}
                 anchorOrigin={{ vertical: 'center', horizontal: isPortrait ? 'left' : 'right' }}
@@ -254,12 +276,10 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                                 {hoveredGroup[0].source.sourceSubtitle}
                             </Typography>
                         )}
-                        {hoveredGroup.map((effect, i) => (
+                        {dedupedDescriptions.map((effect, i) => (
                             <Box key={i} component="div" sx={styles.previewDescription}>
-                                {hoveredGroup.length > 1 && <Box component="span" sx={{ mr: '4px' }}>•</Box>}
-                                {effect.source.effectDescription
-                                    ? <RichText text={effect.source.effectDescription} sx={{ display: 'inline' }} />
-                                    : 'Active effect'}
+                                {dedupedDescriptions.length > 1 && <Box component="span" sx={{ mr: '4px' }}>•</Box>}
+                                <RichText text={effect} sx={{ display: 'inline' }} />
                             </Box>
                         ))}
                         <Typography sx={styles.previewTargetsHeader}>

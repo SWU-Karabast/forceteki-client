@@ -14,7 +14,7 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
-import { useEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
@@ -66,7 +66,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
     const { clearPopups } = usePopup();
     const { getCardback } = useCosmetics();
-    const highlightSx = useEffectHighlightSx(card?.uuid);
+    const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
 
     const locale = useCardImageLocale();
 

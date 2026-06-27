@@ -29,7 +29,7 @@ interface IOngoingEffectHighlightContext {
     highlightRoles: ReadonlyMap<string, EffectHighlightRole>;
 }
 
-const Ctx = createContext<IOngoingEffectHighlightContext | undefined>(undefined);
+const ongoingEffectsContext = createContext<IOngoingEffectHighlightContext | undefined>(undefined);
 
 export const OngoingEffectHighlightProvider = ({ children }: { children: ReactNode }) => {
     const [highlightedEffects, setHighlightedEffects] = useState<IOngoingEffectSummary[]>([]);
@@ -47,19 +47,19 @@ export const OngoingEffectHighlightProvider = ({ children }: { children: ReactNo
     }, [highlightedEffects]);
 
     return (
-        <Ctx.Provider value={{ highlightedEffects, setHighlightedEffects, highlightRoles }}>
+        <ongoingEffectsContext.Provider value={{ highlightedEffects, setHighlightedEffects, highlightRoles }}>
             {children}
-        </Ctx.Provider>
+        </ongoingEffectsContext.Provider>
     );
 };
 
 export const useOngoingEffectHighlight = () => {
-    const ctx = useContext(Ctx);
-    if (!ctx) throw new Error('useConstantEffectHighlight must be used within ConstantEffectHighlightProvider');
-    return ctx;
+    const context = useContext(ongoingEffectsContext);
+    if (!context) throw new Error('useOngoingEffectHighlight must be used within an OngoingEffectHighlightProvider');
+    return context;
 };
 
-export const useEffectHighlightSx = (cardUuid?: string): SystemStyleObject<Theme> => {
+export const useOngoingEffectHighlightSx = (cardUuid?: string): SystemStyleObject<Theme> => {
     const { highlightRoles } = useOngoingEffectHighlight();
     const role = cardUuid ? highlightRoles.get(cardUuid) : undefined;
     return role ? roleSx[role] : EMPTY_SX;
@@ -68,7 +68,7 @@ export const useEffectHighlightSx = (cardUuid?: string): SystemStyleObject<Theme
 export const useDiscardPileHighlightSx = (trayPlayer: string): SystemStyleObject<Theme> => {
     const { highlightedEffects } = useOngoingEffectHighlight();
     const active = highlightedEffects.some(
-        (e) => e.source.sourceZone === 'discard' && e.source.controllerId === trayPlayer,
+        (highlightedEffect) => highlightedEffect.source.sourceZone === 'discard' && highlightedEffect.source.controllerId === trayPlayer,
     );
     return active ? roleSx.source : EMPTY_SX;
 };

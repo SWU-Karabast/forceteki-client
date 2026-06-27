@@ -12,7 +12,7 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
-import { useEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -28,7 +28,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
-    const highlightSx = useEffectHighlightSx(card?.uuid);
+    const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
     const isMobilePortrait = useMediaQuery('(orientation: portrait) and (max-width:932px)');
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
