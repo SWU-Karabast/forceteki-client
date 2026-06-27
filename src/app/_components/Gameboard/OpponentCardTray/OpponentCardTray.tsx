@@ -178,7 +178,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 flexWrap: 'nowrap',
                 columnGap: '1rem', // 2rem gap between columns
                 position: 'relative',
-                zIndex: 2 // Above playmats
+                zIndex: 3 // Above playmats
             }}
         >
             {/* Left column (fixed 360px) */}
