@@ -149,7 +149,8 @@ export interface IActiveModActionCacheEntry {
 }
 
 export enum UsernameChangeSource {
-    Initial = 'Initial',
+    AccountCreation = 'AccountCreation',
+    Migration = 'Migration',
     UserInitiated = 'UserInitiated',
     ForcedRename = 'ForcedRename',
 }

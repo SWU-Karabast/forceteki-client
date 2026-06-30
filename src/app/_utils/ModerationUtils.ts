@@ -98,16 +98,25 @@ export const formatUsernameTransition = (change: IUsernameChangeResponse): strin
 
 export const getUsernameChangeLabel = (change: IUsernameChangeResponse): string => {
     const date = formatDate(change.createdAt);
-    if (change.source === UsernameChangeSource.Initial || !change.previousUsername) {
-        return `${date} Account created (${change.newUsername})`;
+    switch (change.source) {
+        case UsernameChangeSource.AccountCreation:
+            return `${date} Account created (${change.newUsername})`;
+        case UsernameChangeSource.Migration:
+            return `${date} Pre-existing username (${change.newUsername})`;
+        case UsernameChangeSource.ForcedRename:
+            return `${date} Force Rename: ${formatUsernameTransition(change)}`;
+        case UsernameChangeSource.UserInitiated:
+        default:
+            return `${date} Renamed: ${formatUsernameTransition(change)}`;
     }
-    return `${date} Renamed: ${formatUsernameTransition(change)}`;
 };
 
 export const getUsernameChangeSourceLabel = (source: UsernameChangeSource): string => {
     switch (source) {
-        case UsernameChangeSource.Initial:
+        case UsernameChangeSource.AccountCreation:
             return 'Account creation';
+        case UsernameChangeSource.Migration:
+            return 'Migration';
         case UsernameChangeSource.ForcedRename:
             return 'Forced rename';
         default:
@@ -175,4 +184,22 @@ export const buildUserHistory = (
 
     entries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return entries;
+};
+
+/**
+ * Builds the header label for a mod action history entry.
+ * Force renames are distinguished from user renames, and a resolved force rename
+ * (one with a merged username change) reads differently from a pending one.
+ */
+export const getModActionEntryLabel = (entry: IUserHistoryEntry, currentUsername: string): string => {
+    const action = entry.modAction!;
+    const date = formatDate(action.createdAt);
+    if (action.actionType === ModActionType.Rename) {
+        if (entry.mergedUsernameChange) {
+            return `${date} Force Rename (resolved): ${formatUsernameTransition(entry.mergedUsernameChange)}`;
+        }
+        // Pending: the user hasn't renamed yet, so their current username is the name being forced out.
+        return `${date} Force Rename: '${currentUsername}'`;
+    }
+    return getActionLabel(action);
 };

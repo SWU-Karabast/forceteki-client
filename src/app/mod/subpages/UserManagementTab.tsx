@@ -10,10 +10,11 @@ import {
     IModActionResponse,
     IPlayerSearchResult,
     IUsernameChangeResponse,
-    ModActionType
+    ModActionType,
+    UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
-import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionLabel, getActionStatus, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
+import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
 
 const UserManagementTab: React.FC = () => {
     // Search state
@@ -569,14 +570,16 @@ const UserManagementTab: React.FC = () => {
                                                 {isExpanded && (
                                                     <Box sx={styles.actionHistoryDetails}>
                                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                                                            <Box>
-                                                                <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
-                                                                    Source
-                                                                </Typography>
-                                                                <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {sourceLabel}
-                                                                </Typography>
-                                                            </Box>
+                                                            {change.source === UsernameChangeSource.ForcedRename && (
+                                                                <Box>
+                                                                    <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
+                                                                        Source
+                                                                    </Typography>
+                                                                    <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
+                                                                        {sourceLabel}
+                                                                    </Typography>
+                                                                </Box>
+                                                            )}
                                                             <Box>
                                                                 <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
                                                                     Name change
@@ -618,8 +621,7 @@ const UserManagementTab: React.FC = () => {
                                                         }}
                                                     />
                                                     <Typography sx={{ color: 'white', fontSize: '0.85rem', mb:'0px' }}>
-                                                        {getActionLabel(action)}
-                                                        {entry.mergedUsernameChange ? `: ${formatUsernameTransition(entry.mergedUsernameChange)}` : ''}
+                                                        {getModActionEntryLabel(entry, selectedPlayer.username)}
                                                     </Typography>
                                                     {status.label && (
                                                         <Typography sx={styles.statusBadge(status.color)}>
