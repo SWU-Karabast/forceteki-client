@@ -30,6 +30,7 @@ export async function httpGetJson(url: string, providerName?: string): Promise<R
         response = await fetch(requestUrl, {
             method: 'GET',
             cache: 'no-store',
+            signal: AbortSignal.timeout(5000),
         });
     } catch (e) {
         const message = e instanceof Error ? e.message : 'Network error';
