@@ -1,10 +1,9 @@
 import React, { useState, ChangeEvent } from 'react';
 import { Box, Link, Typography, IconButton, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { DeckSource, fetchDeckData, IDeckData } from '@/app/_utils/fetchDeckData';
+import { DeckSource, fetchDeckData, IDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import { ErrorModal } from '@/app/_components/_sharedcomponents/Error/ErrorModal';
 import {
-    DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -13,6 +12,7 @@ import { v4 as uuid } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
 import { saveDeckToLocalStorage, saveDeckToServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { SupportedDeckSources } from '@/app/_constants/constants';
+import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 
 interface AddDeckDialogProps {
@@ -30,6 +30,7 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
     const [errorTitle, setErrorTitle] = useState<string>('Deck Validation Error');
     const [deckErrorSummary, setDeckErrorSummary] = useState<string | null>(null);
     const [deckErrorDetails, setDeckErrorDetails] = useState<IDeckValidationFailures | string | undefined>(undefined);
+    const [errorFooterLink, setErrorFooterLink] = useState<{ label: string } | undefined>(undefined);
     const { user } = useUser();
 
     const handleSubmit = async () => {
@@ -56,19 +57,18 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
             }
         } catch (error) {
             setDeckErrorDetails(undefined);
-            if (error instanceof Error) {
-                if (error.message.includes('403')) {
-                    setDeckErrorSummary('Couldn\'t import. The deck is set to private');
-                    setErrorTitle('Deck Validation Error');
-                    setDeckErrorDetails({
-                        [DeckValidationFailureReason.DeckSetToPrivate]: true,
-                    });
-                    setErrorModalOpen(true);
-                } else {
-                    setErrorTitle('Deck Validation Error');
-                    setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
-                    setErrorModalOpen(true);
-                }
+            setErrorFooterLink(undefined);
+            if (error instanceof DeckFetchError) {
+                const content = getDeckFetchErrorContent(error);
+                setErrorTitle(content.title);
+                setDeckErrorSummary(content.summary);
+                setDeckErrorDetails(content.details);
+                setErrorFooterLink(content.footerLink);
+                setErrorModalOpen(true);
+            } else if (error instanceof Error) {
+                setErrorTitle('Deck Validation Error');
+                setDeckErrorSummary('Couldn\'t import. Deck is invalid.');
+                setErrorModalOpen(true);
             }else{
                 setErrorTitle('Server error');
                 setDeckErrorSummary('Server error when saving deck to server.');
@@ -194,6 +194,7 @@ const AddDeckDialog: React.FC<AddDeckDialogProps> = ({
                 onClose={() => setErrorModalOpen(false)}
                 title={errorTitle}
                 errors={deckErrorDetails}
+                footerLink={errorFooterLink}
             />
         </>
     );
