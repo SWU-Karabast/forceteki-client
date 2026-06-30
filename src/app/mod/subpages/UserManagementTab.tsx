@@ -582,7 +582,7 @@ const UserManagementTab: React.FC = () => {
                                                             )}
                                                             <Box>
                                                                 <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
-                                                                    Name change
+                                                                    {change.previousUsername ? 'Name change' : 'Existing username'}
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
                                                                     {formatUsernameTransition(change)}
