@@ -2,7 +2,9 @@ import { IModerationAction } from '@/app/_contexts/UserTypes';
 import {
     IModActionResponse,
     IPlayerSearchResult,
-    ModActionType
+    IUsernameChangeResponse,
+    ModActionType,
+    UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 export const getMuteDisplayText = (moderation?: IModerationAction): string | null => {
@@ -68,7 +70,7 @@ export const getActionStatus = (action: IModActionResponse, selectedPlayer:IPlay
     }
     if (action.actionType === ModActionType.Mute) {
         if (!action.startedAt) {
-            return { label: 'Pending', color: '#ffd54f' };
+            return { label: 'Pending', color: '#ff9800' };
         }
         if (action.expiresAt && new Date(action.expiresAt) <= new Date()) {
             return { label: 'Expired', color: '#9E9E9E' };
@@ -77,8 +79,134 @@ export const getActionStatus = (action: IModActionResponse, selectedPlayer:IPlay
     }
     if (action.actionType === ModActionType.Rename) {
         if(selectedPlayer.activeRename?.id === action.id){
-            return { label: 'Pending', color: '#ffd54f' };
+            return { label: 'Pending', color: '#ff9800' };
         }
     }
     return { label: '', color: '#9E9E9E' };
+};
+
+/**
+ * Formats a username transition for display, e.g. "oldName → newName".
+ * Initial records (no previous username) just show the new name.
+ * Pass `{ quote: true }` to wrap each username in single quotes (used in header labels).
+ */
+export const formatUsernameTransition = (change: IUsernameChangeResponse, options?: { quote?: boolean }): string => {
+    const wrap = (name: string) => (options?.quote ? `'${name}'` : name);
+    if (!change.previousUsername) {
+        return wrap(change.newUsername);
+    }
+    return `${wrap(change.previousUsername)} → ${wrap(change.newUsername)}`;
+};
+
+export const getUsernameChangeLabel = (change: IUsernameChangeResponse): string => {
+    const date = formatDate(change.createdAt);
+    switch (change.source) {
+        case UsernameChangeSource.AccountCreation:
+            return `${date} Account created (${change.newUsername})`;
+        case UsernameChangeSource.Migration:
+            return `${date} Pre-existing username (${change.newUsername})`;
+        case UsernameChangeSource.ForcedRename:
+            return `${date} Force Rename: ${formatUsernameTransition(change, { quote: true })}`;
+        case UsernameChangeSource.UserInitiated:
+        default:
+            return `${date} Name Changed: ${formatUsernameTransition(change, { quote: true })}`;
+    }
+};
+
+export const getUsernameChangeSourceLabel = (source: UsernameChangeSource): string => {
+    switch (source) {
+        case UsernameChangeSource.AccountCreation:
+            return 'Account creation';
+        case UsernameChangeSource.Migration:
+            return 'Migration';
+        case UsernameChangeSource.ForcedRename:
+            return 'Forced rename';
+        default:
+            return 'User-initiated';
+    }
+};
+
+/**
+ * A unified history entry that is either a mod action or a standalone username change.
+ * Forced renames are merged into their related Rename mod action via `mergedUsernameChange`.
+ */
+export interface IUserHistoryEntry {
+    id: string;
+    createdAt: string;
+    kind: 'modAction' | 'usernameChange';
+    modAction?: IModActionResponse;
+    usernameChange?: IUsernameChangeResponse;
+    mergedUsernameChange?: IUsernameChangeResponse;
+}
+
+/**
+ * Builds a single chronological history list from mod actions and username changes.
+ * A ForcedRename username change is deduped into its related Rename mod action entry
+ * (so the forced rename and its resulting name change render as one row).
+ */
+export const buildUserHistory = (
+    modActions: IModActionResponse[],
+    usernameChanges: IUsernameChangeResponse[],
+): IUserHistoryEntry[] => {
+    const forcedByModActionId = new Map<string, IUsernameChangeResponse>();
+    for (const change of usernameChanges) {
+        if (change.source === UsernameChangeSource.ForcedRename && change.relatedModActionId) {
+            forcedByModActionId.set(change.relatedModActionId, change);
+        }
+    }
+
+    const consumedChangeIds = new Set<string>();
+    const entries: IUserHistoryEntry[] = [];
+
+    for (const action of modActions) {
+        const merged = forcedByModActionId.get(action.id);
+        if (merged) {
+            consumedChangeIds.add(merged.id);
+        }
+        entries.push({
+            id: action.id,
+            createdAt: action.createdAt,
+            kind: 'modAction',
+            modAction: action,
+            mergedUsernameChange: merged,
+        });
+    }
+
+    for (const change of usernameChanges) {
+        if (consumedChangeIds.has(change.id)) {
+            continue;
+        }
+        entries.push({
+            id: change.id,
+            createdAt: change.createdAt,
+            kind: 'usernameChange',
+            usernameChange: change,
+        });
+    }
+
+    entries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return entries;
+};
+
+/**
+ * Builds the header label for a mod action history entry.
+ * Force renames are distinguished from user renames, and a resolved force rename
+ * reads differently from a pending one (driven by the player's active rename state).
+ */
+export const getModActionEntryLabel = (entry: IUserHistoryEntry, selectedPlayer: IPlayerSearchResult): string => {
+    const action = entry.modAction!;
+    const date = formatDate(action.createdAt);
+    if (action.actionType === ModActionType.Rename) {
+        const isPending = selectedPlayer.activeRename?.id === action.id;
+        if (isPending) {
+            // Pending: the user hasn't renamed yet, so their current username is the name being forced out.
+            return `${date} Force Rename: '${selectedPlayer.username}'`;
+        }
+        // Resolved/cancelled. Show before → after only when the linked username change exists (newer data).
+        if (entry.mergedUsernameChange) {
+            return `${date} Force Rename: ${formatUsernameTransition(entry.mergedUsernameChange, { quote: true })}`;
+        }
+        return `${date} Force Rename`;
+    }
+    return getActionLabel(action);
 };
