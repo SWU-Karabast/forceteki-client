@@ -562,7 +562,7 @@ const UserManagementTab: React.FC = () => {
                                                                 transition: 'transform 0.2s',
                                                             }}
                                                         />
-                                                        <Typography sx={{ color: 'white', fontSize: '0.85rem', mb:'0px' }}>
+                                                        <Typography sx={{ color: change.source === UsernameChangeSource.ForcedRename ? '#ffd54f' : 'white', fontSize: '0.85rem', mb:'0px' }}>
                                                             {getUsernameChangeLabel(change)}
                                                         </Typography>
                                                     </Box>
@@ -620,7 +620,7 @@ const UserManagementTab: React.FC = () => {
                                                             transition: 'transform 0.2s',
                                                         }}
                                                     />
-                                                    <Typography sx={{ color: 'white', fontSize: '0.85rem', mb:'0px' }}>
+                                                    <Typography sx={{ color: '#ffd54f', fontSize: '0.85rem', mb:'0px' }}>
                                                         {getModActionEntryLabel(entry, selectedPlayer)}
                                                     </Typography>
                                                     {status.label && (

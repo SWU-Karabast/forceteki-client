@@ -70,7 +70,7 @@ export const getActionStatus = (action: IModActionResponse, selectedPlayer:IPlay
     }
     if (action.actionType === ModActionType.Mute) {
         if (!action.startedAt) {
-            return { label: 'Pending', color: '#ffd54f' };
+            return { label: 'Pending', color: '#ff9800' };
         }
         if (action.expiresAt && new Date(action.expiresAt) <= new Date()) {
             return { label: 'Expired', color: '#9E9E9E' };
@@ -79,7 +79,7 @@ export const getActionStatus = (action: IModActionResponse, selectedPlayer:IPlay
     }
     if (action.actionType === ModActionType.Rename) {
         if(selectedPlayer.activeRename?.id === action.id){
-            return { label: 'Pending', color: '#ffd54f' };
+            return { label: 'Pending', color: '#ff9800' };
         }
     }
     return { label: '', color: '#9E9E9E' };
@@ -88,12 +88,14 @@ export const getActionStatus = (action: IModActionResponse, selectedPlayer:IPlay
 /**
  * Formats a username transition for display, e.g. "oldName → newName".
  * Initial records (no previous username) just show the new name.
+ * Pass `{ quote: true }` to wrap each username in single quotes (used in header labels).
  */
-export const formatUsernameTransition = (change: IUsernameChangeResponse): string => {
+export const formatUsernameTransition = (change: IUsernameChangeResponse, options?: { quote?: boolean }): string => {
+    const wrap = (name: string) => (options?.quote ? `'${name}'` : name);
     if (!change.previousUsername) {
-        return change.newUsername;
+        return wrap(change.newUsername);
     }
-    return `${change.previousUsername} → ${change.newUsername}`;
+    return `${wrap(change.previousUsername)} → ${wrap(change.newUsername)}`;
 };
 
 export const getUsernameChangeLabel = (change: IUsernameChangeResponse): string => {
@@ -104,10 +106,10 @@ export const getUsernameChangeLabel = (change: IUsernameChangeResponse): string 
         case UsernameChangeSource.Migration:
             return `${date} Pre-existing username (${change.newUsername})`;
         case UsernameChangeSource.ForcedRename:
-            return `${date} Force Rename: ${formatUsernameTransition(change)}`;
+            return `${date} Force Rename: ${formatUsernameTransition(change, { quote: true })}`;
         case UsernameChangeSource.UserInitiated:
         default:
-            return `${date} Renamed: ${formatUsernameTransition(change)}`;
+            return `${date} Name Changed: ${formatUsernameTransition(change, { quote: true })}`;
     }
 };
 
@@ -202,9 +204,9 @@ export const getModActionEntryLabel = (entry: IUserHistoryEntry, selectedPlayer:
         }
         // Resolved/cancelled. Show before → after only when the linked username change exists (newer data).
         if (entry.mergedUsernameChange) {
-            return `${date} Force Rename (resolved): ${formatUsernameTransition(entry.mergedUsernameChange)}`;
+            return `${date} Force Rename: ${formatUsernameTransition(entry.mergedUsernameChange, { quote: true })}`;
         }
-        return `${date} Force Rename (resolved)`;
+        return `${date} Force Rename`;
     }
     return getActionLabel(action);
 };
