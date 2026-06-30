@@ -621,7 +621,7 @@ const UserManagementTab: React.FC = () => {
                                                         }}
                                                     />
                                                     <Typography sx={{ color: 'white', fontSize: '0.85rem', mb:'0px' }}>
-                                                        {getModActionEntryLabel(entry, selectedPlayer.username)}
+                                                        {getModActionEntryLabel(entry, selectedPlayer)}
                                                     </Typography>
                                                     {status.label && (
                                                         <Typography sx={styles.statusBadge(status.color)}>

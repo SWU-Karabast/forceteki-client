@@ -189,17 +189,22 @@ export const buildUserHistory = (
 /**
  * Builds the header label for a mod action history entry.
  * Force renames are distinguished from user renames, and a resolved force rename
- * (one with a merged username change) reads differently from a pending one.
+ * reads differently from a pending one (driven by the player's active rename state).
  */
-export const getModActionEntryLabel = (entry: IUserHistoryEntry, currentUsername: string): string => {
+export const getModActionEntryLabel = (entry: IUserHistoryEntry, selectedPlayer: IPlayerSearchResult): string => {
     const action = entry.modAction!;
     const date = formatDate(action.createdAt);
     if (action.actionType === ModActionType.Rename) {
+        const isPending = selectedPlayer.activeRename?.id === action.id;
+        if (isPending) {
+            // Pending: the user hasn't renamed yet, so their current username is the name being forced out.
+            return `${date} Force Rename: '${selectedPlayer.username}'`;
+        }
+        // Resolved/cancelled. Show before → after only when the linked username change exists (newer data).
         if (entry.mergedUsernameChange) {
             return `${date} Force Rename (resolved): ${formatUsernameTransition(entry.mergedUsernameChange)}`;
         }
-        // Pending: the user hasn't renamed yet, so their current username is the name being forced out.
-        return `${date} Force Rename: '${currentUsername}'`;
+        return `${date} Force Rename (resolved)`;
     }
     return getActionLabel(action);
 };
