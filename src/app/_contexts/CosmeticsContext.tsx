@@ -71,7 +71,7 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
         return cosmetics.playmats.find((pm) => pm.id === id) || getCosmeticDefault(RegisteredCosmeticType.Playmat);
     }*/
 
-    const fetchCosmeticsAsync = async () => {
+    const fetchCosmeticsAsync = React.useCallback(async () => {
         const data = await ServerApiService.getCosmeticsAsync();
         setIsContributor(data.isContributor);
         setCosmetics(data.cosmetics.reduce((acc: IRegisteredCosmetics, cosmetic) => {
@@ -89,7 +89,7 @@ export const CosmeticsProvider: React.FC<{ children: React.ReactNode }> = ({
             }
             return acc;
         }, { cardbacks: [], backgrounds: [] }));
-    };
+    }, []);
 
     return (
         <CosmeticsContext.Provider value={{ cosmetics, setCosmetics,

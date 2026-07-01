@@ -30,9 +30,14 @@ function CosmeticsTab() {
                 /* setSelectedPlaymat(cosmetics.playmat ?? 'none');
                 setDisablePlaymats(cosmetics.disablePlaymats ?? false);*/
             }
-            fetchCosmetics();
         }
     }, [user]);
+
+    useEffect(() => {
+        if (user?.id) {
+            fetchCosmetics();
+        }
+    }, [user?.id, fetchCosmetics]);
 
     const onCardbackClick = async (is: string) => {
         try {
