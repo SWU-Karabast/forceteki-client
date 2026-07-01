@@ -7,6 +7,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { ICardData, LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
@@ -29,6 +30,9 @@ const Board: React.FC<IBoardProps> = ({
 
     const playerCapturedCards = gameState?.players[connectedPlayer].cardPiles['capturedZone'];
     const opponentCapturedCards = gameState?.players[opponentId].cardPiles['capturedZone'];
+
+    const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
+    const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
 
     const attachCapturedCards = (
         card: ICardData,
@@ -234,6 +238,44 @@ const Board: React.FC<IBoardProps> = ({
                 color: !initiativeClaimed && hasInitiative ? 'var(--initiative-blue)' : !initiativeClaimed && !hasInitiative ? 'var(--initiative-red)' : 'black',
             }
         },
+        centralPromptContainer: {
+            flex: '0 1 60px',
+            width: '100%',
+            minHeight: '16px',
+            textWrap: 'nowrap',
+            //transform: 'translateY(-50%)',
+            transition: 'left 0.3s ease-in-out',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            pointerEvents: 'none',
+            zIndex: { xs: '2', md: '1' },
+        },
+        promptStyle: {
+            textAlign: 'center',
+            fontSize: '1.3em',
+            // media query to detect mobile in landscape mode. be aware that most devices will have 800px wide on landscape
+            // for this case we want to save as much space as possible
+            '@media (orientation: landscape) and (max-width:932px)': { fontSize: '1rem' },
+            textShadow: '1px 1px 6px black',
+            padding: '0.5rem',
+            position: 'relative',
+            borderRadius: '20px',
+            background: !menuTitle ? 'transparent' : promptTitle
+                ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)'
+                : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
+        },
+        promptShadow: {
+            position: 'absolute',
+            top: '27%',
+            left: 0,
+            width: '100%',
+            height: '60%',
+            zIndex: -1,
+            background: 'rgba(0, 0, 0, .9)',
+            filter: 'blur(10px)',
+            WebkitFilter: 'blur(10px)'
+        },
     }
 
     return (
@@ -270,7 +312,12 @@ const Board: React.FC<IBoardProps> = ({
                             />
                         </Box>
                     </Box>
-                    <Box sx={{ flex: '0 1 60px', width: '100%', minHeight: '16px' }} />
+                    <Box sx={styles.centralPromptContainer}>
+                        <Box sx={styles.promptStyle}>
+                            {menuTitle && <RichText text={menuTitle}/>}
+                            <Box sx={styles.promptShadow}/>
+                        </Box>
+                    </Box>
                     <Box sx={styles.leaderBaseContainer}>
                         <Box sx={styles.leaderBaseWrapper}>
                             <LeaderBaseCard
