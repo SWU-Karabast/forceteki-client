@@ -14,7 +14,6 @@ import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOver
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
-import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
@@ -65,7 +64,6 @@ const GameCard: React.FC<IGameCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
     const { clearPopups } = usePopup();
-    const { getCardback } = useCosmetics();
     const locale = useCardImageLocale();
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
@@ -177,7 +175,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 
     // Compute card image URL + load status before any early return so hooks
     // are called in a stable order.
-    const cardbackPath = getCardback(cardback).path;
+    const cardbackPath = cardback;
     const styledCardUrl = card
         ? s3CardImageURL(
             { ...card, setId: card.clonedCardId ?? card.setId },
