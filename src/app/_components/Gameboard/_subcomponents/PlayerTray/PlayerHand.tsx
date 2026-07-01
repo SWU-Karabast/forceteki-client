@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '@/app/_components/_sharedcomponents/Cards/GameCard';
@@ -8,7 +8,7 @@ import { debugBorder, isDebugHandScalingEnabled } from '@/app/_utils/debug';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
-const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, scrollbarEnabled = true, cardback = undefined }) => {
+const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, scrollbarEnabled = true, cardback = undefined, showCardCount = false }) => {
     const { connectedPlayer } = useGame();
     const { isPortrait } = useScreenOrientation();
     const showDebugInfo = isDebugHandScalingEnabled();
@@ -166,12 +166,52 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
     // Cap it by the max ratio
     overlapWidthPx = Math.min(overlapWidthPx, cardWidthPx * maxCardOverlapPercent);
 
+    const occupiedHandWidth = needsOverlap
+        ? cardWidthPx + ((cards.length - 1) * (cardWidthPx - overlapWidthPx))
+        : totalNeededWidth;
+
+    const showHandCounter = showCardCount && cards.length > 3;
+
     const containerStyle = {
         position: 'relative' as const,
         width: '100%',
         height: isPortrait ? `${PORTRAIT_CARD_HEIGHT_PERCENT * 100}%` : '100%',
         margin: isPortrait ? 'auto 0' : '0',
         overflow: 'hidden',
+        '&:hover .hand-card-count': {
+            opacity: 1,
+        },
+        '@media (pointer: coarse) and (hover: none)': {
+            '& .hand-card-count': {
+                opacity: 1,
+            },
+        },
+    };
+
+    const handCounterStyle = {
+        fontFamily: 'var(--font-barlow), sans-serif',
+        fontWeight: '800',
+        fontSize: 'clamp(0.8rem, 0.6rem + 0.6vw, 1.5rem)',
+        color: 'white',
+        textAlign: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, .75)',
+        borderRadius: '100px',
+        width: `${Math.max(cardWidthPx * 0.35, 32)}px`,
+        height: 'auto',
+        aspectRatio: '1 / 1',
+        position: 'absolute',
+        left: needsOverlap ? `${occupiedHandWidth / 2}px` : '50%',
+        top: `${cardTranslationPx + (cardHeightPx / 2)}px`,
+        transform: 'translate(-50%, -50%)',
+        pointerEvents: 'none',
+        userSelect: 'none',
+        zIndex: 100,
+        lineHeight: 1,
+        opacity: 0,
+        transition: 'opacity 0.15s ease-in-out',
     };
 
     const HandContent = (
@@ -331,6 +371,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                         {HandContent}
                     </Box>
                 )}
+                {showHandCounter && <Typography className="hand-card-count" sx={handCounterStyle}>{cards.length}</Typography>}
             </Box>
         </React.Fragment>
     );
