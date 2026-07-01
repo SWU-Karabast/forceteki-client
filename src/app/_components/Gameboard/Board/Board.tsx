@@ -243,7 +243,6 @@ const Board: React.FC<IBoardProps> = ({
             width: '100%',
             minHeight: '16px',
             textWrap: 'nowrap',
-            //transform: 'translateY(-50%)',
             transition: 'left 0.3s ease-in-out',
             display: 'flex',
             justifyContent: 'center',
