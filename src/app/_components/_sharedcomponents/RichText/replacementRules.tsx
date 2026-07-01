@@ -140,6 +140,35 @@ export const keywordReplacementRule: TextReplacementRule = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Trait replacements  ({trait:underworld}, {trait:bounty-hunter}, …)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const traitStyle: React.CSSProperties = {
+    fontWeight: 600,
+    fontStyle: 'italic',
+    // Traits are printed all-caps but sized down so they sit at roughly the
+    // x-height of the surrounding lowercase text, matching the physical cards.
+    fontSize: '0.85em',
+};
+
+/**
+ * Replacement rule for trait tokens.
+ * `{trait:name}` renders the trait in all caps, semibold, and italic — matching how
+ * traits are printed on the physical cards. Multi-word traits are kebab-cased in the
+ * token (e.g. `{trait:bounty-hunter}`); hyphens are rendered back as spaces.
+ */
+export const traitReplacementRule: TextReplacementRule = {
+    pattern: /\{trait:([a-z'-]+)\}/,
+    render: (match: string, key: number) => {
+        const name = match.match(/\{trait:([a-z'-]+)\}/)![1];
+        const display = name.replace(/-/g, ' ').toUpperCase();
+        return (
+            <span key={key} style={traitStyle}>{display}</span>
+        );
+    },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Default rule set
 // Add new rule sets here to enable them globally by default.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -148,4 +177,5 @@ export const defaultReplacementRules: TextReplacementRule[] = [
     ...aspectReplacementRules,
     resourceReplacementRule,
     keywordReplacementRule,
+    traitReplacementRule,
 ];
