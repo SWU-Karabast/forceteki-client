@@ -144,16 +144,23 @@ export const keywordReplacementRule: TextReplacementRule = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const traitStyle: React.CSSProperties = {
-    fontWeight: 600,
+    // Barlow (the inherited family) loads 400/600/800/900 — not 700 — so a 700 request
+    // resolves to 800 via CSS weight matching. Set 800 explicitly to be unambiguous.
+    fontWeight: 800,
     fontStyle: 'italic',
     // Traits are printed all-caps but sized down so they sit at roughly the
     // x-height of the surrounding lowercase text, matching the physical cards.
     fontSize: '0.85em',
+    // The italic slant makes the leading glyph look detached from the previous
+    // word and the trailing glyph crowd the next one. Nudge the inline spacing to
+    // rebalance: pull in at the start, add a little breathing room at the end.
+    marginInlineStart: '-0.04em',
+    marginInlineEnd: '0.1em',
 };
 
 /**
  * Replacement rule for trait tokens.
- * `{trait:name}` renders the trait in all caps, semibold, and italic — matching how
+ * `{trait:name}` renders the trait in all caps, bold, and italic — matching how
  * traits are printed on the physical cards. Multi-word traits are kebab-cased in the
  * token (e.g. `{trait:bounty-hunter}`); hyphens are rendered back as spaces.
  */
