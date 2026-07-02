@@ -144,8 +144,6 @@ export const keywordReplacementRule: TextReplacementRule = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const traitStyle: React.CSSProperties = {
-    // Barlow (the inherited family) loads 400/600/800/900 — not 700 — so a 700 request
-    // resolves to 800 via CSS weight matching. Set 800 explicitly to be unambiguous.
     fontWeight: 800,
     fontStyle: 'italic',
     // Traits are printed all-caps but sized down so they sit at roughly the
