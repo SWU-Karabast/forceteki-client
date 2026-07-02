@@ -23,6 +23,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
+import { useErrorRecovery } from '@/app/_contexts/ErrorRecovery.context';
 
 interface IDeckSummaryCardTileProps {
     cardId: string;
@@ -68,6 +69,7 @@ const DeckPage: React.FC = () => {
     const router = useRouter();
     const { data: session } = useSession(); // Get session from next-auth
     const { user } = useUser();
+    const { showError } = useErrorRecovery();
 
     // Load decks from localStorage on component mount
     useEffect(() => {
@@ -80,8 +82,15 @@ const DeckPage: React.FC = () => {
             // Call the loadDecks function and await the result
             await retrieveDecksForUser(session?.user, user,{ format:'display', setDecks: setDecks });
         } catch (error) {
-            alert('Server error when fetching decks');
             console.error('Error fetching decks:', error);
+            showError({
+                title: 'Decks could not be loaded',
+                message: 'Server error when fetching decks.',
+                actions: [
+                    { label: 'Retry', onClick: () => void fetchDecks(), variant: 'warning' },
+                    { label: 'Close' },
+                ],
+            });
         }
     };
 
@@ -217,8 +226,15 @@ const DeckPage: React.FC = () => {
 
             setDecks(sortedDecks);
         }catch(error){
-            alert('There was an error when toggling favorite.');
             console.log(error)
+            showError({
+                title: 'Favorite could not be updated',
+                message: 'There was an error when toggling favorite.',
+                actions: [
+                    { label: 'Refresh', onClick: () => void fetchDecks(), variant: 'warning' },
+                    { label: 'Close' },
+                ],
+            });
         }
     };
 

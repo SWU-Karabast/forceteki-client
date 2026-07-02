@@ -2,6 +2,7 @@
 
 import { CardImageLocaleProvider } from '@/app/_contexts/CardImageLocale.context';
 import { CosmeticsProvider } from '@/app/_contexts/CosmeticsContext';
+import { ErrorRecoveryProvider } from '@/app/_contexts/ErrorRecovery.context';
 import { PopupProvider } from '@/app/_contexts/Popup.context';
 import { ThemeContextProvider } from '@/app/_contexts/Theme.context';
 import { TimerVisibilityProvider } from '@/app/_contexts/TimerVisibility.context';
@@ -20,7 +21,9 @@ const ClientProviders: React.FC<IClientProvidersProps> = ({ children }) => {
                     <TimerVisibilityProvider>
                         <PopupProvider>
                             <CosmeticsProvider>
-                                <ThemeContextProvider>{children}</ThemeContextProvider>
+                                <ThemeContextProvider>
+                                    <ErrorRecoveryProvider>{children}</ErrorRecoveryProvider>
+                                </ThemeContextProvider>
                             </CosmeticsProvider>
                         </PopupProvider>
                     </TimerVisibilityProvider>

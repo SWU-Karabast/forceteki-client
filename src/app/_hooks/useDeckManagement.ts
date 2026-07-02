@@ -9,6 +9,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
 import { useSession } from 'next-auth/react';
+import { useErrorRecovery } from '@/app/_contexts/ErrorRecovery.context';
 
 export interface IDeckPreferences {
     showSavedDecks: boolean;
@@ -48,6 +49,7 @@ export interface IDeckManagementState {
 export const useDeckManagement = (): IDeckManagementState => {
     const { user } = useUser();
     const { data: session } = useSession();
+    const { showError } = useErrorRecovery();
     
     // Deck Preferences State
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
@@ -292,11 +294,18 @@ export const useDeckManagement = (): IDeckManagementState => {
             });
         } catch (error) {
             console.error('Error fetching decks:', error);
-            alert('Server error when fetching decks');
+            showError({
+                title: 'Decks could not be loaded',
+                message: 'Server error when fetching decks.',
+                actions: [
+                    { label: 'Retry', onClick: () => void fetchDecks(), variant: 'warning' },
+                    { label: 'Close' },
+                ],
+            });
         } finally {
             setIsLoadingSavedDecks(false);
         }
-    }, [session?.user, user, handleInitializeDeckSelection]);
+    }, [session?.user, user, handleInitializeDeckSelection, showError]);
 
     const handleShowSavedDecksChange = useCallback((value: boolean) => {
         setShowSavedDecks(value);

@@ -11,6 +11,7 @@ import { useTheme } from '@mui/material/styles';
 import { useUser } from '@/app/_contexts/User.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { IUser } from '@/app/_contexts/UserTypes';
+import { useErrorRecovery } from '@/app/_contexts/ErrorRecovery.context';
 
 type Props = {
     serviceName: string;
@@ -30,6 +31,7 @@ function LinkServiceButton({
     const theme = useTheme();
     const { user } = useUser();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const { showError } = useErrorRecovery();
 
     const handleClick = async () => {
         if (linked) {
@@ -45,7 +47,14 @@ function LinkServiceButton({
             onLinkChange(false);
         } catch (error) {
             if (error instanceof Error) {
-                alert(error.message);
+                showError({
+                    title: `${serviceName} could not be unlinked`,
+                    message: error.message,
+                    actions: [
+                        { label: 'Retry', onClick: () => void handleConfirmUnlink(), variant: 'warning' },
+                        { label: 'Close' },
+                    ],
+                });
             }
             console.error(`Failed to unlink ${serviceName}:`, error);
         } finally {
