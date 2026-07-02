@@ -23,6 +23,7 @@ import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferen
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
+import { useErrorRecovery } from '@/app/_contexts/ErrorRecovery.context';
 
 interface IGameContextType {
     gameState: any;
@@ -74,6 +75,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
     const { data: session, status } = useSession();
     const { messages: gameMessages, processMessageDeltas, processMessageRetransmit, resetMessages } = useGameMessages();
+    const { showError } = useErrorRecovery();
 
     // Initialize sound handler with user preferences
     const { playSound } = useSoundHandler({
@@ -259,8 +261,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
         newSocket.on('connection_error', (error: any) => {
             console.error('Error joining lobby:', error);
-            alert(error);
-            router.push('/');
+            showError({
+                title: 'Unable to join lobby',
+                message: String(error),
+                actions: [
+                    { label: 'Refresh', onClick: () => window.location.reload(), variant: 'warning' },
+                    { label: 'Home', onClick: () => router.push('/') },
+                ],
+            });
         });
 
         newSocket.on('matchmakingFailed', (error: any) => {
@@ -268,9 +276,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             resetStates();
         });
 
-        newSocket.on('inactiveDisconnect', () => {            
-            alert('You have been disconnected due to inactivity');
+        newSocket.on('inactiveDisconnect', () => {
             newSocket.disconnect();
+            showError({
+                title: 'Disconnected',
+                message: 'You have been disconnected due to inactivity.',
+                actions: [
+                    { label: 'Reconnect', onClick: createNewSocket, variant: 'warning' },
+                    { label: 'Home', onClick: () => router.push('/') },
+                ],
+            });
         });
 
         newSocket.on('gamestate', (gameState: any) => {

@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Box, Card, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import MatchLoader from './MatchLoader';
+import { useErrorRecovery } from '@/app/_contexts/ErrorRecovery.context';
 const styles = {
     searchBox: {
         width: '35rem',
@@ -39,15 +40,31 @@ const SearchingForGame: React.FC = () => {
     const { lastQueueHeartbeat, createNewSocket } = useGame();
     const router = useRouter();
     const lastQueueHeartbeatState = useRef<number>(0);
+    const connectionLostRef = useRef(false);
     const { user, anonymousUserId } = useUser();
+    const { showError } = useErrorRecovery();
 
     useEffect(() => {
         timerRef.current = setInterval(() => {
             const secondsSinceLastHeartbeat = Math.floor((Date.now() - lastQueueHeartbeatState.current) / 1000);
 
-            if (secondsSinceLastHeartbeat > 15) {
-                alert(`Connection lost. Please try again.\nUser ID: ${user?.id || anonymousUserId}`);
-                router.push('/');
+            if (secondsSinceLastHeartbeat > 15 && !connectionLostRef.current) {
+                connectionLostRef.current = true;
+                showError({
+                    title: 'Connection lost',
+                    message: `Connection lost. Please try again.\nUser ID: ${user?.id || anonymousUserId}`,
+                    actions: [
+                        {
+                            label: 'Reconnect',
+                            onClick: () => {
+                                connectionLostRef.current = false;
+                                createNewSocket();
+                            },
+                            variant: 'warning',
+                        },
+                        { label: 'Home', onClick: () => router.push('/') },
+                    ],
+                });
                 return;
             }
 
@@ -64,7 +81,7 @@ const SearchingForGame: React.FC = () => {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, []);
+    }, [anonymousUserId, createNewSocket, router, showError, user?.id]);
 
     useEffect(() => {
         lastQueueHeartbeatState.current = lastQueueHeartbeat;

@@ -14,10 +14,12 @@ import OpenIcon from '/public/open.svg';
 import NextSetIcon from '/public/next_set.svg';
 import Bo1Icon from '/public/bo1.svg';
 import Bo3Icon from '/public/bo3.svg';
+import { useErrorRecovery } from '@/app/_contexts/ErrorRecovery.context';
 
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
     const { user } = useUser();
+    const { showError } = useErrorRecovery();
 
     const joinLobby = async (lobbyId: string) => {
         try {
@@ -37,7 +39,14 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Error joining lobby:', errorData.message);
-                alert(errorData.message);
+                showError({
+                    title: 'Unable to join lobby',
+                    message: errorData.message,
+                    actions: [
+                        { label: 'Retry', onClick: () => void joinLobby(lobbyId), variant: 'warning' },
+                        { label: 'Refresh', onClick: () => router.refresh() },
+                    ],
+                });
                 return;
             }
             router.push('/lobby');

@@ -24,6 +24,7 @@ import { ICosmeticEntity, RegisteredCosmeticType } from '@/app/_components/_shar
 import { v4 as uuidv4 } from 'uuid';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 import { ServerApiService } from '@/app/_services/ServerApiService';
+import { useErrorRecovery } from '@/app/_contexts/ErrorRecovery.context';
 
 interface ImageDimensions {
     width: number;
@@ -40,6 +41,7 @@ const isDev = process.env.NODE_ENV === 'development';
 
 const CosmeticsManagerTab: React.FC = () => {
     const { cosmetics, setCosmetics, fetchCosmetics } = useCosmetics();
+    const { showError } = useErrorRecovery();
     const [filteredCosmetics, setFilteredCosmetics] = useState<ICosmeticEntity[]>([]);
     const [availableTypes, setAvailableTypes] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -365,8 +367,15 @@ const CosmeticsManagerTab: React.FC = () => {
         }
         const response = await ServerApiService.deleteCosmeticAsync(cosmeticId);
         if (!response.success) {
-            alert('Failed to delete cosmetic');
             console.error('Delete error:', response.message);
+            showError({
+                title: 'Cosmetic could not be deleted',
+                message: response.message || 'Failed to delete cosmetic.',
+                actions: [
+                    { label: 'Retry', onClick: () => void handleDeleteSingleCosmetic(cosmeticId), variant: 'warning' },
+                    { label: 'Close' },
+                ],
+            });
         }
 
         await fetchCosmetics();
