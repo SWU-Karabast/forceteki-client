@@ -65,17 +65,22 @@ export enum RegisteredCosmeticType {
     // Playmat = 'playmat',
 }
 
-export interface IRegisteredCosmeticOption {
+export interface ICosmeticEntity {
     id: string;
     title: string;
     type: RegisteredCosmeticType;
     path: string;
 }
 
+export interface IActiveCosmetics {
+    cardback: ICosmeticEntity;
+    background: ICosmeticEntity;
+}
+
 export interface IRegisteredCosmetics {
-    cardbacks: IRegisteredCosmeticOption[];
-    backgrounds: IRegisteredCosmeticOption[];
-    // playmats: IRegisteredCosmeticOption[];
+    cardbacks: ICosmeticEntity[];
+    backgrounds: ICosmeticEntity[];
+    // playmats: ICosmeticEntity[];
 }
 
 // constants

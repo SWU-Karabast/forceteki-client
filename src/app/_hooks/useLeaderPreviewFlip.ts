@@ -8,6 +8,7 @@ interface UseLeaderCardFlipPreviewReturn {
     aspectRatio: string;
     width: string;
     isFlipped: boolean;
+    toggleFlip: () => void;
 }
 
 interface UseLeaderCardFlipPreviewParams {
@@ -41,6 +42,8 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
     } = params;
 
     const locale = useCardImageLocale();
+    const [frontPreviewImage, setFrontPreviewImage] = useState<string | null>(null);
+    const [backPreviewImage, setBackPreviewImage] = useState<string | null>(null);
 
     // set starting side internally (handles Chancellor Palpatine special case)
     const startingSide = useMemo(() => {
@@ -127,7 +130,11 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
                 setPreviewImage(`url(${frontURL})`);
             }
         };
-        setPreviewImage(`url(${frontURL})`);
+        const frontImage = `url(${frontURL})`;
+        const backImage = `url(${backURL})`;
+        setFrontPreviewImage(frontImage);
+        setBackPreviewImage(backImage);
+        setPreviewImage(frontImage);
         setInternalIsCtrl(false);
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
@@ -135,13 +142,25 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
+            setFrontPreviewImage(null);
+            setBackPreviewImage(null);
         };
     }, [anchorElement, backCardStyle, cardId, frontCardStyle, isLeader, locale, setPreviewImage, startingSide]);
+
+    const toggleFlip = () => {
+        if (!frontPreviewImage || !backPreviewImage) return;
+
+        setInternalIsCtrl((isFlipped) => {
+            setPreviewImage(isFlipped ? frontPreviewImage : backPreviewImage);
+            return !isFlipped;
+        });
+    };
 
     return {
         // Calculated style properties
         aspectRatio: styleSetter.aspectRatio,
         width: styleSetter.width,
         isFlipped: internalIsCtrl,
+        toggleFlip,
     };
 }

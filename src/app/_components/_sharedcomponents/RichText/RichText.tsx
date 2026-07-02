@@ -18,10 +18,16 @@ function parseText(text: string, rules: TextReplacementRule[]): React.ReactNode[
     if (!text) return [];
     if (!rules.length) return [text];
 
+    // Convert inner capturing groups to non-capturing so that each rule
+    // contributes exactly one top-level group in the combined regex.
+    // This keeps the mapping match[i+1] → rules[i] correct.
+    const toNonCapturing = (source: string) =>
+        source.replace(/(?<!\\)\((?!\?)/g, '(?:');
+
     // Build one regex with a dedicated capturing group per rule so we can
     // identify *which* rule produced each match without running them serially.
     const combined = new RegExp(
-        rules.map((r) => `(${r.pattern.source})`).join('|'),
+        rules.map((r) => `(${toNonCapturing(r.pattern.source)})`).join('|'),
         'gi'
     );
 

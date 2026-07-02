@@ -37,7 +37,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
-    const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
+    const opponentsCardbackPath = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback?.path;
 
     const hasLastPlayedCard = !!gameState.clientUIProperties?.lastPlayedCard
     const lastPlayedCardUrl = hasLastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' }, locale)})` : 'none';
@@ -188,7 +188,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.leftColumn,
                 }}
             >
-                <DeckDiscard trayPlayer={trayPlayer} cardback={opponentsCardback} />
+                <DeckDiscard trayPlayer={trayPlayer} cardback={opponentsCardbackPath} />
                 <Box sx={styles.creditsResourcesStack}>
                     <Credits trayPlayer={trayPlayer} />
                     <Resources trayPlayer={trayPlayer}/>
@@ -208,7 +208,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                         maxCardOverlapPercent={0.95}
                         scrollbarEnabled={false}
                         cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []}
-                        cardback={opponentsCardback} />
+                        cardback={opponentsCardbackPath} />
                 </Box>
                 <Box sx={ styles.opponentTurnAura} />
             </Grid>
