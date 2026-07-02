@@ -308,7 +308,7 @@ const DeckPage: React.FC = () => {
             gap: { xs: '10px', md: '0' },
         },
         dropdown:{
-            maxWidth: { xs: '10rem', md: '10rem' },
+            maxWidth: '10rem',
         },
         deckContainer: (isSelected: boolean) => ({
             background: isSelected ? '#2F7DB680' : '#20344280',
