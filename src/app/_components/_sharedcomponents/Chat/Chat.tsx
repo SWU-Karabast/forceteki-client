@@ -315,16 +315,16 @@ const Chat: React.FC<IChatProps> = ({
             justifyContent: 'flex-end',
         },
         messageText: {
-            fontSize: { xs: '0.75em', md: '1em' },
+            fontSize: { xs: '0.95rem', md: '1em' },
             color: '#fff',
-            lineHeight: { xs: '0.75rem', md: '1rem' },
+            lineHeight: { xs: '1.25rem', md: '1rem' },
             m: 0
 
         },
         // Base style for alert messages
         alertBase: {
-            fontSize: { xs: '0.85em', md: '1em' },
-            lineHeight: { xs: '0.85rem', md: '1em' },
+            fontSize: { xs: '0.95rem', md: '1em' },
+            lineHeight: { xs: '1.25rem', md: '1em' },
         },
         chatEntryBox: {
             p: '1rem .25rem',
@@ -340,8 +340,9 @@ const Chat: React.FC<IChatProps> = ({
             alignItems: 'center',
             width: '100%',
             backgroundColor: '#28282800',
-            px: { xs: '0.2em', md: '0.5em' },
-            minHeight: { xs: '1.5rem', md: '2.6rem' },
+            px: { xs: '0.25rem', md: '0.5em' },
+            py: { xs: '0.25rem', md: 0 },
+            minHeight: { xs: '48px', md: '2.6rem' },
         },
         textField: {
             backgroundColor: '#28282800',
@@ -352,10 +353,17 @@ const Chat: React.FC<IChatProps> = ({
             maxWidth: '100%',
             minWidth: 0,
             width: '100%',
-            fontSize: { xs: '0.75em', md: '1em' },
-            height: { xs: '1.8rem', md: '2.2rem' },
-            input: { color: '#fff', padding: '0.3em 0.5em' },
+            fontSize: { xs: '1rem', md: '1em' },
+            height: { xs: '44px', md: '2.2rem' },
+            input: {
+                color: '#fff',
+                padding: { xs: '0 0.5rem', md: '0.3em 0.5em' },
+                height: { xs: '44px', md: 'auto' },
+                boxSizing: 'border-box',
+            },
             '& .MuiOutlinedInput-root': {
+                height: { xs: '44px', md: '2.2rem' },
+                pr: { xs: '4px', md: '8px' },
                 '& fieldset': {
                     borderColor: '#fff',
                 },
@@ -366,6 +374,15 @@ const Chat: React.FC<IChatProps> = ({
                 },
             },
         },
+        sendButton: {
+            width: { xs: '40px', md: '32px' },
+            height: { xs: '40px', md: '32px' },
+            p: 0,
+        },
+        sendIcon: {
+            color: '#fff',
+            fontSize: { xs: '1.35rem', md: '1.1em' },
+        },
         chatDisabled: (borderColor: string) => ({
             textAlign: 'center',
             border: `1px solid ${borderColor}`,
@@ -375,9 +392,9 @@ const Chat: React.FC<IChatProps> = ({
             mt: '0.5em',
             width: '100%',
             display: 'block',
-            fontSize: { xs: '0.75em', md: '1em' },
+            fontSize: { xs: '0.95rem', md: '1em' },
             color: '#fff',
-            lineHeight: { xs: '0.75rem', md: '1rem' },
+            lineHeight: { xs: '1.25rem', md: '1rem' },
             userSelect: 'none',
         }),
         typingState: {
@@ -385,7 +402,8 @@ const Chat: React.FC<IChatProps> = ({
                 px: { xs: '0.2em', md: '0.5em' }
             },
             typography: {
-                fontSize: '0.8rem'
+                fontSize: { xs: '0.9rem', md: '0.8rem' },
+                lineHeight: { xs: '1.2rem', md: '1rem' },
             }
         }
     };
@@ -427,8 +445,8 @@ const Chat: React.FC<IChatProps> = ({
                                 style: { fontSize: '1em' },
                                 endAdornment: (
                                     <InputAdornment position="end" sx={{ ml: 0, p: 0 }}>
-                                        <IconButton size="small" onClick={handleChatSubmit}>
-                                            <Send sx={{ color: '#fff', fontSize: '1.1em' }} />
+                                        <IconButton sx={styles.sendButton} onClick={handleChatSubmit}>
+                                            <Send sx={styles.sendIcon} />
                                         </IconButton>
                                     </InputAdornment>
                                 ),
