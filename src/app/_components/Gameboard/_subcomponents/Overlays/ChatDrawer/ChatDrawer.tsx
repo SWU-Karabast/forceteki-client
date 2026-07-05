@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Drawer, Box, IconButton, Divider, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import {
+    Drawer,
+    Box,
+    IconButton,
+    Divider,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText,
+    SwipeableDrawer,
+    useMediaQuery,
+    useTheme,
+} from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -30,6 +42,17 @@ const styles = {
         flexShrink: 0,
         '& .MuiDrawer-paper': {
             backgroundColor: '#000000CC',
+            color: '#fff',
+            display: 'flex',
+            flexDirection: 'column',
+            width: { xs: '200px', md: 'min(20%, 280px)' },
+            padding: '0.75em',
+            overflow: 'hidden',
+        },
+    },
+    mobileDrawerStyle: {
+        '& .MuiDrawer-paper': {
+            backgroundColor: '#000000E6',
             color: '#fff',
             display: 'flex',
             flexDirection: 'column',
@@ -167,6 +190,8 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
 }
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, preferenceToggle }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const {
         gameState,
         gameMessages,
@@ -272,6 +297,18 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         setMenuAnchorElement(null);
     }
 
+    const handleDrawerOpen = () => {
+        if (!sidebarOpen) {
+            toggleSidebar();
+        }
+    }
+
+    const handleDrawerClose = () => {
+        if (sidebarOpen) {
+            toggleSidebar();
+        }
+    }
+
     const handlePreferenceClick = () => {
         handleMenuClose();
         preferenceToggle();
@@ -312,13 +349,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         setPlayerReportOpen(false);
     };
 
-    return (
-        <Drawer
-            anchor="right"
-            open={sidebarOpen}
-            variant="persistent"
-            sx={styles.drawerStyle}
-        >
+    const drawerContent = (
+        <>
             <Box sx={styles.headerBoxStyle}>
                 <IconButton aria-label="collapse drawer" onClick={toggleSidebar} sx={styles.drawerActionButton}>
                     <ChevronRightIcon />
@@ -386,6 +418,33 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
 
             <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showDisableChatConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
             <PlayerReportDialog open={playerReportOpen} onClose={handleClosePlayerReport}/>
+        </>
+    );
+
+    if (isMobile) {
+        return (
+            <SwipeableDrawer
+                anchor="right"
+                open={sidebarOpen}
+                onOpen={handleDrawerOpen}
+                onClose={handleDrawerClose}
+                sx={styles.mobileDrawerStyle}
+                disableBackdropTransition
+                disableSwipeToOpen={false}
+            >
+                {drawerContent}
+            </SwipeableDrawer>
+        );
+    }
+
+    return (
+        <Drawer
+            anchor="right"
+            open={sidebarOpen}
+            variant="persistent"
+            sx={styles.drawerStyle}
+        >
+            {drawerContent}
         </Drawer>
     );
 };
