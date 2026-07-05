@@ -10,12 +10,19 @@ import BlockIcon from '@mui/icons-material/Block';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { QuickUndoAvailableState } from '@/app/_constants/constants';
+import CommentsDisabledIcon from '@mui/icons-material/CommentsDisabled';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import { MatchmakingType, QuickUndoAvailableState } from '@/app/_constants/constants';
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/app/_contexts/User.context';
+import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
+import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
+import { LobbyConfirmationPopupModule } from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
+import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 
 // ------------------------STYLES------------------------//
 const styles = {
@@ -160,16 +167,89 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
 }
 
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, preferenceToggle }) => {
-    const { gameState, gameMessages, sendGameMessage, isSpectator } = useGame();
+    const {
+        gameState,
+        gameMessages,
+        sendGameMessage,
+        sendLobbyMessage,
+        isSpectator,
+        lobbyState,
+        connectedPlayer,
+        getOpponent,
+        isAnonymousPlayer,
+        hasChatDisabled,
+    } = useGame();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
     const [chatMessage, setChatMessage] = useState('')
     const [menuAnchorElement, setMenuAnchorElement] = useState<null | HTMLElement>(null);
+    const [showDisableChatConfirmation, setShowDisableChatConfirmation] = useState(false);
+    const [playerReportOpen, setPlayerReportOpen] = useState(false);
     const { openPopup } = usePopup();
+    const { user } = useUser();
     const router = useRouter();
     const isDev = process.env.NODE_ENV === 'development';
     const isUndoEnabled = isDev || gameState.undoEnabled;
     const shouldShowUndo = !isSpectator;
     const isMenuOpen = Boolean(menuAnchorElement);
+    const isPrivateLobby = lobbyState?.gameType === MatchmakingType.PrivateLobby;
+    const didCurrentUserMuteChat = lobbyState?.userWhoMutedChat === connectedPlayer;
+    const doesUserHaveChatMuted = user?.preferences?.gameOptions?.muteChat;
+    const opponentId = getOpponent(connectedPlayer);
+    const isAnonymousOpponent = isAnonymousPlayer(opponentId);
+    const opponentChatDisabled = hasChatDisabled(opponentId);
+    const canReportOpponent = !isSpectator && !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
+    const isReportingDisabled = !!user?.reportingDisabled;
+
+    const getChatDisabledInfo = (): IChatDisabledInfo => {
+        if (isPrivateLobby && !doesUserHaveChatMuted) {
+            return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
+        }
+
+        switch (true) {
+            case !user && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
+                return {
+                    reason: ChatDisabledReason.NotLoggedIn,
+                    message: 'Log in to enable chat',
+                    borderColor: 'red'
+                };
+            case !!(user?.moderation):
+                const muteText = getMuteDisplayText(user.moderation);
+                return {
+                    reason: ChatDisabledReason.UserMuted,
+                    message: `You are muted for ${muteText}`,
+                    borderColor: 'yellow'
+                };
+            case isAnonymousOpponent && process.env.NEXT_PUBLIC_FORCE_ENABLE_ANON_CHAT !== 'true':
+                return {
+                    reason: ChatDisabledReason.AnonymousOpponent,
+                    message: 'Chat disabled when playing against an anonymous opponent',
+                    borderColor: 'yellow'
+                };
+            case didCurrentUserMuteChat:
+                return {
+                    reason: ChatDisabledReason.UserDisabledChat,
+                    message: 'You disabled chat',
+                    borderColor: 'yellow'
+                };
+            case doesUserHaveChatMuted:
+                return {
+                    reason: ChatDisabledReason.UserDisabledChat,
+                    message: 'You have chat disabled in your account preferences',
+                    borderColor: 'yellow'
+                };
+            case opponentChatDisabled:
+                return {
+                    reason: ChatDisabledReason.OpponentDisabledChat,
+                    message: 'The opponent has disabled chat',
+                    borderColor: 'yellow'
+                };
+            default:
+                return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
+        }
+    };
+
+    const chatDisabledInfo = getChatDisabledInfo();
+    const shouldShowChatInput = chatDisabledInfo.reason === ChatDisabledReason.None;
 
     const handleChatOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         handleTypingStateOnChange(event.target.value);
@@ -209,6 +289,29 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         }
     }
 
+    const handleDisableChatClick = () => {
+        handleMenuClose();
+        setShowDisableChatConfirmation(true);
+    }
+
+    const handleConfirmDisableChat = () => {
+        sendLobbyMessage(['muteChat']);
+        setShowDisableChatConfirmation(false);
+    };
+
+    const handleCancelDisableChat = () => {
+        setShowDisableChatConfirmation(false);
+    };
+
+    const handleOpenPlayerReport = () => {
+        handleMenuClose();
+        setPlayerReportOpen(true);
+    };
+
+    const handleClosePlayerReport = () => {
+        setPlayerReportOpen(false);
+    };
+
     return (
         <Drawer
             anchor="right"
@@ -245,6 +348,22 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                             </ListItemIcon>
                             <ListItemText>Preferences</ListItemText>
                         </MenuItem>
+                        {!isSpectator && (
+                            <MenuItem disabled={!shouldShowChatInput} onClick={handleDisableChatClick}>
+                                <ListItemIcon sx={styles.menuIcon}>
+                                    <CommentsDisabledIcon fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>{shouldShowChatInput ? 'Disable chat' : 'Chat is disabled'}</ListItemText>
+                            </MenuItem>
+                        )}
+                        {!isSpectator && canReportOpponent && (
+                            <MenuItem disabled={isReportingDisabled} onClick={handleOpenPlayerReport}>
+                                <ListItemIcon sx={styles.menuIcon}>
+                                    <ReportProblemIcon fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</ListItemText>
+                            </MenuItem>
+                        )}
                         <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
                         <MenuItem onClick={handleLeaveGameClick}>
                             <ListItemIcon sx={styles.menuIcon}>
@@ -265,6 +384,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 handleChatSubmit={handleGameChat}
             />
 
+            <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showDisableChatConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
+            <PlayerReportDialog open={playerReportOpen} onClose={handleClosePlayerReport}/>
         </Drawer>
     );
 };
