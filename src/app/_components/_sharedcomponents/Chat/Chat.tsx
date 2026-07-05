@@ -353,13 +353,17 @@ const Chat: React.FC<IChatProps> = ({
             maxWidth: '100%',
             minWidth: 0,
             width: '100%',
-            fontSize: { xs: '1rem', md: '1em' },
+            fontSize: { xs: '16px', md: '1em' },
             height: { xs: '44px', md: '2.2rem' },
             input: {
                 color: '#fff',
+                fontSize: { xs: '16px', md: '1em' },
                 padding: { xs: '0 0.5rem', md: '0.3em 0.5em' },
                 height: { xs: '44px', md: 'auto' },
                 boxSizing: 'border-box',
+            },
+            '& .MuiInputBase-input': {
+                fontSize: { xs: '16px', md: '1em' },
             },
             '& .MuiOutlinedInput-root': {
                 height: { xs: '44px', md: '2.2rem' },
@@ -450,6 +454,9 @@ const Chat: React.FC<IChatProps> = ({
                                         </IconButton>
                                     </InputAdornment>
                                 ),
+                            },
+                            htmlInput: {
+                                style: { fontSize: '16px' },
                             },
                         }}
                     />
