@@ -51,6 +51,9 @@ const styles = {
         },
     },
     mobileDrawerStyle: {
+        '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(0, 0, 0, 0.25)',
+        },
         '& .MuiDrawer-paper': {
             backgroundColor: '#000000E6',
             color: '#fff',
