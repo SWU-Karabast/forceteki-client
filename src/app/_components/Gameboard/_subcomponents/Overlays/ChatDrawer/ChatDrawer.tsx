@@ -309,13 +309,21 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         }
     }
 
+    const closeMobileDrawer = () => {
+        if (isMobile) {
+            handleDrawerClose();
+        }
+    }
+
     const handlePreferenceClick = () => {
         handleMenuClose();
+        closeMobileDrawer();
         preferenceToggle();
     }
 
     const handleLeaveGameClick = () => {
         handleMenuClose();
+        closeMobileDrawer();
         if (isSpectator){
             router.push('/');
         } else {
@@ -328,6 +336,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
 
     const handleDisableChatClick = () => {
         handleMenuClose();
+        closeMobileDrawer();
         setShowDisableChatConfirmation(true);
     }
 
@@ -342,6 +351,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
 
     const handleOpenPlayerReport = () => {
         handleMenuClose();
+        closeMobileDrawer();
         setPlayerReportOpen(true);
     };
 
