@@ -308,6 +308,12 @@ const Chat: React.FC<IChatProps> = ({
             backgroundColor: '#28282800',
             flex: 1,
         },
+        chatMessageStack: {
+            minHeight: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+        },
         messageText: {
             fontSize: { xs: '0.75em', md: '1em' },
             color: '#fff',
@@ -387,10 +393,12 @@ const Chat: React.FC<IChatProps> = ({
     return (
         <>
             <Box sx={styles.chatBox}>
-                {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
-                    return formatMessage(chatEntry?.message, index);
-                })}
-                <Box ref={chatEndRef} />
+                <Box sx={styles.chatMessageStack}>
+                    {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
+                        return formatMessage(chatEntry?.message, index);
+                    })}
+                    <Box ref={chatEndRef} />
+                </Box>
             </Box>
 
             {opponentIsTyping && (
