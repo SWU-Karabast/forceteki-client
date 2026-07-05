@@ -15,6 +15,7 @@ export interface IParticipant {
 export interface IChatDrawerProps {
     sidebarOpen: boolean;
     toggleSidebar: () => void;
+    preferenceToggle: () => void;
 }
 
 export interface IPlayerCardTrayProps {
@@ -24,7 +25,6 @@ export interface IPlayerCardTrayProps {
 
 export interface IOpponentCardTrayProps {
     trayPlayer: string;
-    preferenceToggle: () => void;
 }
 
 export interface IBoardProps {

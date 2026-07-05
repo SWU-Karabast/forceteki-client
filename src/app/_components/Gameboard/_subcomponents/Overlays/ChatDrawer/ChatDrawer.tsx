@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Drawer, Box, Button, IconButton, Divider } from '@mui/material';
+import { Drawer, Box, IconButton, Divider, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -7,37 +7,17 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UndoIcon from '@mui/icons-material/Undo';
 import MessageIcon from '@mui/icons-material/Message';
 import BlockIcon from '@mui/icons-material/Block';
-import Image from 'next/image';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { QuickUndoAvailableState } from '@/app/_constants/constants';
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
+import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { v4 as uuidv4 } from 'uuid';
+import { useRouter } from 'next/navigation';
 
 // ------------------------STYLES------------------------//
-const quickUndoButtonBase = {
-    height: { xs: 'auto', md: '45px' },
-    mb: { xs: 0, md: '10px' },
-    lineHeight: '1.2',
-    color: '#FFF',
-    fontSize: { xs: '0.9rem', md: '20px' },
-    border: '1px solid transparent',
-    borderRadius: '10px',
-    py: { xs: '6px', md: '10px' },
-    justifyContent: 'space-between',
-    pl: { xs: '16px', md: '12px' },
-    pr: { xs: '16px', md: '35px' },
-    position: 'relative',
-    '& .MuiButton-startIcon': {
-        marginRight: 0,
-        marginLeft: 0,
-        transform: 'skewX(5deg)',
-        display: { xs: 'none', sm: 'none', md: 'block' },
-        '& svg': {
-            width: '23px',
-            height: '23px',
-        },
-    },
-    transform: 'skewX(-5deg)',
-};
-
 const styles = {
     drawerStyle: {
         flexShrink: 0,
@@ -54,58 +34,59 @@ const styles = {
     headerBoxStyle: {
         display: 'flex',
         alignItems: 'center',
-        position: 'relative',
-        height: '1.5em',
+        justifyContent: 'space-between',
+        gap: '0.75rem',
+        mb: '0.75rem',
     },
-    quickUndoBox:{
-        display: 'inline-flex',
-        justifyContent: 'flex-start',
-        paddingLeft: { xs: 0, md: '0.5em' },
+    headerActionsStyle: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+    },
+    drawerActionButton: {
+        padding: '10px',
+        color: '#fff',
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '50%',
+        '& svg': { fontSize: '1.45rem' },
+        '&:hover': {
+            background: 'rgba(255, 255, 255, 0.16)',
+            borderColor: 'rgba(255, 255, 255, 0.24)',
+        },
+        '&:disabled': {
+            color: 'rgba(255, 255, 255, 0.45)',
+            background: 'rgba(255, 255, 255, 0.05)',
+        },
     },
     quickUndoButtonEnabled: {
-        ...quickUndoButtonBase,
-        width: 'min(55%, 200px)',
-        background: 'linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, linear-gradient(to top, #1cb34a, #0a3d1e) border-box',
-        '&:hover': {
-            background: 'linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, linear-gradient(to top, #2ad44c, #0a3d1e) border-box',
-            boxShadow: '0 0 8px rgba(0, 170, 70, 0.7)',
-            border: '1px solid rgba(0, 200, 90, 0.7)',
-        },
+        borderColor: 'rgba(42, 212, 76, 0.7)',
+        boxShadow: '0 0 8px rgba(0, 170, 70, 0.45)',
     },
     quickUndoButtonDisabled: {
-        ...quickUndoButtonBase,
-        width: 'min(55%, 200px)',
-        '&:disabled': {
-            backgroundColor: '#404040',
-            color: '#FFF'
-        },
+        borderColor: 'rgba(255, 255, 255, 0.12)',
     },
     quickUndoButtonBlocked: {
-        ...quickUndoButtonBase,
-        width: 'min(65%, 240px)',
-        '&:disabled': {
-            backgroundColor: '#404040',
-            color: '#FFF'
-        },
+        borderColor: 'rgba(255, 255, 255, 0.12)',
     },
     quickUndoButtonRequest: {
-        ...quickUndoButtonBase,
-        width: 'min(65%, 240px)',
-        background: 'linear-gradient(#1E2D32, #1E2D32) padding-box, linear-gradient(#404040, #008FC4) border-box',
-        '&:hover': {
-            background: 'linear-gradient(#2C4046, #2C4046) padding-box, linear-gradient(#404040, #008FC4) border-box',
-        },
+        borderColor: 'rgba(0, 143, 196, 0.8)',
+        boxShadow: '0 0 8px rgba(0, 143, 196, 0.45)',
     },
-    porgContainer: {
-        position:'relative',
-        left:'35px',
-        bottom:'28px',
-        display: { xs: 'none', md: 'block' },
+    menuPaper: {
+        backgroundColor: '#090f18',
+        color: '#fff',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        minWidth: '190px',
+    },
+    menuIcon: {
+        color: '#E0E0E0',
+        minWidth: '36px',
     }
 }
-const UndoButton = () => {
+const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }) => {
     const { gameState, sendGameMessage, connectedPlayer } = useGame();
-    const [isUndoHovered, setIsUndoHovered] = useState(false);
     const correctPlayer = gameState.players[connectedPlayer];
     const quickUndoState: QuickUndoAvailableState | null = correctPlayer?.availableSnapshots?.quickSnapshotAvailable;
     const handleUndoButton = () => {
@@ -145,68 +126,50 @@ const UndoButton = () => {
             break;
     }
 
-    let buttonText;
-    switch (quickUndoState) {
-        case QuickUndoAvailableState.RequestUndoAvailable:
-            buttonText = 'Request';
-            break;
-        case QuickUndoAvailableState.UndoRequestsBlocked:
-            buttonText = 'Blocked';
-            break;
-        case QuickUndoAvailableState.WaitingForConfirmation:
-            buttonText = 'Waiting';
-            break;
-        default:
-            buttonText = 'Undo';
-            break;
-    }
-
     let buttonIcon;
+    let ariaLabel;
     switch (quickUndoState) {
         case QuickUndoAvailableState.RequestUndoAvailable:
             buttonIcon = <MessageIcon />;
+            ariaLabel = 'request undo';
             break;
         case QuickUndoAvailableState.UndoRequestsBlocked:
+            buttonIcon = <BlockIcon />;
+            ariaLabel = 'undo requests blocked';
+            break;
         case QuickUndoAvailableState.WaitingForConfirmation:
             buttonIcon = <BlockIcon />;
+            ariaLabel = 'undo waiting for confirmation';
             break;
         default:
             buttonIcon = <UndoIcon />;
+            ariaLabel = 'undo';
             break;
     }
 
     return (
-        <Box sx={styles.quickUndoBox}>
-            <Box sx={[styles.porgContainer, { visibility: isUndoHovered ? 'visible' : 'hidden' } ]}>
-                <Image
-                    src="/porg1.png"
-                    alt="Highlighted Stats Panel"
-                    width={50}
-                    height={50}
-                />
-            </Box>
-
-            <Button
-                variant="contained"
-                onClick={handleUndoButton}
-                onMouseEnter={() => setIsUndoHovered(true)}
-                onMouseLeave={() => setIsUndoHovered(false)}
-                disabled={undoButtonDisabled}
-                startIcon={buttonIcon}
-                sx={undoButtonStyle}
-            >
-                {buttonText}
-            </Button>
-        </Box>
+        <IconButton
+            aria-label={ariaLabel}
+            onClick={handleUndoButton}
+            disabled={disabledOverride || undoButtonDisabled}
+            sx={[styles.drawerActionButton, undoButtonStyle]}
+        >
+            {buttonIcon}
+        </IconButton>
     )
 }
 
-const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) => {
+const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, preferenceToggle }) => {
     const { gameState, gameMessages, sendGameMessage, isSpectator } = useGame();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
     const [chatMessage, setChatMessage] = useState('')
+    const [menuAnchorElement, setMenuAnchorElement] = useState<null | HTMLElement>(null);
+    const { openPopup } = usePopup();
+    const router = useRouter();
     const isDev = process.env.NODE_ENV === 'development';
-    const isUndoEnabled = (isDev || gameState.undoEnabled) && (!isSpectator);
+    const isUndoEnabled = isDev || gameState.undoEnabled;
+    const shouldShowUndo = !isSpectator;
+    const isMenuOpen = Boolean(menuAnchorElement);
 
     const handleChatOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         handleTypingStateOnChange(event.target.value);
@@ -221,6 +184,31 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
         resetTypingState();
     }
 
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setMenuAnchorElement(event.currentTarget);
+    }
+
+    const handleMenuClose = () => {
+        setMenuAnchorElement(null);
+    }
+
+    const handlePreferenceClick = () => {
+        handleMenuClose();
+        preferenceToggle();
+    }
+
+    const handleLeaveGameClick = () => {
+        handleMenuClose();
+        if (isSpectator){
+            router.push('/');
+        } else {
+            openPopup('leaveGame', {
+                uuid: `${uuidv4()}`,
+                source: PopupSource.User
+            });
+        }
+    }
+
     return (
         <Drawer
             anchor="right"
@@ -228,14 +216,44 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
             variant="persistent"
             sx={styles.drawerStyle}
         >
-            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                <Box sx={styles.headerBoxStyle}>
-                    <IconButton onClick={toggleSidebar}>
-                        <ChevronRightIcon sx={{ color: 'white', fontSize: '28px' }}/>
+            <Box sx={styles.headerBoxStyle}>
+                <IconButton aria-label="collapse drawer" onClick={toggleSidebar} sx={styles.drawerActionButton}>
+                    <ChevronRightIcon />
+                </IconButton>
+                <Box sx={styles.headerActionsStyle}>
+                    {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
+                    <IconButton
+                        aria-label="game menu"
+                        aria-controls={isMenuOpen ? 'chat-drawer-game-menu' : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={isMenuOpen ? 'true' : undefined}
+                        onClick={handleMenuOpen}
+                        sx={styles.drawerActionButton}
+                    >
+                        <MoreHorizIcon />
                     </IconButton>
+                    <Menu
+                        id="chat-drawer-game-menu"
+                        anchorEl={menuAnchorElement}
+                        open={isMenuOpen}
+                        onClose={handleMenuClose}
+                        slotProps={{ paper: { sx: styles.menuPaper } }}
+                    >
+                        <MenuItem onClick={handlePreferenceClick}>
+                            <ListItemIcon sx={styles.menuIcon}>
+                                <SettingsOutlinedIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText>Preferences</ListItemText>
+                        </MenuItem>
+                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                        <MenuItem onClick={handleLeaveGameClick}>
+                            <ListItemIcon sx={styles.menuIcon}>
+                                <LogoutIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText>Leave game</ListItemText>
+                        </MenuItem>
+                    </Menu>
                 </Box>
-
-                {isUndoEnabled && (<UndoButton />)}
             </Box>
 
 
@@ -246,17 +264,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar }) 
                 handleChatOnChange={handleChatOnChange}
                 handleChatSubmit={handleGameChat}
             />
-
-            <Box sx={{ display: { xs: 'block', md: 'none' } } }>
-                <Divider sx={{ backgroundColor: '#fff', mx: '-0.75em', my: '0.75em' }} />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    {isUndoEnabled && (<UndoButton />)}
-                    <IconButton onClick={toggleSidebar}>
-                        <ChevronRightIcon sx={{ color: 'white', fontSize: '28px' }}/>
-                    </IconButton>
-                </Box>
-            </Box>
-
 
         </Drawer>
     );
