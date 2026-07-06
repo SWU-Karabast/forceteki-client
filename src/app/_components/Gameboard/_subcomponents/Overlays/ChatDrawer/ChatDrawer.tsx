@@ -118,7 +118,7 @@ const styles = {
         borderRadius: '11px 0 0 11px',
         boxShadow: '-2px 0 10px rgba(0, 186, 255, 0.48), inset 2px 0 6px rgba(255, 255, 255, 0.14)',
         pointerEvents: 'none',
-        zIndex: 1199,
+        zIndex: 9,
     },
     mobileClosedSwipeHintChevron: {
         width: '7px',
