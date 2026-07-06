@@ -16,7 +16,7 @@ const createStyles = (isPortrait: boolean) => ({
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'flex-end', 
-        padding: { xs: '0.25rem', md: '0.5rem' },
+        padding: { xs: '0.25rem 15px 15px 0.25rem', md: '0.5rem' },
     },
     buttonsContainer: {
         ...debugBorder('purple'),
@@ -30,12 +30,12 @@ const createStyles = (isPortrait: boolean) => ({
         maxWidth: '100%',
     },
     promptButton: {
-        height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
+        height: { xs: '3rem', md: '3.8rem' },
         minWidth: { xs: '1.5rem', md: '2.5rem' },
-        maxWidth: { xs: '5rem', sm: '7rem', md: '9rem' },
+        maxWidth: { xs: '6rem', sm: '7rem', md: '9rem' },
     },
     promptButtonText: {
-        fontSize: { xs: '0.6rem', sm: '0.9rem', md: '1.05rem' },
+        fontSize: { xs: '0.75rem', sm: '0.9rem', md: '1.05rem' },
     },
 });
 
