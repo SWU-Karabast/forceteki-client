@@ -31,7 +31,7 @@ const createStyles = (isPortrait: boolean) => ({
     },
     promptButton: {
         height: { xs: '3rem', md: '3.8rem' },
-        minWidth: { xs: '1.5rem', md: '2.5rem' },
+        minWidth: { xs: '6rem', md: '2.5rem' },
         maxWidth: { xs: '6rem', sm: '7rem', md: '9rem' },
     },
     promptButtonText: {
