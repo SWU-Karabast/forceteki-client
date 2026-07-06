@@ -140,6 +140,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
+        ml: 'auto',
     },
     drawerActionButton: {
         padding: '10px',
@@ -157,6 +158,9 @@ const styles = {
             color: 'rgba(255, 255, 255, 0.45)',
             background: 'rgba(255, 255, 255, 0.05)',
         },
+    },
+    collapseDrawerButton: {
+        display: { xs: 'none', md: 'inline-flex' },
     },
     quickUndoButtonEnabled: {
         borderColor: 'rgba(42, 212, 76, 0.7)',
@@ -467,7 +471,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const drawerContent = (
         <>
             <Box sx={styles.headerBoxStyle}>
-                <IconButton aria-label="collapse drawer" onClick={toggleSidebar} sx={styles.drawerActionButton}>
+                <IconButton aria-label="collapse drawer" onClick={toggleSidebar} sx={[styles.drawerActionButton, styles.collapseDrawerButton]}>
                     <ChevronRightIcon />
                 </IconButton>
                 <Box sx={styles.headerActionsStyle}>
