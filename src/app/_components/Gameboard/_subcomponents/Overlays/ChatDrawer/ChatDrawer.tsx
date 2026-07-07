@@ -9,6 +9,7 @@ import {
     ListItemIcon,
     ListItemText,
     SwipeableDrawer,
+    Tooltip,
     useMediaQuery,
     useTheme,
 } from '@mui/material';
@@ -252,19 +253,23 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
             break;
         default:
             buttonIcon = <UndoIcon />;
-            ariaLabel = 'undo';
+            ariaLabel = 'Undo last action';
             break;
     }
 
     return (
-        <IconButton
-            aria-label={ariaLabel}
-            onClick={handleUndoButton}
-            disabled={disabledOverride || undoButtonDisabled}
-            sx={[styles.drawerActionButton, undoButtonStyle]}
-        >
-            {buttonIcon}
-        </IconButton>
+        <Tooltip title={ariaLabel}>
+            <span>
+                <IconButton
+                    aria-label={ariaLabel}
+                    onClick={handleUndoButton}
+                    disabled={disabledOverride || undoButtonDisabled}
+                    sx={[styles.drawerActionButton, undoButtonStyle]}
+                >
+                    {buttonIcon}
+                </IconButton>
+            </span>
+        </Tooltip>
     )
 }
 
@@ -471,9 +476,11 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const drawerContent = (
         <>
             <Box sx={styles.headerBoxStyle}>
-                <IconButton aria-label="collapse drawer" onClick={toggleSidebar} sx={[styles.drawerActionButton, styles.collapseDrawerButton]}>
-                    <ChevronRightIcon />
-                </IconButton>
+                <Tooltip title="Collapse chat">
+                    <IconButton aria-label="collapse drawer" onClick={toggleSidebar} sx={[styles.drawerActionButton, styles.collapseDrawerButton]}>
+                        <ChevronRightIcon />
+                    </IconButton>
+                </Tooltip>
                 <Box sx={styles.headerActionsStyle}>
                     {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
                     <IconButton
