@@ -11,20 +11,18 @@ import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
-import { useCosmetics } from '../_contexts/CosmeticsContext';
+import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { Play } from 'next/font/google';
-import RichText from '../_components/_sharedcomponents/RichText/RichText';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
     const router = useRouter();
-    const { getBackground } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer]?.user;
-    const background = getBackground(isSpectator ? null : user?.cosmetics?.background ?? null);
+    const backgroundPath = (isSpectator ? undefined : user?.cosmetics?.background?.path) ?? s3ImageURL('ui/board-background-1.webp');
     // const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
     // const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
     // const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
@@ -98,8 +96,6 @@ const GameBoard = () => {
         return null;
     }
 
-    const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
-    const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
     // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
@@ -108,7 +104,7 @@ const GameBoard = () => {
             transition: 'padding-right 0.3s ease-in-out',
             height: '100dvh',
             position: 'relative',
-            backgroundImage: `url(${background.path}?v=2)`,
+            backgroundImage: `url(${backgroundPath}?v=2)`,
             WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
             WebkitUserSelect: 'none',   /* Prevents image selection */
             userSelect: 'none',
@@ -117,44 +113,7 @@ const GameBoard = () => {
             display: 'flex',
             flexDirection: 'column',
         },
-        centralPromptContainer: {
-            position: 'absolute',
-            top: '48.6%',
-            left: sidebarOpen ? { xs: '50vw', md: 'calc(50vw - min(10%, 140px))' } : '50vw',
-            transform: 'translate(-50%, -50%)',
-            transition: 'left 0.3s ease-in-out',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '50vw',
-            pointerEvents: 'none',
-            zIndex: { xs: '2', md: '1' },
-        },
-        promptStyle: {
-            textAlign: 'center',
-            fontSize: '1.3em',
-            // media query to detect mobile in landscape mode. be aware that most devices will have 800px wide on landscape
-            // for this case we want to save as much space as possible
-            '@media (orientation: landscape) and (max-width:932px)': { fontSize: '1rem' },
-            textShadow: '1px 1px 6px black',
-            padding: '0.5rem',
-            position: 'relative',
-            borderRadius: '20px',
-            background: !menuTitle ? 'transparent' : promptTitle
-                ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)'
-                : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
-        },
-        promptShadow: {
-            position: 'absolute',
-            top: '27%',
-            left: 0,
-            width: '100%',
-            height: '60%',
-            zIndex: -1,
-            background: 'rgba(0, 0, 0, .9)',
-            filter: 'blur(10px)',
-            WebkitFilter: 'blur(10px)'
-        },
+
         playerPlaymat: {
             position: 'absolute',
             bottom: 0, // Touch bottom edge
@@ -227,18 +186,10 @@ const GameBoard = () => {
                 </Box>
             </Box>
 
-
             <ChatDrawer
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
             />
-
-            <Box sx={styles.centralPromptContainer}>
-                <Box sx={styles.promptStyle}>
-                    {menuTitle && <RichText text={menuTitle}/>}
-                    <Box sx={styles.promptShadow}/>
-                </Box>
-            </Box>
 
             <PopupShell sidebarOpen={sidebarOpen}/>
             {isPreferenceOpen && <PreferencesComponent

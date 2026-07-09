@@ -1,6 +1,6 @@
 import {
     IFindUserResponse, IModActionResponse,
-    IRegisteredCosmeticOption
+    ICosmeticEntity
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 
 
@@ -37,10 +37,10 @@ export class ServerApiService {
     }
 
     // Cosmetics API methods
-    public static async getCosmeticsAsync(): Promise<{ cosmetics: IRegisteredCosmeticOption[], isContributor: boolean }> {
+    public static async getCosmeticsAsync(): Promise<{ cosmetics: ICosmeticEntity[], isContributor: boolean }> {
         const response = await this.fetchWithErrorHandling<{
             success: boolean;
-            cosmetics: IRegisteredCosmeticOption[];
+            cosmetics: ICosmeticEntity[];
             count: number;
             isContributor: boolean;
         }>(`${this.baseUrl}/api/cosmetics`);
@@ -51,11 +51,11 @@ export class ServerApiService {
         };
     }
 
-    public static async saveCosmeticAsync(cosmetic: IRegisteredCosmeticOption, cookies?: string): Promise<IRegisteredCosmeticOption> {
+    public static async saveCosmeticAsync(cosmetic: ICosmeticEntity, cookies?: string): Promise<ICosmeticEntity> {
         const response = await this.fetchWithErrorHandling<{
             success: boolean;
             message: string;
-            cosmetic: IRegisteredCosmeticOption;
+            cosmetic: ICosmeticEntity;
         }>(`${this.baseUrl}/api/cosmetics`, {
             method: 'POST',
             headers: {
