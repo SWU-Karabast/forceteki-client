@@ -21,10 +21,8 @@ function locationToMessage(location: DecklistLocation): string {
 
 function illegalReasonToSuffix(reason?: IllegalInFormatReason): string {
     switch (reason) {
-        case IllegalInFormatReason.RotatedOut:
-            return ' (set is outside the legal card pool)';
-        case IllegalInFormatReason.Preview:
-            return ' (set has not been released yet)';
+        case IllegalInFormatReason.NotLegalInFormat:
+            return ' (set is not legal in this format)';
         case IllegalInFormatReason.Suspended:
             return ' (card is suspended)';
         case IllegalInFormatReason.UnknownSet:

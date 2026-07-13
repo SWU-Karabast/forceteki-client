@@ -20,11 +20,8 @@ export enum DecklistLocation {
 
 export enum IllegalInFormatReason {
 
-    /** Card's set is not part of the legal rotation/card pool for this format. */
-    RotatedOut = 'rotatedOut',
-
-    /** Card is from a preview set that has not yet been officially released. */
-    Preview = 'preview',
+    /** Card's set is not legal in this format (outside the rotation, never legal, or an unreleased preview set). */
+    NotLegalInFormat = 'notLegalInFormat',
 
     /** Card is on this format's suspension list. */
     Suspended = 'suspended',
