@@ -86,13 +86,13 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'Ashes cards now available in Queue!',
+        title: 'Ashes of the Empire is now legal in Premier!',
         content: `
-        <p>You can now test out newly spoiled cards from Ashes of the Empire in the queue! To get started, just set the Card Pool to "Next Set" when queuing up for a Premier or Eternal match.</p>
+        <p>Ashes of the Empire (Set 8) is now legal in the Premier format! The "Next Set" card pools have been disabled in all formats until the next preview season.</p>
     
         <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we're always looking for new contributors.</p><p></p>
 	  `,
-        date: '5/21/26',
+        date: '7/13/26',
         image: s3ImageURL('ui/ash-news-banner.webp'),
         imageAlt: 'News Announcement',
     },
