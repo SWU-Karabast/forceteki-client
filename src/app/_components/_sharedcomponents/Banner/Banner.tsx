@@ -56,18 +56,18 @@ const KarabastBanner: React.FC = () => {
             flex: 1,
         },
         block1: {
-            backgroundImage: `url(${s3ImageURL('ui/law-vader-banner.webp')})`,
+            backgroundImage: `url(${s3ImageURL('ui/ash-luke-banner.webp')})`,
             marginRight: { xs: '-7px', md: '-152px' },
         },
         block2: {
-            backgroundImage: `url(${s3ImageURL('ui/law-leia-banner.webp')})`,
+            backgroundImage: `url(${s3ImageURL('ui/ash-palp-banner.webp')})`,
         },
         block3: {
-            backgroundImage: `url(${s3ImageURL('ui/law-jabba-banner.webp')})`,
+            backgroundImage: `url(${s3ImageURL('ui/ash-mando-banner.webp')})`,
             marginLeft: { xs: '-7px', md: '-152px' },
         },
         block4: {
-            backgroundImage: `url(${s3ImageURL('ui/law-enfys-banner.webp')})`,
+            backgroundImage: `url(${s3ImageURL('ui/ash-cad-banner.webp')})`,
             marginLeft: { xs: '-7px', md: '-152px' },
         },
     };

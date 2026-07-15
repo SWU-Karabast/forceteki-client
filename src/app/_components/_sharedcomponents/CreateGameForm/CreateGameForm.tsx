@@ -199,6 +199,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     'Incorrect deck format or unsupported deckbuilder.',
                     'Deck Validation Error','error');
                 setModalOpen(true);
+                // Bail out here: without this return, execution falls through to
+                // the create-lobby POST below with deckData still null, so the
+                // clear client-side validation error above gets clobbered by a
+                // confusing server 400 ("No deck or swudbLink provided"). The
+                // other deck-entry forms (DeckSelectionCard, QuickGameForm)
+                // already return in this branch.
+                return;
             }
         }catch (error){
             clearErrors();
