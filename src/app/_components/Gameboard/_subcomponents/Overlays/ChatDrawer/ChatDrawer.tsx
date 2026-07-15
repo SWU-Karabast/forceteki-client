@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
     Drawer,
     Box,
+    Button,
     IconButton,
     Divider,
     Menu,
@@ -160,12 +161,25 @@ const styles = {
             background: 'rgba(255, 255, 255, 0.05)',
         },
     },
+    undoActionButton: {
+        minWidth: 0,
+        padding: '10px 12px',
+        borderRadius: '999px',
+        fontSize: '0.8rem',
+        fontWeight: 600,
+        lineHeight: 1,
+        textTransform: 'none',
+        whiteSpace: 'nowrap',
+        '& .MuiButton-startIcon': {
+            marginLeft: 0,
+            marginRight: '6px',
+        },
+    },
     collapseDrawerButton: {
         display: { xs: 'none', md: 'inline-flex' },
     },
     quickUndoButtonEnabled: {
-        borderColor: 'rgba(42, 212, 76, 0.7)',
-        boxShadow: '0 0 8px rgba(0, 170, 70, 0.45)',
+        borderColor: 'rgba(255, 255, 255, 0.12)',
     },
     quickUndoButtonDisabled: {
         borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -236,22 +250,27 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
             break;
     }
 
+    let buttonText;
     let buttonIcon;
     let ariaLabel;
     switch (quickUndoState) {
         case QuickUndoAvailableState.RequestUndoAvailable:
+            buttonText = 'Request';
             buttonIcon = <MessageIcon />;
             ariaLabel = 'request undo';
             break;
         case QuickUndoAvailableState.UndoRequestsBlocked:
+            buttonText = 'Blocked';
             buttonIcon = <BlockIcon />;
             ariaLabel = 'undo requests blocked';
             break;
         case QuickUndoAvailableState.WaitingForConfirmation:
+            buttonText = 'Waiting';
             buttonIcon = <BlockIcon />;
             ariaLabel = 'undo waiting for confirmation';
             break;
         default:
+            buttonText = 'Undo';
             buttonIcon = <UndoIcon />;
             ariaLabel = 'Undo last action';
             break;
@@ -260,14 +279,15 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
     return (
         <Tooltip title={ariaLabel}>
             <span>
-                <IconButton
+                <Button
                     aria-label={ariaLabel}
                     onClick={handleUndoButton}
                     disabled={disabledOverride || undoButtonDisabled}
-                    sx={[styles.drawerActionButton, undoButtonStyle]}
+                    startIcon={buttonIcon}
+                    sx={[styles.drawerActionButton, styles.undoActionButton, undoButtonStyle]}
                 >
-                    {buttonIcon}
-                </IconButton>
+                    {buttonText}
+                </Button>
             </span>
         </Tooltip>
     )
