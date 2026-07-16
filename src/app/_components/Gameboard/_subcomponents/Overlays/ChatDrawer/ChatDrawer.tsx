@@ -37,6 +37,7 @@ import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { LobbyConfirmationPopupModule } from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
 import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
+import { Theme } from '@mui/material/styles';
 
 // ------------------------STYLES------------------------//
 const styles = {
@@ -122,6 +123,13 @@ const styles = {
         pointerEvents: 'none',
         zIndex: 9,
     },
+    mobileClosedSwipeHintButton: {
+        padding: 0,
+        cursor: 'pointer',
+        pointerEvents: 'auto',
+        // The drawer's invisible swipe area uses drawer - 1 and otherwise intercepts the click.
+        zIndex: (theme: Theme) => theme.zIndex.drawer,
+    },
     mobileClosedSwipeHintChevron: {
         width: '7px',
         height: '7px',
@@ -203,8 +211,15 @@ const styles = {
     },
 }
 
-const MobileClosedSwipeHint = () => (
-    <Box aria-hidden="true" sx={styles.mobileClosedSwipeHint}>
+const MobileClosedSwipeHint = ({ onClick }: { onClick?: () => void }) => (
+    <Box
+        aria-hidden={onClick ? undefined : true}
+        aria-label={onClick ? 'Open chat drawer' : undefined}
+        component={onClick ? 'button' : 'div'}
+        onClick={onClick}
+        sx={onClick ? [styles.mobileClosedSwipeHint, styles.mobileClosedSwipeHintButton] : styles.mobileClosedSwipeHint}
+        type={onClick ? 'button' : undefined}
+    >
         <Box component="span" sx={styles.mobileClosedSwipeHintChevron} />
     </Box>
 );
@@ -296,6 +311,8 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, preferenceToggle }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    // Allow clicking on devices with a mouse or trackpad, including touch-capable hybrids.
+    const hasFinePointer = useMediaQuery('(any-pointer: fine)');
     const {
         gameState,
         gameMessages,
@@ -570,7 +587,10 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     if (isMobile) {
         return (
             <>
-                {!sidebarOpen && !isEdgeSwipeActive && <MobileClosedSwipeHint />}
+                {!sidebarOpen && !isEdgeSwipeActive && (
+                    // Enable click for mouse/trackpad input; touch-only devices continue to use swipe.
+                    <MobileClosedSwipeHint onClick={hasFinePointer ? handleDrawerOpen : undefined} />
+                )}
                 <SwipeableDrawer
                     anchor="right"
                     open={sidebarOpen}
