@@ -172,7 +172,6 @@ const GameBoard = () => {
                 <Box sx={{ height: '15dvh' }}>
                     <OpponentCardTray
                         trayPlayer={getOpponent(connectedPlayer)}
-                        preferenceToggle={handlePreferenceToggle}
                     />
                 </Box>
                 <Box sx={{ height: '67dvh', position: 'relative', zIndex: 2 }}>
@@ -189,6 +188,7 @@ const GameBoard = () => {
             <ChatDrawer
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
+                preferenceToggle={handlePreferenceToggle}
             />
 
             <PopupShell sidebarOpen={sidebarOpen}/>
