@@ -15,6 +15,7 @@ import { SwuforgeDeckProvider } from '../SwuforgeDeckProvider';
 import { SwumetastatsDeckProvider } from '../SwumetastatsDeckProvider';
 import { SwUnlimitedDbDeckProvider } from '../SwUnlimitedDbDeckProvider';
 import { SwustatsDeckProvider } from '../SwustatsDeckProvider';
+import { SwupediaDeckProvider } from '../SwupediaDeckProvider';
 import { buildTagStyle } from './tagStyle';
 import { DeckFetchError, DeckFetchErrorReason } from './types';
 
@@ -45,6 +46,7 @@ const providers: readonly DeckProviderBase[] = [
     new KyberdecksDeckProvider(),
     new CardcoreDeckProvider(),
     new HoloscanDeckProvider(),
+    new SwupediaDeckProvider(),
 ];
 
 /**
