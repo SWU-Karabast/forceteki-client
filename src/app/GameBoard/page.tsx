@@ -180,7 +180,6 @@ const GameBoard = () => {
                 <Box sx={{ height: '18dvh' }}>
                     <PlayerCardTray
                         trayPlayer={connectedPlayer}
-                        toggleSidebar={toggleSidebar}
                     />
                 </Box>
             </Box>
