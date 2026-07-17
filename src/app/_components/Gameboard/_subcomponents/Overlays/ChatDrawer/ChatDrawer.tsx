@@ -9,7 +9,6 @@ import {
     MenuItem,
     ListItemIcon,
     ListItemText,
-    SwipeableDrawer,
     Tooltip,
     useMediaQuery,
     useTheme,
@@ -17,7 +16,6 @@ import {
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import UndoIcon from '@mui/icons-material/Undo';
 import MessageIcon from '@mui/icons-material/Message';
 import BlockIcon from '@mui/icons-material/Block';
@@ -41,74 +39,27 @@ import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/
 import { Theme } from '@mui/material/styles';
 
 // ------------------------STYLES------------------------//
+const drawerBorder = '1px solid rgba(255, 255, 255, 0.16)';
+
 const styles = {
     drawerStyle: {
         flexShrink: 0,
-        '& .MuiDrawer-paper': {
-            backgroundColor: '#000000CC',
-            color: '#fff',
-            display: 'flex',
-            flexDirection: 'column',
-            width: { xs: '200px', md: 'min(20%, 280px)' },
-            padding: '0.75em',
-            overflow: 'hidden',
-        },
-    },
-    mobileDrawerStyle: {
         '& .MuiBackdrop-root': {
             backgroundColor: 'rgba(0, 0, 0, 0.25)',
         },
         '& .MuiDrawer-paper': {
-            backgroundColor: '#000000E6',
+            backgroundColor: { xs: '#000000E6', md: '#000000CC' },
             color: '#fff',
             display: 'flex',
             flexDirection: 'column',
             width: { xs: '200px', md: 'min(20%, 280px)' },
             padding: '0.75em',
-            overflow: 'visible',
-            '&::before': {
-                content: '""',
-                position: 'absolute',
-                left: '-27px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '27px',
-                height: '54px',
-                backgroundColor: '#000000E6',
-                border: '1px solid rgba(143, 214, 255, 0.85)',
-                borderRight: 'none',
-                borderRadius: '27px 0 0 27px',
-                transition: 'border-color 225ms ease',
-                pointerEvents: 'none',
-            },
-            '&::after': {
-                content: '""',
-                position: 'absolute',
-                left: '-14px',
-                top: '50%',
-                width: '7px',
-                height: '7px',
-                borderLeft: '2px solid #fff',
-                borderBottom: '2px solid #fff',
-                filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))',
-                transform: 'translateY(-50%) rotate(45deg)',
-                transition: 'transform 225ms ease',
-                pointerEvents: 'none',
-            },
+            overflow: { xs: 'visible', md: 'hidden' },
+            borderLeft: drawerBorder,
         },
     },
-    mobileDrawerOpenStyle: {
-        '& .MuiDrawer-paper::before': {
-            borderColor: 'rgba(255, 255, 255, 0.16)',
-            borderRight: 'none',
-        },
-        '& .MuiDrawer-paper::after': {
-            transform: 'translateY(-50%) rotate(225deg)',
-        },
-    },
-    mobileClosedSwipeHint: {
+    drawerToggle: {
         position: 'fixed',
-        right: 0,
         top: '50%',
         transform: 'translateY(-50%)',
         width: '40px',
@@ -118,8 +69,10 @@ const styles = {
         justifyContent: 'center',
         background: 'transparent',
         border: 0,
-        pointerEvents: 'none',
-        zIndex: 9,
+        padding: 0,
+        cursor: 'pointer',
+        zIndex: (theme: Theme) => theme.zIndex.drawer + 1,
+        transition: (theme: Theme) => theme.transitions.create('right'),
         '&::before': {
             content: '""',
             position: 'absolute',
@@ -133,23 +86,29 @@ const styles = {
             borderRadius: '27px 0 0 27px',
             boxShadow: '-2px 0 10px rgba(0, 186, 255, 0.48), inset 2px 0 6px rgba(255, 255, 255, 0.14)',
         },
+        '&::after': {
+            content: '""',
+            width: '7px',
+            height: '7px',
+            borderLeft: '2px solid #fff',
+            borderBottom: '2px solid #fff',
+            filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))',
+            position: 'absolute',
+            right: '5px',
+        },
     },
-    mobileClosedSwipeHintButton: {
-        padding: 0,
-        cursor: 'pointer',
-        pointerEvents: 'auto',
-        // The drawer's invisible swipe area uses drawer - 1 and otherwise intercepts the click.
-        zIndex: (theme: Theme) => theme.zIndex.drawer,
-    },
-    mobileClosedSwipeHintChevron: {
-        width: '7px',
-        height: '7px',
-        borderLeft: '2px solid #fff',
-        borderBottom: '2px solid #fff',
-        filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))',
-        transform: 'rotate(45deg)',
-        position: 'absolute',
-        right: '5px',
+    drawerToggleClosed: { right: 0, '&::after': { transform: 'rotate(45deg)' } },
+    drawerToggleOpen: {
+        right: { xs: '200px', md: 'min(20%, 280px)' },
+        '&::before': {
+            right: '-1px',
+            backgroundColor: { md: '#000000CC' },
+            borderColor: 'rgba(255, 255, 255, 0.16)',
+            border: drawerBorder,
+            borderRight: 0,
+            boxShadow: 'none',
+        },
+        '&::after': { transform: 'rotate(225deg)' },
     },
     headerBoxStyle: {
         display: 'flex',
@@ -195,9 +154,6 @@ const styles = {
             marginRight: '6px',
         },
     },
-    collapseDrawerButton: {
-        display: { xs: 'none', md: 'inline-flex' },
-    },
     quickUndoButtonEnabled: {
         borderColor: 'rgba(255, 255, 255, 0.12)',
     },
@@ -224,17 +180,15 @@ const styles = {
     },
 }
 
-const MobileClosedSwipeHint = ({ onClick }: { onClick?: () => void }) => (
+const DrawerToggle = ({ open, onClick }: { open: boolean; onClick: () => void }) => (
     <Box
-        aria-hidden={onClick ? undefined : true}
-        aria-label={onClick ? 'Open chat drawer' : undefined}
-        component={onClick ? 'button' : 'div'}
+        aria-label={`${open ? 'Close' : 'Open'} chat drawer`}
+        aria-expanded={open}
+        component="button"
         onClick={onClick}
-        sx={onClick ? [styles.mobileClosedSwipeHint, styles.mobileClosedSwipeHintButton] : styles.mobileClosedSwipeHint}
-        type={onClick ? 'button' : undefined}
-    >
-        <Box component="span" sx={styles.mobileClosedSwipeHintChevron} />
-    </Box>
+        sx={[styles.drawerToggle, open ? styles.drawerToggleOpen : styles.drawerToggleClosed]}
+        type="button"
+    />
 );
 
 const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }) => {
@@ -430,12 +384,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         setMenuAnchorElement(null);
     }
 
-    const handleDrawerOpen = () => {
-        if (!sidebarOpen) {
-            toggleSidebar();
-        }
-    }
-
     const handleDrawerClose = () => {
         if (sidebarOpen) {
             toggleSidebar();
@@ -511,11 +459,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const drawerContent = (
         <>
             <Box sx={styles.headerBoxStyle}>
-                <Tooltip title="Collapse chat">
-                    <IconButton aria-label="collapse drawer" onClick={toggleSidebar} sx={[styles.drawerActionButton, styles.collapseDrawerButton]}>
-                        <ChevronRightIcon />
-                    </IconButton>
-                </Tooltip>
                 <Box sx={styles.headerActionsStyle}>
                     {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
                     <IconButton
@@ -591,38 +534,19 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         </>
     );
 
-    if (isMobile) {
-        return (
-            <>
-                {!sidebarOpen && (
-                    <MobileClosedSwipeHint onClick={handleDrawerOpen} />
-                )}
-                <SwipeableDrawer
-                    anchor="right"
-                    open={sidebarOpen}
-                    onOpen={handleDrawerOpen}
-                    onClose={handleDrawerClose}
-                    sx={sidebarOpen ? [styles.mobileDrawerStyle, styles.mobileDrawerOpenStyle] : styles.mobileDrawerStyle}
-                    disableBackdropTransition
-                    // Android reserves edge swipes for system navigation. Use the visible
-                    // indicator to open the drawer and keep swipe gestures for closing it.
-                    disableSwipeToOpen
-                >
-                    {drawerContent}
-                </SwipeableDrawer>
-            </>
-        );
-    }
-
     return (
-        <Drawer
-            anchor="right"
-            open={sidebarOpen}
-            variant="persistent"
-            sx={styles.drawerStyle}
-        >
-            {drawerContent}
-        </Drawer>
+        <>
+            <DrawerToggle open={sidebarOpen} onClick={toggleSidebar} />
+            <Drawer
+                anchor="right"
+                open={sidebarOpen}
+                onClose={handleDrawerClose}
+                variant={isMobile ? 'temporary' : 'persistent'}
+                sx={styles.drawerStyle}
+            >
+                {drawerContent}
+            </Drawer>
+        </>
     );
 };
 
