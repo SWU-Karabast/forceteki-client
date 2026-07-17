@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Alert, Box, MenuItem, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -140,6 +140,7 @@ const UserManagementTab: React.FC = () => {
                     }
                     const refreshed = await ServerApiService.getModActionsForPlayerAsync(selectedPlayer.id);
                     setModActions(refreshed.modActions || []);
+                    setUsernameChanges(refreshed.usernameChanges || []);
                     // since we have a selected player the refreshed player will always be one.
                     setSelectedPlayer(refreshed.players[0])
                     setNote('');
@@ -170,6 +171,7 @@ const UserManagementTab: React.FC = () => {
                     // Refresh mod actions
                     const refreshed = await ServerApiService.getModActionsForPlayerAsync(selectedPlayer.id);
                     setModActions(refreshed.modActions || []);
+                    setUsernameChanges(refreshed.usernameChanges || []);
                     // since we have a selected player the refreshed player will always be one.
                     setSelectedPlayer(refreshed.players[0])
                     setSuccessMessage('Mod action cancelled successfully');
@@ -310,7 +312,10 @@ const UserManagementTab: React.FC = () => {
 
     };
     // ==================== Render ====================
-    const history = selectedPlayer ? buildUserHistory(modActions, usernameChanges) : [];
+    const history = useMemo(
+        () => (selectedPlayer ? buildUserHistory(modActions, usernameChanges) : []),
+        [selectedPlayer, modActions, usernameChanges],
+    );
     return (
         <Box>
             {/* Messages */}
