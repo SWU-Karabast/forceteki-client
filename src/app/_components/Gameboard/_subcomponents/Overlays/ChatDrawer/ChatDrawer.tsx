@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
     Drawer,
     Box,
@@ -68,22 +68,22 @@ const styles = {
             '&::before': {
                 content: '""',
                 position: 'absolute',
-                left: '-15px',
+                left: '-27px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                width: '15px',
+                width: '27px',
                 height: '54px',
                 backgroundColor: '#000000E6',
                 border: '1px solid rgba(143, 214, 255, 0.85)',
                 borderRight: 'none',
-                borderRadius: '11px 0 0 11px',
+                borderRadius: '27px 0 0 27px',
                 transition: 'border-color 225ms ease',
                 pointerEvents: 'none',
             },
             '&::after': {
                 content: '""',
                 position: 'absolute',
-                left: '-10px',
+                left: '-14px',
                 top: '50%',
                 width: '7px',
                 height: '7px',
@@ -110,18 +110,28 @@ const styles = {
         right: 0,
         top: '50%',
         transform: 'translateY(-50%)',
-        width: '15px',
+        width: '40px',
         height: '54px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#000000E6',
-        border: '1px solid rgba(143, 214, 255, 0.85)',
-        borderRight: 0,
-        borderRadius: '11px 0 0 11px',
-        boxShadow: '-2px 0 10px rgba(0, 186, 255, 0.48), inset 2px 0 6px rgba(255, 255, 255, 0.14)',
+        background: 'transparent',
+        border: 0,
         pointerEvents: 'none',
         zIndex: 9,
+        '&::before': {
+            content: '""',
+            position: 'absolute',
+            right: 0,
+            top: 0,
+            width: '27px',
+            height: '54px',
+            backgroundColor: '#000000E6',
+            border: '1px solid rgba(143, 214, 255, 0.85)',
+            borderRight: 0,
+            borderRadius: '27px 0 0 27px',
+            boxShadow: '-2px 0 10px rgba(0, 186, 255, 0.48), inset 2px 0 6px rgba(255, 255, 255, 0.14)',
+        },
     },
     mobileClosedSwipeHintButton: {
         padding: 0,
@@ -137,7 +147,8 @@ const styles = {
         borderBottom: '2px solid #fff',
         filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))',
         transform: 'rotate(45deg)',
-        marginLeft: '5px',
+        position: 'absolute',
+        right: '5px',
     },
     headerBoxStyle: {
         display: 'flex',
@@ -311,8 +322,6 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, preferenceToggle }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    // Allow clicking on devices with a mouse or trackpad, including touch-capable hybrids.
-    const hasFinePointer = useMediaQuery('(any-pointer: fine)');
     const {
         gameState,
         gameMessages,
@@ -330,7 +339,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const [menuAnchorElement, setMenuAnchorElement] = useState<null | HTMLElement>(null);
     const [showDisableChatConfirmation, setShowDisableChatConfirmation] = useState(false);
     const [playerReportOpen, setPlayerReportOpen] = useState(false);
-    const [isEdgeSwipeActive, setIsEdgeSwipeActive] = useState(false);
     const { openPopup } = usePopup();
     const { user } = useUser();
     const router = useRouter();
@@ -346,35 +354,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const opponentChatDisabled = hasChatDisabled(opponentId);
     const canReportOpponent = !isSpectator && !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
     const isReportingDisabled = !!user?.reportingDisabled;
-
-    useEffect(() => {
-        if (!isMobile || sidebarOpen) {
-            setIsEdgeSwipeActive(false);
-            return;
-        }
-
-        const handleTouchStart = (event: TouchEvent) => {
-            const touch = event.touches[0];
-
-            if (touch && touch.clientX >= window.innerWidth - 32) {
-                setIsEdgeSwipeActive(true);
-            }
-        };
-
-        const handleTouchEnd = () => {
-            setIsEdgeSwipeActive(false);
-        };
-
-        window.addEventListener('touchstart', handleTouchStart, { passive: true });
-        window.addEventListener('touchend', handleTouchEnd, { passive: true });
-        window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
-
-        return () => {
-            window.removeEventListener('touchstart', handleTouchStart);
-            window.removeEventListener('touchend', handleTouchEnd);
-            window.removeEventListener('touchcancel', handleTouchEnd);
-        };
-    }, [isMobile, sidebarOpen]);
 
     const getChatDisabledInfo = (): IChatDisabledInfo => {
         if (isPrivateLobby && !doesUserHaveChatMuted) {
@@ -587,9 +566,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     if (isMobile) {
         return (
             <>
-                {!sidebarOpen && !isEdgeSwipeActive && (
-                    // Enable click for mouse/trackpad input; touch-only devices continue to use swipe.
-                    <MobileClosedSwipeHint onClick={hasFinePointer ? handleDrawerOpen : undefined} />
+                {!sidebarOpen && (
+                    <MobileClosedSwipeHint onClick={handleDrawerOpen} />
                 )}
                 <SwipeableDrawer
                     anchor="right"
@@ -598,8 +576,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                     onClose={handleDrawerClose}
                     sx={sidebarOpen ? [styles.mobileDrawerStyle, styles.mobileDrawerOpenStyle] : styles.mobileDrawerStyle}
                     disableBackdropTransition
-                    disableSwipeToOpen={false}
-                    swipeAreaWidth={15}
+                    // Android reserves edge swipes for system navigation. Use the visible
+                    // indicator to open the drawer and keep swipe gestures for closing it.
+                    disableSwipeToOpen
                 >
                     {drawerContent}
                 </SwipeableDrawer>
