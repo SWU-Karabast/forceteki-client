@@ -24,6 +24,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
+import OutlinedFlagIcon from '@mui/icons-material/OutlinedFlag';
 import CommentsDisabledIcon from '@mui/icons-material/CommentsDisabled';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import { MatchmakingType, QuickUndoAvailableState } from '@/app/_constants/constants';
@@ -215,6 +216,7 @@ const styles = {
         color: '#fff',
         border: '1px solid rgba(255, 255, 255, 0.12)',
         minWidth: '190px',
+        mt: '0.3rem',
     },
     menuIcon: {
         color: '#E0E0E0',
@@ -338,6 +340,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const [chatMessage, setChatMessage] = useState('')
     const [menuAnchorElement, setMenuAnchorElement] = useState<null | HTMLElement>(null);
     const [showDisableChatConfirmation, setShowDisableChatConfirmation] = useState(false);
+    const [showConcedeConfirmation, setShowConcedeConfirmation] = useState(false);
     const [playerReportOpen, setPlayerReportOpen] = useState(false);
     const { openPopup } = usePopup();
     const { user } = useUser();
@@ -464,6 +467,22 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         }
     }
 
+    const handleConcedeClick = () => {
+        handleMenuClose();
+        closeMobileDrawer();
+        setShowConcedeConfirmation(true);
+    }
+
+    const handleConfirmConcede = () => {
+        const playerName = gameState.players[connectedPlayer]?.name;
+        sendGameMessage(['concede', playerName]);
+        setShowConcedeConfirmation(false);
+    };
+
+    const handleCancelConcede = () => {
+        setShowConcedeConfirmation(false);
+    };
+
     const handleDisableChatClick = () => {
         handleMenuClose();
         closeMobileDrawer();
@@ -539,6 +558,14 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                             </MenuItem>
                         )}
                         <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                        {!isSpectator && (
+                            <MenuItem onClick={handleConcedeClick}>
+                                <ListItemIcon sx={styles.menuIcon}>
+                                    <OutlinedFlagIcon fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Concede game</ListItemText>
+                            </MenuItem>
+                        )}
                         <MenuItem onClick={handleLeaveGameClick}>
                             <ListItemIcon sx={styles.menuIcon}>
                                 <LogoutIcon fontSize="small" />
@@ -558,6 +585,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 handleChatSubmit={handleGameChat}
             />
 
+            <LobbyConfirmationPopupModule title={'Concede Game Confirmation'} message={'Are you sure you wish to concede? This game will count as a loss.'} display={showConcedeConfirmation} onConfirmation={handleConfirmConcede} handleCancel={handleCancelConcede}/>
             <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showDisableChatConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
             <PlayerReportDialog open={playerReportOpen} onClose={handleClosePlayerReport}/>
         </>
