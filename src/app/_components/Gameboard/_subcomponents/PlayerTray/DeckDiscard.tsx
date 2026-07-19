@@ -8,6 +8,8 @@ import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import { useDiscardPileHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
+
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     const { gameState, connectedPlayer } = useGame();
@@ -21,7 +23,8 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
     // Individual ratio states
     const [isDiscardWiderThanTall, setIsDiscardWiderThanTall] = useState(false);
     const [isDeckWiderThanTall, setIsDeckWiderThanTall] = useState(false);
-    
+    const discardHighlightSx = useDiscardPileHighlightSx(trayPlayer);
+
     // Use a more stable layout effect for dimension measurements
     useLayoutEffect(() => {
         let debounceTimer: number;
@@ -261,7 +264,7 @@ const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
         <Box sx={styles.containerStyle}>
             <Box
                 ref={discardRef}
-                sx={styles.discard.discardCardStyle}
+                sx={[styles.discard.discardCardStyle, discardHighlightSx]}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose} 
                 onClick={handleDiscardToggle}

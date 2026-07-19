@@ -14,6 +14,7 @@ import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOver
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
+import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
@@ -64,6 +65,8 @@ const GameCard: React.FC<IGameCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
     const { clearPopups } = usePopup();
+    const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
+
     const locale = useCardImageLocale();
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
@@ -74,7 +77,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
     const isHiddenHandCard = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
     const popoverConfig = usePopoverConfig(card);
-    
+
     // Check if card is blocked from play by opponent's effect (e.g., Regional Governor, Trade Route Taxation)
     const isBlockedFromPlay = !!card.blockedFromPlayReason;
 
@@ -290,7 +293,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             transform: card.exhausted && card.zone !== 'resource' ? 'rotate(4deg)' : 'none',
-            transition: 'transform 0.15s ease',
+            transition: 'box-shadow 0.25s ease, transform 0.15s ease',
             '&:hover': {
                 cursor: clickDisabled() ? 'normal' : 'pointer',
             },
@@ -380,8 +383,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('power-badge')})`,
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
+            WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
+            WebkitUserSelect: 'none',   /* Prevents image selection */
             userSelect: 'none',
             alignItems: 'center',
             justifyContent: 'center',
@@ -397,8 +400,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: `url(${s3TokenImageURL('hp-badge')})`,
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
+            WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
+            WebkitUserSelect: 'none',   /* Prevents image selection */
             userSelect: 'none',
             alignItems: 'center',
             justifyContent: 'center',
@@ -691,7 +694,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
     }
     return (
-        <Box sx={styles.cardContainer}>
+        <Box sx={[styles.cardContainer, highlightSx]}>
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
                 <Box
                     sx={styles.cloneIcon}
