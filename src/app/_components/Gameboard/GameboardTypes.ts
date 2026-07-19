@@ -16,6 +16,7 @@ export interface IChatDrawerProps {
     sidebarOpen: boolean;
     toggleSidebar: () => void;
     preferenceToggle: () => void;
+    openGameEndedModal: () => void;
 }
 
 export interface IPlayerCardTrayProps {
