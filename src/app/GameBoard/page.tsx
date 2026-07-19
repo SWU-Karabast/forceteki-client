@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Box, Grid } from '@mui/material';
+import { Box, Grid, useMediaQuery } from '@mui/material';
 import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
@@ -19,6 +19,7 @@ const GameBoard = () => {
     const router = useRouter();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
+    const isMobileLandscape = useMediaQuery('(orientation: landscape) and (max-width: 932px)');
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer]?.user;
@@ -29,6 +30,12 @@ const GameBoard = () => {
     // const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
     // const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
     // const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+
+    useEffect(() => {
+        if (isMobileLandscape) {
+            setSidebarOpen(true);
+        }
+    }, [isMobileLandscape]);
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && (lobbyState.gameType !== MatchmakingType.Quick || lobbyState.winHistory.gamesToWinMode === GamesToWinMode.BestOfThree)) {
@@ -100,6 +107,9 @@ const GameBoard = () => {
     const styles = {
         mainBoxStyle: {
             pr: sidebarOpen ? { xs: 0, md: 'min(20%, 280px)' } : '0',
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                paddingRight: sidebarOpen ? 'min(20%, 280px)' : 0,
+            },
             width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
             height: '100dvh',
@@ -119,6 +129,9 @@ const GameBoard = () => {
             bottom: 0, // Touch bottom edge
             left: '2rem', // Add left margin to constrain width
             right: sidebarOpen ? { xs: '2rem', md: 'calc(min(20%, 280px) + 2rem)' } : '2rem', // Add right margin to match
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem',
+            },
             height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
@@ -133,6 +146,9 @@ const GameBoard = () => {
             top: 0, // Touch top edge
             left: '2rem', // Add left margin to constrain width
             right: sidebarOpen ? { xs: '2rem', md: 'calc(min(20%, 280px) + 2rem)' } : '2rem', // Add right margin to match
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem',
+            },
             height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',

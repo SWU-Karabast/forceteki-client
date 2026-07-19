@@ -23,6 +23,9 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
             display: isPreferenceOpen ? 'block' : 'none',
             position: variant === 'homePage' ? { xs: 'relative', md: 'absolute' } : 'absolute',
             width: sidebarOpen ? { xs: '100%', md: 'calc(100% - min(20%, 280px))' } : '100%',
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                width: sidebarOpen ? 'calc(100% - min(20%, 280px))' : '100%',
+            },
             height: variant === 'homePage' ? { xs: 'auto', md: '100%' } : '100%',
             backgroundColor: variant ==='gameBoard' ? 'rgba(0, 0, 0, 0.5)' : 'none',
             zIndex: variant === 'homePage' ? 1 : 999,
