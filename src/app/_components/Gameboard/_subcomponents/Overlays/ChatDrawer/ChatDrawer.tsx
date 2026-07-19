@@ -4,11 +4,11 @@ import {
     Box,
     Button,
     IconButton,
-    Divider,
     Menu,
     MenuItem,
     ListItemIcon,
     ListItemText,
+    Snackbar,
     Tooltip,
     useMediaQuery,
     useTheme,
@@ -22,20 +22,18 @@ import BlockIcon from '@mui/icons-material/Block';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
-import OutlinedFlagIcon from '@mui/icons-material/OutlinedFlag';
 import CommentsDisabledIcon from '@mui/icons-material/CommentsDisabled';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import LinkIcon from '@mui/icons-material/Link';
+import BugReportIcon from '@mui/icons-material/BugReport';
 import { MatchmakingType, QuickUndoAvailableState } from '@/app/_constants/constants';
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
-import { usePopup } from '@/app/_contexts/Popup.context';
-import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
-import { v4 as uuidv4 } from 'uuid';
-import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { LobbyConfirmationPopupModule } from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
 import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
+import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 import { Theme } from '@mui/material/styles';
 
 // ------------------------STYLES------------------------//
@@ -120,7 +118,7 @@ const styles = {
     headerActionsStyle: {
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: '0.35rem',
         ml: 'auto',
     },
     drawerActionButton: {
@@ -153,6 +151,9 @@ const styles = {
             marginLeft: 0,
             marginRight: '6px',
         },
+    },
+    headerCircularButton: {
+        padding: '8px',
     },
     quickUndoButtonEnabled: {
         borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -275,7 +276,7 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
     )
 }
 
-const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, preferenceToggle }) => {
+const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, preferenceToggle, openGameEndedModal }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const {
@@ -294,11 +295,11 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const [chatMessage, setChatMessage] = useState('')
     const [menuAnchorElement, setMenuAnchorElement] = useState<null | HTMLElement>(null);
     const [showDisableChatConfirmation, setShowDisableChatConfirmation] = useState(false);
-    const [showConcedeConfirmation, setShowConcedeConfirmation] = useState(false);
+    const [showEndGameConfirmation, setShowEndGameConfirmation] = useState(false);
     const [playerReportOpen, setPlayerReportOpen] = useState(false);
-    const { openPopup } = usePopup();
+    const [bugReportOpen, setBugReportOpen] = useState(false);
+    const [shareLinkCopied, setShareLinkCopied] = useState(false);
     const { user } = useUser();
-    const router = useRouter();
     const isDev = process.env.NODE_ENV === 'development';
     const isUndoEnabled = isDev || gameState.undoEnabled;
     const shouldShowUndo = !isSpectator;
@@ -311,6 +312,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const opponentChatDisabled = hasChatDisabled(opponentId);
     const canReportOpponent = !isSpectator && !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
     const isReportingDisabled = !!user?.reportingDisabled;
+    const canReportBug = !isAnonymousPlayer(connectedPlayer);
+    const canShareGameLink = !isSpectator && !!lobbyState?.settings?.allowSpectators && !!lobbyState?.spectateLink;
+    const hasGameEnded = !!gameState.winners?.length;
 
     const getChatDisabledInfo = (): IChatDisabledInfo => {
         if (isPrivateLobby && !doesUserHaveChatMuted) {
@@ -402,33 +406,24 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         preferenceToggle();
     }
 
-    const handleLeaveGameClick = () => {
+    const handleEndGameClick = () => {
         handleMenuClose();
         closeMobileDrawer();
-        if (isSpectator){
-            router.push('/');
+        if (hasGameEnded) {
+            openGameEndedModal();
         } else {
-            openPopup('leaveGame', {
-                uuid: `${uuidv4()}`,
-                source: PopupSource.User
-            });
+            setShowEndGameConfirmation(true);
         }
     }
 
-    const handleConcedeClick = () => {
-        handleMenuClose();
-        closeMobileDrawer();
-        setShowConcedeConfirmation(true);
-    }
-
-    const handleConfirmConcede = () => {
+    const handleConfirmEndGame = () => {
         const playerName = gameState.players[connectedPlayer]?.name;
         sendGameMessage(['concede', playerName]);
-        setShowConcedeConfirmation(false);
+        setShowEndGameConfirmation(false);
     };
 
-    const handleCancelConcede = () => {
-        setShowConcedeConfirmation(false);
+    const handleCancelEndGame = () => {
+        setShowEndGameConfirmation(false);
     };
 
     const handleDisableChatClick = () => {
@@ -456,18 +451,52 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         setPlayerReportOpen(false);
     };
 
+    const handleShareGameLink = async () => {
+        const spectateLink = lobbyState?.spectateLink;
+        if (!spectateLink) return;
+
+        handleMenuClose();
+        closeMobileDrawer();
+        try {
+            await navigator.clipboard.writeText(spectateLink);
+            setShareLinkCopied(true);
+        } catch (error) {
+            console.error('Failed to copy spectate link', error);
+        }
+    };
+
+    const handleOpenBugReport = () => {
+        handleMenuClose();
+        closeMobileDrawer();
+        setBugReportOpen(true);
+        sendGameMessage(['resetActionTimer']);
+    };
+
     const drawerContent = (
         <>
             <Box sx={styles.headerBoxStyle}>
+                {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
                 <Box sx={styles.headerActionsStyle}>
-                    {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
+                    {!isSpectator && (
+                        <Tooltip title="End game">
+                            <span>
+                                <IconButton
+                                    aria-label="End game"
+                                    onClick={handleEndGameClick}
+                                    sx={[styles.drawerActionButton, styles.headerCircularButton]}
+                                >
+                                    <LogoutIcon />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                    )}
                     <IconButton
                         aria-label="game menu"
                         aria-controls={isMenuOpen ? 'chat-drawer-game-menu' : undefined}
                         aria-haspopup="true"
                         aria-expanded={isMenuOpen ? 'true' : undefined}
                         onClick={handleMenuOpen}
-                        sx={styles.drawerActionButton}
+                        sx={[styles.drawerActionButton, styles.headerCircularButton]}
                     >
                         <MoreHorizIcon />
                     </IconButton>
@@ -492,6 +521,20 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemText>{shouldShowChatInput ? 'Disable chat' : 'Chat is disabled'}</ListItemText>
                             </MenuItem>
                         )}
+                        {!isSpectator && (
+                            <MenuItem disabled={!canShareGameLink} onClick={handleShareGameLink}>
+                                <ListItemIcon sx={styles.menuIcon}>
+                                    <LinkIcon fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Share game link</ListItemText>
+                            </MenuItem>
+                        )}
+                        <MenuItem disabled={!canReportBug || isReportingDisabled} onClick={handleOpenBugReport}>
+                            <ListItemIcon sx={styles.menuIcon}>
+                                <BugReportIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Bug'}</ListItemText>
+                        </MenuItem>
                         {!isSpectator && canReportOpponent && (
                             <MenuItem disabled={isReportingDisabled} onClick={handleOpenPlayerReport}>
                                 <ListItemIcon sx={styles.menuIcon}>
@@ -500,21 +543,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</ListItemText>
                             </MenuItem>
                         )}
-                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
-                        {!isSpectator && (
-                            <MenuItem onClick={handleConcedeClick}>
-                                <ListItemIcon sx={styles.menuIcon}>
-                                    <OutlinedFlagIcon fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText>Concede game</ListItemText>
-                            </MenuItem>
-                        )}
-                        <MenuItem onClick={handleLeaveGameClick}>
-                            <ListItemIcon sx={styles.menuIcon}>
-                                <LogoutIcon fontSize="small" />
-                            </ListItemIcon>
-                            <ListItemText>Leave game</ListItemText>
-                        </MenuItem>
                     </Menu>
                 </Box>
             </Box>
@@ -528,9 +556,16 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 handleChatSubmit={handleGameChat}
             />
 
-            <LobbyConfirmationPopupModule title={'Concede Game Confirmation'} message={'Are you sure you wish to concede? This game will count as a loss.'} display={showConcedeConfirmation} onConfirmation={handleConfirmConcede} handleCancel={handleCancelConcede}/>
+            <LobbyConfirmationPopupModule title={'Do you want to end the game?'} message={'This will concede the game to your opponent and count as a loss.'} display={showEndGameConfirmation} onConfirmation={handleConfirmEndGame} handleCancel={handleCancelEndGame}/>
             <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showDisableChatConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
             <PlayerReportDialog open={playerReportOpen} onClose={handleClosePlayerReport}/>
+            <BugReportDialog open={bugReportOpen} onClose={() => setBugReportOpen(false)}/>
+            <Snackbar
+                open={shareLinkCopied}
+                autoHideDuration={2000}
+                onClose={() => setShareLinkCopied(false)}
+                message="Game link copied"
+            />
         </>
     );
 

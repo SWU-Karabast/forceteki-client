@@ -9,6 +9,7 @@ import PlayerCardTray from '../_components/Gameboard/PlayerCardTray/PlayerCardTr
 import { useGame } from '../_contexts/Game.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
+import GameEndedModal from '@/app/_components/Gameboard/_subcomponents/Overlays/GameEndedModal/GameEndedModal';
 import { useRouter } from 'next/navigation';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
@@ -20,6 +21,7 @@ const GameBoard = () => {
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
+    const [isGameEndedModalOpen, setGameEndedModalOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
     const user = gameState?.players[connectedPlayer]?.user;
     const backgroundPath = (isSpectator ? undefined : user?.cosmetics?.background?.path) ?? s3ImageURL('ui/board-background-1.webp');
@@ -38,11 +40,13 @@ const GameBoard = () => {
 
     useEffect(() => {
         const hasWinners = !!gameState?.winners.length;
-        // open preferences automatically if game ended and user hasn't closed it themselves yet.
+        // Show the game-ended actions once per completed game.
         if (hasWinners && !userClosedWinScreen) {
-            setPreferenceOpen(true);
+            setPreferenceOpen(false);
+            setGameEndedModalOpen(true);
         } else if (!hasWinners && userClosedWinScreen) {
             setUserClosedWinScreen(false);
+            setGameEndedModalOpen(false);
         }
     }, [gameState?.winners, userClosedWinScreen]);
 
@@ -52,10 +56,12 @@ const GameBoard = () => {
     }
 
     const handlePreferenceToggle = () => {
-        if(!!gameState?.winners.length) {
-            setUserClosedWinScreen(true);
-        }
         setPreferenceOpen(!isPreferenceOpen);
+    };
+
+    const handleGameEndedModalClose = () => {
+        setUserClosedWinScreen(true);
+        setGameEndedModalOpen(false);
     };
 
     // check if game ended already.
@@ -64,7 +70,7 @@ const GameBoard = () => {
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','soundOptions','gameOptions']
+        ? ['soundOptions','gameOptions']
         : ['currentGame','soundOptions','gameOptions'];
 
     // Get game number from winHistory for Bo3 mode
@@ -188,16 +194,24 @@ const GameBoard = () => {
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
                 preferenceToggle={handlePreferenceToggle}
+                openGameEndedModal={() => setGameEndedModalOpen(true)}
             />
 
             <PopupShell sidebarOpen={sidebarOpen}/>
+            {winners && (
+                <GameEndedModal
+                    open={isGameEndedModalOpen}
+                    onClose={handleGameEndedModalClose}
+                    title={gameEndedTitle}
+                    subtitle={winners.length > 1 ? 'Game ended in a draw' : `Winner is ${getWinnerDisplayName(winners[0])}`}
+                />
+            )}
             {isPreferenceOpen && <PreferencesComponent
                 sidebarOpen={sidebarOpen}
                 isPreferenceOpen={isPreferenceOpen}
                 preferenceToggle={handlePreferenceToggle}
                 tabs={preferenceTabs}
-                title={winners ? gameEndedTitle : 'PREFERENCES'}
-                subtitle={winners ? winners.length > 1 ? 'Game ended in a draw' : `Winner is ${getWinnerDisplayName(winners[0])}` : undefined}
+                title="PREFERENCES"
             />}
         </Grid>
     );
