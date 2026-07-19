@@ -526,7 +526,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemIcon sx={styles.menuIcon}>
                                     <LinkIcon fontSize="small" />
                                 </ListItemIcon>
-                                <ListItemText>Share game link</ListItemText>
+                                <ListItemText>Share spectator link</ListItemText>
                             </MenuItem>
                         )}
                         <MenuItem disabled={!canReportBug || isReportingDisabled} onClick={handleOpenBugReport}>
