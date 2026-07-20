@@ -94,3 +94,12 @@ export type LeaveGamePopup = {
     uuid: string;
     source: PopupSource;
 };
+
+export type WaitDelayPopup = {
+    type: 'waitDelay';
+    uuid: string;
+    title: string;
+    description?: string;
+    buttons: PopupButton[];
+    source: PopupSource;
+};

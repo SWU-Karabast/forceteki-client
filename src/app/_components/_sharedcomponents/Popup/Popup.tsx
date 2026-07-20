@@ -2,7 +2,7 @@
 import { PopupData, PopupType, usePopup } from '@/app/_contexts/Popup.context';
 import { Box, SxProps, Theme } from '@mui/material';
 import React from 'react';
-import { ActionTriggerPopup, DefaultPopup, DropdownPopup, NumberPopup, PilePopup, SelectCardsPopup } from './Popup.types';
+import { ActionTriggerPopup, DefaultPopup, DropdownPopup, NumberPopup, PilePopup, SelectCardsPopup, WaitDelayPopup } from './Popup.types';
 import { DefaultPopupModal } from './PopupVariant/DefaultPopup';
 import ActionTriggerPopupModal from './PopupVariant/ActionTriggerPopup';
 import { PilePopupModal } from './PopupVariant/PilePopup';
@@ -12,6 +12,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { DropdownPopupModal } from './PopupVariant/DropdownPopup';
 import { LeaveGamePopupModule } from '@/app/_components/_sharedcomponents/Popup/PopupVariant/LeaveGamePopup';
 import { NumberPopupModal } from './PopupVariant/NumberPopup';
+import { WaitDelayPopupModal } from './PopupVariant/WaitDelayPopup';
 
 const focusHandlerStyle = (type: PopupType, data: PopupData, index: number, playerName:string, containCards?:boolean): SxProps<Theme> => ({
     zIndex: 11 + index,
@@ -84,6 +85,8 @@ const PopupShell: React.FC<IPopupShellProps> = ({
                 return <DropdownPopupModal data={data as DropdownPopup} />;
             case 'number':
                 return <NumberPopupModal data={data as NumberPopup} />;
+            case 'waitDelay':
+                return <WaitDelayPopupModal data={data as WaitDelayPopup} />;
             case 'leaveGame':
                 return <LeaveGamePopupModule uuid={data.uuid} />;
             default:
