@@ -100,7 +100,8 @@ const HomePagePlayMode: React.FC = () => {
         markAnnouncementAsSeen(announcement);
     };
 
-    const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
+    // In development, dev test users and real logged-in accounts can both start test setups.
+    const showTestGames = process.env.NODE_ENV === 'development' && !!user;
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
 
     // Tutorial popup handlers (undo + timer chained)
@@ -211,6 +212,8 @@ const HomePagePlayMode: React.FC = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ filename: filename }),
+                    // Send the session cookie so a real logged-in account is used as player 1 (dev only).
+                    credentials: 'include',
                 }
             );
 
