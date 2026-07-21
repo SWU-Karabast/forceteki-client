@@ -16,8 +16,8 @@ interface WaitDelayProps {
     data: WaitDelayPopup;
 }
 
-const MIN_DELAY_MS = 1000;
-const MAX_DELAY_MS = 3000;
+const MIN_DELAY_MS = 2000;
+const MAX_DELAY_MS = 4000;
 // How often the progress bar refreshes; small enough to look smooth.
 const TICK_MS = 50;
 
@@ -31,6 +31,8 @@ export const WaitDelayPopupModal = ({ data }: WaitDelayProps) => {
     const [delay] = useState(() => MIN_DELAY_MS + Math.random() * (MAX_DELAY_MS - MIN_DELAY_MS));
     // 0 -> 100 as the pause elapses, driving the progress bar.
     const [progress, setProgress] = useState(0);
+    // Lets the player disable the auto-resolve timer so they can take as long as they want.
+    const [timerStopped, setTimerStopped] = useState(false);
 
     const resolve = () => {
         if (hasResolvedRef.current || !skipButton) return;
@@ -39,6 +41,7 @@ export const WaitDelayPopupModal = ({ data }: WaitDelayProps) => {
     };
 
     useEffect(() => {
+        if (timerStopped) return;
         const start = Date.now();
         const interval = setInterval(() => {
             const elapsed = Date.now() - start;
@@ -50,7 +53,7 @@ export const WaitDelayPopupModal = ({ data }: WaitDelayProps) => {
         }, TICK_MS);
         return () => clearInterval(interval);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [timerStopped]);
 
     return (
         <Box sx={containerStyle}>
@@ -60,22 +63,29 @@ export const WaitDelayPopupModal = ({ data }: WaitDelayProps) => {
             {data.description && (
                 <RichText text={data.description} sx={textStyle} component={Typography} />
             )}
-            <LinearProgress
-                variant="determinate"
-                value={progress}
-                sx={{
-                    width: '80%',
-                    height: 8,
-                    borderRadius: 4,
-                    my: 2,
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    '& .MuiLinearProgress-bar': {
+            {!timerStopped && (
+                <LinearProgress
+                    variant="determinate"
+                    value={progress}
+                    sx={{
+                        width: '80%',
+                        height: 8,
                         borderRadius: 4,
-                        transition: `transform ${TICK_MS}ms linear`,
-                    },
-                }}
-            />
+                        my: 2,
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        '& .MuiLinearProgress-bar': {
+                            borderRadius: 4,
+                            transition: `transform ${TICK_MS}ms linear`,
+                        },
+                    }}
+                />
+            )}
             <Box sx={footerStyle}>
+                {!timerStopped && (
+                    <GradientBorderButton onClick={() => setTimerStopped(true)}>
+                        <RichText text="Stop Timer" />
+                    </GradientBorderButton>
+                )}
                 <GradientBorderButton onClick={resolve}>
                     <RichText text={skipButton?.text ?? 'Skip'} />
                 </GradientBorderButton>
