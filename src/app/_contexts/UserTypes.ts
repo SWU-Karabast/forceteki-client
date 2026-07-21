@@ -72,6 +72,7 @@ export interface IGameOptions {
     muteChat?: boolean;
     cardLanguage?: CardImageLocale;
     timerVisibility?: TimerVisibility;
+    autoSingleTarget?: boolean;
 }
 
 export enum TimerVisibility {

@@ -475,3 +475,10 @@ export const useGame = () => {
     }
     return context;
 };
+
+/**
+ * Like {@link useGame}, but returns undefined instead of throwing when there is no
+ * GameProvider (e.g. on the home page). Use this from components shared between the
+ * game board and non-game pages that only need the game context when it exists.
+ */
+export const useGameOptional = () => useContext(GameContext);
