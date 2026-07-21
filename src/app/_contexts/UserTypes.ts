@@ -72,7 +72,11 @@ export interface IGameOptions {
     muteChat?: boolean;
     cardLanguage?: CardImageLocale;
     timerVisibility?: TimerVisibility;
-    autoSingleTarget?: boolean;
+
+    // Prompt-reduction settings grouped so future automations can live alongside singleTarget.
+    autoResolve?: {
+        singleTarget?: boolean;
+    };
 }
 
 export enum TimerVisibility {

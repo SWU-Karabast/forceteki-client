@@ -69,7 +69,7 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
         setMuteChatEnabled(currentMuteChat);
         setOriginalMuteChat(currentMuteChat);
 
-        const currentAutoSingleTarget = user?.preferences?.gameOptions?.autoSingleTarget ?? false;
+        const currentAutoSingleTarget = user?.preferences?.gameOptions?.autoResolve?.singleTarget ?? false;
         setAutoSingleTargetEnabled(currentAutoSingleTarget);
         setOriginalAutoSingleTarget(currentAutoSingleTarget);
 
@@ -130,7 +130,7 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
         try {
             const result = await savePreferencesGeneric(
                 user,
-                { gameOptions: { muteChat: muteChatEnabled, cardLanguage, timerVisibility, autoSingleTarget: autoSingleTargetEnabled } },
+                { gameOptions: { muteChat: muteChatEnabled, cardLanguage, timerVisibility, autoResolve: { singleTarget: autoSingleTargetEnabled } } },
                 updateUserPreferences
             );
             if (result.success) {
