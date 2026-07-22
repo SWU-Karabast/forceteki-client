@@ -33,6 +33,9 @@ const styles = {
         overflowY: 'hidden',
         paddingTop: '1.75rem',
         paddingBottom: '0.5rem',
+        // horizontal breathing room so the first/last cards' borders (and hover glow) aren't shaved by
+        // the scroll-clip edge when the row overflows
+        paddingInline: '1rem',
         marginTop: '0.25rem',
         marginBottom: '2rem',
     }
