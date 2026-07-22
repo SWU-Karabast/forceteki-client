@@ -147,6 +147,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
+            else if (promptType === 'batchTriggerResolution' && menuTitle && promptUuid && !selectCardMode) {
+                const batchData = promptState.batchTriggerResolution ?? {};
+                return openPopup('batchTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    sourceCard: batchData.sourceCard,
+                    remainingCount: batchData.remainingCount,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
             else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
                 const promptPopupType = promptType === 'triggerWindow' ? 'actionTrigger' : 'default';
                 return openPopup(promptPopupType, {
