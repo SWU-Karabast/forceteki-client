@@ -308,7 +308,7 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                     <Box sx={{ mb: '10px' }}>
                         <PreferenceOption
                             option={'Auto-resolve single targets'}
-                            optionDescription={'When an effect has only one legal target, resolve it automatically instead of prompting you to choose.'}
+                            optionDescription={'When a non-optional effect has exactly one legal target, resolve it automatically without prompts.'}
                             iconType="checkbox"
                             onChange={handleAutoSingleTargetChange}
                             defaultChecked={autoSingleTargetEnabled}
