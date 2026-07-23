@@ -6,6 +6,7 @@ import PreferenceOption from '@/app/_components/_sharedcomponents/Preferences/_s
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import CardLanguageNoticeDialog from '@/app/_components/_sharedcomponents/CardLanguageNoticeDialog';
 import { useUser } from '@/app/_contexts/User.context';
+import { useGameOptional } from '@/app/_contexts/Game.context';
 import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
 import { CARD_IMAGE_LOCALE_LABELS, CardImageLocale, SUPPORTED_CARD_IMAGE_LOCALES } from '@/app/_utils/s3Utils';
 import { loadPreferencesFromLocalStorage } from '@/app/_utils/ServerAndLocalStorageUtils';
@@ -42,9 +43,14 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
     const { user, updateUserPreferences } = useUser();
     const { setLocale } = useCardImageLocaleContext();
     const { setTimerVisibility: setTimerVisibilityContext } = useTimerVisibilityContext();
+    // Only present when this tab is rendered inside a game (GameProvider); undefined on the home page.
+    const game = useGameOptional();
 
     const [muteChatEnabled, setMuteChatEnabled] = useState<boolean>(false);
     const [originalMuteChat, setOriginalMuteChat] = useState<boolean>(false);
+
+    const [autoSingleTargetEnabled, setAutoSingleTargetEnabled] = useState<boolean>(false);
+    const [originalAutoSingleTarget, setOriginalAutoSingleTarget] = useState<boolean>(false);
 
     const [cardLanguage, setCardLanguage] = useState<CardImageLocale>(CardImageLocale.English);
     const [originalCardLanguage, setOriginalCardLanguage] = useState<CardImageLocale>(CardImageLocale.English);
@@ -62,6 +68,10 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
         const currentMuteChat = user?.preferences?.gameOptions?.muteChat ?? false;
         setMuteChatEnabled(currentMuteChat);
         setOriginalMuteChat(currentMuteChat);
+
+        const currentAutoSingleTarget = user?.preferences?.gameOptions?.autoResolve?.singleTarget ?? false;
+        setAutoSingleTargetEnabled(currentAutoSingleTarget);
+        setOriginalAutoSingleTarget(currentAutoSingleTarget);
 
         let currentTimerVisibility: TimerVisibility;
         if (user?.preferences?.gameOptions?.timerVisibility) {
@@ -85,15 +95,20 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
     }, [user]);
 
     useEffect(() => {
-        const unsaved = muteChatEnabled !== originalMuteChat || cardLanguage !== originalCardLanguage || timerVisibility !== originalTimerVisibility;
+        const unsaved = muteChatEnabled !== originalMuteChat || cardLanguage !== originalCardLanguage || timerVisibility !== originalTimerVisibility || autoSingleTargetEnabled !== originalAutoSingleTarget;
         setHasChanges(unsaved);
         if (setHasNewChanges) {
             setHasNewChanges(unsaved);
         }
-    }, [muteChatEnabled, originalMuteChat, cardLanguage, originalCardLanguage, timerVisibility, originalTimerVisibility, setHasNewChanges]);
+    }, [muteChatEnabled, originalMuteChat, cardLanguage, originalCardLanguage, timerVisibility, originalTimerVisibility, autoSingleTargetEnabled, originalAutoSingleTarget, setHasNewChanges]);
 
     const handleMuteChatChange = (value: boolean) => {
         setMuteChatEnabled(value);
+        setSaveStatus(SaveStatus.NoChange);
+    };
+
+    const handleAutoSingleTargetChange = (value: boolean) => {
+        setAutoSingleTargetEnabled(value);
         setSaveStatus(SaveStatus.NoChange);
     };
 
@@ -111,15 +126,22 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
         setIsSaving(true);
         setSaveStatus(SaveStatus.NoChange);
         const previousCardLanguage = originalCardLanguage;
+        const autoSingleTargetChanged = autoSingleTargetEnabled !== originalAutoSingleTarget;
         try {
             const result = await savePreferencesGeneric(
                 user,
-                { gameOptions: { muteChat: muteChatEnabled, cardLanguage, timerVisibility } },
+                { gameOptions: { muteChat: muteChatEnabled, cardLanguage, timerVisibility, autoResolve: { singleTarget: autoSingleTargetEnabled } } },
                 updateUserPreferences
             );
             if (result.success) {
                 setOriginalMuteChat(muteChatEnabled);
                 setOriginalCardLanguage(cardLanguage);
+                setOriginalAutoSingleTarget(autoSingleTargetEnabled);
+                // The server reads autoSingleTarget when the game is created, so a mid-game change
+                // must also be pushed to the running game to take effect this game.
+                if (autoSingleTargetChanged && variant === 'gameBoard') {
+                    game?.sendGameMessage(['toggleOptionSetting', 'autoSingleTarget', autoSingleTargetEnabled]);
+                }
                 // Flip the live image locale immediately so all cards re-render
                 // without waiting on the UserContext round-trip (also covers the
                 // anonymous path, which doesn't go through UserContext at all).
@@ -276,6 +298,22 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                             Log in to save game options.
                         </Typography>
                     )}
+                </Box>
+            )}
+
+            {user && (
+                <Box sx={styles.functionContainer}>
+                    <Typography sx={styles.typographyContainer} variant={'h2'}>Gameplay</Typography>
+                    <Divider sx={{ mb: '20px' }} />
+                    <Box sx={{ mb: '10px' }}>
+                        <PreferenceOption
+                            option={'Auto-Target'}
+                            optionDescription={'When an action or non-optional effect has exactly one legal target, resolve it automatically without selection prompts.'}
+                            iconType="checkbox"
+                            onChange={handleAutoSingleTargetChange}
+                            defaultChecked={autoSingleTargetEnabled}
+                        />
+                    </Box>
                 </Box>
             )}
 
