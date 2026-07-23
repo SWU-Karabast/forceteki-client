@@ -1,8 +1,6 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-import IconButton from '@mui/material/IconButton';
-import { ChatBubbleOutline } from '@mui/icons-material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import Credits from '../_subcomponents/PlayerTray/Credits';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
@@ -13,7 +11,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 
-const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSidebar }) => {
+const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer }) => {
     const { gameState, connectedPlayer, isSpectator } = useGame();
     const { isPortrait } = useScreenOrientation();
 
@@ -65,18 +63,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
             display: 'flex',
             alignItems: 'flex-end',
             zIndex: '1',
-        },
-        chatColumn: {
-            ...debugBorder('yellow'),
-            display: { xs: 'none', md: 'flex' },
-            alignItems: 'center',
-            alignSelf: 'flex-end',
-            height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
-            '@media (orientation: portrait) and (max-width:900px)': {
-                height: 'auto !important'
-            },
-            width: 'auto',
-            marginBottom: { xs: '0.25rem', md: '0.5rem' }, // Match the padding of actionContainer
         },
         playerTurnAura: {
             height: '100px',
@@ -135,13 +121,6 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer, toggleSide
                 sx={styles.rightColumnStyle}
             >
                 <CardActionTray />
-                <Box ml={2} sx={styles.chatColumn}>
-                    <IconButton
-                        onClick={toggleSidebar}
-                    >
-                        <ChatBubbleOutline sx={{ color: '#FFFFFF', fontSize: '28px' }}/>
-                    </IconButton>
-                </Box>
             </Grid>
         </Grid>
     );
