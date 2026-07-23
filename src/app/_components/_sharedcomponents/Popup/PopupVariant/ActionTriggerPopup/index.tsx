@@ -24,10 +24,19 @@ const styles = {
         width: '100%',
         flexDirection: 'row',
         justifyContent: 'safe center',
+        // cards are all the same size and bottom-aligned; grouped cards' stacked peek + count badge
+        // overflow upward into this reserved top padding so they are visible but don't shift the row.
+        // Keep paddingTop just above the max stack peek (2 layers x STACK_OFFSET_PX ~= 28px) to avoid
+        // dead space above the cards.
+        alignItems: 'flex-end',
         overflowX: 'auto',
         overflowY: 'hidden',
+        paddingTop: '1.75rem',
         paddingBottom: '0.5rem',
-        marginTop: '1rem',
+        // horizontal breathing room so the first/last cards' borders (and hover glow) aren't shaved by
+        // the scroll-clip edge when the row overflows
+        paddingInline: '1rem',
+        marginTop: '0.25rem',
         marginBottom: '2rem',
     }
 };
@@ -65,6 +74,7 @@ export default function ActionTriggerPopupModal({ data }: ButtonProps) {
                                 text={button.text}
                                 sourceCard={button.sourceCard}
                                 hasLegalEffects={button.hasLegalEffects}
+                                count={button.count}
                                 onClick={() => {
                                     sendGameMessage([button.command, button.arg, button.uuid]);
                                 }}

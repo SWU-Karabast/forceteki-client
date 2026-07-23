@@ -2,8 +2,8 @@ import { CardPool, CardPoolLabels, FormatLabels, SwuGameFormat } from '@/app/_co
 import {
     DecklistLocation,
     DeckValidationFailureReason,
-    ICardIdAndName,
-    IDeckValidationFailures
+    IDeckValidationFailures,
+    IllegalInFormatReason
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 
 function locationToMessage(location: DecklistLocation): string {
@@ -16,6 +16,19 @@ function locationToMessage(location: DecklistLocation): string {
             return '"deck" or "sideboard"';
         default:
             return `<error unknown location '${location}'>`;
+    }
+}
+
+function illegalReasonToSuffix(reason?: IllegalInFormatReason): string {
+    switch (reason) {
+        case IllegalInFormatReason.NotLegalInFormat:
+            return ' (set is not legal in this format)';
+        case IllegalInFormatReason.Suspended:
+            return ' (card is suspended)';
+        case IllegalInFormatReason.UnknownSet:
+            return ' (unrecognized set code)';
+        default:
+            return '';
     }
 }
 
@@ -82,13 +95,13 @@ export function getReadableDeckErrors(
             );
 
             // Add a truncated list of offending cards for more context (up to 10)
-            illegalInFormatList.slice(0, 10).forEach(({ name, id }) => {
-                messages.push(`- "${name}" (set: ${id.toUpperCase()})`);
+            illegalInFormatList.slice(0, 10).forEach(({ name, id, reason }) => {
+                messages.push(`- "${name}" (set: ${id.toUpperCase()})${illegalReasonToSuffix(reason)}`);
             });
         } else {
-            illegalInFormatList.forEach(({ name, id }) => {
+            illegalInFormatList.forEach(({ name, id, reason }) => {
                 messages.push(
-                    `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${formatString} with ${cardPoolString}.`
+                    `Card "${name}" (set: ${id.toUpperCase()}) is illegal in ${formatString} with ${cardPoolString}${illegalReasonToSuffix(reason)}.`
                 );
             });
         }

@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useCallback, useState } from 'react';
 import {
     ActionTriggerPopup,
+    BatchTriggerPopup,
     DefaultPopup,
     DropdownPopup,
     PilePopup,
@@ -11,6 +12,7 @@ import {
 
 export type PopupData =
   | ActionTriggerPopup
+  | BatchTriggerPopup
   | DefaultPopup
   | SelectCardsPopup
   | PilePopup

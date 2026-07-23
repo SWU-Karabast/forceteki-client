@@ -23,6 +23,8 @@ export type PopupButton = {
     hasLegalEffects?: boolean;
     selected?: boolean;
     disabled?: boolean;
+    // number of similar triggers this button represents when several are grouped into one choice
+    count?: number;
 };
 
 export type PerCardButton = {
@@ -45,6 +47,16 @@ export type ActionTriggerPopup = {
     uuid: string;
     title: string;
     description?: string;
+    buttons: PopupButton[];
+    source: PopupSource;
+};
+
+export type BatchTriggerPopup = {
+    type: 'batchTrigger';
+    uuid: string;
+    title: string;
+    sourceCard?: PopupSourceCard;
+    remainingCount: number;
     buttons: PopupButton[];
     source: PopupSource;
 };
