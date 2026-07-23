@@ -86,6 +86,19 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: '🛠️ Update: Auto-Target is here',
+        content: `
+        <p>Streamline your gameplay! Auto-Target skips the manual selection step whenever an action or ability has exactly one legal target —  no choice to make, no click needed.</p>
+
+        <p>Find it in <strong>Preferences → Game Options → Gameplay</strong> from either the Home page or in a game. <em>Off by default</em>.</p>
+
+        <p>This is the first in a series of settings we're rolling out to streamline gameplay for players who know their deck inside and out. So keep an eye on the game preferences pane in future updates!</p>
+        `,
+        date: '7/23/26',
+        image: '/auto-target.jpg',
+        imageAlt: 'Auto-Target Setting',
+    },
+    {
         title: 'Ashes of the Empire is now legal in Premier!',
         content: `
         <p>Ashes of the Empire (Set 8) is now legal in the Premier format! The "Next Set" card pools have been disabled in all formats until the next preview season.</p>
@@ -99,14 +112,23 @@ export const articles: IArticle[] = [
 ];
 
 export const announcement: IAnnouncement = {
-    key:'cardLanguageSupport',
-    title: 'Card Language Support',
+    key:'introduceAutoTargetFeature',
+    title: 'Introducing Auto-Target',
     content:`
-    We are very happy to announce that players can now select their preferred language for card text in the settings menu! The official languages for SWU are <b>Italian, French, Spanish, German, and English</b>.<br/><br/>
+    <p>Reduce prompts and streamline your gameplay with the new Auto-Target feature!</p>
 
-    To change your card language, go to the <a href="/Preferences?tab=gameOptions" style="color:lightblue;">"Game Options" tab in the Preferences page</a>.<br/><br/>
+    <p>When an effect, attack, or upgrade has exactly one legal target, we'll skip the selection step and resolve it automatically — no more clicking to confirm the obvious.</p>
 
-    Have feedback? Let us know in our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a>!`,
-    endDate: '2026-07-01', // The date should be year-month-day
-    image:'/card-language-support.png'
+    <p>
+    <em>Examples:</em>
+    <ul>
+        <li>Attacking a lone Sentinel? No need to select the defender, combat starts immediately.</li>
+        <li>Playing an upgrade that can only target one unit? It will be attached automatically.</li>
+        <li>Assigning mandatory ping damage? No clicks needed if there's only one valid target.</li>
+    </ul>
+    </p>
+
+    <strong>How to enable:</strong> From either the Home page or in-game, go to <em>Preferences → Game Options → Gameplay</em> and toggle "Auto-Target" on<br/><br/>`,
+    endDate: '2026-08-15', // The date should be year-month-day
+    image:'/auto-target-setting.png'
 }
