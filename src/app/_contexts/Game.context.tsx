@@ -147,6 +147,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
+            else if (promptType === 'passDelay') {
+                return openPopup('waitDelay', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
             else if (promptType === 'batchTriggerResolution' && menuTitle && promptUuid && !selectCardMode) {
                 const batchData = promptState.batchTriggerResolution ?? {};
                 return openPopup('batchTrigger', {
