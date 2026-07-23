@@ -8,16 +8,28 @@ import { CardStyle, CardType } from '@/app/_components/_sharedcomponents/Cards/C
 
 type SourceCardImageData = Parameters<typeof s3CardImageURL>[0];
 
+// vertical offset per stacked card; larger = more obvious stack. Kept in sync with the row's reserved
+// headroom (ACTION_TRIGGER_STACK_HEADROOM) so the upward peek + badge are never clipped.
+export const STACK_OFFSET_PX = 10;
+export const STACK_SCALE = 0.92; // scale factor for each stacked card; smaller = more obvious stack
+
 const styles = {
-    container: {
+    // the flex item. It is always exactly one card in size (same as an ungrouped trigger) so the row
+    // stays aligned; the stacked cards and count badge overflow upward beyond it without affecting layout.
+    wrapper: {
         position: 'relative',
-        isolation: 'isolate',
-        overflow: 'hidden',
-        aspectRatio: '1 / 1.4',
         // to avoid cutoff when doing the Y translation on hover effect
         mt: '1px',
         flex: '0 0 clamp(116px, 16vw, 10rem)',
         width: 'clamp(116px, 16vw, 10rem)',
+        aspectRatio: '1 / 1.4',
+    },
+    container: {
+        position: 'absolute',
+        inset: 0,
+        zIndex: 2,
+        isolation: 'isolate',
+        overflow: 'hidden',
         padding: '2px',
         borderRadius: '15px',
         border: '1px solid rgb(102, 229, 255)',
@@ -38,6 +50,20 @@ const styles = {
             },
         },
     },
+    // a card "edge" peeking out above the main card to suggest a stack; offset upward, behind, and
+    // scaled down (deeper == smaller). `top center` origin keeps the top edge peeking while it tapers.
+    stackLayer: (depth: number) => ({
+        position: 'absolute',
+        inset: 0,
+        zIndex: 1,
+        transformOrigin: 'top center',
+        transform: `translateY(-${depth * STACK_OFFSET_PX}px) scale(${STACK_SCALE ** depth})`,
+        borderRadius: '15px',
+        border: '1px solid rgba(102, 229, 255, 0.45)',
+        backgroundColor: '#16232B',
+        boxShadow: '0 -3px 7px rgba(0, 0, 0, 0.4)',
+        pointerEvents: 'none',
+    }),
     button: {
         position: 'relative',
         overflow: 'hidden',
@@ -98,6 +124,31 @@ const styles = {
         textTransform: 'uppercase',
         userSelect: 'none',
     },
+    // sits at the top-left of the frontmost card, straddling its top edge. Tweak `top`/`left` to taste.
+    countBadge: {
+        position: 'absolute',
+        // top: '0rem',
+        left: '50%',
+        transform: 'translateX(-50%) translateY(-50%)',
+        zIndex: 3,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: '30px',
+        height: '24px',
+        padding: '0 0.5rem',
+        color: 'white',
+        // opaque so the stacked card borders don't show through the label
+        backgroundColor: '#21414A',
+        border: '1px solid rgba(102, 229, 255, 0.85)',
+        borderRadius: '999px',
+        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.55)',
+        fontSize: '0.8rem',
+        fontWeight: 700,
+        lineHeight: 1,
+        userSelect: 'none',
+        pointerEvents: 'none',
+    },
 }
 
 const cardArtBackground = (backgroundImage: string, isNoEffect: boolean) => ({
@@ -120,7 +171,7 @@ const cardArtBackground = (backgroundImage: string, isNoEffect: boolean) => ({
     },
 });
 
-const useCardImageURL = (sourceCard?: PopupSourceCard): string | null => {
+export const useCardImageURL = (sourceCard?: PopupSourceCard): string | null => {
     const locale = useCardImageLocale();
 
     if (!sourceCard || !sourceCard?.id || !sourceCard.type) {
@@ -134,41 +185,60 @@ const useCardImageURL = (sourceCard?: PopupSourceCard): string | null => {
     );
 }
 
-const isBaseSourceCard = (sourceCard?: PopupSourceCard): boolean => {
+export const isBaseSourceCard = (sourceCard?: PopupSourceCard): boolean => {
     const sourceType = sourceCard?.printedType ?? sourceCard?.type;
 
     return sourceType?.toLowerCase() === CardType.Base;
 };
 
-export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffects }: { onClick(): void; sourceCard?: PopupSourceCard, text: string, hasLegalEffects?: boolean }) {
+export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffects, count }: { onClick(): void; sourceCard?: PopupSourceCard, text: string, hasLegalEffects?: boolean, count?: number }) {
     const backgroundImage = useCardImageURL(sourceCard);
     const isLandscapePreview = isBaseSourceCard(sourceCard);
     const isNoEffect = !hasLegalEffects;
+    const isGrouped = (count ?? 0) > 1;
+    // show at most a 3-card stack regardless of how many triggers are grouped
+    const behindLayers = isGrouped ? Math.min(count ?? 1, 3) - 1 : 0;
 
     return (
-        <Box sx={[styles.container, isNoEffect && styles.noEffectContainer]}>
-            <Button
-                sx={[
-                    styles.button,
-                    backgroundImage 
-                        ? cardArtBackground(backgroundImage, isNoEffect)
-                        : { backgroundColor: '#1E2D32' }
-                ]}
-                onClick={onClick}
-            >
-                <RichText text={text} />
-            </Button>
-            {isNoEffect && (
+        <Box sx={styles.wrapper}>
+            {/* render deepest layer first so shallower layers stack on top of it */}
+            {Array.from({ length: behindLayers }).map((_, i) => {
+                const depth = behindLayers - i;
+                return <Box key={`stack-${depth}`} sx={styles.stackLayer(depth)} />;
+            })}
+            <Box sx={[styles.container, isNoEffect && styles.noEffectContainer]}>
+                <Button
+                    sx={[
+                        styles.button,
+                        backgroundImage
+                            ? cardArtBackground(backgroundImage, isNoEffect)
+                            : { backgroundColor: '#1E2D32' }
+                    ]}
+                    onClick={onClick}
+                >
+                    <RichText text={text} />
+                </Button>
+                {isNoEffect && (
+                    <Box
+                        component="span"
+                        aria-label="This choice has no effect"
+                        onClick={onClick}
+                        sx={styles.noEffectIndicator}
+                    >
+                        No effect
+                    </Box>
+                )}
+                {backgroundImage && <ViewCardButton imageUrl={backgroundImage} isLandscape={isLandscapePreview} />}
+            </Box>
+            {isGrouped && (
                 <Box
                     component="span"
-                    aria-label="This choice has no effect"
-                    onClick={onClick}
-                    sx={styles.noEffectIndicator}
+                    aria-label={`${count} similar triggers grouped together`}
+                    sx={styles.countBadge}
                 >
-                    No effect
+                    {`x${count}`}
                 </Box>
             )}
-            {backgroundImage && <ViewCardButton imageUrl={backgroundImage} isLandscape={isLandscapePreview} />}
         </Box>
     );
 }
