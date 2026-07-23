@@ -47,7 +47,8 @@ const Deck: React.FC = () => {
 
     // sideboard and deck limits
     const minDeckSize = connectedUser?.minDeckSize ?? 50;
-    const maxSideBoard = connectedUser?.maxSideBoard ?? 10;
+    // `null` from the server means no sideboard cap; `undefined` means it hasn't loaded yet, so default to 10
+    const maxSideBoard = connectedUser?.maxSideBoard === undefined ? 10 : connectedUser?.maxSideBoard;
 
     // ------------------------STYLES------------------------//
     const styles = {
@@ -176,7 +177,7 @@ const Deck: React.FC = () => {
                                 <Typography sx={{ ...styles.deckSizeTextStyle, color: sideboardError ? 'red' : styles.deckSizeTextStyle.color }}>
                                     {sideboardCount}
                                 </Typography>
-                                {maxSideBoard === -1 ? (
+                                {maxSideBoard === null ? (
                                     <Box sx={styles.sideboardUnlimitedContainer}>
                                         <Typography sx={styles.lineTypography}>/</Typography>
                                         <AllInclusiveIcon sx={styles.infiniteSymbol} />
