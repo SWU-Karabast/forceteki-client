@@ -117,14 +117,14 @@ export const announcement: IAnnouncement = {
     content:`
     <p>Reduce prompts and streamline your gameplay with the new Auto-Target feature!</p>
 
-    <p>When an effect, attack, or upgrade has exactly one legal target, we'll skip the selection step and resolve it automatically — no more clicking to confirm the obvious.</p>
+    <p>When an effect, attack, or upgrade has exactly one legal target, we'll skip the selection step and resolve it automatically — no extra clicks required.</p>
 
     <p>
     <em>Examples:</em>
     <ul>
-        <li>Attacking a lone Sentinel? No need to select the defender, combat starts immediately.</li>
-        <li>Playing an upgrade that can only target one unit? It will be attached automatically.</li>
-        <li>Assigning mandatory ping damage? No clicks needed if there's only one valid target.</li>
+        <li>Attacking a lone Sentinel will automatically select the defender and initiate combat</li>
+        <li>Playing an upgrade that can only target one unit will immediately attach it</li>
+        <li>Mandatory ping damage will be auto-assigned if there's only one valid target</li>
     </ul>
     </p>
 
