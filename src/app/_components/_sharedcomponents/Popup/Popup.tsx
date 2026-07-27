@@ -2,10 +2,11 @@
 import { PopupData, PopupType, usePopup } from '@/app/_contexts/Popup.context';
 import { Box, SxProps, Theme } from '@mui/material';
 import React from 'react';
-import { ActionTriggerPopup, BatchTriggerPopup, DefaultPopup, DropdownPopup, NumberPopup, PilePopup, SelectCardsPopup, WaitDelayPopup } from './Popup.types';
+import { ActionTriggerPopup, BatchTriggerPopup, DefaultPopup, DropdownPopup, NumberPopup, OptionalTriggerPopup, PilePopup, SelectCardsPopup, WaitDelayPopup } from './Popup.types';
 import { DefaultPopupModal } from './PopupVariant/DefaultPopup';
 import ActionTriggerPopupModal from './PopupVariant/ActionTriggerPopup';
 import BatchTriggerPopupModal from './PopupVariant/BatchTriggerPopup';
+import OptionalTriggerPopupModal from './PopupVariant/OptionalTriggerPopup';
 import { PilePopupModal } from './PopupVariant/PilePopup';
 import { SelectCardsPopupModal } from './PopupVariant/SelectCardsPopup';
 import { contentStyle } from './Popup.styles';
@@ -78,6 +79,8 @@ const PopupShell: React.FC<IPopupShellProps> = ({
                 return <ActionTriggerPopupModal data={data as ActionTriggerPopup} />;
             case 'batchTrigger':
                 return <BatchTriggerPopupModal data={data as BatchTriggerPopup} />;
+            case 'optionalTrigger':
+                return <OptionalTriggerPopupModal data={data as OptionalTriggerPopup} />;
             case 'default':
                 return <DefaultPopupModal data={data as DefaultPopup} />;
             case 'pile':
@@ -109,7 +112,7 @@ const PopupShell: React.FC<IPopupShellProps> = ({
         )
     }
 
-    const centeredModalTypes: PopupType[] = ['default', 'actionTrigger', 'batchTrigger'];
+    const centeredModalTypes: PopupType[] = ['default', 'actionTrigger', 'batchTrigger', 'optionalTrigger'];
     const [nonDefaultPopups, defaultPopups] = [
         popups.filter((popup) => !centeredModalTypes.includes(popup.type)),
         popups.filter((popup) => centeredModalTypes.includes(popup.type))

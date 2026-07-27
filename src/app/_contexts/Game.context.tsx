@@ -166,6 +166,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
+            else if (promptType === 'optionalTrigger' && promptState.optionalTrigger?.sourceCard && menuTitle && promptUuid && !selectCardMode) {
+                const optionalTriggerData = promptState.optionalTrigger;
+                return openPopup('optionalTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    sourceCard: optionalTriggerData.sourceCard,
+                    abilityText: optionalTriggerData.abilityText,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
             else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
                 const promptPopupType = promptType === 'triggerWindow' ? 'actionTrigger' : 'default';
                 return openPopup(promptPopupType, {

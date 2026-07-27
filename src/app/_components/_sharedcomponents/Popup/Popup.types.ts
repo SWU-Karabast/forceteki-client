@@ -61,6 +61,16 @@ export type BatchTriggerPopup = {
     source: PopupSource;
 };
 
+export type OptionalTriggerPopup = {
+    type: 'optionalTrigger';
+    uuid: string;
+    title: string;
+    sourceCard?: PopupSourceCard;
+    abilityText?: string;
+    buttons: PopupButton[];
+    source: PopupSource;
+};
+
 export type SelectCardsPopup = {
     type: 'select';
     uuid: string;
