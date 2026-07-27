@@ -1,5 +1,5 @@
 // layout.tsx
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import React from 'react';
 import ClientLayout from './ClientLayout';
 import { Barlow, Barlow_Semi_Condensed } from 'next/font/google';
@@ -19,6 +19,11 @@ const barlowSemiCondensed = Barlow_Semi_Condensed({
 
 export const metadata: Metadata = {
     title: 'Karabast',
+};
+
+export const viewport: Viewport = {
+    width: 'device-width',
+    initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
