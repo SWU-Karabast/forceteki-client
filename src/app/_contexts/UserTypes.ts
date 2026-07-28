@@ -39,6 +39,10 @@ export interface IModerationAction {
     moderationType?: ModerationType
 }
 
+export interface IReportingDisabledState {
+    hasSeen: boolean;
+}
+
 export interface IGetUser {
     id: string;
     username: string;
@@ -47,7 +51,7 @@ export interface IGetUser {
     activeCosmetics?: IActiveCosmetics,
     needsUsernameChange: boolean;
     mustRequestUsernameChange?: ModerationFieldState | null;
-    reportingDisabled?: ModerationFieldState | null;
+    reportingDisabled?: IReportingDisabledState | null;
     moderation?: IModerationAction | null,
     undoPopupSeenDate?: Date | null
     timerPopupSeenDate?: Date | null

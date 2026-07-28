@@ -115,6 +115,7 @@ const UserManagementTab: React.FC = () => {
             [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} for ${durationValue} ${durationUnit.toLowerCase()}. Are you sure?`,
             [ModActionType.Warning]: `This will issue a warning to player ${selectedPlayer.username}. Are you sure?`,
             [ModActionType.Rename]: `This will force player ${selectedPlayer.username} to rename. Are you sure?`,
+            [ModActionType.ReportingDisabled]: `This will disable reporting for player ${selectedPlayer.username}. Are you sure?`,
         };
 
         setConfirmDialog({
@@ -447,7 +448,12 @@ const UserManagementTab: React.FC = () => {
                                                 Pending force rename
                                             </Typography>
                                         )}
-                                        {!selectedPlayer.isMuted && !selectedPlayer.activeRename && (
+                                        {selectedPlayer.reportingDisabled && (
+                                            <Typography sx={{ color: '#ef5350', fontSize: '0.875rem', fontWeight: 600 }}>
+                                                Reporting disabled
+                                            </Typography>
+                                        )}
+                                        {!selectedPlayer.isMuted && !selectedPlayer.activeRename && !selectedPlayer.reportingDisabled && (
                                             <Typography sx={{ color: '#9e9e9e', fontSize: '0.875rem', fontWeight: 600 }}>
                                                 No active mod actions
                                             </Typography>
@@ -476,6 +482,7 @@ const UserManagementTab: React.FC = () => {
                                     <MenuItem value={ModActionType.Warning}>Warning</MenuItem>
                                     <MenuItem value={ModActionType.Rename}>Force Rename</MenuItem>
                                     <MenuItem value={ModActionType.Mute}>Mute</MenuItem>
+                                    <MenuItem value={ModActionType.ReportingDisabled}>Disable Reporting</MenuItem>
                                 </StyledTextField>
 
                                 {/* Duration - only for Mute */}

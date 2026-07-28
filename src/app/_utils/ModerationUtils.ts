@@ -59,6 +59,8 @@ export const getActionLabel = (action: IModActionResponse): string => {
             return `${date} Warning`;
         case ModActionType.Rename:
             return `${date} Renamed`;
+        case ModActionType.ReportingDisabled:
+            return `${date} Reporting disabled`;
         default:
             return `${date} ${action.actionType}`;
     }
@@ -81,6 +83,10 @@ export const getActionStatus = (action: IModActionResponse, selectedPlayer:IPlay
         if(selectedPlayer.activeRename?.id === action.id){
             return { label: 'Pending', color: '#ff9800' };
         }
+    }
+    if (action.actionType === ModActionType.ReportingDisabled) {
+        // Not cancelled (handled above) and no expiry — an active ReportingDisabled restriction.
+        return { label: 'Active', color: '#ef5350' };
     }
     return { label: '', color: '#9E9E9E' };
 };

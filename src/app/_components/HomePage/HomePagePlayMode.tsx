@@ -234,7 +234,7 @@ const HomePagePlayMode: React.FC = () => {
             if (!user.needsUsernameChange && user.mustRequestUsernameChange === ModerationFieldState.Enabled) {
                 setShowUsernameRestrictedPopup(true);
             }
-            if (!user.needsUsernameChange && user.reportingDisabled === ModerationFieldState.Enabled) {
+            if (!user.needsUsernameChange && user.reportingDisabled && !user.reportingDisabled.hasSeen) {
                 setShowReportingDisabledPopup(true);
             }
             if(user.moderation){
@@ -253,7 +253,7 @@ const HomePagePlayMode: React.FC = () => {
             (user?.showWelcomeMessage ?? false) ||
             !!user?.needsUsernameChange ||
             user?.mustRequestUsernameChange === ModerationFieldState.Enabled ||
-            user?.reportingDisabled === ModerationFieldState.Enabled ||
+            (!!user?.reportingDisabled && !user.reportingDisabled.hasSeen) ||
             (!!user?.moderation && !user.moderation.hasSeen);
         if (!blockingPopupActive && shouldShowAnnouncement(announcement)) {
             setShowAnnouncementPopup(true);

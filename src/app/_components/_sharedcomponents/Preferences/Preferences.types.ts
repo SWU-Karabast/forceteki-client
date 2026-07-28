@@ -117,6 +117,7 @@ export enum ModActionType {
     Mute = 'Mute',
     Warning = 'Warning',
     Rename = 'Rename',
+    ReportingDisabled = 'ReportingDisabled',
 }
 
 export interface IModActionResponse {
@@ -133,6 +134,7 @@ export interface IModActionResponse {
     cancelledAt?: string;
     cancelledById?: string;
     cancelledByUsername?: string;
+    hasSeen?: boolean;
 }
 
 export interface IPlayerSearchResult {
@@ -142,6 +144,7 @@ export interface IPlayerSearchResult {
     lastLogin: string;
     isMuted: boolean;
     activeRename?: IActiveModActionCacheEntry;
+    reportingDisabled?: boolean;
 }
 
 export interface IActiveModActionCacheEntry {
@@ -151,6 +154,7 @@ export interface IActiveModActionCacheEntry {
     startedAt?: string;
     expiresAt?: string;
     modActionId: string;
+    hasSeen?: boolean;
 }
 
 export enum UsernameChangeSource {
