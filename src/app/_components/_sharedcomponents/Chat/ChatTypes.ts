@@ -49,4 +49,5 @@ export interface IChatProps {
     chatMessage: string;
     handleChatOnChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleChatSubmit: () => void;
+    pauseAutoScroll?: boolean;
 }

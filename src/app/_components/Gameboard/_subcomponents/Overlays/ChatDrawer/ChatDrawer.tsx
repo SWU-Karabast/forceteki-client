@@ -526,6 +526,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 chatMessage={chatMessage}
                 handleChatOnChange={handleChatOnChange}
                 handleChatSubmit={handleGameChat}
+                pauseAutoScroll
             />
 
             <LobbyConfirmationPopupModule title={'Concede Game Confirmation'} message={'Are you sure you wish to concede? This game will count as a loss.'} display={showConcedeConfirmation} onConfirmation={handleConfirmConcede} handleCancel={handleCancelConcede}/>
