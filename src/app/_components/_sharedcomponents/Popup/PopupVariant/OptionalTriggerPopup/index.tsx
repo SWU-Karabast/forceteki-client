@@ -49,7 +49,7 @@ export default function OptionalTriggerPopupModal({ data }: ButtonProps) {
     return (
         <Box sx={containerStyle}>
             <Box sx={headerStyle(isMinimized)}>
-                <RichText text="You may trigger this ability" sx={titleStyle} component={Typography} />
+                <RichText text={data.title} sx={titleStyle} component={Typography} />
                 <IconButton
                     sx={minimizeButtonStyle}
                     aria-label="minimize"
@@ -62,8 +62,8 @@ export default function OptionalTriggerPopupModal({ data }: ButtonProps) {
                 <>
                     <Box sx={styles.modalContent}>
                         <TriggerButton
-                            text={data.abilityText ?? triggerButton.text}
-                            sourceCard={data.sourceCard}
+                            text={triggerButton.label ?? triggerButton.text}
+                            sourceCard={triggerButton.sourceCard}
                             hasLegalEffects
                             onClick={() => sendGameMessage([triggerButton.command, triggerButton.arg, triggerButton.uuid])}
                         />

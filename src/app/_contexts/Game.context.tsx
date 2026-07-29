@@ -166,13 +166,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
-            else if (promptType === 'optionalTrigger' && promptState.optionalTrigger?.sourceCard && menuTitle && promptUuid && !selectCardMode) {
-                const optionalTriggerData = promptState.optionalTrigger;
+            else if (promptType === 'optionalTrigger' && menuTitle && promptUuid && !selectCardMode) {
                 return openPopup('optionalTrigger', {
                     uuid: promptUuid,
                     title: menuTitle,
-                    sourceCard: optionalTriggerData.sourceCard,
-                    abilityText: optionalTriggerData.abilityText,
                     buttons,
                     source: PopupSource.PromptState
                 });
