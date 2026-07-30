@@ -49,7 +49,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
         ? 'var(--initiative-blue)'
         : 'var(--initiative-red)';
 
-
+    console.log(effectGroups)
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [hoveredGroup, setHoveredGroup] = React.useState<IOngoingEffectSummary[] | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -147,9 +147,9 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
             width: '100%',
             aspectRatio: '1.4 / 1',
             borderRadius: '4px',
-            backgroundSize: 'cover',
+            backgroundSize: '127%',
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: '25% 25%',
+            backgroundPosition: '51% 25%',
             border: `2px solid ${borderColor}`,
             position: 'relative',
             cursor: 'pointer',
@@ -181,10 +181,11 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
             gap: '0.5rem',
             padding: '0.75rem',
             background: 'rgba(15, 20, 30, 0.95)',
-            border: `1px solid ${borderColor}`,
+            outline: `1px solid ${borderColor}`,
             borderRadius: '6px',
             color: 'white',
-            backdropFilter: 'blur(8px)',
+            outlineOffset: '-1px',
+            backdropFilter: 'blur(0px)',
         },
         previewTitle: {
             fontSize: '0.95rem',
@@ -233,11 +234,13 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                         CardStyle.Plain,
                     );
                     const uniqueTargetCount = countVisibleTargets(group);
+                    const isEvent = source.type === 'event';
                     return (
                         <Box
                             key={group[0].sourceCardUuid}
                             sx={{
                                 ...styles.effectThumbnail,
+                                ...(isEvent && { backgroundPosition: '55% 85%' }),
                                 backgroundImage: `url(${imageUrl})`,
                             }}
                             onMouseEnter={(e) => handlePreviewOpen(e, group)}
