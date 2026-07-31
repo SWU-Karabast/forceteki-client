@@ -6,7 +6,7 @@ import { useOverflow } from '@/app/_hooks/useOverflow';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import {
-    CardStyle,
+    CardStyle, CardType,
     ICardData,
     IOngoingEffectSummary,
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -234,7 +234,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                         CardStyle.Plain,
                     );
                     const uniqueTargetCount = countVisibleTargets(group);
-                    const isEvent = source.type === 'event';
+                    const isEvent = source.type === CardType.Event;
                     return (
                         <Box
                             key={group[0].sourceCardUuid}
