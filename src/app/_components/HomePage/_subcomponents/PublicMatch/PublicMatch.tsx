@@ -35,7 +35,13 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
         router.push(`/spectate?lobbyId=${match.id}`);
     };
 
-    const spectateDisabled = !user && process.env.NODE_ENV !== 'development';
+    const loginRequired = !user && process.env.NODE_ENV !== 'development';
+    const spectateDisabled = !match.allowSpectators || loginRequired;
+    const spectateDisabledReason = !match.allowSpectators
+        ? 'This game does not allow spectators'
+        : loginRequired
+            ? 'Log in to Spectate'
+            : '';
 
     return (
         <Box sx={styles.box}>
@@ -49,7 +55,7 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
                 </Box>
             </Box>
             {!match.isPrivate && (
-                <span title={spectateDisabled ? 'Log in to Spectate' : ''}>
+                <span title={spectateDisabledReason}>
                     <Button
                         onClick={handleSpectate}
                         disabled={spectateDisabled}

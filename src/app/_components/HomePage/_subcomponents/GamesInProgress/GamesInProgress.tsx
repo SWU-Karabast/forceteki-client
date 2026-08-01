@@ -7,6 +7,7 @@ import { CardPool, FormatLabels, GamesToWinMode, SwuGameFormat } from '@/app/_co
 interface GameCardData {
     id: string;
     isPrivate: boolean;
+    allowSpectators: boolean;
     player1Leader: ICardData;
     player1Base: ICardData;
     player2Leader: ICardData;
