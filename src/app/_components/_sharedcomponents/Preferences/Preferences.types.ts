@@ -64,17 +64,22 @@ export enum RegisteredCosmeticType {
     // Playmat = 'playmat',
 }
 
-export interface IRegisteredCosmeticOption {
+export interface ICosmeticEntity {
     id: string;
     title: string;
     type: RegisteredCosmeticType;
     path: string;
 }
 
+export interface IActiveCosmetics {
+    cardback: ICosmeticEntity;
+    background: ICosmeticEntity;
+}
+
 export interface IRegisteredCosmetics {
-    cardbacks: IRegisteredCosmeticOption[];
-    backgrounds: IRegisteredCosmeticOption[];
-    // playmats: IRegisteredCosmeticOption[];
+    cardbacks: ICosmeticEntity[];
+    backgrounds: ICosmeticEntity[];
+    // playmats: ICosmeticEntity[];
 }
 
 // constants
@@ -148,10 +153,28 @@ export interface IActiveModActionCacheEntry {
     modActionId: string;
 }
 
+export enum UsernameChangeSource {
+    AccountCreation = 'AccountCreation',
+    Migration = 'Migration',
+    UserInitiated = 'UserInitiated',
+    ForcedRename = 'ForcedRename',
+}
+
+export interface IUsernameChangeResponse {
+    id: string;
+    playerId: string;
+    previousUsername: string | null;
+    newUsername: string;
+    source: UsernameChangeSource;
+    relatedModActionId?: string;
+    createdAt: string;
+}
+
 export interface IFindUserResponse {
     success: boolean;
     players: IPlayerSearchResult[];
     modActions: IModActionResponse[];
+    usernameChanges: IUsernameChangeResponse[];
 }
 
 export enum DurationUnit {

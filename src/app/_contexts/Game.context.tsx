@@ -147,8 +147,28 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
+            else if (promptType === 'passDelay') {
+                return openPopup('waitDelay', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (promptType === 'batchTriggerResolution' && menuTitle && promptUuid && !selectCardMode) {
+                const batchData = promptState.batchTriggerResolution ?? {};
+                return openPopup('batchTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    sourceCard: batchData.sourceCard,
+                    remainingCount: batchData.remainingCount,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
             else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
-                return openPopup('default', {
+                const promptPopupType = promptType === 'triggerWindow' ? 'actionTrigger' : 'default';
+                return openPopup(promptPopupType, {
                     uuid: promptUuid,
                     title: menuTitle,
                     buttons,
@@ -474,3 +494,10 @@ export const useGame = () => {
     }
     return context;
 };
+
+/**
+ * Like {@link useGame}, but returns undefined instead of throwing when there is no
+ * GameProvider (e.g. on the home page). Use this from components shared between the
+ * game board and non-game pages that only need the game context when it exists.
+ */
+export const useGameOptional = () => useContext(GameContext);

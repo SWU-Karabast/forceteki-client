@@ -17,12 +17,12 @@ import {
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
-    DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { SwuGameFormat, SupportedDeckSources, GamesToWinMode, LobbyFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -51,10 +51,11 @@ interface ICreateGameFormProps {
     deckLink: string;
     setDeckLink: (value: string) => void;
     savedDecks: StoredDeck[];
+    isLoadingSavedDecks?: boolean;
     handleDeckManagement: () => void;
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
     errorState: DeckErrorState;
-    setError: (summary: string | null, details?: IDeckValidationFailures | string, title?: string, modalType?: 'error' | 'warning') => void;
+    setError: (summary: string | null, details?: IDeckValidationFailures | string, title?: string, modalType?: 'error' | 'warning', footerLink?: { label: string }) => void;
     clearErrors: () => void;
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
@@ -74,6 +75,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     deckLink,
     setDeckLink,
     savedDecks,
+    isLoadingSavedDecks = false,
     handleDeckManagement,
     handleFormSubmissionWithUndoCheck,
     errorState,
@@ -118,6 +120,12 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     // Additional State for Non-Creategame Path
     const [lobbyName, setLobbyName] = useState<string>('');
+    const [deckLinkTouched, setDeckLinkTouched] = useState<boolean>(false);
+    const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
+    const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
+    const isNewDeckInputEmpty = !showSavedDecks && deckLink.trim().length === 0;
+    const isCreateGameDisabled = isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty;
+    const showDeckLinkRequiredError = deckLinkTouched && isNewDeckInputEmpty;
 
     useEffect(() => {
         handleJsonDeck(deckLink);
@@ -146,6 +154,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             setShowSavedDecks(false);
             setSwuStatsDeckSource?.(false);
         }
+        setDeckLinkTouched(false);
         clearErrors();
     }
 
@@ -190,24 +199,23 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     'Incorrect deck format or unsupported deckbuilder.',
                     'Deck Validation Error','error');
                 setModalOpen(true);
+                // Bail out here: without this return, execution falls through to
+                // the create-lobby POST below with deckData still null, so the
+                // clear client-side validation error above gets clobbered by a
+                // confusing server 400 ("No deck or swudbLink provided"). The
+                // other deck-entry forms (DeckSelectionCard, QuickGameForm)
+                // already return in this branch.
+                return;
             }
         }catch (error){
             clearErrors();
-            if(error instanceof Error){
-                if(error.message?.includes('403')) {
-                    setError('Couldn\'t import. The deck is set to private.',
-                        { [DeckValidationFailureReason.DeckSetToPrivate]: true },
-                        'Deck Validation Error',
-                        'error')
-                    setModalOpen(true);
-                } else if(error.message?.includes('Deck not found')) {
-                    // Handle the specific 404 error messages from any deck source
-                    setError(error.message,error.message,'Deck not found','error');
-                    setModalOpen(true);
-                } else {
-                    setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');
-                    setModalOpen(true);
-                }
+            if (error instanceof DeckFetchError) {
+                const content = getDeckFetchErrorContent(error);
+                setError(content.summary, content.details, content.title, content.modalType, content.footerLink);
+                setModalOpen(true);
+            } else if(error instanceof Error){
+                setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');
+                setModalOpen(true);
             }
             return;
         }
@@ -276,6 +284,9 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
 
     const handleCreateGameSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (isCreateGameDisabled) {
+            return;
+        }
         setFormat(lobbyConfig.format);
         setCardPool(lobbyConfig.cardPool);
         setGamesToWinMode(lobbyConfig.gamesToWinMode);
@@ -420,7 +431,7 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setFavoriteDeck(e.target.value as string)
                 }
-                disabled={userLoading}
+                disabled={userLoading || isLoadingSavedDecks}
                 placeholder="Favorite Decks"
             >
                 {savedDecks.length === 0 ? (
@@ -567,12 +578,21 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                             <StyledTextField
                                 type="text"
                                 value={deckLink}
+                                onBlur={() => setDeckLinkTouched(true)}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) =>{
                                     clearErrors();
+                                    if (e.target.value.trim().length > 0) {
+                                        setDeckLinkTouched(false);
+                                    }
                                     setDeckLink(e.target.value);
                                     handleJsonDeck(e.target.value);
                                 }}
                             />
+                            {showDeckLinkRequiredError && (
+                                <Typography variant="body1" sx={styles.errorMessageStyle}>
+                                    Enter a deck link or paste deck JSON.
+                                </Typography>
+                            )}
                         </FormControl>
                         {errorState.summary && (
                             <Typography variant={'body1'} sx={styles.errorMessageStyle}>
@@ -689,7 +709,14 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 )}
 
                 {/* Submit Button */}
-                <Button type="submit" variant="contained" sx={styles.submitButtonStyle}>
+                <Button type="submit" disabled={isCreateGameDisabled} variant="contained" sx={{
+                    ...styles.submitButtonStyle,
+                    '&.Mui-disabled': {
+                        backgroundColor: '#404040',
+                        color: '#9e9e9e',
+                        opacity: 1,
+                    },
+                }}>
                     Create Game
                 </Button>
             </form>

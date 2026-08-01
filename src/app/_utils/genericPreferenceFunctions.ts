@@ -128,5 +128,8 @@ const getDefaultPreferences = (): IPreferences => ({
         muteChat: false,
         cardLanguage: CardImageLocale.English,
         timerVisibility: TimerVisibility.Standard,
+        autoResolve: {
+            singleTarget: false,
+        },
     }
 });

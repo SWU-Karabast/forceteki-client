@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Popover, Typography } from '@mui/material';
+import { Box, IconButton, Popover, Typography, useMediaQuery } from '@mui/material';
+import ThreeSixty from '@mui/icons-material/ThreeSixty';
 import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
@@ -27,6 +28,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+    const isMobilePortrait = useMediaQuery('(orientation: portrait) and (max-width:932px)');
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
     const isHoveredInChat = hoveredChatCard.id === card?.uuid;
@@ -56,22 +58,19 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
         },
-        onRelease: () => {
-            setAnchorElement(null);
-            setPreviewImage(null);
-        },
+        onRelease: () => undefined,
     });
 
-    // Tap-anywhere-to-close fallback for touch devices
+    // Keep touch previews open until the next interaction anywhere on the screen.
     React.useEffect(() => {
         if (!open || !isTouchDevice) return;
-        const onTouchStart = () => {
+        const onPointerDown = () => {
             clearTimeout(hoverTimeout.current);
             setAnchorElement(null);
             setPreviewImage(null);
         };
-        document.addEventListener('touchstart', onTouchStart);
-        return () => document.removeEventListener('touchstart', onTouchStart);
+        document.addEventListener('pointerdown', onPointerDown);
+        return () => document.removeEventListener('pointerdown', onPointerDown);
     }, [open, isTouchDevice]);
 
     // Compute card image URL + load status before any early return so hooks
@@ -366,6 +365,23 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             aspectRatio: aspectRatio,
             width: width,
         },
+        mobileFlipButton: {
+            position: 'absolute',
+            top: '0.35rem',
+            right: '0.35rem',
+            zIndex: 2,
+            width: '3.25rem',
+            height: '3.25rem',
+            color: 'white',
+            backgroundColor: 'rgba(3, 12, 19, 0.72)',
+            border: '1px solid rgba(255, 255, 255, 0.38)',
+            borderRadius: '999px',
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.55)',
+            transition: 'opacity 140ms ease, background-color 140ms ease',
+            '&:hover': {
+                backgroundColor: 'rgba(3, 12, 19, 0.9)',
+            },
+        },
         defendIcon: {
             position: 'absolute',
             backgroundImage:  'url(/defending.svg)',
@@ -549,14 +565,20 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
                 <Popover
                     id="mouse-over-popover"
-                    sx={{ pointerEvents: 'none' }}
+                    sx={{ pointerEvents: isTouchDevice ? 'auto' : 'none' }}
                     open={open}
                     anchorEl={anchorElement}
-                    anchorOrigin={{
+                    anchorOrigin={isMobilePortrait ? {
+                        vertical: isConnectedPlayer ? -5 : 'bottom',
+                        horizontal: 'center',
+                    } : {
                         vertical: 'center',
                         horizontal: -5,
                     }}
-                    transformOrigin={{
+                    transformOrigin={isMobilePortrait ? {
+                        vertical: isConnectedPlayer ? 'bottom' : -5,
+                        horizontal: 'center',
+                    } : {
                         vertical: 'center',
                         horizontal: 'right',
                     }}
@@ -564,9 +586,23 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     disableRestoreFocus
                     slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}
                 >
-                    <Box sx={{
-                        ...styles.cardPreview,backgroundImage: previewImage
-                    }} >
+                    <Box sx={{ position: 'relative' }}>
+                        <Box sx={{
+                            ...styles.cardPreview,backgroundImage: previewImage
+                        }} />
+                        {isLeader && isTouchDevice && (
+                            <IconButton
+                                aria-label="Flip leader card"
+                                sx={styles.mobileFlipButton}
+                                onPointerDown={(event) => event.stopPropagation()}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    leaderCardFlipPreview.toggleFlip();
+                                }}
+                            >
+                                <ThreeSixty fontSize="medium" />
+                            </IconButton>
+                        )}
                     </Box>
                     {isLeader && !isTouchDevice && !leaderCardFlipPreview.isFlipped && (
                         <Typography variant={'body1'} sx={styles.ctrlText}

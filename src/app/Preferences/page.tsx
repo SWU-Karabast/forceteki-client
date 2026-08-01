@@ -18,7 +18,8 @@ const PreferencesInner: React.FC = () => {
     // ----------------------Styles-----------------------------//
     const styles = {
         lobbyTextStyle:{
-            ml:'30px',
+            ml: { xs: '15px', md: '30px' },
+            mt: { xs: '10px', md: 0 },
             fontSize: '3.0em',
             fontWeight: '600',
             color: 'white',
@@ -28,16 +29,18 @@ const PreferencesInner: React.FC = () => {
             zIndex: 2
         },
         mainContainer:{
-            height: '100vh',
-            overflow: 'hidden',
+            minHeight: '100vh',
+            height: { xs: 'auto', md: '100vh' },
+            overflowX: 'hidden',
+            overflowY: { xs: 'visible', md: 'hidden' },
             backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display:'grid',
         },
         disclaimer: {
-            position: 'absolute',
-            bottom: 0,
+            position: { xs: 'relative', md: 'absolute' },
+            bottom: { xs: 'auto', md: 0 },
             width: '100%',
             padding: '1rem',
             textAlign: 'center',

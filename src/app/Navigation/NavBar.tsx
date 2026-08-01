@@ -28,7 +28,8 @@ const Navbar = () => {
             ml: '.5vw',
         },
         lobbyTextStyle:{
-            ml:'60px',
+            ml: { md: '30px', xs: '15px' },
+            mt: { xs: '10px', md: 0 },
             fontSize: '3.0em',
             fontWeight: '600',
             color: 'white',

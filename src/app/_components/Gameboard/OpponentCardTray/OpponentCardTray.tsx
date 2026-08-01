@@ -1,5 +1,4 @@
 import React from 'react';
-import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
 import { Box, Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import Credits from '../_subcomponents/PlayerTray/Credits';
@@ -9,35 +8,18 @@ import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTyp
 import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
-import { v4 as uuidv4 } from 'uuid';
-import { usePopup } from '@/app/_contexts/Popup.context';
-import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
-import { useRouter } from 'next/navigation';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
 
-const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
+const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useGame();
-    const { openPopup } = usePopup();
     const { isPortrait } = useScreenOrientation();
     const locale = useCardImageLocale();
-    const router = useRouter();
-    const handleExitButton = () => {
-        if (isSpectator){
-            router.push('/');
-        } else {
-            const popupId = `${uuidv4()}`;
-            openPopup('leaveGame', {
-                uuid: popupId,
-                source: PopupSource.User
-            });
-        }
-    };
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
-    const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
+    const opponentsCardbackPath = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback?.path;
 
     const hasLastPlayedCard = !!gameState.clientUIProperties?.lastPlayedCard
     const lastPlayedCardUrl = hasLastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' }, locale)})` : 'none';
@@ -141,12 +123,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             backgroundImage: lastPlayedCardUrl,
             backgroundRepeat: 'no-repeat',
         },
-        menuStyles: {
-            ...debugBorder('yellow'),
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-        },
         opponentTurnAura: {
             height: '100px',
             width: '90%',
@@ -188,7 +164,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.leftColumn,
                 }}
             >
-                <DeckDiscard trayPlayer={trayPlayer} cardback={opponentsCardback} />
+                <DeckDiscard trayPlayer={trayPlayer} cardback={opponentsCardbackPath} />
                 <Box sx={styles.creditsResourcesStack}>
                     <Credits trayPlayer={trayPlayer} />
                     <Resources trayPlayer={trayPlayer}/>
@@ -208,7 +184,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                         maxCardOverlapPercent={0.95}
                         scrollbarEnabled={false}
                         cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []}
-                        cardback={opponentsCardback} />
+                        cardback={opponentsCardbackPath} />
                 </Box>
                 <Box sx={ styles.opponentTurnAura} />
             </Grid>
@@ -238,10 +214,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 >
                     <Box sx={{ ...styles.lastCardPlayedPreview }} />
                 </Popover>
-                <Box sx={styles.menuStyles}>
-                    <CloseOutlined data-gameboard-right-control-line="true" onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
-                    <SettingsOutlined data-gameboard-right-control-line="true" onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
-                </Box>
             </Grid>
         </Grid>
     );

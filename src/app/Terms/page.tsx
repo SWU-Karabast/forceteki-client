@@ -3,7 +3,6 @@ import React from 'react';
 import { Box, Typography, Divider, List, ListItem, ListItemText } from '@mui/material';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 
 const tosBlocks = [
     { type: 'title', text: 'Karabast.net – Terms of Service' },
@@ -77,23 +76,17 @@ const TermsOfService: React.FC = () => {
             width: '100%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
             marginBottom: '1rem',
             position: 'relative' as const,
-            padding: '0 32px 24px 32px',
+            pb: '24px',
+            px: { xs: '15px', md: '32px' },
+            pt: { xs: '10px', md: 0 },
             zIndex: 2,
-        },
-        backButton: {
-            position: 'absolute' as const,
-            left: '0',
-            top: '-60px',
-            zIndex: 3,
         },
         brand: {
             fontSize: '3.0em',
             fontWeight: 600,
             color: 'white',
-            letterSpacing: 1,
             cursor: 'pointer',
         },
         container: {
@@ -139,13 +132,6 @@ const TermsOfService: React.FC = () => {
 
             <Box sx={styles.container}>
                 <Box sx={styles.cardWrapper}>
-                    <Box sx={styles.backButton}>
-                        <PreferenceButton
-                            variant={'standard'}
-                            text="Back"
-                            buttonFnc={handleExit}
-                        />
-                    </Box>
                     <Box sx={styles.card}>
                         <Typography variant="h4" component="h1" gutterBottom>
                             Terms of Service

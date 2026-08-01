@@ -1,3 +1,4 @@
+import { rgbToHex } from '@mui/material/styles';
 import React from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,6 +102,78 @@ export const resourceReplacementRule: TextReplacementRule = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Keyword replacements  ({keyword:raid}, {keyword:restore:2}, …)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const keywordBaseStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-barlow), sans-serif',
+    fontWeight: 900,
+    color: '#e4951e'
+};
+
+const keywordSmallStyle: React.CSSProperties = {
+    ...keywordBaseStyle,
+    fontSize: '0.85em',
+};
+
+/**
+ * Replacement rule for keyword tokens.
+ * `{keyword:name}` renders a stylized keyword name.
+ * `{keyword:name:amount}` renders a stylized keyword name followed by the amount.
+ */
+export const keywordReplacementRule: TextReplacementRule = {
+    pattern: /\{keyword:([a-z]+)(?::(\d+))?\}/,
+    render: (match: string, key: number) => {
+        const result = match.match(/\{keyword:([a-z]+)(?::(\d+))?\}/)!;
+        const name = result[1];
+        const amount = result[2];
+        const initial = name.charAt(0).toUpperCase();
+        const rest = name.slice(1).toUpperCase();
+        return (
+            <span key={key} style={keywordBaseStyle}>
+                {initial}
+                <span style={keywordSmallStyle}>{rest}</span>
+                {amount != null && ` ${amount}`}
+            </span>
+        );
+    },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Trait replacements  ({trait:underworld}, {trait:bounty-hunter}, …)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const traitStyle: React.CSSProperties = {
+    fontWeight: 800,
+    fontStyle: 'italic',
+    // Traits are printed all-caps but sized down so they sit at roughly the
+    // x-height of the surrounding lowercase text, matching the physical cards.
+    fontSize: '0.85em',
+    // The italic slant makes the leading glyph look detached from the previous
+    // word and the trailing glyph crowd the next one. Nudge the inline spacing to
+    // rebalance: pull in at the start, add a little breathing room at the end.
+    marginInlineStart: '-0.04em',
+    marginInlineEnd: '0.1em',
+};
+
+/**
+ * Replacement rule for trait tokens.
+ * `{trait:name}` renders the trait in all caps, bold, and italic — matching how
+ * traits are printed on the physical cards. Multi-word traits are kebab-cased in the
+ * token (e.g. `{trait:bounty-hunter}`); hyphens are rendered back as spaces.
+ */
+export const traitReplacementRule: TextReplacementRule = {
+    pattern: /\{trait:([a-z'-]+)\}/,
+    render: (match: string, key: number) => {
+        const name = match.match(/\{trait:([a-z'-]+)\}/)![1];
+        const display = name.replace(/-/g, ' ').toUpperCase();
+        return (
+            <span key={key} style={traitStyle}>{display}</span>
+        );
+    },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Default rule set
 // Add new rule sets here to enable them globally by default.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -108,4 +181,6 @@ export const resourceReplacementRule: TextReplacementRule = {
 export const defaultReplacementRules: TextReplacementRule[] = [
     ...aspectReplacementRules,
     resourceReplacementRule,
+    keywordReplacementRule,
+    traitReplacementRule,
 ];

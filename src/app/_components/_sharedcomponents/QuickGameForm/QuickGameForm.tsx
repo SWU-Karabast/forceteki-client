@@ -16,12 +16,12 @@ import {
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
-    DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -50,10 +50,11 @@ interface IQuickGameFormProps {
     deckLink: string;
     setDeckLink: (value: string) => void;
     savedDecks: StoredDeck[];
+    isLoadingSavedDecks: boolean;
     handleDeckManagement: () => void;
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
     errorState: DeckErrorState;
-    setError: (summary: string | null, details?: IDeckValidationFailures | string, title?: string, modalType?: 'error' | 'warning') => void;
+    setError: (summary: string | null, details?: IDeckValidationFailures | string, title?: string, modalType?: 'error' | 'warning', footerLink?: { label: string }) => void;
     clearErrors: () => void;
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
@@ -73,6 +74,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     deckLink,
     setDeckLink,
     savedDecks,
+    isLoadingSavedDecks,
     handleDeckManagement,
     handleFormSubmissionWithUndoCheck,
     errorState,
@@ -114,6 +116,12 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+    const [deckLinkTouched, setDeckLinkTouched] = useState<boolean>(false);
+    const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
+    const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
+    const isNewDeckInputEmpty = !showSavedDecks && deckLink.trim().length === 0;
+    const isJoinQueueDisabled = queueState || isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty;
+    const showDeckLinkRequiredError = deckLinkTouched && isNewDeckInputEmpty;
 
     // Timer ref for clearing the inline text after 5s
 
@@ -132,6 +140,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             setShowSavedDecks(false);
             setSwuStatsDeckSource(false);
         }
+        setDeckLinkTouched(false);
         clearErrors();
     }
 
@@ -197,18 +206,13 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         }catch (error){
             setQueueState(false);
             clearErrors();
-            if(error instanceof Error){
-                if(error.message?.includes('403')) {
-                    setError('Couldn\'t import. The deck is set to private.',{ [DeckValidationFailureReason.DeckSetToPrivate]: true },'Deck Validation Error','error');
-                    setModalOpen(true)
-                } else if(error.message?.includes('Deck not found')) {
-                    // Handle the specific 404 error messages from any deck source
-                    setError(error.message,error.message,'Deck Not Found','error')
-                    setModalOpen(true);
-                } else {
-                    setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');
-                    setModalOpen(true)
-                }
+            if (error instanceof DeckFetchError) {
+                const content = getDeckFetchErrorContent(error);
+                setError(content.summary, content.details, content.title, content.modalType, content.footerLink);
+                setModalOpen(true);
+            } else if(error instanceof Error){
+                setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');
+                setModalOpen(true);
             }
             return;
         }
@@ -278,6 +282,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     const handleJoinGameQueue = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (isJoinQueueDisabled) {
+            return;
+        }
         setFormat(queueConfig.format);
         setCardPool(queueConfig.cardPool);
         setGamesToWinMode(queueConfig.gamesToWinMode)
@@ -412,7 +419,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setFavoriteDeck(e.target.value as string)
             }
-            disabled={userLoading}
+            disabled={userLoading || isLoadingSavedDecks}
             placeholder="Favorite Decks"
         >
             {savedDecks.length === 0 ? (
@@ -530,12 +537,21 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                             <StyledTextField
                                 type="text"
                                 value={deckLink}
+                                onBlur={() => setDeckLinkTouched(true)}
                                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                                     clearErrors()
+                                    if (e.target.value.trim().length > 0) {
+                                        setDeckLinkTouched(false);
+                                    }
                                     setDeckLink(e.target.value);
                                     handleJsonDeck(e.target.value);
                                 }}
                             />
+                            {showDeckLinkRequiredError && (
+                                <Typography variant="body1" sx={styles.errorMessageStyle}>
+                                    Enter a deck link or paste deck JSON.
+                                </Typography>
+                            )}
                         </FormControl>
 
                         {/* Save Deck To Favourites Checkbox */}
@@ -597,10 +613,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 {CurrentGameAnnouncement && <GameAnnouncementBanner announcement={CurrentGameAnnouncement} />}
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={queueState} variant="contained" sx={{ ...styles.submitButtonStyle,
+                <Button type="submit" disabled={isJoinQueueDisabled} variant="contained" sx={{ ...styles.submitButtonStyle,
                     '&.Mui-disabled': {
                         backgroundColor: '#404040',
-                        color: 'var(--variant-containedColor)',
+                        color: '#9e9e9e',
+                        opacity: 1,
                     },
                     mb: '1rem',
                 }}>
