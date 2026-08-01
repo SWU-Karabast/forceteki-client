@@ -197,7 +197,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, .75)',
+        backgroundColor: 'rgba(80, 80, 80, 0.7)',
         borderRadius: '100px',
         width: `${Math.max(cardWidthPx * 0.35, 32)}px`,
         height: 'auto',
