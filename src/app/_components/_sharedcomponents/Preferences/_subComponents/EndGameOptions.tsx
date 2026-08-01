@@ -361,7 +361,8 @@ function EndGameOptions({ gameType, handleOpenBugReport, handleOpenPersonReport 
                     </Box>
                 )}
 
-                {!isSpectator && (
+                {/* Report Bug - Bo3 mode only (in Actions section) */}
+                {isBo3Mode && !isSpectator && (
                     <>
                         <Box sx={styles.contentContainer}>
                             <PreferenceButton
@@ -485,7 +486,38 @@ function EndGameOptions({ gameType, handleOpenBugReport, handleOpenPersonReport 
                                     : 'Convert this match to a best of 3, counting this game as game 1.'}
                             </Typography>
                         </Box>
-
+                        
+                        {/* Report Bug */}
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report Bug'}
+                                buttonFnc={handleOpenBugReport}
+                                sx={{ minWidth: '140px' }}
+                                disabled={!canReportBug || isReportingDisabled}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                {isReportingDisabled ? reportingDisabledText : canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
+                            </Typography>
+                        </Box>
+                        <Box sx={styles.contentContainer}>
+                            <PreferenceButton
+                                variant={'standard'}
+                                text={'Report opponent'}
+                                buttonFnc={handleOpenPersonReport}
+                                sx={{ minWidth: '140px' }}
+                                disabled={!canReportOpponent || isReportingDisabled}
+                            />
+                            <Typography sx={styles.typeographyStyle}>
+                                {isReportingDisabled ? reportingDisabledText
+                                    : isAnonymousPlayer(connectedPlayer)
+                                        ? 'Please log in to submit reports'
+                                        : isAnonymousOpponent
+                                            ? 'Cannot submit reports for anonymous opponents'
+                                            : 'Report opponent to the developer team'
+                                }
+                            </Typography>
+                        </Box>
                     </Box>
                 )
             )}
