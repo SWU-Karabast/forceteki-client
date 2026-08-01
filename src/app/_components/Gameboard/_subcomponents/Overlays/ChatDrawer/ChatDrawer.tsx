@@ -29,6 +29,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import { MatchmakingType, QuickUndoAvailableState } from '@/app/_constants/constants';
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
+import { v4 as uuidv4 } from 'uuid';
 import { useUser } from '@/app/_contexts/User.context';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
@@ -431,7 +432,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
             return;
         }
         openPopup('leaveGame', {
-            uuid: 'leave-game',
+            uuid: `${uuidv4()}`,
             source: PopupSource.User,
         });
     };
@@ -446,9 +447,13 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         }
     };
 
-    const handleConfirmConcede = () => {
+    const handleConfirmEndGame = () => {
         const playerName = gameState.players[connectedPlayer]?.name;
         sendGameMessage(['concede', playerName]);
+        setShowEndGameConfirmation(false);
+    };
+
+    const handleCancelEndGame = () => {
         setShowEndGameConfirmation(false);
     };
 
