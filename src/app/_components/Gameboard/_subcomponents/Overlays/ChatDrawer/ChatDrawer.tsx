@@ -425,7 +425,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const handleEndGameClick = () => {
         handleMenuClose();
         closeMobileDrawer();
-        if (gameState.winners?.length) {
+        if (isSpectator || gameState.winners?.length) {
             sendMessage('manualDisconnect');
             router.push('/');
             return;
@@ -503,19 +503,17 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
             <Box sx={styles.headerBoxStyle}>
                 {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
                 <Box sx={styles.headerActionsStyle}>
-                    {!isSpectator && (
-                        <Tooltip title="End game">
-                            <span>
-                                <IconButton
-                                    aria-label="End game"
-                                    onClick={handleEndGameClick}
-                                    sx={[styles.drawerActionButton, styles.headerCircularButton]}
-                                >
-                                    <LogoutIcon />
-                                </IconButton>
-                            </span>
-                        </Tooltip>
-                    )}
+                    <Tooltip title={isSpectator ? 'Exit game' : 'End game'}>
+                        <span>
+                            <IconButton
+                                aria-label={isSpectator ? 'Exit game' : 'End game'}
+                                onClick={handleEndGameClick}
+                                sx={[styles.drawerActionButton, styles.headerCircularButton]}
+                            >
+                                <LogoutIcon />
+                            </IconButton>
+                        </span>
+                    </Tooltip>
                     <IconButton
                         aria-label="game menu"
                         aria-controls={isMenuOpen ? 'chat-drawer-game-menu' : undefined}
