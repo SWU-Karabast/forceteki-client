@@ -56,6 +56,11 @@ const styles = {
             padding: '0.75em',
             overflow: { xs: 'visible', md: 'hidden' },
             borderLeft: drawerBorder,
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                backgroundColor: '#000000CC',
+                width: 'min(20%, 280px)',
+                overflow: 'hidden',
+            },
         },
     },
     drawerToggle: {
@@ -100,6 +105,9 @@ const styles = {
     drawerToggleClosed: { right: 0, '&::after': { transform: 'rotate(45deg)' } },
     drawerToggleOpen: {
         right: { xs: '200px', md: 'min(20%, 280px)' },
+        '@media (orientation: landscape) and (max-width: 932px)': {
+            right: 'min(20%, 280px)',
+        },
         '&::before': {
             right: '-1px',
             backgroundColor: { md: '#000000CC' },
@@ -278,6 +286,8 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, preferenceToggle }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const isMobileLandscape = useMediaQuery('(orientation: landscape) and (max-width: 932px)');
+    const usesTemporaryDrawer = isMobile && !isMobileLandscape;
     const {
         gameState,
         gameMessages,
@@ -391,7 +401,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     }
 
     const closeMobileDrawer = () => {
-        if (isMobile) {
+        if (usesTemporaryDrawer) {
             handleDrawerClose();
         }
     }
@@ -529,9 +539,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 pauseAutoScroll
             />
 
-            <LobbyConfirmationPopupModule title={'Concede Game Confirmation'} message={'Are you sure you wish to concede? This game will count as a loss.'} display={showConcedeConfirmation} onConfirmation={handleConfirmConcede} handleCancel={handleCancelConcede}/>
-            <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showDisableChatConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
-            <PlayerReportDialog open={playerReportOpen} onClose={handleClosePlayerReport}/>
         </>
     );
 
@@ -542,11 +549,14 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 anchor="right"
                 open={sidebarOpen}
                 onClose={handleDrawerClose}
-                variant={isMobile ? 'temporary' : 'persistent'}
+                variant={usesTemporaryDrawer ? 'temporary' : 'persistent'}
                 sx={styles.drawerStyle}
             >
                 {drawerContent}
             </Drawer>
+            <LobbyConfirmationPopupModule title={'Concede Game Confirmation'} message={'Are you sure you wish to concede? This game will count as a loss.'} display={showConcedeConfirmation} onConfirmation={handleConfirmConcede} handleCancel={handleCancelConcede}/>
+            <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showDisableChatConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
+            <PlayerReportDialog open={playerReportOpen} onClose={handleClosePlayerReport}/>
         </>
     );
 };
