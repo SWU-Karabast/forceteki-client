@@ -45,8 +45,17 @@ const CLEANUP_MS = MOVE_MS * 2 + PRESENTATION_MS + 120;
 const PRESENTATION_DRAWER_GAP_PX = 16;
 
 const setIdKey = (card: Pick<ICardData, 'setId'> | undefined): string | null => {
-    if (!card?.setId) return null;
-    return `${card.setId.set}_${card.setId.number.toString().padStart(3, '0')}`;
+    const set = card?.setId?.set;
+    const number = card?.setId?.number;
+
+    // Some server-created cards (for example tokens) can have a partial setId at
+    // runtime even though ICardData describes it as required.
+    if (typeof set !== 'string' || (typeof number !== 'number' && typeof number !== 'string')) return null;
+
+    const numericNumber = Number(number);
+    if (!Number.isFinite(numericNumber)) return null;
+
+    return `${set}_${numericNumber.toString().padStart(3, '0')}`;
 };
 
 const normalizeLastPlayedCardId = (lastPlayedCard: unknown): string | null => {
