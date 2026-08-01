@@ -22,6 +22,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
+import OutlinedFlagIcon from '@mui/icons-material/OutlinedFlag';
 import CommentsDisabledIcon from '@mui/icons-material/CommentsDisabled';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import LinkIcon from '@mui/icons-material/Link';
@@ -35,6 +36,9 @@ import { LobbyConfirmationPopupModule } from '@/app/_components/Lobby/_subcompon
 import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
 import { Theme } from '@mui/material/styles';
+import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { useRouter } from 'next/navigation';
 
 // ------------------------STYLES------------------------//
 const drawerBorder = '1px solid rgba(255, 255, 255, 0.16)';
@@ -292,6 +296,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const {
         gameState,
         gameMessages,
+        sendMessage,
         sendGameMessage,
         sendLobbyMessage,
         isSpectator,
@@ -302,6 +307,8 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         hasChatDisabled,
     } = useGame();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
+    const { openPopup } = usePopup();
+    const router = useRouter();
     const [chatMessage, setChatMessage] = useState('')
     const [menuAnchorElement, setMenuAnchorElement] = useState<null | HTMLElement>(null);
     const [showDisableChatConfirmation, setShowDisableChatConfirmation] = useState(false);
@@ -324,7 +331,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const isReportingDisabled = !!user?.reportingDisabled;
     const canReportBug = !isAnonymousPlayer(connectedPlayer);
     const canShareGameLink = !isSpectator && !!lobbyState?.settings?.allowSpectators && !!lobbyState?.spectateLink;
-    const hasGameEnded = !!gameState.winners?.length;
 
     const getChatDisabledInfo = (): IChatDisabledInfo => {
         if (isPrivateLobby && !doesUserHaveChatMuted) {
@@ -419,20 +425,30 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const handleEndGameClick = () => {
         handleMenuClose();
         closeMobileDrawer();
-        if (hasGameEnded) {
+        if (gameState.winners?.length) {
+            sendMessage('manualDisconnect');
+            router.push('/');
+            return;
+        }
+        openPopup('leaveGame', {
+            uuid: 'leave-game',
+            source: PopupSource.User,
+        });
+    };
+
+    const handleConcedeClick = () => {
+        handleMenuClose();
+        closeMobileDrawer();
+        if (gameState.winners?.length) {
             openGameEndedModal();
         } else {
             setShowEndGameConfirmation(true);
         }
-    }
-
-    const handleConfirmEndGame = () => {
-        const playerName = gameState.players[connectedPlayer]?.name;
-        sendGameMessage(['concede', playerName]);
-        setShowEndGameConfirmation(false);
     };
 
-    const handleCancelEndGame = () => {
+    const handleConfirmConcede = () => {
+        const playerName = gameState.players[connectedPlayer]?.name;
+        sendGameMessage(['concede', playerName]);
         setShowEndGameConfirmation(false);
     };
 
@@ -517,6 +533,14 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                         onClose={handleMenuClose}
                         slotProps={{ paper: { sx: styles.menuPaper } }}
                     >
+                        {!isSpectator && (
+                            <MenuItem onClick={handleConcedeClick}>
+                                <ListItemIcon sx={styles.menuIcon}>
+                                    <OutlinedFlagIcon fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Concede</ListItemText>
+                            </MenuItem>
+                        )}
                         <MenuItem onClick={handlePreferenceClick}>
                             <ListItemIcon sx={styles.menuIcon}>
                                 <SettingsOutlinedIcon fontSize="small" />
@@ -566,7 +590,6 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 handleChatSubmit={handleGameChat}
                 pauseAutoScroll
             />
-
         </>
     );
 
@@ -582,13 +605,13 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
             >
                 {drawerContent}
             </Drawer>
-            <LobbyConfirmationPopupModule title={'Concede Game Confirmation'} message={'Are you sure you wish to concede? This game will count as a loss.'} display={showConcedeConfirmation} onConfirmation={handleConfirmConcede} handleCancel={handleCancelConcede}/>
+            <LobbyConfirmationPopupModule title={'Do you want to end the game?'} message={'This will concede the game to your opponent and count as a loss.'} display={showEndGameConfirmation} onConfirmation={handleConfirmEndGame} handleCancel={handleCancelEndGame}/>
             <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showDisableChatConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
             <PlayerReportDialog open={playerReportOpen} onClose={handleClosePlayerReport}/>
             <BugReportDialog open={bugReportOpen} onClose={() => setBugReportOpen(false)}/>
             <Snackbar
                 open={shareLinkCopied}
-                autoHideDuration={2000} 
+                autoHideDuration={2000}
                 onClose={() => setShareLinkCopied(false)}
                 message="Game link copied"
             />

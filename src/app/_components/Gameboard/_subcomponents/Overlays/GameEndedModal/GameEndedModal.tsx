@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -7,7 +7,11 @@ import {
     Typography,
 } from '@mui/material';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
-import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
+import EndGameOptions from '@/app/_components/_sharedcomponents/Preferences/_subComponents/EndGameOptions';
+import { useGame } from '@/app/_contexts/Game.context';
+import { MatchmakingType } from '@/app/_constants/constants';
+import BugReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/BugReportDialog';
+import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 
 interface IGameEndedModalProps {
     open: boolean;
@@ -16,8 +20,14 @@ interface IGameEndedModalProps {
     subtitle: string;
 }
 
-const GameEndedModal: React.FC<IGameEndedModalProps> = ({ open, onClose, title, subtitle }) => (
-    <Dialog
+const GameEndedModal: React.FC<IGameEndedModalProps> = ({ open, onClose, title, subtitle }) => {
+    const { lobbyState } = useGame();
+    const gameType = lobbyState?.gameType || MatchmakingType.PrivateLobby;
+    const [bugReportOpen, setBugReportOpen] = useState(false);
+    const [playerReportOpen, setPlayerReportOpen] = useState(false);
+
+    return <>
+        <Dialog
         open={open}
         onClose={onClose}
         fullWidth
@@ -52,9 +62,16 @@ const GameEndedModal: React.FC<IGameEndedModalProps> = ({ open, onClose, title, 
             </IconButton>
         </DialogTitle>
         <DialogContent dividers sx={{ px: { xs: '20px', sm: '30px' }, py: '30px' }}>
-            <EndGameTab />
+            <EndGameOptions
+                gameType={gameType}
+                handleOpenBugReport={() => setBugReportOpen(true)}
+                handleOpenPersonReport={() => setPlayerReportOpen(true)}
+            />
         </DialogContent>
-    </Dialog>
-);
+        </Dialog>
+        <BugReportDialog open={bugReportOpen} onClose={() => setBugReportOpen(false)} />
+        <PlayerReportDialog open={playerReportOpen} onClose={() => setPlayerReportOpen(false)} />
+    </>;
+};
 
 export default GameEndedModal;

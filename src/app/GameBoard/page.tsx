@@ -74,8 +74,6 @@ const GameBoard = () => {
     // check if game ended already.
     const winners = !!gameState?.winners.length ? gameState.winners : undefined;
     // const winners = ['order66']
-    // we set tabs
-    // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
         ? ['soundOptions','gameOptions']
         : ['currentGame','soundOptions','gameOptions'];

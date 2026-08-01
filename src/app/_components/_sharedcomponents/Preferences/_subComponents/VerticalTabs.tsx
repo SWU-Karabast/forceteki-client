@@ -10,7 +10,6 @@ import KeyboardShortcutsTab
     from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/KeyboardShortcutsTab';
 import SoundOptionsTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/SoundOptionsTab';
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
 import { useUser } from '@/app/_contexts/User.context';
 import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
@@ -33,7 +32,6 @@ enum TabType {
     GameOptions = 'gameOptions',
     Cosmetics = 'cosmetics',
     SoundOptions = 'soundOptions',
-    EndGame = 'endGame',
     BlockList = 'blockList',
     General = 'general',
     Logout = 'logout'
@@ -124,8 +122,6 @@ function VerticalTabs({
                 return <CosmeticsTab />;
             case TabType.SoundOptions:
                 return <SoundOptionsTab setHasNewChanges={setHasUnsavedChanges}/>;
-            case TabType.EndGame:
-                return <EndGameTab/>;
             case TabType.BlockList:
                 return <BlockListTab/>;
             case TabType.General:
@@ -146,8 +142,6 @@ function VerticalTabs({
                 return 'Cosmetics';
             case TabType.SoundOptions:
                 return 'Sound Options';
-            case TabType.EndGame:
-                return 'Current Game';
             case TabType.BlockList:
                 return 'Block List';
             case TabType.Logout:
