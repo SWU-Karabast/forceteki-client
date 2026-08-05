@@ -55,4 +55,5 @@ export interface IPlayerHandProps {
     maxCardOverlapPercent?: number; 
     scrollbarEnabled?: boolean;
     cardback?: string;
+    showCardCount?: boolean;
 }
