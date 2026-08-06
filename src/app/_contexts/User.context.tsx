@@ -8,7 +8,7 @@ import React, {
     useState,
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { IUserContextType, IPreferences, IModerationAction, ModerationFieldState } from './UserTypes';
 import { v4 as uuid } from 'uuid';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
@@ -38,11 +38,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const { data: session, update, status } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
+    const router = useRouter();
     const pathname = usePathname();
     const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
+    const useDatabaseDevUsers = process.env.NEXT_PUBLIC_USE_DATABASE_DEV_USERS === 'true';
     const [isMod, setIsMod] = useState(false);
 
     useEffect(() => {
+        const storedUser = localStorage.getItem('devUser');
+        if (!useDatabaseDevUsers && process.env.NODE_ENV === 'development') {
+            if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
+                handleDevSetUser(storedUser);
+            }
+        }
+
         const syncUserWithServer = async () => {
             // If user is already logged in with the current session, do nothing
             if (session?.user && user?.providerId === session.user.id) {
@@ -91,7 +100,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         // Handle setting anonymous user if needed
         const setupAnonymousUserIfNeeded = () => {
             // Only set anonymous user if no session exists
-            if (!session?.user) {
+            if (!session?.user && !storedUser) {
                 let anonymousId = localStorage.getItem('anonymousUserId');
                 if (!anonymousId) {
                     anonymousId = uuid();
@@ -106,7 +115,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             await syncUserWithServer();
             setupAnonymousUserIfNeeded();
         };
-        if(hideLogin && session?.user){
+        if(hideLogin && (session?.user || storedUser)){
             logout();
         }
         initializeUser();
@@ -117,6 +126,32 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             callbackUrl: '/',
         });
         clearAnonUser();
+    };
+
+    const handleDevSetUser = (user: 'Order66' | 'ThisIsTheWay') => {
+        if (user === 'Order66') {
+            setUser({
+                needsUsernameChange: false,
+                mustRequestUsernameChange: null,
+                reportingDisabled: null,
+                showWelcomeMessage: false,
+                id: 'exe66',
+                username: 'Order66',
+                authenticated: true,
+                preferences: { },
+            });
+        } else if (user === 'ThisIsTheWay') {
+            setUser({
+                needsUsernameChange: false,
+                mustRequestUsernameChange: null,
+                reportingDisabled: null,
+                showWelcomeMessage: false,
+                id: 'th3w4y',
+                username: 'ThisIsTheWay',
+                authenticated: true,
+                preferences: { },
+            });
+        }
     };
 
     const updateUsername = (newUsername: string) => {
@@ -212,15 +247,22 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
     const devLogin = async (user: 'Order66' | 'ThisIsTheWay') => {
         clearAnonUser();
-        await signIn('dev-user', {
-            user,
-            callbackUrl: '/',
-        });
+        if (useDatabaseDevUsers) {
+            await signIn('dev-user', {
+                user,
+                callbackUrl: '/',
+            });
+        } else {
+            handleDevSetUser(user);
+            localStorage.setItem('devUser', user);
+            router.push('/');
+        }
     };
 
 
     const logout = () => {
         signOut({ callbackUrl: '/' });
+        localStorage.removeItem('devUser');
         setUser(null);
     };
 

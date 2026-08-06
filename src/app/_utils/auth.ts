@@ -34,7 +34,8 @@ export const authOptions: AuthOptions = {
             clientId: process.env.DISCORD_CLIENT_ID!,
             clientSecret: process.env.DISCORD_CLIENT_SECRET!,
         }),
-        ...(process.env.NODE_ENV === 'development'
+        ...(process.env.NODE_ENV === 'development' &&
+            process.env.NEXT_PUBLIC_USE_DATABASE_DEV_USERS === 'true'
             ? [CredentialsProvider({
                 id: 'dev-user',
                 name: 'Development user',
