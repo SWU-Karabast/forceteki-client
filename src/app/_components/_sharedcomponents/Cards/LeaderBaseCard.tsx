@@ -250,8 +250,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'relative',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
-            WebkitTouchCallout: 'none',
             userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
         },
         deployedPlaceholder: {
             backgroundColor: 'transparent',
@@ -365,6 +366,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundRepeat: 'no-repeat',
             imageRendering: '-webkit-optimize-contrast',
             backfaceVisibility: 'hidden',
+            userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
             aspectRatio: aspectRatio,
             width: width,
         },

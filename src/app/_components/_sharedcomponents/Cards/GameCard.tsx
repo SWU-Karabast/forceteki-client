@@ -332,8 +332,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            WebkitTouchCallout: 'none',
             userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
         },
         upgradeOverlay: {
             position: 'absolute',
@@ -619,6 +620,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             imageRendering: '-webkit-optimize-contrast',
             backfaceVisibility: 'hidden',
+            userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
             aspectRatio,
             width,
         },
