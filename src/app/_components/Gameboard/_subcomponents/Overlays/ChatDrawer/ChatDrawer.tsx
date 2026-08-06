@@ -48,6 +48,8 @@ const styles = {
             backgroundColor: 'rgba(0, 0, 0, 0.25)',
         },
         '& .MuiDrawer-paper': {
+            containerName: 'chat-drawer',
+            containerType: 'inline-size',
             backgroundColor: { xs: '#000000E6', md: '#000000CC' },
             color: '#fff',
             display: 'flex',
@@ -160,6 +162,16 @@ const styles = {
         '& .MuiButton-startIcon': {
             marginLeft: 0,
             marginRight: '6px',
+        },
+        '@container chat-drawer (max-width: 174.99px)': {
+            padding: '8px',
+            borderRadius: '50%',
+            '& .MuiButton-startIcon': {
+                marginRight: 0,
+            },
+            '& .undo-button-label': {
+                display: 'none',
+            },
         },
     },
     headerCircularButton: {
@@ -279,7 +291,7 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
                     startIcon={buttonIcon}
                     sx={[styles.drawerActionButton, styles.undoActionButton, undoButtonStyle]}
                 >
-                    {buttonText}
+                    <span className="undo-button-label">{buttonText}</span>
                 </Button>
             </span>
         </Tooltip>
