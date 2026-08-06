@@ -1,4 +1,5 @@
-
+import type { CardImageLocale } from '@/app/_utils/s3Utils';
+import type { IActiveCosmetics } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
 export interface IUser extends IGetUser{
     email?: string;
@@ -43,6 +44,7 @@ export interface IGetUser {
     username: string;
     showWelcomeMessage: boolean;
     preferences: IPreferences,
+    activeCosmetics?: IActiveCosmetics,
     needsUsernameChange: boolean;
     mustRequestUsernameChange?: ModerationFieldState | null;
     reportingDisabled?: ModerationFieldState | null;
@@ -74,12 +76,16 @@ export interface IKeyboardShortcuts {
 export interface KeyboardLayoutProps {
     keyboardShortcuts?: IKeyboardShortcuts;
 }
-import type { CardImageLocale } from '@/app/_utils/s3Utils';
 
 export interface IGameOptions {
     muteChat?: boolean;
     cardLanguage?: CardImageLocale;
     timerVisibility?: TimerVisibility;
+
+    // Prompt-reduction settings grouped so future automations can live alongside singleTarget.
+    autoResolve?: {
+        singleTarget?: boolean;
+    };
 }
 
 export enum TimerVisibility {

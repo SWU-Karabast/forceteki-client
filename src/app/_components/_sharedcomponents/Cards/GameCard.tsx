@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Popover, PopoverOrigin, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Popover, PopoverOrigin, Tooltip, Typography } from '@mui/material';
+import ThreeSixty from '@mui/icons-material/ThreeSixty';
 import Grid from '@mui/material/Grid';
 import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
@@ -13,7 +14,6 @@ import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOver
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
-import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
@@ -64,7 +64,6 @@ const GameCard: React.FC<IGameCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
     const { clearPopups } = usePopup();
-    const { getCardback } = useCosmetics();
     const locale = useCardImageLocale();
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
@@ -90,6 +89,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         aspectRatio,
         width,
         isFlipped,
+        toggleFlip,
     } = useLeaderCardFlipPreview({
         anchorElement,
         cardId: anchorElement?.getAttribute('data-card-id') || undefined,
@@ -110,10 +110,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
         },
-        onRelease: () => {
-            setAnchorElement(null);
-            setPreviewImage(null);
-        },
+        onRelease: () => undefined,
     });
 
     const isStolen = React.useMemo(() => {
@@ -147,12 +144,12 @@ const GameCard: React.FC<IGameCardProps> = ({
         setPreviewImage(null);
     };
 
-    // Tap-anywhere-to-close fallback for touch devices
+    // Keep touch previews open until the next interaction anywhere on the screen.
     React.useEffect(() => {
         if (!open || !isTouchDevice) return;
-        const onTouchStart = () => handlePreviewClose();
-        document.addEventListener('touchstart', onTouchStart);
-        return () => document.removeEventListener('touchstart', onTouchStart);
+        const onPointerDown = () => handlePreviewClose();
+        document.addEventListener('pointerdown', onPointerDown);
+        return () => document.removeEventListener('pointerdown', onPointerDown);
     }, [open, isTouchDevice]);
 
 
@@ -178,7 +175,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 
     // Compute card image URL + load status before any early return so hooks
     // are called in a stable order.
-    const cardbackPath = getCardback(cardback).path;
+    const cardbackPath = cardback;
     const styledCardUrl = card
         ? s3CardImageURL(
             { ...card, setId: card.clonedCardId ?? card.setId },
@@ -226,8 +223,14 @@ const GameCard: React.FC<IGameCardProps> = ({
         (onClick || defaultClickFunction)();
     }
 
-    const subcardClick = (subCard: ICardData) => {
+    const subcardClick = (event: React.MouseEvent, subCard: ICardData) => {
         if (subCard.selectable) {
+            // Widgets can render on top of their parent card, which themselves are
+            // clickable (like Shield). Without stopping propagation, a single click on a selectable
+            // subcard widget also bubbles to the parent card's onClick and emits a second cardClicked
+            // for the underlying unit. With Alliance Outpost that buffered second click
+            // auto-applies the buff to the token whose shield was just defeated, for example.
+            event.stopPropagation();
             setAnchorElement(null);
             setPreviewImage(null);
             sendGameMessage(['cardClicked', subCard.uuid]);
@@ -326,8 +329,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            WebkitTouchCallout: 'none',
             userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
         },
         upgradeOverlay: {
             position: 'absolute',
@@ -613,8 +617,28 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             imageRendering: '-webkit-optimize-contrast',
             backfaceVisibility: 'hidden',
+            userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
             aspectRatio,
             width,
+        },
+        mobileFlipButton: {
+            position: 'absolute',
+            top: '0.35rem',
+            right: '0.35rem',
+            zIndex: 2,
+            width: '3.25rem',
+            height: '3.25rem',
+            color: 'white',
+            backgroundColor: 'rgba(3, 12, 19, 0.72)',
+            border: '1px solid rgba(255, 255, 255, 0.38)',
+            borderRadius: '999px',
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.55)',
+            transition: 'opacity 140ms ease, background-color 140ms ease',
+            '&:hover': {
+                backgroundColor: 'rgba(3, 12, 19, 0.9)',
+            },
         },
         attackIcon: {
             position: 'absolute',
@@ -752,7 +776,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                         border: shieldCard.selectable ? `2px solid ${getBorderColor({ card: shieldCard, player: connectedPlayer })}` : 'none',
                                         cursor: shieldCard.selectable ? 'pointer' : 'normal'
                                     }}
-                                    onClick={() => subcardClick(shieldCard)}
+                                    onClick={(e) => subcardClick(e, shieldCard)}
                                 />
                             ))}
                         </Grid>
@@ -781,7 +805,7 @@ const GameCard: React.FC<IGameCardProps> = ({
 
             <Popover
                 id="mouse-over-popover"
-                sx={{ pointerEvents: 'none' }}
+                sx={{ pointerEvents: isTouchDevice ? 'auto' : 'none' }}
                 open={open}
                 anchorEl={anchorElement}
                 onClose={handlePreviewClose}
@@ -789,7 +813,22 @@ const GameCard: React.FC<IGameCardProps> = ({
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' }, tabIndex: -1 } }}
                 {...popoverConfig}
             >
-                <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
+                <Box sx={{ position: 'relative' }}>
+                    <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
+                    {isPreviewingLeaderCard && isTouchDevice && (
+                        <IconButton
+                            aria-label="Flip leader card"
+                            sx={styles.mobileFlipButton}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                toggleFlip();
+                            }}
+                        >
+                            <ThreeSixty fontSize="medium" />
+                        </IconButton>
+                    )}
+                </Box>
                 {isPreviewingLeaderCard && !isTouchDevice && !isFlipped && (
                     <Typography variant={'body1'} sx={styles.ctrlText}
                     >CTRL: View Flipside</Typography>
@@ -804,7 +843,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                         border: subcard.selectable ? `2px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',
                         cursor: subcard.selectable ? 'pointer' : 'normal'
                     }}
-                    onClick={() => subcardClick(subcard)}
+                    onClick={(e) => subcardClick(e, subcard)}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     {...longPressHandlers}
@@ -844,7 +883,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                     border: capturedCard.selectable ? `2px solid ${getBorderColor({ card:capturedCard, player:connectedPlayer })}` : 'none',
                                     cursor: capturedCard.selectable ? 'pointer' : 'normal'
                                 }}
-                                onClick={() => subcardClick(capturedCard)}
+                                onClick={(e) => subcardClick(e, capturedCard)}
                                 onMouseEnter={handlePreviewOpen}
                                 onMouseLeave={handlePreviewClose}
                                 {...longPressHandlers}

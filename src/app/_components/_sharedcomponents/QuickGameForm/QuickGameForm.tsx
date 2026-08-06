@@ -16,12 +16,12 @@ import {
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
-    DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -54,7 +54,7 @@ interface IQuickGameFormProps {
     handleDeckManagement: () => void;
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
     errorState: DeckErrorState;
-    setError: (summary: string | null, details?: IDeckValidationFailures | string, title?: string, modalType?: 'error' | 'warning') => void;
+    setError: (summary: string | null, details?: IDeckValidationFailures | string, title?: string, modalType?: 'error' | 'warning', footerLink?: { label: string }) => void;
     clearErrors: () => void;
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
@@ -206,18 +206,13 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         }catch (error){
             setQueueState(false);
             clearErrors();
-            if(error instanceof Error){
-                if(error.message?.includes('403')) {
-                    setError('Couldn\'t import. The deck is set to private.',{ [DeckValidationFailureReason.DeckSetToPrivate]: true },'Deck Validation Error','error');
-                    setModalOpen(true)
-                } else if(error.message?.includes('Deck not found')) {
-                    // Handle the specific 404 error messages from any deck source
-                    setError(error.message,error.message,'Deck Not Found','error')
-                    setModalOpen(true);
-                } else {
-                    setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');
-                    setModalOpen(true)
-                }
+            if (error instanceof DeckFetchError) {
+                const content = getDeckFetchErrorContent(error);
+                setError(content.summary, content.details, content.title, content.modalType, content.footerLink);
+                setModalOpen(true);
+            } else if(error instanceof Error){
+                setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');
+                setModalOpen(true);
             }
             return;
         }

@@ -1,91 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Button, Box } from '@mui/material';
+import React, { useCallback } from 'react';
+import { Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useGame } from '@/app/_contexts/Game.context';
-import { useUser } from '@/app/_contexts/User.context';
-import { keyframes } from '@mui/system';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
-import { PerCardButton } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import PulseButton from '@/app/components/Button/PulseButton';
 import { useKeyboardShortcuts } from '@/app/_hooks/useKeyboardShortcuts';
-import useTimeout from '@/app/_utils/useTimeout';
-
-const pulseBorder = keyframes`
-  0% {
-    border-color: rgba(0, 140, 255, 0.4);
-    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
-  }
-  50% {
-    border-color: rgba(0, 180, 255, 0.6);
-    box-shadow: 0 0 8px rgba(0, 180, 255, 0.6);
-  }
-  100% {
-    border-color: rgba(0, 140, 255, 0.4);
-    box-shadow: 0 0 4px rgba(0, 140, 255, 0.4);
-  }
-`;
-
-const pulseYellowBorder = keyframes`
-  0% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 4px rgba(204, 172, 0, 0.4);
-  }
-  50% {
-    border-color: rgba(220, 185, 0, 0.6);
-    box-shadow: 0 0 8px rgba(220, 185, 0, 0.6);
-  }
-  100% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 4px rgba(204, 172, 0, 0.4);
-  }
-`;
-
-const pulseYellowBorderAbility = keyframes`
-  0% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 8px rgba(204, 172, 0, 0.6);
-  }
-  50% {
-    border-color: rgba(220, 185, 0, 0.6);
-    box-shadow: 0 0 16px rgba(220, 185, 0, 0.8);
-  }
-  100% {
-    border-color: rgba(204, 172, 0, 0.4);
-    box-shadow: 0 0 8px rgba(204, 172, 0, 0.6);
-  }
-`;
-
-const pulseGreenBorder = keyframes`
-  0% {
-    border-color: rgba(0, 170, 70, 0.4);
-    box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
-  }
-  50% {
-    border-color: rgba(0, 200, 90, 0.6);
-    box-shadow: 0 0 8px rgba(0, 200, 90, 0.6);
-  }
-  100% {
-    border-color: rgba(0, 170, 70, 0.4);
-    box-shadow: 0 0 4px rgba(0, 170, 70, 0.4);
-  }
-`;
-
-const pulseRedBorder = keyframes`
-  0% {
-    border-color: rgba(230, 0, 60, 0.4);
-    box-shadow: 0 0 4px rgba(230, 0, 60, 0.4);
-  }
-  50% {
-    border-color: rgba(255, 0, 70, 0.6);
-    box-shadow: 0 0 8px rgba(255, 0, 70, 0.6);
-  }
-  100% {
-    border-color: rgba(230, 0, 60, 0.4);
-    box-shadow: 0 0 4px rgba(230, 0, 60, 0.4);
-  }
-`;
 
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
@@ -95,7 +17,7 @@ const createStyles = (isPortrait: boolean) => ({
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'flex-end', 
-        padding: { xs: '0.25rem', md: '0.5rem' },
+        padding: { xs: '0.25rem 15px 15px 0.25rem', md: '0.5rem' },
     },
     buttonsContainer: {
         ...debugBorder('purple'),
@@ -109,36 +31,12 @@ const createStyles = (isPortrait: boolean) => ({
         maxWidth: '100%',
     },
     promptButton: {
-        transform: 'skew(-10deg)',
-        borderRadius: '1rem',
-        height: { xs: '2.5rem', sm: '3rem', md: '3.8rem' },
-        minWidth: { xs: '1.5rem', md: '2.5rem' },
-        maxWidth: { xs: '5rem', sm: '7rem', md: '9rem' },
-        flex: '1 1 auto', 
-        
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '1px solid transparent',
-        background: `linear-gradient(rgb(29, 29, 29),rgb(29, 29, 29)) padding-box, 
-        linear-gradient(to top, #404040, #404040) border-box`,
-        '&:hover': {
-            background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
-            linear-gradient(to top,rgb(50, 81, 93), #404040) border-box`,
-        },
-        '&:not(:disabled)': {
-            transition: 'box-shadow 0.3s ease-in-out',
-        },
-        touchAction: 'manipulation',
+        height: { xs: '3rem', md: '3.8rem' },
+        minWidth: { xs: '6rem', md: '2.5rem' },
+        maxWidth: { xs: '6rem', sm: '7rem', md: '9rem' },
     },
     promptButtonText: {
-        transform: 'skew(10deg)',
-        lineHeight: '1.2',
-        fontSize: { xs: '0.6rem', sm: '0.9rem', md: '1.05rem' },     
-        textAlign: 'center',
-        '& :disabled': {
-            brightness: '0.7',
-        },
+        fontSize: { xs: '0.75rem', sm: '0.9rem', md: '1.05rem' },
     },
 });
 
@@ -153,17 +51,20 @@ interface IButtonsProps {
 // disabling certain actions briefly to avoid double clicks:
 // - for a resource prompt, we disable the "done" button
 // - for the action window, we disable the "claim initiative" button
-const hasCooldown = (buttonType: string, prompType: string) => (buttonType === 'done' && prompType === 'resource') || (prompType === 'actionWindow' && ['pass', 'claimInitiative'].includes(buttonType));
+const hasCooldown = (buttonType: string, promptType: string) => (buttonType === 'done' && promptType === 'resource') || (promptType === 'actionWindow' && ['pass', 'claimInitiative'].includes(buttonType));
 
 const CardActionTray: React.FC = () => {
     const { isPortrait } = useScreenOrientation();
-    const { sendGameMessage, gameState, connectedPlayer, distributionPromptData, getConnectedPlayerPrompt } = useGame();
+    const { sendGameMessage, gameState, connectedPlayer, distributionPromptData } = useGame();
     const playerState = gameState.players[connectedPlayer];
     const styles = createStyles(isPortrait);
-    const [resourcePromptDoneButtonOverride, setResourcePromptDoneButtonOverrideState] = useState<boolean>(false);
 
-    // Wrapped in useCallback so it can be safely used as a dependency in our keyboard handlers
     const showTrayButtons = useCallback(() => {
+        if (playerState.promptState.promptType === 'displayCards') {
+            // Buttons for the display cards prompt are rendered within the popup itself, not in the action tray
+            return false;
+        }
+
         if ( playerState.promptState.promptType === 'actionWindow' ||
              playerState.promptState.promptType === 'resource' ||
              playerState.promptState.promptType === 'distributeAmongTargets' ||
@@ -172,9 +73,9 @@ const CardActionTray: React.FC = () => {
             return true;
         }
         return false;
-    }, [playerState.promptState, gameState]);
+    }, [gameState, playerState.promptState]);
 
-    const buttonDisabled = useCallback((button: IButtonsProps | PerCardButton) => {
+    const buttonDisabled = useCallback((button: IButtonsProps) => {
         if (button.arg === 'done') {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
@@ -183,59 +84,24 @@ const CardActionTray: React.FC = () => {
                     return true;
                 }
             }
-
-            if (getConnectedPlayerPrompt()?.promptType === 'resource') {
-                if (!resourcePromptDoneButtonOverride) {
-                    setResourcePromptDoneButtonOverrideState(true);
-                    setTimeout(() => {
-                        setResourcePromptDoneButtonOverrideState(false);
-                    }, 500);
-                    return true;
-                }
-                return resourcePromptDoneButtonOverride;
-            }
         }
-        return !!(button as IButtonsProps).disabled;
-    }, [playerState.promptState, distributionPromptData, getConnectedPlayerPrompt, resourcePromptDoneButtonOverride]);
 
-    // --- KEYBOARD HANDLERS ---
+        return !!button.disabled;
+    }, [distributionPromptData, playerState.promptState]);
+
     const handlePassTurn = useCallback(() => {
-        // 1. Only allow the shortcut if the tray is actually visible to the user
         if (!showTrayButtons()) return;
 
-        // 2. Find the pass button in the current state
-        const passBtn = playerState.promptState.buttons.find(
-            (b: IButtonsProps) => b.arg === 'pass' || b.arg === 'passAbility' || b.text === 'Pass'
+        const passButton = playerState.promptState.buttons.find(
+            (button: IButtonsProps) => button.arg === 'pass' || button.arg === 'passAbility' || button.text === 'Pass'
         );
-        
-        // 3. Fire if found and not disabled
-        if (passBtn && !buttonDisabled(passBtn)) {
-            sendGameMessage([passBtn.command, passBtn.arg, passBtn.uuid]);
+
+        if (passButton && !buttonDisabled(passButton)) {
+            sendGameMessage([passButton.command, passButton.arg, passButton.uuid]);
         }
-    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage, showTrayButtons]);
+    }, [buttonDisabled, playerState.promptState.buttons, sendGameMessage, showTrayButtons]);
 
-    /* const handleClaimInitiative = useCallback(() => {
-        if (!showTrayButtons()) return;
-
-        const claimBtn = playerState.promptState.buttons.find(
-            (b: IButtonsProps) => b.arg === 'claimInitiative'
-        );
-        if (claimBtn && !buttonDisabled(claimBtn)) {
-            sendGameMessage([claimBtn.command, claimBtn.arg, claimBtn.uuid]);
-        }
-    }, [playerState.promptState.buttons, buttonDisabled, sendGameMessage, showTrayButtons]); */
-
-    // Register our actions with the global handler
-    useKeyboardShortcuts({
-        passTurn: handlePassTurn,
-        // claimInitiative: handleClaimInitiative
-    });
-
-    useEffect(() => {
-        if (getConnectedPlayerPrompt()?.promptType !== 'resource') {
-            setResourcePromptDoneButtonOverrideState(false);
-        }
-    }, [gameState, getConnectedPlayerPrompt]);
+    useKeyboardShortcuts({ passTurn: handlePassTurn });
 
     return (
         <Grid
@@ -261,7 +127,6 @@ const CardActionTray: React.FC = () => {
     );
 };
 
-
 interface IPromptButtonProps {
     button: IButtonsProps;
     sendGameMessage: (args: [string, string, string]) => void;
@@ -269,108 +134,44 @@ interface IPromptButtonProps {
     cooldown?: boolean;
 }
 
-
-const PromptButton: React.FC<IPromptButtonProps> = (props) => {
-    const { button, sendGameMessage, cooldown } = props;
-    const { isPortrait } = useScreenOrientation();
-    const [hasCooldown, setCooldown] = useState<boolean>(cooldown === true);
-    const disabled = hasCooldown || props.disabled;
-    const styles = createStyles(isPortrait);
-
-    useTimeout(() => {
-        setCooldown(false);
-    }, cooldown === true ? 500 : null);
-
-    const actionTrayStyles = (button: IButtonsProps, disabled = false) => {
-        if (button.arg === 'claimInitiative' || button.text === 'Draw') {
-            return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #0a3b4d) padding-box, 
-                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
-                '&:hover': {
-                    background: `linear-gradient(rgb(29, 29, 29),rgb(20, 65, 81)) padding-box, 
-                    linear-gradient(to top, #038FC3, #0a3b4d) border-box`,
-                },
-                '&:not(:disabled)': {
-                    animation: `${pulseBorder} 4s infinite ease-in-out`,
-                    boxShadow: '0 0 6px rgba(0, 140, 255, 0.5)',
-                    border: '1px solid rgba(0, 140, 255, 0.5)',
-                },
-            };
-        }
-
-        if (button.arg === 'pass' || button.arg === 'passAbility' || button.text === 'Return' || button.text === 'Exhaust' || button.text === 'Discard') {
-            return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #3d3a0a) padding-box, 
-                    linear-gradient(to top, #b3a81c, #3d3a0a) border-box`,
-                '&:hover': {
-                    background: `linear-gradient(rgb(29, 29, 29),rgb(81, 77, 20)) padding-box, 
-                    linear-gradient(to top, #d4c82a, #3d3a0a) border-box`,
-                    boxShadow: '0 0 8px rgba(204, 172, 0, 0.7)',
-                    border: '1px solid rgba(220, 185, 0, 0.7)',
-                },
-                '&:not(:disabled)': {
-                    animation: button.arg === 'pass' ? `${pulseYellowBorder} 4s infinite ease-in-out` : `${pulseYellowBorderAbility} 3s infinite ease-in-out`,
-                    boxShadow: '0 0 6px rgba(204, 172, 0, 0.5)',
-                    border: '1px solid rgba(204, 172, 0, 0.5)',
-                },
-            };
-        }
-        
-        if (button.arg === 'done' || button.text === 'Pay' || button.text === 'Top' || button.text === 'Play') {
-            return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #0a3d1e) padding-box, 
-                    linear-gradient(to top, #1cb34a, #0a3d1e) border-box`,
-                '&:hover': {
-                    background: `linear-gradient(rgb(29, 29, 29),rgb(20, 81, 40)) padding-box, 
-                    linear-gradient(to top, #2ad44c, #0a3d1e) border-box`,
-                    boxShadow: '0 0 8px rgba(0, 170, 70, 0.7)',
-                    border: '1px solid rgba(0, 200, 90, 0.7)',
-                },
-                '&:not(:disabled)': {
-                    animation: `${pulseGreenBorder} 4s infinite ease-in-out`,
-                    boxShadow: '0 0 6px rgba(0, 170, 70, 0.5)',
-                    border: '1px solid rgba(0, 170, 70, 0.5)',
-                },
-            };
-        }
-
-        if (button.arg === 'cancel' || button.text === 'Damage' || button.text === 'Bottom') {
-            return disabled ? {} : {
-                background: `linear-gradient(rgb(29, 29, 29), #641515) padding-box, 
-                    linear-gradient(to top, #b82121, #641515) border-box`,
-                '&:hover': {
-                    background: `linear-gradient(rgb(29, 29, 29),rgb(110, 25, 25)) padding-box, 
-                    linear-gradient(to top, #e02929, #641515) border-box`,
-                    boxShadow: '0 0 8px rgba(230, 0, 60, 0.7)',
-                    border: '1px solid rgba(255, 0, 70, 0.7)',
-                },
-                '&:not(:disabled)': {
-                    animation: `${pulseRedBorder} 4s infinite ease-in-out`,
-                    boxShadow: '0 0 6px rgba(230, 0, 60, 0.5)',
-                    border: '1px solid rgba(230, 0, 60, 0.5)',
-                },
-            };
-        }
-        
-        return {};
+const getPulseButtonVariant = (button: IButtonsProps) => {
+    if (button.arg === 'claimInitiative' || button.text === 'Draw') {
+        return 'info';
     }
 
+    if (button.arg === 'pass' || button.arg === 'passAbility' || button.text === 'Return' || button.text === 'Exhaust' || button.text === 'Discard') {
+        return 'warning';
+    }
+
+    if (button.arg === 'done' || button.text === 'Pay' || button.text === 'Top' || button.text === 'Play') {
+        return 'success';
+    }
+
+    if (button.arg === 'cancel' || button.text === 'Damage' || button.text === 'Bottom') {
+        return 'danger';
+    }
+
+    return 'default';
+}
+
+const PromptButton: React.FC<IPromptButtonProps> = (props) => {
+    const { button, sendGameMessage, cooldown, disabled = false } = props;
+    const { isPortrait } = useScreenOrientation();
+    const styles = createStyles(isPortrait);
+    const variant = disabled ? 'default' : getPulseButtonVariant(button);
+
     return (
-        <Button
-            variant="contained"
-            sx={{ ...styles.promptButton, ...actionTrayStyles(button, button.disabled) }}
+        <PulseButton
+            variant={variant}
+            sx={styles.promptButton}
+            textSx={styles.promptButtonText}
+            text={button.text}
+            pulse={button.arg === 'pass' ? 'big' : 'small'}
             onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
             disabled={disabled}
-        >
-            <Box sx={styles.promptButtonText}>
-                {button.text}
-            </Box>
-        </Button>
+            cooldown={cooldown}
+        />
     );
 };
 
 export default CardActionTray;
-
-function setResourcePromptDoneButtonOverride(arg0: boolean) {
-    throw new Error('Function not implemented.');
-}

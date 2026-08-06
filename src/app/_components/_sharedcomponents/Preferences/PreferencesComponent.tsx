@@ -3,8 +3,6 @@ import { Box, Typography } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import VerticalTabs from '@/app/_components/_sharedcomponents/Preferences/_subComponents/VerticalTabs';
 import { IPreferenceProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { useRouter } from 'next/navigation';
 
 const PreferencesComponent: React.FC<IPreferenceProps> = ({
     isPreferenceOpen,
@@ -19,18 +17,15 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
     const [attemptingClose, setAttemptingClose] = useState(false);
     const [closePreferencesHandler, setClosePreferencesHandler] = useState<() => void>(() => () => undefined);
 
-    const router = useRouter();
-    const attemptBackButton = () => {
-        setClosePreferencesHandler(() => () => router.push('/'));
-        setAttemptingClose(true);
-    };
-
     // ------------------------STYLES------------------------//
     const styles = {
         containerStyle:{
             display: isPreferenceOpen ? 'block' : 'none',
             position: variant === 'homePage' ? { xs: 'relative', md: 'absolute' } : 'absolute',
             width: sidebarOpen ? { xs: '100%', md: 'calc(100% - min(20%, 280px))' } : '100%',
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                width: sidebarOpen ? 'calc(100% - min(20%, 280px))' : '100%',
+            },
             height: variant === 'homePage' ? { xs: 'auto', md: '100%' } : '100%',
             backgroundColor: variant ==='gameBoard' ? 'rgba(0, 0, 0, 0.5)' : 'none',
             zIndex: variant === 'homePage' ? 1 : 999,
@@ -105,11 +100,6 @@ const PreferencesComponent: React.FC<IPreferenceProps> = ({
         <>
             <Box sx={styles.containerStyle}>
                 <Box sx={styles.overlayStyle}>
-                    {variant === 'homePage' && (
-                        <Box sx={styles.titleContainer}>
-                            <PreferenceButton variant={'standard'} buttonFnc={attemptBackButton}/>
-                        </Box>
-                    )}
                     {title && (
                         <Box sx={styles.headerBox}>
                             <Typography variant="h1">{title}</Typography>

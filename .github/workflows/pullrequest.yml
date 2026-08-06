@@ -4,13 +4,18 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
+  merge_group:
+# this will cancel any PR runs that are superseded by a new commit so they don't waste time running tests that are no longer relevant
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   lint:
-    if: github.event.pull_request.draft == false
+    if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: "22.x"
           cache: "npm"
@@ -18,11 +23,11 @@ jobs:
       - run: npm run lint
 
   build:
-    if: github.event.pull_request.draft == false
+    if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: "22.x"
           cache: "npm"

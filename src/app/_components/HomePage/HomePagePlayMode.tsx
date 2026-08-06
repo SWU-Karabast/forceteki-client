@@ -369,6 +369,7 @@ const HomePagePlayMode: React.FC = () => {
                             errors={errorState.details}
                             matchConfig={deckPreferences.matchConfig}
                             modalType={errorState.modalType}
+                            footerLink={errorState.footerLink}
                         />
                         {showTestGames &&
                         <TabPanel index={showQuickMatch ? 2 : 1} value={value}>

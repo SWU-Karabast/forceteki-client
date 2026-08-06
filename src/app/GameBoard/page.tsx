@@ -1,42 +1,41 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Grid, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Grid, useMediaQuery } from '@mui/material';
 import ChatDrawer from '../_components/Gameboard/_subcomponents/Overlays/ChatDrawer/ChatDrawer';
 import OpponentCardTray from '../_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '../_components/Gameboard/Board/Board';
 import PlayerCardTray from '../_components/Gameboard/PlayerCardTray/PlayerCardTray';
 import { useGame } from '../_contexts/Game.context';
-import { useUser } from '../_contexts/User.context';
 import PopupShell from '../_components/_sharedcomponents/Popup/Popup';
 import PreferencesComponent from '@/app/_components/_sharedcomponents/Preferences/PreferencesComponent';
 import { useRouter } from 'next/navigation';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
-import { useCosmetics } from '../_contexts/CosmeticsContext';
+import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { Play } from 'next/font/google';
-import RichText from '../_components/_sharedcomponents/RichText/RichText';
 
 const GameBoard = () => {
-    const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator, sendGameMessage } = useGame();
-    const { user } = useUser();
+    const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
     const router = useRouter();
-    const { getBackground } = useCosmetics();
     const sidebarState = localStorage.getItem('sidebarState') !== null ? localStorage.getItem('sidebarState') === 'true' : true;
     const [sidebarOpen, setSidebarOpen] = useState(sidebarState);
+    const isMobileLandscape = useMediaQuery('(orientation: landscape) and (max-width: 932px)');
     const [isPreferenceOpen, setPreferenceOpen] = useState(false);
     const [userClosedWinScreen, setUserClosedWinScreen] = useState(false);
-    const [isConcedeConfirmOpen, setIsConcedeConfirmOpen] = useState(false);
-
-    // Playmat and Background Logic
-    const playerUser = gameState?.players[connectedPlayer]?.user;
-    const background = getBackground(isSpectator ? null : playerUser?.cosmetics?.background ?? null);
-    // const playMatsDisabled = isSpectator ? true : playerUser?.cosmetics?.disablePlaymats ?? true;
-    // const myPlaymatId = !playMatsDisabled ? playerUser?.cosmetics?.playmat : 'none';
+    const user = gameState?.players[connectedPlayer]?.user;
+    const backgroundPath = (isSpectator ? undefined : user?.cosmetics?.background?.path) ?? s3ImageURL('ui/board-background-1.webp');
+    // const playMatsDisabled = isSpectator ? true : user?.cosmetics?.disablePlaymats ?? true;
+    // const myPlaymatId = !playMatsDisabled ? user?.cosmetics?.playmat : 'none';
     // const myPlaymat = myPlaymatId && myPlaymatId !== 'none' ? getPlaymat(myPlaymatId) : null;
-    const opponentId = getOpponent(connectedPlayer);
-    const opponentUser = gameState?.players[opponentId]?.user;
+    // const opponentUser = gameState?.players[getOpponent(connectedPlayer)].user;
     // const theirPlaymatId = !playMatsDisabled ? opponentUser?.cosmetics?.playmat : null;
-    // const theirPlaymat = !playMatsDisabled && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+    // const theirPlaymat = !playMatsDisabled && theirPlaymatId && theirPlaymatId ? getPlaymat(theirPlaymatId) : null;
+
+    useEffect(() => {
+        if (isMobileLandscape) {
+            setSidebarOpen(true);
+        }
+    }, [isMobileLandscape]);
 
     useEffect(() => {
         if(lobbyState && !lobbyState.gameOngoing && (lobbyState.gameType !== MatchmakingType.Quick || lobbyState.winHistory.gamesToWinMode === GamesToWinMode.BestOfThree)) {
@@ -46,6 +45,7 @@ const GameBoard = () => {
 
     useEffect(() => {
         const hasWinners = !!gameState?.winners.length;
+        // open preferences automatically if game ended and user hasn't closed it themselves yet.
         if (hasWinners && !userClosedWinScreen) {
             setPreferenceOpen(true);
         } else if (!hasWinners && userClosedWinScreen) {
@@ -65,22 +65,28 @@ const GameBoard = () => {
         setPreferenceOpen(!isPreferenceOpen);
     };
 
+    // check if game ended already.
     const winners = !!gameState?.winners.length ? gameState.winners : undefined;
+    // const winners = ['order66']
+    // we set tabs
+    // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','keyboardShortcuts','soundOptions', 'gameOptions']
-        : ['currentGame','keyboardShortcuts','soundOptions', 'gameOptions'];
+        ? ['endGame','keyboardShortcuts','soundOptions','gameOptions']
+        : ['currentGame','keyboardShortcuts','soundOptions','gameOptions'];
 
-    // Bo3 Logic
+    // Get game number from winHistory for Bo3 mode
     const winHistory = lobbyState?.winHistory;
     const isBo3Mode = winHistory?.gamesToWinMode === GamesToWinMode.BestOfThree;
     const currentGameNumber = winHistory?.currentGameNumber || 1;
     const winsPerPlayer: Record<string, number> = winHistory?.winsPerPlayer || {};
     const setEndResult: IBo3SetEndResult | null = winHistory?.setEndResult || null;
     const isBo3SetComplete = isBo3Mode && !!setEndResult;
+
     const gameEndedTitle = isBo3Mode
         ? (isBo3SetComplete ? 'Best-of-Three Set Ended' : `Game ${currentGameNumber} ended`)
         : 'Game ended';
 
+    // Get display name for winner (spectator-aware)
     const getWinnerDisplayName = (winnerName: string): string => {
         if (isSpectator && gameState?.players) {
             const player1Name = gameState.players[connectedPlayer]?.user?.username;
@@ -97,17 +103,18 @@ const GameBoard = () => {
         return null;
     }
 
-    const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
-    const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
-
+    // ----------------------Styles-----------------------------//
     const styles = {
         mainBoxStyle: {
             pr: sidebarOpen ? { xs: 0, md: 'min(20%, 280px)' } : '0',
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                paddingRight: sidebarOpen ? 'min(20%, 280px)' : 0,
+            },
             width: '100%',
             transition: 'padding-right 0.3s ease-in-out',
             height: '100dvh',
             position: 'relative',
-            backgroundImage: `url(${background.path}?v=2)`,
+            backgroundImage: `url(${backgroundPath}?v=2)`,
             '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
             '-webkit-user-select': 'none',   /* Prevents image selection */
             userSelect: 'none',
@@ -116,55 +123,21 @@ const GameBoard = () => {
             display: 'flex',
             flexDirection: 'column',
         },
-        centralPromptContainer: {
-            position: 'absolute',
-            top: '48.6%',
-            left: sidebarOpen ? { xs: '50vw', md: 'calc(50vw - min(10%, 140px))' } : '50vw',
-            transform: 'translate(-50%, -50%)',
-            transition: 'left 0.3s ease-in-out',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '50vw',
-            pointerEvents: 'none',
-            zIndex: { xs: '2', md: '1' },
-        },
-        promptStyle: {
-            textAlign: 'center',
-            fontSize: '1.3em',
-            // media query to detect mobile in landscape mode. be aware that most devices will have 800px wide on landscape
-            // for this case we want to save as much space as possible
-            '@media (orientation: landscape) and (max-width:932px)': { fontSize: '1rem' },
-            textShadow: '1px 1px 6px black',
-            padding: '0.5rem',
-            position: 'relative',
-            borderRadius: '20px',
-            background: !menuTitle ? 'transparent' : promptTitle
-                ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)'
-                : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
-        },
-        promptShadow: {
-            position: 'absolute',
-            top: '27%',
-            left: 0,
-            width: '100%',
-            height: '60%',
-            zIndex: -1,
-            background: 'rgba(0, 0, 0, .9)',
-            filter: 'blur(10px)',
-            WebkitFilter: 'blur(10px)'
-        },
+
         playerPlaymat: {
             position: 'absolute',
             bottom: 0, // Touch bottom edge
             left: '2rem', // Add left margin to constrain width
             right: sidebarOpen ? { xs: '2rem', md: 'calc(min(20%, 280px) + 2rem)' } : '2rem', // Add right margin to match
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem',
+            },
             height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
-            borderRadius: '8px',
-            zIndex: 1,
+            borderRadius: '8px', // Add subtle rounded corners
+            zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
         },
@@ -173,15 +146,18 @@ const GameBoard = () => {
             top: 0, // Touch top edge
             left: '2rem', // Add left margin to constrain width
             right: sidebarOpen ? { xs: '2rem', md: 'calc(min(20%, 280px) + 2rem)' } : '2rem', // Add right margin to match
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                right: sidebarOpen ? 'calc(min(20%, 280px) + 2rem)' : '2rem',
+            },
             height: '47dvh', // Reduced height for middle spacing
             backgroundSize: 'cover', // Fill container width, crop overflow edges
             backgroundPosition: 'center center',
             backgroundRepeat: 'no-repeat',
-            borderRadius: '8px',
-            zIndex: 1,
+            borderRadius: '8px', // Add subtle rounded corners
+            zIndex: 1, // Above background and darkening overlay, below UI elements
             transition: 'right 0.3s ease-in-out',
             pointerEvents: 'none',
-        },
+        }
     };
 
     return (
@@ -212,7 +188,6 @@ const GameBoard = () => {
                 <Box sx={{ height: '15dvh' }}>
                     <OpponentCardTray
                         trayPlayer={getOpponent(connectedPlayer)}
-                        preferenceToggle={handlePreferenceToggle}
                     />
                 </Box>
                 <Box sx={{ height: '67dvh', position: 'relative', zIndex: 2 }}>
@@ -221,7 +196,6 @@ const GameBoard = () => {
                 <Box sx={{ height: '18dvh' }}>
                     <PlayerCardTray
                         trayPlayer={connectedPlayer}
-                        toggleSidebar={toggleSidebar}
                     />
                 </Box>
             </Box>
@@ -229,14 +203,8 @@ const GameBoard = () => {
             <ChatDrawer
                 sidebarOpen={sidebarOpen}
                 toggleSidebar={toggleSidebar}
+                preferenceToggle={handlePreferenceToggle}
             />
-
-            <Box sx={styles.centralPromptContainer}>
-                <Box sx={styles.promptStyle}>
-                    {menuTitle && <RichText text={menuTitle}/>}
-                    <Box sx={styles.promptShadow}/>
-                </Box>
-            </Box>
 
             <PopupShell sidebarOpen={sidebarOpen}/>
             {isPreferenceOpen && <PreferencesComponent

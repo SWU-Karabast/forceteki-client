@@ -3,7 +3,6 @@ import React from 'react';
 import { Box, Typography, Divider, List, ListItem, ListItemText } from '@mui/material';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useRouter } from 'next/navigation';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 
 const tosBlocks = [
     { type: 'title', text: 'Karabast.net – Terms of Service' },
@@ -84,12 +83,6 @@ const TermsOfService: React.FC = () => {
             pt: { xs: '10px', md: 0 },
             zIndex: 2,
         },
-        backButton: {
-            position: 'absolute' as const,
-            left: '0',
-            top: '-60px',
-            zIndex: 3,
-        },
         brand: {
             fontSize: '3.0em',
             fontWeight: 600,
@@ -139,13 +132,6 @@ const TermsOfService: React.FC = () => {
 
             <Box sx={styles.container}>
                 <Box sx={styles.cardWrapper}>
-                    <Box sx={styles.backButton}>
-                        <PreferenceButton
-                            variant={'standard'}
-                            text="Back"
-                            buttonFnc={handleExit}
-                        />
-                    </Box>
                     <Box sx={styles.card}>
                         <Typography variant="h4" component="h1" gutterBottom>
                             Terms of Service

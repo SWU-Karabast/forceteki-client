@@ -8,7 +8,9 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "npx tsc --noemit && next lint",
-		"lint:fix": "npx tsc --noemit && next lint --fix"
+		"lint:fix": "npx tsc --noemit && next lint --fix",
+		"storybook": "storybook dev -p 6006 --no-version-updates",
+		"build-storybook": "storybook build"
 	},
 	"dependencies": {
 		"@aws-sdk/client-dynamodb": "^3.917.0",
@@ -34,6 +36,10 @@
 		"uuid": "^11.0.5"
 	},
 	"devDependencies": {
+		"@storybook/addon-a11y": "^10.4.1",
+		"@storybook/addon-docs": "^10.4.1",
+		"@storybook/addon-onboarding": "^10.4.1",
+		"@storybook/nextjs": "^10.4.1",
 		"@stylistic/eslint-plugin": "^2.12.1",
 		"@types/jsonwebtoken": "^9.0.9",
 		"@types/node": "^20",
@@ -42,6 +48,7 @@
 		"eslint": "^8",
 		"eslint-config-next": "14.2.14",
 		"eslint-plugin-next": "^0.0.0",
+		"storybook": "^10.4.1",
 		"typescript": "^5"
 	},
 	"overrides": {

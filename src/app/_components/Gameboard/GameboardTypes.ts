@@ -15,16 +15,15 @@ export interface IParticipant {
 export interface IChatDrawerProps {
     sidebarOpen: boolean;
     toggleSidebar: () => void;
+    preferenceToggle: () => void;
 }
 
 export interface IPlayerCardTrayProps {
     trayPlayer: string;
-    toggleSidebar: () => void;
 }
 
 export interface IOpponentCardTrayProps {
     trayPlayer: string;
-    preferenceToggle: () => void;
 }
 
 export interface IBoardProps {
@@ -56,4 +55,5 @@ export interface IPlayerHandProps {
     maxCardOverlapPercent?: number; 
     scrollbarEnabled?: boolean;
     cardback?: string;
+    showCardCount?: boolean;
 }
