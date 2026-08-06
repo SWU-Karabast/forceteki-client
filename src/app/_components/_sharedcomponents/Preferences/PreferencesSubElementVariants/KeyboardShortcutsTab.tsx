@@ -47,7 +47,7 @@ export enum ShortcutLabels {
 function KeyboardShortcutsTab({ setHasNewChanges }: KeyboardShortcutsTabProps) {
     const { user, updateUserPreferences } = useUser();
 
-    const isAnonymous = !user || !user.email;
+    const isAnonymous = !user || !user.authenticated;
     
     const defaultShortcuts = getDefaultShortcuts();
 

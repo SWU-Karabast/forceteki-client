@@ -23,7 +23,7 @@ export const useKeyboardShortcuts = (callbacks: ShortcutCallbacks) => {
     const { user } = useUser();
     
     // Define the guest check
-    const isAnonymous = !user || !user.email;
+    const isAnonymous = !user || !user.authenticated;
 
     // Use a ref so we don't constantly re-bind the event listener on every render
     const callbacksRef = useRef(callbacks);
