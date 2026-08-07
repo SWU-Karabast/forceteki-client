@@ -18,14 +18,30 @@ export enum DecklistLocation {
     Deck = 'deck'
 }
 
+export enum IllegalInFormatReason {
+
+    /** Card's set is not legal in this format (outside the rotation, never legal, or an unreleased preview set). */
+    NotLegalInFormat = 'notLegalInFormat',
+
+    /** Card is on this format's suspension list. */
+    Suspended = 'suspended',
+
+    /** Card's set code is not recognized. */
+    UnknownSet = 'unknownSet',
+}
+
 export interface ICardIdAndName {
     id: string;
     name: string;
 }
 
+export interface IIllegalCardEntry extends ICardIdAndName {
+    reason?: IllegalInFormatReason;
+}
+
 export interface IDeckValidationFailures {
     [DeckValidationFailureReason.NotImplemented]?: ICardIdAndName[];
-    [DeckValidationFailureReason.IllegalInFormat]?: ICardIdAndName[];
+    [DeckValidationFailureReason.IllegalInFormat]?: IIllegalCardEntry[];
     [DeckValidationFailureReason.TooManyLeaders]?: boolean;
     [DeckValidationFailureReason.InvalidDecklistLocation]?: { card: ICardIdAndName; location: DecklistLocation }[];
     [DeckValidationFailureReason.InvalidDeckData]?: boolean;

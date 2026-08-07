@@ -30,7 +30,10 @@ export enum DeckSource {
     KyberDecks = 'KyberDecks',
     CardCore = 'CardCore',
     HoloScan = 'HoloScan',
-    Melee = 'Melee'
+    Melee = 'Melee',
+    Niamos = 'Niamos',
+    SWUPedia = 'SWUPedia',
+    SithVault = 'SithVault'
 }
 
 export interface IDeckData {

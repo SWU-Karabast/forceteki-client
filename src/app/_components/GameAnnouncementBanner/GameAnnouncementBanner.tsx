@@ -21,9 +21,8 @@ export type GameAnnouncement =
  * Only one announcement is shown at a time — overwrite this value when rolling out the next one.
  */
 export const CurrentGameAnnouncement: GameAnnouncement | undefined = {
-    kind: 'newFormat',
-    format: SwuGameFormat.Limited,
-    cardPool: CardPool.NextSet,
+    kind: 'custom',
+    message: 'Ashes of the Empire is now legal in Premier!',
 };
 
 interface IGameAnnouncementBannerProps {
@@ -44,7 +43,7 @@ const GameAnnouncementBanner: React.FC<IGameAnnouncementBannerProps> = ({
         text = `${FormatLabels[format]} format${cardPool === CardPool.NextSet ? ' with Next Set cards' : ''} is now available${isOnlyInLobby ? ' in Lobbies' : ''}!`;
     }
 
-    return <Typography variant="body1" sx={{ color: '#ffdd57', textAlign: 'center', mb: '1rem' }}>
+    return <Typography variant="body1" sx={{ color: '#88b0cc', textAlign: 'center', mb: '1rem' }}>
         {text}
     </Typography>
 }

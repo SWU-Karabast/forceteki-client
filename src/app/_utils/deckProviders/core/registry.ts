@@ -6,7 +6,9 @@ import { HoloscanDeckProvider } from '../HoloscanDeckProvider';
 import { KyberdecksDeckProvider } from '../KyberdecksDeckProvider';
 import { MeleeDeckProvider } from '../MeleeDeckProvider';
 import { MySwuDeckProvider } from '../MySwuDeckProvider';
+import { NiamosDeckProvider } from '../NiamosDeckProvider';
 import { ProtectThePodDeckProvider } from '../ProtectThePodDeckProvider';
+import { SithvaultDeckProvider } from '../SithvaultDeckProvider';
 import { SwubaseDeckProvider } from '../SwubaseDeckProvider';
 import { SwucardhubDeckProvider } from '../SwucardhubDeckProvider';
 import { SwudbDeckProvider } from '../SwudbDeckProvider';
@@ -14,6 +16,7 @@ import { SwuforgeDeckProvider } from '../SwuforgeDeckProvider';
 import { SwumetastatsDeckProvider } from '../SwumetastatsDeckProvider';
 import { SwUnlimitedDbDeckProvider } from '../SwUnlimitedDbDeckProvider';
 import { SwustatsDeckProvider } from '../SwustatsDeckProvider';
+import { SwupediaDeckProvider } from '../SwupediaDeckProvider';
 import { buildTagStyle } from './tagStyle';
 import { DeckFetchError, DeckFetchErrorReason } from './types';
 
@@ -38,11 +41,14 @@ const providers: readonly DeckProviderBase[] = [
     new SwubaseDeckProvider(),
     new SwumetastatsDeckProvider(),
     new MySwuDeckProvider(),
+    new NiamosDeckProvider(),
     new ProtectThePodDeckProvider(),
     new SwuforgeDeckProvider(),
     new KyberdecksDeckProvider(),
     new CardcoreDeckProvider(),
     new HoloscanDeckProvider(),
+    new SwupediaDeckProvider(),
+    new SithvaultDeckProvider(),
 ];
 
 /**
