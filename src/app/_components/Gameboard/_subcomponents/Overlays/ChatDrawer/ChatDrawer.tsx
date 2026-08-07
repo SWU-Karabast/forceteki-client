@@ -549,14 +549,12 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                             <ListItemText>Leave game</ListItemText>
                         </MenuItem>
                         {!isSpectator && (
-
                             <MenuItem onClick={handleConcedeClick}>
                                 <ListItemIcon sx={styles.menuIcon}>
                                     <OutlinedFlagIcon fontSize="small" />
                                 </ListItemIcon>
                                 <ListItemText>Concede game</ListItemText>
                             </MenuItem>
-
                         )}
                     </Menu>
                 </Box>
