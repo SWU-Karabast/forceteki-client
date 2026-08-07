@@ -301,6 +301,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const isMobileLandscape = useMediaQuery('(orientation: landscape) and (max-width: 932px)');
+    const isLeaveGameMenuItemVisible = useMediaQuery('(orientation: landscape) and (max-width: 875px)');
     const usesTemporaryDrawer = isMobile && !isMobileLandscape;
     const {
         gameState,
@@ -538,7 +539,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</ListItemText>
                             </MenuItem>
                         )}
-                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                        {(!isSpectator || isLeaveGameMenuItemVisible) && (
+                            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                        )}
                         <MenuItem onClick={handleLeaveGameClick} sx={styles.menuLeaveGameAction}>
                             <ListItemIcon sx={styles.menuIcon}>
                                 <LogoutIcon fontSize="small" />
