@@ -48,8 +48,6 @@ const styles = {
             backgroundColor: 'rgba(0, 0, 0, 0.25)',
         },
         '& .MuiDrawer-paper': {
-            containerName: 'chat-drawer',
-            containerType: 'inline-size',
             backgroundColor: { xs: '#000000E6', md: '#000000CC' },
             color: '#fff',
             display: 'flex',
@@ -163,19 +161,20 @@ const styles = {
             marginLeft: 0,
             marginRight: '6px',
         },
-        '@container chat-drawer (max-width: 174.99px)': {
-            padding: '8px',
-            borderRadius: '50%',
-            '& .MuiButton-startIcon': {
-                marginRight: 0,
-            },
-            '& .undo-button-label': {
-                display: 'none',
-            },
-        },
     },
     headerCircularButton: {
         padding: '8px',
+    },
+    headerLeaveGameAction: {
+        '@media (orientation: landscape) and (max-width: 875px)': {
+            display: 'none',
+        },
+    },
+    menuLeaveGameAction: {
+        display: 'none',
+        '@media (orientation: landscape) and (max-width: 875px)': {
+            display: 'flex',
+        },
     },
     quickUndoButtonEnabled: {
         borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -291,7 +290,7 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
                     startIcon={buttonIcon}
                     sx={[styles.drawerActionButton, styles.undoActionButton, undoButtonStyle]}
                 >
-                    <span className="undo-button-label">{buttonText}</span>
+                    {buttonText}
                 </Button>
             </span>
         </Tooltip>
@@ -495,7 +494,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                         <IconButton
                             aria-label="Leave game"
                             onClick={handleLeaveGameClick}
-                            sx={[styles.drawerActionButton, styles.headerCircularButton]}
+                            sx={[styles.drawerActionButton, styles.headerCircularButton, styles.headerLeaveGameAction]}
                         >
                             <LogoutIcon />
                         </IconButton>
@@ -539,16 +538,22 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</ListItemText>
                             </MenuItem>
                         )}
+                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                        <MenuItem onClick={handleLeaveGameClick} sx={styles.menuLeaveGameAction}>
+                            <ListItemIcon sx={styles.menuIcon}>
+                                <LogoutIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText>Leave game</ListItemText>
+                        </MenuItem>
                         {!isSpectator && (
-                            <>
-                                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
-                                <MenuItem onClick={handleConcedeClick}>
-                                    <ListItemIcon sx={styles.menuIcon}>
-                                        <OutlinedFlagIcon fontSize="small" />
-                                    </ListItemIcon>
-                                    <ListItemText>Concede game</ListItemText>
-                                </MenuItem>
-                            </>
+
+                            <MenuItem onClick={handleConcedeClick}>
+                                <ListItemIcon sx={styles.menuIcon}>
+                                    <OutlinedFlagIcon fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Concede game</ListItemText>
+                            </MenuItem>
+
                         )}
                     </Menu>
                 </Box>
