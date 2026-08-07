@@ -527,14 +527,16 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</ListItemText>
                             </MenuItem>
                         )}
-                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
                         {!isSpectator && (
-                            <MenuItem onClick={handleConcedeClick}>
-                                <ListItemIcon sx={styles.menuIcon}>
-                                    <OutlinedFlagIcon fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText>Concede game</ListItemText>
-                            </MenuItem>
+                            <>
+                                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                                <MenuItem onClick={handleConcedeClick}>
+                                    <ListItemIcon sx={styles.menuIcon}>
+                                        <OutlinedFlagIcon fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Concede game</ListItemText>
+                                </MenuItem>
+                            </>
                         )}
                     </Menu>
                 </Box>
