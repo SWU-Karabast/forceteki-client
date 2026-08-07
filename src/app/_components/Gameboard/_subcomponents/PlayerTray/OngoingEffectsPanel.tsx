@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Popover, Typography } from '@mui/material';
+import { Box, Popover, Typography, useMediaQuery } from '@mui/material';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useOngoingEffectHighlight } from '@/app/_contexts/OngoingEffectHighlight.context';
 import { useOverflow } from '@/app/_hooks/useOverflow';
@@ -10,7 +11,6 @@ import {
     ICardData,
     IOngoingEffectSummary,
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 
 
@@ -28,7 +28,9 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
         [ongoingEffects, trayPlayer],
     );
 
-    const { isPortrait } = useScreenOrientation();
+    // Touch devices open the preview via tap and need it interactive; mouse (hover) devices need it
+    // pointer-transparent so hovering the popover doesn't steal the pointer off the tile and flicker it closed.
+    const isCoarsePointer = useMediaQuery('(pointer: coarse)');
     // group effects by source card
     const effectGroups: IOngoingEffectSummary[][] = React.useMemo(() => {
         const bySource = new Map<string, IOngoingEffectSummary[]>();
@@ -49,7 +51,6 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
         ? 'var(--initiative-blue)'
         : 'var(--initiative-red)';
 
-    console.log(effectGroups)
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [hoveredGroup, setHoveredGroup] = React.useState<IOngoingEffectSummary[] | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -174,6 +175,22 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
             padding: '0 3px',
             userSelect: 'none',
         },
+        hiddenBadge: {
+            position: 'absolute',
+            top: '-4px',
+            left: '-4px',
+            width: 'clamp(0.9rem, 2.4vmin, 1.1rem)',
+            height: 'clamp(0.9rem, 2.4vmin, 1.1rem)',
+            borderRadius: '50%',
+            background: 'black',
+            border: `1.5px solid ${borderColor}`,
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            userSelect: 'none',
+            '& svg': { fontSize: 'clamp(0.55rem, 1.5vmin, 0.7rem)' },
+        },
         previewCard: {
             maxWidth: 'min(20rem, 80vw)',
             display: 'flex',
@@ -186,6 +203,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
             color: 'white',
             outlineOffset: '-1px',
             backdropFilter: 'blur(0px)',
+            marginLeft: '0.5em', // nudge the popover off the on-board thumbnail (always opens to the right)
         },
         previewTitle: {
             fontSize: '0.95rem',
@@ -205,6 +223,19 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
             lineHeight: 1.4,
             color: 'rgba(255, 255, 255, 0.85)',
             margin: 0,
+        },
+        visibilityNote: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.3rem',
+            fontSize: '0.7rem',
+            color: 'rgba(255, 255, 255, 0.55)',
+            margin: 0,
+            marginTop: '-0.5rem',
+            paddingTop: '0.5rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+            '& svg': { fontSize: '0.85rem' },
         },
         previewTargetsHeader: {
             fontSize: '0.7rem',
@@ -235,6 +266,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                     );
                     const uniqueTargetCount = countVisibleTargets(group);
                     const isEvent = source.type === CardType.Event;
+                    const hiddenFromOpponent = Boolean(group[0].hiddenFromOpponent);
                     return (
                         <Box
                             key={group[0].sourceCardUuid}
@@ -248,8 +280,13 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                             onClick={(e) => handleTap(e, group)}
                             data-effect-uuid={group[0].sourceCardUuid}
                             data-card-name={source.sourceTitle}
-                            aria-label={`Ongoing effects from ${source.sourceTitle}: ${group.length} effect${group.length === 1 ? '' : 's'}, ${uniqueTargetCount} visible target${uniqueTargetCount === 1 ? '' : 's'}`}
+                            aria-label={`Ongoing effects from ${source.sourceTitle}: ${group.length} effect${group.length === 1 ? '' : 's'}, ${uniqueTargetCount} visible target${uniqueTargetCount === 1 ? '' : 's'}${hiddenFromOpponent ? ', only visible to you' : ''}`}
                         >
+                            {hiddenFromOpponent && (
+                                <Box sx={styles.hiddenBadge} aria-hidden="true">
+                                    <VisibilityOffIcon />
+                                </Box>
+                            )}
                             {uniqueTargetCount > 0 && (
                                 <Box sx={styles.targetCountBadge}>{uniqueTargetCount}</Box>
                             )}
@@ -264,9 +301,9 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                 onClose={handlePreviewClose}
                 // Tooltip is non-interactive; suppress focus management to avoid aria-hidden warnings on close.
                 disableAutoFocus
-                sx={{ pointerEvents: isPortrait ? 'auto' : 'none' }}
-                anchorOrigin={{ vertical: 'center', horizontal: isPortrait ? 'left' : 'right' }}
-                transformOrigin={{ vertical: 'center', horizontal: isPortrait ? 'right' : 'left' }}
+                sx={{ pointerEvents: isCoarsePointer ? 'auto' : 'none' }}
+                anchorOrigin={{ vertical: 'center', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'center', horizontal: 'left' }}
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}
             >
                 {hoveredGroup && (
@@ -288,6 +325,12 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                         <Typography sx={styles.previewTargetsHeader}>
                             {hoveredTargetsCount === 0 ? 'No visible targets' : `Targets (${hoveredTargetsCount})`}
                         </Typography>
+                        {hoveredGroup[0].hiddenFromOpponent && (
+                            <Typography sx={styles.visibilityNote}>
+                                <VisibilityOffIcon />
+                                Only visible to you
+                            </Typography>
+                        )}
                     </Box>
                 )}
             </Popover>
