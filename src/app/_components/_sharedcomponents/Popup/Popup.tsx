@@ -32,7 +32,13 @@ export const getPopupPosition = (type: PopupType, data: PopupData, index: number
         top: '50%',
         transform: 'translate(-50%, -50%)',
         minWidth: '80%',
-        width: { xs: 'calc(100dvw - 2rem)', md: '80%' }
+        width: { xs: 'calc(100dvw - 2rem)', md: '80%' },
+        '@media (orientation: landscape) and (max-width: 932px)': {
+            // The persistent chat drawer occupies part of PopupShell in mobile
+            // landscape, so size the popup from that remaining space instead
+            // of the full viewport.
+            width: 'calc(100% - 2rem)',
+        },
     };
 
     // const pilePosition = {

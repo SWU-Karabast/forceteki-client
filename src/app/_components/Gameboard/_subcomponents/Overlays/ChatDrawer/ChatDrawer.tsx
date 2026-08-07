@@ -56,6 +56,11 @@ const styles = {
             padding: '0.75em',
             overflow: { xs: 'visible', md: 'hidden' },
             borderLeft: drawerBorder,
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                backgroundColor: '#000000CC',
+                width: 'min(20%, 280px)',
+                overflow: 'hidden',
+            },
         },
     },
     drawerToggle: {
@@ -100,6 +105,9 @@ const styles = {
     drawerToggleClosed: { right: 0, '&::after': { transform: 'rotate(45deg)' } },
     drawerToggleOpen: {
         right: { xs: '200px', md: 'min(20%, 280px)' },
+        '@media (orientation: landscape) and (max-width: 932px)': {
+            right: 'min(20%, 280px)',
+        },
         '&::before': {
             right: '-1px',
             backgroundColor: { md: '#000000CC' },
@@ -120,7 +128,7 @@ const styles = {
     headerActionsStyle: {
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: '0.35rem',
         ml: 'auto',
     },
     drawerActionButton: {
@@ -153,6 +161,9 @@ const styles = {
             marginLeft: 0,
             marginRight: '6px',
         },
+    },
+    headerCircularButton: {
+        padding: '8px',
     },
     quickUndoButtonEnabled: {
         borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -278,9 +289,12 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
 const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, preferenceToggle }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const isMobileLandscape = useMediaQuery('(orientation: landscape) and (max-width: 932px)');
+    const usesTemporaryDrawer = isMobile && !isMobileLandscape;
     const {
         gameState,
         gameMessages,
+        sendMessage,
         sendGameMessage,
         sendLobbyMessage,
         isSpectator,
@@ -289,6 +303,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         getOpponent,
         isAnonymousPlayer,
         hasChatDisabled,
+        gameIsEnded,
     } = useGame();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
     const [chatMessage, setChatMessage] = useState('')
@@ -391,7 +406,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     }
 
     const closeMobileDrawer = () => {
-        if (isMobile) {
+        if (usesTemporaryDrawer) {
             handleDrawerClose();
         }
     }
@@ -406,6 +421,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         handleMenuClose();
         closeMobileDrawer();
         if (isSpectator){
+            router.push('/');
+        } else if (gameIsEnded()) {
+            sendMessage('manualDisconnect');
             router.push('/');
         } else {
             openPopup('leaveGame', {
@@ -459,15 +477,24 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const drawerContent = (
         <>
             <Box sx={styles.headerBoxStyle}>
+                {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
                 <Box sx={styles.headerActionsStyle}>
-                    {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
+                    <Tooltip title="Leave game">
+                        <IconButton
+                            aria-label="Leave game"
+                            onClick={handleLeaveGameClick}
+                            sx={[styles.drawerActionButton, styles.headerCircularButton]}
+                        >
+                            <LogoutIcon />
+                        </IconButton>
+                    </Tooltip>
                     <IconButton
                         aria-label="game menu"
                         aria-controls={isMenuOpen ? 'chat-drawer-game-menu' : undefined}
                         aria-haspopup="true"
                         aria-expanded={isMenuOpen ? 'true' : undefined}
                         onClick={handleMenuOpen}
-                        sx={styles.drawerActionButton}
+                        sx={[styles.drawerActionButton, styles.headerCircularButton]}
                     >
                         <MoreHorizIcon />
                     </IconButton>
@@ -500,21 +527,17 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</ListItemText>
                             </MenuItem>
                         )}
-                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
                         {!isSpectator && (
-                            <MenuItem onClick={handleConcedeClick}>
-                                <ListItemIcon sx={styles.menuIcon}>
-                                    <OutlinedFlagIcon fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText>Concede game</ListItemText>
-                            </MenuItem>
+                            <>
+                                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                                <MenuItem onClick={handleConcedeClick}>
+                                    <ListItemIcon sx={styles.menuIcon}>
+                                        <OutlinedFlagIcon fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Concede game</ListItemText>
+                                </MenuItem>
+                            </>
                         )}
-                        <MenuItem onClick={handleLeaveGameClick}>
-                            <ListItemIcon sx={styles.menuIcon}>
-                                <LogoutIcon fontSize="small" />
-                            </ListItemIcon>
-                            <ListItemText>Leave game</ListItemText>
-                        </MenuItem>
                     </Menu>
                 </Box>
             </Box>
@@ -526,11 +549,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 chatMessage={chatMessage}
                 handleChatOnChange={handleChatOnChange}
                 handleChatSubmit={handleGameChat}
+                pauseAutoScroll
             />
 
-            <LobbyConfirmationPopupModule title={'Concede Game Confirmation'} message={'Are you sure you wish to concede? This game will count as a loss.'} display={showConcedeConfirmation} onConfirmation={handleConfirmConcede} handleCancel={handleCancelConcede}/>
-            <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showDisableChatConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
-            <PlayerReportDialog open={playerReportOpen} onClose={handleClosePlayerReport}/>
         </>
     );
 
@@ -541,11 +562,14 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 anchor="right"
                 open={sidebarOpen}
                 onClose={handleDrawerClose}
-                variant={isMobile ? 'temporary' : 'persistent'}
+                variant={usesTemporaryDrawer ? 'temporary' : 'persistent'}
                 sx={styles.drawerStyle}
             >
                 {drawerContent}
             </Drawer>
+            <LobbyConfirmationPopupModule title={'Concede Game Confirmation'} message={'Are you sure you wish to concede? This game will count as a loss.'} display={showConcedeConfirmation} onConfirmation={handleConfirmConcede} handleCancel={handleCancelConcede}/>
+            <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showDisableChatConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
+            <PlayerReportDialog open={playerReportOpen} onClose={handleClosePlayerReport}/>
         </>
     );
 };
