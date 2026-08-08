@@ -172,7 +172,7 @@ export const useDeckManagement = (): IDeckManagementState => {
             }
 
             // Mock SWU Stats data for dev user "ThisIsTheWay"
-            if (process.env.NODE_ENV === 'development' && user.id === 'th3w4y') {
+            if (process.env.NODE_ENV === 'development' && user.provider === 'dev-user' && user.username === 'ThisIsTheWay') {
                 console.log('[DEV] Using mock SWU Stats data for ThisIsTheWay');
                 setIsSwuStatsLinked(true);
                 setIsLoadingSwuStatsDecks(true);
