@@ -13,6 +13,7 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
+import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -28,6 +29,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+    const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
     const isMobilePortrait = useMediaQuery('(orientation: portrait) and (max-width:932px)');
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
@@ -243,12 +245,14 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            transition: 'box-shadow 0.25s ease',
             cursor: clickDisabled() ? 'default' : 'pointer',
             position: 'relative',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
-            WebkitTouchCallout: 'none',
             userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
         },
         deployedPlaceholder: {
             backgroundColor: 'transparent',
@@ -362,6 +366,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundRepeat: 'no-repeat',
             imageRendering: '-webkit-optimize-contrast',
             backfaceVisibility: 'hidden',
+            userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
             aspectRatio: aspectRatio,
             width: width,
         },
@@ -515,7 +522,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         <Box sx={{ width: '100%' }}>
             {capturedCards.length > 0 && isConnectedPlayer && capturedCardsDecoration}
             <Box
-                sx={isDeployed ? styles.deployedPlaceholder : styles.card}
+                sx={isDeployed ? styles.deployedPlaceholder : [styles.card, highlightSx]}
                 onClick={handleClick}
                 aria-owns={open ? 'mouse-over-popover' : undefined}
                 aria-haspopup="true"

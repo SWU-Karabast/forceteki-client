@@ -128,7 +128,7 @@ const styles = {
     headerActionsStyle: {
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: '0.35rem',
         ml: 'auto',
     },
     drawerActionButton: {
@@ -161,6 +161,9 @@ const styles = {
             marginLeft: 0,
             marginRight: '6px',
         },
+    },
+    headerCircularButton: {
+        padding: '8px',
     },
     quickUndoButtonEnabled: {
         borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -291,6 +294,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const {
         gameState,
         gameMessages,
+        sendMessage,
         sendGameMessage,
         sendLobbyMessage,
         isSpectator,
@@ -299,6 +303,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         getOpponent,
         isAnonymousPlayer,
         hasChatDisabled,
+        gameIsEnded,
     } = useGame();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
     const [chatMessage, setChatMessage] = useState('')
@@ -417,6 +422,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
         closeMobileDrawer();
         if (isSpectator){
             router.push('/');
+        } else if (gameIsEnded()) {
+            sendMessage('manualDisconnect');
+            router.push('/');
         } else {
             openPopup('leaveGame', {
                 uuid: `${uuidv4()}`,
@@ -469,15 +477,24 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const drawerContent = (
         <>
             <Box sx={styles.headerBoxStyle}>
+                {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
                 <Box sx={styles.headerActionsStyle}>
-                    {shouldShowUndo && (<UndoButton disabledOverride={!isUndoEnabled} />)}
+                    <Tooltip title="Leave game">
+                        <IconButton
+                            aria-label="Leave game"
+                            onClick={handleLeaveGameClick}
+                            sx={[styles.drawerActionButton, styles.headerCircularButton]}
+                        >
+                            <LogoutIcon />
+                        </IconButton>
+                    </Tooltip>
                     <IconButton
                         aria-label="game menu"
                         aria-controls={isMenuOpen ? 'chat-drawer-game-menu' : undefined}
                         aria-haspopup="true"
                         aria-expanded={isMenuOpen ? 'true' : undefined}
                         onClick={handleMenuOpen}
-                        sx={styles.drawerActionButton}
+                        sx={[styles.drawerActionButton, styles.headerCircularButton]}
                     >
                         <MoreHorizIcon />
                     </IconButton>
@@ -510,21 +527,17 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</ListItemText>
                             </MenuItem>
                         )}
-                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
                         {!isSpectator && (
-                            <MenuItem onClick={handleConcedeClick}>
-                                <ListItemIcon sx={styles.menuIcon}>
-                                    <OutlinedFlagIcon fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText>Concede game</ListItemText>
-                            </MenuItem>
+                            <>
+                                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                                <MenuItem onClick={handleConcedeClick}>
+                                    <ListItemIcon sx={styles.menuIcon}>
+                                        <OutlinedFlagIcon fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Concede game</ListItemText>
+                                </MenuItem>
+                            </>
                         )}
-                        <MenuItem onClick={handleLeaveGameClick}>
-                            <ListItemIcon sx={styles.menuIcon}>
-                                <LogoutIcon fontSize="small" />
-                            </ListItemIcon>
-                            <ListItemText>Leave game</ListItemText>
-                        </MenuItem>
                     </Menu>
                 </Box>
             </Box>
