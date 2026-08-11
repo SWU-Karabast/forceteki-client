@@ -474,7 +474,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'relative',
             mb: isConnectedPlayer ? '-4%' : '0px',
             mt: isConnectedPlayer ? '0px' : '-4%',
-            zIndex: 1
+            // sits above the adjacent upgrade strip so the "Captured" divider stays fully legible
+            zIndex: 2
         }}>
             {!isConnectedPlayer && (
                 <Typography sx={styles.capturedCardsDivider}>
@@ -529,11 +530,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             mt: isConnectedPlayer ? '0px' : '-4%',
             zIndex: 1
         }}>
-            {!isConnectedPlayer && (
-                <Typography sx={styles.capturedCardsDivider}>
-                    Upgrades
-                </Typography>
-            )}
             {upgrades.map((upgrade: ICardData) => (
                 <Box
                     key={`base-upgrade-${upgrade.uuid}`}
@@ -564,11 +560,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     </Typography>
                 </Box>
             ))}
-            {isConnectedPlayer && (
-                <Typography sx={styles.capturedCardsDivider}>
-                    Upgrades
-                </Typography>
-            )}
         </Box>
     )
 
