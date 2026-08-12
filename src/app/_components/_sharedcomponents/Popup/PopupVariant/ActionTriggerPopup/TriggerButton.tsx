@@ -13,6 +13,9 @@ type SourceCardImageData = Parameters<typeof s3CardImageURL>[0];
 export const STACK_OFFSET_PX = 10;
 export const STACK_SCALE = 0.92; // scale factor for each stacked card; smaller = more obvious stack
 
+// the card's width, exported so sibling controls (e.g. a Pass button beneath) can match it exactly
+export const CARD_WIDTH = 'clamp(116px, 16vw, 10rem)';
+
 const styles = {
     // the flex item. It is always exactly one card in size (same as an ungrouped trigger) so the row
     // stays aligned; the stacked cards and count badge overflow upward beyond it without affecting layout.
@@ -20,8 +23,8 @@ const styles = {
         position: 'relative',
         // to avoid cutoff when doing the Y translation on hover effect
         mt: '1px',
-        flex: '0 0 clamp(116px, 16vw, 10rem)',
-        width: 'clamp(116px, 16vw, 10rem)',
+        flex: `0 0 ${CARD_WIDTH}`,
+        width: CARD_WIDTH,
         aspectRatio: '1 / 1.4',
     },
     container: {

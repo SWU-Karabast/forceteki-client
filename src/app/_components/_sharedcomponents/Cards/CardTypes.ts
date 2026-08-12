@@ -1,5 +1,24 @@
 import { DeckSource } from '@/app/_utils/fetchDeckData';
 
+export interface IOngoingEffectSourceSummary {
+    setId: ICardSetId;
+    type?: string;
+    controllerId: string;
+    sourceZone?: string;
+    sourceTitle: string;
+    sourceSubtitle?: string;
+    effectDescription?: string;
+}
+
+export interface IOngoingEffectSummary {
+    sourceCardUuid: string;
+    source: IOngoingEffectSourceSummary;
+    targets: string[];
+    // Only sent for effects the opponent can't see (e.g. sourced from the player's hand); used to reassure
+    // the controller that no hidden information has been leaked to their opponent.
+    hiddenFromOpponent?: boolean;
+}
+
 export enum CardType {
     Base = 'base',
 

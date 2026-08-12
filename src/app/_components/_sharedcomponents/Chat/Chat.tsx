@@ -451,19 +451,19 @@ const Chat: React.FC<IChatProps> = ({
             minWidth: 0,
             width: '100%',
             fontSize: { xs: '16px', md: '1em' },
-            height: { xs: '44px', md: '2.2rem' },
+            height: { xs: '32px', md: '2.2rem' },
             input: {
                 color: '#fff',
                 fontSize: { xs: '16px', md: '1em' },
                 padding: { xs: '0 0.5rem', md: '0.3em 0.5em' },
-                height: { xs: '44px', md: 'auto' },
+                height: { xs: '32px', md: 'auto' },
                 boxSizing: 'border-box',
             },
             '& .MuiInputBase-input': {
                 fontSize: { xs: '16px', md: '1em' },
             },
             '& .MuiOutlinedInput-root': {
-                height: { xs: '44px', md: '2.2rem' },
+                height: { xs: '32px', md: '2.2rem' },
                 pr: { xs: '4px', md: '8px' },
                 '& fieldset': {
                     borderColor: '#fff',

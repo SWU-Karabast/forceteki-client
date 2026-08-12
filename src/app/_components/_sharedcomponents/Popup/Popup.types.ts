@@ -23,6 +23,8 @@ export type PopupButton = {
     hasLegalEffects?: boolean;
     selected?: boolean;
     disabled?: boolean;
+    // display label rendered in place of `text` by richer prompt UIs (e.g. the ability name on an optional-trigger card button)
+    label?: string;
     // number of similar triggers this button represents when several are grouped into one choice
     count?: number;
 };
@@ -57,6 +59,14 @@ export type BatchTriggerPopup = {
     title: string;
     sourceCard?: PopupSourceCard;
     remainingCount: number;
+    buttons: PopupButton[];
+    source: PopupSource;
+};
+
+export type OptionalTriggerPopup = {
+    type: 'optionalTrigger';
+    uuid: string;
+    title: string;
     buttons: PopupButton[];
     source: PopupSource;
 };
