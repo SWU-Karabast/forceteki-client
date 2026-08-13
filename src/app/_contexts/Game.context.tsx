@@ -23,6 +23,7 @@ import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferen
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
+import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface IGameContextType {
     gameState: any;
@@ -46,6 +47,7 @@ interface IGameContextType {
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
     gameIsEnded: () => boolean;
+    ongoingEffects: IOngoingEffectSummary[];
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -106,6 +108,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return zones
     }
 
+    const ongoingEffects: IOngoingEffectSummary[] = React.useMemo(
+        () => gameState?.ongoingEffects ?? [],
+        [gameState?.ongoingEffects],
+    );
+
+
     const handleGameStatePopups = (gameState: any, connectedPlayerId: string, isSpectatorMode: boolean) => {
         if (!connectedPlayerId || isSpectatorMode) return;
         if (gameState.players?.[connectedPlayerId]?.promptState) {
@@ -162,6 +170,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     title: menuTitle,
                     sourceCard: batchData.sourceCard,
                     remainingCount: batchData.remainingCount,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (promptType === 'optionalTrigger' && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('optionalTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
                     buttons,
                     source: PopupSource.PromptState
                 });
@@ -475,6 +491,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 hasChatDisabled,
                 createNewSocket,
                 gameIsEnded,
+                ongoingEffects,
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,
