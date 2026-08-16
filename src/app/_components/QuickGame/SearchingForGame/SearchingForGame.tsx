@@ -3,6 +3,7 @@ import { Box, Card, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import MatchLoader from './MatchLoader';
 const styles = {
     searchBox: {
@@ -40,14 +41,31 @@ const SearchingForGame: React.FC = () => {
     const router = useRouter();
     const lastQueueHeartbeatState = useRef<number>(0);
     const { user, anonymousUserId } = useUser();
+    const { showErrorScreen } = useErrorScreen();
 
     useEffect(() => {
         timerRef.current = setInterval(() => {
             const secondsSinceLastHeartbeat = Math.floor((Date.now() - lastQueueHeartbeatState.current) / 1000);
 
             if (secondsSinceLastHeartbeat > 15) {
-                alert(`Connection lost. Please try again.\nUser ID: ${user?.id || anonymousUserId}`);
-                router.push('/');
+                // The user now leaves via the error screen rather than being redirected
+                // immediately, so stop polling or this would fire every second.
+                if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                }
+                showErrorScreen({
+                    title: 'Connection lost',
+                    message: 'We lost contact with the matchmaking queue, so you\'ve been taken out of it. Try joining again.',
+                    detail: `User ID: ${user?.id || anonymousUserId}`,
+                    actions: (dismiss) => [{
+                        label: 'Return to main menu',
+                        variant: 'concede',
+                        onClick: () => {
+                            dismiss();
+                            router.push('/');
+                        },
+                    }],
+                });
                 return;
             }
 
