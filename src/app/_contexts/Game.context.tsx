@@ -23,6 +23,7 @@ import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferen
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface IGameContextType {
@@ -68,6 +69,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
+    const { showErrorScreen } = useErrorScreen();
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
@@ -294,8 +296,19 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
         newSocket.on('connection_error', (error: any) => {
             console.error('Error joining lobby:', error);
-            alert(error);
-            router.push('/');
+            showErrorScreen({
+                title: 'Couldn\'t join the game',
+                message: 'We couldn\'t connect you to this game. It may have already ended or no longer exists.',
+                detail: typeof error === 'string' ? error : error?.message,
+                actions: (dismiss) => [{
+                    label: 'Return to main menu',
+                    variant: 'concede',
+                    onClick: () => {
+                        dismiss();
+                        router.push('/');
+                    },
+                }],
+            });
         });
 
         newSocket.on('matchmakingFailed', (error: any) => {
@@ -303,8 +316,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             resetStates();
         });
 
-        newSocket.on('inactiveDisconnect', () => {            
-            alert('You have been disconnected due to inactivity');
+        newSocket.on('inactiveDisconnect', () => {
+            // The server removes the user from the lobby on an inactivity disconnect,
+            // so there is nothing to rejoin - returning home is the only way forward.
+            showErrorScreen({
+                title: 'Disconnected due to inactivity',
+                message: 'You were removed from the game because there was no activity for a while. The game has gone on without you.',
+                actions: (dismiss) => [{
+                    label: 'Return to main menu',
+                    variant: 'concede',
+                    onClick: () => {
+                        dismiss();
+                        resetStates();
+                        router.push('/');
+                    },
+                }],
+            });
             newSocket.disconnect();
         });
 

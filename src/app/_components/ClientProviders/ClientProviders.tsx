@@ -6,6 +6,7 @@ import { PopupProvider } from '@/app/_contexts/Popup.context';
 import { ThemeContextProvider } from '@/app/_contexts/Theme.context';
 import { TimerVisibilityProvider } from '@/app/_contexts/TimerVisibility.context';
 import { UserProvider } from '@/app/_contexts/User.context';
+import { ErrorScreenProvider } from '@/app/_contexts/ErrorScreen.context';
 import { SessionProvider } from 'next-auth/react';
 import { OngoingEffectHighlightProvider } from '@/app/_contexts/OngoingEffectHighlight.context';
 
@@ -22,7 +23,9 @@ const ClientProviders: React.FC<IClientProvidersProps> = ({ children }) => {
                         <PopupProvider>
                             <OngoingEffectHighlightProvider>
                                 <CosmeticsProvider>
-                                    <ThemeContextProvider>{children}</ThemeContextProvider>
+                                    <ThemeContextProvider>
+                                        <ErrorScreenProvider>{children}</ErrorScreenProvider>
+                                    </ThemeContextProvider>
                                 </CosmeticsProvider>
                             </OngoingEffectHighlightProvider>
                         </PopupProvider>
