@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { SxProps, Theme } from '@mui/material/styles';
+import { TokenBackground } from './TokenBackground';
 
 
 type DamageCounterProps = {
@@ -52,26 +53,11 @@ export function DamageCounterToken({ value, fillColor, strokeColor, strokeWidth 
     const fontSize = TOKEN_VARIANTS[variant].fontSize || '1.9rem';
     return (
         <Box sx={{ ...baseStyles, px: paddingX, fontSize: fontSize }}>
-            <Box
-                component="svg"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 100 100"
-                aria-hidden
-                preserveAspectRatio="none" 
-                sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                }}
-            >
-                <path
-                    d="M16 0 H76 A24 24 0 0 1 100 24 V84 L84 100 H24 A24 24 0 0 1 0 76 V16 L16 0 Z"
-                    fill={TOKEN_VARIANTS[variant].fillColor || fillColor || '#DB131D'}
-                    stroke={TOKEN_VARIANTS[variant].strokeColor || strokeColor}
-                    strokeWidth={TOKEN_VARIANTS[variant].strokeWidth || strokeWidth}
-                />
-            </Box>
+            <TokenBackground
+                fill={TOKEN_VARIANTS[variant].fillColor || fillColor || '#DB131D'}
+                stroke={TOKEN_VARIANTS[variant].strokeColor || strokeColor}
+                strokeWidth={TOKEN_VARIANTS[variant].strokeWidth || strokeWidth}
+            />
             <Typography
                 variant="body1"
                 sx={{

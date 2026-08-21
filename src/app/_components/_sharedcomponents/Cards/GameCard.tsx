@@ -19,11 +19,7 @@ import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighli
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
-
-// Shared token shape (rounded rect with beveled top-left/bottom-right corners) matching
-// token-background.svg / the shield token. Drawn with preserveAspectRatio="none" so the shape
-// stretches to fit its content, letting a badge grow to hold an icon + a (multi-digit) count.
-const TOKEN_SHAPE_PATH = 'M16 0 H76 A24 24 0 0 1 100 24 V84 L84 100 H24 A24 24 0 0 1 0 76 V16 L16 0 Z';
+import { TokenBackground } from '../_styledcomponents/TokenBackground';
 
 // Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
 const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
@@ -51,22 +47,16 @@ const upgradeSelectPopupData = (
     localDoneButton: true,
 });
 
-const renderTokenShape = (fill: string, stroke?: string) => (
-    <Box
-        component="svg"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden
-        sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}
-    >
-        <path
-            d={TOKEN_SHAPE_PATH}
-            fill={fill}
-            stroke={stroke ?? 'none'}
-            strokeWidth={stroke ? 8 : 0}
-            vectorEffect="non-scaling-stroke"
-        />
-    </Box>
+// Badge background. A stroke is only drawn when the token is selectable, in which case it
+// carries the player's selection border color.
+const renderTokenBackground = (fill: string, stroke?: string) => (
+    <TokenBackground
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={stroke ? 8 : 0}
+        nonScalingStroke
+        sx={{ zIndex: 0 }}
+    />
 );
 
 
@@ -918,7 +908,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                     }}
                                     onClick={(selectableShield || upgradesClickable) ? (e) => badgeClick(e, selectableShield) : undefined}
                                 >
-                                    {renderTokenShape('#00A6EC', selectableShield ? getBorderColor({ card: selectableShield, player: connectedPlayer }) : undefined)}
+                                    {renderTokenBackground('#00A6EC', selectableShield ? getBorderColor({ card: selectableShield, player: connectedPlayer }) : undefined)}
                                     <Box sx={styles.shieldBadgeEmblem}/>
                                     <Typography sx={styles.tokenBadgeCount}>{shieldCount}</Typography>
                                 </Box>
@@ -932,7 +922,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                     }}
                                     onClick={(selectableExperience || upgradesClickable) ? (e) => badgeClick(e, selectableExperience) : undefined}
                                 >
-                                    {renderTokenShape('#2e7d32', selectableExperience ? getBorderColor({ card: selectableExperience, player: connectedPlayer }) : undefined)}
+                                    {renderTokenBackground('#2e7d32', selectableExperience ? getBorderColor({ card: selectableExperience, player: connectedPlayer }) : undefined)}
                                     <Typography sx={styles.tokenBadgeSymbol}>+</Typography>
                                     <Typography sx={styles.tokenBadgeCount}>{experienceCount}</Typography>
                                 </Box>
@@ -946,7 +936,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                     }}
                                     onClick={(selectableAdvantage || upgradesClickable) ? (e) => badgeClick(e, selectableAdvantage) : undefined}
                                 >
-                                    {renderTokenShape('#ffffff', selectableAdvantage ? getBorderColor({ card: selectableAdvantage, player: connectedPlayer }) : undefined)}
+                                    {renderTokenBackground('#ffffff', selectableAdvantage ? getBorderColor({ card: selectableAdvantage, player: connectedPlayer }) : undefined)}
                                     <KeyboardArrowUp sx={styles.tokenBadgeChevron}/>
                                     <Typography sx={styles.tokenBadgeCount}>{advantageCount}</Typography>
                                 </Box>
