@@ -19,7 +19,7 @@ import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighli
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
-import { Token } from '../_styledcomponents/Token';
+import { TokenContainer } from '../_styledcomponents/TokenContainer';
 
 // Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
 const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
@@ -857,7 +857,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                         )}
                         <Box sx={styles.tokenBadgeContainer}>
                             {shieldCount > 0 && (
-                                <Token
+                                <TokenContainer
                                     type="shield"
                                     stroke={selectableShield ? getBorderColor({ card: selectableShield, player: connectedPlayer }) : undefined}
                                     onClick={(selectableShield || upgradesClickable) ? (e) => badgeClick(e, selectableShield) : undefined}
@@ -868,10 +868,10 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 >
                                     <Box sx={styles.shieldBadgeEmblem}/>
                                     <Typography sx={styles.tokenBadgeCount}>{shieldCount}</Typography>
-                                </Token>
+                                </TokenContainer>
                             )}
                             {experienceCount > 0 && (
-                                <Token
+                                <TokenContainer
                                     type="experience"
                                     stroke={selectableExperience ? getBorderColor({ card: selectableExperience, player: connectedPlayer }) : undefined}
                                     onClick={(selectableExperience || upgradesClickable) ? (e) => badgeClick(e, selectableExperience) : undefined}
@@ -882,10 +882,10 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 >
                                     <Typography sx={styles.tokenBadgeSymbol}>+</Typography>
                                     <Typography sx={styles.tokenBadgeCount}>{experienceCount}</Typography>
-                                </Token>
+                                </TokenContainer>
                             )}
                             {advantageCount > 0 && (
-                                <Token
+                                <TokenContainer
                                     type="advantage"
                                     stroke={selectableAdvantage ? getBorderColor({ card: selectableAdvantage, player: connectedPlayer }) : undefined}
                                     onClick={(selectableAdvantage || upgradesClickable) ? (e) => badgeClick(e, selectableAdvantage) : undefined}
@@ -896,7 +896,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 >
                                     <KeyboardArrowUp sx={styles.tokenBadgeChevron}/>
                                     <Typography sx={styles.tokenBadgeCount}>{advantageCount}</Typography>
-                                </Token>
+                                </TokenContainer>
                             )}
                         </Box>
                         {card.sentinel && (

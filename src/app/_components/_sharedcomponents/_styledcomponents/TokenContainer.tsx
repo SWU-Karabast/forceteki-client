@@ -1,21 +1,24 @@
 /**
- * A game token: the chamfered silhouette plus whatever content sits on it (an icon, a
- * count, or both). Wraps its children, so a caller composes a token by nesting content
- * rather than by positioning a background behind it.
+ * Draws the chamfered token shape around whatever it wraps — an icon, a count, or both.
+ * A caller composes one by nesting content rather than by positioning a background
+ * behind it.
+ *
+ * This is the shared visual treatment, not the game's token cards. Anything drawn on the
+ * token shape belongs here, counter or otherwise.
  *
  * Appearance comes from `type`, which selects an entry in TOKEN_TYPES. Sizing does not —
  * pass height, padding and font-size through `sx`, since those differ per usage.
  *
- * The token establishes its own stacking context and paints the silhouette behind the
- * content, so children need no positioning of their own. It measures itself and rebuilds
- * the silhouette at that size, so the corners hold their shape at any width.
+ * Establishes its own stacking context and paints the shape behind the content, so
+ * children need no positioning of their own. Measures itself and rebuilds the shape at
+ * that size, so the corners hold their form at any width.
  *
  * @property type - Which token this is; sets fill, content colour and default outline.
  * @property stroke - Overrides the type's outline, e.g. with a selection colour. Pass null
  *   to force no outline.
  * @property onClick - Makes the token interactive.
  * @property sx - Merged into the root sx. Sizing and spacing belong here.
- * @property children - Rendered above the silhouette.
+ * @property children - Rendered above the shape.
  */
 import { useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import Box from '@mui/material/Box';
@@ -145,7 +148,7 @@ export function buildTokenPath(width: number, height: number): string {
     ].join(' ');
 }
 
-export type TokenProps = {
+export type TokenContainerProps = {
     type: TokenType;
     stroke?: string | null;
     onClick?: (event: MouseEvent) => void;
@@ -153,7 +156,7 @@ export type TokenProps = {
     children?: ReactNode;
 };
 
-export function Token({ type, stroke, onClick, sx, children }: TokenProps) {
+export function TokenContainer({ type, stroke, onClick, sx, children }: TokenContainerProps) {
     const appearance = TOKEN_TYPES[type];
     const ref = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });

@@ -1,13 +1,13 @@
 /**
  * The damage number shown on a card, and the running total while damage or healing is
- * being distributed across targets. A thin wrapper over Token that picks the matching
+ * being distributed across targets. A thin wrapper over TokenContainer that picks the matching
  * token type and sizes it.
  *
  * @property value - Number shown on the token.
  * @property variant - Which counter this is; distribution counters are smaller.
  */
 import Typography from '@mui/material/Typography';
-import { Token, type TokenType } from './Token';
+import { TokenContainer, type TokenType } from './TokenContainer';
 
 type DamageCounterVariant = 'damage' | 'distributeDamage' | 'distributeHealing';
 
@@ -29,7 +29,7 @@ export function DamageCounterToken({ value, variant = 'damage' }: DamageCounterP
     const paddingX = value.toString().length > 1 ? '.5rem' : '.7rem';
 
     return (
-        <Token
+        <TokenContainer
             type={tokenType}
             sx={{
                 px: paddingX,
@@ -52,6 +52,6 @@ export function DamageCounterToken({ value, variant = 'damage' }: DamageCounterP
             >
                 {value}
             </Typography>
-        </Token>
+        </TokenContainer>
     );
 }
