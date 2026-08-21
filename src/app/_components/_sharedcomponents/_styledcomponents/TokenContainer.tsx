@@ -20,9 +20,13 @@
  * @property sx - Merged into the root sx. Sizing and spacing belong here.
  * @property children - Rendered above the shape.
  */
-import { useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ComponentType, type MouseEvent, type ReactNode, type SVGProps } from 'react';
 import Box from '@mui/material/Box';
 import { SxProps, Theme } from '@mui/material/styles';
+import AdvantageIcon from '@/assets/token-icons/advantage.svg';
+import ExperienceIcon from '@/assets/token-icons/experience.svg';
+import ShieldIcon from '@/assets/token-icons/shield.svg';
+import WeaknessIcon from '@/assets/token-icons/weakness.svg';
 
 /**
  * Proportions of the token silhouette: a rounded rect whose top-left and bottom-right
@@ -41,10 +45,31 @@ const CHAMFER_TIP_RATIO = 1 / 34;
 /** Reference height that a scaling `strokeWidth` is expressed against. */
 const STROKE_REFERENCE_HEIGHT = 100;
 
+/**
+ * Side of the square every icon is drawn into, relative to the token's font size. Fixing
+ * the slot is what keeps tokens the same width: the glyphs come from different sources
+ * (card art, drawn paths) with no common intrinsic size of their own.
+ */
+const ICON_SLOT = '0.92em';
+
+/**
+ * Sizes whatever the icon file draws. The icons are authored on a shared 24x24 grid with no
+ * fill of their own, so SVGR's `fill="currentColor"` on the root leaves them inheriting the
+ * token's content colour.
+ */
+const iconSlotSx = {
+    width: ICON_SLOT,
+    height: ICON_SLOT,
+    flexShrink: 0,
+    display: 'inline-flex',
+    '& > svg': { width: '100%', height: '100%', display: 'block' },
+} as const;
+
 export type TokenType =
     | 'shield'
     | 'experience'
     | 'advantage'
+    | 'weakness'
     | 'damageCounter'
     | 'distributeDamageCounter'
     | 'distributeHealingCounter';
@@ -65,6 +90,9 @@ type TokenAppearance = {
 
     /** Hold the outline at a constant pixel width rather than scaling it with the token. */
     nonScalingStroke?: boolean;
+
+    /** Drawn ahead of the token's content in a fixed square slot. Counters have none. */
+    icon?: ComponentType<SVGProps<SVGSVGElement>>;
 };
 
 /**
@@ -72,9 +100,22 @@ type TokenAppearance = {
  * entry here rather than threading colours through a call site.
  */
 const TOKEN_TYPES: Record<TokenType, TokenAppearance> = {
-    shield: { fill: '#00A6EC', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true },
-    experience: { fill: '#2E7D32', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true },
-    advantage: { fill: '#FFFFFF', color: '#000000', strokeWidth: 8, nonScalingStroke: true },
+    shield: {
+        fill: '#00A6EC', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
+        icon: ShieldIcon,
+    },
+    experience: {
+        fill: '#2E7D32', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
+        icon: ExperienceIcon,
+    },
+    advantage: {
+        fill: '#FFFFFF', color: '#000000', strokeWidth: 8, nonScalingStroke: true,
+        icon: AdvantageIcon,
+    },
+    weakness: {
+        fill: '#6A2C3E', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
+        icon: WeaknessIcon,
+    },
     damageCounter: { fill: '#DB131D', color: '#FFFFFF', strokeWidth: 0 },
     distributeDamageCounter: { fill: '#6D1414', color: '#FFFFFF', stroke: '#DB131D', strokeWidth: 6 },
     distributeHealingCounter: { fill: '#1A6681', color: '#FFFFFF', stroke: '#00BAFF', strokeWidth: 6 },
@@ -158,6 +199,7 @@ export type TokenContainerProps = {
 
 export function TokenContainer({ type, stroke, onClick, sx, children }: TokenContainerProps) {
     const appearance = TOKEN_TYPES[type];
+    const Icon = appearance.icon;
     const ref = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -225,6 +267,7 @@ export function TokenContainer({ type, stroke, onClick, sx, children }: TokenCon
                     />
                 )}
             </Box>
+            {Icon && <Box sx={iconSlotSx}><Icon/></Box>}
             {children}
         </Box>
     );

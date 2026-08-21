@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, IconButton, Popover, PopoverOrigin, Tooltip, Typography } from '@mui/material';
 import ThreeSixty from '@mui/icons-material/ThreeSixty';
-import KeyboardArrowUp from '@mui/icons-material/KeyboardArrowUp';
 import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -317,18 +316,20 @@ const GameCard: React.FC<IGameCardProps> = ({
                 return 'upgrade-grey.png';
         }
     };
-    // Neutral token upgrades (Shield/Experience/Advantage) are consolidated into count
-    // badges on the right edge of the card. All other upgrades render as bars below the card.
-    const tokenUpgradeNames = ['Shield', 'Experience', 'Advantage'];
+    // Neutral token upgrades are consolidated into count badges on the right edge of the card.
+    // All other upgrades render as bars below the card.
+    const tokenUpgradeNames = ['Shield', 'Experience', 'Advantage', 'Weakness'];
     const nonShieldUpgradeCards = subcards.filter((subcard) => !tokenUpgradeNames.includes(subcard.name ?? ''));
     const shieldCount = subcards.filter((subcard) => subcard.name === 'Shield').length;
     const experienceCount = subcards.filter((subcard) => subcard.name === 'Experience').length;
     const advantageCount = subcards.filter((subcard) => subcard.name === 'Advantage').length;
+    const weaknessCount = subcards.filter((subcard) => subcard.name === 'Weakness').length;
     // Selection of specific/multiple tokens is a later part of this work; for now clicking a
     // badge selects the first selectable token of that type (tokens of a type are fungible).
     const selectableShield = subcards.find((subcard) => subcard.name === 'Shield' && subcard.selectable);
     const selectableExperience = subcards.find((subcard) => subcard.name === 'Experience' && subcard.selectable);
     const selectableAdvantage = subcards.find((subcard) => subcard.name === 'Advantage' && subcard.selectable);
+    const selectableWeakness = subcards.find((subcard) => subcard.name === 'Weakness' && subcard.selectable);
 
     // On a multi-select prompt (e.g. Power Failure), clicking a token badge opens a popup to
     // select any number of this unit's upgrades individually. On single-select prompts, badges
@@ -516,39 +517,20 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
-            rowGap: '0.15em',
-            fontSize: 'clamp(0.45rem, 1.15vw, 1rem)',
+            rowGap: '0.14em',
+            fontSize: 'clamp(0.44rem, 1.1vw, 0.96rem)',
             zIndex: 2,
         },
         tokenBadge: {
-            height: '1.5em',
-            minWidth: '1.5em',
-            padding: '0 0.3em',
-            columnGap: '0.12em',
+            height: '1.2em',
+            minWidth: '1.2em',
+            padding: '0 0.22em',
+            columnGap: '0.1em',
             filter: 'drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.55))',
             cursor: 'default',
         },
         selectableTokenBadge: {
             cursor: 'pointer',
-        },
-        shieldBadgeEmblem: {
-            width: '1.25em',
-            height: '1.25em',
-            flexShrink: 0,
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
-        },
-        tokenBadgeSymbol: {
-            fontSize: '1em',
-            fontWeight: 800,
-            lineHeight: 1,
-            color: 'inherit',
-        },
-        tokenBadgeChevron: {
-            fontSize: '1.15em',
-            color: 'inherit',
         },
         tokenBadgeCount: {
             fontSize: '0.95em',
@@ -867,7 +849,6 @@ const GameCard: React.FC<IGameCardProps> = ({
                                         ...((selectableShield || upgradesClickable) ? styles.selectableTokenBadge : {}),
                                     }}
                                 >
-                                    <Box sx={styles.shieldBadgeEmblem}/>
                                     <Typography sx={styles.tokenBadgeCount}>{shieldCount}</Typography>
                                 </TokenContainer>
                             )}
@@ -881,8 +862,20 @@ const GameCard: React.FC<IGameCardProps> = ({
                                         ...((selectableExperience || upgradesClickable) ? styles.selectableTokenBadge : {}),
                                     }}
                                 >
-                                    <Typography sx={styles.tokenBadgeSymbol}>+</Typography>
                                     <Typography sx={styles.tokenBadgeCount}>{experienceCount}</Typography>
+                                </TokenContainer>
+                            )}
+                            {weaknessCount > 0 && (
+                                <TokenContainer
+                                    type="weakness"
+                                    stroke={selectableWeakness ? getBorderColor({ card: selectableWeakness, player: connectedPlayer }) : undefined}
+                                    onClick={(selectableWeakness || upgradesClickable) ? (e) => badgeClick(e, selectableWeakness) : undefined}
+                                    sx={{
+                                        ...styles.tokenBadge,
+                                        ...((selectableWeakness || upgradesClickable) ? styles.selectableTokenBadge : {}),
+                                    }}
+                                >
+                                    <Typography sx={styles.tokenBadgeCount}>{weaknessCount}</Typography>
                                 </TokenContainer>
                             )}
                             {advantageCount > 0 && (
@@ -895,7 +888,6 @@ const GameCard: React.FC<IGameCardProps> = ({
                                         ...((selectableAdvantage || upgradesClickable) ? styles.selectableTokenBadge : {}),
                                     }}
                                 >
-                                    <KeyboardArrowUp sx={styles.tokenBadgeChevron}/>
                                     <Typography sx={styles.tokenBadgeCount}>{advantageCount}</Typography>
                                 </TokenContainer>
                             )}
