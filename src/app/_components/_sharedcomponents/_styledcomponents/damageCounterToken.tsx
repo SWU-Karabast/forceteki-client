@@ -1,67 +1,47 @@
-import Box from '@mui/material/Box';
+/**
+ * The damage number shown on a card, and the running total while damage or healing is
+ * being distributed across targets. A thin wrapper over Token that picks the matching
+ * token type and sizes it.
+ *
+ * @property value - Number shown on the token.
+ * @property variant - Which counter this is; distribution counters are smaller.
+ */
 import Typography from '@mui/material/Typography';
-import { SxProps, Theme } from '@mui/material/styles';
-import { TokenBackground } from './TokenBackground';
+import { Token, type TokenType } from './Token';
 
+type DamageCounterVariant = 'damage' | 'distributeDamage' | 'distributeHealing';
 
 type DamageCounterProps = {
     value: number | string;
-    // sx?: SxProps<Theme>;
-    fillColor?: string;
-    strokeColor?: string;
-    strokeWidth?: number;
-    variant?: 'damage' |'distributeDamage' | 'distributeHealing';
+    variant?: DamageCounterVariant;
 };
 
-const TOKEN_VARIANTS = {
-    damage: {
-        fillColor: '#DB131D',
-        strokeColor: null,
-        strokeWidth: 0,
-        fontSize: '1.9rem',
-    },
-    distributeDamage: {
-        fillColor: '#6d1414ff',
-        strokeColor: '#DB131D',
-        strokeWidth: 6,
-        fontSize: '1.4rem',
-    },
-    distributeHealing: {
-        fillColor: '#1a6681ff',
-        strokeColor: '#00BAFF',
-        strokeWidth: 6,
-        fontSize: '1.4rem',
-    },
-}
-
-const baseStyles: SxProps<Theme> = {
-    fontWeight: 700,
-    color: 'white',
-    display: 'inline-flex',
-    py: '.3rem',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    filter: 'drop-shadow(1px 2px 1px rgba(0,0,0,0.40))',
-    textShadow: '2px 2px rgba(0,0,0,0.20)',
-    lineHeight: 1,
-    userSelect: 'none',
+const COUNTER_VARIANTS: Record<DamageCounterVariant, { tokenType: TokenType; fontSize: string }> = {
+    damage: { tokenType: 'damageCounter', fontSize: '1.9rem' },
+    distributeDamage: { tokenType: 'distributeDamageCounter', fontSize: '1.4rem' },
+    distributeHealing: { tokenType: 'distributeHealingCounter', fontSize: '1.4rem' },
 };
 
-export function DamageCounterToken({ value, fillColor, strokeColor, strokeWidth = 0, variant = 'damage' }: DamageCounterProps) {
+export function DamageCounterToken({ value, variant = 'damage' }: DamageCounterProps) {
+    const { tokenType, fontSize } = COUNTER_VARIANTS[variant];
+
+    // Two digits need less side padding than one to keep the token from growing too wide.
     const paddingX = value.toString().length > 1 ? '.5rem' : '.7rem';
-    const fontSize = TOKEN_VARIANTS[variant].fontSize || '1.9rem';
+
     return (
-        <Box sx={{ ...baseStyles, px: paddingX, fontSize: fontSize }}>
-            <TokenBackground
-                fill={TOKEN_VARIANTS[variant].fillColor || fillColor || '#DB131D'}
-                stroke={TOKEN_VARIANTS[variant].strokeColor || strokeColor}
-                strokeWidth={TOKEN_VARIANTS[variant].strokeWidth || strokeWidth}
-            />
+        <Token
+            type={tokenType}
+            sx={{
+                px: paddingX,
+                py: '.3rem',
+                fontSize,
+                filter: 'drop-shadow(1px 2px 1px rgba(0,0,0,0.40))',
+                textShadow: '2px 2px rgba(0,0,0,0.20)',
+            }}
+        >
             <Typography
                 variant="body1"
                 sx={{
-                    position: 'relative',
                     m: 0,
                     fontWeight: 700,
                     fontSize: 'inherit',
@@ -72,6 +52,6 @@ export function DamageCounterToken({ value, fillColor, strokeColor, strokeWidth 
             >
                 {value}
             </Typography>
-        </Box>
+        </Token>
     );
 }

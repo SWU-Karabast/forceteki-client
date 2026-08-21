@@ -19,7 +19,7 @@ import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighli
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
-import { TokenBackground } from '../_styledcomponents/TokenBackground';
+import { Token } from '../_styledcomponents/Token';
 
 // Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
 const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
@@ -47,17 +47,6 @@ const upgradeSelectPopupData = (
     localDoneButton: true,
 });
 
-// Badge background. A stroke is only drawn when the token is selectable, in which case it
-// carries the player's selection border color.
-const renderTokenBackground = (fill: string, stroke?: string) => (
-    <TokenBackground
-        fill={fill}
-        stroke={stroke}
-        strokeWidth={stroke ? 8 : 0}
-        nonScalingStroke
-        sx={{ zIndex: 0 }}
-    />
-);
 
 
 const usePopoverConfig = (card: ICardData): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
@@ -531,27 +520,17 @@ const GameCard: React.FC<IGameCardProps> = ({
             zIndex: 2,
         },
         tokenBadge: {
-            position: 'relative',
-            display: 'inline-flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
             height: '1.5em',
             minWidth: '1.5em',
             padding: '0 0.3em',
             columnGap: '0.12em',
-            fontWeight: 700,
-            lineHeight: 1,
             filter: 'drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.55))',
-            userSelect: 'none',
             cursor: 'default',
         },
         selectableTokenBadge: {
             cursor: 'pointer',
         },
         shieldBadgeEmblem: {
-            position: 'relative',
-            zIndex: 1,
             width: '1.25em',
             height: '1.25em',
             flexShrink: 0,
@@ -561,22 +540,16 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
         },
         tokenBadgeSymbol: {
-            position: 'relative',
-            zIndex: 1,
             fontSize: '1em',
             fontWeight: 800,
             lineHeight: 1,
             color: 'inherit',
         },
         tokenBadgeChevron: {
-            position: 'relative',
-            zIndex: 1,
             fontSize: '1.15em',
             color: 'inherit',
         },
         tokenBadgeCount: {
-            position: 'relative',
-            zIndex: 1,
             fontSize: '0.95em',
             fontWeight: 700,
             lineHeight: 1,
@@ -884,46 +857,46 @@ const GameCard: React.FC<IGameCardProps> = ({
                         )}
                         <Box sx={styles.tokenBadgeContainer}>
                             {shieldCount > 0 && (
-                                <Box
+                                <Token
+                                    type="shield"
+                                    stroke={selectableShield ? getBorderColor({ card: selectableShield, player: connectedPlayer }) : undefined}
+                                    onClick={(selectableShield || upgradesClickable) ? (e) => badgeClick(e, selectableShield) : undefined}
                                     sx={{
                                         ...styles.tokenBadge,
-                                        color: '#fff',
                                         ...((selectableShield || upgradesClickable) ? styles.selectableTokenBadge : {}),
                                     }}
-                                    onClick={(selectableShield || upgradesClickable) ? (e) => badgeClick(e, selectableShield) : undefined}
                                 >
-                                    {renderTokenBackground('#00A6EC', selectableShield ? getBorderColor({ card: selectableShield, player: connectedPlayer }) : undefined)}
                                     <Box sx={styles.shieldBadgeEmblem}/>
                                     <Typography sx={styles.tokenBadgeCount}>{shieldCount}</Typography>
-                                </Box>
+                                </Token>
                             )}
                             {experienceCount > 0 && (
-                                <Box
+                                <Token
+                                    type="experience"
+                                    stroke={selectableExperience ? getBorderColor({ card: selectableExperience, player: connectedPlayer }) : undefined}
+                                    onClick={(selectableExperience || upgradesClickable) ? (e) => badgeClick(e, selectableExperience) : undefined}
                                     sx={{
                                         ...styles.tokenBadge,
-                                        color: '#fff',
                                         ...((selectableExperience || upgradesClickable) ? styles.selectableTokenBadge : {}),
                                     }}
-                                    onClick={(selectableExperience || upgradesClickable) ? (e) => badgeClick(e, selectableExperience) : undefined}
                                 >
-                                    {renderTokenBackground('#2e7d32', selectableExperience ? getBorderColor({ card: selectableExperience, player: connectedPlayer }) : undefined)}
                                     <Typography sx={styles.tokenBadgeSymbol}>+</Typography>
                                     <Typography sx={styles.tokenBadgeCount}>{experienceCount}</Typography>
-                                </Box>
+                                </Token>
                             )}
                             {advantageCount > 0 && (
-                                <Box
+                                <Token
+                                    type="advantage"
+                                    stroke={selectableAdvantage ? getBorderColor({ card: selectableAdvantage, player: connectedPlayer }) : undefined}
+                                    onClick={(selectableAdvantage || upgradesClickable) ? (e) => badgeClick(e, selectableAdvantage) : undefined}
                                     sx={{
                                         ...styles.tokenBadge,
-                                        color: '#000',
                                         ...((selectableAdvantage || upgradesClickable) ? styles.selectableTokenBadge : {}),
                                     }}
-                                    onClick={(selectableAdvantage || upgradesClickable) ? (e) => badgeClick(e, selectableAdvantage) : undefined}
                                 >
-                                    {renderTokenBackground('#ffffff', selectableAdvantage ? getBorderColor({ card: selectableAdvantage, player: connectedPlayer }) : undefined)}
                                     <KeyboardArrowUp sx={styles.tokenBadgeChevron}/>
                                     <Typography sx={styles.tokenBadgeCount}>{advantageCount}</Typography>
-                                </Box>
+                                </Token>
                             )}
                         </Box>
                         {card.sentinel && (

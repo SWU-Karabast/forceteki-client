@@ -1,21 +1,23 @@
 /**
- * Absolutely-positioned token background: a rounded rect whose top-left and bottom-right
- * corners are chamfered rather than rounded, with the chamfer's own tips softened.
+ * A game token: the chamfered silhouette plus whatever content sits on it (an icon, a
+ * count, or both). Wraps its children, so a caller composes a token by nesting content
+ * rather than by positioning a background behind it.
  *
- * Render it inside a `position: relative` container, with the token's own content (icon,
- * count) as later siblings so they stack above it. It measures itself and rebuilds its
- * path at that size, so the corners hold their shape at any width.
+ * Appearance comes from `type`, which selects an entry in TOKEN_TYPES. Sizing does not —
+ * pass height, padding and font-size through `sx`, since those differ per usage.
  *
- * @property fill - Interior colour of the token.
- * @property stroke - Outline colour. Omit (or pass null) for no outline.
- * @property strokeWidth - Outline width. Scales with the token by default, expressed
- *   against a 100-unit-tall reference box. With `nonScalingStroke`, it is CSS pixels.
- * @property nonScalingStroke - Hold the outline at a constant pixel width instead of
- *   scaling it with the token. Worth enabling on small tokens, where a scaled outline all
- *   but disappears.
- * @property sx - Merged into the root sx, e.g. to set a zIndex against sibling content.
+ * The token establishes its own stacking context and paints the silhouette behind the
+ * content, so children need no positioning of their own. It measures itself and rebuilds
+ * the silhouette at that size, so the corners hold their shape at any width.
+ *
+ * @property type - Which token this is; sets fill, content colour and default outline.
+ * @property stroke - Overrides the type's outline, e.g. with a selection colour. Pass null
+ *   to force no outline.
+ * @property onClick - Makes the token interactive.
+ * @property sx - Merged into the root sx. Sizing and spacing belong here.
+ * @property children - Rendered above the silhouette.
  */
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import Box from '@mui/material/Box';
 import { SxProps, Theme } from '@mui/material/styles';
 
@@ -36,6 +38,45 @@ const CHAMFER_TIP_RATIO = 1 / 34;
 /** Reference height that a scaling `strokeWidth` is expressed against. */
 const STROKE_REFERENCE_HEIGHT = 100;
 
+export type TokenType =
+    | 'shield'
+    | 'experience'
+    | 'advantage'
+    | 'damageCounter'
+    | 'distributeDamageCounter'
+    | 'distributeHealingCounter';
+
+type TokenAppearance = {
+
+    /** Silhouette colour. */
+    fill: string;
+
+    /** Colour inherited by the token's content. */
+    color: string;
+
+    /** Outline drawn for every token of this type. Upgrade tokens outline only when selectable, so they set none. */
+    stroke?: string;
+
+    /** Ignored when there is no outline to draw. */
+    strokeWidth: number;
+
+    /** Hold the outline at a constant pixel width rather than scaling it with the token. */
+    nonScalingStroke?: boolean;
+};
+
+/**
+ * Every token in the game, keyed by what it represents. Adding a token means adding an
+ * entry here rather than threading colours through a call site.
+ */
+const TOKEN_TYPES: Record<TokenType, TokenAppearance> = {
+    shield: { fill: '#00A6EC', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true },
+    experience: { fill: '#2E7D32', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true },
+    advantage: { fill: '#FFFFFF', color: '#000000', strokeWidth: 8, nonScalingStroke: true },
+    damageCounter: { fill: '#DB131D', color: '#FFFFFF', strokeWidth: 0 },
+    distributeDamageCounter: { fill: '#6D1414', color: '#FFFFFF', stroke: '#DB131D', strokeWidth: 6 },
+    distributeHealingCounter: { fill: '#1A6681', color: '#FFFFFF', stroke: '#00BAFF', strokeWidth: 6 },
+};
+
 /**
  * Tangent length for a fillet of `radius` tucked into the corner where two edges leave a
  * vertex along unit vectors `a` and `b` — i.e. how far back from the vertex each edge has
@@ -51,7 +92,7 @@ function tangentLength(a: readonly [number, number], b: readonly [number, number
  * rendered box. Corner sizes come from `height` alone; the four straight runs absorb
  * whatever width is left over.
  */
-export function buildTokenBackgroundPath(width: number, height: number): string {
+export function buildTokenPath(width: number, height: number): string {
     let radius = CORNER_RADIUS_RATIO * height;
     let chamferX = CHAMFER_X_RATIO * height;
     let chamferY = CHAMFER_Y_RATIO * height;
@@ -104,22 +145,17 @@ export function buildTokenBackgroundPath(width: number, height: number): string 
     ].join(' ');
 }
 
-export type TokenBackgroundProps = {
-    fill: string;
+export type TokenProps = {
+    type: TokenType;
     stroke?: string | null;
-    strokeWidth?: number;
-    nonScalingStroke?: boolean;
+    onClick?: (event: MouseEvent) => void;
     sx?: SxProps<Theme>;
+    children?: ReactNode;
 };
 
-export function TokenBackground({
-    fill,
-    stroke,
-    strokeWidth = 0,
-    nonScalingStroke = false,
-    sx,
-}: TokenBackgroundProps) {
-    const ref = useRef<SVGSVGElement>(null);
+export function Token({ type, stroke, onClick, sx, children }: TokenProps) {
+    const appearance = TOKEN_TYPES[type];
+    const ref = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
 
     useLayoutEffect(() => {
@@ -141,35 +177,52 @@ export function TokenBackground({
     const { width, height } = size;
     const measured = width > 0 && height > 0;
 
-    // A scaling strokeWidth is relative to a 100-unit-tall box; the viewBox is in pixels,
-    // so convert unless the caller wants a fixed pixel outline.
-    const resolvedStrokeWidth = nonScalingStroke
-        ? strokeWidth
-        : strokeWidth * (height / STROKE_REFERENCE_HEIGHT);
+    // An explicit stroke wins over the type's own; null forces the outline off.
+    const outline = stroke === undefined ? appearance.stroke : stroke ?? undefined;
+
+    // A scaling strokeWidth is relative to a 100-unit-tall box; the viewBox is in pixels.
+    const strokeWidth = !outline
+        ? 0
+        : appearance.nonScalingStroke
+            ? appearance.strokeWidth
+            : appearance.strokeWidth * (height / STROKE_REFERENCE_HEIGHT);
 
     return (
         <Box
-            component="svg"
             ref={ref}
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox={measured ? `0 0 ${width} ${height}` : undefined}
-            aria-hidden
+            onClick={onClick}
             sx={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
+                position: 'relative',
+                // Own stacking context, so the silhouette's negative z-index stays inside
+                // the token and children stack above it without any styling of their own.
+                isolation: 'isolate',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                lineHeight: 1,
+                userSelect: 'none',
+                color: appearance.color,
                 ...sx,
             }}
         >
-            {measured && (
-                <path
-                    d={buildTokenBackgroundPath(width, height)}
-                    fill={fill}
-                    stroke={stroke ?? undefined}
-                    strokeWidth={resolvedStrokeWidth}
-                />
-            )}
+            <Box
+                component="svg"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox={measured ? `0 0 ${width} ${height}` : undefined}
+                aria-hidden
+                sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: -1 }}
+            >
+                {measured && (
+                    <path
+                        d={buildTokenPath(width, height)}
+                        fill={appearance.fill}
+                        stroke={outline}
+                        strokeWidth={strokeWidth}
+                    />
+                )}
+            </Box>
+            {children}
         </Box>
     );
 }
