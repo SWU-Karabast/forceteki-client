@@ -31,7 +31,8 @@ const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
         }));
 
 // Popup payload for selecting a unit's upgrades. Clicks toggle via 'cardClicked' (board
-// SelectCardPrompt); the Done button only closes the popup (confirmation is the board prompt Done).
+// SelectCardPrompt); the Close button only dismisses the popup, since confirmation happens
+// on the board's own prompt Done.
 const upgradeSelectPopupData = (
     unitUuid: string,
     unitName: string | undefined,
@@ -44,7 +45,7 @@ const upgradeSelectPopupData = (
     buttons: [],
     source: PopupSource.User,
     clickMode: 'cardClicked',
-    localDoneButton: true,
+    localCloseButton: true,
 });
 
 

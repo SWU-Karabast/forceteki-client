@@ -156,10 +156,10 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                         })}
                     </Box>
                 </Box>
-                {data.localDoneButton ? (
-                    <Box sx={{ ...styles.actionFooter, justifyContent: 'flex-end' }}>
+                {data.localCloseButton ? (
+                    <Box sx={styles.actionFooter}>
                         <GradientBorderButton onClick={() => closePopup(data.uuid)}>
-                            Done
+                            Close
                         </GradientBorderButton>
                     </Box>
                 ) : (

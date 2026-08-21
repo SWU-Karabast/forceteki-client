@@ -89,10 +89,11 @@ export type SelectCardsPopup = {
     clickMode?: 'menuButton' | 'cardClicked';
 
     /**
-     * When true, render a single "Done" button that only closes the popup client-side
-     * (no message sent). Used when confirmation happens via the board's own prompt Done.
+     * When true, render a single "Close" button that only dismisses the popup client-side
+     * (no message sent). Used when confirmation happens via the board's own prompt Done,
+     * so this button must not read as committing the action.
      */
-    localDoneButton?: boolean;
+    localCloseButton?: boolean;
 };
 
 export type PilePopup = {
