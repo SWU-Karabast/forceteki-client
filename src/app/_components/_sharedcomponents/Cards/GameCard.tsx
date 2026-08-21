@@ -716,22 +716,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             aspectRatio: '1/1',
             width: '50%'
         },
-        damageCounter: {
-            fontWeight: '800',
-            fontSize: '1.9rem',
-            color: 'white',
-            width: '2.5rem',
-            aspectRatio: '1 / 1',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: distributeHealing ? 'rgba(0, 186, 255, 1)' : 'url(/token-background.svg)',
-            borderRadius: distributeHealing ? '17px 8px' : '0px',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
-            textShadow: '1px 1px #00000033'
-        },
         capturedCardsDivider:{
             fontSize: '11px',
             fontWeight: 'bold',

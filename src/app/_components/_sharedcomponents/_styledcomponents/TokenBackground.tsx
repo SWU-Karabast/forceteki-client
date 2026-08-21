@@ -1,21 +1,32 @@
+/**
+ * Absolutely-positioned token background: a rounded rect whose top-left and bottom-right
+ * corners are chamfered rather than rounded, with the chamfer's own tips softened.
+ *
+ * Render it inside a `position: relative` container, with the token's own content (icon,
+ * count) as later siblings so they stack above it. It measures itself and rebuilds its
+ * path at that size, so the corners hold their shape at any width.
+ *
+ * @property fill - Interior colour of the token.
+ * @property stroke - Outline colour. Omit (or pass null) for no outline.
+ * @property strokeWidth - Outline width. Scales with the token by default, expressed
+ *   against a 100-unit-tall reference box. With `nonScalingStroke`, it is CSS pixels.
+ * @property nonScalingStroke - Hold the outline at a constant pixel width instead of
+ *   scaling it with the token. Worth enabling on small tokens, where a scaled outline all
+ *   but disappears.
+ * @property sx - Merged into the root sx, e.g. to set a zIndex against sibling content.
+ */
 import { useLayoutEffect, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import { SxProps, Theme } from '@mui/material/styles';
 
 /**
- * The token silhouette, measured off public/token-background.svg: a rounded rect whose
- * top-left and bottom-right corners are chamfered instead of rounded, with the chamfer's
- * own tips slightly softened. The chamfer is not 45 degrees — it runs taller than it is
- * wide.
+ * Proportions of the token silhouette: a rounded rect whose top-left and bottom-right
+ * corners are chamfered rather than rounded, with the chamfer's own tips softened. The
+ * chamfer runs taller than it is wide, so it is not a 45 degree cut.
  *
- * Every size is a fraction of the token's HEIGHT, never its width. That is what keeps the
- * corners identical to how they'd look on a square token: as a token widens to fit an icon
- * plus a multi-digit count, the corners hold their shape and only the flat edges elongate.
- *
- * The asset is authored on a 34-unit box and is very slightly inconsistent with itself —
- * its bottom-right chamfer runs 5.5 x 6.0 with r2.0 tips against the top-left's 5.0 x 6.0
- * with r1.0 tips. That reads as export wobble rather than intent, so both corners use the
- * cleaner top-left numbers here.
+ * Each value is a fraction of the token's HEIGHT, never its width. That is what holds the
+ * corners to the shape they take on a square token: as a token widens to fit an icon plus
+ * a multi-digit count, the corners stay put and only the flat edges elongate.
  */
 const CORNER_RADIUS_RATIO = 5 / 34;
 const CHAMFER_X_RATIO = 5 / 34;
@@ -95,34 +106,12 @@ export function buildTokenBackgroundPath(width: number, height: number): string 
 
 export type TokenBackgroundProps = {
     fill: string;
-
-    /** Omit (or pass null) for no outline. */
     stroke?: string | null;
-
-    /**
-     * Outline width. Scales with the token by default, expressed against a 100-unit-tall
-     * reference box. With `nonScalingStroke`, it is CSS pixels instead.
-     */
     strokeWidth?: number;
-
-    /**
-     * Hold the outline at a constant pixel width instead of scaling it with the token.
-     * Worth enabling on small tokens, where a scaled outline all but disappears.
-     */
     nonScalingStroke?: boolean;
-
-    /** Merged into the root sx, e.g. to set a zIndex against sibling content. */
     sx?: SxProps<Theme>;
 };
 
-/**
- * Absolutely-positioned token background. Render it inside a `position: relative`
- * container, with the token's own content (icon, count) as later siblings so they
- * stack above it.
- *
- * The path is rebuilt from the element's measured size rather than being stretched to
- * fit, so a wide token keeps square-token corners.
- */
 export function TokenBackground({
     fill,
     stroke,
