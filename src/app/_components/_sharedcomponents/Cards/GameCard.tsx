@@ -1,11 +1,12 @@
 import React from 'react';
 import { Box, IconButton, Popover, PopoverOrigin, Tooltip, Typography } from '@mui/material';
 import ThreeSixty from '@mui/icons-material/ThreeSixty';
-import Grid from '@mui/material/Grid';
+import KeyboardArrowUp from '@mui/icons-material/KeyboardArrowUp';
 import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource, type SelectCardsPopup } from '../Popup/Popup.types';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { getBorderColor } from './cardUtils';
@@ -18,6 +19,55 @@ import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighli
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
+
+// Shared token shape (rounded rect with beveled top-left/bottom-right corners) matching
+// token-background.svg / the shield token. Drawn with preserveAspectRatio="none" so the shape
+// stretches to fit its content, letting a badge grow to hold an icon + a (multi-digit) count.
+const TOKEN_SHAPE_PATH = 'M16 0 H76 A24 24 0 0 1 100 24 V84 L84 100 H24 A24 24 0 0 1 0 76 V16 L16 0 Z';
+
+// Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
+const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
+    subcards
+        .filter((s) => s.selectable || s.selected)
+        .map((u) => ({
+            ...u,
+            selectionState: u.selected ? 'selected' : u.selectable ? 'selectable' : 'unselectable',
+        }));
+
+// Popup payload for selecting a unit's upgrades. Clicks toggle via 'cardClicked' (board
+// SelectCardPrompt); the Done button only closes the popup (confirmation is the board prompt Done).
+const upgradeSelectPopupData = (
+    unitUuid: string,
+    unitName: string | undefined,
+    subcards: ICardData[],
+): Omit<SelectCardsPopup, 'type'> => ({
+    uuid: unitUuid,
+    title: unitName ?? 'Select upgrades',
+    cards: buildUpgradeSelectCards(subcards),
+    perCardButtons: [],
+    buttons: [],
+    source: PopupSource.User,
+    clickMode: 'cardClicked',
+    localDoneButton: true,
+});
+
+const renderTokenShape = (fill: string, stroke?: string) => (
+    <Box
+        component="svg"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden
+        sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}
+    >
+        <path
+            d={TOKEN_SHAPE_PATH}
+            fill={fill}
+            stroke={stroke ?? 'none'}
+            strokeWidth={stroke ? 8 : 0}
+            vectorEffect="non-scaling-stroke"
+        />
+    </Box>
+);
 
 
 const usePopoverConfig = (card: ICardData): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
@@ -64,7 +114,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     cardback = undefined,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
-    const { clearPopups } = usePopup();
+    const { clearPopups, openPopup, closePopup, popups } = usePopup();
     const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
 
     const locale = useCardImageLocale();
@@ -189,6 +239,29 @@ const GameCard: React.FC<IGameCardProps> = ({
         : '';
     const { status: cardImageStatus, imgProps: cardImgProps } = useImageLoadStatus(styledCardUrl);
 
+    // Multi-select upgrade popup: keep it in sync with live board state and auto-close it when the
+    // prompt ends or nothing stays selectable. Declared before the early return so hook order stays stable.
+    const multiSelectActive = getConnectedPlayerPrompt()?.selectCardMode === 'multiple';
+    const hasSelectableUpgrades = subcards.some((s) => s.selectable);
+    const upgradeUnitUuid = card?.uuid;
+    const upgradePopupOpen = popups.some((p) => p.uuid === upgradeUnitUuid);
+    // Signature of the live selection so the open popup is re-fed only on real changes (no loop).
+    const liveUpgradeSignature = subcards
+        .filter((s) => s.selectable || s.selected)
+        .map((u) => `${u.uuid}:${u.selected ? 's' : u.selectable ? 'a' : 'u'}`)
+        .join(',');
+    React.useEffect(() => {
+        if (!upgradePopupOpen || !upgradeUnitUuid) {
+            return;
+        }
+        if (!multiSelectActive || !hasSelectableUpgrades) {
+            closePopup(upgradeUnitUuid);
+            return;
+        }
+        openPopup('select', upgradeSelectPopupData(upgradeUnitUuid, card?.name, subcards));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [upgradePopupOpen, upgradeUnitUuid, multiSelectActive, hasSelectableUpgrades, liveUpgradeSignature]);
+
     if (!card) {
         return null;
     }
@@ -264,9 +337,33 @@ const GameCard: React.FC<IGameCardProps> = ({
                 return 'upgrade-grey.png';
         }
     };
-    // Filter subcards into Shields and other upgrades
-    const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
-    const nonShieldUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
+    // Neutral token upgrades (Shield/Experience/Advantage) are consolidated into count
+    // badges on the right edge of the card. All other upgrades render as bars below the card.
+    const tokenUpgradeNames = ['Shield', 'Experience', 'Advantage'];
+    const nonShieldUpgradeCards = subcards.filter((subcard) => !tokenUpgradeNames.includes(subcard.name ?? ''));
+    const shieldCount = subcards.filter((subcard) => subcard.name === 'Shield').length;
+    const experienceCount = subcards.filter((subcard) => subcard.name === 'Experience').length;
+    const advantageCount = subcards.filter((subcard) => subcard.name === 'Advantage').length;
+    // Selection of specific/multiple tokens is a later part of this work; for now clicking a
+    // badge selects the first selectable token of that type (tokens of a type are fungible).
+    const selectableShield = subcards.find((subcard) => subcard.name === 'Shield' && subcard.selectable);
+    const selectableExperience = subcards.find((subcard) => subcard.name === 'Experience' && subcard.selectable);
+    const selectableAdvantage = subcards.find((subcard) => subcard.name === 'Advantage' && subcard.selectable);
+
+    // On a multi-select prompt (e.g. Power Failure), clicking a token badge opens a popup to
+    // select any number of this unit's upgrades individually. On single-select prompts, badges
+    // keep the inline behavior (select the first selectable token of that type). The popup itself
+    // is kept live and auto-closed by an effect above the early return.
+    const upgradesClickable = multiSelectActive && hasSelectableUpgrades;
+    const openUpgradeSelectPopup = () => openPopup('select', upgradeSelectPopupData(card.uuid, card.name, subcards));
+    const badgeClick = (e: React.MouseEvent, selectableToken?: ICardData) => {
+        if (upgradesClickable) {
+            e.stopPropagation();
+            openUpgradeSelectPopup();
+        } else if (selectableToken) {
+            subcardClick(e, selectableToken);
+        }
+    };
     const promptType = getConnectedPlayerPrompt()?.promptType;
     const borderColor = getBorderColor({
         card,
@@ -432,28 +529,69 @@ const GameCard: React.FC<IGameCardProps> = ({
             height: '100%',
             userSelect: 'none',
         },
-        shieldContainer: {
-            position:'absolute',
-            top:'-5%',
+        tokenBadgeContainer: {
+            position: 'absolute',
+            top: '-5%',
             right: '-4%',
-            width: '100%',
-            justifyContent: 'right',
-            alignItems: 'center',
-            columnGap: '4px'
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            rowGap: '0.15em',
+            fontSize: 'clamp(0.45rem, 1.15vw, 1rem)',
+            zIndex: 2,
         },
-        shieldIcon:{
-            width: '28%',
-            aspectRatio: '1 / 1',
+        tokenBadge: {
+            position: 'relative',
+            display: 'inline-flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '1.5em',
+            minWidth: '1.5em',
+            padding: '0 0.3em',
+            columnGap: '0.12em',
+            fontWeight: 700,
+            lineHeight: 1,
+            filter: 'drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.55))',
+            userSelect: 'none',
+            cursor: 'default',
+        },
+        selectableTokenBadge: {
+            cursor: 'pointer',
+        },
+        shieldBadgeEmblem: {
+            position: 'relative',
+            zIndex: 1,
+            width: '1.25em',
+            height: '1.25em',
+            flexShrink: 0,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
             backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
         },
-        blankedShieldIcon:{
-            width: '28%',
-            aspectRatio: '1 / 1',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('shield-token-blanked')})`,
+        tokenBadgeSymbol: {
+            position: 'relative',
+            zIndex: 1,
+            fontSize: '1em',
+            fontWeight: 800,
+            lineHeight: 1,
+            color: 'inherit',
+        },
+        tokenBadgeChevron: {
+            position: 'relative',
+            zIndex: 1,
+            fontSize: '1.15em',
+            color: 'inherit',
+        },
+        tokenBadgeCount: {
+            position: 'relative',
+            zIndex: 1,
+            fontSize: '0.95em',
+            fontWeight: 700,
+            lineHeight: 1,
+            color: 'inherit',
+            textShadow: '0px 1px 1px rgba(0, 0, 0, 0.35)',
         },
         upgradeIcon:{
             position: 'relative',
@@ -770,19 +908,50 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 isIndirect={isIndirectDamage}
                             /> 
                         )}
-                        <Grid direction="row" container sx={styles.shieldContainer}>
-                            {shieldCards.map((shieldCard, index) => (
+                        <Box sx={styles.tokenBadgeContainer}>
+                            {shieldCount > 0 && (
                                 <Box
-                                    key={`${card.uuid}-shield-${index}`}
                                     sx={{
-                                        ...(shieldCard.isBlanked ? styles.blankedShieldIcon : styles.shieldIcon),
-                                        border: shieldCard.selectable ? `2px solid ${getBorderColor({ card: shieldCard, player: connectedPlayer })}` : 'none',
-                                        cursor: shieldCard.selectable ? 'pointer' : 'normal'
+                                        ...styles.tokenBadge,
+                                        color: '#fff',
+                                        ...((selectableShield || upgradesClickable) ? styles.selectableTokenBadge : {}),
                                     }}
-                                    onClick={(e) => subcardClick(e, shieldCard)}
-                                />
-                            ))}
-                        </Grid>
+                                    onClick={(selectableShield || upgradesClickable) ? (e) => badgeClick(e, selectableShield) : undefined}
+                                >
+                                    {renderTokenShape('#00A6EC', selectableShield ? getBorderColor({ card: selectableShield, player: connectedPlayer }) : undefined)}
+                                    <Box sx={styles.shieldBadgeEmblem}/>
+                                    <Typography sx={styles.tokenBadgeCount}>{shieldCount}</Typography>
+                                </Box>
+                            )}
+                            {experienceCount > 0 && (
+                                <Box
+                                    sx={{
+                                        ...styles.tokenBadge,
+                                        color: '#fff',
+                                        ...((selectableExperience || upgradesClickable) ? styles.selectableTokenBadge : {}),
+                                    }}
+                                    onClick={(selectableExperience || upgradesClickable) ? (e) => badgeClick(e, selectableExperience) : undefined}
+                                >
+                                    {renderTokenShape('#2e7d32', selectableExperience ? getBorderColor({ card: selectableExperience, player: connectedPlayer }) : undefined)}
+                                    <Typography sx={styles.tokenBadgeSymbol}>+</Typography>
+                                    <Typography sx={styles.tokenBadgeCount}>{experienceCount}</Typography>
+                                </Box>
+                            )}
+                            {advantageCount > 0 && (
+                                <Box
+                                    sx={{
+                                        ...styles.tokenBadge,
+                                        color: '#000',
+                                        ...((selectableAdvantage || upgradesClickable) ? styles.selectableTokenBadge : {}),
+                                    }}
+                                    onClick={(selectableAdvantage || upgradesClickable) ? (e) => badgeClick(e, selectableAdvantage) : undefined}
+                                >
+                                    {renderTokenShape('#ffffff', selectableAdvantage ? getBorderColor({ card: selectableAdvantage, player: connectedPlayer }) : undefined)}
+                                    <KeyboardArrowUp sx={styles.tokenBadgeChevron}/>
+                                    <Typography sx={styles.tokenBadgeCount}>{advantageCount}</Typography>
+                                </Box>
+                            )}
+                        </Box>
                         {card.sentinel && (
                             <Box sx={styles.sentinelIcon}/>
                         )}

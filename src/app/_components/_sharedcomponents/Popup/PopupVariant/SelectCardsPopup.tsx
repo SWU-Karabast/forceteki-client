@@ -11,10 +11,12 @@ import {
 } from '../Popup.styles';
 import { PerCardButton, SelectCardsPopup } from '../Popup.types';
 import { useGame } from '@/app/_contexts/Game.context';
+import { usePopup } from '@/app/_contexts/Popup.context';
 import { BiMinus, BiPlus } from 'react-icons/bi';
 import { CardStyle } from '../../Cards/CardTypes';
 import GameCard from '../../Cards/GameCard';
 import RichText from '../../RichText/RichText';
+import GradientBorderButton from '../../_styledcomponents/GradientBorderButton';
 
 interface ButtonProps {
     data: SelectCardsPopup;
@@ -85,6 +87,7 @@ const styles = {
 
 export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
     const { sendGameMessage } = useGame();
+    const { closePopup } = usePopup();
     const [isMinimized, setIsMinimized] = useState(false);
 
     const selectingCards = data.cards.some((card) => card.selectionState === 'selectable' || card.selectionState === 'selected') && 
@@ -100,7 +103,13 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
 
     const handleCardClick = (cardUuid: string) => {
         if (!clickDisabled()) {
-            sendGameMessage(['menuButton', cardUuid, data.uuid])
+            if (data.clickMode === 'cardClicked') {
+                // Board card selection (e.g. selecting a unit's upgrades): toggles selection
+                // on the server's SelectCardPrompt, same as clicking the card on the board.
+                sendGameMessage(['cardClicked', cardUuid]);
+            } else {
+                sendGameMessage(['menuButton', cardUuid, data.uuid]);
+            }
         }
     }
 
@@ -147,21 +156,29 @@ export const SelectCardsPopupModal = ({ data }: ButtonProps) => {
                         })}
                     </Box>
                 </Box>
-                <Box sx={styles.actionFooter}>
-                    {data.buttons.map((button, index) => 
-                        <Button
-                            key={`${button.arg}:${index}`}
-                            sx={perCardButtonStyle}
-                            variant="contained"
-                            disabled={button.disabled}
-                            onClick={() => {
-                                sendGameMessage([button.command, button.arg, data.uuid]);
-                            }}
-                        >
-                            {button.text}
-                        </Button>
-                    )}
-                </Box>
+                {data.localDoneButton ? (
+                    <Box sx={{ ...styles.actionFooter, justifyContent: 'flex-end' }}>
+                        <GradientBorderButton onClick={() => closePopup(data.uuid)}>
+                            Done
+                        </GradientBorderButton>
+                    </Box>
+                ) : (
+                    <Box sx={styles.actionFooter}>
+                        {data.buttons.map((button, index) =>
+                            <Button
+                                key={`${button.arg}:${index}`}
+                                sx={perCardButtonStyle}
+                                variant="contained"
+                                disabled={button.disabled}
+                                onClick={() => {
+                                    sendGameMessage([button.command, button.arg, data.uuid]);
+                                }}
+                            >
+                                {button.text}
+                            </Button>
+                        )}
+                    </Box>
+                )}
             </>
         );
     };
