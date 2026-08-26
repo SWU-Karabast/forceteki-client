@@ -16,12 +16,11 @@
  * @property type - Which token this is; sets fill, content colour and default outline.
  * @property stroke - Overrides the type's outline, e.g. with a selection colour. Pass null
  *   to force no outline.
- * @property onClick - Makes the token interactive.
  * @property sx - Merged into the root sx. Sizing and spacing belong here.
  * @property children - Rendered above the shape.
  */
-import { useLayoutEffect, useRef, useState, type ComponentType, type MouseEvent, type ReactNode, type SVGProps } from 'react';
-import Box from '@mui/material/Box';
+import { useLayoutEffect, useRef, useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
+import Box, { type BoxProps } from '@mui/material/Box';
 import { SxProps, Theme } from '@mui/material/styles';
 import AdvantageIcon from '@/assets/token-icons/advantage.svg';
 import ExperienceIcon from '@/assets/token-icons/experience.svg';
@@ -189,15 +188,14 @@ export function buildTokenPath(width: number, height: number): string {
     ].join(' ');
 }
 
-export type TokenContainerProps = {
+export type TokenContainerProps = Omit<BoxProps, 'type' | 'sx' | 'children' | 'ref'> & {
     type: TokenType;
     stroke?: string | null;
-    onClick?: (event: MouseEvent) => void;
     sx?: SxProps<Theme>;
     children?: ReactNode;
 };
 
-export function TokenContainer({ type, stroke, onClick, sx, children }: TokenContainerProps) {
+export function TokenContainer({ type, stroke, sx, children, ...boxProps }: TokenContainerProps) {
     const appearance = TOKEN_TYPES[type];
     const Icon = appearance.icon;
     const ref = useRef<HTMLDivElement>(null);
@@ -235,7 +233,7 @@ export function TokenContainer({ type, stroke, onClick, sx, children }: TokenCon
     return (
         <Box
             ref={ref}
-            onClick={onClick}
+            {...boxProps}
             sx={{
                 position: 'relative',
                 // Own stacking context, so the silhouette's negative z-index stays inside

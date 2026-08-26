@@ -18,7 +18,7 @@ import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighli
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
-import { TokenContainer } from '../_styledcomponents/TokenContainer';
+import { TokenContainer, type TokenType } from '../_styledcomponents/TokenContainer';
 
 // Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
 const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
@@ -46,6 +46,18 @@ const upgradeSelectPopupData = (
     clickMode: 'cardClicked',
     localCloseButton: true,
 });
+
+// Neutral token upgrades are consolidated into count badges on the right edge of the card,
+// in this order; every other upgrade renders as a bar below the card. A subcard is matched
+// to a badge by name, which is also how it is kept out of the bars.
+const TOKEN_BADGES: readonly { name: string; type: TokenType }[] = [
+    { name: 'Shield', type: 'shield' },
+    { name: 'Experience', type: 'experience' },
+    { name: 'Weakness', type: 'weakness' },
+    { name: 'Advantage', type: 'advantage' },
+];
+
+const TOKEN_BADGE_NAMES = TOKEN_BADGES.map((badge) => badge.name);
 
 
 
@@ -316,20 +328,19 @@ const GameCard: React.FC<IGameCardProps> = ({
                 return 'upgrade-grey.png';
         }
     };
-    // Neutral token upgrades are consolidated into count badges on the right edge of the card.
-    // All other upgrades render as bars below the card.
-    const tokenUpgradeNames = ['Shield', 'Experience', 'Advantage', 'Weakness'];
-    const nonShieldUpgradeCards = subcards.filter((subcard) => !tokenUpgradeNames.includes(subcard.name ?? ''));
-    const shieldCount = subcards.filter((subcard) => subcard.name === 'Shield').length;
-    const experienceCount = subcards.filter((subcard) => subcard.name === 'Experience').length;
-    const advantageCount = subcards.filter((subcard) => subcard.name === 'Advantage').length;
-    const weaknessCount = subcards.filter((subcard) => subcard.name === 'Weakness').length;
-    // Selection of specific/multiple tokens is a later part of this work; for now clicking a
-    // badge selects the first selectable token of that type (tokens of a type are fungible).
-    const selectableShield = subcards.find((subcard) => subcard.name === 'Shield' && subcard.selectable);
-    const selectableExperience = subcards.find((subcard) => subcard.name === 'Experience' && subcard.selectable);
-    const selectableAdvantage = subcards.find((subcard) => subcard.name === 'Advantage' && subcard.selectable);
-    const selectableWeakness = subcards.find((subcard) => subcard.name === 'Weakness' && subcard.selectable);
+    const nonShieldUpgradeCards = subcards.filter((subcard) => !TOKEN_BADGE_NAMES.includes(subcard.name ?? ''));
+ 
+    const tokenBadges = TOKEN_BADGES
+        .map(({ name, type }) => {
+            const tokens = subcards.filter((subcard) => subcard.name === name);
+            return {
+                type,
+                count: tokens.length,
+                token: tokens[0],
+                selectableToken: tokens.find((subcard) => subcard.selectable),
+            };
+        })
+        .filter((badge) => badge.count > 0);
 
     // On a multi-select prompt (e.g. Power Failure), clicking a token badge opens a popup to
     // select any number of this unit's upgrades individually. On single-select prompts, badges
@@ -839,58 +850,28 @@ const GameCard: React.FC<IGameCardProps> = ({
                             /> 
                         )}
                         <Box sx={styles.tokenBadgeContainer}>
-                            {shieldCount > 0 && (
-                                <TokenContainer
-                                    type="shield"
-                                    stroke={selectableShield ? getBorderColor({ card: selectableShield, player: connectedPlayer }) : undefined}
-                                    onClick={(selectableShield || upgradesClickable) ? (e) => badgeClick(e, selectableShield) : undefined}
-                                    sx={{
-                                        ...styles.tokenBadge,
-                                        ...((selectableShield || upgradesClickable) ? styles.selectableTokenBadge : {}),
-                                    }}
-                                >
-                                    <Typography sx={styles.tokenBadgeCount}>{shieldCount}</Typography>
-                                </TokenContainer>
-                            )}
-                            {experienceCount > 0 && (
-                                <TokenContainer
-                                    type="experience"
-                                    stroke={selectableExperience ? getBorderColor({ card: selectableExperience, player: connectedPlayer }) : undefined}
-                                    onClick={(selectableExperience || upgradesClickable) ? (e) => badgeClick(e, selectableExperience) : undefined}
-                                    sx={{
-                                        ...styles.tokenBadge,
-                                        ...((selectableExperience || upgradesClickable) ? styles.selectableTokenBadge : {}),
-                                    }}
-                                >
-                                    <Typography sx={styles.tokenBadgeCount}>{experienceCount}</Typography>
-                                </TokenContainer>
-                            )}
-                            {weaknessCount > 0 && (
-                                <TokenContainer
-                                    type="weakness"
-                                    stroke={selectableWeakness ? getBorderColor({ card: selectableWeakness, player: connectedPlayer }) : undefined}
-                                    onClick={(selectableWeakness || upgradesClickable) ? (e) => badgeClick(e, selectableWeakness) : undefined}
-                                    sx={{
-                                        ...styles.tokenBadge,
-                                        ...((selectableWeakness || upgradesClickable) ? styles.selectableTokenBadge : {}),
-                                    }}
-                                >
-                                    <Typography sx={styles.tokenBadgeCount}>{weaknessCount}</Typography>
-                                </TokenContainer>
-                            )}
-                            {advantageCount > 0 && (
-                                <TokenContainer
-                                    type="advantage"
-                                    stroke={selectableAdvantage ? getBorderColor({ card: selectableAdvantage, player: connectedPlayer }) : undefined}
-                                    onClick={(selectableAdvantage || upgradesClickable) ? (e) => badgeClick(e, selectableAdvantage) : undefined}
-                                    sx={{
-                                        ...styles.tokenBadge,
-                                        ...((selectableAdvantage || upgradesClickable) ? styles.selectableTokenBadge : {}),
-                                    }}
-                                >
-                                    <Typography sx={styles.tokenBadgeCount}>{advantageCount}</Typography>
-                                </TokenContainer>
-                            )}
+                            {tokenBadges.map(({ type, count, token, selectableToken }) => {
+                                const clickable = !!selectableToken || upgradesClickable;
+                                return (
+                                    <TokenContainer
+                                        key={type}
+                                        type={type}
+                                        stroke={selectableToken ? getBorderColor({ card: selectableToken, player: connectedPlayer }) : undefined}
+                                        onClick={clickable ? (e) => badgeClick(e, selectableToken) : undefined}
+                                        sx={{
+                                            ...styles.tokenBadge,
+                                            ...(clickable ? styles.selectableTokenBadge : {}),
+                                        }}
+                                        onMouseEnter={handlePreviewOpen}
+                                        onMouseLeave={handlePreviewClose}
+                                        {...longPressHandlers}
+                                        data-card-url={s3CardImageURL(token, locale, CardStyle.Plain, cardbackPath)}
+                                        data-card-type={token.printedType}
+                                    >
+                                        <Typography sx={styles.tokenBadgeCount}>{count}</Typography>
+                                    </TokenContainer>
+                                );
+                            })}
                         </Box>
                         {card.sentinel && (
                             <Box sx={styles.sentinelIcon}/>
