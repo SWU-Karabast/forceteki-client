@@ -244,6 +244,7 @@ export function TokenContainer({ type, stroke, sx, children, ...boxProps }: Toke
                 justifyContent: 'center',
                 fontWeight: 700,
                 lineHeight: 1,
+                fontVariantNumeric: 'tabular-nums',
                 userSelect: 'none',
                 color: appearance.color,
                 ...sx,
