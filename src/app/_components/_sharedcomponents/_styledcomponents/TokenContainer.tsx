@@ -13,13 +13,18 @@
  * children need no positioning of their own. Measures itself and rebuilds the shape at
  * that size, so the corners hold their form at any width.
  *
+ * The fill carries a rim light rather than a face gradient. Badges render around 20px tall,
+ * where shading across the face spans too few pixels to register, while an edge treatment
+ * reads at any size because it puts its contrast where the eye is already tracing the
+ * silhouette. This is a deliberate departure from the printed token, whose face is flat.
+ *
  * @property type - Which token this is; sets fill, content colour and default outline.
  * @property stroke - Overrides the type's outline, e.g. with a selection colour. Pass null
  *   to force no outline.
  * @property sx - Merged into the root sx. Sizing and spacing belong here.
  * @property children - Rendered above the shape.
  */
-import { useLayoutEffect, useRef, useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
+import { useId, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
 import Box, { type BoxProps } from '@mui/material/Box';
 import { SxProps, Theme } from '@mui/material/styles';
 import AdvantageIcon from '@/assets/token-icons/advantage.svg';
@@ -43,6 +48,14 @@ const CHAMFER_TIP_RATIO = 1 / 34;
 
 /** Reference height that a scaling `strokeWidth` is expressed against. */
 const STROKE_REFERENCE_HEIGHT = 100;
+
+/**
+ * Width of the rim light, as a fraction of the token's height so it holds its weight from a
+ * 20px badge up to a 40px counter. The rim is stroked at twice this and clipped to the
+ * silhouette, which leaves the inner half only - stroking an edge from the inside is what
+ * keeps the token's outer profile exactly where the path puts it.
+ */
+const RIM_WIDTH_RATIO = 0.055;
 
 /**
  * Side of the square every icon is drawn into, relative to the token's font size. Fixing
@@ -97,6 +110,12 @@ type TokenAppearance = {
 /**
  * Every token in the game, keyed by what it represents. Adding a token means adding an
  * entry here rather than threading colours through a call site.
+ *
+ * Fills follow the palette in theme.ts, where every selection and initiative colour sits at
+ * 92-100% saturation. A new fill belongs in that band, and its hue wants clear air from the
+ * ones already spoken for - shield at 198, experience at 123, weakness at 277, damage at
+ * 357. Lightness is then whatever leaves the white glyph legible, which is why experience
+ * runs darker than shield at the same saturation: green reads far lighter than cyan does.
  */
 const TOKEN_TYPES: Record<TokenType, TokenAppearance> = {
     shield: {
@@ -104,7 +123,7 @@ const TOKEN_TYPES: Record<TokenType, TokenAppearance> = {
         icon: ShieldIcon,
     },
     experience: {
-        fill: '#2E7D32', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
+        fill: '#0B8E12', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
         icon: ExperienceIcon,
     },
     advantage: {
@@ -112,7 +131,7 @@ const TOKEN_TYPES: Record<TokenType, TokenAppearance> = {
         icon: AdvantageIcon,
     },
     weakness: {
-        fill: '#6A2C3E', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
+        fill: '#7606BC', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
         icon: WeaknessIcon,
     },
     damageCounter: { fill: '#DB131D', color: '#FFFFFF', strokeWidth: 0 },
@@ -198,6 +217,9 @@ export type TokenContainerProps = Omit<BoxProps, 'type' | 'sx' | 'children' | 'r
 export function TokenContainer({ type, stroke, sx, children, ...boxProps }: TokenContainerProps) {
     const appearance = TOKEN_TYPES[type];
     const Icon = appearance.icon;
+    // SVG ids live in the document, not the component, so every token on the board needs its
+    // own. useId's colons are legal in a url() fragment but not in a selector; drop them.
+    const rimId = useId().replace(/[^a-zA-Z0-9]/g, '');
     const ref = useRef<HTMLDivElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -257,14 +279,39 @@ export function TokenContainer({ type, stroke, sx, children, ...boxProps }: Toke
                 aria-hidden
                 sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: -1 }}
             >
-                {measured && (
-                    <path
-                        d={buildTokenPath(width, height)}
-                        fill={appearance.fill}
-                        stroke={outline}
-                        strokeWidth={strokeWidth}
-                    />
-                )}
+                {measured && (() => {
+                    const d = buildTokenPath(width, height);
+                    return (
+                        <>
+                            <defs>
+                                {/* One light source, off the top-left: the rim runs from a bright
+                                    catch on the near edges to a dark one on the far side, which is
+                                    what gives a flat fill the read of a moulded chip. */}
+                                <linearGradient id={`${rimId}rim`} x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.55}/>
+                                    <stop offset="0.55" stopColor="#FFFFFF" stopOpacity={0.06}/>
+                                    <stop offset="1" stopColor="#000000" stopOpacity={0.22}/>
+                                </linearGradient>
+                                <clipPath id={`${rimId}clip`}>
+                                    <path d={d}/>
+                                </clipPath>
+                            </defs>
+                            <path d={d} fill={appearance.fill}/>
+                            <g clipPath={`url(#${rimId}clip)`}>
+                                <path
+                                    d={d}
+                                    fill="none"
+                                    stroke={`url(#${rimId}rim)`}
+                                    strokeWidth={RIM_WIDTH_RATIO * height * 2}
+                                />
+                            </g>
+                            {/* Drawn last so a selection outline reads over the rim, not under it. */}
+                            {outline && (
+                                <path d={d} fill="none" stroke={outline} strokeWidth={strokeWidth}/>
+                            )}
+                        </>
+                    );
+                })()}
             </Box>
             {Icon && <Box sx={iconSlotSx}><Icon/></Box>}
             {children}
