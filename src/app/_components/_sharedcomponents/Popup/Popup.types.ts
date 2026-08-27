@@ -27,6 +27,13 @@ export type PopupButton = {
     label?: string;
     // number of similar triggers this button represents when several are grouped into one choice
     count?: number;
+    // true when this trigger is optional and can be declined inline via `passArg` (no interstitial prompt);
+    // clicking the card itself triggers the ability
+    optional?: boolean;
+    // command arg to send when declining an inline-optional trigger; only set when `optional` is true
+    passArg?: string;
+    // label for the inline decline button (respects an ability's custom pass text); only set when `optional` is true
+    passText?: string;
 };
 
 export type PerCardButton = {
