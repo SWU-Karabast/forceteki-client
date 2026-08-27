@@ -1,12 +1,28 @@
 import { AuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import DiscordProvider from 'next-auth/providers/discord';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import type { JWT } from 'next-auth/jwt';
 import jwt from 'jsonwebtoken';
 import { ServerApiService } from '../_services/ServerApiService';
 
 
 const TwoMonthsInSeconds = 60 * 24 * 60 * 60; // 60 days
+const developmentUsers = {
+    Order66: {
+        id: 'order66',
+        name: 'Order66',
+        email: 'order66@local.karabast',
+        provider: 'dev-user',
+    },
+    ThisIsTheWay: {
+        id: 'this-is-the-way',
+        name: 'ThisIsTheWay',
+        email: 'this-is-the-way@local.karabast',
+        provider: 'dev-user',
+    },
+} as const;
+
 export const authOptions: AuthOptions = {
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
@@ -18,6 +34,19 @@ export const authOptions: AuthOptions = {
             clientId: process.env.DISCORD_CLIENT_ID!,
             clientSecret: process.env.DISCORD_CLIENT_SECRET!,
         }),
+        ...(process.env.NODE_ENV === 'development'
+            ? [CredentialsProvider({
+                id: 'dev-user',
+                name: 'Development user',
+                credentials: {
+                    user: { label: 'User', type: 'text' },
+                },
+                async authorize(credentials) {
+                    const userKey = credentials?.user as keyof typeof developmentUsers;
+                    return developmentUsers[userKey] ?? null;
+                },
+            })]
+            : []),
     ],
     session: {
         strategy: 'jwt',

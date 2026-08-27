@@ -694,7 +694,6 @@ const removeUndefinedValues = <T>(obj: T): T => {
 };
 
 export const savePreferencesToServer = async (
-    user: IUser,
     preferences: IPreferences
 ): Promise<boolean> => {
     try {
@@ -705,7 +704,7 @@ export const savePreferencesToServer = async (
             preferences: cleanedPreferences
         };
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/preferences`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/preferences`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

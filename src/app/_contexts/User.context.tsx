@@ -44,13 +44,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const [isMod, setIsMod] = useState(false);
 
     useEffect(() => {
-        // check dev user first
-        const storedUser = localStorage.getItem('devUser');
-        if (process.env.NODE_ENV === 'development') {
-            if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
-                handleDevSetUser(storedUser);
-            }
-        }
         const syncUserWithServer = async () => {
             // If user is already logged in with the current session, do nothing
             if (session?.user && user?.providerId === session.user.id) {
@@ -78,6 +71,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
                         timerPopupSeenDate: serverUser.timerPopupSeenDate,
                     });
+
                     await update({ userId: serverUser.id });
                     // Fetch mod status
                     const modStatus = await import('@/app/_services/ServerApiService').then(m => m.ServerApiService.userIsModAsync());
@@ -97,9 +91,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         };
 
         // Handle setting anonymous user if needed
-        const setupAnonymousUserIfNeeded = (storedUser: string | null) => {
+        const setupAnonymousUserIfNeeded = () => {
             // Only set anonymous user if no session exists
-            if (!session?.user && !storedUser) {
+            if (!session?.user) {
                 let anonymousId = localStorage.getItem('anonymousUserId');
                 if (!anonymousId) {
                     anonymousId = uuid();
@@ -110,14 +104,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         };
 
         // to prevent race conditions
-        const initializeUser = async (storedUser: string | null) => {
+        const initializeUser = async () => {
             await syncUserWithServer();
-            setupAnonymousUserIfNeeded(storedUser);
+            setupAnonymousUserIfNeeded();
         };
-        if(hideLogin && (session?.user || storedUser)){
+        if(hideLogin && session?.user){
             logout();
         }
-        initializeUser(storedUser);
+        initializeUser();
     }, [session, pathname]);
 
     const login = (provider: 'google' | 'discord') => {
@@ -126,32 +120,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
         clearAnonUser();
     };
-
-    const handleDevSetUser = (user: 'Order66' | 'ThisIsTheWay') => {
-        if (user === 'Order66') {
-            setUser({
-                needsUsernameChange: false,
-                mustRequestUsernameChange: null,
-                reportingDisabled: null,
-                showWelcomeMessage: false,
-                id: 'exe66',
-                username: 'Order66',
-                authenticated: true,
-                preferences: { },
-            });
-        } else if (user === 'ThisIsTheWay') {
-            setUser({
-                needsUsernameChange: false,
-                mustRequestUsernameChange: null,
-                reportingDisabled: null,
-                showWelcomeMessage: false,
-                id: 'th3w4y',
-                username: 'ThisIsTheWay',
-                authenticated: true,
-                preferences: { },
-            });
-        }
-    }
 
     const updateUsername = (newUsername: string) => {
         setUser((prevUser) => {
@@ -244,17 +212,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
     };
 
-    const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
-        handleDevSetUser(user);
+    const devLogin = async (user: 'Order66' | 'ThisIsTheWay') => {
         clearAnonUser();
-        localStorage.setItem('devUser', user);
-        router.push('/');
+        await signIn('dev-user', {
+            user,
+            callbackUrl: '/',
+        });
     };
 
 
     const logout = () => {
         signOut({ callbackUrl: '/' });
-        localStorage.removeItem('devUser');
         setUser(null);
     };
 
