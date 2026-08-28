@@ -4,11 +4,13 @@ import { Box, Typography, Tab, Tabs } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import CosmeticsManagerTab from './subpages/CosmeticsManagerTab';
 import UserManagementTab from './subpages/UserManagementTab';
+import ServerControlsTab from './subpages/ServerControlsTab';
 import { useRouter } from 'next/navigation';
 
 enum ModToolsTab {
     CosmeticsManager = 0,
     UserManagement = 1,
+    ServerControls = 2,
 }
 
 const ModPageClient = () => {
@@ -112,12 +114,14 @@ const ModPageClient = () => {
                 >
                     <Tab label="Cosmetics Manager" sx={styles.tab} />
                     <Tab label="User Management" sx={styles.tab} />
+                    <Tab label="Server Controls" sx={styles.tab} />
                 </Tabs>
 
                 {/* Tab Content */}
                 <Box sx={styles.tabPanel}>
                     {activeTab === ModToolsTab.CosmeticsManager && <CosmeticsManagerTab />}
                     {activeTab === ModToolsTab.UserManagement && <UserManagementTab />}
+                    {activeTab === ModToolsTab.ServerControls && <ServerControlsTab />}
                 </Box>
             </Box>
         </Box>
