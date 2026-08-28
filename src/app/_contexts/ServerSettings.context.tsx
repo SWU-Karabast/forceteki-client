@@ -27,14 +27,20 @@ export const DEFAULT_MAINTENANCE_MESSAGE = 'Karabast is currently under maintena
 interface IServerSettingsContext {
 
     /**
-     * Whether new games can be created. Starts false and only becomes true once the server says so,
-     * so an unreachable or restarting backend shows maintenance rather than letting players start
-     * games that would fail.
+     * Whether new games can be created. False until the server says otherwise, so a backend that has
+     * gone unreachable reads as maintenance rather than letting players start games that would fail.
+     * On its own it also reads as maintenance during the first request of every page load, which is
+     * what `hasLoaded` is for.
      */
     gamesEnabled: boolean;
     maintenanceMessage: string;
 
-    /** False until the first response arrives, for callers that want to avoid a maintenance flash. */
+    /**
+     * False until the first response arrives. Gate maintenance UI on this as well as `gamesEnabled`,
+     * so a page load shows the normal view while that first request is in flight instead of flashing
+     * maintenance at every visitor. The server rejects a game started in that window with a 503, so
+     * the client-side gate is presentation rather than enforcement.
+     */
     hasLoaded: boolean;
     refreshServerSettings: () => Promise<void>;
 }

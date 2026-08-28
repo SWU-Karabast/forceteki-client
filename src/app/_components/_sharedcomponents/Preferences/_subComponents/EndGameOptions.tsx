@@ -22,7 +22,7 @@ interface IProps {
 function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType }: IProps) {
     const router = useRouter();
     const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent, isAnonymousPlayer } = useGame();
-    const { gamesEnabled, maintenanceMessage } = useServerSettings();
+    const { gamesEnabled, maintenanceMessage, hasLoaded } = useServerSettings();
     const { user } = useUser();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
@@ -256,7 +256,7 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
     const hasStatsMessages = karabastStatsMessage || swuStatsMessage || swuBaseStatsMessage;
 
     // Check if maintenance mode is enabled
-    const isMaintenanceMode = !gamesEnabled;
+    const isMaintenanceMode = hasLoaded && !gamesEnabled;
 
     // ------------------------ Styles ------------------------//
     const styles = {

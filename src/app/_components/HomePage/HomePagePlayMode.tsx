@@ -101,7 +101,7 @@ const HomePagePlayMode: React.FC = () => {
         markAnnouncementAsSeen(announcement);
     };
 
-    const { gamesEnabled, maintenanceMessage } = useServerSettings();
+    const { gamesEnabled, maintenanceMessage, hasLoaded } = useServerSettings();
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
@@ -301,7 +301,7 @@ const HomePagePlayMode: React.FC = () => {
     return (
         <>
             <Card variant="black" sx={styles.wrapper}>
-                { !gamesEnabled ?
+                { hasLoaded && !gamesEnabled ?
                     <CardContent>
                         <Typography variant="h2">MAINTENANCE</Typography>
                         <Typography variant="h3">{maintenanceMessage}</Typography>

@@ -27,7 +27,7 @@ interface ILobbyConcededPopupProps {
 const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) => {
     const router = useRouter();
     const { lobbyState, connectedPlayer, sendLobbyMessage, sendMessage, resetStates, isSpectator } = useGame();
-    const { gamesEnabled } = useServerSettings();
+    const { gamesEnabled, hasLoaded } = useServerSettings();
 
     const isQuickMatch = gameType === MatchmakingType.Quick;
 
@@ -136,7 +136,7 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
     }
 
     // Check if maintenance mode is enabled
-    const isMaintenanceMode = !gamesEnabled;
+    const isMaintenanceMode = hasLoaded && !gamesEnabled;
 
     // ------------------------STYLES------------------------//
     const styles = {
