@@ -20,6 +20,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     title,
     cardStyle = LeaderBaseCardStyle.Plain,
     capturedCards = [],
+    upgrades = [],
     disabled = false,
     isLeader = false,
 }) => {
@@ -457,7 +458,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'relative',
             mb: isConnectedPlayer ? '-4%' : '0px',
             mt: isConnectedPlayer ? '0px' : '-4%',
-            zIndex: 1
+            // sits above the adjacent upgrade strip so the "Captured" divider stays fully legible
+            zIndex: 2
         }}>
             {!isConnectedPlayer && (
                 <Typography sx={styles.capturedCardsDivider}>
@@ -502,9 +504,53 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         </Box>
     )
 
+    // Base upgrades (via the Fortify keyword) render as aspect-colored strips tucked against the base,
+    // mirroring the captured-cards decoration above.
+    const upgradesDecoration = (
+        <Box sx={{
+            width: '100%',
+            position: 'relative',
+            mb: isConnectedPlayer ? '-4%' : '0px',
+            mt: isConnectedPlayer ? '0px' : '-4%',
+            zIndex: 1
+        }}>
+            {upgrades.map((upgrade: ICardData) => (
+                <Box
+                    key={`base-upgrade-${upgrade.uuid}`}
+                    sx={{
+                        ...styles.capturedCardIcon,
+                        cursor: upgrade.selectable ? 'pointer' : 'default',
+                    }}
+                    onClick={() => subcardClick(upgrade)}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    {...longPressHandlers}
+                    data-card-url={s3CardImageURL({ ...upgrade, setId: upgrade.setId }, locale)}
+                    data-card-type={upgrade.printedType}
+                    data-card-id={upgrade.setId ? upgrade.setId.set + '_' + upgrade.setId.number : upgrade.id}
+                >
+                    {/* Background image element positioned behind text */}
+                    <Box
+                        sx={{
+                            ...styles.capturedCardBackground,
+                            backgroundImage: `url(${capturedCardBackground(upgrade)})`,
+                            border: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',
+                        }}
+                    />
+                    <Typography sx={{
+                        ...styles.capturedCardName
+                    }}>
+                        {upgrade.name}
+                    </Typography>
+                </Box>
+            ))}
+        </Box>
+    )
+
     return (
         <Box sx={{ width: '100%' }}>
             {capturedCards.length > 0 && isConnectedPlayer && capturedCardsDecoration}
+            {upgrades.length > 0 && isConnectedPlayer && upgradesDecoration}
             <Box
                 sx={isDeployed ? styles.deployedPlaceholder : [styles.card, highlightSx]}
                 onClick={handleClick}
@@ -613,6 +659,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     </>
                 )}
             </Box>
+            {upgrades.length > 0 && !isConnectedPlayer && upgradesDecoration}
             {capturedCards.length > 0 && !isConnectedPlayer && capturedCardsDecoration}
         </Box>
     );
