@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, IconButton, Popover, PopoverOrigin, Tooltip, Typography } from '@mui/material';
 import ThreeSixty from '@mui/icons-material/ThreeSixty';
-import Grid from '@mui/material/Grid';
 import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
+import { PopupSource, type SelectCardsPopup } from '../Popup/Popup.types';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { getBorderColor } from './cardUtils';
@@ -18,6 +18,85 @@ import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighli
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
+import { TokenContainer, type TokenType } from '../_styledcomponents/TokenContainer';
+
+// Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
+const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
+    subcards
+        .filter((s) => s.selectable || s.selected)
+        .map((u) => ({
+            ...u,
+            selectionState: u.selected ? 'selected' : u.selectable ? 'selectable' : 'unselectable',
+        }));
+
+// Popup payload for selecting a unit's upgrades. Clicks toggle via 'cardClicked' (board
+// SelectCardPrompt); the Close button only dismisses the popup, since confirmation happens
+// on the board's own prompt Done.
+const upgradeSelectPopupData = (
+    unitUuid: string,
+    unitName: string | undefined,
+    subcards: ICardData[],
+): Omit<SelectCardsPopup, 'type'> => ({
+    uuid: unitUuid,
+    title: unitName ?? 'Select upgrades',
+    cards: buildUpgradeSelectCards(subcards),
+    perCardButtons: [],
+    buttons: [],
+    source: PopupSource.User,
+    clickMode: 'cardClicked',
+    localCloseButton: true,
+});
+
+// Neutral token upgrades are consolidated into count badges on the right edge of the card,
+// in this order; every other upgrade renders as a bar below the card. A subcard is matched
+// to a badge by name, which is also how it is kept out of the bars.
+const TOKEN_BADGES: readonly { name: string; type: TokenType }[] = [
+    { name: 'Shield', type: 'shield' },
+    { name: 'Experience', type: 'experience' },
+    { name: 'Weakness', type: 'weakness' },
+    { name: 'Advantage', type: 'advantage' },
+];
+
+const TOKEN_BADGE_NAMES = TOKEN_BADGES.map((badge) => badge.name);
+
+// Status icons drawn up the card's left edge, listed bottom-to-top: the first entry that
+// applies takes the fixed slot above the power badge and the rest grow upwards from it.
+// Adding an icon means adding an entry here rather than a style plus a branch in the render.
+const STATUS_ICONS: readonly {
+    key: string;
+    image: string;
+    applies: (card: ICardData, cardStyle: CardStyle) => boolean;
+    tooltip?: (card: ICardData) => string;
+}[] = [
+    {
+        key: 'cannotBeAttacked',
+        image: '/HiddenIcon.png',
+        applies: (card) => !!card.cannotBeAttacked,
+    },
+    {
+        key: 'sentinel',
+        image: s3TokenImageURL('sentinel-icon'),
+        applies: (card, cardStyle) => cardStyle === CardStyle.InPlay && !!card.sentinel,
+    },
+    {
+        key: 'blanked',
+        image: '/BlankIcon.png',
+        applies: (card) => !!card.isBlanked,
+    },
+    {
+        key: 'blockedFromPlay',
+        image: '/LockIcon.png',
+        applies: (card) => !!card.blockedFromPlayReason,
+        tooltip: (card) => card.blockedFromPlayReason || 'Cannot play this card',
+    },
+    {
+        key: 'stolen',
+        image: '/StolenIcon.png',
+        // Held by someone other than its owner.
+        applies: (card) => !!card.controllerId && !!card.ownerId && card.controllerId !== card.ownerId,
+    },
+];
+
 
 
 const usePopoverConfig = (card: ICardData): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
@@ -64,7 +143,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     cardback = undefined,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
-    const { clearPopups } = usePopup();
+    const { clearPopups, openPopup, closePopup, popups } = usePopup();
     const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
 
     const locale = useCardImageLocale();
@@ -77,9 +156,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
     const isHiddenHandCard = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
     const popoverConfig = usePopoverConfig(card);
-
-    // Check if card is blocked from play by opponent's effect (e.g., Regional Governor, Trade Route Taxation)
-    const isBlockedFromPlay = !!card.blockedFromPlayReason;
 
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -115,13 +191,6 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         onRelease: () => undefined,
     });
-
-    const isStolen = React.useMemo(() => {
-        if (!(card.controllerId && card.ownerId)) {
-            return false
-        }
-        return card.controllerId !== card.ownerId
-    }, [card.controllerId, card.ownerId])
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
         // Skip hover preview on touch devices to avoid brief flash on tap
@@ -188,6 +257,29 @@ const GameCard: React.FC<IGameCardProps> = ({
         )
         : '';
     const { status: cardImageStatus, imgProps: cardImgProps } = useImageLoadStatus(styledCardUrl);
+
+    // Multi-select upgrade popup: keep it in sync with live board state and auto-close it when the
+    // prompt ends or nothing stays selectable. Declared before the early return so hook order stays stable.
+    const multiSelectActive = getConnectedPlayerPrompt()?.selectCardMode === 'multiple';
+    const hasSelectableUpgrades = subcards.some((s) => s.selectable);
+    const upgradeUnitUuid = card?.uuid;
+    const upgradePopupOpen = popups.some((p) => p.uuid === upgradeUnitUuid);
+    // Signature of the live selection so the open popup is re-fed only on real changes (no loop).
+    const liveUpgradeSignature = subcards
+        .filter((s) => s.selectable || s.selected)
+        .map((u) => `${u.uuid}:${u.selected ? 's' : u.selectable ? 'a' : 'u'}`)
+        .join(',');
+    React.useEffect(() => {
+        if (!upgradePopupOpen || !upgradeUnitUuid) {
+            return;
+        }
+        if (!multiSelectActive || !hasSelectableUpgrades) {
+            closePopup(upgradeUnitUuid);
+            return;
+        }
+        openPopup('select', upgradeSelectPopupData(upgradeUnitUuid, card?.name, subcards));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [upgradePopupOpen, upgradeUnitUuid, multiSelectActive, hasSelectableUpgrades, liveUpgradeSignature]);
 
     if (!card) {
         return null;
@@ -264,9 +356,38 @@ const GameCard: React.FC<IGameCardProps> = ({
                 return 'upgrade-grey.png';
         }
     };
-    // Filter subcards into Shields and other upgrades
-    const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
-    const nonShieldUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
+    const nonShieldUpgradeCards = subcards.filter((subcard) => !TOKEN_BADGE_NAMES.includes(subcard.name ?? ''));
+ 
+    const tokenBadges = TOKEN_BADGES
+        .map(({ name, type }) => {
+            const tokens = subcards.filter((subcard) => subcard.name === name);
+            return {
+                type,
+                count: tokens.length,
+                token: tokens[0],
+                selectableToken: tokens.find((subcard) => subcard.selectable),
+            };
+        })
+        .filter((badge) => badge.count > 0);
+
+    const statusIcons = STATUS_ICONS
+        .filter(({ applies }) => applies(card, cardStyle))
+        .map(({ key, image, tooltip }) => ({ key, image, title: tooltip?.(card) }));
+
+    // On a multi-select prompt (e.g. Power Failure), clicking a token badge opens a popup to
+    // select any number of this unit's upgrades individually. On single-select prompts, badges
+    // keep the inline behavior (select the first selectable token of that type). The popup itself
+    // is kept live and auto-closed by an effect above the early return.
+    const upgradesClickable = multiSelectActive && hasSelectableUpgrades;
+    const openUpgradeSelectPopup = () => openPopup('select', upgradeSelectPopupData(card.uuid, card.name, subcards));
+    const badgeClick = (e: React.MouseEvent, selectableToken?: ICardData) => {
+        if (upgradesClickable) {
+            e.stopPropagation();
+            openUpgradeSelectPopup();
+        } else if (selectableToken) {
+            subcardClick(e, selectableToken);
+        }
+    };
     const promptType = getConnectedPlayerPrompt()?.promptType;
     const borderColor = getBorderColor({
         card,
@@ -432,28 +553,34 @@ const GameCard: React.FC<IGameCardProps> = ({
             height: '100%',
             userSelect: 'none',
         },
-        shieldContainer: {
-            position:'absolute',
-            top:'-5%',
+        tokenBadgeContainer: {
+            position: 'absolute',
+            top: '-5%',
             right: '-4%',
-            width: '100%',
-            justifyContent: 'right',
-            alignItems: 'center',
-            columnGap: '4px'
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            rowGap: '0.14em',
+            fontSize: 'clamp(0.44rem, 1.1vw, 0.96rem)',
+            zIndex: 2,
         },
-        shieldIcon:{
-            width: '28%',
-            aspectRatio: '1 / 1',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
+        tokenBadge: {
+            height: '1.2em',
+            minWidth: '1.2em',
+            padding: '0 0.22em',
+            columnGap: '0.1em',
+            filter: 'drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.55))',
+            cursor: 'default',
         },
-        blankedShieldIcon:{
-            width: '28%',
-            aspectRatio: '1 / 1',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('shield-token-blanked')})`,
+        selectableTokenBadge: {
+            cursor: 'pointer',
+        },
+        tokenBadgeCount: {
+            fontSize: '0.95em',
+            fontWeight: 700,
+            lineHeight: 1,
+            color: 'inherit',
+            textShadow: '0px 1px 1px rgba(0, 0, 0, 0.35)',
         },
         upgradeIcon:{
             position: 'relative',
@@ -516,37 +643,29 @@ const GameCard: React.FC<IGameCardProps> = ({
                  1px  1px 0 #000
             `
         },
-        sentinelIcon:{
+        statusIconContainer: {
             position: 'absolute',
-            width: '28%',
-            aspectRatio: '1 / 1',
-            top:'32%',
-            right: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('sentinel-icon')})`,
-            filter: 'drop-shadow(0 6px 6px 0 #00000040)'
-        },
-        stolenIcon:{
-            position: 'absolute',
-            width: '28%',
-            aspectRatio: '1 / 1',
-            top:'32%',
+            bottom: cardStyle === CardStyle.InPlay ? '33%' : '50%',
             left: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/StolenIcon.png)',
-        },
-        blankIcon:{
-            position: 'absolute',
             width: cardStyle === CardStyle.InPlay ? '28%' : '35%',
+            display: 'flex',
+            flexDirection: 'column-reverse',
+            alignItems: 'flex-start',
+            fontSize: 'clamp(0.44rem, 1.1vw, 0.96rem)',
+            rowGap: '0.2em',
+            pointerEvents: 'none',
+            zIndex: 2,
+        },
+        statusIcon: {
+            width: '100%',
             aspectRatio: '1 / 1',
-            top: '32%',
-            right: cardStyle === CardStyle.InPlay ? '-4%' : 'auto',
-            left: cardStyle === CardStyle.InPlay ? 'auto' : '1%',
+            flexShrink: 0,
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/BlankIcon.png)',
+            backgroundPosition: 'center',
+            pointerEvents: 'auto',
+            // One shadow for the whole stack, as the token badges carry one for every badge.
+            filter: 'drop-shadow(0 4px 4px rgba(0, 0, 0, 0.5))',
         },
         upgradeBlankIcon:{
             position: 'absolute',
@@ -557,29 +676,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/BlankIcon.png)',
         },
-        cannotBeAttacked:{
-            position: 'absolute',
-            width: '28%',
-            aspectRatio: '1 / 1',
-            top:'-5%',
-            left: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/HiddenIcon.png)',
-        },
-        blockedFromPlayIcon:{
-            position: 'absolute',
-            width: '35%',
-            aspectRatio: '1 / 1',
-            // Move down when blank icon is also visible (both icons would be at top: 32% otherwise)
-            top: card.isBlanked && cardStyle !== CardStyle.InPlay ? '60%' : '32%',
-            left: '1%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/LockIcon.png)',
-            filter: 'drop-shadow(0 4px 4px 0 #00000080)',
-            zIndex: 2,
-        },
         unimplementedAlert: {
             display: notImplemented(card) ? 'flex' : 'none',
             backgroundImage: 'url(/not-implemented.svg)',
@@ -587,22 +683,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: '1/1',
             width: '50%'
-        },
-        damageCounter: {
-            fontWeight: '800',
-            fontSize: '1.9rem',
-            color: 'white',
-            width: '2.5rem',
-            aspectRatio: '1 / 1',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: distributeHealing ? 'rgba(0, 186, 255, 1)' : 'url(/token-background.svg)',
-            borderRadius: distributeHealing ? '17px 8px' : '0px',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
-            textShadow: '1px 1px #00000033'
         },
         capturedCardsDivider:{
             fontSize: '11px',
@@ -748,20 +828,12 @@ const GameCard: React.FC<IGameCardProps> = ({
                         <Typography sx={styles.numberFont}>{cardCounter}</Typography>
                     </Box>
                 )}
-                {isStolen && (
-                    <Box sx={styles.stolenIcon}/>
-                )}
-                {card.cannotBeAttacked && (
-                    <Box sx={styles.cannotBeAttacked}/>
-                )}
-                {isBlockedFromPlay && (
-                    <Tooltip title={card.blockedFromPlayReason || 'Cannot play this card'} arrow>
-                        <Box sx={styles.blockedFromPlayIcon}/>
-                    </Tooltip>
-                )}
-                {card.isBlanked && (
-                    <Box sx={styles.blankIcon}/>
-                )}
+                <Box sx={styles.statusIconContainer}>
+                    {statusIcons.map(({ key, image, title }) => {
+                        const icon = <Box key={key} sx={{ ...styles.statusIcon, backgroundImage: `url(${image})` }}/>;
+                        return title ? <Tooltip key={key} title={title} arrow>{icon}</Tooltip> : icon;
+                    })}
+                </Box>
                 {cardStyle === CardStyle.InPlay && (
                     <>
                         { showValueAdjuster() && (
@@ -770,22 +842,30 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 isIndirect={isIndirectDamage}
                             /> 
                         )}
-                        <Grid direction="row" container sx={styles.shieldContainer}>
-                            {shieldCards.map((shieldCard, index) => (
-                                <Box
-                                    key={`${card.uuid}-shield-${index}`}
-                                    sx={{
-                                        ...(shieldCard.isBlanked ? styles.blankedShieldIcon : styles.shieldIcon),
-                                        border: shieldCard.selectable ? `2px solid ${getBorderColor({ card: shieldCard, player: connectedPlayer })}` : 'none',
-                                        cursor: shieldCard.selectable ? 'pointer' : 'normal'
-                                    }}
-                                    onClick={(e) => subcardClick(e, shieldCard)}
-                                />
-                            ))}
-                        </Grid>
-                        {card.sentinel && (
-                            <Box sx={styles.sentinelIcon}/>
-                        )}
+                        <Box sx={styles.tokenBadgeContainer}>
+                            {tokenBadges.map(({ type, count, token, selectableToken }) => {
+                                const clickable = !!selectableToken || upgradesClickable;
+                                return (
+                                    <TokenContainer
+                                        key={type}
+                                        type={type}
+                                        stroke={selectableToken ? getBorderColor({ card: selectableToken, player: connectedPlayer }) : undefined}
+                                        onClick={clickable ? (e) => badgeClick(e, selectableToken) : undefined}
+                                        sx={{
+                                            ...styles.tokenBadge,
+                                            ...(clickable ? styles.selectableTokenBadge : {}),
+                                        }}
+                                        onMouseEnter={handlePreviewOpen}
+                                        onMouseLeave={handlePreviewClose}
+                                        {...longPressHandlers}
+                                        data-card-url={s3CardImageURL(token, locale, CardStyle.Plain, cardbackPath)}
+                                        data-card-type={token.printedType}
+                                    >
+                                        <Typography sx={styles.tokenBadgeCount}>{count}</Typography>
+                                    </TokenContainer>
+                                );
+                            })}
+                        </Box>
                         <Box sx={styles.powerIcon}>
                             <Typography sx={styles.numberFont}>{card.power}</Typography>
                         </Box>

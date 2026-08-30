@@ -80,6 +80,20 @@ export type SelectCardsPopup = {
     perCardButtons: PerCardButton[];
     buttons: PopupButton[];
     source: PopupSource;
+
+    /**
+     * How a card click is sent to the server. Defaults to 'menuButton' (server-driven
+     * displayCards prompts). Use 'cardClicked' when the popup toggles selection of board
+     * cards (e.g. selecting a unit's upgrades for a board SelectCardPrompt).
+     */
+    clickMode?: 'menuButton' | 'cardClicked';
+
+    /**
+     * When true, render a single "Close" button that only dismisses the popup client-side
+     * (no message sent). Used when confirmation happens via the board's own prompt Done,
+     * so this button must not read as committing the action.
+     */
+    localCloseButton?: boolean;
 };
 
 export type PilePopup = {
