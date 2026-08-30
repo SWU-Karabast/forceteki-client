@@ -178,6 +178,16 @@ export interface IFindUserResponse {
     usernameChanges: IUsernameChangeResponse[];
 }
 
+/**
+ * Global server settings, owned by the backend and toggleable by moderators at runtime.
+ */
+export interface IServerSettings {
+    gamesEnabled: boolean;
+    maintenanceMessage?: string;
+    updatedBy?: string;
+    updatedAt?: string;
+}
+
 export enum DurationUnit {
     Days = 'Days',
     Weeks = 'Weeks',

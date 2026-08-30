@@ -33,6 +33,7 @@ import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayM
 import TimerTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/TimerTutorialPopup';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 import { ErrorModal } from '../_sharedcomponents/Error/ErrorModal';
+import { useServerSettings } from '@/app/_contexts/ServerSettings.context';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -99,6 +100,8 @@ const HomePagePlayMode: React.FC = () => {
         setShowAnnouncementPopup(false);
         markAnnouncementAsSeen(announcement);
     };
+
+    const { gamesEnabled, maintenanceMessage, hasLoaded } = useServerSettings();
 
     const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
@@ -298,11 +301,10 @@ const HomePagePlayMode: React.FC = () => {
     return (
         <>
             <Card variant="black" sx={styles.wrapper}>
-                { process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES === 'true' ?
+                { hasLoaded && !gamesEnabled ?
                     <CardContent>
                         <Typography variant="h2">MAINTENANCE</Typography>
-                        <Typography variant="h3" sx={{ mb: 1 }}>Karabast is currently under maintenance.</Typography>
-                        <Typography variant="h3">Be back soon!</Typography>
+                        <Typography variant="h3">{maintenanceMessage}</Typography>
                     </CardContent>
                     :
                     <CardContent>
