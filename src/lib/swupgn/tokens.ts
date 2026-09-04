@@ -1,4 +1,4 @@
-import type { CardKind, GameEvent } from './types';
+import type { CardKind, GameEvent, ReducedState } from './types';
 
 const TOKEN_PREFIX = 'TOKEN:';
 const FORCE_TOKEN_NAME = 'the force';
@@ -147,6 +147,57 @@ export function dropInertRecords(events: GameEvent[], keepSeqs: ReadonlySet<stri
  * would otherwise leave the viewer with zero frames and a spinner that never resolves.
  */
 export function normalizeEvents(events: GameEvent[], keepSeqs?: ReadonlySet<string>): GameEvent[] {
-    const repaired = dropInertRecords(normalizeTokenEvents(events), keepSeqs);
+    const repaired = dropInertRecords(normalizeTokenEvents(repairUpgradePlays(events)), keepSeqs);
     return repaired.length > 0 ? repaired : events;
+}
+
+/**
+ * Recover the host of an upgrade the writer played without naming one.
+ *
+ * `PLAY_UPGRADE` carries no `target` and the paired `MOVE` carries no `attachedTo`, so an
+ * upgrade has nowhere to attach and is dropped — a played Ascension Cable simply never
+ * appears. Worse for a PILOT: `kind` describes the card's PRINTED type, not the role it is
+ * taking, so Han Solo (a ground unit played as an upgrade onto a vehicle) arrives as
+ * `MOVE ... to: "space", kind: "unit"` and lands in the SPACE arena as a standalone ground
+ * unit next to the vehicle he is flying.
+ *
+ * The keyframes know the answer — they record `upgrades: ["JTL#203"]` on the host — so
+ * harvest that mapping and apply it to the events:
+ *   - a target-less `PLAY_UPGRADE` gets its `target`, so the fold attaches it;
+ *   - the `MOVE` that puts the card in an arena immediately before it is re-marked
+ *     `kind: 'upgrade'`, which is the writer's own signal for "this is not an arena card".
+ */
+export function repairUpgradePlays(events: GameEvent[]): GameEvent[] {
+    const hostOf = new Map<string, string>();
+    for (const e of events) {
+        if (e == null || typeof e !== 'object') continue;
+        const kf = (e as { keyframe?: ReducedState }).keyframe;
+        if (!kf) continue;
+        for (const ps of Object.values(kf.players ?? {})) {
+            for (const c of ps?.cards ?? []) {
+                for (const u of c?.upgrades ?? []) hostOf.set(u, c.id);
+            }
+        }
+    }
+    if (hostOf.size === 0) return events;
+
+    const playedAsUpgrade = new Set<string>();
+    for (const e of events) {
+        if (e != null && typeof e === 'object' && e.t === 'PLAY_UPGRADE') playedAsUpgrade.add(e.card);
+    }
+
+    return events.map((e, i) => {
+        if (e == null || typeof e !== 'object') return e;
+        if (e.t === 'PLAY_UPGRADE' && !e.target) {
+            const host = hostOf.get(e.card);
+            return host ? { ...e, target: host } : e;
+        }
+        if (e.t === 'MOVE' && e.kind !== 'upgrade' && playedAsUpgrade.has(e.card)) {
+            const next = events[i + 1];
+            const isThePlay = next != null && typeof next === 'object'
+                && next.t === 'PLAY_UPGRADE' && next.card === e.card;
+            if (isThePlay) return { ...e, kind: 'upgrade' as const };
+        }
+        return e;
+    });
 }

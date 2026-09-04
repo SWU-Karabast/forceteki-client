@@ -13,6 +13,6 @@ export { render } from './render';
 export { serialize } from './serialize';
 export type { NameResolver } from './cardNames';
 export { baseId, indexResolver } from './cardNames';
-export { normalizeTokenEvents, dropInertRecords, normalizeEvents, isStatusTokenCard, isTokenPseudoCard, tokenName, tokenArtId } from './tokens';
+export { normalizeTokenEvents, dropInertRecords, normalizeEvents, repairUpgradePlays, isStatusTokenCard, isTokenPseudoCard, tokenName, tokenArtId } from './tokens';
 export { checkKeyframes } from './integrity';
 export type { IntegrityResult, KeyframeMismatch } from './integrity';

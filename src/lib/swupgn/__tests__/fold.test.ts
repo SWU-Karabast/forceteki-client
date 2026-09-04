@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, normalizeEvents, isStatusTokenCard, tokenArtId, parse } from '../index';
+import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, normalizeEvents, repairUpgradePlays, isStatusTokenCard, tokenArtId, parse } from '../index';
 import type { GameEvent, ReducedState, PlayerState } from '../index';
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -537,5 +537,50 @@ describe('dropInertRecords never orphans an anchored record', () => {
 
     it('never empties a non-empty stream — an all-inert file must not render zero frames', () => {
         expect(normalizeEvents(inert)).toHaveLength(inert.length);
+    });
+});
+
+describe('upgrades attach to their host instead of standing in an arena', () => {
+    // A PILOT is the sharp case: `kind` describes the card's PRINTED type, not the role it
+    // is taking, so Han Solo (a ground unit played as an upgrade onto a vehicle) arrives as
+    // `MOVE ... to: "space", kind: "unit"` and stood in the SPACE arena as a standalone
+    // ground unit. PLAY_UPGRADE carries no target either — but the keyframes record
+    // `upgrades: ["JTL#203"]` on the host, so the binding is recoverable.
+    const pilotPlay: GameEvent[] = [
+        { seq: 'R3.A.0a', t: 'PLAY', p: 1, card: 'JTL#221', zone: 'space' },
+        { seq: 'R3.A.0b', t: 'MOVE', card: 'JTL#203', from: 'hand', to: 'space', p: 1, kind: 'unit' },
+        { seq: 'R3.A.1', t: 'PLAY_UPGRADE', p: 1, card: 'JTL#203', zone: 'space', cost: 5 },
+        { seq: 'R3.end', t: 'ROUND_END', round: 3, keyframe: {
+            round: 3, phase: 'action', initiative: 1,
+            players: {
+                1: { seat: 1, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
+                    resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [
+                        { id: 'JTL#221', zone: 'space', damage: 0, exhausted: false, upgrades: ['JTL#203'], shields: 0, experience: 0, statusTokens: {} },
+                        { id: 'JTL#203', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {} },
+                    ] },
+                2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
+                    resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
+            },
+        } },
+    ];
+
+    it('recovers the missing target from the keyframe and attaches at play time', () => {
+        const s = fold(normalizeEvents(pilotPlay).slice(0, 3));
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['JTL#221']);
+        expect(p1(s).cards[0].upgrades).toEqual(['JTL#203']);
+    });
+
+    it('never lists an attached card as its own arena card after a keyframe snap', () => {
+        const s = fold(normalizeEvents(pilotPlay));
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['JTL#221']);
+        expect(p1(s).cards[0].upgrades).toEqual(['JTL#203']);
+    });
+
+    it('leaves an already-targeted PLAY_UPGRADE alone', () => {
+        const ev: GameEvent[] = [
+            { seq: '1', t: 'PLAY', p: 1, card: 'HOST', zone: 'ground' },
+            { seq: '2', t: 'PLAY_UPGRADE', p: 1, card: 'UPG', target: 'HOST' },
+        ];
+        expect(repairUpgradePlays(ev)).toEqual(ev);
     });
 });

@@ -337,9 +337,12 @@ export function snapToKeyframe(s: ReducedState, kf: ReducedState): ReducedState 
     // renders as a card with no printed identity ("IMAGE NOT FOUND" on the board).
     for (const seat of [1, 2] as Seat[]) {
         const ps = next.players[seat];
-        if (ps?.cards) {
-            ps.cards = ps.cards.filter((c) => !isStatusTokenCard(c?.id));
-        }
+        if (!ps?.cards) continue;
+        // An attached card is listed TWICE: once inside its host's `upgrades`, and again as
+        // its own arena card. That second listing is what put Han Solo — a ground unit
+        // played as a pilot onto a vehicle — in the space arena as a standalone unit.
+        const attached = new Set(ps.cards.flatMap((c) => c?.upgrades ?? []));
+        ps.cards = ps.cards.filter((c) => !isStatusTokenCard(c?.id) && !attached.has(c?.id));
     }
     return next;
 }

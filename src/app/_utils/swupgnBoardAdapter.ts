@@ -202,6 +202,13 @@ function adaptPlayer(
     // Token badges ride along in the arena piles as parented cards, exactly as the live
     // server delivers upgrades; UnitsBoard groups them onto their host.
     const tokens = ps.cards.flatMap((c, i) => tokenCards(c, inPlay[i], playerId, statMap));
+    // Real (printed) upgrades attach the same way: one parented arena card per upgrade, so
+    // UnitsBoard groups it under its host. Without this a pilot or an equipment card is
+    // tracked in the fold but renders nowhere.
+    const upgrades = ps.cards.flatMap((c, i) => (c.upgrades ?? []).map((id) => ({
+        ...cardFromId(id, inPlay[i].zone, playerId, playerId, statOf(id, statMap)),
+        parentCardId: inPlay[i].uuid,
+    })));
     // Glow the card(s) that acted this frame (reuses GameCard's `selected` styling). The
     // board is non-interactive in replay, so repurposing `selected` as an action highlight
     // is safe and needs no new prop on the shared card component.
@@ -216,8 +223,8 @@ function adaptPlayer(
     if (attacking && attacking.size) {
         for (const c of inPlay) if (attacking.has(c.uuid)) c.attacking = true;
     }
-    const ground = [...inPlay, ...tokens].filter((c) => c.zone === 'groundArena');
-    const space = [...inPlay, ...tokens].filter((c) => c.zone === 'spaceArena');
+    const ground = [...inPlay, ...upgrades, ...tokens].filter((c) => c.zone === 'groundArena');
+    const space = [...inPlay, ...upgrades, ...tokens].filter((c) => c.zone === 'spaceArena');
     // Fog-of-war: render this player's hand as face-down placeholders (count preserved,
     // identities hidden) instead of the omniscient known cards.
     const hand = hideHand
