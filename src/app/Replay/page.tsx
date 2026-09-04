@@ -178,7 +178,7 @@ function ReplayBoard({ doc, rawContent, replayId, initialFrame, clipStart, clipE
     doc: SwuPgnDocument;
     rawContent: string | null;
     replayId: string | null;
-    initialFrame: number;
+    initialFrame: number | string;
     clipStart: number | null;
     clipEnd: number | null;
 }) {
@@ -205,7 +205,10 @@ export default function ReplayPage() {
     const toParam = searchParams.get('to');
     const clipStart = fromParam != null ? Number(fromParam) : null;
     const clipEnd = toParam != null ? Number(toParam) : null;
-    const initialFrame = Number(searchParams.get('t')) || clipStart || 0;
+    // `t` is a `seq` ("R4.A.8u"), which survives the reader dropping inert records. Older
+    // links carry a bare frame index; both are accepted (see ReplayProvider.initialFrame).
+    const tParam = searchParams.get('t');
+    const initialFrame = tParam || clipStart || 0;
 
     // On mount, if URL has ?id=, try to load from IndexedDB
     useEffect(() => {

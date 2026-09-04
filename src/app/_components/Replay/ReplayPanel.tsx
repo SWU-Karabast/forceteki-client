@@ -29,7 +29,7 @@ const BORDER = '1px solid rgba(255,255,255,0.1)';
 
 const ReplayPanel: React.FC = () => {
     const {
-        header, totalFrames, replayId, currentIndex, downloadTextLog, fogOfWar, toggleFogOfWar,
+        header, totalFrames, replayId, currentIndex, events, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip, doc, moves, nameOf,
     } = useReplay();
     const { downloadWithAnnotations } = useReplayAnnotations();
@@ -45,7 +45,9 @@ const ReplayPanel: React.FC = () => {
     };
     const shareMoment = () => {
         const base = `${window.location.origin}/Replay?id=${replayId ?? ''}`;
-        copy(`${base}&t=${currentIndex}`, 'Link to this moment copied');
+        // Share the frame's `seq`, not its index: indices shift if the reader's set of
+        // dropped records changes, seqs don't.
+        copy(`${base}&t=${events[currentIndex]?.seq ?? currentIndex}`, 'Link to this moment copied');
     };
     const copyClipLink = () => {
         if (!clip) return;

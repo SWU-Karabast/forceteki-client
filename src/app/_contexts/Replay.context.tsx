@@ -91,7 +91,8 @@ interface ReplayProviderProps {
     children: ReactNode;
     rawContent?: string | null;
     replayId?: string | null;
-    initialFrame?: number;
+    /** Opening position: a `seq` (stable across stream repairs) or a legacy frame index. */
+    initialFrame?: number | string;
     nameMap?: Record<string, string>;
     // Deep-linked clip range (?from&to): seek to start and auto-play the range on load.
     clipStart?: number | null;
@@ -269,10 +270,18 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             // Open on frame 0 unless a ?t deep-link says otherwise. Playback used to skip to
             // the first ROUND_START, which hid the setup prologue — including both players'
             // opening resource picks, which are exactly what a replay is reviewed for.
-            setCurrentIndex(Math.max(0, Math.min(initialFrame, totalFrames - 1)));
+            //
+            // A `seq` deep-link is resolved against the repaired stream, so it lands on the
+            // same MOMENT even though the reader drops inert records; a bare number is a
+            // legacy index and is taken at face value.
+            const seqIndex = typeof initialFrame === 'string' && !/^\d+$/.test(initialFrame)
+                ? events.findIndex((e) => e.seq === initialFrame)
+                : -1;
+            const target = seqIndex >= 0 ? seqIndex : Number(initialFrame) || 0;
+            setCurrentIndex(Math.max(0, Math.min(target, totalFrames - 1)));
             setIsPlaying(false);
         }
-    }, [doc, initialFrame, totalFrames, clipStart, clipEnd]);
+    }, [doc, events, initialFrame, totalFrames, clipStart, clipEnd]);
 
     // What happened on the current frame: a caption + the in-play card(s) to glow.
     const action = useMemo(() => frameAction(events[currentIndex], resolver), [events, currentIndex, resolver]);
