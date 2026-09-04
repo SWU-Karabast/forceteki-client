@@ -19,6 +19,7 @@ export interface IResourcingDecision {
     seat: Seat;
     round: number;
     card: string;
+
     /** The hand as it stood BEFORE the commitment, including `card`. */
     handBefore: string[];
 }
@@ -33,11 +34,14 @@ export interface IReplayContextType {
     lobbyState: null;
 
     doc: SwuPgnDocument;
+
     /** The repaired event stream. Frame indices address THIS, not `doc.events` — the
      *  reader drops inert records, so the two are not the same length. */
     events: GameEvent[];
+
     /** Round boundaries as scrubber marks: frame index + "R1", "R2", ... */
     roundMarks: { value: number; label: string }[];
+
     /** Every resource commitment, with the hand it was chosen from. */
     resourcingDecisions: IResourcingDecision[];
     currentIndex: number;
@@ -91,6 +95,7 @@ interface ReplayProviderProps {
     children: ReactNode;
     rawContent?: string | null;
     replayId?: string | null;
+
     /** Opening position: a `seq` (stable across stream repairs) or a legacy frame index. */
     initialFrame?: number | string;
     nameMap?: Record<string, string>;

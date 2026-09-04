@@ -1,5 +1,5 @@
 import type { GameEvent, ReducedState, PlayerState, CardInstanceState, Seat } from './types';
-import { isForceToken, isStatusTokenCard, isTokenPseudoCard } from './tokens';
+import { isForceToken, isStatusTokenCard } from './tokens';
 
 function emptyPlayer(seat: Seat): PlayerState {
     return {
