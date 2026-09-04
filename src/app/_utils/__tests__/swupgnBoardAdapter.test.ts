@@ -175,3 +175,29 @@ describe('token badges', () => {
         expect(gs.players['p1'].cardPiles['spaceArena']).toHaveLength(1);
     });
 });
+
+describe('player identity for the board', () => {
+    // LeaderBaseCard reads player.aspects and player.id UNGUARDED to pick the
+    // Heroism/Villainy Force-token art, so both must always be present — the crash only
+    // surfaces once a player actually holds the Force token.
+    const doc = parse(SAMPLE);
+    const seats: Record<Seat, string> = { 1: 'p1', 2: 'p2' };
+    const state = stateAt(doc.events, doc.events[doc.events.length - 1].seq);
+
+    it('always sets id and an aspects array, even with no card data loaded', () => {
+        const gs = adaptState(state, doc, { 1: 30, 2: 30 }, seats);
+        for (const id of ['p1', 'p2']) {
+            expect(gs.players[id].id).toBe(id);
+            expect(Array.isArray(gs.players[id].aspects)).toBe(true);
+        }
+    });
+
+    it('unions the leader and base aspects when card data is available', () => {
+        const statMap = {
+            [doc.header.p1Leader]: { aspects: ['cunning', 'heroism'] },
+            [doc.header.p1Base]: { aspects: ['command'] },
+        };
+        const gs = adaptState(state, doc, { 1: 30, 2: 30 }, seats, {}, statMap);
+        expect(gs.players['p1'].aspects).toEqual(['cunning', 'heroism', 'command']);
+    });
+});

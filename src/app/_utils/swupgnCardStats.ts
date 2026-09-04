@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { baseId } from '@/lib/swupgn';
 
-// public/card-stats.json is a static SET#NUM -> {power,hp,arena,type} map generated from
+// public/card-stats.json is a static SET#NUM -> {power,hp,arena,type,aspects} map generated from
 // forceteki's per-card data (npm run gen:card-data). The board uses it to show power/HP
 // stat badges on in-play units and the deployed-leader's unit stats — the .swupgn stream
 // carries card ids but not printed stats. Fetched once and module-cached, like names/costs.
@@ -10,6 +10,7 @@ export interface CardStat {
     power?: number;
     hp?: number;
     arena?: string;    // 'ground' | 'space'
+    aspects?: string[];// e.g. ['cunning','heroism'] — leader/base aspects
 }
 
 const CARD_STATS_URL = '/card-stats.json';

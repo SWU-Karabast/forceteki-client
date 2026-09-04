@@ -204,7 +204,16 @@ function adaptPlayer(
     if (highlight && highlight.has(leaderId)) leader.selected = true;
     const base = cardFromId(baseSetId, 'base', playerId, playerId);
     base.type = 'base';
+    // The board reads the player's aspects (leader + base) to pick the Heroism/Villainy
+    // Force-token art, and `id` to tell whose side of the board it is on. Both are
+    // unguarded reads there, so they must be present, not just correct.
+    const aspects = [
+        ...(statOf(leaderId, statMap)?.aspects ?? []),
+        ...(statOf(baseSetId, statMap)?.aspects ?? []),
+    ];
     return {
+        id: playerId,
+        aspects,
         user: { username: playerId },
         leader,
         base,

@@ -1,7 +1,7 @@
 // Generates the replay viewer's static card-data assets from forceteki's card data:
 //   public/card-names.json : SET#NUM -> title              (move list / decklist / captions)
 //   public/card-costs.json : SET#NUM -> cost               (resourcing report float/spend math)
-//   public/card-stats.json : SET#NUM -> {power,hp,arena,type} (board: unit/leader stat badges)
+//   public/card-stats.json : SET#NUM -> {power,hp,arena,type,aspects} (board: stat badges, Force token art)
 //
 // Names/costs join the two summary files below. Stats come from the per-card files in
 // the Card/ directory (the only source that carries power/hp/arena/type).
@@ -95,6 +95,8 @@ if (fs.existsSync(cardDir)) {
         if (typeof card.power === 'number') entry.power = card.power;
         if (typeof card.hp === 'number') entry.hp = card.hp;
         if (card.arena) entry.arena = card.arena;
+        // Leader/base aspects decide a player's Heroism vs Villainy Force-token art.
+        if (card.aspects && card.aspects.length) entry.aspects = card.aspects;
         // A card can be printed in multiple sets; index every printing.
         const codes = (card.setCodes && card.setCodes.length ? card.setCodes : [card.setId]).filter(Boolean);
         for (const sc of codes) {
