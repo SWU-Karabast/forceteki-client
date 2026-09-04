@@ -133,3 +133,44 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
         expect(gs.players.p1.cardPiles.spaceArena.some((c: { uuid: string }) => c.uuid === 'JTL#018')).toBe(true);
     });
 });
+
+describe('token badges', () => {
+    // The board draws neutral tokens (Shield/Experience/Weakness/Advantage) as count
+    // badges built from a unit's subcards, which UnitsBoard groups by parentCardId.
+    // The folded counters have to be materialized that way or they render as nothing.
+    const inst = (over: Partial<CardInstanceState> = {}): CardInstanceState => ({
+        id: 'SEC#215', zone: 'space', damage: 0, exhausted: false,
+        upgrades: [], shields: 0, experience: 0, statusTokens: {}, ...over,
+    });
+
+    const stateWith = (c: CardInstanceState): ReducedState => ({
+        round: 1, phase: 'action', initiative: 1,
+        players: {
+            1: { seat: 1, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
+                resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [c] },
+            2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
+                resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
+        },
+    });
+
+    const doc = parse(SAMPLE);
+    const seats: Record<Seat, string> = { 1: 'p1', 2: 'p2' };
+
+    it('emits one parented token card per token, in the host arena', () => {
+        const gs = adaptState(
+            stateWith(inst({ shields: 2, experience: 1, statusTokens: { advantage: 1 } })),
+            doc, { 1: 30, 2: 30 }, seats,
+        );
+        const space = gs.players['p1'].cardPiles['spaceArena'];
+        const tokens = space.filter((c: { parentCardId?: string }) => c.parentCardId === 'SEC#215');
+        expect(tokens.map((t: { name: string }) => t.name).sort())
+            .toEqual(['Advantage', 'Experience', 'Shield', 'Shield']);
+        // The host itself is still a single unparented card in the arena.
+        expect(space.filter((c: { parentCardId?: string }) => !c.parentCardId)).toHaveLength(1);
+    });
+
+    it('emits nothing for a unit with no tokens', () => {
+        const gs = adaptState(stateWith(inst()), doc, { 1: 30, 2: 30 }, seats);
+        expect(gs.players['p1'].cardPiles['spaceArena']).toHaveLength(1);
+    });
+});

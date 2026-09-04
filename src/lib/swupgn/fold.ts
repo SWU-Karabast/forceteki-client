@@ -124,8 +124,23 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
     }
 }
 
+/**
+ * Status tokens (Advantage, The Force, ...) appear in the stream as pseudo-cards named
+ * `TOKEN:<Name>[:copy]`, with their own MOVE/DEFEAT/ABILITY events into and out of the
+ * arenas. They are NOT cards: they have no set id, so treating them as arena units puts
+ * a card with an unresolvable image on the board. The token's actual effect is recorded
+ * separately by STATUS_TOKEN on its host, which is what the board renders.
+ */
+const TOKEN_ID_PREFIX = 'TOKEN:';
+export const isTokenPseudoCard = (id: string): boolean => id.startsWith(TOKEN_ID_PREFIX);
+
 /** Apply a single event to state, mutating and returning it. */
 export function reduce(s: ReducedState, e: GameEvent): ReducedState {
+    // STATUS_TOKEN carries the host in `card` and the token in `token`, so it must still
+    // be applied; every other event naming a TOKEN: pseudo-card is board-state noise.
+    if (e.t !== 'STATUS_TOKEN' && 'card' in e && typeof e.card === 'string' && isTokenPseudoCard(e.card)) {
+        return s;
+    }
     switch (e.t) {
         case 'ROUND_START': s.round = e.round; break;
         case 'PHASE_START': s.phase = (e.phase as ReducedState['phase']); break;
@@ -234,12 +249,26 @@ function clone(s: ReducedState): ReducedState {
     return JSON.parse(JSON.stringify(s));
 }
 
+/**
+ * Snap the running fold to a keyframe. Keyframes in the wild are sometimes PARTIAL —
+ * forceteki has emitted `"players": {}` or only one seat — so a wholesale replace would
+ * drop the omitted seat's entire state and leave the board with a missing player
+ * (`gameState.players[connectedPlayer]` undefined, which crashes the trays). Merge per
+ * seat instead: a seat the keyframe carries is authoritative, a seat it omits keeps the
+ * folded state, which is the best information available for it.
+ */
+export function snapToKeyframe(s: ReducedState, kf: ReducedState): ReducedState {
+    const next = clone(kf);
+    next.players = { ...s.players, ...clone(kf).players };
+    return next;
+}
+
 export function fold(events: GameEvent[]): ReducedState {
     let s = emptyState();
     for (const e of events) {
         // A keyframe is authoritative: snap to it, then continue folding.
         if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe) {
-            s = clone(e.keyframe);
+            s = snapToKeyframe(s, e.keyframe);
             continue;
         }
         s = reduce(s, e);
@@ -262,7 +291,7 @@ export function foldFrames(events: GameEvent[]): ReducedState[] {
     for (let i = 0; i < events.length; i++) {
         const e = events[i];
         if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe) {
-            s = clone(e.keyframe);
+            s = snapToKeyframe(s, e.keyframe);
         } else {
             s = reduce(s, e);
         }

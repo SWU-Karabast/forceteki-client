@@ -1,5 +1,5 @@
 import type { CardInstanceState, GameEvent, PlayerState, ReducedState } from './types';
-import { reduce } from './fold';
+import { reduce, snapToKeyframe } from './fold';
 
 export interface KeyframeMismatch { seq: string; path: string; expected: unknown; got: unknown; }
 export interface IntegrityResult { ok: boolean; mismatches: KeyframeMismatch[]; }
@@ -109,7 +109,7 @@ export function checkKeyframes(events: GameEvent[]): IntegrityResult {
     for (const e of events) {
         if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe) {
             mismatches.push(...diff(e.seq, e.keyframe, s));
-            s = JSON.parse(JSON.stringify(e.keyframe));
+            s = snapToKeyframe(s, e.keyframe);
             continue;
         }
         s = reduce(s, e);

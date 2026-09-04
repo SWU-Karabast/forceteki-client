@@ -30,6 +30,7 @@ export interface AdaptedCard {
     experience?: number;
     statusTokens?: Record<string, number>;
     subcards?: AdaptedCard[];
+    parentCardId?: string;
 }
 
 /** ReducedState arena zones → board cardPiles zone names. */
@@ -63,6 +64,53 @@ export function cardFromId(
         selected: false,
         selectable: false,
     };
+}
+
+/** ReducedState token counters -> the subcard `name` GameCard's TOKEN_BADGES matches on.
+ *  The board draws neutral tokens as count badges built from a unit's `subcards`, so the
+ *  folded counters have to be materialized or they render as nothing. */
+const TOKEN_BADGE_NAME: Record<string, string> = {
+    shield: 'Shield',
+    experience: 'Experience',
+    weakness: 'Weakness',
+    advantage: 'Advantage',
+};
+
+/**
+ * Materialize a unit's folded token counters the way the live server does: one arena card
+ * per token carrying `parentCardId`, which UnitsBoard groups into the host's `subcards`.
+ * One card per token, since GameCard's badge count is `subcards.filter(...).length`.
+ */
+function tokenCards(inst: CardInstanceState, host: AdaptedCard, ownerId: string): AdaptedCard[] {
+    const counts: Record<string, number> = {
+        shield: inst.shields,
+        experience: inst.experience,
+        ...inst.statusTokens,
+    };
+    const out: AdaptedCard[] = [];
+    for (const [token, count] of Object.entries(counts)) {
+        const name = TOKEN_BADGE_NAME[token];
+        if (!name || !(count > 0)) continue;
+        for (let i = 0; i < count; i++) {
+            out.push({
+                // Token art lives under a numeric S3 id the .swupgn stream doesn't carry,
+                // so setId stays empty: the badge is an inline SVG and needs no image URL.
+                uuid: `${host.uuid}:${token}:${i}`,
+                setId: { set: '', number: 0 },
+                name,
+                zone: host.zone,
+                controllerId: ownerId,
+                ownerId,
+                type: 'token',
+                parentCardId: host.uuid,
+                damage: 0,
+                exhausted: false,
+                selected: false,
+                selectable: false,
+            });
+        }
+    }
+    return out;
 }
 
 /** Build a board card from a folded in-play instance. Printed power/HP come from the
@@ -113,6 +161,9 @@ function adaptPlayer(
     attacking?: Set<string>,
 ): any {
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap)));
+    // Token badges ride along in the arena piles as parented cards, exactly as the live
+    // server delivers upgrades; UnitsBoard groups them onto their host.
+    const tokens = ps.cards.flatMap((c, i) => tokenCards(c, inPlay[i], playerId));
     // Glow the card(s) that acted this frame (reuses GameCard's `selected` styling). The
     // board is non-interactive in replay, so repurposing `selected` as an action highlight
     // is safe and needs no new prop on the shared card component.
@@ -127,8 +178,8 @@ function adaptPlayer(
     if (attacking && attacking.size) {
         for (const c of inPlay) if (attacking.has(c.uuid)) c.attacking = true;
     }
-    const ground = inPlay.filter((c) => c.zone === 'groundArena');
-    const space = inPlay.filter((c) => c.zone === 'spaceArena');
+    const ground = [...inPlay, ...tokens].filter((c) => c.zone === 'groundArena');
+    const space = [...inPlay, ...tokens].filter((c) => c.zone === 'spaceArena');
     // Fog-of-war: render this player's hand as face-down placeholders (count preserved,
     // identities hidden) instead of the omniscient known cards.
     const hand = hideHand

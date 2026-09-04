@@ -179,3 +179,55 @@ describe('fold / foldFrames / stateAt', () => {
         expect(p1(s).cards.find((c) => c.id === 'U')).toBeUndefined(); // U comes after
     });
 });
+
+describe('keyframes are merged per seat, not replaced wholesale', () => {
+    // forceteki has emitted keyframes carrying only one seat (or `"players": {}`).
+    // A wholesale replace drops the omitted seat entirely, which leaves the board with
+    // `gameState.players[connectedPlayer]` undefined and crashes the card trays.
+    const partial = (round: number, seats: (1 | 2)[]): ReducedState => {
+        const full = keyframe({ round, p1: { baseHp: 20 }, p2: { baseHp: 25 } });
+        for (const seat of [1, 2] as const) if (!seats.includes(seat)) delete full.players[seat];
+        return full;
+    };
+
+    it('keeps the folded state for a seat the keyframe omits', () => {
+        const events: GameEvent[] = [
+            { seq: '1', t: 'MOVE', card: 'A', from: 'deck', to: 'hand', p: 1 },
+            { seq: 'R2.start', t: 'ROUND_START', round: 2, keyframe: partial(2, [2]) },
+        ];
+        const s = fold(events);
+        expect(s.players[1]).toBeDefined();
+        expect(s.players[1]!.hand).toEqual(['A']);   // survived the snap
+        expect(s.players[2]!.baseHp).toBe(25);       // seat present in the keyframe wins
+    });
+
+    it('an empty players map leaves both seats intact', () => {
+        const events: GameEvent[] = [
+            { seq: 'R4.start', t: 'ROUND_START', round: 4, keyframe: partial(4, []) },
+        ];
+        for (const s of foldFrames(events)) {
+            expect(s.players[1]).toBeDefined();
+            expect(s.players[2]).toBeDefined();
+        }
+    });
+});
+
+describe('TOKEN: pseudo-cards never become board cards', () => {
+    // Status tokens ride the stream as `TOKEN:<Name>[:copy]` with their own MOVE/DEFEAT
+    // events. They have no set id, so treating them as arena units renders a card whose
+    // image cannot resolve. Their effect is carried by STATUS_TOKEN on the host instead.
+    it('a token moved into an arena is ignored, but STATUS_TOKEN still lands', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'PLAY', card: 'SEC#215', zone: 'space', p: 1 });
+        s = reduce(s, { seq: '2', t: 'MOVE', card: 'TOKEN:Advantage', from: 'outsideTheGame', to: 'space', p: 1 });
+        s = reduce(s, { seq: '3', t: 'STATUS_TOKEN', card: 'SEC#215', token: 'advantage', count: 1 });
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['SEC#215']);
+        expect(p1(s).cards[0].statusTokens).toEqual({ advantage: 1 });
+    });
+
+    it('a defeated token is not pushed into the discard pile', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'DEFEAT', card: 'TOKEN:Advantage:2', reason: 'ability' });
+        expect(p1(s).discard).toEqual([]);
+    });
+});
