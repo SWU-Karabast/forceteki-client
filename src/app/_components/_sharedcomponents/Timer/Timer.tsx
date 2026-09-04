@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 import Tooltip, { TooltipProps } from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { formatMilliseconds, getTimerColor } from './timerUtils';
+import { useMediaQuery, useTheme } from '@mui/material';
 
 const TIMER_STEP = 100; // shorter intervals provide a smoother progress animation
 interface TimerProps extends CircularProgressProps {
@@ -20,6 +21,13 @@ interface TimerProps extends CircularProgressProps {
     tooltipTitle?: TooltipProps['title'];
 }
 
+const styles = {
+    container: { 
+        position: 'relative', 
+        display: 'inline-flex'
+    }
+}
+
 const Timer: React.FC<TimerProps> = ({
     activeTurn,
     children,
@@ -31,6 +39,8 @@ const Timer: React.FC<TimerProps> = ({
     timeRemaining,
     tooltipTitle,
     ...props }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     // Decreases turn time every 100ms, to provide a smooth countdown animation
     React.useEffect(() => {
         const timer = setInterval(() => {
@@ -65,10 +75,10 @@ const Timer: React.FC<TimerProps> = ({
                     )
             }
         >
-            <Box sx={{ position: 'relative', display: 'inline-flex', transform: { xs: 'scale(0.7)', md: 'none' } }}>
+            <Box sx={styles.container}>
                 <CircularProgress
                     variant='determinate'
-                    size={80}
+                    size={isMobile ? 44 : 80}
                     value={(timeRemaining / (maxTime / 100))} // Must be value between 0-100
                     sx={{
                         color: timerColor,

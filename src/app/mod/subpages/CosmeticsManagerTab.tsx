@@ -20,7 +20,7 @@ import {
 import Image from 'next/image';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { ICosmeticEntity, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { v4 as uuidv4 } from 'uuid';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 import { ServerApiService } from '@/app/_services/ServerApiService';
@@ -38,9 +38,15 @@ interface ValidationRules {
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const CosmeticsManagerTab: React.FC = () => {
+interface ICosmeticsManagerTabProps {
+
+    /** Moderators manage cardbacks only; the rest of this tab is admin-only, as are its endpoints. */
+    isAdmin: boolean;
+}
+
+const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) => {
     const { cosmetics, setCosmetics, fetchCosmetics } = useCosmetics();
-    const [filteredCosmetics, setFilteredCosmetics] = useState<IRegisteredCosmeticOption[]>([]);
+    const [filteredCosmetics, setFilteredCosmetics] = useState<ICosmeticEntity[]>([]);
     const [availableTypes, setAvailableTypes] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -90,14 +96,14 @@ const CosmeticsManagerTab: React.FC = () => {
         let results = allCosmetics;
 
         if (typeFilter !== 'All') {
-            results = results.filter((cosmetic: IRegisteredCosmeticOption) =>
+            results = results.filter((cosmetic: ICosmeticEntity) =>
                 cosmetic.type.toLowerCase() === typeFilter.toLowerCase()
             );
         }
 
         if (searchQuery.trim() !== '') {
             const query = searchQuery.toLowerCase();
-            results = results.filter((cosmetic: IRegisteredCosmeticOption) => {
+            results = results.filter((cosmetic: ICosmeticEntity) => {
                 const title = cosmetic.title?.toLowerCase() || '';
                 const id = cosmetic.id?.toLowerCase() || '';
                 return title.includes(query) || id.includes(query);
@@ -109,7 +115,7 @@ const CosmeticsManagerTab: React.FC = () => {
 
     useEffect(() => {
         if (allCosmetics.length > 0) {
-            const types = allCosmetics.reduce((acc: string[], cosmetic: IRegisteredCosmeticOption) => {
+            const types = allCosmetics.reduce((acc: string[], cosmetic: ICosmeticEntity) => {
                 const type = cosmetic.type.charAt(0).toUpperCase() + cosmetic.type.slice(1);
                 if (!acc.includes(type)) {
                     acc.push(type);
@@ -475,7 +481,7 @@ const CosmeticsManagerTab: React.FC = () => {
             {/* Header Controls */}
             <Box sx={styles.cosmeticsHeader}>
                 <Box sx={{ display: 'flex', gap: '10px', marginBottom: '1rem' }}>
-                    {isDev && (
+                    {isDev && isAdmin && (
                         <PreferenceButton
                             variant={'standard'}
                             text="Dev Cleanup"
@@ -528,7 +534,7 @@ const CosmeticsManagerTab: React.FC = () => {
             <Box sx={styles.cardOuter}>
                 <Card sx={styles.cardStyle}>
                     <Box sx={styles.mainContainerStyle}>
-                        {filteredCosmetics.map((cosmetic: IRegisteredCosmeticOption) => (
+                        {filteredCosmetics.map((cosmetic: ICosmeticEntity) => (
                             <Box sx={styles.cosmeticContainer} key={cosmetic.id}>
                                 <Box
                                     sx={{
@@ -543,7 +549,8 @@ const CosmeticsManagerTab: React.FC = () => {
                                     <Typography variant="caption" color="gray">
                                         {cosmetic.type} • {cosmetic.id}
                                     </Typography>
-                                    {cosmetic.title?.toLowerCase() !== 'default' && (
+                                    {cosmetic.title?.toLowerCase() !== 'default'
+                                        && (isAdmin || cosmetic.type === RegisteredCosmeticType.Cardback) && (
                                         <Button
                                             size="small"
                                             color="error"
@@ -598,7 +605,7 @@ const CosmeticsManagerTab: React.FC = () => {
                             label="Cosmetic Type"
                         >
                             <MenuItem value="cardback">Cardback (718x1000)</MenuItem>
-                            <MenuItem value="background">Background (1920x1080px)</MenuItem>
+                            {isAdmin && <MenuItem value="background">Background (1920x1080px)</MenuItem>}
                             {/* <MenuItem value="playmat">Playmat (2680x1200px)</MenuItem>*/}
                         </Select>
                     </FormControl>

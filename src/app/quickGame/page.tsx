@@ -6,7 +6,7 @@ import FoundGame from '@/app/_components/QuickGame/FoundGame/FoundGame';
 import { useGame } from '@/app/_contexts/Game.context';
 import SearchingForGame from '@/app/_components/QuickGame/SearchingForGame/SearchingForGame';
 import { useRouter } from 'next/navigation';
-import { useCosmetics } from '../_contexts/CosmeticsContext';
+import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { useUser } from '../_contexts/User.context';
 
 const QuickGame: React.FC = () => {
@@ -16,9 +16,8 @@ const QuickGame: React.FC = () => {
         sendMessage('manualDisconnect');
         router.push('/');
     }
-    const { getBackground } = useCosmetics();
     const { user } = useUser();
-    const background = getBackground(user?.preferences.cosmetics?.background);
+    const backgroundPath = user?.activeCosmetics?.background?.path ?? s3ImageURL('ui/board-background-1.webp');
 
     useEffect(() => {
         if (gameState) {
@@ -34,7 +33,7 @@ const QuickGame: React.FC = () => {
         containerStyle: {
             height: '100vh',
             overflow: 'hidden',
-            backgroundImage: `url(${background?.path}?v=2)`,
+            backgroundImage: `url(${backgroundPath}?v=2)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
         },

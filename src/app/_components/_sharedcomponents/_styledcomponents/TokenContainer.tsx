@@ -1,0 +1,320 @@
+/**
+ * Draws the chamfered token shape around whatever it wraps — an icon, a count, or both.
+ * A caller composes one by nesting content rather than by positioning a background
+ * behind it.
+ *
+ * This is the shared visual treatment, not the game's token cards. Anything drawn on the
+ * token shape belongs here, counter or otherwise.
+ *
+ * Appearance comes from `type`, which selects an entry in TOKEN_TYPES. Sizing does not —
+ * pass height, padding and font-size through `sx`, since those differ per usage.
+ *
+ * Establishes its own stacking context and paints the shape behind the content, so
+ * children need no positioning of their own. Measures itself and rebuilds the shape at
+ * that size, so the corners hold their form at any width.
+ *
+ * The fill carries a rim light rather than a face gradient. Badges render around 20px tall,
+ * where shading across the face spans too few pixels to register, while an edge treatment
+ * reads at any size because it puts its contrast where the eye is already tracing the
+ * silhouette. This is a deliberate departure from the printed token, whose face is flat.
+ *
+ * @property type - Which token this is; sets fill, content colour and default outline.
+ * @property stroke - Overrides the type's outline, e.g. with a selection colour. Pass null
+ *   to force no outline.
+ * @property sx - Merged into the root sx. Sizing and spacing belong here.
+ * @property children - Rendered above the shape.
+ */
+import { useId, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
+import Box, { type BoxProps } from '@mui/material/Box';
+import { SxProps, Theme } from '@mui/material/styles';
+import AdvantageIcon from '@/assets/token-icons/advantage.svg';
+import ExperienceIcon from '@/assets/token-icons/experience.svg';
+import ShieldIcon from '@/assets/token-icons/shield.svg';
+import WeaknessIcon from '@/assets/token-icons/weakness.svg';
+
+/**
+ * Proportions of the token silhouette: a rounded rect whose top-left and bottom-right
+ * corners are chamfered rather than rounded, with the chamfer's own tips softened. The
+ * chamfer runs taller than it is wide, so it is not a 45 degree cut.
+ *
+ * Each value is a fraction of the token's HEIGHT, never its width. That is what holds the
+ * corners to the shape they take on a square token: as a token widens to fit an icon plus
+ * a multi-digit count, the corners stay put and only the flat edges elongate.
+ */
+const CORNER_RADIUS_RATIO = 5 / 34;
+const CHAMFER_X_RATIO = 5 / 34;
+const CHAMFER_Y_RATIO = 6 / 34;
+const CHAMFER_TIP_RATIO = 1 / 34;
+
+/** Reference height that a scaling `strokeWidth` is expressed against. */
+const STROKE_REFERENCE_HEIGHT = 100;
+
+/**
+ * Width of the rim light, as a fraction of the token's height so it holds its weight from a
+ * 20px badge up to a 40px counter. The rim is stroked at twice this and clipped to the
+ * silhouette, which leaves the inner half only - stroking an edge from the inside is what
+ * keeps the token's outer profile exactly where the path puts it.
+ */
+const RIM_WIDTH_RATIO = 0.055;
+
+/**
+ * Side of the square every icon is drawn into, relative to the token's font size. Fixing
+ * the slot is what keeps tokens the same width: the glyphs come from different sources
+ * (card art, drawn paths) with no common intrinsic size of their own.
+ */
+const ICON_SLOT = '0.92em';
+
+/**
+ * Sizes whatever the icon file draws. The icons are authored on a shared 24x24 grid with no
+ * fill of their own, so SVGR's `fill="currentColor"` on the root leaves them inheriting the
+ * token's content colour.
+ */
+const iconSlotSx = {
+    width: ICON_SLOT,
+    height: ICON_SLOT,
+    flexShrink: 0,
+    display: 'inline-flex',
+    '& > svg': { width: '100%', height: '100%', display: 'block' },
+} as const;
+
+export type TokenType =
+    | 'shield'
+    | 'experience'
+    | 'advantage'
+    | 'weakness'
+    | 'damageCounter'
+    | 'distributeDamageCounter'
+    | 'distributeHealingCounter';
+
+type TokenAppearance = {
+
+    /** Silhouette colour. */
+    fill: string;
+
+    /** Colour inherited by the token's content. */
+    color: string;
+
+    /** Outline drawn for every token of this type. Upgrade tokens outline only when selectable, so they set none. */
+    stroke?: string;
+
+    /** Ignored when there is no outline to draw. */
+    strokeWidth: number;
+
+    /** Hold the outline at a constant pixel width rather than scaling it with the token. */
+    nonScalingStroke?: boolean;
+
+    /** Drawn ahead of the token's content in a fixed square slot. Counters have none. */
+    icon?: ComponentType<SVGProps<SVGSVGElement>>;
+};
+
+/**
+ * Every token in the game, keyed by what it represents. Adding a token means adding an
+ * entry here rather than threading colours through a call site.
+ *
+ * Fills follow the palette in theme.ts, where every selection and initiative colour sits at
+ * 92-100% saturation. A new fill belongs in that band, and its hue wants clear air from the
+ * ones already spoken for - shield at 198, experience at 123, weakness at 277, damage at
+ * 357. Lightness is then whatever leaves the white glyph legible, which is why experience
+ * runs darker than shield at the same saturation: green reads far lighter than cyan does.
+ */
+const TOKEN_TYPES: Record<TokenType, TokenAppearance> = {
+    shield: {
+        fill: '#00A6EC', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
+        icon: ShieldIcon,
+    },
+    experience: {
+        fill: '#0B8E12', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
+        icon: ExperienceIcon,
+    },
+    advantage: {
+        fill: '#FFFFFF', color: '#000000', strokeWidth: 8, nonScalingStroke: true,
+        icon: AdvantageIcon,
+    },
+    weakness: {
+        fill: '#7606BC', color: '#FFFFFF', strokeWidth: 8, nonScalingStroke: true,
+        icon: WeaknessIcon,
+    },
+    damageCounter: { fill: '#DB131D', color: '#FFFFFF', strokeWidth: 0 },
+    distributeDamageCounter: { fill: '#6D1414', color: '#FFFFFF', stroke: '#DB131D', strokeWidth: 6 },
+    distributeHealingCounter: { fill: '#1A6681', color: '#FFFFFF', stroke: '#00BAFF', strokeWidth: 6 },
+};
+
+/**
+ * Tangent length for a fillet of `radius` tucked into the corner where two edges leave a
+ * vertex along unit vectors `a` and `b` — i.e. how far back from the vertex each edge has
+ * to stop for an arc of that radius to meet both smoothly.
+ */
+function tangentLength(a: readonly [number, number], b: readonly [number, number], radius: number): number {
+    const cos = Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1]));
+    return radius / Math.tan(Math.acos(cos) / 2);
+}
+
+/**
+ * Builds the silhouette at an explicit pixel size, so the SVG viewBox can map 1:1 to the
+ * rendered box. Corner sizes come from `height` alone; the four straight runs absorb
+ * whatever width is left over.
+ */
+export function buildTokenPath(width: number, height: number): string {
+    let radius = CORNER_RADIUS_RATIO * height;
+    let chamferX = CHAMFER_X_RATIO * height;
+    let chamferY = CHAMFER_Y_RATIO * height;
+    let tip = CHAMFER_TIP_RATIO * height;
+
+    // Unit vector along the chamfer, pointing up and to the right.
+    const chamferLength = Math.hypot(chamferX, chamferY);
+    const along: readonly [number, number] = [chamferX / chamferLength, -chamferY / chamferLength];
+    const back: readonly [number, number] = [-along[0], -along[1]];
+
+    // How far the flat edges stop short of each chamfer vertex to make room for the tips.
+    let edgeInset = tangentLength([0, 1], along, tip); // against the vertical edge
+    let flatInset = tangentLength(back, [1, 0], tip); // against the horizontal edge
+
+    // A token narrower than its own corners would invert the path; shrink everything to fit.
+    const fit = Math.min(1, width / (chamferX + flatInset + radius));
+    radius *= fit;
+    chamferX *= fit;
+    chamferY *= fit;
+    tip *= fit;
+    edgeInset *= fit;
+    flatInset *= fit;
+
+    // Chamfer tangent points, offset from each vertex along the chamfer itself.
+    const unit = chamferLength * fit;
+    const edgeAlong: readonly [number, number] = [chamferX * (edgeInset / unit), chamferY * (edgeInset / unit)];
+    const flatAlong: readonly [number, number] = [chamferX * (flatInset / unit), chamferY * (flatInset / unit)];
+
+    const arc = (r: number, x: number, y: number) => `A${r} ${r} 0 0 1 ${x} ${y}`;
+
+    return [
+        // top edge, rightward from the top-left chamfer
+        `M${chamferX + flatInset} 0`,
+        `H${width - radius}`,
+        arc(radius, width, radius),
+        // right edge down into the bottom-right chamfer
+        `V${height - chamferY - edgeInset}`,
+        arc(tip, width - edgeAlong[0], height - chamferY + edgeAlong[1]),
+        `L${width - chamferX + flatAlong[0]} ${height - flatAlong[1]}`,
+        arc(tip, width - chamferX - flatInset, height),
+        // bottom edge, leftward
+        `H${radius}`,
+        arc(radius, 0, height - radius),
+        // left edge up into the top-left chamfer
+        `V${chamferY + edgeInset}`,
+        arc(tip, edgeAlong[0], chamferY - edgeAlong[1]),
+        `L${chamferX - flatAlong[0]} ${flatAlong[1]}`,
+        arc(tip, chamferX + flatInset, 0),
+        'Z',
+    ].join(' ');
+}
+
+export type TokenContainerProps = Omit<BoxProps, 'type' | 'sx' | 'children' | 'ref'> & {
+    type: TokenType;
+    stroke?: string | null;
+    sx?: SxProps<Theme>;
+    children?: ReactNode;
+};
+
+export function TokenContainer({ type, stroke, sx, children, ...boxProps }: TokenContainerProps) {
+    const appearance = TOKEN_TYPES[type];
+    const Icon = appearance.icon;
+    // SVG ids live in the document, not the component, so every token on the board needs its
+    // own. useId's colons are legal in a url() fragment but not in a selector; drop them.
+    const rimId = useId().replace(/[^a-zA-Z0-9]/g, '');
+    const ref = useRef<HTMLDivElement>(null);
+    const [size, setSize] = useState({ width: 0, height: 0 });
+
+    useLayoutEffect(() => {
+        const element = ref.current;
+        if (!element) return;
+
+        const measure = () => {
+            const { width, height } = element.getBoundingClientRect();
+            setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+        };
+
+        measure();
+        const ro = new ResizeObserver(measure);
+        ro.observe(element);
+
+        return () => ro.disconnect();
+    }, []);
+
+    const { width, height } = size;
+    const measured = width > 0 && height > 0;
+
+    // An explicit stroke wins over the type's own; null forces the outline off.
+    const outline = stroke === undefined ? appearance.stroke : stroke ?? undefined;
+
+    // A scaling strokeWidth is relative to a 100-unit-tall box; the viewBox is in pixels.
+    const strokeWidth = !outline
+        ? 0
+        : appearance.nonScalingStroke
+            ? appearance.strokeWidth
+            : appearance.strokeWidth * (height / STROKE_REFERENCE_HEIGHT);
+
+    return (
+        <Box
+            ref={ref}
+            {...boxProps}
+            sx={{
+                position: 'relative',
+                // Own stacking context, so the silhouette's negative z-index stays inside
+                // the token and children stack above it without any styling of their own.
+                isolation: 'isolate',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                lineHeight: 1,
+                fontVariantNumeric: 'tabular-nums',
+                userSelect: 'none',
+                color: appearance.color,
+                ...sx,
+            }}
+        >
+            <Box
+                component="svg"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox={measured ? `0 0 ${width} ${height}` : undefined}
+                aria-hidden
+                sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: -1 }}
+            >
+                {measured && (() => {
+                    const d = buildTokenPath(width, height);
+                    return (
+                        <>
+                            <defs>
+                                {/* One light source, off the top-left: the rim runs from a bright
+                                    catch on the near edges to a dark one on the far side, which is
+                                    what gives a flat fill the read of a moulded chip. */}
+                                <linearGradient id={`${rimId}rim`} x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.55}/>
+                                    <stop offset="0.55" stopColor="#FFFFFF" stopOpacity={0.06}/>
+                                    <stop offset="1" stopColor="#000000" stopOpacity={0.22}/>
+                                </linearGradient>
+                                <clipPath id={`${rimId}clip`}>
+                                    <path d={d}/>
+                                </clipPath>
+                            </defs>
+                            <path d={d} fill={appearance.fill}/>
+                            <g clipPath={`url(#${rimId}clip)`}>
+                                <path
+                                    d={d}
+                                    fill="none"
+                                    stroke={`url(#${rimId}rim)`}
+                                    strokeWidth={RIM_WIDTH_RATIO * height * 2}
+                                />
+                            </g>
+                            {/* Drawn last so a selection outline reads over the rim, not under it. */}
+                            {outline && (
+                                <path d={d} fill="none" stroke={outline} strokeWidth={strokeWidth}/>
+                            )}
+                        </>
+                    );
+                })()}
+            </Box>
+            {Icon && <Box sx={iconSlotSx}><Icon/></Box>}
+            {children}
+        </Box>
+    );
+}

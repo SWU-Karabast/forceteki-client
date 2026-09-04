@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getS3ServiceAsync } from '@/app/_services/S3Service';
-import { IRegisteredCosmeticOption, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { ICosmeticEntity, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
 import { AdminRole } from '@/app/_contexts/UserTypes';
 import { ServerApiService } from '@/app/_services/ServerApiService';
@@ -85,7 +85,7 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
         const s3Url = await s3Service.uploadFile(s3Key, fileBuffer, 'image/webp');
 
         // Create cosmetic metadata
-        const cosmeticData: IRegisteredCosmeticOption = {
+        const cosmeticData: ICosmeticEntity = {
             id: cosmeticId,
             title: cosmeticTitle,
             type: cosmeticType as RegisteredCosmeticType,

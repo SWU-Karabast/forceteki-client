@@ -33,3 +33,15 @@ For testing on mobile devices connected to your local network:
 3. Restart the development server
 4. Follow the [backend mobile testing instructions](https://github.com/SWU-Karabast/forceteki#mobile-testing-and-custom-environment) to add your IP to the CORS allowed origins
 5. Connect to `your-local-ip:3000` on the web browser of your mobile device
+
+### Storybook
+
+Storybook is included as a local development tool for building, testing, and documenting UI components in isolation. It lets you open individual React components outside the full app, inspect their states, and iterate on visual changes more quickly. 
+
+To run it locally just do:
+
+```bash
+npm run storybook
+```
+
+New stories should live inside the `src/stories` folder, usually as `ComponentName.stories.tsx`, and should cover the main visual states and edge cases so contributors can understand and validate UI behavior without navigating through the entire app.

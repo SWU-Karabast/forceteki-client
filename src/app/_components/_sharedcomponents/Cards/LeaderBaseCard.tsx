@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Popover, Typography, useMediaQuery } from '@mui/material';
+import { Box, IconButton, Popover, Typography, useMediaQuery } from '@mui/material';
+import ThreeSixty from '@mui/icons-material/ThreeSixty';
 import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
@@ -12,12 +13,14 @@ import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
+import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
     title,
     cardStyle = LeaderBaseCardStyle.Plain,
     capturedCards = [],
+    upgrades = [],
     disabled = false,
     isLeader = false,
 }) => {
@@ -27,6 +30,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
+    const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
     const isMobilePortrait = useMediaQuery('(orientation: portrait) and (max-width:932px)');
 
     const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
@@ -57,22 +61,19 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             setAnchorElement(target);
             setPreviewImage(`url(${imageUrl})`);
         },
-        onRelease: () => {
-            setAnchorElement(null);
-            setPreviewImage(null);
-        },
+        onRelease: () => undefined,
     });
 
-    // Tap-anywhere-to-close fallback for touch devices
+    // Keep touch previews open until the next interaction anywhere on the screen.
     React.useEffect(() => {
         if (!open || !isTouchDevice) return;
-        const onTouchStart = () => {
+        const onPointerDown = () => {
             clearTimeout(hoverTimeout.current);
             setAnchorElement(null);
             setPreviewImage(null);
         };
-        document.addEventListener('touchstart', onTouchStart);
-        return () => document.removeEventListener('touchstart', onTouchStart);
+        document.addEventListener('pointerdown', onPointerDown);
+        return () => document.removeEventListener('pointerdown', onPointerDown);
     }, [open, isTouchDevice]);
 
     // Compute card image URL + load status before any early return so hooks
@@ -245,12 +246,14 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            transition: 'box-shadow 0.25s ease',
             cursor: clickDisabled() ? 'default' : 'pointer',
             position: 'relative',
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
-            WebkitTouchCallout: 'none',
             userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
         },
         deployedPlaceholder: {
             backgroundColor: 'transparent',
@@ -316,22 +319,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             gap: '1rem',
             pointerEvents: 'none',
         },
-        damageCounter: {
-            fontWeight: '700',
-            fontSize: '1.9rem',
-            color: 'white',
-            minWidth: '2.5rem',
-            padding: '0 10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'url(/dmgbg-l.png) left no-repeat, url(/dmgbg-r.png) right no-repeat',
-            backgroundSize: '50% 100%, 50% 100%',
-            backgroundRepeat: 'no-repeat',
-            filter: 'drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.40))',
-            textShadow: '2px 2px rgba(0, 0, 0, 0.20)',
-            userSelect: 'none',
-        },
         nameplateBox: {
             position: 'absolute',
             bottom: '0',
@@ -364,8 +351,28 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundRepeat: 'no-repeat',
             imageRendering: '-webkit-optimize-contrast',
             backfaceVisibility: 'hidden',
+            userSelect: 'none',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
             aspectRatio: aspectRatio,
             width: width,
+        },
+        mobileFlipButton: {
+            position: 'absolute',
+            top: '0.35rem',
+            right: '0.35rem',
+            zIndex: 2,
+            width: '3.25rem',
+            height: '3.25rem',
+            color: 'white',
+            backgroundColor: 'rgba(3, 12, 19, 0.72)',
+            border: '1px solid rgba(255, 255, 255, 0.38)',
+            borderRadius: '999px',
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.55)',
+            transition: 'opacity 140ms ease, background-color 140ms ease',
+            '&:hover': {
+                backgroundColor: 'rgba(3, 12, 19, 0.9)',
+            },
         },
         defendIcon: {
             position: 'absolute',
@@ -451,7 +458,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             position: 'relative',
             mb: isConnectedPlayer ? '-4%' : '0px',
             mt: isConnectedPlayer ? '0px' : '-4%',
-            zIndex: 1
+            // sits above the adjacent upgrade strip so the "Captured" divider stays fully legible
+            zIndex: 2
         }}>
             {!isConnectedPlayer && (
                 <Typography sx={styles.capturedCardsDivider}>
@@ -496,11 +504,55 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         </Box>
     )
 
+    // Base upgrades (via the Fortify keyword) render as aspect-colored strips tucked against the base,
+    // mirroring the captured-cards decoration above.
+    const upgradesDecoration = (
+        <Box sx={{
+            width: '100%',
+            position: 'relative',
+            mb: isConnectedPlayer ? '-4%' : '0px',
+            mt: isConnectedPlayer ? '0px' : '-4%',
+            zIndex: 1
+        }}>
+            {upgrades.map((upgrade: ICardData) => (
+                <Box
+                    key={`base-upgrade-${upgrade.uuid}`}
+                    sx={{
+                        ...styles.capturedCardIcon,
+                        cursor: upgrade.selectable ? 'pointer' : 'default',
+                    }}
+                    onClick={() => subcardClick(upgrade)}
+                    onMouseEnter={handlePreviewOpen}
+                    onMouseLeave={handlePreviewClose}
+                    {...longPressHandlers}
+                    data-card-url={s3CardImageURL({ ...upgrade, setId: upgrade.setId }, locale)}
+                    data-card-type={upgrade.printedType}
+                    data-card-id={upgrade.setId ? upgrade.setId.set + '_' + upgrade.setId.number : upgrade.id}
+                >
+                    {/* Background image element positioned behind text */}
+                    <Box
+                        sx={{
+                            ...styles.capturedCardBackground,
+                            backgroundImage: `url(${capturedCardBackground(upgrade)})`,
+                            border: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',
+                        }}
+                    />
+                    <Typography sx={{
+                        ...styles.capturedCardName
+                    }}>
+                        {upgrade.name}
+                    </Typography>
+                </Box>
+            ))}
+        </Box>
+    )
+
     return (
         <Box sx={{ width: '100%' }}>
             {capturedCards.length > 0 && isConnectedPlayer && capturedCardsDecoration}
+            {upgrades.length > 0 && isConnectedPlayer && upgradesDecoration}
             <Box
-                sx={isDeployed ? styles.deployedPlaceholder : styles.card}
+                sx={isDeployed ? styles.deployedPlaceholder : [styles.card, highlightSx]}
                 onClick={handleClick}
                 aria-owns={open ? 'mouse-over-popover' : undefined}
                 aria-haspopup="true"
@@ -550,7 +602,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
                 <Popover
                     id="mouse-over-popover"
-                    sx={{ pointerEvents: 'none' }}
+                    sx={{ pointerEvents: isTouchDevice ? 'auto' : 'none' }}
                     open={open}
                     anchorEl={anchorElement}
                     anchorOrigin={isMobilePortrait ? {
@@ -571,9 +623,23 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     disableRestoreFocus
                     slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}
                 >
-                    <Box sx={{
-                        ...styles.cardPreview,backgroundImage: previewImage
-                    }} >
+                    <Box sx={{ position: 'relative' }}>
+                        <Box sx={{
+                            ...styles.cardPreview,backgroundImage: previewImage
+                        }} />
+                        {isLeader && isTouchDevice && (
+                            <IconButton
+                                aria-label="Flip leader card"
+                                sx={styles.mobileFlipButton}
+                                onPointerDown={(event) => event.stopPropagation()}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    leaderCardFlipPreview.toggleFlip();
+                                }}
+                            >
+                                <ThreeSixty fontSize="medium" />
+                            </IconButton>
+                        )}
                     </Box>
                     {isLeader && !isTouchDevice && !leaderCardFlipPreview.isFlipped && (
                         <Typography variant={'body1'} sx={styles.ctrlText}
@@ -593,6 +659,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     </>
                 )}
             </Box>
+            {upgrades.length > 0 && !isConnectedPlayer && upgradesDecoration}
             {capturedCards.length > 0 && !isConnectedPlayer && capturedCardsDecoration}
         </Box>
     );

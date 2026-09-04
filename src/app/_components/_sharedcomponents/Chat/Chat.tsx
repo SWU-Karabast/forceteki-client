@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Box,
+    Button,
+    Divider,
     TextField,
     IconButton,
     InputAdornment,
-    Typography, Collapse,
+    Typography,
 } from '@mui/material';
-import { CommentsDisabled, ExpandLess, ExpandMore, Send, ReportProblem } from '@mui/icons-material';
+import { Send } from '@mui/icons-material';
 import { 
     IChatProps, 
     IChatEntry, 
@@ -21,10 +23,6 @@ import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { useUser } from '@/app/_contexts/User.context';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
-import {
-    LobbyConfirmationPopupModule
-} from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
-import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import { ILobbyUserProps } from '../../Lobby/LobbyTypes';
 import { MatchmakingType } from '@/app/_constants/constants';
 import RichText from '../RichText/RichText';
@@ -34,15 +32,15 @@ const Chat: React.FC<IChatProps> = ({
     chatMessage,
     handleChatOnChange,
     handleChatSubmit,
+    pauseAutoScroll = false,
 }) => {
-    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled, sendLobbyMessage } = useGame();
-    const [showConfirmation, setShowConfirmation] = useState(false);
-    const [playerReportOpen, setPlayerReportOpen] = useState(false);
-    const chatEndRef = useRef<HTMLDivElement | null>(null);
+    const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled } = useGame();
+    const chatBoxRef = useRef<HTMLDivElement | null>(null);
+    const lastScrollTopRef = useRef(0);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
+    const [isScrollPaused, setIsScrollPaused] = useState(false);
+    const [unreadStartIndex, setUnreadStartIndex] = useState<number | null>(null);
     const { user } = useUser();
-
-    const [isOptionsOpen, setIsOptionsOpen] = useState(false);
 
     // Initialize sound handler with user preferences
     const { playIncomingMessageSound } = useSoundHandler({
@@ -114,7 +112,6 @@ const Chat: React.FC<IChatProps> = ({
     const chatDisabledInfo = getChatDisabledInfo();
     // Helper function to determine if chat input should be shown
     const shouldShowChatInput = !chatDisabledInfo || chatDisabledInfo.reason === ChatDisabledReason.None;
-    const canReportOpponent = !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
     const opponentIsTyping = lobbyState?.gameChat.typingState[opponentId];
 
     const getSpectatorDisplayName = (
@@ -126,29 +123,6 @@ const Chat: React.FC<IChatProps> = ({
         if (playerId === getOpponent(connectedPlayer)) return 'Player 2';
         return 'Unknown Player';
     };
-
-    const triggerDisableConfirmation = () =>{
-        setShowConfirmation(true);
-        setIsOptionsOpen(false);
-    }
-
-    const handleConfirmDisableChat = () => {
-        sendLobbyMessage(['muteChat']);
-        setShowConfirmation(false);
-    };
-
-    const handleCancelDisableChat = () => {
-        setShowConfirmation(false);
-    };
-
-    const handleOpenPersonReport = () => {
-        setPlayerReportOpen(true);
-    };
-
-    const handleClosePersonReport = () => {
-        setPlayerReportOpen(false);
-    };
-
 
     const isOpponentMessage = (message: IChatMessageContent | undefined, connectedPlayerId: string): boolean => {
         if (!message) return false;
@@ -325,74 +299,62 @@ const Chat: React.FC<IChatProps> = ({
         previousMessagesRef.current = [...chatHistory];
     }, [chatHistory, connectedPlayer, isSpectator]);
 
-    useEffect(() => {
-        if(chatEndRef.current) {
-            chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    const scrollToLatest = (behavior: ScrollBehavior = 'smooth') => {
+        const chatBox = chatBoxRef.current;
+        if (!chatBox) return;
+
+        lastScrollTopRef.current = chatBox.scrollTop;
+        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior });
+    };
+
+    const handleChatScroll = (event: React.UIEvent<HTMLDivElement>) => {
+        const chatBox = event.currentTarget;
+        const isScrollingUp = chatBox.scrollTop < lastScrollTopRef.current;
+        const isAwayFromBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight > 24;
+
+        lastScrollTopRef.current = chatBox.scrollTop;
+
+        if (isScrollPaused && !isAwayFromBottom) {
+            setIsScrollPaused(false);
+            setUnreadStartIndex(null);
+            return;
         }
-    }, [chatHistory]);
+
+        if (pauseAutoScroll && !isScrollPaused && isScrollingUp && isAwayFromBottom) {
+            setIsScrollPaused(true);
+            setUnreadStartIndex(chatHistory.length);
+        }
+    };
+
+    const resumeChat = () => {
+        setIsScrollPaused(false);
+        setUnreadStartIndex(null);
+    };
+
+    const unreadMessageCount = unreadStartIndex === null
+        ? 0
+        : Math.max(0, chatHistory.length - unreadStartIndex);
+
+    useEffect(() => {
+        if (!isScrollPaused) {
+            scrollToLatest();
+        }
+    }, [chatHistory, isScrollPaused]);
+
+    useEffect(() => {
+        if (unreadStartIndex !== null && chatHistory.length < unreadStartIndex) {
+            setIsScrollPaused(false);
+            setUnreadStartIndex(null);
+        }
+    }, [chatHistory.length, unreadStartIndex]);
     // ------------------------STYLES------------------------//
 
     const styles = {
-        headerContainer: {
+        chatScrollContainer: {
+            position: 'relative',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            px: '0.5em',
-            py: '0.25em',
-            backgroundColor: '#28282800',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s ease',
-        },
-        headerTitle: {
-            fontSize: { xs: '0.85em', md: '1em' },
-            color: '#fff',
-            fontWeight: 'bold',
-        },
-        expandIcon: {
-            color: '#fff',
-            fontSize: '1.2em',
-            transition: 'transform 0.2s ease',
-        },
-        optionsPanel: {
-            backgroundColor: '#1a1a1a',
-            borderBottom: '1px solid',
-            borderColor: '#FFFE5031',
-        },
-        optionItem: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            px: '1em',
-            py: '0.5em',
-            cursor: 'pointer',
-            background: 'linear-gradient(#1E2D32, #1E2D32) padding-box',
-            '&:hover': {
-                background: 'linear-gradient(#2C4046, #2C4046) padding-box',
-            },
-            transition: 'background 0.2s ease',
-        },
-        optionLabel: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            color: '#fff',
-            fontSize: { xs: '0.8em', md: '0.9em' },
-        },
-        optionIcon: {
-            color: '#fff',
-            fontSize: '1.1em',
-        },
-        optionStatus: {
-            fontSize: { xs: '0.7em', md: '0.8em' },
-            color: '#888',
-            textTransform: 'uppercase',
-        },
-        mutedIndicator: {
-            fontSize: { xs: '0.7em', md: '0.8em' },
-            color: '#ffa726',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
+            flex: 1,
+            minHeight: 0,
         },
         chatBox: {
             p: '0.5em',
@@ -401,17 +363,65 @@ const Chat: React.FC<IChatProps> = ({
             backgroundColor: '#28282800',
             flex: 1,
         },
-        messageText: {
-            fontSize: { xs: '0.75em', md: '1em' },
+        pausedButton: {
+            position: 'absolute',
+            zIndex: 2,
+            bottom: '0.5rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 'calc(100% - 1rem)',
+            maxWidth: '15rem',
+            minWidth: 0,
+            px: '0.8rem',
+            py: '0.35rem',
+            borderRadius: '999px',
             color: '#fff',
-            lineHeight: { xs: '0.75rem', md: '1rem' },
+            backgroundColor: 'rgba(20, 20, 20, 0.94)',
+            border: '1px solid rgba(255, 254, 80, 0.55)',
+            fontSize: '0.75rem',
+            lineHeight: 1.2,
+            textTransform: 'none',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+            '&:hover': {
+                backgroundColor: 'rgba(40, 40, 40, 0.98)',
+                '& .paused-label': {
+                    display: 'none',
+                },
+                '& .unread-label': {
+                    display: 'inline',
+                },
+            },
+        },
+        unreadLabel: {
+            display: 'none',
+        },
+        newMessagesDivider: {
+            my: '0.25rem',
+            color: '#FFFE50',
+            fontSize: '0.7rem',
+            '&::before, &::after': {
+                borderColor: '#FFFE50',
+                opacity: 0.7,
+            },
+        },
+        chatMessageStack: {
+            minHeight: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+        },
+        messageText: {
+            fontSize: { xs: '0.95rem', md: '1em' },
+            color: '#fff',
+            lineHeight: { xs: '1.25rem', md: '1rem' },
             m: 0
 
         },
         // Base style for alert messages
         alertBase: {
-            fontSize: { xs: '0.85em', md: '1em' },
-            lineHeight: { xs: '0.85rem', md: '1em' },
+            fontSize: { xs: '0.95rem', md: '1em' },
+            lineHeight: { xs: '1.25rem', md: '1em' },
         },
         chatEntryBox: {
             p: '1rem .25rem',
@@ -427,8 +437,9 @@ const Chat: React.FC<IChatProps> = ({
             alignItems: 'center',
             width: '100%',
             backgroundColor: '#28282800',
-            px: { xs: '0.2em', md: '0.5em' },
-            minHeight: { xs: '1.5rem', md: '2.6rem' },
+            px: { xs: '0.25rem', md: '0.5em' },
+            py: { xs: '0.25rem', md: 0 },
+            minHeight: { xs: '48px', md: '2.6rem' },
         },
         textField: {
             backgroundColor: '#28282800',
@@ -439,10 +450,21 @@ const Chat: React.FC<IChatProps> = ({
             maxWidth: '100%',
             minWidth: 0,
             width: '100%',
-            fontSize: { xs: '0.75em', md: '1em' },
-            height: { xs: '1.8rem', md: '2.2rem' },
-            input: { color: '#fff', padding: '0.3em 0.5em' },
+            fontSize: { xs: '16px', md: '1em' },
+            height: { xs: '32px', md: '2.2rem' },
+            input: {
+                color: '#fff',
+                fontSize: { xs: '16px', md: '1em' },
+                padding: { xs: '0 0.5rem', md: '0.3em 0.5em' },
+                height: { xs: '32px', md: 'auto' },
+                boxSizing: 'border-box',
+            },
+            '& .MuiInputBase-input': {
+                fontSize: { xs: '16px', md: '1em' },
+            },
             '& .MuiOutlinedInput-root': {
+                height: { xs: '32px', md: '2.2rem' },
+                pr: { xs: '4px', md: '8px' },
                 '& fieldset': {
                     borderColor: '#fff',
                 },
@@ -453,6 +475,15 @@ const Chat: React.FC<IChatProps> = ({
                 },
             },
         },
+        sendButton: {
+            width: { xs: '40px', md: '32px' },
+            height: { xs: '40px', md: '32px' },
+            p: 0,
+        },
+        sendIcon: {
+            color: '#fff',
+            fontSize: { xs: '1.35rem', md: '1.1em' },
+        },
         chatDisabled: (borderColor: string) => ({
             textAlign: 'center',
             border: `1px solid ${borderColor}`,
@@ -462,9 +493,9 @@ const Chat: React.FC<IChatProps> = ({
             mt: '0.5em',
             width: '100%',
             display: 'block',
-            fontSize: { xs: '0.75em', md: '1em' },
+            fontSize: { xs: '0.95rem', md: '1em' },
             color: '#fff',
-            lineHeight: { xs: '0.75rem', md: '1rem' },
+            lineHeight: { xs: '1.25rem', md: '1rem' },
             userSelect: 'none',
         }),
         typingState: {
@@ -472,92 +503,39 @@ const Chat: React.FC<IChatProps> = ({
                 px: { xs: '0.2em', md: '0.5em' }
             },
             typography: {
-                fontSize: '0.8rem'
+                fontSize: { xs: '0.9rem', md: '0.8rem' },
+                lineHeight: { xs: '1.2rem', md: '1rem' },
             }
         }
     };
 
     return (
         <>
-            {/* Chat Header - Clickable to expand options */}
-            {!isSpectator && (<Box
-                sx={styles.headerContainer}
-                onClick={!isSpectator ? () => setIsOptionsOpen(!isOptionsOpen) : undefined}
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography sx={styles.headerTitle}>Chat Options</Typography>
-                </Box>
-                {!isSpectator && (
-                    isOptionsOpen ? (
-                        <ExpandLess sx={styles.expandIcon} />
-                    ) : (
-                        <ExpandMore sx={styles.expandIcon} />
-                    )
+            <Box sx={styles.chatScrollContainer}>
+                {isScrollPaused && (
+                    <Button
+                        onClick={resumeChat}
+                        sx={styles.pausedButton}
+                        aria-label={`Chat paused due to scrolling. ${unreadMessageCount} new messages. Click to resume.`}
+                    >
+                        <span className="paused-label">Chat paused due to scrolling</span>
+                        <Box component="span" className="unread-label" sx={styles.unreadLabel}>
+                            {unreadMessageCount} new {unreadMessageCount === 1 ? 'message' : 'messages'}
+                        </Box>
+                    </Button>
                 )}
-            </Box>)}
-
-            {/* Collapsible Options Panel */}
-            {!isSpectator && (
-                <Collapse in={isOptionsOpen}>
-                    <Box sx={styles.optionsPanel}>
-                        {shouldShowChatInput && (
-                            <>
-                                <Box sx={styles.optionItem} onClick={triggerDisableConfirmation}>
-                                    <Box sx={styles.optionLabel}>
-                                        <CommentsDisabled sx={styles.optionIcon} />
-                                        <span>Disable Chat</span>
-                                    </Box>
-                                </Box>
-                                {canReportOpponent && (
-                                    <Box
-                                        sx={{
-                                            ...styles.optionItem,
-                                            ...(user?.reportingDisabled ? { opacity: 0.5, cursor: 'default', '&:hover': {} } : {})
-                                        }}
-                                        onClick={user?.reportingDisabled ? undefined : handleOpenPersonReport}
-                                    >
-                                        <Box sx={styles.optionLabel}>
-                                            <ReportProblem sx={styles.optionIcon} />
-                                            <span>{user?.reportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</span>
-                                        </Box>
-                                    </Box>
+                <Box ref={chatBoxRef} onScroll={handleChatScroll} sx={styles.chatBox}>
+                    <Box sx={styles.chatMessageStack}>
+                        {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => (
+                            <React.Fragment key={`${chatEntry.date}-${index}`}>
+                                {unreadStartIndex === index && unreadMessageCount > 0 && (
+                                    <Divider sx={styles.newMessagesDivider}>New messages</Divider>
                                 )}
-                            </>
-                        )}
-                        {!shouldShowChatInput && (
-                            <>
-                                <Box sx={{ ...styles.optionItem, cursor: 'default', '&:hover': {} }}>
-                                    <Box sx={styles.optionLabel}>
-                                        <CommentsDisabled sx={styles.optionIcon} />
-                                        <span style={{ color: '#888' }}>
-                                            Chat is disabled
-                                        </span>
-                                    </Box>
-                                </Box>
-                                {canReportOpponent && (
-                                    <Box
-                                        sx={{
-                                            ...styles.optionItem,
-                                            ...(user?.reportingDisabled ? { opacity: 0.5, cursor: 'default', '&:hover': {} } : {})
-                                        }}
-                                        onClick={user?.reportingDisabled ? undefined : handleOpenPersonReport}
-                                    >
-                                        <Box sx={styles.optionLabel}>
-                                            <ReportProblem sx={styles.optionIcon} />
-                                            <span>{user?.reportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</span>
-                                        </Box>
-                                    </Box>
-                                )}
-                            </>
-                        )}
+                                {formatMessage(chatEntry?.message, index)}
+                            </React.Fragment>
+                        ))}
                     </Box>
-                </Collapse>
-            )}
-            <Box sx={styles.chatBox}>
-                {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => {
-                    return formatMessage(chatEntry?.message, index);
-                })}
-                <Box ref={chatEndRef} />
+                </Box>
             </Box>
 
             {opponentIsTyping && (
@@ -586,11 +564,14 @@ const Chat: React.FC<IChatProps> = ({
                                 style: { fontSize: '1em' },
                                 endAdornment: (
                                     <InputAdornment position="end" sx={{ ml: 0, p: 0 }}>
-                                        <IconButton size="small" onClick={handleChatSubmit}>
-                                            <Send sx={{ color: '#fff', fontSize: '1.1em' }} />
+                                        <IconButton sx={styles.sendButton} onClick={handleChatSubmit}>
+                                            <Send sx={styles.sendIcon} />
                                         </IconButton>
                                     </InputAdornment>
                                 ),
+                            },
+                            htmlInput: {
+                                style: { fontSize: '16px' },
                             },
                         }}
                     />
@@ -601,8 +582,6 @@ const Chat: React.FC<IChatProps> = ({
                     </Typography>
                 )}
             </Box>
-            <LobbyConfirmationPopupModule title={'Disable Chat Confirmation'} message={'Are you sure you wish to disable chat for this game? This action is not reversable.'} display={showConfirmation} onConfirmation={handleConfirmDisableChat} handleCancel={handleCancelDisableChat}/>
-            <PlayerReportDialog open={playerReportOpen} onClose={handleClosePersonReport}/>
         </>
 
     );

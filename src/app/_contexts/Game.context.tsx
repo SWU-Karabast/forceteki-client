@@ -24,6 +24,7 @@ import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 import { ReplayContext } from '@/app/_contexts/Replay.context';
+import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface IGameContextType {
     gameState: any;
@@ -47,6 +48,7 @@ interface IGameContextType {
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
     gameIsEnded: () => boolean;
+    ongoingEffects: IOngoingEffectSummary[];
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -107,6 +109,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return zones
     }
 
+    const ongoingEffects: IOngoingEffectSummary[] = React.useMemo(
+        () => gameState?.ongoingEffects ?? [],
+        [gameState?.ongoingEffects],
+    );
+
+
     const handleGameStatePopups = (gameState: any, connectedPlayerId: string, isSpectatorMode: boolean) => {
         if (!connectedPlayerId || isSpectatorMode) return;
         if (gameState.players?.[connectedPlayerId]?.promptState) {
@@ -148,8 +156,36 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     source: PopupSource.PromptState
                 });
             }
+            else if (promptType === 'passDelay') {
+                return openPopup('waitDelay', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (promptType === 'batchTriggerResolution' && menuTitle && promptUuid && !selectCardMode) {
+                const batchData = promptState.batchTriggerResolution ?? {};
+                return openPopup('batchTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    sourceCard: batchData.sourceCard,
+                    remainingCount: batchData.remainingCount,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (promptType === 'optionalTrigger' && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('optionalTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
             else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
-                return openPopup('default', {
+                const promptPopupType = promptType === 'triggerWindow' ? 'actionTrigger' : 'default';
+                return openPopup(promptPopupType, {
                     uuid: promptUuid,
                     title: menuTitle,
                     buttons,
@@ -456,6 +492,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 hasChatDisabled,
                 createNewSocket,
                 gameIsEnded,
+                ongoingEffects,
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,
@@ -497,6 +534,7 @@ const FALLBACK_GAME_CONTEXT: IGameContextType = {
     hasChatDisabled: noopBoolFn,
     gameIsEnded: noopBoolFn,
     createNewSocket: noopFn,
+    ongoingEffects: [],
     hoveredChatCard: { id: null, hover: noopFn, clear: noopFn },
 } as IGameContextType;
 
@@ -529,3 +567,10 @@ export const useGame = () => {
     // consumer into a dead, click-swallowing spectator view).
     throw new Error('useGame must be used within a GameProvider (or a ReplayProvider for the replay viewer)');
 };
+
+/**
+ * Like {@link useGame}, but returns undefined instead of throwing when there is no
+ * GameProvider (e.g. on the home page). Use this from components shared between the
+ * game board and non-game pages that only need the game context when it exists.
+ */
+export const useGameOptional = () => useContext(GameContext);

@@ -2,6 +2,10 @@
 import { useState, useCallback } from 'react';
 import { IDeckValidationFailures } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 
+export interface IErrorFooterLink {
+    label: string;
+}
+
 export interface DeckErrorState {
     summary: string | null;
     details: IDeckValidationFailures | string | undefined;
@@ -9,6 +13,7 @@ export interface DeckErrorState {
     modalType: 'error' | 'warning';
     isJsonDeck: boolean;
     modalOpen: boolean;
+    footerLink?: IErrorFooterLink;
 }
 
 export const useDeckErrors = () => {
@@ -19,13 +24,15 @@ export const useDeckErrors = () => {
         modalType: 'error',
         isJsonDeck: false,
         modalOpen: false,
+        footerLink: undefined,
     });
 
     const setError = useCallback((
         summary: string | null,
         details?: IDeckValidationFailures | string,
         title?: string,
-        modalType?: 'error' | 'warning'
+        modalType?: 'error' | 'warning',
+        footerLink?: IErrorFooterLink,
     ) => {
         setErrorState(prev => ({
             ...prev,
@@ -34,6 +41,7 @@ export const useDeckErrors = () => {
             title: title || 'Deck Validation Error',
             modalType: modalType || 'error',
             modalOpen: false,
+            footerLink,
         }));
     }, []);
 
@@ -45,6 +53,7 @@ export const useDeckErrors = () => {
             modalType: 'error',
             isJsonDeck: false,
             modalOpen: false,
+            footerLink: undefined,
         });
     }, []);
 

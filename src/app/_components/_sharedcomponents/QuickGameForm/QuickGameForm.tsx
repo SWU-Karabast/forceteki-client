@@ -16,12 +16,12 @@ import {
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { fetchDeckData } from '@/app/_utils/fetchDeckData';
+import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
-    DeckValidationFailureReason,
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
 import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import {
@@ -54,7 +54,7 @@ interface IQuickGameFormProps {
     handleDeckManagement: () => void;
     handleFormSubmissionWithUndoCheck: (originalSubmissionFn: () => void) => void;
     errorState: DeckErrorState;
-    setError: (summary: string | null, details?: IDeckValidationFailures | string, title?: string, modalType?: 'error' | 'warning') => void;
+    setError: (summary: string | null, details?: IDeckValidationFailures | string, title?: string, modalType?: 'error' | 'warning', footerLink?: { label: string }) => void;
     clearErrors: () => void;
     setIsJsonDeck: (value: boolean) => void;
     setModalOpen: (value: boolean) => void;
@@ -120,8 +120,18 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
     const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
     const isNewDeckInputEmpty = !showSavedDecks && deckLink.trim().length === 0;
-    const isJoinQueueDisabled = queueState || isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty;
+    const isSwuStatsDeckSource = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked;
+    const hasNoSavedDecksAvailable = showSavedDecks &&
+        (isSwuStatsDeckSource ? swuStatsDecks.length === 0 : savedDecks.length === 0);
+    const isSavedDeckEmpty = showSavedDecks && !favoriteDeck;
+    const isJoinQueueDisabled = queueState || isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty || isSavedDeckEmpty;
     const showDeckLinkRequiredError = deckLinkTouched && isNewDeckInputEmpty;
+    // The SWU Stats dropdown renders its own empty-state message in the field, so don't duplicate it there.
+    const showSavedDeckHint = isSavedDeckEmpty && !isSavedDeckSelectionLoading &&
+        !isSwuStatsDeckSelectionLoading && !(hasNoSavedDecksAvailable && isSwuStatsDeckSource);
+    const savedDeckHintText = hasNoSavedDecksAvailable
+        ? 'No saved decks found. Use New Deck to add one.'
+        : 'Select a deck to continue.';
 
     // Timer ref for clearing the inline text after 5s
 
@@ -206,18 +216,13 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         }catch (error){
             setQueueState(false);
             clearErrors();
-            if(error instanceof Error){
-                if(error.message?.includes('403')) {
-                    setError('Couldn\'t import. The deck is set to private.',{ [DeckValidationFailureReason.DeckSetToPrivate]: true },'Deck Validation Error','error');
-                    setModalOpen(true)
-                } else if(error.message?.includes('Deck not found')) {
-                    // Handle the specific 404 error messages from any deck source
-                    setError(error.message,error.message,'Deck Not Found','error')
-                    setModalOpen(true);
-                } else {
-                    setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');
-                    setModalOpen(true)
-                }
+            if (error instanceof DeckFetchError) {
+                const content = getDeckFetchErrorContent(error);
+                setError(content.summary, content.details, content.title, content.modalType, content.footerLink);
+                setModalOpen(true);
+            } else if(error instanceof Error){
+                setError('Couldn\'t import. Deck is invalid.',undefined,'Deck Validation Error','error');
+                setModalOpen(true);
             }
             return;
         }
@@ -329,6 +334,10 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         },
         errorMessageStyle: {
             color: 'var(--initiative-red);',
+            mt: '0.5rem'
+        },
+        hintMessageStyle: {
+            color: '#aaa',
             mt: '0.5rem'
         },
         errorMessageLinkPlain:{
@@ -490,7 +499,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 {showSavedDecks && !useSwuStatsDecks && (
                     <FormControl fullWidth sx={styles.formControlStyle}>
                         {renderKarabastDecksDropdown()}
-                        
+                        {showSavedDeckHint && (
+                            <Typography variant="body1" sx={styles.hintMessageStyle}>
+                                {savedDeckHintText}
+                            </Typography>
+                        )}
                         <Box sx={styles.manageDecksContainer}>
                             <Button
                                 onClick={handleDeckManagement}
@@ -504,7 +517,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 {showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && (
                     <FormControl fullWidth sx={styles.formControlStyle}>
                         {renderSwuStatsDecksDropdown()}
-                        
+                        {showSavedDeckHint && (
+                            <Typography variant="body1" sx={styles.hintMessageStyle}>
+                                {savedDeckHintText}
+                            </Typography>
+                        )}
                         <Box sx={styles.manageDecksContainer}>
                             <Button
                                 href="https://swustats.net"

@@ -1,11 +1,13 @@
 'use client';
-import { Box, MenuItem, Typography } from '@mui/material';
+import { Box, MenuItem, Typography, useMediaQuery, useTheme } from '@mui/material';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'
 import Grid from '@mui/material/Grid';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
+import { deckSourceTagStyles } from '@/app/_utils/deckProviders/core/registry';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
@@ -67,7 +69,8 @@ const DeckPage: React.FC = () => {
     const router = useRouter();
     const { data: session } = useSession(); // Get session from next-auth
     const { user } = useUser();
-
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     // Load decks from localStorage on component mount
     useEffect(() => {
         fetchDecks();
@@ -144,10 +147,6 @@ const DeckPage: React.FC = () => {
     const sortDecks = (sort:string) => {
         const sortedDecks = sortDeckList(decks, sort);
         setDecks(sortedDecks);
-    };
-
-    const handleBackButton = () => {
-        router.push('/');
     };
 
     // Handle successful deck addition
@@ -261,34 +260,8 @@ const DeckPage: React.FC = () => {
         sortDecks(e.target.value);
     };
 
-    const getDeckSourceStyle = (deckSource: string) => {
-        switch (deckSource.toUpperCase()) {
-            case 'SWUSTATS':
-                return styles.swuStatsTag;
-            case 'SWUDB':
-                return styles.swudbTag;
-            case 'SWUNLIMITEDDB':
-                return styles.swuUnlimitedTag;
-            case 'SWUCARDHUB':
-                return styles.swuCardHubTag;
-            case 'SWUBASE':
-                return styles.swuBaseTag;
-            case 'SWUMETASTATS':
-                return styles.swuMetaStatsTag;
-            case 'MYSWU':
-                return styles.mySwuTag;
-            case 'PROTECTTHEPOD':
-                return styles.protectThePodTag;
-            case 'CARDCORE':
-                return styles.cardCoreTag;
-            case 'MELEE':
-                return styles.meleeGgTag;
-            default:
-                console.log(`Unknown deck source: ${deckSource}`);
-                return styles.unknownTag;
-        }
-    };
-
+    const getDeckSourceStyle = (deckSource: string) =>
+        deckSourceTagStyles[deckSource] ?? styles.unknownTag;
     // ----------------------Styles-----------------------------//
     const styles = {
         header:{
@@ -298,25 +271,32 @@ const DeckPage: React.FC = () => {
             justifyContent: 'space-between',
         },
         sortBy:{
-            minWidth:'100px'
+            minWidth:'100px',
+            display: { xs: 'none', md: 'block' },
         },
         sortByContainer:{
             display:'flex',
             flexDirection: 'row',
             alignItems:'center',
+            justifyContent:'space-between',
+            flexWrap: 'nowrap',
+            gap: { xs: '10px', md: '0' },
         },
         dropdown:{
-            maxWidth:'10rem',
+            maxWidth: '10rem',
         },
         deckContainer: (isSelected: boolean) => ({
             background: isSelected ? '#2F7DB680' : '#20344280',
-            width: '31rem',
+            width: { xs: '30rem', md: '33rem' },
+            // height: { xs: 'auto', md: '13rem' },
             height: '13rem',
+            minHeight: '13rem',
             borderRadius: '5px',
             padding:'5px',
             display:'flex',
             flexDirection: 'row',
             border: '2px solid transparent',
+            paddingRight:'1.3rem',
             '&:hover': {
                 backgroundColor: '#2F7DB680',
             },
@@ -327,13 +307,14 @@ const DeckPage: React.FC = () => {
             mt: '30px',
             overflowY: 'auto',
             maxHeight: '84%',
+            pb:'0',
         },
         CardSetContainerStyle:{
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
             width: '15.2rem',
-            height: '12.1rem'
+            height: '12.1rem',
         },
         parentBoxStyling: {
             position:'absolute',
@@ -342,8 +323,8 @@ const DeckPage: React.FC = () => {
             backgroundColor: 'transparent',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
-            width: '14rem',
-            height: '10.18rem',
+            width: { xs: '12rem', md:'14rem' },
+            height: { xs: '8.18rem', md:'10.18rem' },
             backgroundImage: 'url(/leaders/boba.webp)',
             backgroundRepeat: 'no-repeat',
             textAlign: 'center' as const,
@@ -351,23 +332,24 @@ const DeckPage: React.FC = () => {
             display: 'flex',
             cursor: 'pointer',
             position: 'relative' as const,
-            ml: '15px',
+            ml: { xs: '8px', md: '15px' },
         },
         leaderBaseHolder:{
             display:'flex',
             alignItems:'center',
             height:'100%',
-            width: 'calc(55% - 5px)'
+            width: 'calc(55% - 5px)',
         },
         deckMetaContainer:{
             display:'flex',
             flexDirection:'column',
-            width:'calc(45% - 5px)',
+            width: 'calc(45% - 5px)',
             height:'100%',
             justifyContent: 'space-between',
         },
         deckTitle:{
-            mt: '14%',
+            mt: { xs: '8%', md: '14%' },
+            fontSize: { xs: '1rem', md: '1rem' },
         },
         viewDeckButton:{
             display:'flex',
@@ -377,9 +359,9 @@ const DeckPage: React.FC = () => {
         },
         favoriteIcon: {
             position: 'absolute',
-            top: '10px',
-            right: '10px',
-            fontSize: '24px',
+            top: { xs: '5px', md: '10px' },
+            right: { xs: '5px', md: '10px' },
+            fontSize: { xs: '20px', md: '24px' },
             color: 'gold',
             cursor: 'pointer',
             zIndex: 10,
@@ -398,10 +380,11 @@ const DeckPage: React.FC = () => {
             width: '100%',
             textAlign: 'center',
             marginTop: '2rem',
+            fontSize: { xs: '1rem', md: 'inherit' },
         },
         addNewDeck:{
-            width:'350px',
-            ml:'40px'
+            width: { xs: 'auto', md: '350px' },
+            ml: { xs: '0px', md: '40px' },
         },
         selectionInfo: {
             color: 'white',
@@ -410,7 +393,7 @@ const DeckPage: React.FC = () => {
         // New style for the selection checkmark
         selectionCheckmark: {
             position: 'absolute',
-            bottom: '34px',
+            bottom: { xs: '10px', md: '34px' },
             right: '10px',
             width: '24px',
             height: '24px',
@@ -429,7 +412,7 @@ const DeckPage: React.FC = () => {
         sourceTag: {
             padding: '4px 10px',
             borderRadius: '15px',
-            fontSize: '0.75rem',
+            fontSize: { xs:'1rem', md:'0.75rem' },
             fontWeight: '500',
             display: 'inline-block',
             marginTop: '8px',
@@ -438,96 +421,6 @@ const DeckPage: React.FC = () => {
             border: '1px solid',
             boxShadow: '0 0 5px',
             width:'fit-content',
-        },
-        swuStatsTag: {
-            borderColor: '#FFD700', // Blue for SWUStats
-            color: '#FFD700',
-            '&:hover': {
-                backgroundColor: '#FFD700',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #FFD700',
-        },
-        swudbTag: {
-            borderColor: '#4CB5FF',
-            color: '#4CB5FF',
-            '&:hover': {
-                backgroundColor: '#4CB5FF',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #4CB5FF',
-        },
-        swuUnlimitedTag: {
-            borderColor: '#4CFF85',
-            color: '#4CFF85',
-            '&:hover': {
-                backgroundColor: '#4CFF85',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #4CB5FF',
-        },
-        swuCardHubTag: {
-            borderColor: '#4F39F6',
-            color: '#4F39F6',
-            '&:hover': {
-                backgroundColor: '#4F39F6',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #4F39F6',
-        },
-        swuBaseTag: {
-            borderColor: '#4CFF85',
-            color: '#4CFF85',
-            '&:hover': {
-                backgroundColor: '#4CFF85',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #4CFF85',
-        },
-        swuMetaStatsTag: {
-            borderColor: '#00DBCC',
-            color: '#00DBCC',
-            '&:hover': {
-                backgroundColor: '#00DBCC',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #00DBCC',
-        },
-        mySwuTag: {
-            borderColor: '#F65526',
-            color: '#F65526',
-            '&:hover': {
-                backgroundColor: '#F65526',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #F65526',
-        },
-        protectThePodTag: {
-            borderColor: '#B388FF',
-            color: '#B388FF',
-            '&:hover': {
-                backgroundColor: '#B388FF',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #B388FF',
-        },
-        cardCoreTag: {
-            borderColor: '#FF6B35',
-            color: '#FF6B35',
-            '&:hover': {
-                backgroundColor: '#FF6B35',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #FF6B35',
-        },
-        meleeGgTag: {
-            borderColor: '#ffa800',
-            color: '#ffa800',
-            '&:hover': {
-                backgroundColor: '#ffa800',
-                color: '#000000',
-            },
-            boxShadow: '0 0 5px #FF6B35',
         },
         unknownTag: {
             color: 'white',
@@ -538,7 +431,7 @@ const DeckPage: React.FC = () => {
             boxShadow: '0 0 5px #4CB5FF',
         },
         titleContainer:{
-            width:'6rem',
+            width: '6rem',
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
@@ -551,9 +444,6 @@ const DeckPage: React.FC = () => {
         <>
             <Box sx={styles.header}>
                 <Box sx={styles.sortByContainer}>
-                    <Box sx={styles.titleContainer}>
-                        <PreferenceButton variant={'standard'} buttonFnc={handleBackButton}/>
-                    </Box>
                     <Typography variant={'h3'} sx={styles.sortBy}>Sort by</Typography>
                     <StyledTextField
                         select
@@ -569,13 +459,14 @@ const DeckPage: React.FC = () => {
                         ))}
                     </StyledTextField>
                     <Box sx={styles.addNewDeck}>
-                        <PreferenceButton variant={'standard'} text={'Add New Deck'} buttonFnc={() => setAddDeckDialogOpen(true)}/>
+                        <PreferenceButton variant={'standard'} sx={isMobile ? { fontSize: '14px', pt: '6px', pb: '6px', minWidth: '36px' } : {}} text={isMobile ? '+' : 'Add New Deck'} buttonFnc={() => setAddDeckDialogOpen(true)}/>
                     </Box>
                 </Box>
                 <Box>
                     <PreferenceButton
                         variant={'concede'}
-                        text={'Delete deck(s)'}
+                        sx={isMobile ? { fontSize: '14px', pt: '6px', pb: '6px', minWidth: '36px' } : {}}
+                        text={isMobile ? <DeleteOutlineIcon fontSize="small"/> : 'Delete deck(s)'}
                         buttonFnc={openDeleteDialog}
                         disabled={selectedDecks.length === 0}
                     />
@@ -640,6 +531,7 @@ const DeckPage: React.FC = () => {
                                         <PreferenceButton
                                             variant="standard"
                                             text="View Deck"
+                                            sx={{ fontSize: '1rem', padding:'0.5rem' }}
                                             buttonFnc={() => handleViewDeck(deck.deckID)}
                                         />
                                     </Box>

@@ -1,9 +1,10 @@
 import { SxProps } from '@mui/material';
 import { Theme } from '@mui/material/styles';
+import { ReactNode } from 'react';
 
 export type IButtonType = {
     variant: 'concede' | 'standard' | 'warning',
-    text?: string,
+    text?: string | ReactNode,
     buttonFnc?: () => void,
     disabled?: boolean,
     sx?: SxProps<Theme>,
@@ -64,17 +65,22 @@ export enum RegisteredCosmeticType {
     // Playmat = 'playmat',
 }
 
-export interface IRegisteredCosmeticOption {
+export interface ICosmeticEntity {
     id: string;
     title: string;
     type: RegisteredCosmeticType;
     path: string;
 }
 
+export interface IActiveCosmetics {
+    cardback: ICosmeticEntity;
+    background: ICosmeticEntity;
+}
+
 export interface IRegisteredCosmetics {
-    cardbacks: IRegisteredCosmeticOption[];
-    backgrounds: IRegisteredCosmeticOption[];
-    // playmats: IRegisteredCosmeticOption[];
+    cardbacks: ICosmeticEntity[];
+    backgrounds: ICosmeticEntity[];
+    // playmats: ICosmeticEntity[];
 }
 
 // constants
@@ -148,10 +154,38 @@ export interface IActiveModActionCacheEntry {
     modActionId: string;
 }
 
+export enum UsernameChangeSource {
+    AccountCreation = 'AccountCreation',
+    Migration = 'Migration',
+    UserInitiated = 'UserInitiated',
+    ForcedRename = 'ForcedRename',
+}
+
+export interface IUsernameChangeResponse {
+    id: string;
+    playerId: string;
+    previousUsername: string | null;
+    newUsername: string;
+    source: UsernameChangeSource;
+    relatedModActionId?: string;
+    createdAt: string;
+}
+
 export interface IFindUserResponse {
     success: boolean;
     players: IPlayerSearchResult[];
     modActions: IModActionResponse[];
+    usernameChanges: IUsernameChangeResponse[];
+}
+
+/**
+ * Global server settings, owned by the backend and toggleable by moderators at runtime.
+ */
+export interface IServerSettings {
+    gamesEnabled: boolean;
+    maintenanceMessage?: string;
+    updatedBy?: string;
+    updatedAt?: string;
 }
 
 export enum DurationUnit {

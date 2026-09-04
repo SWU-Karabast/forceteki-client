@@ -1,5 +1,4 @@
 import React from 'react';
-import { CloseOutlined, SettingsOutlined } from '@mui/icons-material';
 import { Box, Grid, Popover, PopoverOrigin } from '@mui/material';
 import Resources from '../_subcomponents/PlayerTray/Resources';
 import Credits from '../_subcomponents/PlayerTray/Credits';
@@ -9,35 +8,18 @@ import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTyp
 import { useBoardState } from '@/app/_hooks/useBoardState';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
-import { v4 as uuidv4 } from 'uuid';
-import { usePopup } from '@/app/_contexts/Popup.context';
-import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
-import { useRouter } from 'next/navigation';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
 
-const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, preferenceToggle }) => {
+const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
     const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useBoardState();
-    const { openPopup } = usePopup();
     const { isPortrait } = useScreenOrientation();
     const locale = useCardImageLocale();
-    const router = useRouter();
-    const handleExitButton = () => {
-        if (isSpectator){
-            router.push('/');
-        } else {
-            const popupId = `${uuidv4()}`;
-            openPopup('leaveGame', {
-                uuid: popupId,
-                source: PopupSource.User
-            });
-        }
-    };
 
     const activePlayer = gameState.players[connectedPlayer].isActionPhaseActivePlayer;
     const phase = gameState.phase;
-    const opponentsCardback = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback;
+    const opponentsCardbackPath = isSpectator ? undefined : gameState?.players[getOpponent(connectedPlayer)].user?.cosmetics?.cardback?.path;
 
     const hasLastPlayedCard = !!gameState.clientUIProperties?.lastPlayedCard
     const lastPlayedCardUrl = hasLastPlayedCard ? `url(${s3CardImageURL({ setId: gameState.clientUIProperties.lastPlayedCard, type: '', id: '' }, locale)})` : 'none';
@@ -74,12 +56,21 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
     const styles = {
         leftColumn: {
             ...debugBorder('red'),
-            flexDirection: isPortrait ? 'column' : 'row', // Responsive layout
+            flexDirection: 'row', // Responsive layout
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: isPortrait ? '0.5rem' : '1.0rem',
+            padding: '1rem',
             gap: '1rem',
+            // Mobile landscape
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                py: '8px',
+            },
+            // Mobile portrait
+            '@media (orientation: portrait) and (max-width: 932px)': {
+                p: '0.5rem',
+                flexDirection: 'column',
+            },
             height: '100%',
             boxSizing: 'border-box',
         },
@@ -110,8 +101,19 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             alignItems: 'center',
             justifyContent: 'flex-end',
             py: '1rem',
-            pr: { xs: '1rem', md: '2rem' },
-            gap: { xs: hasLastPlayedCard ? '1rem' : '0', md: '1rem' },
+            pr: '2rem',
+            gap: '1rem',
+            // Mobile portrait
+            '@media (orientation: portrait) and (max-width: 932px)': {
+                pr: '5px',
+                gap: hasLastPlayedCard ? '6px' : '0',
+            },
+            // Mobile landscape
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                pr: '1rem',
+                gap: hasLastPlayedCard ? '1rem' : '0',
+                py: '8px',
+            },
         },
         lastPlayed: {
             ...debugBorder('yellow'),
@@ -140,12 +142,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
             backgroundSize: 'cover',
             backgroundImage: lastPlayedCardUrl,
             backgroundRepeat: 'no-repeat',
-        },
-        menuStyles: {
-            ...debugBorder('yellow'),
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
         },
         opponentTurnAura: {
             height: '100px',
@@ -177,6 +173,10 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '1rem', // 2rem gap between columns
+                // Mobile portrait
+                '@media (orientation: portrait) and (max-width: 932px)': {
+                    columnGap: '6px',
+                },
                 position: 'relative',
                 zIndex: 2 // Above playmats
             }}
@@ -188,7 +188,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                     ...styles.leftColumn,
                 }}
             >
-                <DeckDiscard trayPlayer={trayPlayer} cardback={opponentsCardback} />
+                <DeckDiscard trayPlayer={trayPlayer} cardback={opponentsCardbackPath} />
                 <Box sx={styles.creditsResourcesStack}>
                     <Credits trayPlayer={trayPlayer} />
                     <Resources trayPlayer={trayPlayer}/>
@@ -209,7 +209,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                         maxCardOverlapPercent={0.95}
                         scrollbarEnabled={false}
                         cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []}
-                        cardback={opponentsCardback} />
+                        cardback={opponentsCardbackPath}
+                        showCardCount
+                    />
                 </Box>
                 <Box sx={ styles.opponentTurnAura} />
             </Grid>
@@ -241,10 +243,6 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer, prefer
                         >
                             <Box sx={{ ...styles.lastCardPlayedPreview }} />
                         </Popover>
-                        <Box sx={styles.menuStyles}>
-                            <CloseOutlined onClick={handleExitButton} sx={{ cursor:'pointer' }}/>
-                            <SettingsOutlined onClick={preferenceToggle} sx={{ cursor:'pointer' }} />
-                        </Box>
                     </>
                 )}
             </Grid>

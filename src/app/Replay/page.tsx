@@ -156,19 +156,13 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
                         after the header and the 60px transport bar, so the column
                         can never overflow 100dvh and clip the player tray. */}
                     <Box sx={{ height: '15dvh' }}>
-                        <OpponentCardTray
-                            trayPlayer={getOpponent(connectedPlayer)}
-                            preferenceToggle={() => {}}
-                        />
+                        <OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
                     </Box>
                     <Box sx={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 2 }}>
                         <Board sidebarOpen={false} />
                     </Box>
                     <Box sx={{ height: '18dvh', mb: '60px' }}>
-                        <PlayerCardTray
-                            trayPlayer={connectedPlayer}
-                            toggleSidebar={() => {}}
-                        />
+                        <PlayerCardTray trayPlayer={connectedPlayer} />
                     </Box>
                 </Box>
                 <PopupShell sidebarOpen={false} />

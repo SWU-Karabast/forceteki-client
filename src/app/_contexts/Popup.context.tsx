@@ -1,20 +1,27 @@
 'use client';
 import React, { createContext, useContext, useCallback, useState } from 'react';
 import {
+    ActionTriggerPopup,
+    BatchTriggerPopup,
     DefaultPopup,
     DropdownPopup,
+    OptionalTriggerPopup,
     PilePopup,
     SelectCardsPopup,
-    PopupSource, LeaveGamePopup, NumberPopup
+    PopupSource, LeaveGamePopup, NumberPopup, WaitDelayPopup
 } from '../_components/_sharedcomponents/Popup/Popup.types';
 
 export type PopupData =
+  | ActionTriggerPopup
+  | BatchTriggerPopup
+  | OptionalTriggerPopup
   | DefaultPopup
   | SelectCardsPopup
   | PilePopup
   | DropdownPopup
   | NumberPopup
-  | LeaveGamePopup;
+  | LeaveGamePopup
+  | WaitDelayPopup;
 
 export type PopupType = PopupData['type'];
 
