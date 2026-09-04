@@ -4,7 +4,7 @@
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat } from '@/lib/swupgn';
-import { foldFrames, serialize, render, baseId } from '@/lib/swupgn';
+import { foldFrames, serialize, render, baseId, normalizeTokenEvents } from '@/lib/swupgn';
 import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
@@ -84,7 +84,9 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     doc, children, rawContent = null, replayId = null, initialFrame = 0, nameMap = {},
     clipStart = null, clipEnd = null,
 }) => {
-    const events = doc.events;
+    // forceteki never emits a decrement when a status token leaves its host, so read the
+    // repaired stream (see normalizeTokenEvents) rather than the file's literal events.
+    const events = useMemo(() => normalizeTokenEvents(doc.events), [doc]);
     const totalFrames = events.length;
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);

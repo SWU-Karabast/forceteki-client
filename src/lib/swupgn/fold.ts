@@ -1,4 +1,5 @@
 import type { GameEvent, ReducedState, PlayerState, CardInstanceState, Seat } from './types';
+import { isForceToken, isTokenPseudoCard } from './tokens';
 
 function emptyPlayer(seat: Seat): PlayerState {
     return {
@@ -124,21 +125,16 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
     }
 }
 
-/**
- * Status tokens (Advantage, The Force, ...) appear in the stream as pseudo-cards named
- * `TOKEN:<Name>[:copy]`, with their own MOVE/DEFEAT/ABILITY events into and out of the
- * arenas. They are NOT cards: they have no set id, so treating them as arena units puts
- * a card with an unresolvable image on the board. The token's actual effect is recorded
- * separately by STATUS_TOKEN on its host, which is what the board renders.
- */
-const TOKEN_ID_PREFIX = 'TOKEN:';
-export const isTokenPseudoCard = (id: string): boolean => id.startsWith(TOKEN_ID_PREFIX);
-
 /** Apply a single event to state, mutating and returning it. */
 export function reduce(s: ReducedState, e: GameEvent): ReducedState {
-    // STATUS_TOKEN carries the host in `card` and the token in `token`, so it must still
-    // be applied; every other event naming a TOKEN: pseudo-card is board-state noise.
+    // TOKEN: pseudo-cards are not cards: they have no set id, so folding them into an
+    // arena puts a card with an unresolvable image on the board. STATUS_TOKEN names the
+    // HOST in `card`, so it still applies; The Force is a per-player token on the base,
+    // and its MOVE in/out of that base is the only signal the stream gives for it.
     if (e.t !== 'STATUS_TOKEN' && 'card' in e && typeof e.card === 'string' && isTokenPseudoCard(e.card)) {
+        if (e.t === 'MOVE' && isForceToken(e.card) && e.p) {
+            player(s, e.p).hasForce = e.to === 'base';
+        }
         return s;
     }
     switch (e.t) {
@@ -233,7 +229,9 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         case 'SHIELD_GAIN': { const c = findCard(s, e.card); if (c) { c.shields += e.count ?? 1; } break; }
         case 'SHIELD_USE': { const c = findCard(s, e.card); if (c) { c.shields = Math.max(0, c.shields - (e.count ?? 1)); } break; }
         case 'EXPERIENCE_GAIN': { const c = findCard(s, e.card); if (c) { c.experience += e.count; } break; }
-        case 'STATUS_TOKEN': { const c = findCard(s, e.card); if (c) { c.statusTokens[e.token] = (c.statusTokens[e.token] ?? 0) + e.count; } break; }
+        // count is negative when a token leaves (see normalizeTokenEvents); clamp so a
+        // duplicated removal cannot drive the badge count below zero.
+        case 'STATUS_TOKEN': { const c = findCard(s, e.card); if (c) { c.statusTokens[e.token] = Math.max(0, (c.statusTokens[e.token] ?? 0) + e.count); } break; }
         // Pure-log events with no state delta:
         case 'ATTACK': case 'PASS': case 'CHOICE': case 'MULLIGAN':
         case 'KEEP_HAND': case 'MODAL_CHOICE': case 'ABILITY_ACTIVATE': case 'SHUFFLE':

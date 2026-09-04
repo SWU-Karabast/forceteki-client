@@ -138,8 +138,9 @@ describe('token badges', () => {
     // The board draws neutral tokens (Shield/Experience/Weakness/Advantage) as count
     // badges built from a unit's subcards, which UnitsBoard groups by parentCardId.
     // The folded counters have to be materialized that way or they render as nothing.
+    // (Advantage is an Ashes of the Empire token; the host set below carries no meaning.)
     const inst = (over: Partial<CardInstanceState> = {}): CardInstanceState => ({
-        id: 'SEC#215', zone: 'space', damage: 0, exhausted: false,
+        id: 'ASH#220', zone: 'space', damage: 0, exhausted: false,
         upgrades: [], shields: 0, experience: 0, statusTokens: {}, ...over,
     });
 
@@ -162,7 +163,7 @@ describe('token badges', () => {
             doc, { 1: 30, 2: 30 }, seats,
         );
         const space = gs.players['p1'].cardPiles['spaceArena'];
-        const tokens = space.filter((c: { parentCardId?: string }) => c.parentCardId === 'SEC#215');
+        const tokens = space.filter((c: { parentCardId?: string }) => c.parentCardId === 'ASH#220');
         expect(tokens.map((t: { name: string }) => t.name).sort())
             .toEqual(['Advantage', 'Experience', 'Shield', 'Shield']);
         // The host itself is still a single unparented card in the arena.
