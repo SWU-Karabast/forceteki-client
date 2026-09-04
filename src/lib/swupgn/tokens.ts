@@ -34,17 +34,21 @@ export function normalizeTokenEvents(events: GameEvent[]): GameEvent[] {
             return e;
         }
         if (e.to !== 'outsideTheGame') {
+            // `attachedTo` is the normative host binding; the adjacent STATUS_TOKEN is the
+            // fallback for files written before forceteki carried it. Either way the token's
+            // name and count come from that STATUS_TOKEN, which is the only place they appear.
             const next = events[i + 1];
             if (next && next.t === 'STATUS_TOKEN' && next.count > 0) {
-                bound.set(e.card, { card: next.card, token: next.token, count: next.count });
+                bound.set(e.card, { card: e.attachedTo ?? next.card, token: next.token, count: next.count });
             }
             return e;
         }
         // Leaving play: emit the decrement in place of the (board-inert) move.
-        const b = bound.get(e.card);
-        if (!b) {
+        const prior = bound.get(e.card);
+        if (!prior) {
             return e;
         }
+        const b = { ...prior, card: e.attachedTo ?? prior.card };
         bound.delete(e.card);
         // Forward-compatible with a fixed emitter: if the stream already decrements the
         // host nearby, leave its events alone rather than removing the token twice.

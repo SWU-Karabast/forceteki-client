@@ -254,13 +254,47 @@ describe('normalizeTokenEvents — the removal the stream never emits', () => {
         const fixed = normalizeTokenEvents(lifecycle);
         expect(fixed).toHaveLength(lifecycle.length);
         expect(fixed[3]).toEqual({ seq: '4', t: 'STATUS_TOKEN', card: 'ASH#220', token: 'advantage', count: -1 });
-        expect(p1(fold(fixed)).cards[0].statusTokens).toEqual({ advantage: 0 });
+        // Deleted, not zeroed: an engine keyframe reports an untokened host as `{}` and the
+        // integrity gate compares by JSON equality.
+        expect(p1(fold(fixed)).cards[0].statusTokens).toEqual({});
     });
 
     it('never drives a badge count below zero', () => {
         const doubled = [...normalizeTokenEvents(lifecycle),
             { seq: '6', t: 'STATUS_TOKEN', card: 'ASH#220', token: 'advantage', count: -1 } as GameEvent];
-        expect(p1(fold(doubled)).cards[0].statusTokens.advantage).toBe(0);
+        expect(p1(fold(doubled)).cards[0].statusTokens).toEqual({});
+    });
+
+    it('takes the host from attachedTo when the emitter carries it', () => {
+        // forceteki now names the host on the token's own MOVE, so the binding no longer has
+        // to be inferred from which STATUS_TOKEN happens to come next.
+        const events: GameEvent[] = [
+            { seq: '1', t: 'PLAY', card: 'ASH#220', zone: 'ground', p: 1 },
+            { seq: '2', t: 'MOVE', card: 'TOKEN:Advantage', from: 'outsideTheGame', to: 'ground', p: 1, attachedTo: 'ASH#220' },
+            { seq: '3', t: 'STATUS_TOKEN', card: 'ASH#220', token: 'advantage', count: 1 },
+            { seq: '4', t: 'MOVE', card: 'TOKEN:Advantage', from: 'ground', to: 'outsideTheGame', p: 1, attachedTo: 'ASH#220' },
+        ];
+        expect(normalizeTokenEvents(events)[3]).toEqual(
+            { seq: '4', t: 'STATUS_TOKEN', card: 'ASH#220', token: 'advantage', count: -1 },
+        );
+        expect(p1(fold(normalizeTokenEvents(events))).cards[0].statusTokens).toEqual({});
+    });
+
+    it('keeps other tokens on the host when one of several is removed', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'PLAY', card: 'ASH#220', zone: 'ground', p: 1 });
+        s = reduce(s, { seq: '2', t: 'STATUS_TOKEN', card: 'ASH#220', token: 'advantage', count: 1 });
+        s = reduce(s, { seq: '3', t: 'STATUS_TOKEN', card: 'ASH#220', token: 'weakness', count: 2 });
+        s = reduce(s, { seq: '4', t: 'STATUS_TOKEN', card: 'ASH#220', token: 'advantage', count: -1 });
+        expect(p1(s).cards[0].statusTokens).toEqual({ weakness: 2 });
+    });
+
+    it('clamps experience at zero the way the reference fold does', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'PLAY', card: 'ASH#220', zone: 'ground', p: 1 });
+        s = reduce(s, { seq: '2', t: 'EXPERIENCE_GAIN', card: 'ASH#220', count: 1 });
+        s = reduce(s, { seq: '3', t: 'EXPERIENCE_GAIN', card: 'ASH#220', count: -3 });
+        expect(p1(s).cards[0].experience).toBe(0);
     });
 
     it('tracks The Force on and off its player base', () => {

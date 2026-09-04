@@ -228,10 +228,22 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         case 'RESOURCE': break;
         case 'SHIELD_GAIN': { const c = findCard(s, e.card); if (c) { c.shields += e.count ?? 1; } break; }
         case 'SHIELD_USE': { const c = findCard(s, e.card); if (c) { c.shields = Math.max(0, c.shields - (e.count ?? 1)); } break; }
-        case 'EXPERIENCE_GAIN': { const c = findCard(s, e.card); if (c) { c.experience += e.count; } break; }
-        // count is negative when a token leaves (see normalizeTokenEvents); clamp so a
-        // duplicated removal cannot drive the badge count below zero.
-        case 'STATUS_TOKEN': { const c = findCard(s, e.card); if (c) { c.statusTokens[e.token] = Math.max(0, (c.statusTokens[e.token] ?? 0) + e.count); } break; }
+        // `count` may be negative: a token leaving its host is recorded as the same event with a
+        // negative delta (see SwuPgnRecorder.tokenRecord). Counts clamp at 0, and a status token
+        // that reaches 0 is DELETED rather than left as `{advantage: 0}` — an engine keyframe
+        // reports a host with no tokens as `statusTokens: {}`, and the integrity gate compares
+        // the two by JSON equality.
+        case 'EXPERIENCE_GAIN': { const c = findCard(s, e.card); if (c) { c.experience = Math.max(0, c.experience + e.count); } break; }
+        case 'STATUS_TOKEN': {
+            const c = findCard(s, e.card);
+            if (c) {
+                const next = Math.max(0, (c.statusTokens[e.token] ?? 0) + e.count);
+                c.statusTokens = Object.fromEntries(
+                    Object.entries({ ...c.statusTokens, [e.token]: next }).filter(([, n]) => n > 0)
+                );
+            }
+            break;
+        }
         // Pure-log events with no state delta:
         case 'ATTACK': case 'PASS': case 'CHOICE': case 'MULLIGAN':
         case 'KEEP_HAND': case 'MODAL_CHOICE': case 'ABILITY_ACTIVATE': case 'SHUFFLE':
