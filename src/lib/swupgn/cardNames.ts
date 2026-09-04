@@ -15,6 +15,7 @@ export function baseId(ref: string): string {
  * itself, so an incomplete index degrades to today's behaviour rather than losing the event.
  */
 export function indexResolver(cards: readonly CardIndexRecord[] = []): NameResolver {
-    const byId = new Map(cards.map((c) => [c.id, c.name]));
+    // CLIENT-OWNED: entries come off JSON.parse, so a `null` line would throw here.
+    const byId = new Map(cards.filter((c) => !!c && typeof c === 'object').map((c) => [c.id, c.name]));
     return { nameOf: (id: string) => byId.get(baseId(id)) ?? baseId(id) };
 }

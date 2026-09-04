@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, isStatusTokenCard, tokenArtId, parse } from '../index';
+import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, normalizeEvents, isStatusTokenCard, tokenArtId, parse } from '../index';
 import type { GameEvent, ReducedState, PlayerState } from '../index';
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -433,5 +433,109 @@ describe('folding a whole file leaves the board coherent', () => {
                 expect(ps.hand.length).toBeLessThanOrEqual(ps.handSize);
             }
         }
+    });
+});
+
+describe('malformed input does not take the reader down', () => {
+    // Fields come straight off JSON.parse of an uploaded file — parse.ts documents the
+    // threat model ("a malformed or hostile file — replays are shared between users").
+    // Nothing guarantees `card` is a string, and a token helper calling .startsWith on a
+    // number threw `id.startsWith is not a function` out of BOTH entry points.
+    const badCard = [
+        { seq: 'R1.A.1', t: 'MOVE', card: 123, from: 'deck', to: 'hand', p: 1 },
+        { seq: 'R1.A.2', t: 'MOVE', card: null, from: 'hand', to: 'ground', p: 1 },
+    ] as unknown as GameEvent[];
+
+    it('survives a non-string card id through normalize and fold', () => {
+        expect(() => normalizeEvents(badCard)).not.toThrow();
+        expect(() => foldFrames(badCard)).not.toThrow();
+    });
+
+    it('classifies a non-string id as not-a-token rather than throwing', () => {
+        expect(isStatusTokenCard(123 as unknown as string)).toBe(false);
+        expect(tokenArtId(null as unknown as string)).toBeUndefined();
+    });
+});
+
+describe('hostile file cannot corrupt the page or the pile', () => {
+    // Every field here comes off JSON.parse of a file users share with each other.
+    it('a non-seat `p` never touches Object.prototype', () => {
+        const ev = [{ seq: '1', t: 'MOVE', card: 'X', from: 'deck', to: 'resource', p: '__proto__' }] as unknown as GameEvent[];
+        expect(() => fold(ev)).not.toThrow();
+        // Was: Object.prototype.resourcesReady = NaN, set for the whole page session.
+        expect(({} as Record<string, unknown>).resourcesReady).toBeUndefined();
+    });
+
+    it('skips a non-object event line instead of throwing', () => {
+        const ev = [null, 5, 'x', { seq: '1', t: 'PASS', p: 1 }] as unknown as GameEvent[];
+        expect(() => fold(ev)).not.toThrow();
+    });
+
+    it('tolerates a scalar where a card list is declared', () => {
+        const ev = [
+            { seq: '1', t: 'DRAW', p: 1, count: 1, cards: 3 },
+            { seq: '2', t: 'DISCARD', p: 1, cards: null },
+        ] as unknown as GameEvent[];
+        expect(() => fold(ev)).not.toThrow();
+        expect(p1(fold(ev)).hand).toEqual([]);
+    });
+
+    it('only seats 1 and 2 can own a base', () => {
+        const ev = [
+            { seq: '1', t: 'DAMAGE', src: 'X', tgt: 'base@7', amt: 1, damageType: 'combat', hp: 5 },
+            { seq: '2', t: 'DAMAGE', src: 'X', tgt: 'base@0', amt: 1, damageType: 'combat', hp: 5 },
+        ] as unknown as GameEvent[];
+        // A phantom seat used to be created and then ride along in every frame clone.
+        expect(Object.keys(fold(ev).players).sort()).toEqual(['1', '2']);
+    });
+
+    it('keeps the discard pile deduped and removes a card that leaves it', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'A', from: 'ground', to: 'discard', p: 1 });
+        s = reduce(s, { seq: '2', t: 'DEFEAT', card: 'A', reason: 'ability' });
+        expect(p1(s).discard).toEqual(['A']);
+        s = reduce(s, { seq: '3', t: 'MOVE', card: 'A', from: 'discard', to: 'hand', p: 1 });
+        expect(p1(s).discard).toEqual([]);
+    });
+});
+
+describe('keyframes do not smuggle token upgrades onto the board', () => {
+    // The 1.0 writer lists a token UPGRADE in the keyframe's `cards[]` as though it were a
+    // unit — the same token it also records on its host's statusTokens. MOVE events state
+    // `kind: 'upgrade'` and are filtered, but a keyframe is snapped in wholesale, so the
+    // pseudo-card landed in an arena and rendered as "IMAGE NOT FOUND" on the board.
+    const kf = (): ReducedState => ({
+        round: 1, phase: 'action', initiative: 1,
+        players: {
+            1: { seat: 1, baseHp: 33, baseMaxHp: 33, handSize: 0, hand: [], resourcesReady: 0,
+                resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [
+                    { id: 'LOF#192', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: { advantage: 1 } },
+                    { id: 'TOKEN:advantage#5844562972', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {} },
+                    { id: 'TOKEN:shield#8752877738', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {} },
+                ] },
+            2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
+                resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
+        },
+    });
+
+    it('drops token upgrades from a snapped keyframe, keeping the host and its counters', () => {
+        const s = fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf() }] as GameEvent[]);
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['LOF#192']);
+        expect(p1(s).cards[0].statusTokens).toEqual({ advantage: 1 });
+    });
+});
+
+describe('dropInertRecords never orphans an anchored record', () => {
+    const inert: GameEvent[] = [
+        { seq: 'a', t: 'MOVE', card: 'X', from: 'deck', to: 'deck', p: 1 },
+        { seq: 'b', t: 'MOVE', card: 'Y', from: 'deck', to: 'deck', p: 1 },
+    ];
+
+    it('keeps a record an annotation points at', () => {
+        expect(dropInertRecords(inert, new Set(['b'])).map((e) => e.seq)).toEqual(['b']);
+    });
+
+    it('never empties a non-empty stream — an all-inert file must not render zero frames', () => {
+        expect(normalizeEvents(inert)).toHaveLength(inert.length);
     });
 });

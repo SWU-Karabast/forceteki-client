@@ -99,3 +99,18 @@ describe('parse — 1.0 sections (STORY/CARDS), and 1.1 files still read', () =>
         expect(doc.cards ?? []).toEqual([]);
     });
 });
+
+describe('parse — DoS ceiling on event count', () => {
+    // A real game is a few thousand events. The cap bounds the per-frame fold and the
+    // snapshot array so a hostile file cannot freeze or OOM the tab; upstream has no cap
+    // because it never builds per-frame snapshots.
+    it('refuses a file with an absurd number of events', () => {
+        const header = '[Game "SWU-PGN/1.0"] [GameId "g"] [Date "d"] [CardPool "S"] [Engine "e"] [Seed "0"]\n'
+            + '[P1Id "a"] [P2Id "b"] [P1 "A"] [P2 "B"]\n'
+            + '[P1Leader "S#1"] [P1Base "S#2"] [P2Leader "S#3"] [P2Base "S#4"]\n'
+            + '[Result "Draw"] [Reason "r"] [Rounds "1"]\n%%% EVENTS\n';
+        const line = '{"seq":"x","t":"PASS","p":1}';
+        const huge = header + Array.from({ length: 200_001 }, () => line).join('\n');
+        expect(() => parse(huge)).toThrow(/too many events/);
+    });
+});

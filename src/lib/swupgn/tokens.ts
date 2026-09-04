@@ -3,8 +3,15 @@ import type { CardKind, GameEvent } from './types';
 const TOKEN_PREFIX = 'TOKEN:';
 const FORCE_TOKEN_NAME = 'the force';
 
-/** Tokens ride the stream as pseudo-cards prefixed `TOKEN:`. */
-export const isTokenPseudoCard = (id: string): boolean => id.startsWith(TOKEN_PREFIX);
+/**
+ * Tokens ride the stream as pseudo-cards prefixed `TOKEN:`.
+ *
+ * Every helper here coerces with String() first. These read fields straight off
+ * JSON.parse of an uploaded file, where nothing guarantees a string — a `card` that
+ * arrives as a number would otherwise throw `id.startsWith is not a function` and take
+ * the whole replay down. `baseId` in cardNames.ts guards the same way.
+ */
+export const isTokenPseudoCard = (id: string): boolean => String(id).startsWith(TOKEN_PREFIX);
 
 /**
  * The token's name, normalized, from either id shape forceteki has written:
@@ -13,11 +20,15 @@ export const isTokenPseudoCard = (id: string): boolean => id.startsWith(TOKEN_PR
  * Both reduce to `advantage`. Files of both shapes are in the wild, so both are read.
  */
 export const tokenName = (id: string): string =>
-    id.slice(TOKEN_PREFIX.length).split('#')[0].replace(/:\d+$/, '').toLowerCase();
+    String(id).slice(TOKEN_PREFIX.length).split('#')[0].replace(/:\d+$/, '').toLowerCase();
 
-/** The numeric art id from a current-shape token id, if it carries one. */
+/**
+ * The numeric art id from a current-shape token id, if it carries one.
+ * A second copy of a token appends its suffix AFTER the art id —
+ * `TOKEN:advantage#5844562972:2` — so the suffix is stripped before the numeric test.
+ */
 export const tokenArtId = (id: string): string | undefined => {
-    const art = id.slice(TOKEN_PREFIX.length).split('#')[1];
+    const art = String(id).slice(TOKEN_PREFIX.length).split('#')[1]?.replace(/:\d+$/, '');
     return art && /^\d+$/.test(art) ? art : undefined;
 };
 
@@ -71,7 +82,10 @@ export const isForceToken = (id: string): boolean =>
 export function normalizeTokenEvents(events: GameEvent[]): GameEvent[] {
     const bound = new Map<string, { card: string; token: string; count: number }>();
     return events.map((e, i) => {
-        if (!('card' in e) || !isStatusTokenCard(e.card)) {
+        if (e == null || typeof e !== 'object') {
+            return e;
+        }
+        if (!('card' in e) || !isStatusTokenCard(e.card, 'kind' in e ? e.kind : undefined)) {
             return e;
         }
         if (e.t !== 'MOVE') {
@@ -114,14 +128,25 @@ export function normalizeTokenEvents(events: GameEvent[]): GameEvent[] {
  * In a sample game two searches produced 28 of the file's 136 MOVE records (20%), each one
  * costing the scrubber a frame that renders identically to its neighbour.
  *
- * Only inert MOVEs are dropped; every other record is kept, so `seq` lookups still resolve
- * and annotation references still land.
+ * Dropping a record removes its `seq` from the stream, so anything anchored to it — an
+ * annotation ref, a shared `?t=` link — would resolve to nothing. `keepSeqs` holds those
+ * back: a referenced record stays, and playback skips it anyway because the board does not
+ * change across it. The 1.0 writer no longer emits inert MOVEs at all, so this is a
+ * legacy-file repair.
  */
-export function dropInertRecords(events: GameEvent[]): GameEvent[] {
-    return events.filter((e) => !(e.t === 'MOVE' && (!e.from || !e.to || e.from === e.to)));
+export function dropInertRecords(events: GameEvent[], keepSeqs: ReadonlySet<string> = new Set()): GameEvent[] {
+    return events.filter((e) => !(e != null && typeof e === 'object'
+        && e.t === 'MOVE' && (!e.from || !e.to || e.from === e.to)
+        && !keepSeqs.has(e.seq)));
 }
 
-/** Every stream repair the reader applies, in order. */
-export function normalizeEvents(events: GameEvent[]): GameEvent[] {
-    return dropInertRecords(normalizeTokenEvents(events));
+/**
+ * Every stream repair the reader applies, in order.
+ *
+ * Never returns an empty array for a non-empty input: a file whose every record is inert
+ * would otherwise leave the viewer with zero frames and a spinner that never resolves.
+ */
+export function normalizeEvents(events: GameEvent[], keepSeqs?: ReadonlySet<string>): GameEvent[] {
+    const repaired = dropInertRecords(normalizeTokenEvents(events), keepSeqs);
+    return repaired.length > 0 ? repaired : events;
 }

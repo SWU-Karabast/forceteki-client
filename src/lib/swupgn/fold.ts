@@ -13,8 +13,22 @@ function emptyState(): ReducedState {
     return { round: 0, phase: 'setup', initiative: null, players: { 1: emptyPlayer(1), 2: emptyPlayer(2) } };
 }
 
+/**
+ * CLIENT-OWNED. `seat` arrives from JSON.parse of an uploaded file, so it is not
+ * necessarily 1 or 2 — and `s.players["__proto__"]` resolves to Object.prototype, which is
+ * truthy, so the guard below used to hand Object.prototype back as a PlayerState and let
+ * `ps.resourcesReady += 1` pollute it for the whole page session, silently. Anything that
+ * is not a real seat gets a scratch player that is discarded with the frame.
+ */
+function isSeat(v: unknown): v is Seat {
+    return v === 1 || v === 2;
+}
+
 function player(s: ReducedState, seat: Seat): PlayerState {
-    if (!s.players[seat]) {
+    if (!isSeat(seat)) {
+        return emptyPlayer(1);
+    }
+    if (!Object.prototype.hasOwnProperty.call(s.players, seat) || !s.players[seat]) {
         s.players[seat] = emptyPlayer(seat);
     }
     return s.players[seat]!;
@@ -22,8 +36,13 @@ function player(s: ReducedState, seat: Seat): PlayerState {
 
 /** Resolve a target ref like "base@2" or "SOR#095:2" to the owning seat (best-effort). */
 function seatOfBaseRef(ref: string): Seat | null {
-    const m = /^base@(\d)$/.exec(ref);
+    const m = /^base@([12])$/.exec(String(ref));
     return m ? (Number(m[1]) as Seat) : null;
+}
+
+/** CLIENT-OWNED. `cards` is typed string[] but comes off JSON.parse; a scalar is not iterable. */
+function asIdList(v: unknown): string[] {
+    return Array.isArray(v) ? v : [];
 }
 
 function findCard(s: ReducedState, id: string): CardInstanceState | undefined {
@@ -105,6 +124,16 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         ps.resourcesReady = Math.max(0, ps.resourcesReady - 1);
     }
 
+    // CLIENT-OWNED. Discard membership, both directions. The viewer RENDERS the discard
+    // pile keyed by card id, so an append-only pile duplicates React keys and drifts
+    // numCardsInDeck; a card that leaves the discard has to leave the array too.
+    if (e.to === 'discard' && e.from !== 'discard') {
+        if (!ps.discard.includes(e.card)) ps.discard.push(e.card);
+    } else if (e.from === 'discard' && e.to !== 'discard') {
+        const di = ps.discard.indexOf(e.card);
+        if (di >= 0) ps.discard.splice(di, 1);
+    }
+
     // In-play (arena) membership. An UPGRADE never has any: it attaches to a unit, and its
     // effect on the board is carried by the host's own records (SHIELD_GAIN, EXPERIENCE_GAIN,
     // STATUS_TOKEN, or PLAY_UPGRADE.target). Without `kind` a reader cannot tell a token
@@ -140,6 +169,12 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
 
 /** Apply a single event to state, mutating and returning it. */
 export function reduce(s: ReducedState, e: GameEvent): ReducedState {
+    // CLIENT-OWNED. An events line of `null`, `5` or `"x"` parses fine as JSON and then
+    // throws on the first property read, taking the whole replay down with no error
+    // boundary to catch it. Skip it instead.
+    if (e == null || typeof e !== 'object') {
+        return s;
+    }
     // CLIENT-OWNED, pre-1.0 compatibility. A 1.0 stream states `kind`, which applyMoveCounts
     // acts on; a 1.1 file states nothing, so a token upgrade would fold into an arena as a
     // card with no printed identity. isStatusTokenCard falls back to a name list for exactly
@@ -162,8 +197,11 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         // the matching hand->zone MOVE accounts for the hand decrement.
         case 'PLAY': case 'PLAY_SMUGGLE':
             placeCard(s, e.p, e.card, e.zone ?? 'ground'); break;
-        case 'PLAY_EVENT':
-            player(s, e.p).discard.push(e.card); break;
+        case 'PLAY_EVENT': {
+            const ps = player(s, e.p);
+            if (!ps.discard.includes(e.card)) ps.discard.push(e.card);
+            break;
+        }
         case 'PLAY_UPGRADE': {
             if (e.target) {
                 const host = findCard(s, e.target);
@@ -219,7 +257,8 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
                 }
                 const idx = ps.cards.findIndex((c) => c.id === e.card);
                 if (idx >= 0) {
-                    ps.discard.push(ps.cards[idx].id);
+                    // Guarded: a paired ground->discard MOVE may also add it.
+                    if (!ps.discard.includes(ps.cards[idx].id)) ps.discard.push(ps.cards[idx].id);
                     ps.cards.splice(idx, 1);
                 }
             }
@@ -234,8 +273,16 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         // CLIENT-OWNED: DRAW does NOT also push — the paired deck->hand MOVEs already added
         // these, and double-adding produced duplicate ids (and duplicate React keys) when a
         // card was drawn, played and drawn again.
-        case 'DRAW': { const ps = player(s, e.p); for (const c of e.cards) if (!ps.hand.includes(c)) ps.hand.push(c); break; }
-        case 'DISCARD': { player(s, e.p).discard.push(...e.cards); break; }
+        case 'DRAW': {
+            const ps = player(s, e.p);
+            for (const c of asIdList(e.cards)) if (!ps.hand.includes(c)) ps.hand.push(c);
+            break;
+        }
+        case 'DISCARD': {
+            const ps = player(s, e.p);
+            for (const c of asIdList(e.cards)) if (!ps.discard.includes(c)) ps.discard.push(c);
+            break;
+        }
         case 'RESOURCE': break;
         case 'SHIELD_GAIN': { const c = findCard(s, e.card); if (c) { c.shields += e.count ?? 1; } break; }
         case 'SHIELD_USE': { const c = findCard(s, e.card); if (c) { c.shields = Math.max(0, c.shields - (e.count ?? 1)); } break; }
@@ -282,13 +329,25 @@ function clone(s: ReducedState): ReducedState {
  */
 export function snapToKeyframe(s: ReducedState, kf: ReducedState): ReducedState {
     const next = clone(kf);
-    next.players = { ...s.players, ...clone(kf).players };
+    next.players = { ...s.players, ...next.players };
+    // CLIENT-OWNED. The writer lists a token UPGRADE in the keyframe's `cards[]` as though
+    // it were a unit — the same token it also (correctly) records on its host's
+    // `statusTokens`. Events state `kind: 'upgrade'` and are filtered on the way through,
+    // but a keyframe is snapped in wholesale, so the pseudo-card lands in an arena and
+    // renders as a card with no printed identity ("IMAGE NOT FOUND" on the board).
+    for (const seat of [1, 2] as Seat[]) {
+        const ps = next.players[seat];
+        if (ps?.cards) {
+            ps.cards = ps.cards.filter((c) => !isStatusTokenCard(c?.id));
+        }
+    }
     return next;
 }
 
 export function fold(events: GameEvent[]): ReducedState {
     let s = emptyState();
     for (const e of events) {
+        if (e == null || typeof e !== 'object') { continue; }
         // A keyframe is authoritative: snap to it, then continue folding.
         if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe) {
             s = snapToKeyframe(s, e.keyframe);
@@ -312,7 +371,9 @@ export function foldFrames(events: GameEvent[]): ReducedState[] {
     let s = emptyState();
     for (let i = 0; i < events.length; i++) {
         const e = events[i];
-        if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe) {
+        if (e == null || typeof e !== 'object') {
+            // keep the frame slot so indices still address the event array
+        } else if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe) {
             s = snapToKeyframe(s, e.keyframe);
         } else {
             s = reduce(s, e);

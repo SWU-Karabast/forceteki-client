@@ -1,16 +1,24 @@
 import { useEffect, useState } from 'react';
-import { baseId, type NameResolver } from '@/lib/swupgn';
+import { baseId, isTokenPseudoCard, tokenName, type NameResolver } from '@/lib/swupgn';
 
 /**
  * Build a NameResolver for the move list / decklist / captions. The .swupgn carries
  * only SET#NUM ids; this maps them to display names from an injected map, falling back
  * to the raw id when unknown (the board renders from images, so an unresolved name only
- * affects text). TOKEN:<label> refs render their label.
+ * affects text).
+ *
+ * Token ids carry their shape in the string — `TOKEN:Advantage:2` (pre-1.0 copy suffix) and
+ * `TOKEN:advantage#5844562972` (1.0 numeric art id) — so slicing the prefix alone leaked
+ * "Advantage:2" / "advantage#5844562972" into captions. A 1.0 file normally resolves names
+ * from its own `%%% CARDS` index, but that section is OPTIONAL, so this path still sees them.
  */
 export function makeNameResolver(map: Record<string, string>): NameResolver {
     return {
         nameOf(id: string): string {
-            if (id.startsWith('TOKEN:')) return id.slice('TOKEN:'.length);
+            if (isTokenPseudoCard(id)) {
+                const name = tokenName(id);
+                return name.replace(/(^|[\s-])\w/g, (c) => c.toUpperCase());
+            }
             return map[baseId(id)] ?? id;
         },
     };

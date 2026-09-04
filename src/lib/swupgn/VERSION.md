@@ -28,6 +28,17 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
 - **`tokens.ts`** — client-only. Repairs the token lifecycle in pre-1.0 files (which emit no
   removal decrement) and classifies token upgrades when no `kind` is stated.
 - **`serialize.ts`** — client-owned; no upstream counterpart.
+- **`parse.ts` `MAX_EVENTS`** — 200k-event ceiling. Upstream has none because it never builds
+  per-frame snapshots; the viewer does, so an unbounded event count is an OOM on a shared file.
+- **`fold.ts` untrusted-input guards** — seat validation (a `p` of `"__proto__"` resolved to
+  Object.prototype and polluted it), non-object event records, scalar-where-array `cards`,
+  and `base@[12]` only. Upstream folds server-generated files; the viewer folds uploads.
+- **`fold.ts` discard CONTENTS** — dedup plus removal, same reason as hand contents: the
+  viewer renders the pile keyed by card id, and `numCardsInDeck` subtracts its length.
+
+Re-vendoring dropped MAX_EVENTS and the discard guards once already (caught by /review, not
+by the test suite — they had no tests). Diff this list against upstream before accepting a
+re-vendor, not just the test results.
 
 Resolved upstream, do NOT re-apply: the `[Rounds]` NaN fallback, and keeping token upgrades
 out of the arenas (now driven by `kind`).

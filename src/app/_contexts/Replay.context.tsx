@@ -111,7 +111,11 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // Read the repaired stream, not the file's literal events: forceteki never emits a
     // decrement when a status token leaves its host, and deck searches emit inert MOVEs
     // that cost a scrubber frame each. See normalizeEvents.
-    const events = useMemo(() => normalizeEvents(doc.events), [doc]);
+    const events = useMemo(
+        // Hold back any record an annotation points at: dropping it would orphan the thread.
+        () => normalizeEvents(doc.events, new Set(doc.annotations.map((a) => a.ref))),
+        [doc],
+    );
     const totalFrames = events.length;
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -176,7 +180,8 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         for (let i = 0; i < events.length; i++) {
             const e = events[i];
             if (e.t === 'ROUND_START') { round = e.round; continue; }
-            if (e.t !== 'MOVE' || e.to !== 'resource' || e.from !== 'hand' || !e.p) continue;
+            if (e.t !== 'MOVE' || e.to !== 'resource' || e.from !== 'hand') continue;
+            if (e.p !== 1 && e.p !== 2) continue;
             const before = frameStates[i - 1]?.players[e.p]?.hand ?? [];
             out.push({
                 seq: e.seq, frame: i, seat: e.p, round, card: e.card,
@@ -226,7 +231,8 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         const out: Array<Record<Seat, string[]>> = new Array(events.length);
         for (let i = 0; i < events.length; i++) {
             const e = events[i];
-            if (e.t === 'MOVE' && e.p) {
+            // `e.p` comes off the file; anything but a real seat has no bucket here.
+            if (e.t === 'MOVE' && (e.p === 1 || e.p === 2)) {
                 if (e.to === 'resource' && e.from !== 'resource') {
                     cur[e.p] = [...cur[e.p], e.card];
                 } else if (e.from === 'resource' && e.to !== 'resource') {
@@ -273,7 +279,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         // honor ?t (initialFrame) and start paused.
         const hasClip = clipStart != null && clipEnd != null && clipEnd >= clipStart;
         if (hasClip) {
-            setClipState({ start: clipStart!, end: clipEnd! });
+            // Clamp to the real frame range: `from`/`to` come straight off the URL, and
+            // nextMeaningfulFrame walks to `clip.end` — past the array, boardChanged[i] is
+            // undefined so the loop never breaks. `?from=0&to=1e15` hung the tab, on load,
+            // on an auto-playing path.
+            const last = Math.max(0, totalFrames - 1);
+            const start = Math.min(Math.max(0, clipStart!), last);
+            setClipState({ start, end: Math.min(Math.max(start, clipEnd!), last) });
             setCurrentIndex(Math.max(0, Math.min(clipStart!, totalFrames - 1)));
             setIsPlaying(true);
         } else {

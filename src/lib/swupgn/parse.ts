@@ -44,6 +44,12 @@ function buildHeader(raw: Record<string, string>): Header {
     };
 }
 
+// CLIENT-OWNED. Safety ceiling on event count. A real game is a few thousand events; this
+// bounds the per-frame fold (O(n) per frame) and the snapshot array so a malformed or
+// hostile file — replays are shared between users — can't freeze/OOM the tab. Upstream has
+// no cap because it never builds per-frame snapshots; the viewer does.
+const MAX_EVENTS = 200_000;
+
 type Section = 'NONE' | 'UNKNOWN' | 'STORY' | 'DECKS' | 'CARDS' | 'SETUP' | 'EVENTS' | 'ANNOTATIONS';
 
 /** Sections whose lines are NDJSON records. `STORY` is deliberately not one of them. */
@@ -105,7 +111,12 @@ export function parse(text: string): SwuPgnDocument {
             case 'DECKS': decks.push(rec as DeckRecord); break;
             case 'CARDS': cards.push(rec as CardIndexRecord); break;
             case 'SETUP': setup.push(rec as SetupInitRecord | GameEvent); break;
-            case 'EVENTS': events.push(rec as GameEvent); break;
+            case 'EVENTS':
+                if (events.length >= MAX_EVENTS) {
+                    throw new Error(`SWU-PGN: too many events (limit ${MAX_EVENTS})`);
+                }
+                events.push(rec as GameEvent);
+                break;
             case 'ANNOTATIONS': annotations.push(rec as Annotation); break;
             case 'UNKNOWN': throw new Error(`SWU-PGN: JSON record in unrecognized section on line ${i + 1}`);
             default: throw new Error(`SWU-PGN: record before any %%% section on line ${i + 1}`);

@@ -64,3 +64,25 @@ describe('loadCardNameMap', () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 });
+
+describe('token display names never leak the id shape', () => {
+    // A token id carries its shape in the string: `TOKEN:Advantage:2` (pre-1.0 copy suffix)
+    // and `TOKEN:advantage#5844562972` (1.0 numeric art id). Slicing the prefix alone put
+    // "Advantage:2" and "advantage#5844562972" into captions. A 1.0 file usually resolves
+    // names from its own %%% CARDS index, but that section is optional, so this path runs.
+    const r = makeNameResolver({ 'SOR#108': 'Wampa' });
+
+    it('renders a readable name for both id shapes', () => {
+        expect(r.nameOf('TOKEN:Advantage')).toBe('Advantage');
+        expect(r.nameOf('TOKEN:Advantage:2')).toBe('Advantage');
+        expect(r.nameOf('TOKEN:advantage#5844562972')).toBe('Advantage');
+        expect(r.nameOf('TOKEN:x-wing#9415311381')).toBe('X-Wing');
+        expect(r.nameOf('TOKEN:the force#4571900905')).toBe('The Force');
+    });
+
+    it('still resolves ordinary cards from the map', () => {
+        expect(r.nameOf('SOR#108')).toBe('Wampa');
+        expect(r.nameOf('SOR#108:3')).toBe('Wampa');
+        expect(r.nameOf('SOR#999')).toBe('SOR#999');
+    });
+});

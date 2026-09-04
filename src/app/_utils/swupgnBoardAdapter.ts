@@ -51,6 +51,7 @@ export function parseSetId(id: string): { set: string; number: number } {
 export function cardFromId(
     id: string, zone: string, controllerId: string, ownerId: string, stat?: CardStat,
 ): AdaptedCard {
+    const artId = tokenArtId(id) ?? stat?.id;
     return {
         uuid: id,
         setId: parseSetId(id),
@@ -62,7 +63,7 @@ export function cardFromId(
         // under cards/_tokens/, and s3CardImageURL takes that branch whenever `id` is set.
         // Current-format ids carry that number themselves (TOKEN:x-wing#9415311381), which
         // beats a name lookup; the stat map covers older files and synthesized badges.
-        ...(tokenArtId(id) ?? stat?.id ? { id: tokenArtId(id) ?? stat?.id } : {}),
+        ...(artId ? { id: artId } : {}),
         ...(typeof stat?.power === 'number' ? { power: stat.power } : {}),
         ...(typeof stat?.hp === 'number' ? { hp: stat.hp } : {}),
         damage: 0,
@@ -96,9 +97,13 @@ function tokenCards(
         ...inst.statusTokens,
     };
     const out: AdaptedCard[] = [];
-    for (const [token, count] of Object.entries(counts)) {
+    for (const [token, rawCount] of Object.entries(counts)) {
         const name = TOKEN_BADGE_NAME[token];
+        // Same bound as the piles: a STATUS_TOKEN count comes off the file and is otherwise
+        // only clamped at zero, so a huge count would render that many badge elements.
+        const count = Number.isFinite(rawCount) ? Math.min(Math.trunc(rawCount), MAX_PILE) : 0;
         if (!name || !(count > 0)) continue;
+        const artId = statOf(`TOKEN:${name}`, statMap)?.id;
         for (let i = 0; i < count; i++) {
             out.push({
                 // The badge is an inline SVG, but its hover preview and the pile popup ask
@@ -106,7 +111,7 @@ function tokenCards(
                 // id, keyed here as TOKEN:<Name> (see gen-card-data.mjs).
                 uuid: `${host.uuid}:${token}:${i}`,
                 setId: { set: '', number: 0 },
-                ...(statOf(`TOKEN:${name}`, statMap)?.id ? { id: statOf(`TOKEN:${name}`, statMap)!.id } : {}),
+                ...(artId ? { id: artId } : {}),
                 name,
                 zone: host.zone,
                 controllerId: ownerId,
@@ -143,16 +148,26 @@ export type SeatToPlayerId = Record<Seat, string>;
 
 /** Pull each seat's starting deck-order length from the INIT setup record. */
 export function deckOrderLengths(doc: SwuPgnDocument): Record<Seat, number> {
-    const init = doc.setup.find((r): r is SetupInitRecord => (r as SetupInitRecord).t === 'INIT');
+    const init = doc.setup.find((r): r is SetupInitRecord => !!r && (r as SetupInitRecord).t === 'INIT');
     return {
-        1: init?.p1DeckOrder.length ?? 0,
-        2: init?.p2DeckOrder.length ?? 0,
+        // `init?.` guards the record, not the field: an INIT line without p1DeckOrder threw.
+        1: Array.isArray(init?.p1DeckOrder) ? init.p1DeckOrder.length : 0,
+        2: Array.isArray(init?.p2DeckOrder) ? init.p2DeckOrder.length : 0,
     };
 }
 
+/**
+ * A pile is only ever rendered, so its length is bounded by what can plausibly be shown.
+ * `credits` and `resourcesExhausted` are never written by any event — they enter the state
+ * only via a keyframe, copied verbatim from the file — so `{"credits": 900000000}` on one
+ * line used to allocate a 900M-element array and OOM the tab.
+ */
+const MAX_PILE = 200;
+
 function facedownStack(count: number, zone: string, owner: string): AdaptedCard[] {
     // Resource/credit identities aren't in ReducedState; render N inert placeholders.
-    return Array.from({ length: Math.max(0, count) }, (_, i) => ({
+    const n = Number.isFinite(count) ? Math.min(Math.max(0, Math.trunc(count)), MAX_PILE) : 0;
+    return Array.from({ length: n }, (_, i) => ({
         uuid: `${owner}:${zone}:${i}`,
         setId: { set: '', number: 0 },
         zone, controllerId: owner, ownerId: owner, type: 'token',
@@ -165,7 +180,7 @@ function facedownStack(count: number, zone: string, owner: string): AdaptedCard[
 function resourceCards(
     ids: string[] | undefined, total: number, owner: string, statMap: Record<string, CardStat>,
 ): AdaptedCard[] {
-    const known = (ids ?? []).slice(0, total)
+    const known = (Array.isArray(ids) ? ids : []).slice(0, total)
         .map((id) => cardFromId(id, 'resources', owner, owner, statOf(id, statMap)));
     return known.length >= total
         ? known
