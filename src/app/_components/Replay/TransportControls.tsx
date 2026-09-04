@@ -106,14 +106,14 @@ const TransportControls: React.FC = () => {
             }}
         >
             <Tooltip title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}>
-                <IconButton onClick={handlePlayPause} sx={{ color: 'white' }}>
+                <IconButton aria-label={isPlaying ? 'Pause' : 'Play'} onClick={handlePlayPause} sx={{ color: 'white' }}>
                     {isPlaying ? <Pause /> : <PlayArrow />}
                 </IconButton>
             </Tooltip>
 
             <Tooltip title="Step back (←)">
                 <span>
-                    <IconButton onClick={stepBack} disabled={currentIndex === 0} sx={{ color: 'white' }}>
+                    <IconButton aria-label="Step back one frame" onClick={stepBack} disabled={currentIndex === 0} sx={{ color: 'white' }}>
                         <SkipPrevious />
                     </IconButton>
                 </span>
@@ -121,13 +121,21 @@ const TransportControls: React.FC = () => {
 
             <Tooltip title="Step forward (→)">
                 <span>
-                    <IconButton onClick={stepForward} disabled={currentIndex >= totalFrames - 1} sx={{ color: 'white' }}>
+                    <IconButton aria-label="Step forward one frame" onClick={stepForward} disabled={currentIndex >= totalFrames - 1} sx={{ color: 'white' }}>
                         <SkipNext />
                     </IconButton>
                 </span>
             </Tooltip>
 
+            <Box aria-live="polite" sx={{
+                position: 'absolute', width: 1, height: 1, overflow: 'hidden',
+                clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap',
+            }}>
+                {`Frame ${currentIndex + 1} of ${totalFrames}${currentRound ? `, ${currentRound}` : ''}`}
+            </Box>
             <Slider
+                aria-label="Replay position"
+                getAriaValueText={formatPosition}
                 value={currentIndex}
                 min={0}
                 max={Math.max(0, totalFrames - 1)}
@@ -165,6 +173,7 @@ const TransportControls: React.FC = () => {
             )}
 
             <ToggleButtonGroup
+                aria-label="Playback speed"
                 value={speed}
                 exclusive
                 onChange={handleSpeedChange}
@@ -184,7 +193,7 @@ const TransportControls: React.FC = () => {
                 }}
             >
                 {SPEEDS.map((s) => (
-                    <ToggleButton key={s} value={s}>
+                    <ToggleButton key={s} value={s} aria-label={`${s} times speed`}>
                         {s}x
                     </ToggleButton>
                 ))}
@@ -195,6 +204,7 @@ const TransportControls: React.FC = () => {
             </Typography>
             <Tooltip title={`Viewing as ${currentPerspective} — swap perspective`}>
                 <IconButton
+                    aria-label={`Viewing as ${currentPerspective}. Swap perspective`}
                     onClick={togglePerspective}
                     sx={{ color: 'white' }}
                 >

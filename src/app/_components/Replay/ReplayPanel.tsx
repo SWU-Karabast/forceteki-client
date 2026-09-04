@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, IconButton, Tooltip, Snackbar, CircularProgress } from '@mui/material';
 import {
-    ChevronRight, ChevronLeft, FormatListBulleted, BarChartOutlined, CallSplitOutlined,
+    ChevronRight, ChevronLeft, FormatListBulleted, BarChartOutlined, CallSplitOutlined, MenuBookOutlined,
     ViewDayOutlined, ChatBubbleOutline, LinkOutlined, FileDownloadOutlined, DescriptionOutlined,
     VisibilityOutlined, VisibilityOffOutlined, ContentCut, FirstPage, LastPage, MovieCreationOutlined,
 } from '@mui/icons-material';
@@ -10,13 +10,15 @@ import { useReplay } from '@/app/_contexts/Replay.context';
 import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
 import { downloadClipWebm } from '@/app/_utils/exportClipWebm';
 import MovesTab from './MovesTab';
+import StoryTab from './StoryTab';
 import ResourcingReport from './ResourcingReport';
 import DecisionReview from './DecisionReview';
 import TurnDigests from './TurnDigests';
 import DiscussionTab from './DiscussionTab';
 
-type TabKey = 'moves' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
+type TabKey = 'story' | 'moves' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
 const TABS: { key: TabKey; label: string; Icon: React.ElementType }[] = [
+    { key: 'story', label: 'Story', Icon: MenuBookOutlined },
     { key: 'moves', label: 'Moves', Icon: FormatListBulleted },
     { key: 'resourcing', label: 'Resourcing', Icon: BarChartOutlined },
     { key: 'decisions', label: 'Decisions', Icon: CallSplitOutlined },
@@ -88,7 +90,7 @@ const ReplayPanel: React.FC = () => {
                 </Tooltip>
                 {TABS.map(({ key, label, Icon }) => (
                     <Tooltip key={key} title={label} placement="left">
-                        <IconButton size="small" onClick={() => { setTab(key); setCollapsed(false); }} sx={tabBtn(false)}>
+                        <IconButton size="small" aria-label={`${label} tab`} onClick={() => { setTab(key); setCollapsed(false); }} sx={tabBtn(false)}>
                             <Icon sx={{ fontSize: 19 }} />
                         </IconButton>
                     </Tooltip>
@@ -97,11 +99,12 @@ const ReplayPanel: React.FC = () => {
         );
     }
 
-    const Body = tab === 'moves' ? MovesTab
-        : tab === 'resourcing' ? ResourcingReport
-            : tab === 'decisions' ? DecisionReview
-                : tab === 'digest' ? TurnDigests
-                    : DiscussionTab;
+    const Body = tab === 'story' ? StoryTab
+        : tab === 'moves' ? MovesTab
+            : tab === 'resourcing' ? ResourcingReport
+                : tab === 'decisions' ? DecisionReview
+                    : tab === 'digest' ? TurnDigests
+                        : DiscussionTab;
 
     return (
         <Box sx={{
@@ -138,7 +141,7 @@ const ReplayPanel: React.FC = () => {
             <Box sx={{ display: 'flex', px: 0.75, py: 0.5, gap: 0.25, borderBottom: BORDER }}>
                 {TABS.map(({ key, label, Icon }) => (
                     <Tooltip key={key} title={label}>
-                        <IconButton size="small" onClick={() => setTab(key)} sx={{ ...tabBtn(tab === key), flex: 1, borderRadius: '6px' }}>
+                        <IconButton size="small" role="tab" aria-selected={tab === key} aria-label={`${label} tab`} onClick={() => setTab(key)} sx={{ ...tabBtn(tab === key), flex: 1, borderRadius: '6px' }}>
                             <Icon sx={{ fontSize: 18 }} />
                         </IconButton>
                     </Tooltip>

@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, isStatusTokenCard, tokenArtId } from '../index';
+import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, isStatusTokenCard, tokenArtId, parse } from '../index';
 import type { GameEvent, ReducedState, PlayerState } from '../index';
+import { readFileSync } from 'fs';
+import path from 'path';
+
+const SAMPLE = readFileSync(path.join(__dirname, 'fixtures/sample-game.swupgn'), 'utf-8');
 
 // Fresh default state (players 1/2, baseHp 30, empty everywhere).
 const base = (): ReducedState => fold([]);
@@ -119,14 +123,16 @@ describe('reduce — combat & token state', () => {
         expect(p1(s).discard).toContain('U');
     });
 
-    it('PLAY_UPGRADE attaches to a known host, else tracks as its own instance', () => {
+    it('PLAY_UPGRADE attaches to a known host and never becomes an arena card', () => {
         let s = base();
-        s = reduce(s, { seq: '1', t: 'MOVE', card: 'HOST', from: 'hand', to: 'ground', p: 1 });
-        s = reduce(s, { seq: '2', t: 'PLAY_UPGRADE', p: 1, card: 'UP', target: 'HOST' });
-        expect(p1(s).cards.find((c) => c.id === 'HOST')!.upgrades).toContain('UP');
-        // Unknown host -> the upgrade becomes its own tracked card (fallback).
-        s = reduce(s, { seq: '3', t: 'PLAY_UPGRADE', p: 1, card: 'ORPHAN', target: 'NOPE' });
-        expect(p1(s).cards.find((c) => c.id === 'ORPHAN')).toBeTruthy();
+        s = reduce(s, { seq: '1', t: 'PLAY', card: 'HOST', zone: 'ground', p: 1 });
+        s = reduce(s, { seq: '2', t: 'PLAY_UPGRADE', p: 1, card: 'UPG', target: 'HOST' });
+        expect(p1(s).cards.find((c) => c.id === 'HOST')!.upgrades).toEqual(['UPG']);
+        // An untracked host used to fall back to placing the upgrade in the arena, which put
+        // a phantom "unit" on the board that no keyframe agreed with. If the host isn't
+        // tracked the attachment simply isn't modelled.
+        s = reduce(s, { seq: '3', t: 'PLAY_UPGRADE', p: 1, card: 'ORPHAN', target: 'MISSING' });
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['HOST']);
     });
 
     it('SHIELD_USE clamps at 0; EXPERIENCE_GAIN and STATUS_TOKEN accumulate', () => {
@@ -351,13 +357,17 @@ describe('token upgrades vs token units', () => {
     // attach to a host and are not board cards — and Battle Droid/X-Wing/etc. as
     // ['token','unit'], which ARE board cards. Ignoring every TOKEN: id alike would strand
     // a defeated token unit in its arena for the rest of the replay.
-    it('classifies upgrades but not units, in BOTH id shapes', () => {
-        // forceteki changed token ids from `TOKEN:<Title>[:copy]` to
-        // `TOKEN:<internalName>#<numericId>` in Sept 2026. Files of both shapes are in the
-        // wild, and getting this wrong silently puts a status token back on the board as a
-        // card with no printed identity.
+    it('lets `kind` decide, whatever the id looks like', () => {
+        // A current file states kind on MOVE/CREATE_TOKEN and in %%% CARDS, derived from the
+        // card's type — so a token upgrade printed next year classifies itself.
+        expect(isStatusTokenCard('TOKEN:something-new#123', 'upgrade')).toBe(true);
+        expect(isStatusTokenCard('TOKEN:advantage#5844562972', 'unit')).toBe(false);
+        expect(isStatusTokenCard('SOR#095', 'upgrade')).toBe(false); // not a token at all
+    });
+
+    it('falls back to the name list only for pre-1.0 files that state no kind', () => {
         for (const id of ['TOKEN:Advantage', 'TOKEN:Advantage:3', 'TOKEN:advantage#5844562972',
-            'TOKEN:Shield', 'TOKEN:shield#8752877738']) {
+            'TOKEN:Shield', 'TOKEN:weakness']) {
             expect(isStatusTokenCard(id)).toBe(true);
         }
         for (const id of ['TOKEN:X-Wing', 'TOKEN:x-wing#9415311381', 'TOKEN:The Force',
@@ -369,7 +379,9 @@ describe('token upgrades vs token units', () => {
     it('reads the art id out of a current-shape token id only', () => {
         expect(tokenArtId('TOKEN:advantage#5844562972')).toBe('5844562972');
         expect(tokenArtId('TOKEN:Advantage:2')).toBeUndefined();
-        // A placeholder id in forceteki's card data must not pass as a numeric art id.
+        // forceteki now requires a numeric id, so a token whose card data carries a
+        // placeholder emits a bare `TOKEN:weakness` rather than `TOKEN:weakness#weakness-id`.
+        expect(tokenArtId('TOKEN:weakness')).toBeUndefined();
         expect(tokenArtId('TOKEN:weakness#weakness-id')).toBeUndefined();
     });
 
@@ -385,5 +397,41 @@ describe('token upgrades vs token units', () => {
         let s = base();
         s = reduce(s, { seq: '1', t: 'MOVE', card: 'TOKEN:Advantage', from: 'outsideTheGame', to: 'space', p: 1 });
         expect(p1(s).cards).toEqual([]);
+    });
+});
+
+describe('folding a whole file leaves the board coherent', () => {
+    // Keyframe snapping papers over fold bugs: a phantom arena card or a duplicated id is
+    // wiped at the next round boundary. Folding with keyframes STRIPPED is what exposed the
+    // PLAY_UPGRADE fallback putting an ordinary upgrade in an arena.
+    const doc = parse(SAMPLE);
+    const noKeyframes = doc.events.map((e) =>
+        (e.t === 'ROUND_START' || e.t === 'ROUND_END') ? { ...e, keyframe: undefined } : e);
+
+    it('puts no upgrade in either arena and never duplicates a card id', () => {
+        for (const s of foldFrames(noKeyframes)) {
+            for (const seat of [1, 2] as const) {
+                const cards = s.players[seat]?.cards ?? [];
+                const ids = cards.map((c) => c.id);
+                expect(ids).toEqual([...new Set(ids)]);
+                for (const c of cards) {
+                    expect(['ground', 'space', 'groundArena', 'spaceArena']).toContain(c.zone);
+                }
+            }
+        }
+    });
+
+    it('keeps hand contents deduped and never above the counted size', () => {
+        // hand[] is what the board RENDERS, so a duplicate id is a duplicate React key.
+        // It can legitimately sit BELOW handSize: this synthetic fixture draws `SOR#178`
+        // twice under one id (the real emitter gives each copy a `:N` suffix), and counting
+        // it twice while rendering it once is the correct trade.
+        for (const s of foldFrames(noKeyframes)) {
+            for (const seat of [1, 2] as const) {
+                const ps = s.players[seat]!;
+                expect(ps.hand).toEqual([...new Set(ps.hand)]);
+                expect(ps.hand.length).toBeLessThanOrEqual(ps.handSize);
+            }
+        }
     });
 });

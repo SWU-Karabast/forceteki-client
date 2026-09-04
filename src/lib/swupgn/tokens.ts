@@ -1,4 +1,4 @@
-import type { GameEvent } from './types';
+import type { CardKind, GameEvent } from './types';
 
 const TOKEN_PREFIX = 'TOKEN:';
 const FORCE_TOKEN_NAME = 'the force';
@@ -22,19 +22,32 @@ export const tokenArtId = (id: string): string | undefined => {
 };
 
 /**
- * Token UPGRADES — the ones that attach to a host unit and render as a count badge.
- * Token UNITS (battle droid, x-wing, tie fighter, clone trooper, mandalorian, spy, beast)
- * are ordinary board cards and MUST fold normally, or a defeated one is stranded in its
- * arena for the rest of the replay.
+ * Pre-1.0 FALLBACK ONLY.
  *
- * forceteki types these `['token','upgrade']` vs `['token','unit']`, but the STREAM does
- * not carry the distinction and this reader is engine-independent, so the upgrade set is
- * enumerated here. It has to be revisited whenever a new token upgrade is printed — see
- * the open request to forceteki to state the kind in the stream.
+ * A current file states `kind: 'unit' | 'upgrade'` on `MOVE`, `CREATE_TOKEN` and every
+ * `%%% CARDS` entry, derived from the card's type — so a token upgrade printed next year
+ * classifies itself and this list is never consulted. It exists solely for 1.1 files, which
+ * carry no `kind` and in which a token upgrade is otherwise indistinguishable from a token
+ * unit: both arrive as `TOKEN:<name>`. Getting it wrong folds an upgrade into an arena as a
+ * card with no printed identity, or strands a defeated token unit there forever.
+ *
+ * Do not add to this list to support a new token. Fix the emitter to state `kind`.
  */
-const STATUS_TOKEN_NAMES = new Set(['shield', 'experience', 'advantage', 'weakness']);
-export const isStatusTokenCard = (id: string): boolean =>
-    isTokenPseudoCard(id) && STATUS_TOKEN_NAMES.has(tokenName(id));
+const PRE_1_0_UPGRADE_NAMES = new Set(['shield', 'experience', 'advantage', 'weakness']);
+
+/**
+ * Is this record a token upgrade? `kind` decides when the record carries it; the name list
+ * is consulted only for a pre-1.0 file that states nothing.
+ */
+export const isStatusTokenCard = (id: string, kind?: CardKind): boolean => {
+    if (!isTokenPseudoCard(id)) {
+        return false;
+    }
+    if (kind) {
+        return kind === 'upgrade';
+    }
+    return PRE_1_0_UPGRADE_NAMES.has(tokenName(id));
+};
 
 /** The Force is a per-player token that sits on the base, not a unit status token. */
 export const isForceToken = (id: string): boolean =>

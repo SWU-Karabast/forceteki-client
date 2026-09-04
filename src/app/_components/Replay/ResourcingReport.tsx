@@ -23,7 +23,11 @@ const RoundTable: React.FC<{ rows: PlayerRoundResourcing[]; onSeek: (round: numb
                 <Box
                     component="tr"
                     key={r.round}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Jump to round ${r.round}`}
                     onClick={() => onSeek(r.round)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSeek(r.round); } }}
                     sx={{
                         cursor: 'pointer', color: 'rgba(255,255,255,0.85)',
                         backgroundColor: r.underspent ? 'rgba(255,107,107,0.14)' : 'transparent',
@@ -65,7 +69,11 @@ const DecisionList: React.FC<{ seat: Seat }> = ({ seat }) => {
                 return (
                     <Box
                         key={d.seq}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Jump to ${d.round > 0 ? `round ${d.round}` : 'setup'} resource pick: ${nameOf(d.card)}`}
                         onClick={() => seekTo(d.frame)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); seekTo(d.frame); } }}
                         sx={{
                             cursor: 'pointer', py: 0.5, px: 0.75, borderRadius: '4px',
                             borderLeft: '2px solid',

@@ -16,7 +16,8 @@ import PlayerCardTray from '@/app/_components/Gameboard/PlayerCardTray/PlayerCar
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
 import { parse, SwuPgnDocument } from '@/lib/swupgn';
-import { generateReplayId, storeReplay, loadReplay } from '@/app/_utils/replayStorage';
+import { loadReplay } from '@/app/_utils/replayStorage';
+import { storeReplayContent } from '@/app/_utils/replayHandoff';
 import { formatResult } from '@/app/_utils/replayMoves';
 import { useCardNameMap } from '@/app/_utils/swupgnCardNames';
 
@@ -238,23 +239,7 @@ export default function ReplayPage() {
         setDoc(loaded);
         setRawContent(content);
         try {
-            // generateReplayId expects old PascalCase Record<string,string>; pass a shim
-            // so the stable id logic (Player1/Player2/Date/Result/Leader1/Leader2) still works.
-            const headerShim: Record<string, string> = {
-                Player1: loaded.header.p1,
-                Player2: loaded.header.p2,
-                Date: loaded.header.date,
-                Result: loaded.header.result,
-                Leader1: loaded.header.p1Leader,
-                Leader2: loaded.header.p2Leader,
-            };
-            const id = await generateReplayId(headerShim, content);
-            await storeReplay(id, content, {
-                player1: loaded.header.p1,
-                player2: loaded.header.p2,
-                result: loaded.header.result,
-                savedAt: Date.now(),
-            });
+            const { id } = await storeReplayContent(content);
             router.replace(`/Replay?id=${id}`, { scroll: false });
         } catch (err) {
             // Storage failed (e.g. QuotaExceededError); replay still works in-memory,

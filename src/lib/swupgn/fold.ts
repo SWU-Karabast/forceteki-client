@@ -41,30 +41,37 @@ function newCard(id: string, zone: string): CardInstanceState {
 }
 
 /**
- * Place a card into a player's in-play set, idempotent by id. A unit can be added by
- * either the PLAY/DEPLOY event or the paired hand->arena MOVE, in EITHER order (real
- * logs emit the MOVE first, then PLAY). Pushing unconditionally created a second
- * instance of the same id → duplicate React keys and a unit rendered twice.
+ * Put a card in an arena, ONCE.
+ *
+ * Placement is idempotent by id because a real stream reports the same arrival twice: the
+ * engine emits the zone transition as a MOVE (the fold's source of truth) and a PLAY /
+ * PLAY_SMUGGLE / DEPLOY_LEADER summary beside it. Pushing on both duplicated every unit in
+ * play — invisible while keyframes kept snapping the state back, but wrong for `stateAt()`
+ * anywhere between two keyframes, which is exactly what a replay scrubber asks for.
  */
-function placeInArena(ps: PlayerState, id: string, zone: string): void {
-    const existing = ps.cards.find((c) => c.id === id);
-    if (existing) { existing.zone = zone; } else { ps.cards.push(newCard(id, zone)); }
+function placeCard(s: ReducedState, seat: Seat, id: string, zone: string): void {
+    const existing = findCard(s, id);
+    if (existing) {
+        existing.zone = zone;
+        return;
+    }
+    player(s, seat).cards.push(newCard(id, zone));
 }
 
 const ARENA_ZONES = new Set(['ground', 'space']);
 
 /**
- * Engine truth: every zone transition is an OnCardMoved → MOVE event. handSize, the
- * hand[] contents, resourcesReady, the discard pile, and the in-play `cards[]` set are
- * reconstructed from MOVE (the single source of truth), NOT from DRAW/RESOURCE/PLAY,
- * which are higher-level summary records that always coincide with the underlying MOVEs
- * (a DRAW carries the cumulative count of the deck→hand MOVEs just emitted; re-adding
- * them double-counts). DRAW therefore no longer mutates hand[]. PLAY/DEPLOY/PLAY_UPGRADE
- * still place a card (so unit-level fold tests that drive PLAY without a paired MOVE keep
- * working), but placement is idempotent by id — via placeInArena here and applyMoveCounts
- * below — so PLAY+MOVE in EITHER order does not create a second instance.
+ * Engine truth: every zone transition is an OnCardMoved → MOVE event. handSize,
+ * resourcesReady and the in-play `cards[]` set are therefore reconstructed from MOVE
+ * (the single source of truth), NOT from DRAW/RESOURCE/PLAY, which are higher-level
+ * summary records that always coincide with the underlying MOVEs (a DRAW carries the
+ * cumulative count of the deck→hand MOVEs just emitted; double-counting them would
+ * diverge from the keyframe). DRAW still records the omniscient `hand[]` contents and
+ * PLAY/PLAY_UPGRADE still place a card so unit-level fold tests that drive PLAY without
+ * a paired MOVE keep working; MOVE placement is idempotent by id so PLAY+MOVE in real
+ * streams does not double-add.
  */
-function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: string; p?: Seat }): void {
+function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: string; p?: Seat; kind?: 'unit' | 'upgrade' }): void {
     if (e.p == null) {
         // Without a seat we can only update zone on an already-tracked card; counts are
         // unattributable. Real engine streams always carry the seat.
@@ -74,10 +81,13 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
     }
     const ps = player(s, e.p);
 
-    // Hand membership: count AND contents, both driven by MOVE (the single source of
-    // truth for zone transitions). hand[] therefore reflects the ACTUAL current hand —
-    // DRAW does NOT also push, which previously double-added what the paired deck->hand
-    // MOVE already added and produced duplicate React keys when a card was re-drawn.
+    // Hand membership: count AND contents.
+    //
+    // CLIENT-OWNED on the contents. Upstream only counts here and appends to `hand[]` from
+    // DRAW, so `hand[]` grows monotonically — every card ever drawn stays in it. That is
+    // harmless for a final-state fold (`hand[]` is outside the integrity gate), but a
+    // scrubber RENDERS this array: without the removal a player's hand shows cards they
+    // played ten rounds ago, and repeated ids produce duplicate React keys.
     if (e.to === 'hand' && e.from !== 'hand') {
         ps.handSize += 1;
         if (!ps.hand.includes(e.card)) ps.hand.push(e.card);
@@ -95,17 +105,20 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         ps.resourcesReady = Math.max(0, ps.resourcesReady - 1);
     }
 
-    // Discard membership: a card entering discard is added (deduped), one leaving is
-    // removed. DEFEAT/DISCARD also add (guarded) for paths with no discard MOVE.
-    if (e.to === 'discard' && e.from !== 'discard') {
-        if (!ps.discard.includes(e.card)) ps.discard.push(e.card);
-    } else if (e.from === 'discard' && e.to !== 'discard') {
-        const di = ps.discard.indexOf(e.card);
-        if (di >= 0) ps.discard.splice(di, 1);
+    // In-play (arena) membership. An UPGRADE never has any: it attaches to a unit, and its
+    // effect on the board is carried by the host's own records (SHIELD_GAIN, EXPERIENCE_GAIN,
+    // STATUS_TOKEN, or PLAY_UPGRADE.target). Without `kind` a reader cannot tell a token
+    // upgrade from a token unit — both are `TOKEN:<name>#<id>` — and folding the upgrade in
+    // put a phantom card in the arena. The hand/resource counts above still apply: an upgrade
+    // really does leave the hand.
+    if (e.kind === 'upgrade') {
+        const upgrade = findCard(s, e.card);
+        if (upgrade) {
+            upgrade.zone = e.to;
+        }
+        return;
     }
 
-    // In-play (arena) membership. Place on entry (idempotent by id so a PLAY that already
-    // added the card is not duplicated); remove on exit from the arena.
     const existing = findCard(s, e.card);
     if (ARENA_ZONES.has(e.to)) {
         if (existing) {
@@ -127,17 +140,17 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
 
 /** Apply a single event to state, mutating and returning it. */
 export function reduce(s: ReducedState, e: GameEvent): ReducedState {
-    // The Force is a per-player token that sits on the base; its MOVE in and out of that
-    // base is the only signal the stream gives for it, and it is never a board card.
+    // CLIENT-OWNED, pre-1.0 compatibility. A 1.0 stream states `kind`, which applyMoveCounts
+    // acts on; a 1.1 file states nothing, so a token upgrade would fold into an arena as a
+    // card with no printed identity. isStatusTokenCard falls back to a name list for exactly
+    // those files. The Force is never a board card in either format — its MOVE on and off a
+    // base is the only signal the stream gives for it.
     if (e.t === 'MOVE' && isForceToken(e.card) && e.p) {
         player(s, e.p).hasForce = e.to === 'base';
         return s;
     }
-    // A token UPGRADE is not a card: it has no set id and belongs on a host, so folding it
-    // into an arena puts a card with an unresolvable image on the board. Its effect is
-    // carried by STATUS_TOKEN, which names the HOST in `card` and so still applies. Token
-    // UNITS are ordinary cards and fall through to fold normally.
-    if (e.t !== 'STATUS_TOKEN' && 'card' in e && typeof e.card === 'string' && isStatusTokenCard(e.card)) {
+    if (e.t !== 'STATUS_TOKEN' && 'card' in e && typeof e.card === 'string'
+        && isStatusTokenCard(e.card, 'kind' in e ? e.kind : undefined)) {
         return s;
     }
     switch (e.t) {
@@ -148,26 +161,25 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         // zone transitions); see applyMoveCounts. PLAY only places the card in its zone —
         // the matching hand->zone MOVE accounts for the hand decrement.
         case 'PLAY': case 'PLAY_SMUGGLE':
-            placeInArena(player(s, e.p), e.card, e.zone ?? 'ground'); break;
-        case 'PLAY_EVENT': {
-            // Event resolves to discard; guard against the paired hand->discard MOVE.
-            const ps = player(s, e.p);
-            if (!ps.discard.includes(e.card)) ps.discard.push(e.card);
-            break;
-        }
+            placeCard(s, e.p, e.card, e.zone ?? 'ground'); break;
+        case 'PLAY_EVENT':
+            player(s, e.p).discard.push(e.card); break;
         case 'PLAY_UPGRADE': {
             if (e.target) {
                 const host = findCard(s, e.target);
-                if (host) { host.upgrades.push(e.card); break; }
+                if (host) { host.upgrades.push(e.card); }
             }
-            // Fallback when the host is unknown: track the upgrade as its own instance.
-            placeInArena(player(s, e.p), e.card, e.zone ?? 'ground');
+            // An upgrade is NEVER an arena card, so there is no fallback placement: if the
+            // host isn't tracked the attachment is simply not modelled. Placing it instead
+            // (as this used to) put a phantom "unit" in the arena that no keyframe agrees
+            // with — a real upgrade, SEC#038, showed up that way in a recorded game.
             break;
         }
         case 'DEPLOY_LEADER':
-            placeInArena(player(s, e.p), e.card, e.zone ?? 'ground'); break;
+            placeCard(s, e.p, e.card, e.zone ?? 'ground'); break;
         case 'CREATE_TOKEN':
-            player(s, e.p).cards.push(newCard(e.token, e.zone)); break;
+            if (e.kind !== 'upgrade') { placeCard(s, e.p, e.token, e.zone); }
+            break;
         case 'DAMAGE': {
             const baseSeat = seatOfBaseRef(e.tgt);
             if (baseSeat) {
@@ -207,8 +219,7 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
                 }
                 const idx = ps.cards.findIndex((c) => c.id === e.card);
                 if (idx >= 0) {
-                    // Guarded: a paired ground->discard MOVE may also add it.
-                    if (!ps.discard.includes(ps.cards[idx].id)) ps.discard.push(ps.cards[idx].id);
+                    ps.discard.push(ps.cards[idx].id);
                     ps.cards.splice(idx, 1);
                 }
             }
@@ -220,14 +231,11 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         // membership (see applyMoveCounts). DRAW/DISCARD/RESOURCE no longer mutate those
         // counts — they coincide with the underlying MOVEs and would double-count.
         case 'MOVE': applyMoveCounts(s, e); break;
-        // hand contents come from the paired deck->hand MOVE (see applyMoveCounts); DRAW
-        // is a summary record and must NOT re-add (that caused duplicate hand entries).
-        case 'DRAW': break;
-        case 'DISCARD': {
-            const ps = player(s, e.p);
-            for (const id of e.cards) if (!ps.discard.includes(id)) ps.discard.push(id);
-            break;
-        }
+        // CLIENT-OWNED: DRAW does NOT also push — the paired deck->hand MOVEs already added
+        // these, and double-adding produced duplicate ids (and duplicate React keys) when a
+        // card was drawn, played and drawn again.
+        case 'DRAW': { const ps = player(s, e.p); for (const c of e.cards) if (!ps.hand.includes(c)) ps.hand.push(c); break; }
+        case 'DISCARD': { player(s, e.p).discard.push(...e.cards); break; }
         case 'RESOURCE': break;
         case 'SHIELD_GAIN': { const c = findCard(s, e.card); if (c) { c.shields += e.count ?? 1; } break; }
         case 'SHIELD_USE': { const c = findCard(s, e.card); if (c) { c.shields = Math.max(0, c.shields - (e.count ?? 1)); } break; }
@@ -263,12 +271,14 @@ function clone(s: ReducedState): ReducedState {
 }
 
 /**
- * Snap the running fold to a keyframe. Keyframes in the wild are sometimes PARTIAL —
- * forceteki has emitted `"players": {}` or only one seat — so a wholesale replace would
- * drop the omitted seat's entire state and leave the board with a missing player
- * (`gameState.players[connectedPlayer]` undefined, which crashes the trays). Merge per
- * seat instead: a seat the keyframe carries is authoritative, a seat it omits keeps the
- * folded state, which is the best information available for it.
+ * CLIENT-OWNED. Snap the running fold to a keyframe, merging PER SEAT.
+ *
+ * Upstream replaces the state wholesale, and the spec now tells a reader to ignore a
+ * keyframe missing a seat — both fine, because current writers always emit both seats.
+ * Pre-1.0 files in the wild do not: forceteki shipped keyframes carrying one seat or
+ * `"players": {}`, and replacing wholesale drops the omitted player entirely, which leaves
+ * the board with `gameState.players[connectedPlayer]` undefined. Merging keeps the folded
+ * state for a seat the keyframe omits. Compatibility shim, not a permanent divergence.
  */
 export function snapToKeyframe(s: ReducedState, kf: ReducedState): ReducedState {
     const next = clone(kf);
@@ -290,13 +300,12 @@ export function fold(events: GameEvent[]): ReducedState {
 }
 
 /**
- * Snapshot of state after each event, produced in a single O(n) forward pass.
+ * CLIENT-OWNED. Snapshot of state after each event, in a single O(n) forward pass.
+ *
  * The replay scrubber needs the state at every frame; computing that as
- * `events.map((_, i) => fold(events.slice(0, i + 1)))` re-folds every prefix and
- * is O(n^2). This folds once and clones a snapshot per step instead. Memory is the
- * same N retained snapshots as the naive precompute; the win is CPU. (Lazy
- * fold-from-nearest-keyframe would also bound memory — revisit if profiling shows
- * heap pressure at realistic game sizes; the parser's event cap bounds N meanwhile.)
+ * `events.map((_, i) => fold(events.slice(0, i + 1)))` re-folds every prefix and is O(n^2).
+ * Upstream has no equivalent — it only ever needs the final state or a single `stateAt`.
+ * Measured on a 523-frame game: 3ms, 0.6MB retained.
  */
 export function foldFrames(events: GameEvent[]): ReducedState[] {
     const out: ReducedState[] = new Array(events.length);

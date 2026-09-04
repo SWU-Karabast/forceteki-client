@@ -9,6 +9,18 @@ function parseHeaderLine(line: string, raw: Record<string, string>): void {
     }
 }
 
+/**
+ * Parse a numeric tag, falling back when it isn't a number.
+ *
+ * `[Rounds "seven"]` used to yield NaN, which is not an error anywhere and so propagated
+ * silently into whatever consumed it. A wrong-but-finite value fails loudly at the point of
+ * use; NaN fails nowhere and corrupts everything downstream.
+ */
+function finiteOr(value: string, fallback: number): number {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+}
+
 function buildHeader(raw: Record<string, string>): Header {
     const req = (k: string): string => {
         if (!(k in raw)) {
@@ -28,10 +40,7 @@ function buildHeader(raw: Record<string, string>): Header {
         p1Leader: req('P1Leader'), p1Base: req('P1Base'),
         p2Leader: req('P2Leader'), p2Base: req('P2Base'),
         result: req('Result') as Header['result'], reason: req('Reason'),
-        // Guard against a non-numeric [Rounds] tag: Number('x') is NaN, which would
-        // propagate into round-based UI. Fall back to 0 when not a finite number.
-        // (Client-owned: forceteki's reader takes Number() raw — see the open report.)
-        rounds: (() => { const n = Number(req('Rounds')); return Number.isFinite(n) ? n : 0; })(),
+        rounds: finiteOr(req('Rounds'), 0),
     };
 }
 

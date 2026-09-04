@@ -12,6 +12,10 @@ describe('parse(sample-game.swupgn)', () => {
     const doc = parse(SAMPLE);
 
     it('reads the header', () => {
+        // DELIBERATE: the fixture is a pre-publication 1.1 file, kept as compatibility
+        // coverage. Version numbers do NOT order this format — a file saying 1.1 is OLDER
+        // than one saying 1.0, because the format was renumbered at publication. Match the
+        // Game tag exactly; never >=.
         expect(doc.header.game).toBe('SWU-PGN/1.1');
         expect(doc.header.result).toBe('Incomplete');
         expect(doc.header.rounds).toBe(3);
@@ -68,7 +72,7 @@ describe('parse — malformed input', () => {
     });
 });
 
-describe('parse — the 2026-09 format revision', () => {
+describe('parse — 1.0 sections (STORY/CARDS), and 1.1 files still read', () => {
     // forceteki added `%%% STORY` (rendered narrative) and `%%% CARDS` (id -> name index)
     // and renumbered the format 1.1 -> 1.0. A reader that treats an unknown section as an
     // error rejects the whole file, which is what this client did before re-vendoring.
