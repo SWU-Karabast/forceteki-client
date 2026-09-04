@@ -201,3 +201,49 @@ describe('player identity for the board', () => {
         expect(gs.players['p1'].aspects).toEqual(['cunning', 'heroism', 'command']);
     });
 });
+
+describe('resource pile identities', () => {
+    // The fold tracks only a resource COUNT, but which card a player commits is the most
+    // reviewable decision in the game, so the caller derives the ids from the
+    // `hand -> resource` MOVEs and passes them in.
+    const doc = parse(SAMPLE);
+    const seats: Record<Seat, string> = { 1: 'p1', 2: 'p2' };
+    const withResources = (n: number): ReducedState => ({
+        round: 1, phase: 'action', initiative: 1,
+        players: {
+            1: { seat: 1, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: n,
+                resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
+            2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
+                resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
+        },
+    });
+
+    it('names the resourced cards instead of face-down placeholders', () => {
+        const gs = adaptState(withResources(2), doc, { 1: 30, 2: 30 }, seats,
+            { resourcedIds: { 1: ['ASH#110:2', 'ASH#208'] } });
+        const pile = gs.players['p1'].cardPiles['resources'];
+        expect(pile.map((c: { uuid: string }) => c.uuid)).toEqual(['ASH#110:2', 'ASH#208']);
+        expect(pile[0].setId).toEqual({ set: 'ASH', number: 110 });
+    });
+
+    it('pads with face-down placeholders when the count outruns the known ids', () => {
+        const gs = adaptState(withResources(3), doc, { 1: 30, 2: 30 }, seats,
+            { resourcedIds: { 1: ['ASH#208'] } });
+        const pile = gs.players['p1'].cardPiles['resources'];
+        expect(pile).toHaveLength(3);
+        expect(pile.filter((c: { setId: { set: string } }) => !c.setId.set)).toHaveLength(2);
+    });
+
+    it('never shows more resources than the fold counted', () => {
+        const gs = adaptState(withResources(1), doc, { 1: 30, 2: 30 }, seats,
+            { resourcedIds: { 1: ['ASH#208', 'ASH#110:2', 'SEC#215'] } });
+        expect(gs.players['p1'].cardPiles['resources']).toHaveLength(1);
+    });
+
+    it('falls back to face-down when no ids are supplied', () => {
+        const gs = adaptState(withResources(2), doc, { 1: 30, 2: 30 }, seats);
+        const pile = gs.players['p1'].cardPiles['resources'];
+        expect(pile).toHaveLength(2);
+        expect(pile.every((c: { setId: { set: string } }) => !c.setId.set)).toBe(true);
+    });
+});

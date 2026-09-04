@@ -136,12 +136,26 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         e.t === 'DRAW' || (e.t === 'MOVE' && e.to === 'hand' && e.from === 'deck')
     ), [events]);
 
-    // First "real action" frame = the start of round 1 (first ROUND_START). Playback opens
-    // here so the viewer lands on gameplay, not the setup/shuffle/mulligan prologue. The
-    // prologue is still scrubbable by dragging the slider back.
-    const firstActionFrame = useMemo(() => {
-        const i = events.findIndex((e) => e.t === 'ROUND_START');
-        return i >= 0 ? i : 0;
+    // Per-frame resource-pile contents. The fold tracks only a COUNT (ReducedState mirrors
+    // forceteki's reference PlayerState, which has no resource identities), but the card ids
+    // are right there in the `hand -> resource` MOVEs — and which card a player commits is
+    // the single most reviewable decision in the game. Derived here, alongside
+    // leaderExhaustByFrame, rather than by adding a client-only field to ReducedState.
+    const resourcedByFrame = useMemo<Array<Record<Seat, string[]>>>(() => {
+        const cur: Record<Seat, string[]> = { 1: [], 2: [] };
+        const out: Array<Record<Seat, string[]>> = new Array(events.length);
+        for (let i = 0; i < events.length; i++) {
+            const e = events[i];
+            if (e.t === 'MOVE' && e.p) {
+                if (e.to === 'resource' && e.from !== 'resource') {
+                    cur[e.p] = [...cur[e.p], e.card];
+                } else if (e.from === 'resource' && e.to !== 'resource') {
+                    cur[e.p] = cur[e.p].filter((c) => c !== e.card);
+                }
+            }
+            out[i] = { 1: cur[1], 2: cur[2] };
+        }
+        return out;
     }, [events]);
 
     // Per-frame exhausted state of each leader, from EXHAUST/READY events for the leader id.
@@ -184,13 +198,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             setIsPlaying(true);
         } else {
             setClipState(null);
-            // Honor an explicit ?t deep-link; otherwise skip the setup prologue and open
-            // on the first round's action.
-            const target = initialFrame > 0 ? initialFrame : firstActionFrame;
-            setCurrentIndex(Math.max(0, Math.min(target, totalFrames - 1)));
+            // Open on frame 0 unless a ?t deep-link says otherwise. Playback used to skip to
+            // the first ROUND_START, which hid the setup prologue — including both players'
+            // opening resource picks, which are exactly what a replay is reviewed for.
+            setCurrentIndex(Math.max(0, Math.min(initialFrame, totalFrames - 1)));
             setIsPlaying(false);
         }
-    }, [doc, initialFrame, totalFrames, clipStart, clipEnd, firstActionFrame]);
+    }, [doc, initialFrame, totalFrames, clipStart, clipEnd]);
 
     // What happened on the current frame: a caption + the in-play card(s) to glow.
     const action = useMemo(() => frameAction(events[currentIndex], resolver), [events, currentIndex, resolver]);
@@ -211,16 +225,20 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                 if (!prevIds.has(c.id)) enteringIds.push(c.id);
             }
         }
-        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; enteringIds?: string[]; attackingIds?: string[] } = {
+        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[] } = {
             ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
             highlightIds: action.highlight,
             leaderExhausted: leaderExhaustByFrame[currentIndex],
+            // Fog-of-war hides the opponent's hand; their face-down resources go with it.
+            resourcedIds: fogOfWar
+                ? { [perspective === P1 ? 1 : 2]: resourcedByFrame[currentIndex]?.[perspective === P1 ? 1 : 2] ?? [] } as Partial<Record<Seat, string[]>>
+                : resourcedByFrame[currentIndex],
             enteringIds,
             // On an ATTACK frame the attacker is the first highlight id; lunge it.
             attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
         return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame]);
+    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first

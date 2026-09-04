@@ -151,6 +151,17 @@ function facedownStack(count: number, zone: string, owner: string): AdaptedCard[
     }));
 }
 
+/** Resource pile: the actual cards committed, face-down placeholders for any remainder. */
+function resourceCards(
+    ids: string[] | undefined, total: number, owner: string, statMap: Record<string, CardStat>,
+): AdaptedCard[] {
+    const known = (ids ?? []).slice(0, total)
+        .map((id) => cardFromId(id, 'resources', owner, owner, statOf(id, statMap)));
+    return known.length >= total
+        ? known
+        : [...known, ...facedownStack(total - known.length, 'resources', owner)];
+}
+
 function adaptPlayer(
     ps: PlayerState, playerId: string, deckOrderLen: number,
     leaderId: string, baseSetId: string, hideHand = false,
@@ -159,6 +170,7 @@ function adaptPlayer(
     leaderExhausted = false,
     entering?: Set<string>,
     attacking?: Set<string>,
+    resourcedIds?: string[],
 ): any {
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap)));
     // Token badges ride along in the arena piles as parented cards, exactly as the live
@@ -232,7 +244,10 @@ function adaptPlayer(
             discard,
             groundArena: ground,
             spaceArena: space,
-            resources: facedownStack(resourcesTotal, 'resources', playerId),
+            // Named resources when the caller derived them (the fold tracks only a count),
+            // padded with face-down placeholders if the count outruns the known ids — a
+            // keyframe can report more resources than the MOVE stream accounted for.
+            resources: resourceCards(resourcedIds, resourcesTotal, playerId, statMap),
             credits: facedownStack(ps.credits, 'credits', playerId),
             capturedZone: [] as AdaptedCard[],
         },
@@ -243,7 +258,7 @@ function adaptPlayer(
 export function adaptState(
     s: ReducedState, doc: SwuPgnDocument,
     decks: Record<Seat, number>, seatToId: SeatToPlayerId,
-    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; enteringIds?: string[]; attackingIds?: string[] } = {},
+    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[] } = {},
     statMap: Record<string, CardStat> = {},
 ): any {
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
@@ -256,7 +271,7 @@ export function adaptState(
         if (!ps) { continue; }
         const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
-        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering, attacking);
+        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering, attacking, opts.resourcedIds?.[seat]);
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }
