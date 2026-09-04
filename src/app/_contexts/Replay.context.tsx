@@ -3,14 +3,25 @@
 // gameState mirrors the live board's gameState, which is typed `any`
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
-import type { SwuPgnDocument, ReducedState, Seat } from '@/lib/swupgn';
-import { foldFrames, serialize, render, baseId, normalizeTokenEvents } from '@/lib/swupgn';
+import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn';
+import { foldFrames, serialize, render, baseId, normalizeEvents } from '@/lib/swupgn';
 import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
+
+/** One resource commitment: what was taken, and what the player could have taken instead. */
+export interface IResourcingDecision {
+    seq: string;
+    frame: number;
+    seat: Seat;
+    round: number;
+    card: string;
+    /** The hand as it stood BEFORE the commitment, including `card`. */
+    handBefore: string[];
+}
 
 export interface IReplayContextType {
     gameState: any;
@@ -22,6 +33,13 @@ export interface IReplayContextType {
     lobbyState: null;
 
     doc: SwuPgnDocument;
+    /** The repaired event stream. Frame indices address THIS, not `doc.events` — the
+     *  reader drops inert records, so the two are not the same length. */
+    events: GameEvent[];
+    /** Round boundaries as scrubber marks: frame index + "R1", "R2", ... */
+    roundMarks: { value: number; label: string }[];
+    /** Every resource commitment, with the hand it was chosen from. */
+    resourcingDecisions: IResourcingDecision[];
     currentIndex: number;
     totalFrames: number;
     header: SwuPgnDocument['header'];
@@ -84,9 +102,10 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     doc, children, rawContent = null, replayId = null, initialFrame = 0, nameMap = {},
     clipStart = null, clipEnd = null,
 }) => {
-    // forceteki never emits a decrement when a status token leaves its host, so read the
-    // repaired stream (see normalizeTokenEvents) rather than the file's literal events.
-    const events = useMemo(() => normalizeTokenEvents(doc.events), [doc]);
+    // Read the repaired stream, not the file's literal events: forceteki never emits a
+    // decrement when a status token leaves its host, and deck searches emit inert MOVEs
+    // that cost a scrubber frame each. See normalizeEvents.
+    const events = useMemo(() => normalizeEvents(doc.events), [doc]);
     const totalFrames = events.length;
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -135,6 +154,55 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const isDrawBurst = useMemo<boolean[]>(() => events.map((e) =>
         e.t === 'DRAW' || (e.t === 'MOVE' && e.to === 'hand' && e.from === 'deck')
     ), [events]);
+
+    // Resource commitments paired with the hand they were chosen from. The board can only
+    // show the hand AFTER the pick (the card has already left it on that frame), but what
+    // makes a resourcing decision reviewable is the alternatives that were passed over.
+    const resourcingDecisions = useMemo<IResourcingDecision[]>(() => {
+        let round = 0;
+        const out: IResourcingDecision[] = [];
+        for (let i = 0; i < events.length; i++) {
+            const e = events[i];
+            if (e.t === 'ROUND_START') { round = e.round; continue; }
+            if (e.t !== 'MOVE' || e.to !== 'resource' || e.from !== 'hand' || !e.p) continue;
+            const before = frameStates[i - 1]?.players[e.p]?.hand ?? [];
+            out.push({
+                seq: e.seq, frame: i, seat: e.p, round, card: e.card,
+                // Guard the fold missing the card (a keyframe can resync the hand): the
+                // committed card is part of the choice by definition.
+                handBefore: before.includes(e.card) ? [...before] : [...before, e.card],
+            });
+        }
+        return out;
+    }, [events, frameStates]);
+
+    // Round boundaries, for landmarks on an otherwise featureless 500-frame scrubber.
+    const roundMarks = useMemo(
+        () => events.flatMap((e, i) => (e.t === 'ROUND_START' ? [{ value: i, label: `R${e.round}` }] : [])),
+        [events],
+    );
+
+    // Per-frame base HP. ReducedState seeds every base at 30 because the fold has no card
+    // data, so a 33- or 28-HP base reads wrong until its first DAMAGE event — and the base
+    // never showed damage at all. Seed from printed HP instead and apply the ABSOLUTE `hp`
+    // the engine puts on every base DAMAGE/HEAL/OVERWHELM.
+    const baseHpByFrame = useMemo<Array<Record<Seat, number | undefined>>>(() => {
+        const printed: Record<Seat, number | undefined> = {
+            1: statMap[baseId(doc.header.p1Base)]?.hp,
+            2: statMap[baseId(doc.header.p2Base)]?.hp,
+        };
+        const cur: Record<Seat, number | undefined> = { 1: printed[1], 2: printed[2] };
+        const out: Array<Record<Seat, number | undefined>> = new Array(events.length);
+        for (let i = 0; i < events.length; i++) {
+            const e = events[i];
+            if (e.t === 'DAMAGE' || e.t === 'HEAL' || e.t === 'OVERWHELM') {
+                const m = /^base@(\d)$/.exec(e.tgt);
+                if (m) cur[Number(m[1]) as Seat] = e.hp;
+            }
+            out[i] = { 1: cur[1], 2: cur[2] };
+        }
+        return out;
+    }, [events, doc.header.p1Base, doc.header.p2Base, statMap]);
 
     // Per-frame resource-pile contents. The fold tracks only a COUNT (ReducedState mirrors
     // forceteki's reference PlayerState, which has no resource identities), but the card ids
@@ -225,11 +293,12 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                 if (!prevIds.has(c.id)) enteringIds.push(c.id);
             }
         }
-        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[] } = {
+        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; baseHp?: Partial<Record<Seat, number>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[] } = {
             ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
             highlightIds: action.highlight,
             leaderExhausted: leaderExhaustByFrame[currentIndex],
             // Fog-of-war hides the opponent's hand; their face-down resources go with it.
+            baseHp: baseHpByFrame[currentIndex],
             resourcedIds: fogOfWar
                 ? { [perspective === P1 ? 1 : 2]: resourcedByFrame[currentIndex]?.[perspective === P1 ? 1 : 2] ?? [] } as Partial<Record<Seat, string[]>>
                 : resourcedByFrame[currentIndex],
@@ -238,7 +307,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
         return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame]);
+    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first
@@ -313,13 +382,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent, isSpectator: true,
         gameMessages: [], gameIsEnded: () => true, lobbyState: null,
-        doc, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
+        doc, events, roundMarks, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
         replayId, downloadReplay, nameOf: resolver.nameOf,
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, stepForward, stepBack, seekTo,
         seekToSeq, currentEvents, togglePerspective, currentPerspective: perspective,
-    }), [gameState, perspective, getOpponent, doc, currentIndex, totalFrames, moves,
+    }), [gameState, perspective, getOpponent, doc, events, roundMarks, resourcingDecisions, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, downloadReplay, resolver, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed,

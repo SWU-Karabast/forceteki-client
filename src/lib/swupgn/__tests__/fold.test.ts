@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents } from '../index';
+import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords } from '../index';
 import type { GameEvent, ReducedState, PlayerState } from '../index';
 
 // Fresh default state (players 1/2, baseHp 30, empty everywhere).
@@ -318,5 +318,30 @@ describe('normalizeTokenEvents — a fixed emitter is left alone', () => {
         const fixed = normalizeTokenEvents(events);
         expect(fixed[3]).toEqual(events[3]); // the move is left as the inert event it is
         expect(p1(fold(fixed)).cards[0].statusTokens.advantage).toBe(1);
+    });
+});
+
+describe('dropInertRecords', () => {
+    // A deck search emits two junk MOVEs per card examined: `deck -> deck`, and a second
+    // with an empty `from`. Neither is a zone transition; both cost the scrubber a frame.
+    const search: GameEvent[] = [
+        { seq: '1', t: 'SEARCH', p: 1 },
+        { seq: '2', t: 'MOVE', card: 'JTL#096', from: 'deck', to: 'deck', p: 1 },
+        { seq: '3', t: 'MOVE', card: 'JTL#096', from: '', to: 'deck', p: 1 },
+        { seq: '4', t: 'MOVE', card: 'JTL#221', from: 'deck', to: 'space', p: 1 },
+    ];
+
+    it('drops same-zone and empty-endpoint moves, keeps real ones', () => {
+        expect(dropInertRecords(search).map((e) => e.seq)).toEqual(['1', '4']);
+    });
+
+    it('keeps every non-MOVE record so seq lookups still resolve', () => {
+        const kept = dropInertRecords(search).filter((e) => e.t !== 'MOVE');
+        expect(kept).toEqual([search[0]]);
+    });
+
+    it('leaves a clean stream untouched', () => {
+        const clean: GameEvent[] = [{ seq: '1', t: 'MOVE', card: 'A', from: 'deck', to: 'hand', p: 1 }];
+        expect(dropInertRecords(clean)).toEqual(clean);
     });
 });

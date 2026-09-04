@@ -61,3 +61,23 @@ export function normalizeTokenEvents(events: GameEvent[]): GameEvent[] {
         return { seq: e.seq, t: 'STATUS_TOKEN', card: b.card, token: b.token, count: -b.count };
     });
 }
+
+/**
+ * Drop records that describe nothing about the board.
+ *
+ * A deck search emits, per card examined, a `deck -> deck` MOVE and a second MOVE with an
+ * EMPTY `from` — neither is a zone transition, and `from: ""` is not a legal zone at all.
+ * In a sample game two searches produced 28 of the file's 136 MOVE records (20%), each one
+ * costing the scrubber a frame that renders identically to its neighbour.
+ *
+ * Only inert MOVEs are dropped; every other record is kept, so `seq` lookups still resolve
+ * and annotation references still land.
+ */
+export function dropInertRecords(events: GameEvent[]): GameEvent[] {
+    return events.filter((e) => !(e.t === 'MOVE' && (!e.from || !e.to || e.from === e.to)));
+}
+
+/** Every stream repair the reader applies, in order. */
+export function normalizeEvents(events: GameEvent[]): GameEvent[] {
+    return dropInertRecords(normalizeTokenEvents(events));
+}

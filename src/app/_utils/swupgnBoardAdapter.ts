@@ -171,6 +171,7 @@ function adaptPlayer(
     entering?: Set<string>,
     attacking?: Set<string>,
     resourcedIds?: string[],
+    baseHp?: number,
 ): any {
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap)));
     // Token badges ride along in the arena piles as parented cards, exactly as the live
@@ -214,8 +215,16 @@ function adaptPlayer(
     // dimming. Glow it on the frame it acts (same `selected` highlight as units).
     if (!leaderDeployed && leaderExhausted) leader.exhausted = true;
     if (highlight && highlight.has(leaderId)) leader.selected = true;
-    const base = cardFromId(baseSetId, 'base', playerId, playerId);
+    // Base HP: the .swupgn stream never states a base's printed HP, and ReducedState seeds
+    // every base at 30 — so bases with an aspect penalty or a Force slot (33, 28, ...) read
+    // wrong, and the base showed no damage at all because nothing set `damage` on it.
+    // Printed HP comes from card data; current HP is derived by the caller from the
+    // absolute `hp` on base DAMAGE/HEAL/OVERWHELM events.
+    const base = cardFromId(baseSetId, 'base', playerId, playerId, statOf(baseSetId, statMap));
     base.type = 'base';
+    if (typeof base.hp === 'number' && typeof baseHp === 'number') {
+        base.damage = Math.max(0, base.hp - baseHp);
+    }
     // The board reads the player's aspects (leader + base) to pick the Heroism/Villainy
     // Force-token art, and `id` to tell whose side of the board it is on. Both are
     // unguarded reads there, so they must be present, not just correct.
@@ -258,7 +267,7 @@ function adaptPlayer(
 export function adaptState(
     s: ReducedState, doc: SwuPgnDocument,
     decks: Record<Seat, number>, seatToId: SeatToPlayerId,
-    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[] } = {},
+    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; resourcedIds?: Partial<Record<Seat, string[]>>; baseHp?: Partial<Record<Seat, number>>; enteringIds?: string[]; attackingIds?: string[] } = {},
     statMap: Record<string, CardStat> = {},
 ): any {
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
@@ -271,7 +280,7 @@ export function adaptState(
         if (!ps) { continue; }
         const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
-        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering, attacking, opts.resourcedIds?.[seat]);
+        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering, attacking, opts.resourcedIds?.[seat], opts.baseHp?.[seat]);
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }

@@ -45,6 +45,48 @@ const RoundTable: React.FC<{ rows: PlayerRoundResourcing[]; onSeek: (round: numb
     </Box>
 );
 
+/**
+ * The resource commitments themselves: what was taken, and what was passed over. The board
+ * can only ever show the hand AFTER a pick, so the alternatives — the actual substance of
+ * the decision — are invisible while scrubbing. Click a row to jump to that moment.
+ */
+const DecisionList: React.FC<{ seat: Seat }> = ({ seat }) => {
+    const { resourcingDecisions, nameOf, seekTo, currentIndex } = useReplay();
+    const mine = resourcingDecisions.filter((d) => d.seat === seat);
+    if (mine.length === 0) return null;
+
+    return (
+        <Box sx={{ mt: 1.5 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                Resource picks
+            </Typography>
+            {mine.map((d) => {
+                const passed = d.handBefore.filter((id) => id !== d.card);
+                return (
+                    <Box
+                        key={d.seq}
+                        onClick={() => seekTo(d.frame)}
+                        sx={{
+                            cursor: 'pointer', py: 0.5, px: 0.75, borderRadius: '4px',
+                            borderLeft: '2px solid',
+                            borderColor: d.frame === currentIndex ? 'var(--selection-blue)' : 'transparent',
+                            backgroundColor: d.frame === currentIndex ? 'rgba(255,255,255,0.08)' : 'transparent',
+                            '&:hover': { backgroundColor: 'rgba(255,255,255,0.06)' },
+                        }}
+                    >
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)', display: 'block', fontWeight: 600 }}>
+                            {d.round > 0 ? `R${d.round}` : 'Setup'} · {nameOf(d.card)}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', display: 'block', lineHeight: 1.3 }}>
+                            {passed.length > 0 ? `over ${passed.map((id) => nameOf(id)).join(', ')}` : 'only card in hand'}
+                        </Typography>
+                    </Box>
+                );
+            })}
+        </Box>
+    );
+};
+
 const PlayerColumn: React.FC<{ seat: Seat; name: string; report: ResourcingReportData }> = ({ seat, name, report }) => {
     const { doc, nameOf, seekToSeq } = useReplay();
 
@@ -79,6 +121,7 @@ const PlayerColumn: React.FC<{ seat: Seat; name: string; report: ResourcingRepor
                     </Typography>
                 )}
             </Box>
+            <DecisionList seat={seat} />
         </Box>
     );
 };

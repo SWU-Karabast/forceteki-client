@@ -127,10 +127,10 @@ const NoteCard: React.FC<{
 /** Threaded discussion for the current frame's move. Notes + replies persist locally and
  *  serialize into the .swupgn, so a shared file carries the conversation. */
 const DiscussionTab: React.FC = () => {
-    const { doc, currentIndex } = useReplay();
+    const { events, currentIndex } = useReplay();
     const { threadFor, addAnnotation, deleteAnnotation, author, setAuthor } = useReplayAnnotations();
 
-    const seq = doc.events[currentIndex]?.seq;
+    const seq = events[currentIndex]?.seq;
     const notes = (seq ? threadFor(seq) : []) as Note[];
     const threads = useMemo(
         () => buildThreads<Note>(notes, idOf, (n) => n.parent, (n) => n.ts ?? 0),

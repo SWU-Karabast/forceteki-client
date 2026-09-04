@@ -26,16 +26,17 @@ const TransportControls: React.FC = () => {
         setSpeed,
         currentIndex,
         totalFrames,
-        doc,
+        events,
+        roundMarks,
         seekTo,
         togglePerspective,
         currentPerspective,
     } = useReplay();
 
-    const currentRound = formatRoundPhase(doc.events[currentIndex]?.seq ?? '');
+    const currentRound = formatRoundPhase(events[currentIndex]?.seq ?? '');
 
     const formatPosition = (value: number) => {
-        const seq = doc.events[value]?.seq;
+        const seq = events[value]?.seq;
         return (seq && formatRoundPhase(seq)) || `${value + 1} / ${totalFrames}`;
     };
 
@@ -130,7 +131,7 @@ const TransportControls: React.FC = () => {
                 value={currentIndex}
                 min={0}
                 max={Math.max(0, totalFrames - 1)}
-                marks={[]}
+                marks={roundMarks}
                 onChange={handleSliderChange}
                 valueLabelDisplay="auto"
                 valueLabelFormat={formatPosition}
