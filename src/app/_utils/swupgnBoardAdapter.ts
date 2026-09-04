@@ -3,7 +3,7 @@
 // (IBoardState.gameState: any, see Game.context.tsx which disables the same rule).
 // Typing these returns would mean typing the entire live board state — out of scope.
 import type { CardInstanceState, ReducedState, Seat, SwuPgnDocument, PlayerState, SetupInitRecord } from '@/lib/swupgn';
-import { baseId } from '@/lib/swupgn';
+import { baseId, tokenArtId } from '@/lib/swupgn';
 import { statOf, type CardStat } from '@/app/_utils/swupgnCardStats';
 
 /** Minimal card shape the board reads. Replay is read-only, so selection/prompt
@@ -60,7 +60,9 @@ export function cardFromId(
         type: stat?.type ?? 'unit',
         // Tokens have no set number: the S3 pipeline addresses them by numeric engine id
         // under cards/_tokens/, and s3CardImageURL takes that branch whenever `id` is set.
-        ...(stat?.id ? { id: stat.id } : {}),
+        // Current-format ids carry that number themselves (TOKEN:x-wing#9415311381), which
+        // beats a name lookup; the stat map covers older files and synthesized badges.
+        ...(tokenArtId(id) ?? stat?.id ? { id: tokenArtId(id) ?? stat?.id } : {}),
         ...(typeof stat?.power === 'number' ? { power: stat.power } : {}),
         ...(typeof stat?.hp === 'number' ? { hp: stat.hp } : {}),
         damage: 0,

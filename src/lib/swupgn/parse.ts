@@ -1,4 +1,4 @@
-import type { SwuPgnDocument, Header, DeckRecord, GameEvent, Annotation, SetupInitRecord } from './types';
+import type { SwuPgnDocument, Header, DeckRecord, GameEvent, Annotation, SetupInitRecord, CardIndexRecord } from './types';
 
 function parseHeaderLine(line: string, raw: Record<string, string>): void {
     // A line may contain multiple [Tag "Value"] pairs.
@@ -30,20 +30,34 @@ function buildHeader(raw: Record<string, string>): Header {
         result: req('Result') as Header['result'], reason: req('Reason'),
         // Guard against a non-numeric [Rounds] tag: Number('x') is NaN, which would
         // propagate into round-based UI. Fall back to 0 when not a finite number.
+        // (Client-owned: forceteki's reader takes Number() raw — see the open report.)
         rounds: (() => { const n = Number(req('Rounds')); return Number.isFinite(n) ? n : 0; })(),
     };
 }
 
-type Section = 'NONE' | 'UNKNOWN' | 'DECKS' | 'SETUP' | 'EVENTS' | 'ANNOTATIONS';
+type Section = 'NONE' | 'UNKNOWN' | 'STORY' | 'DECKS' | 'CARDS' | 'SETUP' | 'EVENTS' | 'ANNOTATIONS';
 
-// Safety ceiling on event count. A real game is a few thousand events; this bounds
-// the per-frame fold (O(n) per frame) and the snapshot array so a malformed or
-// hostile file — replays are shared between users — can't freeze/OOM the tab.
-const MAX_EVENTS = 200_000;
+/** Sections whose lines are NDJSON records. `STORY` is deliberately not one of them. */
+const JSON_SECTIONS = ['DECKS', 'CARDS', 'SETUP', 'EVENTS', 'ANNOTATIONS'];
+
+/** Drop leading/trailing blank lines a section banner's spacing leaves around the prose. */
+function trimBlankEdges(lines: string[]): string[] {
+    let start = 0;
+    let end = lines.length;
+    while (start < end && lines[start].trim() === '') {
+        start++;
+    }
+    while (end > start && lines[end - 1].trim() === '') {
+        end--;
+    }
+    return lines.slice(start, end);
+}
 
 export function parse(text: string): SwuPgnDocument {
     const raw: Record<string, string> = {};
+    const story: string[] = [];
     const decks: DeckRecord[] = [];
+    const cards: CardIndexRecord[] = [];
     const setup: (SetupInitRecord | GameEvent)[] = [];
     const events: GameEvent[] = [];
     const annotations: Annotation[] = [];
@@ -51,7 +65,15 @@ export function parse(text: string): SwuPgnDocument {
 
     const lines = text.split('\n');
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+        const rawLine = lines[i];
+        const line = rawLine.trim();
+
+        // %%% STORY is prose, not NDJSON: keep every line verbatim (blank lines included,
+        // they are part of the layout) until the next banner.
+        if (section === 'STORY' && !line.startsWith('%%%')) {
+            story.push(rawLine.replace(/\r$/, ''));
+            continue;
+        }
         if (line.length === 0) {
             continue;
         }
@@ -61,7 +83,7 @@ export function parse(text: string): SwuPgnDocument {
         }
         if (line.startsWith('%%%')) {
             const name = line.slice(3).trim().toUpperCase();
-            section = (['DECKS', 'SETUP', 'EVENTS', 'ANNOTATIONS'].includes(name) ? name : 'UNKNOWN') as Section;
+            section = (name === 'STORY' || JSON_SECTIONS.includes(name) ? name : 'UNKNOWN') as Section;
             continue;
         }
         let rec: unknown;
@@ -72,18 +94,14 @@ export function parse(text: string): SwuPgnDocument {
         }
         switch (section) {
             case 'DECKS': decks.push(rec as DeckRecord); break;
+            case 'CARDS': cards.push(rec as CardIndexRecord); break;
             case 'SETUP': setup.push(rec as SetupInitRecord | GameEvent); break;
-            case 'EVENTS':
-                if (events.length >= MAX_EVENTS) {
-                    throw new Error(`SWU-PGN: too many events (limit ${MAX_EVENTS})`);
-                }
-                events.push(rec as GameEvent);
-                break;
+            case 'EVENTS': events.push(rec as GameEvent); break;
             case 'ANNOTATIONS': annotations.push(rec as Annotation); break;
             case 'UNKNOWN': throw new Error(`SWU-PGN: JSON record in unrecognized section on line ${i + 1}`);
             default: throw new Error(`SWU-PGN: record before any %%% section on line ${i + 1}`);
         }
     }
 
-    return { header: buildHeader(raw), decks, setup, events, annotations };
+    return { header: buildHeader(raw), story: trimBlankEdges(story), decks, cards, setup, events, annotations };
 }

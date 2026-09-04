@@ -4,7 +4,7 @@
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn';
-import { foldFrames, serialize, render, baseId, normalizeEvents } from '@/lib/swupgn';
+import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver } from '@/lib/swupgn';
 import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
@@ -121,7 +121,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const [clip, setClipState] = useState<{ start: number; end: number } | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const resolver = useMemo(() => makeNameResolver(nameMap), [nameMap]);
+    // A current-format file carries its own `%%% CARDS` index, which covers tokens and any
+    // card newer than the client's generated name map — prefer it, and fall back to the
+    // static map for files written before the index existed.
+    const resolver = useMemo(
+        () => (doc.cards?.length ? indexResolver(doc.cards) : makeNameResolver(nameMap)),
+        [doc.cards, nameMap],
+    );
     const decks = useMemo(() => deckOrderLengths(doc), [doc]);
     const statMap = useCardStatMap();
     const moves = useMemo(() => buildMoveList(events, resolver), [events, resolver]);

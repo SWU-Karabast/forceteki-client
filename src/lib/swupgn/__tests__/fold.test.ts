@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, isStatusTokenCard } from '../index';
+import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, isStatusTokenCard, tokenArtId } from '../index';
 import type { GameEvent, ReducedState, PlayerState } from '../index';
 
 // Fresh default state (players 1/2, baseHp 30, empty everywhere).
@@ -351,13 +351,26 @@ describe('token upgrades vs token units', () => {
     // attach to a host and are not board cards — and Battle Droid/X-Wing/etc. as
     // ['token','unit'], which ARE board cards. Ignoring every TOKEN: id alike would strand
     // a defeated token unit in its arena for the rest of the replay.
-    it('classifies upgrades but not units, copy suffix and all', () => {
-        expect(isStatusTokenCard('TOKEN:Advantage')).toBe(true);
-        expect(isStatusTokenCard('TOKEN:Advantage:3')).toBe(true);
-        expect(isStatusTokenCard('TOKEN:Shield')).toBe(true);
-        expect(isStatusTokenCard('TOKEN:X-Wing')).toBe(false);
-        expect(isStatusTokenCard('TOKEN:The Force')).toBe(false);
-        expect(isStatusTokenCard('ASH#220')).toBe(false);
+    it('classifies upgrades but not units, in BOTH id shapes', () => {
+        // forceteki changed token ids from `TOKEN:<Title>[:copy]` to
+        // `TOKEN:<internalName>#<numericId>` in Sept 2026. Files of both shapes are in the
+        // wild, and getting this wrong silently puts a status token back on the board as a
+        // card with no printed identity.
+        for (const id of ['TOKEN:Advantage', 'TOKEN:Advantage:3', 'TOKEN:advantage#5844562972',
+            'TOKEN:Shield', 'TOKEN:shield#8752877738']) {
+            expect(isStatusTokenCard(id)).toBe(true);
+        }
+        for (const id of ['TOKEN:X-Wing', 'TOKEN:x-wing#9415311381', 'TOKEN:The Force',
+            'TOKEN:the force#4571900905', 'ASH#220']) {
+            expect(isStatusTokenCard(id)).toBe(false);
+        }
+    });
+
+    it('reads the art id out of a current-shape token id only', () => {
+        expect(tokenArtId('TOKEN:advantage#5844562972')).toBe('5844562972');
+        expect(tokenArtId('TOKEN:Advantage:2')).toBeUndefined();
+        // A placeholder id in forceteki's card data must not pass as a numeric art id.
+        expect(tokenArtId('TOKEN:weakness#weakness-id')).toBeUndefined();
     });
 
     it('folds a token unit into and out of its arena like any other card', () => {

@@ -1,7 +1,7 @@
 export type Seat = 1 | 2;
 
 export interface Header {
-    game: string;            // "SWU-PGN/1.1"
+    game: string;            // "SWU-PGN/1.0" (files written before the renumbering say 1.1)
     gameId: string;
     date: string;            // ISO-8601 UTC
     format?: string;
@@ -36,50 +36,80 @@ export interface SetupInitRecord {
 
 /** Discriminated union of all event record types. `t` is the discriminant. */
 export type GameEvent =
-    | { seq: string; t: 'PLAY' | 'PLAY_EVENT' | 'PLAY_UPGRADE' | 'PLAY_SMUGGLE'; p: Seat; card: string; zone?: string; cost?: number; target?: string }
-    | { seq: string; t: 'DEPLOY_LEADER'; p: Seat; card: string; zone?: string; cost?: number }
-    | { seq: string; t: 'ATTACK'; p: Seat; atk: string; def: string; defenderType: 'unit' | 'base' }
-    | { seq: string; t: 'PASS' | 'CLAIM_INITIATIVE'; p: Seat }
-    | { seq: string; t: 'CHOICE'; p: Seat; prompt?: string; offered: string[]; chose: number }
-    | { seq: string; t: 'MULLIGAN' | 'KEEP_HAND'; p: Seat }
-    | { seq: string; t: 'MODAL_CHOICE'; p: Seat; offered: string[]; chose: number }
-    | { seq: string; t: 'ABILITY_ACTIVATE'; p: Seat; card: string; ability?: string }
-    | { seq: string; t: 'DAMAGE'; src: string; tgt: string; amt: number; damageType: string; hp: number }
-    | { seq: string; t: 'HEAL'; tgt: string; amt: number; hp: number }
-    | { seq: string; t: 'DEFEAT'; card: string; reason: string; defeatedBy?: string }
-    | { seq: string; t: 'EXHAUST' | 'READY'; card: string }
-    | { seq: string; t: 'DRAW'; p: Seat; count: number; cards: string[] }
-    | { seq: string; t: 'DISCARD'; p: Seat; cards: string[] }
-    | { seq: string; t: 'RESOURCE'; p: Seat; card: string; cardName?: string }
-    | { seq: string; t: 'SHUFFLE'; p: Seat }
-    | { seq: string; t: 'CREATE_TOKEN'; p: Seat; token: string; zone: string; power?: number; hp?: number }
-    | { seq: string; t: 'MOVE'; card: string; from: string; to: string; p?: Seat; attachedTo?: string }
-    | { seq: string; t: 'CAPTURE' | 'RESCUE' | 'TAKE_CONTROL'; p: Seat; card: string }
-    | { seq: string; t: 'SHIELD_GAIN' | 'SHIELD_USE'; card: string; count?: number }
-    | { seq: string; t: 'EXPERIENCE_GAIN'; card: string; count: number }
-    | { seq: string; t: 'STATUS_TOKEN'; card: string; token: string; count: number }
-    | { seq: string; t: 'OVERWHELM'; p: Seat; tgt: string; amt: number; hp: number }
-    | { seq: string; t: 'SEARCH'; p: Seat; found?: string[]; zone?: string }
-    | { seq: string; t: 'REVEAL'; p: Seat; zone: string; cards: string[] }
-    | { seq: string; t: 'TRIGGER'; p?: Seat; card: string }
-    | { seq: string; t: 'PHASE_START' | 'PHASE_END'; phase: string }
-    | { seq: string; t: 'ROUND_START' | 'ROUND_END'; round: number; keyframe?: ReducedState }
-    | { seq: string; t: 'GAME_END'; winner: Seat | 'Draw'; reason: string };
+  | { seq: string; t: 'PLAY' | 'PLAY_EVENT' | 'PLAY_UPGRADE' | 'PLAY_SMUGGLE'; p: Seat; card: string; zone?: string; cost?: number; target?: string }
+  | { seq: string; t: 'DEPLOY_LEADER'; p: Seat; card: string; zone?: string; cost?: number }
+  | { seq: string; t: 'ATTACK'; p: Seat; atk: string; def: string; defenderType: 'unit' | 'base' }
+  | { seq: string; t: 'PASS' | 'CLAIM_INITIATIVE'; p: Seat }
+  | { seq: string; t: 'CHOICE'; p: Seat; prompt?: string; offered: string[]; chose: number }
+  | { seq: string; t: 'MULLIGAN' | 'KEEP_HAND'; p: Seat }
+  | { seq: string; t: 'MODAL_CHOICE'; p: Seat; offered: string[]; chose: number }
+  | { seq: string; t: 'ABILITY_ACTIVATE'; p: Seat; card: string; ability?: string }
+  | { seq: string; t: 'DAMAGE'; src: string; tgt: string; amt: number; damageType: string; hp: number }
+  | { seq: string; t: 'HEAL'; tgt: string; amt: number; hp: number }
+  | { seq: string; t: 'DEFEAT'; card: string; reason: string; defeatedBy?: string }
+  | { seq: string; t: 'EXHAUST' | 'READY'; card: string }
+  | { seq: string; t: 'DRAW'; p: Seat; count: number; cards: string[] }
+  | { seq: string; t: 'DISCARD'; p: Seat; cards: string[] }
+  | { seq: string; t: 'RESOURCE'; p: Seat; card: string }
+  | { seq: string; t: 'SHUFFLE'; p: Seat }
+  | { seq: string; t: 'CREATE_TOKEN'; p: Seat; token: string; zone: string; power?: number; hp?: number }
+  | { seq: string; t: 'MOVE'; card: string; from: string; to: string; p?: Seat; attachedTo?: string }
+  | { seq: string; t: 'CAPTURE' | 'RESCUE' | 'TAKE_CONTROL'; p: Seat; card: string }
+  | { seq: string; t: 'SHIELD_GAIN' | 'SHIELD_USE'; card: string; count?: number }
+  | { seq: string; t: 'EXPERIENCE_GAIN'; card: string; count: number }
+  | { seq: string; t: 'STATUS_TOKEN'; card: string; token: string; count: number }
+  | { seq: string; t: 'OVERWHELM'; p: Seat; tgt: string; amt: number; hp: number }
+  | { seq: string; t: 'SEARCH'; p: Seat; found?: string[]; zone?: string }
+  | { seq: string; t: 'REVEAL'; p: Seat; zone: string; cards: string[] }
+  | { seq: string; t: 'TRIGGER'; p?: Seat; card: string }
+  | { seq: string; t: 'PHASE_START' | 'PHASE_END'; phase: string }
+  | { seq: string; t: 'ROUND_START' | 'ROUND_END'; round: number; keyframe?: ReducedState }
+  | { seq: string; t: 'GAME_END'; winner: Seat | 'Draw'; reason: string };
 
 export interface Annotation {
     ref: string;                    // seq this annotates
+
+    // Threading fields are CLIENT-OWNED: the replay viewer's discussion tab needs stable
+    // ids and parent links to nest replies. They are optional and round-trip through the
+    // ANNOTATIONS section, so a file carrying them still validates against the writer's
+    // schema. Re-vendoring this file must preserve them.
     id?: string;                    // stable id, for threaded replies (emitted on export)
     parent?: string;                // id of the annotation this replies to (threading)
     ts?: number;                    // author timestamp (epoch ms), for ordering a thread
+
     nag?: string;                   // chess-style glyph: "!", "?", "!!", "?!", ...
     text?: string;
     by?: string;                    // pseudonymous author
     line?: GameEvent[];             // engine-free variation
 }
 
+/**
+ * One entry of the `%%% CARDS` index: a card identifier and the name to show for it.
+ *
+ * The index makes a file self-describing. Without it every `SET#NUM` in the file is opaque
+ * to a human and unresolvable to a reader that has no card database — which is what forced
+ * `render()` to take an injected NameResolver.
+ *
+ * Ids here are BASE ids: no `:N` copy suffix (look up `baseId(ref)`), because every copy of
+ * a card shares a name.
+ */
+export interface CardIndexRecord {
+    id: string;                     // SET#NUM, or TOKEN:<name>#<id>
+    name: string;                   // display name, e.g. "Greef Karga, Gracious Magistrate"
+}
+
 export interface SwuPgnDocument {
     header: Header;
+
+    /** `%%% STORY`: the rendered narrative, as raw text lines. Derived from the rest of the
+     *  file — regenerating it MUST reproduce these lines exactly. Optional: a file without
+     *  the section is valid, just not readable without a tool. `parse()` always sets it. */
+    story?: string[];
     decks: DeckRecord[];
+
+    /** `%%% CARDS`: id -> display name for every card the file mentions. Optional: without it
+     *  a reader needs its own card database to show names. `parse()` always sets it. */
+    cards?: CardIndexRecord[];
     setup: (SetupInitRecord | GameEvent)[];
     events: GameEvent[];
     annotations: Annotation[];

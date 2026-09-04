@@ -67,3 +67,31 @@ describe('parse — malformed input', () => {
         expect(parse(text).header.rounds).toBe(0);
     });
 });
+
+describe('parse — the 2026-09 format revision', () => {
+    // forceteki added `%%% STORY` (rendered narrative) and `%%% CARDS` (id -> name index)
+    // and renumbered the format 1.1 -> 1.0. A reader that treats an unknown section as an
+    // error rejects the whole file, which is what this client did before re-vendoring.
+    const withNewSections = [
+        '[Game "SWU-PGN/1.0"] [GameId "g"] [Date "d"] [CardPool "SOR"] [Engine "e"] [Seed "0"]',
+        '[P1Id "a"] [P2Id "b"] [P1 "One"] [P2 "Two"]',
+        '[P1Leader "SOR#010"] [P1Base "SOR#028"] [P2Leader "SOR#005"] [P2Base "SOR#020"]',
+        '[Result "Draw"] [Reason "r"] [Rounds "1"]',
+        '', '%%% STORY', '', ' ── action ──', '  1. Player 1 plays Wampa', '',
+        '%%% CARDS', '{"id":"SOR#108","name":"Wampa"}',
+        '', '%%% EVENTS', '{"seq":"R1.A.1","t":"PLAY","p":1,"card":"SOR#108","zone":"ground"}',
+    ].join('\n');
+
+    it('reads the story and card index without choking on free text', () => {
+        const doc = parse(withNewSections);
+        expect(doc.cards).toEqual([{ id: 'SOR#108', name: 'Wampa' }]);
+        expect(doc.story?.join('\n')).toContain('Player 1 plays Wampa');
+        expect(doc.events).toHaveLength(1);
+    });
+
+    it('still reads a pre-revision file that has neither section', () => {
+        const doc = parse(withNewSections.replace(/%%% STORY[\s\S]*?%%% CARDS\n.*\n/, ''));
+        expect(doc.events).toHaveLength(1);
+        expect(doc.cards ?? []).toEqual([]);
+    });
+});

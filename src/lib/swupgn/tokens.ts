@@ -1,28 +1,44 @@
 import type { GameEvent } from './types';
 
 const TOKEN_PREFIX = 'TOKEN:';
-const FORCE_TOKEN = 'TOKEN:The Force';
+const FORCE_TOKEN_NAME = 'the force';
 
-/** Tokens ride the stream as pseudo-cards named `TOKEN:<Name>[:copy]`. */
+/** Tokens ride the stream as pseudo-cards prefixed `TOKEN:`. */
 export const isTokenPseudoCard = (id: string): boolean => id.startsWith(TOKEN_PREFIX);
 
-/** `TOKEN:Advantage:3` -> `Advantage`. */
-export const tokenName = (id: string): string => id.slice(TOKEN_PREFIX.length).replace(/:\d+$/, '');
+/**
+ * The token's name, normalized, from either id shape forceteki has written:
+ *   `TOKEN:advantage#5844562972`  (current: internal name + numeric art id)
+ *   `TOKEN:Advantage:2`           (pre-2026-09: display name + copy suffix)
+ * Both reduce to `advantage`. Files of both shapes are in the wild, so both are read.
+ */
+export const tokenName = (id: string): string =>
+    id.slice(TOKEN_PREFIX.length).split('#')[0].replace(/:\d+$/, '').toLowerCase();
+
+/** The numeric art id from a current-shape token id, if it carries one. */
+export const tokenArtId = (id: string): string | undefined => {
+    const art = id.slice(TOKEN_PREFIX.length).split('#')[1];
+    return art && /^\d+$/.test(art) ? art : undefined;
+};
 
 /**
  * Token UPGRADES — the ones that attach to a host unit and render as a count badge.
- * Token UNITS (Battle Droid, X-Wing, TIE Fighter, Clone Trooper, Mandalorian, Spy, Beast)
+ * Token UNITS (battle droid, x-wing, tie fighter, clone trooper, mandalorian, spy, beast)
  * are ordinary board cards and MUST fold normally, or a defeated one is stranded in its
- * arena for the rest of the replay. forceteki types them `['token','upgrade']` vs
- * `['token','unit']`; the reader is engine-independent and has no card data, so the
- * upgrade set is enumerated here.
+ * arena for the rest of the replay.
+ *
+ * forceteki types these `['token','upgrade']` vs `['token','unit']`, but the STREAM does
+ * not carry the distinction and this reader is engine-independent, so the upgrade set is
+ * enumerated here. It has to be revisited whenever a new token upgrade is printed — see
+ * the open request to forceteki to state the kind in the stream.
  */
-const STATUS_TOKEN_NAMES = new Set(['Shield', 'Experience', 'Advantage', 'Weakness']);
+const STATUS_TOKEN_NAMES = new Set(['shield', 'experience', 'advantage', 'weakness']);
 export const isStatusTokenCard = (id: string): boolean =>
     isTokenPseudoCard(id) && STATUS_TOKEN_NAMES.has(tokenName(id));
 
 /** The Force is a per-player token that sits on the base, not a unit status token. */
-export const isForceToken = (id: string): boolean => id === FORCE_TOKEN;
+export const isForceToken = (id: string): boolean =>
+    isTokenPseudoCard(id) && tokenName(id) === FORCE_TOKEN_NAME;
 
 /**
  * Repair the token lifecycle in a forceteki event stream.

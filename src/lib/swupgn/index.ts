@@ -1,4 +1,4 @@
-// Public API for the SWU-PGN/1.1 reader (client-vendored subset).
+// Public API for the SWU-PGN/1.0 reader (client-vendored subset).
 //
 // NOTE: validate.ts from the server's swupgn/src is intentionally OMITTED here — it uses
 // Node `fs`/`path` + `ajv` to load JSON schemas from disk and is not browser-safe. The
@@ -12,7 +12,7 @@ export { fold, foldFrames, reduce, stateAt } from './fold';
 export { render } from './render';
 export { serialize } from './serialize';
 export type { NameResolver } from './cardNames';
-export { baseId } from './cardNames';
-export { normalizeTokenEvents, dropInertRecords, normalizeEvents, isStatusTokenCard, tokenName } from './tokens';
+export { baseId, indexResolver } from './cardNames';
+export { normalizeTokenEvents, dropInertRecords, normalizeEvents, isStatusTokenCard, isTokenPseudoCard, tokenName, tokenArtId } from './tokens';
 export { checkKeyframes } from './integrity';
 export type { IntegrityResult, KeyframeMismatch } from './integrity';
