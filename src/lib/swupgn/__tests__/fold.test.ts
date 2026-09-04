@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords } from '../index';
+import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, isStatusTokenCard } from '../index';
 import type { GameEvent, ReducedState, PlayerState } from '../index';
 
 // Fresh default state (players 1/2, baseHp 30, empty everywhere).
@@ -343,5 +343,34 @@ describe('dropInertRecords', () => {
     it('leaves a clean stream untouched', () => {
         const clean: GameEvent[] = [{ seq: '1', t: 'MOVE', card: 'A', from: 'deck', to: 'hand', p: 1 }];
         expect(dropInertRecords(clean)).toEqual(clean);
+    });
+});
+
+describe('token upgrades vs token units', () => {
+    // forceteki types Shield/Experience/Advantage/Weakness as ['token','upgrade'] — they
+    // attach to a host and are not board cards — and Battle Droid/X-Wing/etc. as
+    // ['token','unit'], which ARE board cards. Ignoring every TOKEN: id alike would strand
+    // a defeated token unit in its arena for the rest of the replay.
+    it('classifies upgrades but not units, copy suffix and all', () => {
+        expect(isStatusTokenCard('TOKEN:Advantage')).toBe(true);
+        expect(isStatusTokenCard('TOKEN:Advantage:3')).toBe(true);
+        expect(isStatusTokenCard('TOKEN:Shield')).toBe(true);
+        expect(isStatusTokenCard('TOKEN:X-Wing')).toBe(false);
+        expect(isStatusTokenCard('TOKEN:The Force')).toBe(false);
+        expect(isStatusTokenCard('ASH#220')).toBe(false);
+    });
+
+    it('folds a token unit into and out of its arena like any other card', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'CREATE_TOKEN', p: 1, token: 'TOKEN:X-Wing', zone: 'space' });
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['TOKEN:X-Wing']);
+        s = reduce(s, { seq: '2', t: 'MOVE', card: 'TOKEN:X-Wing', from: 'space', to: 'discard', p: 1 });
+        expect(p1(s).cards).toEqual([]);
+    });
+
+    it('still keeps a token upgrade out of the arena', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'TOKEN:Advantage', from: 'outsideTheGame', to: 'space', p: 1 });
+        expect(p1(s).cards).toEqual([]);
     });
 });

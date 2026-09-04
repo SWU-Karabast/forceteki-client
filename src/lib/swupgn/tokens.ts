@@ -3,8 +3,23 @@ import type { GameEvent } from './types';
 const TOKEN_PREFIX = 'TOKEN:';
 const FORCE_TOKEN = 'TOKEN:The Force';
 
-/** Status tokens ride the stream as pseudo-cards named `TOKEN:<Name>[:copy]`. */
+/** Tokens ride the stream as pseudo-cards named `TOKEN:<Name>[:copy]`. */
 export const isTokenPseudoCard = (id: string): boolean => id.startsWith(TOKEN_PREFIX);
+
+/** `TOKEN:Advantage:3` -> `Advantage`. */
+export const tokenName = (id: string): string => id.slice(TOKEN_PREFIX.length).replace(/:\d+$/, '');
+
+/**
+ * Token UPGRADES — the ones that attach to a host unit and render as a count badge.
+ * Token UNITS (Battle Droid, X-Wing, TIE Fighter, Clone Trooper, Mandalorian, Spy, Beast)
+ * are ordinary board cards and MUST fold normally, or a defeated one is stranded in its
+ * arena for the rest of the replay. forceteki types them `['token','upgrade']` vs
+ * `['token','unit']`; the reader is engine-independent and has no card data, so the
+ * upgrade set is enumerated here.
+ */
+const STATUS_TOKEN_NAMES = new Set(['Shield', 'Experience', 'Advantage', 'Weakness']);
+export const isStatusTokenCard = (id: string): boolean =>
+    isTokenPseudoCard(id) && STATUS_TOKEN_NAMES.has(tokenName(id));
 
 /** The Force is a per-player token that sits on the base, not a unit status token. */
 export const isForceToken = (id: string): boolean => id === FORCE_TOKEN;
@@ -27,7 +42,7 @@ export const isForceToken = (id: string): boolean => id === FORCE_TOKEN;
 export function normalizeTokenEvents(events: GameEvent[]): GameEvent[] {
     const bound = new Map<string, { card: string; token: string; count: number }>();
     return events.map((e, i) => {
-        if (!('card' in e) || !isTokenPseudoCard(e.card) || isForceToken(e.card)) {
+        if (!('card' in e) || !isStatusTokenCard(e.card)) {
             return e;
         }
         if (e.t !== 'MOVE') {

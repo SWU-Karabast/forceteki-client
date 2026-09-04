@@ -11,6 +11,7 @@ export interface CardStat {
     hp?: number;
     arena?: string;    // 'ground' | 'space'
     aspects?: string[];// e.g. ['cunning','heroism'] — leader/base aspects
+    id?: string;       // numeric engine id; tokens resolve their art by this, not by setId
 }
 
 const CARD_STATS_URL = '/card-stats.json';

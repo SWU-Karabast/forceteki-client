@@ -12,6 +12,7 @@ import { statOf, type CardStat } from '@/app/_utils/swupgnCardStats';
 export interface AdaptedCard {
     uuid: string;
     setId: { set: string; number: number };
+    id?: string;
     name?: string;
     zone: string;
     controllerId: string;
@@ -57,6 +58,9 @@ export function cardFromId(
         controllerId,
         ownerId,
         type: stat?.type ?? 'unit',
+        // Tokens have no set number: the S3 pipeline addresses them by numeric engine id
+        // under cards/_tokens/, and s3CardImageURL takes that branch whenever `id` is set.
+        ...(stat?.id ? { id: stat.id } : {}),
         ...(typeof stat?.power === 'number' ? { power: stat.power } : {}),
         ...(typeof stat?.hp === 'number' ? { hp: stat.hp } : {}),
         damage: 0,
@@ -81,7 +85,9 @@ const TOKEN_BADGE_NAME: Record<string, string> = {
  * per token carrying `parentCardId`, which UnitsBoard groups into the host's `subcards`.
  * One card per token, since GameCard's badge count is `subcards.filter(...).length`.
  */
-function tokenCards(inst: CardInstanceState, host: AdaptedCard, ownerId: string): AdaptedCard[] {
+function tokenCards(
+    inst: CardInstanceState, host: AdaptedCard, ownerId: string, statMap: Record<string, CardStat>,
+): AdaptedCard[] {
     const counts: Record<string, number> = {
         shield: inst.shields,
         experience: inst.experience,
@@ -93,10 +99,12 @@ function tokenCards(inst: CardInstanceState, host: AdaptedCard, ownerId: string)
         if (!name || !(count > 0)) continue;
         for (let i = 0; i < count; i++) {
             out.push({
-                // Token art lives under a numeric S3 id the .swupgn stream doesn't carry,
-                // so setId stays empty: the badge is an inline SVG and needs no image URL.
+                // The badge is an inline SVG, but its hover preview and the pile popup ask
+                // s3CardImageURL for real art — which for a token means the numeric engine
+                // id, keyed here as TOKEN:<Name> (see gen-card-data.mjs).
                 uuid: `${host.uuid}:${token}:${i}`,
                 setId: { set: '', number: 0 },
+                ...(statOf(`TOKEN:${name}`, statMap)?.id ? { id: statOf(`TOKEN:${name}`, statMap)!.id } : {}),
                 name,
                 zone: host.zone,
                 controllerId: ownerId,
@@ -176,7 +184,7 @@ function adaptPlayer(
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap)));
     // Token badges ride along in the arena piles as parented cards, exactly as the live
     // server delivers upgrades; UnitsBoard groups them onto their host.
-    const tokens = ps.cards.flatMap((c, i) => tokenCards(c, inPlay[i], playerId));
+    const tokens = ps.cards.flatMap((c, i) => tokenCards(c, inPlay[i], playerId, statMap));
     // Glow the card(s) that acted this frame (reuses GameCard's `selected` styling). The
     // board is non-interactive in replay, so repurposing `selected` as an action highlight
     // is safe and needs no new prop on the shared card component.

@@ -1,7 +1,8 @@
 // Generates the replay viewer's static card-data assets from forceteki's card data:
 //   public/card-names.json : SET#NUM -> title              (move list / decklist / captions)
 //   public/card-costs.json : SET#NUM -> cost               (resourcing report float/spend math)
-//   public/card-stats.json : SET#NUM -> {power,hp,arena,type,aspects} (board: stat badges, Force token art)
+//   public/card-stats.json : SET#NUM -> {power,hp,arena,type,aspects} (board: stat badges, aspects)
+//                            plus TOKEN:<Title> -> {type:'token',id} for token art
 //
 // Names/costs join the two summary files below. Stats come from the per-card files in
 // the Card/ directory (the only source that carries power/hp/arena/type).
@@ -97,6 +98,14 @@ if (fs.existsSync(cardDir)) {
         if (card.arena) entry.arena = card.arena;
         // Leader/base aspects decide a player's Heroism vs Villainy Force-token art.
         if (card.aspects && card.aspects.length) entry.aspects = card.aspects;
+        // Tokens (Shield/Experience/Advantage/Weakness/The Force) have no set number — they
+        // are addressed by a numeric engine id under cards/_tokens/ in the S3 image pipeline.
+        // The .swupgn stream names them "TOKEN:<Title>[:copy]", so key them the same way and
+        // they resolve through the ordinary statOf() lookup (baseId strips the copy suffix).
+        if (card.types?.includes('token') && card.title) {
+            stats[`TOKEN:${card.title}`] = { ...entry, type: 'token', id: String(card.id) };
+            continue;
+        }
         // A card can be printed in multiple sets; index every printing.
         const codes = (card.setCodes && card.setCodes.length ? card.setCodes : [card.setId]).filter(Boolean);
         for (const sc of codes) {

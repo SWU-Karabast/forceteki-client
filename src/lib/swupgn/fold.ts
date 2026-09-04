@@ -1,5 +1,5 @@
 import type { GameEvent, ReducedState, PlayerState, CardInstanceState, Seat } from './types';
-import { isForceToken, isTokenPseudoCard } from './tokens';
+import { isForceToken, isStatusTokenCard, isTokenPseudoCard } from './tokens';
 
 function emptyPlayer(seat: Seat): PlayerState {
     return {
@@ -127,14 +127,17 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
 
 /** Apply a single event to state, mutating and returning it. */
 export function reduce(s: ReducedState, e: GameEvent): ReducedState {
-    // TOKEN: pseudo-cards are not cards: they have no set id, so folding them into an
-    // arena puts a card with an unresolvable image on the board. STATUS_TOKEN names the
-    // HOST in `card`, so it still applies; The Force is a per-player token on the base,
-    // and its MOVE in/out of that base is the only signal the stream gives for it.
-    if (e.t !== 'STATUS_TOKEN' && 'card' in e && typeof e.card === 'string' && isTokenPseudoCard(e.card)) {
-        if (e.t === 'MOVE' && isForceToken(e.card) && e.p) {
-            player(s, e.p).hasForce = e.to === 'base';
-        }
+    // The Force is a per-player token that sits on the base; its MOVE in and out of that
+    // base is the only signal the stream gives for it, and it is never a board card.
+    if (e.t === 'MOVE' && isForceToken(e.card) && e.p) {
+        player(s, e.p).hasForce = e.to === 'base';
+        return s;
+    }
+    // A token UPGRADE is not a card: it has no set id and belongs on a host, so folding it
+    // into an arena puts a card with an unresolvable image on the board. Its effect is
+    // carried by STATUS_TOKEN, which names the HOST in `card` and so still applies. Token
+    // UNITS are ordinary cards and fall through to fold normally.
+    if (e.t !== 'STATUS_TOKEN' && 'card' in e && typeof e.card === 'string' && isStatusTokenCard(e.card)) {
         return s;
     }
     switch (e.t) {
