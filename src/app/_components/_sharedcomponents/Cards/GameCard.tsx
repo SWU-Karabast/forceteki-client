@@ -6,9 +6,9 @@ import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource, type SelectCardsPopup } from '../Popup/Popup.types';
-import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
-import { getBorderColor } from './cardUtils';
+import { blockedFromPlay, cannotBeAttacked, getBorderColor, hasSentinel, isBlanked, isStolen } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
@@ -19,6 +19,8 @@ import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
 import { TokenContainer, type TokenType } from '../_styledcomponents/TokenContainer';
+import StatusIcon from '@/app/_components/_sharedcomponents/Cards/GameCard/StatusIcon';
+import { HealthBadge, PowerBadge } from './GameCard/StatBadge';
 
 // Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
 const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
@@ -58,46 +60,6 @@ const TOKEN_BADGES: readonly { name: string; type: TokenType }[] = [
 ];
 
 const TOKEN_BADGE_NAMES = TOKEN_BADGES.map((badge) => badge.name);
-
-// Status icons drawn up the card's left edge, listed bottom-to-top: the first entry that
-// applies takes the fixed slot above the power badge and the rest grow upwards from it.
-// Adding an icon means adding an entry here rather than a style plus a branch in the render.
-const STATUS_ICONS: readonly {
-    key: string;
-    image: string;
-    applies: (card: ICardData, cardStyle: CardStyle) => boolean;
-    tooltip?: (card: ICardData) => string;
-}[] = [
-    {
-        key: 'cannotBeAttacked',
-        image: '/HiddenIcon.png',
-        applies: (card) => !!card.cannotBeAttacked,
-    },
-    {
-        key: 'sentinel',
-        image: s3TokenImageURL('sentinel-icon'),
-        applies: (card, cardStyle) => cardStyle === CardStyle.InPlay && !!card.sentinel,
-    },
-    {
-        key: 'blanked',
-        image: '/BlankIcon.png',
-        applies: (card) => !!card.isBlanked,
-    },
-    {
-        key: 'blockedFromPlay',
-        image: '/LockIcon.png',
-        applies: (card) => !!card.blockedFromPlayReason,
-        tooltip: (card) => card.blockedFromPlayReason || 'Cannot play this card',
-    },
-    {
-        key: 'stolen',
-        image: '/StolenIcon.png',
-        // Held by someone other than its owner.
-        applies: (card) => !!card.controllerId && !!card.ownerId && card.controllerId !== card.ownerId,
-    },
-];
-
-
 
 const usePopoverConfig = (card: ICardData): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
     const { connectedPlayer } = useGame();
@@ -357,7 +319,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         }
     };
     const nonShieldUpgradeCards = subcards.filter((subcard) => !TOKEN_BADGE_NAMES.includes(subcard.name ?? ''));
- 
+
     const tokenBadges = TOKEN_BADGES
         .map(({ name, type }) => {
             const tokens = subcards.filter((subcard) => subcard.name === name);
@@ -369,10 +331,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             };
         })
         .filter((badge) => badge.count > 0);
-
-    const statusIcons = STATUS_ICONS
-        .filter(({ applies }) => applies(card, cardStyle))
-        .map(({ key, image, tooltip }) => ({ key, image, title: tooltip?.(card) }));
 
     // On a multi-select prompt (e.g. Power Failure), clicking a token badge opens a popup to
     // select any number of this unit's upgrades individually. On single-select prompts, badges
@@ -495,39 +453,11 @@ const GameCard: React.FC<IGameCardProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
         },
-        powerIcon:{
+        statBadge: {
+            fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
             position: 'absolute',
             width: '28%',
-            aspectRatio: '3 / 4',
-            display: 'flex',
             bottom: '-6%',
-            left: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('power-badge')})`,
-            WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
-            WebkitUserSelect: 'none',   /* Prevents image selection */
-            userSelect: 'none',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
-        },
-        healthIcon:{
-            position: 'absolute',
-            width: '28%',
-            aspectRatio: '3 / 4',
-            display: 'flex',
-            bottom: '-6%',
-            right: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('hp-badge')})`,
-            WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
-            WebkitUserSelect: 'none',   /* Prevents image selection */
-            userSelect: 'none',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
         },
         damageIcon:{
             position: 'absolute',
@@ -655,17 +585,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             rowGap: '0.2em',
             pointerEvents: 'none',
             zIndex: 2,
-        },
-        statusIcon: {
-            width: '100%',
-            aspectRatio: '1 / 1',
-            flexShrink: 0,
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            pointerEvents: 'auto',
-            // One shadow for the whole stack, as the token badges carry one for every badge.
-            filter: 'drop-shadow(0 4px 4px rgba(0, 0, 0, 0.5))',
         },
         upgradeBlankIcon:{
             position: 'absolute',
@@ -829,10 +748,15 @@ const GameCard: React.FC<IGameCardProps> = ({
                     </Box>
                 )}
                 <Box sx={styles.statusIconContainer}>
-                    {statusIcons.map(({ key, image, title }) => {
-                        const icon = <Box key={key} sx={{ ...styles.statusIcon, backgroundImage: `url(${image})` }}/>;
-                        return title ? <Tooltip key={key} title={title} arrow>{icon}</Tooltip> : icon;
-                    })}
+                    {cannotBeAttacked(card, cardStyle) && <StatusIcon type="hidden" />}
+                    {hasSentinel(card, cardStyle) && <StatusIcon type="sentinel" />}
+                    {isBlanked(card, cardStyle) && <StatusIcon type="blank" />}
+                    {blockedFromPlay(card, cardStyle) && (
+                        <Tooltip title={card.blockedFromPlayReason || 'Cannot play this card'} arrow>
+                            <StatusIcon type="lock" />
+                        </Tooltip>
+                    )}
+                    {isStolen(card, cardStyle) && <StatusIcon type="stolen" />}
                 </Box>
                 {cardStyle === CardStyle.InPlay && (
                     <>
@@ -866,9 +790,8 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 );
                             })}
                         </Box>
-                        <Box sx={styles.powerIcon}>
-                            <Typography sx={styles.numberFont}>{card.power}</Typography>
-                        </Box>
+
+                        <PowerBadge sx={[styles.statBadge, { left: '-4%' } ]} value={card.power || 0} />
                         {Number(card.damage) > 0 && (
                             <Box sx={styles.damageIcon}>
                                 <Typography sx={styles.damageNumber}>
@@ -876,9 +799,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 </Typography>
                             </Box>
                         )}
-                        <Box sx={styles.healthIcon}>
-                            <Typography sx={styles.numberFont}>{card.hp}</Typography>
-                        </Box>
+                        <HealthBadge sx={[styles.statBadge, { right: '-4%' } ]} value={card.hp || 0} />
                     </>
                 )}
             </Box>
