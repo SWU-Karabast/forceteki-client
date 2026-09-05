@@ -4,7 +4,7 @@
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn';
-import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver } from '@/lib/swupgn';
+import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver, isCompleteKeyframe } from '@/lib/swupgn';
 import { adaptState, type AdaptOptions, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { deckByFrame, type DeckState } from '@/app/_utils/deckTracker';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
@@ -194,6 +194,19 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         return out;
     }, [events, frameStates]);
 
+    // The frame of the last keyframe on or before each frame, for the snapshot power/hp
+    // a keyframe card carries (spec §11): exact until something feeding a stat changes.
+    const snapshotFrame = useMemo(() => {
+        const out = new Array<number>(events.length);
+        let last = -1;
+        for (let i = 0; i < events.length; i++) {
+            const e = events[i];
+            if (e && (e.t === 'ROUND_START' || e.t === 'ROUND_END') && isCompleteKeyframe(e.keyframe)) last = i;
+            out[i] = last;
+        }
+        return out;
+    }, [events]);
+
     // Remaining deck per frame, counted from the engine's own deck MOVEs against the
     // published starting order. One source of truth for the board and the Deck tab.
     const deckStates = useMemo(() => deckByFrame(doc, events), [doc, events]);
@@ -353,11 +366,12 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                 ? { [perspective === P1 ? 1 : 2]: resourcedByFrame[currentIndex]?.[perspective === P1 ? 1 : 2] ?? [] } as Partial<Record<Seat, string[]>>
                 : resourcedByFrame[currentIndex],
             enteringIds,
+            snapshot: snapshotFrame[currentIndex] >= 0 ? frameStates[snapshotFrame[currentIndex]] : undefined,
             // On an ATTACK frame the attacker is the first highlight id; lunge it.
             attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
         return adaptState(frameStates[currentIndex], doc, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, resolver]);
+    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, resolver, snapshotFrame]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first

@@ -27,6 +27,12 @@ function finiteOr(value: string, fallback: number): number {
 // compared numerically: §22.1 says a file declaring 1.1 is OLDER than 1.0, so `>=` is wrong.
 const SUPPORTED_GAME_TAG = /^SWU-PGN\/1\.\d+$/;
 
+// CLIENT-OWNED. Safety ceiling on event count. A real game is a few thousand events; this
+// bounds the per-frame fold (O(n) per frame) and the snapshot array so a malformed or
+// hostile file — replays are shared between users — can't freeze/OOM the tab. Upstream has
+// no cap because it never builds per-frame snapshots; the viewer does.
+const MAX_EVENTS = 200_000;
+
 function buildHeader(raw: Record<string, string>): Header {
     const req = (k: string): string => {
         if (!(k in raw)) {
@@ -51,14 +57,9 @@ function buildHeader(raw: Record<string, string>): Header {
         p2Leader: req('P2Leader'), p2Base: req('P2Base'),
         result: req('Result') as Header['result'], reason: req('Reason'),
         rounds: finiteOr(req('Rounds'), 0),
+        ...(raw['RecorderErrors'] != null ? { recorderErrors: finiteOr(raw['RecorderErrors'], 0) } : {}),
     };
 }
-
-// CLIENT-OWNED. Safety ceiling on event count. A real game is a few thousand events; this
-// bounds the per-frame fold (O(n) per frame) and the snapshot array so a malformed or
-// hostile file — replays are shared between users — can't freeze/OOM the tab. Upstream has
-// no cap because it never builds per-frame snapshots; the viewer does.
-const MAX_EVENTS = 200_000;
 
 type Section = 'NONE' | 'UNKNOWN' | 'STORY' | 'DECKS' | 'CARDS' | 'SETUP' | 'EVENTS' | 'ANNOTATIONS';
 
@@ -102,7 +103,10 @@ export function parse(text: string): SwuPgnDocument {
         if (line.length === 0) {
             continue;
         }
-        if (line.startsWith('[')) {
+        // Header lines only exist before the first banner (spec §4). Inside a JSON section a
+        // `[`-prefixed line is a record (a JSON array), and must reach the JSON path below so
+        // that validate() can reject it, rather than vanish as a mis-parsed header.
+        if (section === 'NONE' && line.startsWith('[')) {
             parseHeaderLine(line, raw);
             continue;
         }
@@ -119,7 +123,8 @@ export function parse(text: string): SwuPgnDocument {
         }
         // CLIENT-OWNED. Every record is an object (§4). A bare `null`, number or array is
         // valid JSON, and it used to reach `events[i].seq` in the viewer, crash the page,
-        // and be persisted first, so the `?id=` link crash-looped on every reload.
+        // and be persisted first, so the `?id=` link crash-looped on every reload. Upstream
+        // leaves this to validate(), which the client does not ship.
         if (rec == null || typeof rec !== 'object' || Array.isArray(rec)) {
             throw new Error(`SWU-PGN: record on line ${i + 1} is not a JSON object`);
         }

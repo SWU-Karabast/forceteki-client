@@ -4,7 +4,7 @@ import type { GameEvent, ReducedState, PlayerState, CardInstanceState } from '..
 
 const mkCard = (id: string, over: Partial<CardInstanceState> = {}): CardInstanceState => ({
     id, zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 0,
-    experience: 0, statusTokens: {}, ...over,
+    experience: 0, statusTokens: {}, captured: [], ...over,
 });
 
 const mkPlayer = (seat: 1 | 2, over: Partial<PlayerState> = {}): PlayerState => ({

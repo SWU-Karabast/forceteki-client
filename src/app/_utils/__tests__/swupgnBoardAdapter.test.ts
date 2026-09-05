@@ -30,7 +30,7 @@ describe('cardFromId', () => {
 describe('cardFromInstance', () => {
     it('carries damage/exhausted and maps the zone', () => {
         const inst = { id: 'SOR#178', zone: 'ground', damage: 2, exhausted: true,
-            upgrades: [], shields: 1, experience: 0, statusTokens: {} };
+            upgrades: [], shields: 1, experience: 0, statusTokens: {}, captured: [] };
         const c = cardFromInstance(inst, 'p1');
         expect(c.zone).toBe(ZONE_MAP.ground);
         expect(c.damage).toBe(2);
@@ -112,7 +112,7 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
     it('flags a unit as entering when its id is in enteringIds', () => {
         const unit: CardInstanceState = {
             id: 'AAA#001', zone: 'ground', damage: 0, exhausted: false, upgrades: [],
-            shields: 0, experience: 0, statusTokens: {},
+            shields: 0, experience: 0, statusTokens: {}, captured: [],
         };
         const gs = adaptState(state([unit]), doc, ids, { enteringIds: ['AAA#001'] });
         const card = gs.players.p1.cardPiles.groundArena.find((c: { uuid: string }) => c.uuid === 'AAA#001');
@@ -130,7 +130,7 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
     it('a deployed leader flips the slot to the placeholder and renders as an in-play unit', () => {
         const leaderUnit: CardInstanceState = {
             id: 'JTL#018', zone: 'space', damage: 0, exhausted: false, upgrades: [],
-            shields: 0, experience: 0, statusTokens: {},
+            shields: 0, experience: 0, statusTokens: {}, captured: [],
         };
         const gs = adaptState(state([leaderUnit]), doc, ids, { leaderExhausted: { 1: true } });
         expect(gs.players.p1.leader.zone).not.toBe('base'); // deployed -> placeholder
@@ -146,7 +146,7 @@ describe('token badges', () => {
     // (Advantage is an Ashes of the Empire token; the host set below carries no meaning.)
     const inst = (over: Partial<CardInstanceState> = {}): CardInstanceState => ({
         id: 'ASH#220', zone: 'space', damage: 0, exhausted: false,
-        upgrades: [], shields: 0, experience: 0, statusTokens: {}, ...over,
+        upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [], ...over,
     });
 
     const stateWith = (c: CardInstanceState): ReducedState => ({
@@ -265,7 +265,7 @@ describe('attached upgrades render as banners: aspects + name reach the subcard'
     const names: Record<string, string> = { 'LOF#164': 'Wampa', 'LOF#215': 'Ascension Cable' };
     const nameOf = (id: string) => names[id] ?? id;
     const doc = parse(SAMPLE);
-    const wampa: CardInstanceState = { id: 'LOF#164', zone: 'ground', damage: 0, exhausted: false, upgrades: ['LOF#215'], shields: 0, experience: 0, statusTokens: {} };
+    const wampa: CardInstanceState = { id: 'LOF#164', zone: 'ground', damage: 0, exhausted: false, upgrades: ['LOF#215'], shields: 0, experience: 0, statusTokens: {}, captured: [] };
     const state: ReducedState = {
         round: 1, phase: 'action', initiative: 1,
         players: {
@@ -311,7 +311,7 @@ describe('effectiveStats — a unit shows what is attached to it, the way the en
         'TOKEN:Shield': { type: 'token', power: 0, hp: 0, upgradePower: 0, upgradeHp: 0, id: '8752877738' },
     };
     const unit = (over: Partial<CardInstanceState>): CardInstanceState => ({
-        id: 'JTL#095', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, ...over,
+        id: 'JTL#095', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [], ...over,
     });
     const stats = (inst: CardInstanceState) => {
         const c = cardFromInstance(inst, 'p1', statMap[inst.id as keyof typeof statMap], undefined, statMap);
@@ -376,11 +376,50 @@ describe('token units resolve their stats and art by numeric id', () => {
     });
 
     it('builds a board card that takes the token art path and carries its printed stats', () => {
-        const inst: CardInstanceState = { id: 'TOKEN:mandalorian#8192010342', zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 1, experience: 0, statusTokens: {} };
+        const inst: CardInstanceState = { id: 'TOKEN:mandalorian#8192010342', zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 1, experience: 0, statusTokens: {}, captured: [] };
         const c = cardFromInstance(inst, 'p2', statOf(inst.id, statMap), 'Mandalorian', statMap);
         expect(c.type).toBe('token');       // s3CardImageURL: type includes 'token' -> cards/_tokens/<id>
         expect(c.id).toBe('8192010342');
         expect([c.power, c.hp]).toEqual([2, 2]);
         expect(c.name).toBe('Mandalorian');
+    });
+});
+
+describe('captives and snapshot stats (SWU-PGN 78566bda)', () => {
+    const doc = parse(SAMPLE);
+    const card = (over: Partial<CardInstanceState>): CardInstanceState => ({
+        id: 'SOR#095', zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [], ...over,
+    });
+    const state = (p1Cards: CardInstanceState[]): ReducedState => ({
+        round: 2, phase: 'action', initiative: 1,
+        players: {
+            1: { seat: 1, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0, resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: p1Cards },
+            2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0, resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
+        },
+    });
+    const ids = { 1: 'p1', 2: 'p2' } as Record<Seat, string>;
+
+    it('files a captured unit under its captor in capturedZone', () => {
+        const gs = adaptState(state([card({ captured: ['SOR#128'] })]), doc, ids);
+        expect(gs.players.p1.cardPiles.capturedZone.map((c: { uuid: string; parentCardId: string }) => [c.uuid, c.parentCardId])).toEqual([['SOR#128', 'SOR#095']]);
+        expect(gs.players.p1.cardPiles.groundArena.map((c: { uuid: string }) => c.uuid)).toEqual(['SOR#095']);
+    });
+
+    it('shows a status token the board has never heard of, by its own name', () => {
+        const gs = adaptState(state([card({ statusTokens: { 'plot-armor': 2 } })]), doc, ids);
+        const badges = gs.players.p1.cardPiles.groundArena.filter((c: { parentCardId?: string }) => c.parentCardId);
+        expect(badges.map((c: { name: string }) => c.name)).toEqual(['Plot-Armor', 'Plot-Armor']);
+    });
+
+    it('uses the keyframe power/hp while nothing feeding a stat has changed, then the static math', () => {
+        const statMap = { 'SOR#095': { type: 'unit', power: 4, hp: 5 }, 'TOKEN:Experience': { type: 'token', upgradePower: 1, upgradeHp: 1, id: '2007868442' } };
+        const snapped = state([card({ power: 6, hp: 5 })]); // an ability gives +2/+0 the fold cannot see
+        const same = adaptState(snapped, doc, ids, { snapshot: snapped }, statMap);
+        expect([same.players.p1.cardPiles.groundArena[0].power, same.players.p1.cardPiles.groundArena[0].hp]).toEqual([6, 5]);
+        const later = state([card({ power: 6, hp: 5, experience: 1 })]);
+        const moved = adaptState(later, doc, ids, { snapshot: snapped }, statMap);
+        expect([moved.players.p1.cardPiles.groundArena[0].power, moved.players.p1.cardPiles.groundArena[0].hp]).toEqual([5, 6]);
+        const none = adaptState(later, doc, ids, {}, statMap);
+        expect(none.players.p1.cardPiles.groundArena[0].power).toBe(5);
     });
 });

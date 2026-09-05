@@ -535,7 +535,7 @@ describe('hostile file cannot corrupt the page or the pile', () => {
 describe('a keyframe off an untrusted file is coerced to the PlayerState shape', () => {
     const kf = (p1: Record<string, unknown>): ReducedState => ({
         round: 1, phase: 'action', initiative: 1,
-        players: { 1: { seat: 1, ...p1 }, 2: keyframe().players[2] },
+        players: { 1: { seat: 1, hand: [], discard: [], cards: [], ...p1 }, 2: keyframe().players[2] },
     } as unknown as ReducedState);
 
     it('a card that omits upgrades/statusTokens survives its own arena exit and DEFEAT', () => {
@@ -549,17 +549,26 @@ describe('a keyframe off an untrusted file is coerced to the PlayerState shape',
         expect(p1(s).cards).toHaveLength(0);
     });
 
-    it('non-array piles and non-numeric counts fall back instead of throwing on the next event', () => {
-        const start = { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf({ hand: 'nope', discard: null, credits: '3', baseHp: 'x', cards: [null, 7, { id: 'SOR#001', zone: 'ground', damage: 'lots' }] }) } as GameEvent;
+    it('a seat with a non-array pile or a non-object card is a damaged checkpoint: ignored, folded seat kept (§13)', () => {
+        const before = [{ seq: '1', t: 'MOVE', card: 'SOR#009', from: 'deck', to: 'hand', p: 1 }] as GameEvent[];
+        for (const bad of [{ hand: 'nope' }, { discard: null }, { cards: 'x' }, { cards: [null] }, { cards: [7] }]) {
+            const s = fold([...before, { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf(bad) } as GameEvent]);
+            expect(p1(s).hand, JSON.stringify(bad)).toEqual(['SOR#009']);
+            expect(s.players[2]!.baseHp).toBe(30); // the complete seat still snapped
+        }
+    });
+
+    it('non-numeric scalars on a complete seat fall back instead of throwing on the next event', () => {
+        const start = { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf({ credits: '3', baseHp: 'x', handSize: null, cards: [{ id: 'SOR#001', zone: 'ground', damage: 'lots', upgrades: 'no', captured: 5 }] }) } as GameEvent;
         const s = fold([start,
             { seq: '2', t: 'MOVE', card: 'SOR#009', from: 'deck', to: 'hand', p: 1 },
             { seq: '3', t: 'MOVE', card: 'TOKEN:credit#1', from: 'outsideTheGame', to: 'base', p: 1 },
         ] as GameEvent[]);
         expect(p1(s).hand).toEqual(['SOR#009']);
-        expect(p1(s).discard).toEqual([]);
+        expect(p1(s).handSize).toBe(1);
         expect(p1(s).credits).toBe(1);
         expect(p1(s).baseHp).toBe(30);
-        expect(p1(s).cards).toEqual([{ id: 'SOR#001', zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {} }]);
+        expect(p1(s).cards).toEqual([{ id: 'SOR#001', zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [] }]);
     });
 
     it('caps every keyframe list, so one line cannot make every frame clone 50k strings', () => {
@@ -595,9 +604,9 @@ describe('keyframes do not smuggle token upgrades onto the board', () => {
         players: {
             1: { seat: 1, baseHp: 33, baseMaxHp: 33, handSize: 0, hand: [], resourcesReady: 0,
                 resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [
-                    { id: 'LOF#192', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: { advantage: 1 } },
-                    { id: 'TOKEN:advantage#5844562972', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {} },
-                    { id: 'TOKEN:shield#8752877738', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {} },
+                    { id: 'LOF#192', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: { advantage: 1 }, captured: [] },
+                    { id: 'TOKEN:advantage#5844562972', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [] },
+                    { id: 'TOKEN:shield#8752877738', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [] },
                 ] },
             2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
                 resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
@@ -627,7 +636,7 @@ describe('dropInertRecords never orphans an anchored record', () => {
 });
 
 describe('upgrades attach via the MOVE\'s attachedTo and come off when they leave play', () => {
-    // Records copied from files the fixed forceteki writer produced on 2026-09-05: a printed
+    // Records shaped like the upstream `upgrades` and `pilot` vectors (swupgn/test-vectors): a printed
     // upgrade (Ascension Cable, LOF#215) on a Wampa (LOF#164), and a pilot (Academy Graduate,
     // JTL#058) flown onto an X-Wing (LAW#253). The token upgrades that ride alongside in the
     // real stream are covered by the token tests above.
@@ -703,7 +712,7 @@ describe('upgrades attach via the MOVE\'s attachedTo and come off when they leav
 
     it('reproduces the fixed writer\'s own files: no upgrade is ever an arena card, and none outlives its exit', () => {
         for (const name of ['upgrades', 'pilot'] as const) {
-            const text = readFileSync(path.join(__dirname, `fixtures/${name}-2026-09-05.swupgn`), 'utf-8');
+            const text = readFileSync(path.join(__dirname, `fixtures/vectors/${name}.swupgn`), 'utf-8');
             const doc = parse(text);
             const events = normalizeEvents(doc.events);
             const frames = foldFrames(events);
@@ -713,10 +722,15 @@ describe('upgrades attach via the MOVE\'s attachedTo and come off when they leav
                 const arena = ([1, 2] as const).flatMap((seat) => frames[i].players[seat]?.cards ?? []);
                 for (const c of arena) expect(upgradeIds.has(c.id), `${name} frame ${i} (${events[i].seq})`).toBe(false);
             }
-            // After the last record that moves an upgrade out of an arena, no host carries it.
+            // After the last record that moves an upgrade out of an arena, no host carries it;
+            // one still attached when the game ends is on a host in the final frame.
             for (const id of upgradeIds) {
                 const exit = events.map((e, i) => ({ e, i })).filter(({ e }) => e.t === 'MOVE' && e.card === id && ARENA.has(e.from) && !ARENA.has(e.to)).pop();
-                expect(exit, `${name}: ${id} never left play`).toBeDefined();
+                if (!exit) {
+                    const last = ([1, 2] as const).flatMap((seat) => frames[frames.length - 1].players[seat]?.cards ?? []);
+                    expect(last.some((c) => c.upgrades.includes(id)), `${name}: ${id} neither left play nor stayed attached`).toBe(true);
+                    continue;
+                }
                 const after = ([1, 2] as const).flatMap((seat) => frames[exit!.i].players[seat]?.cards ?? []);
                 for (const c of after) expect(c.upgrades, `${name} after ${events[exit!.i].seq}`).not.toContain(id);
             }
@@ -743,8 +757,8 @@ describe('upgrades attach to their host instead of standing in an arena', () => 
             players: {
                 1: { seat: 1, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
                     resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [
-                        { id: 'JTL#221', zone: 'space', damage: 0, exhausted: false, upgrades: ['JTL#203'], shields: 0, experience: 0, statusTokens: {} },
-                        { id: 'JTL#203', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {} },
+                        { id: 'JTL#221', zone: 'space', damage: 0, exhausted: false, upgrades: ['JTL#203'], shields: 0, experience: 0, statusTokens: {}, captured: [] },
+                        { id: 'JTL#203', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [] },
                     ] },
                 2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
                     resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },

@@ -8,7 +8,7 @@
 // re-export `validate` below.
 export * from './types';
 export { parse } from './parse';
-export { fold, foldFrames, reduce, stateAt, isSeat, asIdList } from './fold';
+export { fold, foldFrames, reduce, stateAt, isSeat, asIdList, isCompleteKeyframe, emptyState } from './fold';
 export { render } from './render';
 export { serialize } from './serialize';
 export type { NameResolver } from './cardNames';

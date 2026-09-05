@@ -1,7 +1,9 @@
 import type { CardKind, GameEvent, ReducedState } from './types';
 
 const TOKEN_PREFIX = 'TOKEN:';
-const FORCE_TOKEN_NAME = 'the force';
+
+/** Spec §6.1 reserves `TOKEN:the-force#…`; files written before 2026-09 said `TOKEN:The Force`. */
+const FORCE_TOKEN_NAMES = new Set(['the-force', 'the force']);
 
 /**
  * Tokens ride the stream as pseudo-cards prefixed `TOKEN:`.
@@ -74,7 +76,7 @@ export const eventKind = (e: unknown): CardKind | undefined => {
 
 /** The Force is a per-player token that sits on the base, not a unit status token. */
 export const isForceToken = (id: string): boolean =>
-    isTokenPseudoCard(id) && tokenName(id) === FORCE_TOKEN_NAME;
+    isTokenPseudoCard(id) && FORCE_TOKEN_NAMES.has(tokenName(id));
 
 /** A Credit token likewise sits on the base; each one on it is one credit. */
 export const isCreditToken = (id: string): boolean =>

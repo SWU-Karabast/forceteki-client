@@ -93,6 +93,11 @@ const TOKEN_BADGE_NAME: Record<string, string> = {
     advantage: 'Advantage',
 };
 
+/** STATUS_TOKEN.token is an open list (spec §6.4): a token printed tomorrow arrives under its
+ *  own name and is titled from it, so the stat map and the badge can still be looked up. */
+const tokenTitle = (token: string): string =>
+    TOKEN_BADGE_NAME[token] ?? String(token).replace(/(^|[\s-])\w/g, (c) => c.toUpperCase());
+
 /**
  * Materialize a unit's folded token counters the way the live server does: one arena card
  * per token carrying `parentCardId`, which UnitsBoard groups into the host's `subcards`.
@@ -108,7 +113,7 @@ function tokenCards(
     };
     const out: AdaptedCard[] = [];
     for (const [token, rawCount] of Object.entries(counts)) {
-        const name = TOKEN_BADGE_NAME[token];
+        const name = tokenTitle(token);
         // Same bound as the piles: a STATUS_TOKEN count comes off the file and is otherwise
         // only clamped at zero, so a huge count would render that many badge elements.
         const count = Number.isFinite(rawCount) ? Math.min(Math.trunc(rawCount), MAX_PILE) : 0;
@@ -163,8 +168,8 @@ export function effectiveStats(
     for (const id of inst.upgrades ?? []) add(statOf(id, statMap));
     const tokens: Record<string, number> = { shield: inst.shields, experience: inst.experience, ...inst.statusTokens };
     for (const [token, count] of Object.entries(tokens)) {
-        const title = TOKEN_BADGE_NAME[token];
-        if (title && Number.isFinite(count) && count > 0) add(statOf(`TOKEN:${title}`, statMap), Math.trunc(count));
+        const title = tokenTitle(token);
+        if (Number.isFinite(count) && count > 0) add(statOf(`TOKEN:${title}`, statMap), Math.trunc(count));
     }
     if (stat.grit) power += Math.max(0, inst.damage);
     return {
@@ -173,15 +178,35 @@ export function effectiveStats(
     };
 }
 
+/** What a unit's stats depend on, for deciding whether a keyframe's snapshot still applies. */
+const statInputs = (c: CardInstanceState): string => JSON.stringify([
+    [...(c.upgrades ?? [])].sort(), c.shields, c.experience, c.statusTokens, c.damage,
+]);
+
+/**
+ * A keyframe carries the engine's live `power`/`hp` (ability effects included, spec §11);
+ * the fold never maintains them. They are exact for as long as nothing that feeds a stat
+ * has changed since that keyframe; after that the static reconstruction takes over.
+ */
+export function snapshotStats(inst: CardInstanceState, snapshot?: CardInstanceState): { power?: number; hp?: number } {
+    if (!snapshot || statInputs(snapshot) !== statInputs(inst)) return {};
+    return {
+        ...(typeof snapshot.power === 'number' ? { power: snapshot.power } : {}),
+        ...(typeof snapshot.hp === 'number' ? { hp: snapshot.hp } : {}),
+    };
+}
+
 /** Build a board card from a folded in-play instance. Printed power/HP come from the
- *  static stat map (the .swupgn stream has no stats), raised by whatever is attached
- *  (see effectiveStats); damage is the folded value. */
+ *  static stat map, raised by whatever is attached (see effectiveStats) and corrected by
+ *  the last keyframe's snapshot while it still applies; damage is the folded value. */
 export function cardFromInstance(
     inst: CardInstanceState, ownerId: string, stat?: CardStat, name?: string, statMap: Record<string, CardStat> = {},
+    snapshot?: CardInstanceState,
 ): AdaptedCard {
     return {
         ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, ownerId, ownerId, stat, name),
         ...effectiveStats(inst, stat, statMap),
+        ...snapshotStats(inst, snapshot),
         damage: inst.damage,
         exhausted: inst.exhausted,
         upgrades: inst.upgrades,
@@ -209,6 +234,9 @@ export interface AdaptOptions {
     enteringIds?: string[];
     attackingIds?: string[];
     nameOf?: NameOf;
+
+    /** The state at the last keyframe on or before this frame, for its snapshot `power`/`hp`. */
+    snapshot?: ReducedState;
 }
 
 /**
@@ -253,14 +281,23 @@ interface SeatOptions {
     baseHp?: number;
     deckRemaining?: number;
     nameOf?: NameOf;
+    snapshot?: PlayerState;
 }
 
 function adaptPlayer(
     ps: PlayerState, playerId: string, leaderId: string, baseSetId: string,
     statMap: Record<string, CardStat>,
-    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, resourcedIds, baseHp, deckRemaining, nameOf }: SeatOptions,
+    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, resourcedIds, baseHp, deckRemaining, nameOf, snapshot }: SeatOptions,
 ): any {
-    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap));
+    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap,
+        snapshot?.cards.find((k) => k.id === c.id)));
+    // Captives file under their captor, exactly as the live server delivers them: one card
+    // per captive with `parentCardId`, which UnitsBoard groups onto the host. They are the
+    // opponent's cards, held here.
+    const captured = ps.cards.flatMap((c, i) => (c.captured ?? []).map((id) => ({
+        ...cardFromId(id, 'capturedZone', playerId, playerId, statOf(id, statMap), nameOf?.(id)),
+        parentCardId: inPlay[i].uuid,
+    })));
     // Token badges ride along in the arena piles as parented cards, exactly as the live
     // server delivers upgrades; UnitsBoard groups them onto their host.
     const tokens = ps.cards.flatMap((c, i) => tokenCards(c, inPlay[i], playerId, statMap));
@@ -357,7 +394,7 @@ function adaptPlayer(
             // keyframe can report more resources than the MOVE stream accounted for.
             resources: resourceCards(resourcedIds, resourcesTotal, playerId, statMap, nameOf),
             credits: facedownStack(ps.credits, 'credits', playerId),
-            capturedZone: [] as AdaptedCard[],
+            capturedZone: captured,
         },
     };
 }
@@ -381,7 +418,7 @@ export function adaptState(
         const adapted = adaptPlayer(ps, playerId, leaderId, baseSetId, statMap, {
             hideHand: opts.hideHandFor === seat, highlight, leaderExhausted: opts.leaderExhausted?.[seat] ?? false,
             entering, attacking, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
-            deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf,
+            deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf, snapshot: opts.snapshot?.players[seat],
         });
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;

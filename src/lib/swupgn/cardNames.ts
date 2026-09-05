@@ -15,10 +15,9 @@ export function baseId(ref: string): string {
  * itself, so an incomplete index degrades to today's behaviour rather than losing the event.
  */
 export function indexResolver(cards: readonly CardIndexRecord[] = []): NameResolver {
-    // CLIENT-OWNED: entries come off JSON.parse, so a `null` line would throw here.
-    // CLIENT-OWNED: `name` is untyped too. A number reached DeckTab's `localeCompare` and
-    // threw; a newline reached serialize(), where a rendered story line beginning `%%%`
-    // would end the STORY section of the exported file and make it unreadable.
+    // CLIENT-OWNED: entries and `name` come off JSON.parse of an upload. A `null` line threw
+    // here; a numeric name reached DeckTab's `localeCompare`; a newline reached serialize(),
+    // where a rendered story line beginning `%%%` would end the exported STORY section.
     const byId = new Map(cards.filter((c) => !!c && typeof c === 'object')
         .map((c) => [c.id, typeof c.name === 'string' ? c.name.replace(/[\r\n]+/g, ' ') : undefined]));
     return { nameOf: (id: string) => byId.get(baseId(id)) ?? baseId(id) };

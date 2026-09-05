@@ -1,10 +1,13 @@
 import type { SwuPgnDocument, GameEvent, ReducedState, Seat } from './types';
 import { baseId, NameResolver, indexResolver } from './cardNames';
+import { isCompleteKeyframe } from './fold';
 
 const RULE_WIDTH = 78;
 
-// CLIENT-OWNED. `cards`/`found` are typed string[] but come off JSON.parse of an upload.
-const ids = (v: unknown): string[] => (Array.isArray(v) ? v : []);
+/** `x` if it is an array, else `[]`: a file is untrusted input and `cards: 5` must not throw. */
+function arr(x: unknown): string[] {
+    return Array.isArray(x) ? (x as string[]) : [];
+}
 
 function who(p: Seat | undefined): string {
     return p === 1 ? 'Player 1' : p === 2 ? 'Player 2' : '';
@@ -32,13 +35,18 @@ function line(e: GameEvent, n: NameResolver): string | null {
         }
         return n.nameOf(baseId(id)) + copySuffix(id);
     };
+    const list = (ids: unknown): string => arr(ids).map(nm)
+        .join(', ');
     switch (e.t) {
         // `cost` is the PRINTED cost (spec §10.1), so it is worded as such: "(2 resources)"
         // read as resources paid, which is wrong whenever an aspect penalty or discount applied.
-        case 'PLAY': case 'PLAY_UPGRADE': case 'PLAY_SMUGGLE':
+        case 'PLAY': case 'PLAY_SMUGGLE':
             return `${who(e.p)} plays ${nm(e.card)}${e.zone ? ` to ${e.zone}` : ''}${e.cost != null ? ` (cost ${e.cost})` : ''}`;
+        // An attachment names its host rather than its arena: "plays Ascension Cable on Wampa".
+        case 'PLAY_UPGRADE':
+            return `${who(e.p)} plays ${nm(e.card)}${e.target ? ` on ${nm(e.target)}` : e.zone ? ` to ${e.zone}` : ''}${e.cost != null ? ` (cost ${e.cost})` : ''}`;
         case 'PLAY_EVENT': return `${who(e.p)} plays ${nm(e.card)}${e.cost != null ? ` (cost ${e.cost})` : ''}`;
-        case 'DEPLOY_LEADER': return `${who(e.p)} deploys ${nm(e.card)}`;
+        case 'DEPLOY_LEADER': return `${who(e.p)} deploys ${nm(e.card)}${e.target ? ` as a pilot on ${nm(e.target)}` : ''}`;
         case 'ATTACK': return `${who(e.p)} attacks ${e.defenderType === 'base' ? `${who(e.p === 1 ? 2 : 1)}'s base` : nm(e.def)} with ${nm(e.atk)}`;
         case 'PASS': return `${who(e.p)} passes`;
         case 'CLAIM_INITIATIVE': return `${who(e.p)} claims initiative`;
@@ -52,13 +60,13 @@ function line(e: GameEvent, n: NameResolver): string | null {
         case 'SHIELD_GAIN': return `${nm(e.card)} gains ${e.count ?? 1} shield`;
         case 'SHIELD_USE': return `${nm(e.card)} loses ${e.count ?? 1} shield`;
         case 'EXPERIENCE_GAIN': return `${nm(e.card)} ${e.count < 0 ? 'loses' : 'gains'} ${Math.abs(e.count)} experience`;
-        case 'DRAW': return `${who(e.p)} draws ${e.count}${ids(e.cards).length ? `: ${ids(e.cards).map(nm).join(', ')}` : ''}`;
-        case 'DISCARD': return `${who(e.p)} discards ${ids(e.cards).map(nm).join(', ')}`;
+        case 'DRAW': return `${who(e.p)} draws ${e.count}${arr(e.cards).length ? `: ${list(e.cards)}` : ''}`;
+        case 'DISCARD': return `${who(e.p)} discards ${list(e.cards)}`;
         case 'RESOURCE': return `${who(e.p)} resources ${nm(e.card)}`;
-        case 'REVEAL': return `${who(e.p)} reveals ${ids(e.cards).map(nm).join(', ')}`;
-        case 'SEARCH': return e.found ? `${who(e.p)} searches, finds ${ids(e.found).map(nm).join(', ')}` : `${who(e.p)} searches their deck`;
+        case 'REVEAL': return `${who(e.p)} reveals ${list(e.cards)}`;
+        case 'SEARCH': return e.found ? `${who(e.p)} searches, finds ${list(e.found)}` : `${who(e.p)} searches their deck`;
         case 'CREATE_TOKEN': return `${who(e.p)} creates ${nm(e.token)} in ${e.zone}`;
-        case 'CAPTURE': return `${who(e.p)} captures ${nm(e.card)}`;
+        case 'CAPTURE': return `${who(e.p)} captures ${nm(e.card)}${e.by ? ` with ${nm(e.by)}` : ''}`;
         case 'RESCUE': return `${who(e.p)} rescues ${nm(e.card)}`;
         case 'TAKE_CONTROL': return `${who(e.p)} takes control of ${nm(e.card)}`;
         case 'MULLIGAN': return `${who(e.p)} mulligans`;
@@ -66,9 +74,11 @@ function line(e: GameEvent, n: NameResolver): string | null {
         case 'GAME_END': return `*** ${e.winner === 'Draw' ? 'Game ends in a draw' : `${who(e.winner)} wins`} — ${e.reason} ***`;
         // Mechanism, not story: these are how the board changes, and each is already implied
         // by the action it sits under. MOVE in particular is the fold's source of truth and
-        // would triple the length of the narrative for no reader benefit.
+        // would triple the length of the narrative for no reader benefit; the resource
+        // counters fire on every play and every regroup.
         case 'CHOICE': case 'PHASE_END': case 'ROUND_END': case 'SHUFFLE':
         case 'MODAL_CHOICE': case 'MOVE': case 'EXHAUST': case 'READY':
+        case 'EXHAUST_RESOURCES': case 'READY_RESOURCES':
             return null;
         case 'PHASE_START': return null;       // handled as a banner below
         case 'ROUND_START': return null;       // handled as a banner below
@@ -122,6 +132,9 @@ function boardSummary(k: ReducedState, n: NameResolver): string[] {
                 for (const up of c.upgrades ?? []) {
                     bits.push(nm(up));
                 }
+                for (const held of c.captured ?? []) {
+                    bits.push(`holds ${nm(held)}`);
+                }
                 return nm(c.id) + (bits.length ? ` [${bits.join(', ')}]` : '');
             });
             out.push(`      ${zone}: ${rendered.join('  ·  ')}`);
@@ -144,10 +157,12 @@ export function render(doc: SwuPgnDocument, names?: NameResolver): string {
         if (e.t === 'ROUND_START') {
             out.push('', '═'.repeat(RULE_WIDTH));
             const left = ` ROUND ${e.round}`;
-            const right = e.keyframe?.initiative ? `initiative: ${who(e.keyframe.initiative)} ` : '';
+            // Only a complete keyframe is laid out; a damaged one is not a board (spec §13).
+            const keyframe = isCompleteKeyframe(e.keyframe) ? e.keyframe : undefined;
+            const right = keyframe?.initiative ? `initiative: ${who(keyframe.initiative)} ` : '';
             out.push(right ? left.padEnd(RULE_WIDTH - right.length) + right : left);
-            if (e.keyframe) {
-                out.push(...boardSummary(e.keyframe, n));
+            if (keyframe) {
+                out.push(...boardSummary(keyframe, n));
             }
             out.push('═'.repeat(RULE_WIDTH), '');
             actionNum = 0;
