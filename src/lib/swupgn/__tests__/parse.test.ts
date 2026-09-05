@@ -135,3 +135,26 @@ describe('parse — the Game tag gate (spec §18, §22.1)', () => {
         expect(() => parse(SAMPLE.replace(/\[Game "[^"]*"\]/, ''))).toThrow(/missing required header tag \[Game\]/);
     });
 });
+
+describe('indexResolver takes an untyped name', () => {
+    it('drops a non-string name and flattens newlines', async () => {
+        const { indexResolver } = await import('../cardNames');
+        const r = indexResolver([{ id: 'SOR#001', name: 5 } as unknown as { id: string; name: string }, { id: 'SOR#002', name: 'Line\r\n%%% EVENTS' }]);
+        expect(r.nameOf('SOR#001')).toBe('SOR#001');
+        expect(r.nameOf('SOR#002')).toBe('Line %%% EVENTS');
+    });
+});
+
+describe('parse refuses a record that is not a JSON object', () => {
+    it('names the line for null, a number, and an array', async () => {
+        const { readFileSync } = await import('fs');
+        const path = await import('path');
+        const sample = readFileSync(path.join(__dirname, 'fixtures/sample-game.swupgn'), 'utf-8');
+        // (an `[...]` line is header syntax, so an array never reaches the record path)
+        for (const bad of ['null', '5', '"str"']) {
+            const text = sample.replace('%%% EVENTS\n', `%%% EVENTS\n${bad}\n`);
+            expect(text).not.toBe(sample);
+            expect(() => parse(text)).toThrow(/is not a JSON object/);
+        }
+    });
+});

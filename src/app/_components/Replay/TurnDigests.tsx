@@ -3,29 +3,13 @@ import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { turnDigests } from '@/app/_utils/turnDigests';
-import type { Bookmark } from '@/app/_utils/replayDecisions';
-
-const fmtTarget = (tgt?: string) => {
-    if (!tgt) return '';
-    const m = /^base@(\d)$/.exec(tgt);
-    return m ? `P${m[1]} base` : tgt;
-};
+import { bookmarkLabel } from '@/app/_utils/replayDecisions';
+import SeekRow from './SeekRow';
 
 /** Turn-by-turn digest, rendered inline as a panel tab body. */
 const TurnDigests: React.FC = () => {
     const { doc, nameOf, seekToSeq, header } = useReplay();
     const digests = useMemo(() => turnDigests(doc), [doc]);
-
-    const markLabel = (b: Bookmark): string => {
-        switch (b.kind) {
-            case 'BIG_DAMAGE': return `${nameOf(b.src ?? '')} hits ${fmtTarget(b.tgt)} for ${b.amt}`;
-            case 'DEFEAT': return `${nameOf(b.card ?? '')} defeated`;
-            case 'OVERWHELM': return `Overwhelm ${fmtTarget(b.tgt)} for ${b.amt}`;
-            case 'INITIATIVE': return `P${b.p} claimed initiative`;
-            case 'GAME_END': return `Game end${b.reason ? ` — ${b.reason}` : ''}`;
-            default: return b.kind;
-        }
-    };
 
     const p1 = header.p1 || 'Player 1';
     const p2 = header.p2 || 'Player 2';
@@ -34,17 +18,19 @@ const TurnDigests: React.FC = () => {
         <Box sx={{ p: 1.5 }}>
             {digests.map((d) => (
                 <Box key={d.round} sx={{ mb: 2 }}>
-                    <Typography
-                        variant="subtitle2"
+                    <SeekRow
                         onClick={() => { if (d.seq) seekToSeq(d.seq); }}
+                        disabled={!d.seq}
                         sx={{
-                            color: 'white', fontWeight: 700, cursor: d.seq ? 'pointer' : 'default',
+                            color: 'white',
                             borderBottom: '1px solid rgba(255,255,255,0.12)', pb: 0.5, mb: 0.75,
                             '&:hover': { color: d.seq ? 'var(--initiative-blue)' : 'white' },
                         }}
                     >
-                        {d.round === 0 ? 'Setup' : `Round ${d.round}`}
-                    </Typography>
+                        <Typography variant="subtitle2" sx={{ color: 'inherit', fontWeight: 700 }}>
+                            {d.round === 0 ? 'Setup' : `Round ${d.round}`}
+                        </Typography>
+                    </SeekRow>
                     {([1, 2] as const).map((seat) => {
                         const row = d.perSeat[seat];
                         if (!row) return null;
@@ -57,14 +43,15 @@ const TurnDigests: React.FC = () => {
                         );
                     })}
                     {d.bookmarks.map((b, i) => (
-                        <Typography
+                        <SeekRow
                             key={`${b.seq}-${i}`}
-                            variant="caption"
                             onClick={() => seekToSeq(b.seq)}
-                            sx={{ color: '#ffc857', display: 'block', cursor: 'pointer', ml: 1, '&:hover': { textDecoration: 'underline' } }}
+                            sx={{ ml: 1, '&:hover': { textDecoration: 'underline' } }}
                         >
-                            ★ {markLabel(b)}
-                        </Typography>
+                            <Typography variant="caption" sx={{ color: '#ffc857', display: 'block' }}>
+                                ★ {bookmarkLabel(b, nameOf)}
+                            </Typography>
+                        </SeekRow>
                     ))}
                 </Box>
             ))}

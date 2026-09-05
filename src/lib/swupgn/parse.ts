@@ -117,6 +117,12 @@ export function parse(text: string): SwuPgnDocument {
         } catch {
             throw new Error(`SWU-PGN: invalid JSON on line ${i + 1}`);
         }
+        // CLIENT-OWNED. Every record is an object (§4). A bare `null`, number or array is
+        // valid JSON, and it used to reach `events[i].seq` in the viewer, crash the page,
+        // and be persisted first, so the `?id=` link crash-looped on every reload.
+        if (rec == null || typeof rec !== 'object' || Array.isArray(rec)) {
+            throw new Error(`SWU-PGN: record on line ${i + 1} is not a JSON object`);
+        }
         switch (section) {
             case 'DECKS': decks.push(rec as DeckRecord); break;
             case 'CARDS': cards.push(rec as CardIndexRecord); break;

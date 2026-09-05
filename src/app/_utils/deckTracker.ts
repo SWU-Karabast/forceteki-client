@@ -16,13 +16,15 @@ export interface DeckState {
 
     /** Remaining card ids, in draw order — index 0 is the next card. */
     remaining: string[];
+}
 
-    /** Ids that have left the deck, in the order they left. */
-    gone: string[];
+/** The INIT setup record, if the file carries one. The one lookup every deck reader shares. */
+export function initRecord(doc: SwuPgnDocument): SetupInitRecord | undefined {
+    return doc.setup.find((r): r is SetupInitRecord => !!r && (r as SetupInitRecord).t === 'INIT');
 }
 
 function initOrder(doc: SwuPgnDocument): Record<Seat, string[]> {
-    const init = doc.setup.find((r): r is SetupInitRecord => !!r && (r as SetupInitRecord).t === 'INIT');
+    const init = initRecord(doc);
     return {
         1: Array.isArray(init?.p1DeckOrder) ? [...init.p1DeckOrder] : [],
         2: Array.isArray(init?.p2DeckOrder) ? [...init.p2DeckOrder] : [],
@@ -33,7 +35,6 @@ function initOrder(doc: SwuPgnDocument): Record<Seat, string[]> {
 export function deckByFrame(doc: SwuPgnDocument, events: GameEvent[]): Array<Record<Seat, DeckState>> {
     const order = initOrder(doc);
     const cur: Record<Seat, string[]> = { 1: [...order[1]], 2: [...order[2]] };
-    const gone: Record<Seat, string[]> = { 1: [], 2: [] };
     const out: Array<Record<Seat, DeckState>> = new Array(events.length);
 
     for (let i = 0; i < events.length; i++) {
@@ -43,15 +44,13 @@ export function deckByFrame(doc: SwuPgnDocument, events: GameEvent[]): Array<Rec
                 const idx = cur[e.p].indexOf(e.card);
                 if (idx >= 0) {
                     cur[e.p] = [...cur[e.p].slice(0, idx), ...cur[e.p].slice(idx + 1)];
-                    gone[e.p] = [...gone[e.p], e.card];
                 }
             } else if (e.to === 'deck' && e.from !== 'deck' && !cur[e.p].includes(e.card)) {
                 // The stream doesn't say where in the deck it went; the end is the honest guess.
                 cur[e.p] = [...cur[e.p], e.card];
-                gone[e.p] = gone[e.p].filter((c) => c !== e.card);
             }
         }
-        out[i] = { 1: { remaining: cur[1], gone: gone[1] }, 2: { remaining: cur[2], gone: gone[2] } };
+        out[i] = { 1: { remaining: cur[1] }, 2: { remaining: cur[2] } };
     }
     return out;
 }

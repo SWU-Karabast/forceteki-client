@@ -67,3 +67,14 @@ describe('checkKeyframes — mismatch detection', () => {
         expect(res.mismatches).toContainEqual({ seq: 'R1.E.0', path: 'players.1.cards[U].damage', expected: 3, got: 0 });
     });
 });
+
+describe('checkKeyframes on an untyped keyframe', () => {
+    it('does not throw when a seat lacks cards or the keyframe is a primitive', async () => {
+        const { checkKeyframes } = await import('../integrity');
+        const events = [
+            { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: { round: 1, phase: 'action', initiative: 1, players: { 1: {}, 2: null } } },
+            { seq: 'R1.end', t: 'ROUND_END', round: 1, keyframe: 5 },
+        ] as unknown as Parameters<typeof checkKeyframes>[0];
+        expect(() => checkKeyframes(events)).not.toThrow();
+    });
+});

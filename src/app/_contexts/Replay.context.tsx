@@ -5,13 +5,13 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn';
 import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver } from '@/lib/swupgn';
-import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
-import { deckByFrame } from '@/app/_utils/deckTracker';
+import { adaptState, type AdaptOptions, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
+import { deckByFrame, type DeckState } from '@/app/_utils/deckTracker';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
-import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
+import { triggerBlobDownload, sanitizeFilename, downloadSwuPgn } from '@/app/_utils/downloadBlob';
 
 /** One resource commitment: what was taken, and what the player could have taken instead. */
 export interface IResourcingDecision {
@@ -29,10 +29,6 @@ export interface IReplayContextType {
     gameState: any;
     connectedPlayer: string;
     getOpponent: (p: string) => string;
-    isSpectator: boolean;
-    gameMessages: { date: string; message: string[] }[];
-    gameIsEnded: () => boolean;
-    lobbyState: null;
 
     doc: SwuPgnDocument;
 
@@ -42,6 +38,9 @@ export interface IReplayContextType {
 
     /** Round boundaries as scrubber marks: frame index + "R1", "R2", ... */
     roundMarks: { value: number; label: string }[];
+
+    /** Remaining deck per seat after each frame, from the published starting order. */
+    deckStates: Array<Record<Seat, DeckState>>;
 
     /** Every resource commitment, with the hand it was chosen from. */
     resourcingDecisions: IResourcingDecision[];
@@ -133,7 +132,6 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         () => (doc.cards?.length ? indexResolver(doc.cards) : makeNameResolver(nameMap)),
         [doc.cards, nameMap],
     );
-    const decks = useMemo(() => deckOrderLengths(doc), [doc]);
     const statMap = useCardStatMap();
     const moves = useMemo(() => buildMoveList(events, resolver), [events, resolver]);
 
@@ -145,7 +143,9 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // an events.findIndex() per move on every frame change (was O(moves x events)).
     const seqToFrame = useMemo(() => {
         const m = new Map<string, number>();
-        for (let i = 0; i < events.length; i++) m.set(events[i].seq, i);
+        // First occurrence wins, matching stateAt()/seekToSeq()'s findIndex: a duplicate seq
+        // used to seek one way from the move list and another from a ?t= link.
+        for (let i = 0; i < events.length; i++) if (!m.has(events[i].seq)) m.set(events[i].seq, i);
         return m;
     }, [events]);
     const moveFrames = useMemo(() => moves.map((mv) => seqToFrame.get(mv.seq) ?? -1), [moves, seqToFrame]);
@@ -336,7 +336,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                 if (!prevIds.has(c.id)) enteringIds.push(c.id);
             }
         }
-        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; baseHp?: Partial<Record<Seat, number>>; deckRemaining?: Partial<Record<Seat, number>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[]; nameOf?: (id: string) => string } = {
+        const opts: AdaptOptions = {
             ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
             // Names come from the file's own CARDS index (or the static map for older files);
             // GameCard prints them on attached-upgrade banners.
@@ -356,8 +356,8 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             // On an ATTACK frame the attacker is the first highlight id; lunge it.
             attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
-        return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, resolver]);
+        return adaptState(frameStates[currentIndex], doc, SEAT_TO_ID, opts, statMap);
+    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, resolver]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first
@@ -376,8 +376,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
 
     const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);
     const downloadReplay = useCallback(() => {
-        const blob = new Blob([rawContent ?? serialize(doc)], { type: 'application/vnd.swu-pgn' });
-        triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.swupgn`));
+        downloadSwuPgn(doc, rawContent ?? serialize(doc));
     }, [rawContent, doc]);
 
     const downloadTextLog = useCallback(() => {
@@ -430,15 +429,14 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     }, [isPlaying, speed, totalFrames, clip, nextMeaningfulFrame]);
 
     const value: IReplayContextType = useMemo(() => ({
-        gameState, connectedPlayer: perspective, getOpponent, isSpectator: true,
-        gameMessages: [], gameIsEnded: () => true, lobbyState: null,
-        doc, events, roundMarks, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
+        gameState, connectedPlayer: perspective, getOpponent,
+        doc, events, roundMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
         replayId, downloadReplay, nameOf: resolver.nameOf,
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, stepForward, stepBack, seekTo,
         seekToSeq, currentEvents, togglePerspective, currentPerspective: perspective,
-    }), [gameState, perspective, getOpponent, doc, events, roundMarks, resourcingDecisions, currentIndex, totalFrames, moves,
+    }), [gameState, perspective, getOpponent, doc, events, roundMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, downloadReplay, resolver, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed,

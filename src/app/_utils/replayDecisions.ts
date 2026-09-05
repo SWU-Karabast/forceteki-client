@@ -77,3 +77,22 @@ export function autoBookmarks(doc: SwuPgnDocument, bigDamageThreshold = 4): Book
     }
     return out;
 }
+
+const seatLabel = (p?: number) => (p === 1 ? 'Player 1' : p === 2 ? 'Player 2' : '');
+const fmtTarget = (tgt?: string) => {
+    if (!tgt) return '';
+    const m = /^base@(\d)$/.exec(tgt);
+    return m ? `Player ${m[1]}'s base` : tgt;
+};
+
+/** One-line caption for a key moment, shared by the Decisions and Digest tabs. */
+export function bookmarkLabel(b: Bookmark, nameOf: (id: string) => string): string {
+    switch (b.kind) {
+        case 'BIG_DAMAGE': return `${nameOf(b.src ?? '')} hits ${fmtTarget(b.tgt)} for ${b.amt}`;
+        case 'DEFEAT': return `${nameOf(b.card ?? '')} defeated${b.reason ? ` (${b.reason})` : ''}`;
+        case 'OVERWHELM': return `${seatLabel(b.p)} overwhelms ${fmtTarget(b.tgt)} for ${b.amt}`;
+        case 'INITIATIVE': return `${seatLabel(b.p)} claimed initiative`;
+        case 'GAME_END': return `Game end${b.reason ? ` — ${b.reason}` : ''}`;
+        default: return b.kind;
+    }
+}

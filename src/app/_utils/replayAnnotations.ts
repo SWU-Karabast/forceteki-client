@@ -45,18 +45,6 @@ export async function saveAnnotations(replayId: string | null, annotations: Work
     });
 }
 
-/** Remove all working-copy notes for a replay. */
-export async function clearAnnotations(replayId: string | null): Promise<void> {
-    if (!replayId) return;
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(ANNOTATIONS_STORE, 'readwrite');
-        tx.objectStore(ANNOTATIONS_STORE).delete(replayId);
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-    });
-}
-
 /** Convert a working note to a serializable Annotation. The client `_id` is emitted as the
  *  stable `id` so threaded replies (which reference a parent id) survive export/import. */
 export function toAnnotation(w: WorkingAnnotation): Annotation {

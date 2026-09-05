@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { Box, IconButton, Slider, Tooltip, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import {
     PlayArrow,
@@ -35,6 +35,15 @@ const TransportControls: React.FC = () => {
 
     const currentRound = formatRoundPhase(events[currentIndex]?.seq ?? '');
 
+    // One DOM node per mark. A file with thousands of ROUND_STARTs is hostile, not a game;
+    // keep the landmarks legible and bounded.
+    const sliderMarks = useMemo(() => {
+        const MAX_MARKS = 100;
+        if (roundMarks.length <= MAX_MARKS) return roundMarks;
+        const step = Math.ceil(roundMarks.length / MAX_MARKS);
+        return roundMarks.filter((_, i) => i % step === 0);
+    }, [roundMarks]);
+
     const formatPosition = (value: number) => {
         const seq = events[value]?.seq;
         return (seq && formatRoundPhase(seq)) || `${value + 1} / ${totalFrames}`;
@@ -55,7 +64,11 @@ const TransportControls: React.FC = () => {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+            // Global shortcuts apply only when nothing interactive has focus: Space on a
+            // focused button must press the button, and an arrow on the slider must not
+            // step twice (the slider's own key handling plus ours).
+            const target = e.target as HTMLElement | null;
+            if (target?.closest?.('input, textarea, select, button, a[href], [role="button"], [role="slider"], [role="tab"], [contenteditable="true"]')) return;
 
             switch (e.key) {
                 case ' ':
@@ -136,7 +149,9 @@ const TransportControls: React.FC = () => {
                 position: 'absolute', width: '1px', height: '1px', overflow: 'hidden',
                 clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap',
             }}>
-                {`Frame ${currentIndex + 1} of ${totalFrames}${currentRound ? `, ${currentRound}` : ''}`}
+                {/* Silent during autoplay: at 8x that was several announcements a second, and
+                    a screen reader never finished one before the next arrived. */}
+                {isPlaying ? '' : `Frame ${currentIndex + 1} of ${totalFrames}${currentRound ? `, ${currentRound}` : ''}`}
             </Box>
             <Slider
                 aria-label="Replay position"
@@ -144,7 +159,7 @@ const TransportControls: React.FC = () => {
                 value={currentIndex}
                 min={0}
                 max={Math.max(0, totalFrames - 1)}
-                marks={roundMarks}
+                marks={sliderMarks}
                 onChange={handleSliderChange}
                 valueLabelDisplay="auto"
                 valueLabelFormat={formatPosition}

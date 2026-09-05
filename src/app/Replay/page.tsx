@@ -17,7 +17,7 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
 import { parse, SwuPgnDocument } from '@/lib/swupgn';
 import { loadReplay } from '@/app/_utils/replayStorage';
-import { storeReplayContent } from '@/app/_utils/replayHandoff';
+import { replayUrl, storeReplayContent } from '@/app/_utils/replayHandoff';
 import { formatResult } from '@/app/_utils/replayMoves';
 import { useCardNameMap } from '@/app/_utils/swupgnCardNames';
 
@@ -240,17 +240,7 @@ export default function ReplayPage() {
         setRawContent(content);
         try {
             const { id } = await storeReplayContent(content);
-            // Keep t/from/to. A shared link names a MOMENT; the recipient has to upload the
-            // file to resolve it (replays live in this browser's IndexedDB, not on a
-            // server), and dropping the params here landed them at frame 0 instead — the
-            // one thing the link existed to communicate.
-            const keep = new URLSearchParams();
-            for (const k of ['t', 'from', 'to']) {
-                const v = searchParams.get(k);
-                if (v != null) keep.set(k, v);
-            }
-            const qs = keep.toString();
-            router.replace(`/Replay?id=${id}${qs ? `&${qs}` : ''}`, { scroll: false });
+            router.replace(replayUrl(id, searchParams), { scroll: false });
         } catch (err) {
             // Storage failed (e.g. QuotaExceededError); replay still works in-memory,
             // it just won't survive a refresh. Log so the failure isn't invisible.

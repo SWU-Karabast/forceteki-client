@@ -2,7 +2,7 @@
 // This adapter produces the live board's gameState, which is typed `any`
 // (IBoardState.gameState: any, see Game.context.tsx which disables the same rule).
 // Typing these returns would mean typing the entire live board state — out of scope.
-import type { CardInstanceState, ReducedState, Seat, SwuPgnDocument, PlayerState, SetupInitRecord } from '@/lib/swupgn';
+import type { CardInstanceState, ReducedState, Seat, SwuPgnDocument, PlayerState } from '@/lib/swupgn';
 import { baseId, tokenArtId } from '@/lib/swupgn';
 import { statOf, type CardStat } from '@/app/_utils/swupgnCardStats';
 
@@ -43,7 +43,7 @@ export const ZONE_MAP: Record<string, string> = {
 
 /** Parse "SET#NUM[:copy]" into a board setId. */
 export function parseSetId(id: string): { set: string; number: number } {
-    const base = id.replace(/:\d+$/, '');
+    const base = baseId(id); // String()-coerces: a numeric `card` off JSON.parse reached .replace
     const [set, num] = base.split('#');
     return { set, number: Number(num) };
 }
@@ -198,14 +198,17 @@ export type SeatToPlayerId = Record<Seat, string>;
 /** Resolves a card id to a display name; the replay passes the file's own CARDS index. */
 export type NameOf = (id: string) => string;
 
-/** Pull each seat's starting deck-order length from the INIT setup record. */
-export function deckOrderLengths(doc: SwuPgnDocument): Record<Seat, number> {
-    const init = doc.setup.find((r): r is SetupInitRecord => !!r && (r as SetupInitRecord).t === 'INIT');
-    return {
-        // `init?.` guards the record, not the field: an INIT line without p1DeckOrder threw.
-        1: Array.isArray(init?.p1DeckOrder) ? init.p1DeckOrder.length : 0,
-        2: Array.isArray(init?.p2DeckOrder) ? init.p2DeckOrder.length : 0,
-    };
+/** Everything the replay layers onto a folded frame before the board renders it. */
+export interface AdaptOptions {
+    hideHandFor?: Seat;
+    highlightIds?: string[];
+    leaderExhausted?: Partial<Record<Seat, boolean>>;
+    resourcedIds?: Partial<Record<Seat, string[]>>;
+    baseHp?: Partial<Record<Seat, number>>;
+    deckRemaining?: Partial<Record<Seat, number>>;
+    enteringIds?: string[];
+    attackingIds?: string[];
+    nameOf?: NameOf;
 }
 
 /**
@@ -239,18 +242,23 @@ function resourceCards(
         : [...known, ...facedownStack(total - known.length, 'resources', owner)];
 }
 
+/** The per-seat slice of AdaptOptions, plus the fold's own view of that seat. */
+interface SeatOptions {
+    hideHand?: boolean;
+    highlight?: Set<string>;
+    leaderExhausted?: boolean;
+    entering?: Set<string>;
+    attacking?: Set<string>;
+    resourcedIds?: string[];
+    baseHp?: number;
+    deckRemaining?: number;
+    nameOf?: NameOf;
+}
+
 function adaptPlayer(
-    ps: PlayerState, playerId: string, deckOrderLen: number,
-    leaderId: string, baseSetId: string, hideHand = false,
-    statMap: Record<string, CardStat> = {},
-    highlight?: Set<string>,
-    leaderExhausted = false,
-    entering?: Set<string>,
-    attacking?: Set<string>,
-    resourcedIds?: string[],
-    baseHp?: number,
-    deckRemaining?: number,
-    nameOf?: NameOf,
+    ps: PlayerState, playerId: string, leaderId: string, baseSetId: string,
+    statMap: Record<string, CardStat>,
+    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, resourcedIds, baseHp, deckRemaining, nameOf }: SeatOptions,
 ): any {
     const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap));
     // Token badges ride along in the arena piles as parented cards, exactly as the live
@@ -283,16 +291,13 @@ function adaptPlayer(
     // identities hidden) instead of the omniscient known cards.
     const hand = hideHand
         ? facedownStack(ps.hand.length, 'hand', playerId)
-        : ps.hand.map((id) => cardFromId(id, 'hand', playerId, playerId, statOf(id, statMap), nameOf?.(id)));
-    const discard = ps.discard.map((id) => cardFromId(id, 'discard', playerId, playerId, statOf(id, statMap), nameOf?.(id)));
+        : ps.hand.slice(0, MAX_PILE).map((id) => cardFromId(id, 'hand', playerId, playerId, statOf(id, statMap), nameOf?.(id)));
+    const discard = ps.discard.slice(0, MAX_PILE).map((id) => cardFromId(id, 'discard', playerId, playerId, statOf(id, statMap), nameOf?.(id)));
     const resourcesTotal = ps.resourcesReady + ps.resourcesExhausted;
-    // Prefer the tracked deck (counted from the engine's own `from: 'deck'` MOVEs) over
-    // subtracting the visible zones — the subtraction drifts whenever a card leaves the deck
-    // by a path the piles don't account for, and the board and the Deck tab then show two
-    // different numbers for the same thing.
-    const numCardsInDeck = typeof deckRemaining === 'number'
-        ? Math.max(0, deckRemaining)
-        : Math.max(0, deckOrderLen - hand.length - resourcesTotal - discard.length - inPlay.length);
+    // Counted from the engine's own `from: 'deck'` MOVEs against the published starting
+    // order (deckTracker); subtracting the visible piles drifted whenever a card left the deck
+    // by a path the piles do not show. No INIT order in the file means no deck to show.
+    const numCardsInDeck = Math.max(0, deckRemaining ?? 0);
     // A deployed leader lives in an arena as a unit (folded into ps.cards). The leader slot
     // then shows the "deployed" placeholder (zone != 'base'); otherwise it shows the leader
     // art. LeaderBaseCard derives isDeployed from `zone !== 'base'`, so an undeployed leader
@@ -359,9 +364,8 @@ function adaptPlayer(
 
 /** Map a folded ReducedState + document context into the board's gameState shape. */
 export function adaptState(
-    s: ReducedState, doc: SwuPgnDocument,
-    decks: Record<Seat, number>, seatToId: SeatToPlayerId,
-    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; resourcedIds?: Partial<Record<Seat, string[]>>; baseHp?: Partial<Record<Seat, number>>; deckRemaining?: Partial<Record<Seat, number>>; enteringIds?: string[]; attackingIds?: string[]; nameOf?: NameOf } = {},
+    s: ReducedState, doc: SwuPgnDocument, seatToId: SeatToPlayerId,
+    opts: AdaptOptions = {},
     statMap: Record<string, CardStat> = {},
 ): any {
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
@@ -374,7 +378,11 @@ export function adaptState(
         if (!ps) { continue; }
         const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
-        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering, attacking, opts.resourcedIds?.[seat], opts.baseHp?.[seat], opts.deckRemaining?.[seat], opts.nameOf);
+        const adapted = adaptPlayer(ps, playerId, leaderId, baseSetId, statMap, {
+            hideHand: opts.hideHandFor === seat, highlight, leaderExhausted: opts.leaderExhausted?.[seat] ?? false,
+            entering, attacking, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
+            deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf,
+        });
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }

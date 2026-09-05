@@ -45,6 +45,7 @@ const LastActionCaption: React.FC = () => {
                 gap: 1,
                 pointerEvents: 'none',
                 animation: `${captionIn} 0.22s ease-out`,
+                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
             }}
         >
             <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

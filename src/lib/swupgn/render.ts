@@ -3,6 +3,9 @@ import { baseId, NameResolver, indexResolver } from './cardNames';
 
 const RULE_WIDTH = 78;
 
+// CLIENT-OWNED. `cards`/`found` are typed string[] but come off JSON.parse of an upload.
+const ids = (v: unknown): string[] => (Array.isArray(v) ? v : []);
+
 function who(p: Seat | undefined): string {
     return p === 1 ? 'Player 1' : p === 2 ? 'Player 2' : '';
 }
@@ -49,11 +52,11 @@ function line(e: GameEvent, n: NameResolver): string | null {
         case 'SHIELD_GAIN': return `${nm(e.card)} gains ${e.count ?? 1} shield`;
         case 'SHIELD_USE': return `${nm(e.card)} loses ${e.count ?? 1} shield`;
         case 'EXPERIENCE_GAIN': return `${nm(e.card)} ${e.count < 0 ? 'loses' : 'gains'} ${Math.abs(e.count)} experience`;
-        case 'DRAW': return `${who(e.p)} draws ${e.count}${e.cards.length ? `: ${e.cards.map(nm).join(', ')}` : ''}`;
-        case 'DISCARD': return `${who(e.p)} discards ${e.cards.map(nm).join(', ')}`;
+        case 'DRAW': return `${who(e.p)} draws ${e.count}${ids(e.cards).length ? `: ${ids(e.cards).map(nm).join(', ')}` : ''}`;
+        case 'DISCARD': return `${who(e.p)} discards ${ids(e.cards).map(nm).join(', ')}`;
         case 'RESOURCE': return `${who(e.p)} resources ${nm(e.card)}`;
-        case 'REVEAL': return `${who(e.p)} reveals ${e.cards.map(nm).join(', ')}`;
-        case 'SEARCH': return e.found ? `${who(e.p)} searches, finds ${e.found.map(nm).join(', ')}` : `${who(e.p)} searches their deck`;
+        case 'REVEAL': return `${who(e.p)} reveals ${ids(e.cards).map(nm).join(', ')}`;
+        case 'SEARCH': return e.found ? `${who(e.p)} searches, finds ${ids(e.found).map(nm).join(', ')}` : `${who(e.p)} searches their deck`;
         case 'CREATE_TOKEN': return `${who(e.p)} creates ${nm(e.token)} in ${e.zone}`;
         case 'CAPTURE': return `${who(e.p)} captures ${nm(e.card)}`;
         case 'RESCUE': return `${who(e.p)} rescues ${nm(e.card)}`;

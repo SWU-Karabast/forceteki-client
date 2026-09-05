@@ -1,5 +1,5 @@
 import type { SwuPgnDocument, Seat } from '@/lib/swupgn';
-import { baseId } from '@/lib/swupgn';
+import { baseId, isSeat, asIdList } from '@/lib/swupgn';
 
 // Interpreted resourcing report computed from ground-truth events. The engine reads the
 // engine's source of truth (MOVE zone transitions) plus explicit PLAY*/DEPLOY_LEADER
@@ -108,19 +108,23 @@ export function resourcingReport(doc: SwuPgnDocument, costMap: Record<string, nu
         if (e.t === 'ROUND_START') {
             round = e.round;
             roundSet.add(round);
-            if (e.keyframe) {
+            if (e.keyframe && typeof e.keyframe === 'object') {
                 for (const seat of [1, 2] as Seat[]) {
-                    const ps = e.keyframe.players[seat];
-                    if (ps) cell(seat, round).pool = ps.resourcesReady + ps.resourcesExhausted;
+                    const ps = e.keyframe.players?.[seat];
+                    const pool = Number(ps?.resourcesReady) + Number(ps?.resourcesExhausted);
+                    if (ps && Number.isFinite(pool)) cell(seat, round).pool = pool;
                 }
             }
             continue;
         }
+        // Every record below is per-seat; `p` comes off JSON.parse and used to index a
+        // Record<Seat, Set> with whatever it held.
+        if (!isSeat((e as { p?: unknown }).p)) continue;
         switch (e.t) {
             case 'DRAW': {
                 const a = cell(e.p, round);
-                a.drawn += e.count;
-                for (const id of e.cards) drawnIds[e.p].add(id);
+                a.drawn += Number.isFinite(e.count) ? e.count : asIdList(e.cards).length;
+                for (const id of asIdList(e.cards)) drawnIds[e.p].add(id);
                 break;
             }
             case 'MOVE': {

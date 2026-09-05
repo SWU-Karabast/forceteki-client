@@ -56,19 +56,23 @@ export function openDB(): Promise<IDBDatabase> {
     });
 }
 
-// Generate a short deterministic ID from the replay header + content sample.
-// Includes content entropy so rematches/BO3s with identical headers produce
-// different IDs (different game actions = different hash).
-export async function generateReplayId(header: Record<string, string>, rawContent?: string): Promise<string> {
-    const contentSample = rawContent ? rawContent.slice(-2000) : '';
+/** The header fields that identify a replay, as the parsed document names them. */
+export interface ReplayIdHeader {
+    p1: string; p2: string; date: string; result: string; p1Leader: string; p2Leader: string;
+}
+
+// Generate a short deterministic ID from the replay header + the WHOLE content, so two
+// files with the same header and the same closing sequence (a rematch that ends the same
+// way) do not collide and silently replace each other in storage.
+export async function generateReplayId(header: ReplayIdHeader, rawContent = ''): Promise<string> {
     const seed = [
-        header.Player1 || '',
-        header.Player2 || '',
-        header.Date || '',
-        header.Result || '',
-        header.Leader1 || '',
-        header.Leader2 || '',
-        contentSample,
+        header.p1 || '',
+        header.p2 || '',
+        header.date || '',
+        header.result || '',
+        header.p1Leader || '',
+        header.p2Leader || '',
+        rawContent,
     ].join('|');
 
     // crypto.subtle is only available in secure contexts (HTTPS / localhost).

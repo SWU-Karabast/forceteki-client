@@ -3,7 +3,7 @@ import { Typography, Box } from '@mui/material';
 import { debugBorder } from '@/app/_utils/debug';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useBoardState } from '@/app/_hooks/useBoardState';
+import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { ICardData, LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
@@ -13,7 +13,7 @@ import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
 }) => {
-    const { gameState, connectedPlayer, isSpectator } = useBoardState();
+    const { gameState, connectedPlayer, isSpectator } = useGame();
     const { isPortrait } = useScreenOrientation();
     const playerIds = Object.keys(gameState.players);
 

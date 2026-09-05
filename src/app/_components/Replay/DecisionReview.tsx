@@ -2,14 +2,8 @@
 import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useReplay } from '@/app/_contexts/Replay.context';
-import { decisionPoints, autoBookmarks, type Bookmark } from '@/app/_utils/replayDecisions';
-
-const seatLabel = (p?: number) => (p === 1 ? 'Player 1' : p === 2 ? 'Player 2' : '');
-const fmtTarget = (tgt?: string) => {
-    if (!tgt) return '';
-    const m = /^base@(\d)$/.exec(tgt);
-    return m ? `Player ${m[1]}'s base` : tgt;
-};
+import { decisionPoints, autoBookmarks, bookmarkLabel, type Bookmark } from '@/app/_utils/replayDecisions';
+import SeekRow from './SeekRow';
 
 const BOOKMARK_COLOR: Record<Bookmark['kind'], string> = {
     DEFEAT: '#ff6b6b',
@@ -20,15 +14,15 @@ const BOOKMARK_COLOR: Record<Bookmark['kind'], string> = {
 };
 
 const Row: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
-    <Box
+    <SeekRow
         onClick={onClick}
         sx={{
-            display: 'flex', alignItems: 'baseline', gap: 1, px: 1, py: 0.75, cursor: 'pointer',
+            display: 'flex', alignItems: 'baseline', gap: 1, px: 1, py: 0.75,
             borderRadius: '4px', '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
         }}
     >
         {children}
-    </Box>
+    </SeekRow>
 );
 
 /** Decision points + key moments, rendered inline as a panel tab body. */
@@ -36,17 +30,6 @@ const DecisionReview: React.FC = () => {
     const { doc, nameOf, seekToSeq } = useReplay();
     const decisions = useMemo(() => decisionPoints(doc), [doc]);
     const bookmarks = useMemo(() => autoBookmarks(doc), [doc]);
-
-    const bookmarkLabel = (b: Bookmark): string => {
-        switch (b.kind) {
-            case 'BIG_DAMAGE': return `${nameOf(b.src ?? '')} hits ${fmtTarget(b.tgt)} for ${b.amt}`;
-            case 'DEFEAT': return `${nameOf(b.card ?? '')} defeated${b.reason ? ` (${b.reason})` : ''}`;
-            case 'OVERWHELM': return `${seatLabel(b.p)} overwhelms ${fmtTarget(b.tgt)} for ${b.amt}`;
-            case 'INITIATIVE': return `${seatLabel(b.p)} claimed initiative`;
-            case 'GAME_END': return `Game end${b.reason ? ` — ${b.reason}` : ''}`;
-            default: return b.kind;
-        }
-    };
 
     return (
         <Box sx={{ p: 1.5 }}>
@@ -95,7 +78,7 @@ const DecisionReview: React.FC = () => {
                     {bookmarks.map((b, i) => (
                         <Row key={`${b.seq}-${i}`} onClick={() => seekToSeq(b.seq)}>
                             <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: BOOKMARK_COLOR[b.kind], mt: 0.6 }} />
-                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>{bookmarkLabel(b)}</Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>{bookmarkLabel(b, nameOf)}</Typography>
                         </Row>
                     ))}
                 </Box>

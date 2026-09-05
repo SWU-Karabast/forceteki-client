@@ -5,6 +5,7 @@ import { PlayArrow, DeleteOutline } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { listReplays, deleteReplay, StoredReplayMeta } from '@/app/_utils/replayStorage';
 import { formatResult } from '@/app/_utils/replayMoves';
+import SeekRow from './SeekRow';
 
 function formatSavedAt(ts: number): string {
     if (!ts) return '';
@@ -46,9 +47,10 @@ const RecentReplays: React.FC = () => {
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, maxHeight: 220, overflowY: 'auto' }}>
                 {replays.map((r) => (
-                    <Box
+                    <SeekRow
                         key={r.id}
-                        onClick={() => router.push(`/Replay?id=${r.id}`)}
+                        onClick={() => router.push(`/Replay?id=${encodeURIComponent(r.id)}`)}
+                        label={`Open replay ${r.player1} vs ${r.player2}`}
                         sx={{
                             display: 'flex',
                             alignItems: 'center',
@@ -56,7 +58,6 @@ const RecentReplays: React.FC = () => {
                             px: 1.25,
                             py: 0.75,
                             borderRadius: '6px',
-                            cursor: 'pointer',
                             backgroundColor: 'rgba(255,255,255,0.04)',
                             border: '1px solid rgba(255,255,255,0.08)',
                             '&:hover': { backgroundColor: 'rgba(0,186,255,0.1)', borderColor: 'rgba(0,186,255,0.3)' },
@@ -79,11 +80,11 @@ const RecentReplays: React.FC = () => {
                             </Typography>
                         )}
                         <Tooltip title="Remove">
-                            <IconButton size="small" onClick={(e) => handleDelete(e, r.id)} sx={{ color: 'rgba(255,255,255,0.35)', '&:hover': { color: '#f44336' } }}>
+                            <IconButton size="small" aria-label={`Remove replay ${r.player1} vs ${r.player2}`} onClick={(e) => handleDelete(e, r.id)} sx={{ color: 'rgba(255,255,255,0.35)', '&:hover': { color: '#f44336' } }}>
                                 <DeleteOutline fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                    </Box>
+                    </SeekRow>
                 ))}
             </Box>
         </Box>

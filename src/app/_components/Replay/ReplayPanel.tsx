@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Box, Typography, IconButton, Tooltip, Snackbar, CircularProgress } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip, Snackbar, CircularProgress, Button, useTheme } from '@mui/material';
 import {
     ChevronRight, ChevronLeft, FormatListBulleted, BarChartOutlined, CallSplitOutlined, MenuBookOutlined, StyleOutlined,
     ViewDayOutlined, ChatBubbleOutline, LinkOutlined, FileDownloadOutlined, DescriptionOutlined,
@@ -19,14 +19,14 @@ import TurnDigests from './TurnDigests';
 import DiscussionTab from './DiscussionTab';
 
 type TabKey = 'story' | 'moves' | 'deck' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
-const TABS: { key: TabKey; label: string; Icon: React.ElementType }[] = [
-    { key: 'story', label: 'Story', Icon: MenuBookOutlined },
-    { key: 'moves', label: 'Moves', Icon: FormatListBulleted },
-    { key: 'deck', label: 'Deck', Icon: StyleOutlined },
-    { key: 'resourcing', label: 'Resourcing', Icon: BarChartOutlined },
-    { key: 'decisions', label: 'Decisions', Icon: CallSplitOutlined },
-    { key: 'digest', label: 'Digest', Icon: ViewDayOutlined },
-    { key: 'discussion', label: 'Discussion', Icon: ChatBubbleOutline },
+const TABS: { key: TabKey; label: string; Icon: React.ElementType; Body: React.FC }[] = [
+    { key: 'story', label: 'Story', Icon: MenuBookOutlined, Body: StoryTab },
+    { key: 'moves', label: 'Moves', Icon: FormatListBulleted, Body: MovesTab },
+    { key: 'deck', label: 'Deck', Icon: StyleOutlined, Body: DeckTab },
+    { key: 'resourcing', label: 'Resourcing', Icon: BarChartOutlined, Body: ResourcingReport },
+    { key: 'decisions', label: 'Decisions', Icon: CallSplitOutlined, Body: DecisionReview },
+    { key: 'digest', label: 'Digest', Icon: ViewDayOutlined, Body: TurnDigests },
+    { key: 'discussion', label: 'Discussion', Icon: ChatBubbleOutline, Body: DiscussionTab },
 ];
 
 const PANEL_BG = 'rgba(8,11,17,0.94)';
@@ -38,10 +38,12 @@ const ReplayPanel: React.FC = () => {
         clip, setClipStart, setClipEnd, clearClip, doc, moves, nameOf,
     } = useReplay();
     const { downloadWithAnnotations } = useReplayAnnotations();
+    const theme = useTheme();
     // Collapsed by default on a phone: the panel is fixed at 88vw, so open-by-default
-    // covers the board completely and leaves the game as a sliver down one edge.
+    // covers the board completely and leaves the game as a sliver down one edge. Same
+    // breakpoint as the `{ xs, sm }` sx values below, so the two rules cannot split.
     const [collapsed, setCollapsed] = useState(() =>
-        typeof window !== 'undefined' && window.matchMedia('(max-width: 599px)').matches);
+        typeof window !== 'undefined' && window.matchMedia(theme.breakpoints.down('sm').replace(/^@media\s*/, '')).matches);
     const [tab, setTab] = useState<TabKey>('moves');
     const [snack, setSnack] = useState<string | null>(null);
     const [recording, setRecording] = useState(false);
@@ -55,7 +57,7 @@ const ReplayPanel: React.FC = () => {
         const base = `${window.location.origin}/Replay?id=${replayId ?? ''}`;
         // Share the frame's `seq`, not its index: indices shift if the reader's set of
         // dropped records changes, seqs don't.
-        copy(`${base}&t=${events[currentIndex]?.seq ?? currentIndex}`,
+        copy(`${base}&t=${encodeURIComponent(String(events[currentIndex]?.seq ?? currentIndex))}`,
             'Link copied — send the .swupgn with it, the replay lives in your browser');
     };
     const copyClipLink = () => {
@@ -69,7 +71,7 @@ const ReplayPanel: React.FC = () => {
         setRecording(true);
         try {
             await downloadClipWebm({
-                doc, start: clip?.start ?? 0, end: clip?.end ?? totalFrames - 1,
+                doc, events, start: clip?.start ?? 0, end: clip?.end ?? totalFrames - 1,
                 labelForSeq: (seq) => moves.find((m) => m.seq === seq)?.label, nameOf,
             });
         } catch (e) {
@@ -107,13 +109,7 @@ const ReplayPanel: React.FC = () => {
         );
     }
 
-    const Body = tab === 'story' ? StoryTab
-        : tab === 'moves' ? MovesTab
-            : tab === 'deck' ? DeckTab
-                : tab === 'resourcing' ? ResourcingReport
-                    : tab === 'decisions' ? DecisionReview
-                        : tab === 'digest' ? TurnDigests
-                            : DiscussionTab;
+    const Body = (TABS.find((t) => t.key === tab) ?? TABS[0]).Body;
 
     return (
         <Box sx={{
@@ -146,16 +142,34 @@ const ReplayPanel: React.FC = () => {
                 <Typography variant="caption" sx={{ color: clip ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.4)', minWidth: 44, textAlign: 'center', fontSize: '0.7rem' }}>
                     {clip ? `${clip.start}–${clip.end}` : 'clip'}
                 </Typography>
-                <Tooltip title="Copy clip link"><span><IconButton size="small" onClick={copyClipLink} disabled={!clip} sx={{ color: clip ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)' }}><ContentCut sx={{ fontSize: 16 }} /></IconButton></span></Tooltip>
-                <Tooltip title="Export clip as .webm"><span><IconButton size="small" onClick={exportWebm} disabled={recording} sx={{ color: 'rgba(255,255,255,0.7)' }}>{recording ? <CircularProgress size={15} sx={{ color: 'var(--initiative-blue)' }} /> : <MovieCreationOutlined sx={{ fontSize: 18 }} />}</IconButton></span></Tooltip>
-                {clip && <Box component="span" onClick={clearClip} sx={{ cursor: 'pointer', color: 'rgba(255,255,255,0.45)', fontSize: '0.68rem', ml: 0.25 }}>clear</Box>}
+                {/* The span keeps the tooltip alive while the button is disabled, but it also
+                    takes the tooltip's aria-label, so the button names itself. */}
+                <Tooltip title="Copy clip link"><span><IconButton size="small" aria-label="Copy clip link" onClick={copyClipLink} disabled={!clip} sx={{ color: clip ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)' }}><ContentCut sx={{ fontSize: 16 }} /></IconButton></span></Tooltip>
+                <Tooltip title="Export clip as .webm"><span><IconButton size="small" aria-label="Export clip as webm" onClick={exportWebm} disabled={recording} sx={{ color: 'rgba(255,255,255,0.7)' }}>{recording ? <CircularProgress size={15} sx={{ color: 'var(--initiative-blue)' }} /> : <MovieCreationOutlined sx={{ fontSize: 18 }} />}</IconButton></span></Tooltip>
+                {clip && (
+                    <Button size="small" onClick={clearClip} aria-label="Clear clip" sx={{ minWidth: 0, px: 0.75, py: 0, color: 'rgba(255,255,255,0.45)', fontSize: '0.68rem', textTransform: 'none', '&:hover': { color: 'white' } }}>
+                        clear
+                    </Button>
+                )}
             </Box>
 
-            {/* Tab strip */}
-            <Box sx={{ display: 'flex', px: 0.75, py: 0.5, gap: 0.25, borderBottom: BORDER }}>
+            {/* Tab strip. Arrow keys move between tabs, as a tablist is expected to. */}
+            <Box
+                role="tablist"
+                aria-label="Replay panel sections"
+                onKeyDown={(e) => {
+                    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                    e.preventDefault();
+                    const i = TABS.findIndex((t) => t.key === tab);
+                    const next = TABS[(i + (e.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length];
+                    setTab(next.key);
+                    (e.currentTarget.querySelector(`[data-tab="${next.key}"]`) as HTMLElement | null)?.focus();
+                }}
+                sx={{ display: 'flex', px: 0.75, py: 0.5, gap: 0.25, borderBottom: BORDER }}
+            >
                 {TABS.map(({ key, label, Icon }) => (
                     <Tooltip key={key} title={label}>
-                        <IconButton size="small" role="tab" aria-selected={tab === key} aria-label={`${label} tab`} onClick={() => setTab(key)} sx={{ ...tabBtn(tab === key), flex: 1, borderRadius: '6px' }}>
+                        <IconButton size="small" role="tab" id={`replay-tab-${key}`} data-tab={key} aria-selected={tab === key} aria-controls="replay-tabpanel" tabIndex={tab === key ? 0 : -1} aria-label={`${label} tab`} onClick={() => setTab(key)} sx={{ ...tabBtn(tab === key), flex: 1, borderRadius: '6px' }}>
                             <Icon sx={{ fontSize: 18 }} />
                         </IconButton>
                     </Tooltip>
@@ -163,7 +177,7 @@ const ReplayPanel: React.FC = () => {
             </Box>
 
             {/* Active tab body */}
-            <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+            <Box id="replay-tabpanel" role="tabpanel" aria-labelledby={`replay-tab-${tab}`} sx={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                 <Body />
             </Box>
 

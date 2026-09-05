@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cardFromId, cardFromInstance, ZONE_MAP, adaptState, deckOrderLengths } from '../swupgnBoardAdapter';
+import { cardFromId, cardFromInstance, ZONE_MAP, adaptState } from '../swupgnBoardAdapter';
 import { statOf } from '../swupgnCardStats';
 import { parse, stateAt, type ReducedState, type Seat, type CardInstanceState } from '@/lib/swupgn';
 import { readFileSync } from 'fs';
@@ -40,11 +40,10 @@ describe('cardFromInstance', () => {
 
 describe('adaptState (full assembly)', () => {
     const doc = parse(SAMPLE);
-    const decks = deckOrderLengths(doc);
     // R1.G.3 is after P1's regroup draw. ps.hand[] and ps.handSize are both MOVE-driven,
     // so they agree; the assertion uses ps.hand.length to stay independent of the count.
     const reduced = stateAt(doc.events, 'R1.G.3');
-    const gs = adaptState(reduced, doc, decks, { 1: 'p1', 2: 'p2' });
+    const gs = adaptState(reduced, doc, { 1: 'p1', 2: 'p2' });
 
     it('keys players by playerId', () => {
         expect(Object.keys(gs.players)).toEqual(['p1', 'p2']);
@@ -63,8 +62,14 @@ describe('adaptState (full assembly)', () => {
         expect(gs.players.p1.availableResources).toBe(p1.resourcesReady);
     });
 
-    it('derives a non-negative deck count', () => {
-        expect(gs.players.p1.numCardsInDeck).toBeGreaterThanOrEqual(0);
+    it('shows an empty deck when no tracked count is supplied', () => {
+        expect(gs.players.p1.numCardsInDeck).toBe(0);
+    });
+
+    it('prefers the tracked deck per seat when supplied, clamped at zero', () => {
+        const g = adaptState(reduced, doc, { 1: 'p1', 2: 'p2' }, { deckRemaining: { 1: 7, 2: -1 } });
+        expect(g.players.p1.numCardsInDeck).toBe(7);
+        expect(g.players.p2.numCardsInDeck).toBe(0);
     });
 
     it('maps phase and initiative', () => {
@@ -88,7 +93,6 @@ describe('adaptState (full assembly)', () => {
 describe('adaptState — leader state (deploy / exhaust / action highlight)', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const doc = { header: { p1Leader: 'JTL#018', p1Base: 'JTL#026', p2Leader: 'SEC#010', p2Base: 'JTL#021' } } as any;
-    const decks = { 1: 50, 2: 50 } as Record<Seat, number>;
     const ids = { 1: 'p1', 2: 'p2' } as Record<Seat, string>;
     const mkPlayer = (seat: Seat, cards: CardInstanceState[] = []) => ({
         seat, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
@@ -99,7 +103,7 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
     });
 
     it('undeployed leader shows its art (zone base) and dims when exhausted', () => {
-        const gs = adaptState(state(), doc, decks, ids, { leaderExhausted: { 1: true } });
+        const gs = adaptState(state(), doc, ids, { leaderExhausted: { 1: true } });
         expect(gs.players.p1.leader.zone).toBe('base'); // isDeployed=false -> art renders
         expect(gs.players.p1.leader.exhausted).toBe(true); // -> Karabast dimming
         expect(gs.players.p2.leader.exhausted).toBeFalsy();
@@ -110,15 +114,15 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
             id: 'AAA#001', zone: 'ground', damage: 0, exhausted: false, upgrades: [],
             shields: 0, experience: 0, statusTokens: {},
         };
-        const gs = adaptState(state([unit]), doc, decks, ids, { enteringIds: ['AAA#001'] });
+        const gs = adaptState(state([unit]), doc, ids, { enteringIds: ['AAA#001'] });
         const card = gs.players.p1.cardPiles.groundArena.find((c: { uuid: string }) => c.uuid === 'AAA#001');
         expect(card.entering).toBe(true);
-        const gs2 = adaptState(state([unit]), doc, decks, ids, {});
+        const gs2 = adaptState(state([unit]), doc, ids, {});
         expect(gs2.players.p1.cardPiles.groundArena[0].entering).toBeFalsy();
     });
 
     it('glows the leader on its action frame', () => {
-        const gs = adaptState(state(), doc, decks, ids, { highlightIds: ['JTL#018'] });
+        const gs = adaptState(state(), doc, ids, { highlightIds: ['JTL#018'] });
         expect(gs.players.p1.leader.selected).toBe(true);
         expect(gs.players.p2.leader.selected).toBe(false);
     });
@@ -128,7 +132,7 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
             id: 'JTL#018', zone: 'space', damage: 0, exhausted: false, upgrades: [],
             shields: 0, experience: 0, statusTokens: {},
         };
-        const gs = adaptState(state([leaderUnit]), doc, decks, ids, { leaderExhausted: { 1: true } });
+        const gs = adaptState(state([leaderUnit]), doc, ids, { leaderExhausted: { 1: true } });
         expect(gs.players.p1.leader.zone).not.toBe('base'); // deployed -> placeholder
         expect(gs.players.p1.leader.exhausted).toBeFalsy(); // slot not dimmed while deployed
         expect(gs.players.p1.cardPiles.spaceArena.some((c: { uuid: string }) => c.uuid === 'JTL#018')).toBe(true);
@@ -161,7 +165,7 @@ describe('token badges', () => {
     it('emits one parented token card per token, in the host arena', () => {
         const gs = adaptState(
             stateWith(inst({ shields: 2, experience: 1, statusTokens: { advantage: 1 } })),
-            doc, { 1: 30, 2: 30 }, seats,
+            doc, seats,
         );
         const space = gs.players['p1'].cardPiles['spaceArena'];
         const tokens = space.filter((c: { parentCardId?: string }) => c.parentCardId === 'ASH#220');
@@ -172,7 +176,7 @@ describe('token badges', () => {
     });
 
     it('emits nothing for a unit with no tokens', () => {
-        const gs = adaptState(stateWith(inst()), doc, { 1: 30, 2: 30 }, seats);
+        const gs = adaptState(stateWith(inst()), doc, seats);
         expect(gs.players['p1'].cardPiles['spaceArena']).toHaveLength(1);
     });
 });
@@ -186,7 +190,7 @@ describe('player identity for the board', () => {
     const state = stateAt(doc.events, doc.events[doc.events.length - 1].seq);
 
     it('always sets id and an aspects array, even with no card data loaded', () => {
-        const gs = adaptState(state, doc, { 1: 30, 2: 30 }, seats);
+        const gs = adaptState(state, doc, seats);
         for (const id of ['p1', 'p2']) {
             expect(gs.players[id].id).toBe(id);
             expect(Array.isArray(gs.players[id].aspects)).toBe(true);
@@ -198,7 +202,7 @@ describe('player identity for the board', () => {
             [doc.header.p1Leader]: { aspects: ['cunning', 'heroism'] },
             [doc.header.p1Base]: { aspects: ['command'] },
         };
-        const gs = adaptState(state, doc, { 1: 30, 2: 30 }, seats, {}, statMap);
+        const gs = adaptState(state, doc, seats, {}, statMap);
         expect(gs.players['p1'].aspects).toEqual(['cunning', 'heroism', 'command']);
     });
 });
@@ -220,7 +224,7 @@ describe('resource pile identities', () => {
     });
 
     it('names the resourced cards instead of face-down placeholders', () => {
-        const gs = adaptState(withResources(2), doc, { 1: 30, 2: 30 }, seats,
+        const gs = adaptState(withResources(2), doc, seats,
             { resourcedIds: { 1: ['ASH#110:2', 'ASH#208'] } });
         const pile = gs.players['p1'].cardPiles['resources'];
         expect(pile.map((c: { uuid: string }) => c.uuid)).toEqual(['ASH#110:2', 'ASH#208']);
@@ -228,7 +232,7 @@ describe('resource pile identities', () => {
     });
 
     it('pads with face-down placeholders when the count outruns the known ids', () => {
-        const gs = adaptState(withResources(3), doc, { 1: 30, 2: 30 }, seats,
+        const gs = adaptState(withResources(3), doc, seats,
             { resourcedIds: { 1: ['ASH#208'] } });
         const pile = gs.players['p1'].cardPiles['resources'];
         expect(pile).toHaveLength(3);
@@ -236,13 +240,13 @@ describe('resource pile identities', () => {
     });
 
     it('never shows more resources than the fold counted', () => {
-        const gs = adaptState(withResources(1), doc, { 1: 30, 2: 30 }, seats,
+        const gs = adaptState(withResources(1), doc, seats,
             { resourcedIds: { 1: ['ASH#208', 'ASH#110:2', 'SEC#215'] } });
         expect(gs.players['p1'].cardPiles['resources']).toHaveLength(1);
     });
 
     it('falls back to face-down when no ids are supplied', () => {
-        const gs = adaptState(withResources(2), doc, { 1: 30, 2: 30 }, seats);
+        const gs = adaptState(withResources(2), doc, seats);
         const pile = gs.players['p1'].cardPiles['resources'];
         expect(pile).toHaveLength(2);
         expect(pile.every((c: { setId: { set: string } }) => !c.setId.set)).toBe(true);
@@ -261,7 +265,6 @@ describe('attached upgrades render as banners: aspects + name reach the subcard'
     const names: Record<string, string> = { 'LOF#164': 'Wampa', 'LOF#215': 'Ascension Cable' };
     const nameOf = (id: string) => names[id] ?? id;
     const doc = parse(SAMPLE);
-    const decks = deckOrderLengths(doc);
     const wampa: CardInstanceState = { id: 'LOF#164', zone: 'ground', damage: 0, exhausted: false, upgrades: ['LOF#215'], shields: 0, experience: 0, statusTokens: {} };
     const state: ReducedState = {
         round: 1, phase: 'action', initiative: 1,
@@ -272,7 +275,7 @@ describe('attached upgrades render as banners: aspects + name reach the subcard'
     };
 
     it('gives the parented upgrade card its aspects, name and printed type', () => {
-        const gs = adaptState(state, doc, decks, { 1: 'p1', 2: 'p2' }, { nameOf }, statMap);
+        const gs = adaptState(state, doc, { 1: 'p1', 2: 'p2' }, { nameOf }, statMap);
         const ground = gs.players.p1.cardPiles.groundArena;
         const cable = ground.find((c: { uuid: string }) => c.uuid === 'LOF#215');
         expect(cable).toBeDefined();
@@ -349,7 +352,7 @@ describe('effectiveStats — a unit shows what is attached to it, the way the en
                 2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0, resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
             },
         };
-        const gs = adaptState(s, doc, deckOrderLengths(doc), { 1: 'p1', 2: 'p2' }, {}, statMap);
+        const gs = adaptState(s, doc, { 1: 'p1', 2: 'p2' }, {}, statMap);
         const n1 = gs.players.p1.cardPiles.spaceArena.find((c: { uuid: string }) => c.uuid === 'JTL#095');
         expect([n1.power, n1.hp]).toEqual([6, 5]);
     });

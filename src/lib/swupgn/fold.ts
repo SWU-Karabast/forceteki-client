@@ -20,7 +20,7 @@ function emptyState(): ReducedState {
  * `ps.resourcesReady += 1` pollute it for the whole page session, silently. Anything that
  * is not a real seat gets a scratch player that is discarded with the frame.
  */
-function isSeat(v: unknown): v is Seat {
+export function isSeat(v: unknown): v is Seat {
     return v === 1 || v === 2;
 }
 
@@ -41,7 +41,7 @@ function seatOfBaseRef(ref: string): Seat | null {
 }
 
 /** CLIENT-OWNED. `cards` is typed string[] but comes off JSON.parse; a scalar is not iterable. */
-function asIdList(v: unknown): string[] {
+export function asIdList(v: unknown): string[] {
     return Array.isArray(v) ? v : [];
 }
 
@@ -192,8 +192,10 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
             upgrade.zone = e.to;
         }
         // CLIENT-OWNED. The normative binding (spec §10.1): the move that puts an upgrade or a
-        // pilot into an arena names its host, and that is where the reader attaches it.
+        // pilot into an arena names its host, and that is where the reader attaches it. A
+        // same-arena move naming a NEW host (an upgrade changing units) moves it over.
         if (ARENA_ZONES.has(e.to) && e.attachedTo) {
+            detachFromHosts(s, e.card);
             attachToHost(s, e.attachedTo, e.card);
         }
         return;
@@ -380,6 +382,42 @@ function clone(s: ReducedState): ReducedState {
     return JSON.parse(JSON.stringify(s));
 }
 
+const finiteOr = (v: unknown, d: number): number => (typeof v === 'number' && Number.isFinite(v) ? v : d);
+
+/** A keyframe list longer than any real pile is a hostile file; every frame clones it. */
+const MAX_KEYFRAME_LIST = 200;
+const stringList = (v: unknown): string[] => (Array.isArray(v) ? v.slice(0, MAX_KEYFRAME_LIST).map(String) : []);
+
+/** CLIENT-OWNED. A keyframe card with the CardInstanceState shape guaranteed; extra fields
+ *  a newer writer adds (power, hp, captured) ride through untouched. */
+function normalizeCard(c: unknown): CardInstanceState | null {
+    if (c == null || typeof c !== 'object') return null;
+    const r = c as Partial<CardInstanceState>;
+    const tokens = r.statusTokens;
+    return {
+        ...r,
+        id: String(r.id), zone: String(r.zone ?? ''),
+        damage: finiteOr(r.damage, 0), exhausted: r.exhausted === true,
+        upgrades: stringList(r.upgrades),
+        shields: finiteOr(r.shields, 0), experience: finiteOr(r.experience, 0),
+        statusTokens: tokens != null && typeof tokens === 'object' && !Array.isArray(tokens) ? tokens : {},
+    };
+}
+
+/** CLIENT-OWNED. A keyframe seat with the PlayerState shape guaranteed (see snapToKeyframe). */
+function normalizePlayer(seat: Seat, r: Partial<PlayerState>): PlayerState {
+    const d = emptyPlayer(seat);
+    return {
+        ...r, seat,
+        baseHp: finiteOr(r.baseHp, d.baseHp), baseMaxHp: finiteOr(r.baseMaxHp, d.baseMaxHp),
+        handSize: finiteOr(r.handSize, 0), hand: stringList(r.hand),
+        resourcesReady: finiteOr(r.resourcesReady, 0), resourcesExhausted: finiteOr(r.resourcesExhausted, 0),
+        credits: finiteOr(r.credits, 0), hasForce: r.hasForce === true,
+        discard: stringList(r.discard),
+        cards: (Array.isArray(r.cards) ? r.cards.slice(0, MAX_KEYFRAME_LIST) : []).map(normalizeCard).filter((c): c is CardInstanceState => c !== null),
+    };
+}
+
 /**
  * CLIENT-OWNED. Snap the running fold to a keyframe, merging PER SEAT.
  *
@@ -391,8 +429,24 @@ function clone(s: ReducedState): ReducedState {
  * state for a seat the keyframe omits. Compatibility shim, not a permanent divergence.
  */
 export function snapToKeyframe(s: ReducedState, kf: ReducedState): ReducedState {
-    const next = clone(kf);
-    next.players = { ...s.players, ...next.players };
+    // `keyframe: 5` is truthy and reached `next.players = ...` on a number. Not a keyframe.
+    if (kf == null || typeof kf !== 'object') return s;
+    // CLIENT-OWNED. A keyframe is copied off JSON.parse of an uploaded file, so every field
+    // is untyped. The fold then calls `.push` on `hand`, `.indexOf` on a card's `upgrades`
+    // and `+= 1` on `credits`, and a seat whose keyframe omitted `upgrades` threw on the next
+    // arena exit and took the whole replay down. Coerce each seat to the PlayerState shape
+    // (and cap its lists) BEFORE the deep copy, so a hostile keyframe is never cloned whole;
+    // a seat that is not an object at all is ignored, as the spec says (§13), and the folded
+    // seat is kept.
+    const kfPlayers = (kf.players ?? {}) as Partial<Record<Seat, unknown>>;
+    const players: ReducedState['players'] = { ...s.players };
+    for (const seat of [1, 2] as Seat[]) {
+        const kp = kfPlayers[seat];
+        if (kp != null && typeof kp === 'object') {
+            players[seat] = normalizePlayer(seat, kp as Partial<PlayerState>);
+        }
+    }
+    const next = clone({ round: kf.round, phase: kf.phase, initiative: kf.initiative, players });
     // CLIENT-OWNED. The writer lists a token UPGRADE in the keyframe's `cards[]` as though
     // it were a unit — the same token it also (correctly) records on its host's
     // `statusTokens`. Events state `kind: 'upgrade'` and are filtered on the way through,

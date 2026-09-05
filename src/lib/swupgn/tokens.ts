@@ -152,7 +152,7 @@ export function normalizeTokenEvents(events: GameEvent[]): GameEvent[] {
  */
 export function dropInertRecords(events: GameEvent[], keepSeqs: ReadonlySet<string> = new Set()): GameEvent[] {
     return events.filter((e) => !(e != null && typeof e === 'object'
-        && e.t === 'MOVE' && (!e.from || !e.to || e.from === e.to)
+        && e.t === 'MOVE' && (!e.from || !e.to || (e.from === e.to && !e.attachedTo))
         && !keepSeqs.has(e.seq)));
 }
 
@@ -163,7 +163,9 @@ export function dropInertRecords(events: GameEvent[], keepSeqs: ReadonlySet<stri
  * would otherwise leave the viewer with zero frames and a spinner that never resolves.
  */
 export function normalizeEvents(events: GameEvent[], keepSeqs?: ReadonlySet<string>): GameEvent[] {
-    const repaired = dropInertRecords(normalizeTokenEvents(repairUpgradePlays(events)), keepSeqs);
+    // repairUpgradePlays matches a MOVE to the PLAY_UPGRADE right after it, so it runs on the
+    // stream with inert records already gone; one between them would otherwise defeat it.
+    const repaired = repairUpgradePlays(dropInertRecords(normalizeTokenEvents(events), keepSeqs));
     return repaired.length > 0 ? repaired : events;
 }
 

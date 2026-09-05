@@ -3,8 +3,8 @@ import React, { useMemo, useState } from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
 import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
-import { deckByFrame } from '@/app/_utils/deckTracker';
-import { useCardCostMap } from '@/app/_utils/swupgnCardCosts';
+import { initRecord } from '@/app/_utils/deckTracker';
+import { costOf, useCardCostMap } from '@/app/_utils/swupgnCardCosts';
 import { baseId, type Seat } from '@/lib/swupgn';
 
 /**
@@ -17,10 +17,9 @@ import { baseId, type Seat } from '@/lib/swupgn';
 const PEEK = 5;
 
 const SeatDeck: React.FC<{ seat: Seat; name: string; reveal: boolean }> = ({ seat, name, reveal }) => {
-    const { doc, events, currentIndex, nameOf } = useReplay();
+    const { deckStates, currentIndex, nameOf } = useReplay();
     const costs = useCardCostMap();
-    const byFrame = useMemo(() => deckByFrame(doc, events), [doc, events]);
-    const state = byFrame[currentIndex]?.[seat];
+    const state = deckStates[currentIndex]?.[seat];
     if (!state) return null;
 
     const { remaining } = state;
@@ -41,13 +40,11 @@ const SeatDeck: React.FC<{ seat: Seat; name: string; reveal: boolean }> = ({ sea
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block', mt: 1, fontWeight: 600 }}>
                 Next {Math.min(PEEK, remaining.length)}
             </Typography>
+            {/* Hidden draws leave the DOM entirely: a blurred name is still read aloud and
+                still found by find-in-page, which is no spoiler protection at all. */}
             {remaining.slice(0, PEEK).map((id, i) => (
-                <Typography key={`${id}-${i}`} variant="caption" sx={{
-                    display: 'block', color: reveal ? 'rgba(255,255,255,0.85)' : 'transparent',
-                    textShadow: reveal ? 'none' : '0 0 7px rgba(255,255,255,0.55)',
-                    userSelect: reveal ? 'auto' : 'none',
-                }}>
-                    {i + 1}. {nameOf(id)}
+                <Typography key={`${id}-${i}`} variant="caption" sx={{ display: 'block', color: reveal ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)' }}>
+                    {i + 1}. {reveal ? nameOf(id) : '· · · · ·'}
                 </Typography>
             ))}
             {remaining.length === 0 && (
@@ -65,7 +62,7 @@ const SeatDeck: React.FC<{ seat: Seat; name: string; reveal: boolean }> = ({ sea
                         {n > 1 ? `${n}× ` : ''}{nameOf(id)}
                     </Typography>
                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)' }}>
-                        {costs[id] != null ? costs[id] : ''}
+                        {costOf(id, costs) ?? ''}
                     </Typography>
                 </Box>
             ))}
@@ -76,10 +73,7 @@ const SeatDeck: React.FC<{ seat: Seat; name: string; reveal: boolean }> = ({ sea
 const DeckTab: React.FC = () => {
     const { header, doc } = useReplay();
     const [reveal, setReveal] = useState(false);
-    const hasOrder = useMemo(
-        () => doc.setup.some((r) => (r as { t?: string })?.t === 'INIT'),
-        [doc],
-    );
+    const hasOrder = useMemo(() => initRecord(doc) != null, [doc]);
 
     if (!hasOrder) {
         return (
@@ -93,24 +87,25 @@ const DeckTab: React.FC = () => {
 
     return (
         <Box sx={{ p: 1.5 }}>
-            <Box
-                role="button"
-                tabIndex={0}
-                aria-pressed={reveal}
-                aria-label={reveal ? 'Hide upcoming draws' : 'Reveal upcoming draws'}
-                onClick={() => setReveal((r) => !r)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setReveal((r) => !r); } }}
-                sx={{
-                    display: 'inline-flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', mb: 1.5,
-                    color: reveal ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.6)',
-                    '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
-                }}
-            >
-                <Tooltip title="The file publishes the full starting deck order, so upcoming draws are exact">
+            <Tooltip title="The file publishes the full starting deck order, so upcoming draws are exact">
+                <Box
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={reveal}
+                    aria-label={reveal ? 'Hide upcoming draws' : 'Reveal upcoming draws'}
+                    onClick={() => setReveal((r) => !r)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setReveal((r) => !r); } }}
+                    sx={{
+                        display: 'inline-flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', mb: 1.5,
+                        color: reveal ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.6)',
+                        '&:hover': { color: 'white' },
+                        '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
+                    }}
+                >
                     {reveal ? <VisibilityOutlined sx={{ fontSize: 16 }} /> : <VisibilityOffOutlined sx={{ fontSize: 16 }} />}
-                </Tooltip>
-                <Typography variant="caption">{reveal ? 'Upcoming draws shown' : 'Reveal upcoming draws'}</Typography>
-            </Box>
+                    <Typography variant="caption">{reveal ? 'Upcoming draws shown' : 'Reveal upcoming draws'}</Typography>
+                </Box>
+            </Tooltip>
             <Box sx={{ display: 'flex', gap: 3 }}>
                 <SeatDeck seat={1} name={header.p1 || 'Player 1'} reveal={reveal} />
                 <SeatDeck seat={2} name={header.p2 || 'Player 2'} reveal={reveal} />

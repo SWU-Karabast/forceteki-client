@@ -32,7 +32,10 @@ export function buildThreads<T>(
 
     const order: string[] = [];
     for (const n of notes) {
-        const key = keyOf(n);
+        // A file can carry two notes with the same id; the second used to overwrite the
+        // first and then render twice. Keep both, keying the duplicate off its position.
+        let key = keyOf(n);
+        while (nodes.has(key)) key = `${key}#${order.length}`;
         nodes.set(key, { note: n, replies: [] });
         order.push(key);
     }

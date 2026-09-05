@@ -41,3 +41,14 @@ describe('buildThreads', () => {
         expect(tree).toHaveLength(2);
     });
 });
+
+describe('buildThreads with duplicate ids', () => {
+    it('keeps both notes instead of dropping the first', async () => {
+        const { buildThreads } = await import('../annotationThreads');
+        type N = { id?: string; parent?: string; ts: number; text: string };
+        const notes: N[] = [{ id: 'a', ts: 1, text: 'first' }, { id: 'a', ts: 2, text: 'second' }, { id: 'b', parent: 'a', ts: 3, text: 'reply' }];
+        const roots = buildThreads<N>(notes, (n) => n.id, (n) => n.parent, (n) => n.ts);
+        expect(roots.map((r) => r.note.text)).toEqual(['first', 'second']);
+        expect(roots[0].replies.map((r) => r.note.text)).toEqual(['reply']);
+    });
+});

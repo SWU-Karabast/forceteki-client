@@ -5,7 +5,7 @@ import Credits from '../_subcomponents/PlayerTray/Credits';
 import PlayerHand from '../_subcomponents/PlayerTray/PlayerHand';
 import DeckDiscard from '../_subcomponents/PlayerTray/DeckDiscard';
 import { IOpponentCardTrayProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useBoardState } from '@/app/_hooks/useBoardState';
+import { useGame } from '@/app/_contexts/Game.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { debugBorder } from '@/app/_utils/debug';
@@ -13,7 +13,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
-    const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useBoardState();
+    const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useGame();
     const { isPortrait } = useScreenOrientation();
     const locale = useCardImageLocale();
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { loadStaticJson, useStaticJson } from '@/app/_utils/staticJson';
 import { baseId, tokenArtId } from '@/lib/swupgn';
 
 // public/card-stats.json is a static SET#NUM -> {power,hp,arena,type,aspects,upgradePower,upgradeHp,grit} map generated from
@@ -18,24 +18,12 @@ export interface CardStat {
 }
 
 const CARD_STATS_URL = '/card-stats.json';
-let cardStatMapPromise: Promise<Record<string, CardStat>> | null = null;
+const WARN = 'Failed to load card stat map; board stat badges will be hidden.';
 
-export function loadCardStatMap(): Promise<Record<string, CardStat>> {
-    if (!cardStatMapPromise) {
-        cardStatMapPromise = fetch(CARD_STATS_URL)
-            .then((res) => {
-                if (!res.ok) throw new Error(`card-stats.json ${res.status}`);
-                return res.json() as Promise<Record<string, CardStat>>;
-            })
-            .catch((err) => {
-                // Non-fatal: units render without power/HP badges if this can't load.
-                console.warn('Failed to load card stat map; board stat badges will be hidden.', err);
-                cardStatMapPromise = null;
-                return {};
-            });
-    }
-    return cardStatMapPromise;
-}
+export const loadCardStatMap = (): Promise<Record<string, CardStat>> => loadStaticJson<Record<string, CardStat>>(CARD_STATS_URL, WARN);
+
+/** Hook: SET#NUM -> stats map, empty until the static JSON loads. */
+export const useCardStatMap = (): Record<string, CardStat> => useStaticJson<Record<string, CardStat>>(CARD_STATS_URL, WARN);
 
 // Token entries are keyed `TOKEN:<Title>` (the generator has no set number to key on), but a
 // current file names a token `TOKEN:<internalName>#<numericId>[:copy]` (spec §6.1), and the
@@ -64,17 +52,4 @@ export function statOf(id: string, map: Record<string, CardStat>): CardStat | un
     if (direct) return direct;
     const art = tokenArtId(id);
     return art ? tokenById(map, art) : undefined;
-}
-
-/** Hook: SET#NUM -> stats map, empty until the static JSON loads. */
-export function useCardStatMap(): Record<string, CardStat> {
-    const [map, setMap] = useState<Record<string, CardStat>>({});
-    useEffect(() => {
-        let active = true;
-        loadCardStatMap().then((m) => {
-            if (active) setMap(m);
-        });
-        return () => { active = false; };
-    }, []);
-    return map;
 }

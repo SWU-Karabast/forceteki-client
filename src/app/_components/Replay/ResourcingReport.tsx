@@ -96,16 +96,14 @@ const DecisionList: React.FC<{ seat: Seat }> = ({ seat }) => {
 };
 
 const PlayerColumn: React.FC<{ seat: Seat; name: string; report: ResourcingReportData }> = ({ seat, name, report }) => {
-    const { doc, nameOf, seekToSeq } = useReplay();
+    const { nameOf, roundMarks, seekTo } = useReplay();
 
     const rows = report.byRound.filter((b) => b.seat === seat);
     const s = report.summary[seat];
-    const roundStartSeq = useMemo(() => {
-        const m: Record<number, string> = {};
-        for (const e of doc.events) if (e.t === 'ROUND_START') m[e.round] = e.seq;
-        return m;
-    }, [doc.events]);
-    const onSeek = (round: number) => { const seq = roundStartSeq[round]; if (seq) seekToSeq(seq); };
+    const onSeek = (round: number) => {
+        const mark = roundMarks.find((m) => m.label === `R${round}`);
+        if (mark) seekTo(mark.value);
+    };
 
     return (
         <Box sx={{ flex: 1, minWidth: 0 }}>

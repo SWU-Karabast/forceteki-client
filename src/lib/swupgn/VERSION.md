@@ -61,6 +61,26 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
 - **`fold.ts` untrusted-input guards** — seat validation (a `p` of `"__proto__"` resolved to
   Object.prototype and polluted it), non-object event records, scalar-where-array `cards`,
   and `base@[12]` only. Upstream folds server-generated files; the viewer folds uploads.
+  `isSeat` and `asIdList` are exported for the client's own per-tab utilities.
+- **`fold.ts` keyframe normalization** — `snapToKeyframe` ignores a keyframe that is not an
+  object and coerces each seat to the `PlayerState` shape (`normalizePlayer`/`normalizeCard`:
+  arrays, finite numbers, booleans; extra fields such as upstream's `power`/`hp`/`captured`
+  ride through), capping every list at `MAX_KEYFRAME_LIST` (200) BEFORE the deep copy so a
+  hostile keyframe is never cloned whole. A keyframe card without `upgrades` threw on the next
+  arena exit and took the whole replay down. Every test in `fold.test.ts` under "a keyframe
+  off an untrusted file".
+- **`fold.ts` / `tokens.ts` same-arena re-attach** — a MOVE whose `from` and `to` are the same
+  arena but which names a new `attachedTo` is an upgrade changing hosts: `dropInertRecords`
+  keeps it and `applyMoveCounts` detaches then attaches. Upstream drops it as inert.
+- **`parse.ts` record shape** — a record that parses to `null`, a number or a string is
+  refused with its line number (§4 says every record is an object). It used to reach
+  `events[i].seq` in the viewer and be persisted to IndexedDB before first render, so the
+  `?id=` link crash-looped.
+- **`cardNames.ts` / `render.ts` / `integrity.ts` untyped fields** — a non-string `name` in
+  the CARDS index is ignored and newlines in a name are flattened (a rendered story line
+  beginning `%%%` would end the STORY section of an export); `render()` treats a scalar
+  `cards`/`found` as empty; `checkKeyframes` skips a seat that is not PlayerState-shaped and a
+  keyframe that is not an object.
 - **`fold.ts` discard CONTENTS** — dedup plus removal, same reason as hand contents: the
   viewer renders the pile keyed by card id, and `numCardsInDeck` subtracts its length.
 

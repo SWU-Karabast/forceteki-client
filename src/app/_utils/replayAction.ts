@@ -1,4 +1,4 @@
-import { baseId, type GameEvent, type NameResolver, type Seat } from '@/lib/swupgn';
+import { type GameEvent, type NameResolver, type Seat, asIdList } from '@/lib/swupgn';
 
 // What happened on the current frame, for the animated caption + board highlight. Unlike
 // the move list (buildMoveList), this covers EVERY frame's event — including ability
@@ -16,7 +16,7 @@ const who = (p?: Seat): string => (p === 1 ? 'Player 1' : p === 2 ? 'Player 2' :
 const plural = (n: number) => (n === 1 ? '' : 's');
 
 export function frameAction(e: GameEvent | undefined, n: NameResolver): FrameAction {
-    const nm = (id: string) => n.nameOf(baseId(id));
+    const nm = (id: string) => n.nameOf(id); // every NameResolver strips the :copy suffix itself
     if (!e) return { label: '', highlight: [], kind: 'none' };
     switch (e.t) {
         case 'PLAY':
@@ -50,7 +50,7 @@ export function frameAction(e: GameEvent | undefined, n: NameResolver): FrameAct
             }
             return { label: '', highlight: [], kind: 'none' };
         case 'DISCARD':
-            return { label: `${who(e.p)} discards ${e.cards.length} card${plural(e.cards.length)}`, highlight: [], kind: 'discard' };
+            return { label: `${who(e.p)} discards ${asIdList(e.cards).length} card${plural(asIdList(e.cards).length)}`, highlight: [], kind: 'discard' };
         case 'DRAW':
             return { label: `${who(e.p)} draws ${e.count} card${plural(e.count)}`, highlight: [], kind: 'draw' };
         case 'CLAIM_INITIATIVE':

@@ -22,13 +22,20 @@ const NagPicker: React.FC<{ value: string; onChange: (v: string) => void }> = ({
                 <Tooltip key={g} title={info.label}>
                     <Box
                         component="span"
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={active}
+                        aria-label={info.label}
                         onClick={() => onChange(active ? '' : g)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChange(active ? '' : g); } }}
                         sx={{
                             cursor: 'pointer', px: 0.75, py: 0.1, borderRadius: '4px', fontWeight: 700,
                             fontSize: '0.8rem', userSelect: 'none', lineHeight: 1.6,
                             color: active ? '#0c0f16' : NAG_TONE_COLOR[info.tone],
                             backgroundColor: active ? NAG_TONE_COLOR[info.tone] : 'rgba(255,255,255,0.06)',
                             border: `1px solid ${NAG_TONE_COLOR[info.tone]}55`,
+                            '&:hover': { backgroundColor: active ? NAG_TONE_COLOR[info.tone] : 'rgba(255,255,255,0.14)' },
+                            '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 1 },
                         }}
                     >
                         {info.glyph}
@@ -57,6 +64,7 @@ const Composer: React.FC<{ onSubmit: (text: string, nag: string) => void; withNa
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder={placeholder}
+                    inputProps={{ 'aria-label': placeholder }}
                     size="small"
                     multiline
                     maxRows={4}
@@ -143,6 +151,7 @@ const DiscussionTab: React.FC = () => {
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="Your name"
+                inputProps={{ 'aria-label': 'Your name' }}
                 size="small"
                 sx={{
                     mb: 1.5,

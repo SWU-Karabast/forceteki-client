@@ -16,6 +16,12 @@ export function triggerBlobDownload(blob: Blob, filename: string): void {
     setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
+/** Download a .swupgn under its `<p1>-vs-<p2>.swupgn` name with the format's own MIME type. */
+export function downloadSwuPgn(doc: { header: { p1: string; p2: string } }, text: string): void {
+    const blob = new Blob([text], { type: 'application/vnd.swu-pgn' });
+    triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.swupgn`));
+}
+
 /** Reduce an arbitrary label to a safe download filename (alnum, dot, dash). */
 export function sanitizeFilename(name: string): string {
     return name.replace(/[^a-z0-9.-]+/gi, '-');

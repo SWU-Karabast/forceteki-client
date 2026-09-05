@@ -1,5 +1,5 @@
-import type { SwuPgnDocument, ReducedState, Seat } from '@/lib/swupgn';
-import { fold } from '@/lib/swupgn';
+import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn';
+import { foldFrames } from '@/lib/swupgn';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 
 // P4 heavy stretch: export a clip [start,end] as a real downloadable .webm. We CANNOT
@@ -11,6 +11,10 @@ import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob
 
 export interface ClipExportOpts {
     doc: SwuPgnDocument;
+
+    /** The REPAIRED stream the viewer scrubs (Replay.context `events`): `start`/`end` index
+     *  it, not `doc.events`, which is longer by every inert record the reader dropped. */
+    events: GameEvent[];
     start: number;
     end: number;
     // seq -> human move label (from the move list), for the action caption.
@@ -117,8 +121,7 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
     if (typeof window === 'undefined' || typeof window.MediaRecorder === 'undefined') {
         throw new Error('Clip export needs a browser with MediaRecorder support.');
     }
-    const { doc, start, end, labelForSeq, nameOf, msPerFrame = 700 } = opts;
-    const events = doc.events;
+    const { doc, events, start, end, labelForSeq, nameOf, msPerFrame = 700 } = opts;
     const lo = Math.max(0, Math.min(start, end));
     const hi = Math.min(events.length - 1, Math.max(start, end));
     // An empty range (no events, or start/end out of bounds) would record zero frames
@@ -139,9 +142,11 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
     recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
     const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); });
 
+    // One pass; refolding every prefix was O(n²) on the clip length.
+    const states = foldFrames(events.slice(0, hi + 1));
     recorder.start();
     for (let i = lo; i <= hi; i++) {
-        const state = fold(events.slice(0, i + 1));
+        const state = states[i];
         const caption = labelForSeq(events[i].seq) ?? '';
         drawFrame(ctx, state, doc.header, nameOf, caption, i, events.length - 1);
         await sleep(msPerFrame);

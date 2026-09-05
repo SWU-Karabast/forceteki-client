@@ -131,3 +131,19 @@ describe('resourcingReport — real sample game', () => {
         expect(rep.summary[2].totalDrawn).toBeGreaterThan(0);
     });
 });
+
+describe('resourcingReport on untyped records', () => {
+    it('skips a bad seat, a scalar cards field, a string count, and a primitive keyframe', async () => {
+        const { resourcingReport } = await import('../resourcingReport');
+        const doc = { events: [
+            { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: 5 },
+            { seq: '1', t: 'DRAW', p: 3, count: 2, cards: ['A'] },
+            { seq: '2', t: 'DRAW', p: 1, count: 'two', cards: 'A' },
+            { seq: '3', t: 'DRAW', p: 1, count: 'two', cards: ['A', 'B'] },
+            { seq: '4', t: 'PLAY', p: '1', card: 'A' },
+        ] } as unknown as Parameters<typeof resourcingReport>[0];
+        const r = resourcingReport(doc, {});
+        expect(r.summary[1].totalDrawn).toBe(2);
+        expect(r.summary[1].totalPlayed).toBe(0);
+    });
+});

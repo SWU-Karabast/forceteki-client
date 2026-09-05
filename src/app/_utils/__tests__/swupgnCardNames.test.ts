@@ -86,3 +86,12 @@ describe('token display names never leak the id shape', () => {
         expect(r.nameOf('SOR#999')).toBe('SOR#999');
     });
 });
+
+describe('makeNameResolver on hostile ids', () => {
+    it('never returns Object.prototype for __proto__ and always returns a string', async () => {
+        const { makeNameResolver } = await import('../swupgnCardNames');
+        const r = makeNameResolver(Object.assign(Object.create(null), { 'SOR#010': 'Darth Vader' }));
+        expect(r.nameOf('__proto__')).toBe('__proto__');
+        expect(typeof r.nameOf(5 as unknown as string)).toBe('string');
+    });
+});

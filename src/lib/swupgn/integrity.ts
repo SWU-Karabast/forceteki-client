@@ -24,8 +24,8 @@ function emptyState(): ReducedState {
  * construction; hand/resource/discard piles are compared via the count fields, not
  * per-card. `credits`, `hasForce`, `resourcesExhausted`, `hand`/`discard` contents and
  * `upgrades` are intentionally OUT of scope for this gate — they are not yet driven by
- * dedicated fold deltas upstream (the client folds credits/force from base MOVEs; upgrade
- * nesting is not modelled).
+ * dedicated fold deltas upstream (the client folds credits/force from base MOVEs and models
+ * upgrade nesting via attachToHost/detachFromHosts, but this gate does not compare it yet).
  * Closing those is a Plan-3 completeness item; see SwuPgnKeyframeCompleteness.spec.ts.
  *
  * NOTE on handSize/resourcesReady: the fold reconstructs these from MOVE events (the
@@ -95,9 +95,11 @@ function diffSeat(seq: string, seat: 1 | 2, e: PlayerState, g: PlayerState, chec
 function diff(seq: string, expected: ReducedState, got: ReducedState, checkBaseHp: boolean): KeyframeMismatch[] {
     const out: KeyframeMismatch[] = [];
     for (const seat of [1, 2] as const) {
-        const e = expected.players[seat];
+        const e = expected.players?.[seat];
         const g = got.players[seat];
-        if (e && g) {
+        // CLIENT-OWNED: the keyframe is untyped file content; a seat that is not a
+        // PlayerState-shaped object is the §13 "missing seat" case and is not compared.
+        if (e && g && typeof e === 'object' && Array.isArray(e.cards)) {
             out.push(...diffSeat(seq, seat, e, g, checkBaseHp));
         }
     }
@@ -120,7 +122,7 @@ export function checkKeyframes(events: GameEvent[]): IntegrityResult {
     const mismatches: KeyframeMismatch[] = [];
     let seenKeyframe = false;
     for (const e of events) {
-        if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe) {
+        if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe && typeof e.keyframe === 'object') {
             mismatches.push(...diff(e.seq, e.keyframe, s, seenKeyframe));
             seenKeyframe = true;
             s = snapToKeyframe(s, e.keyframe);

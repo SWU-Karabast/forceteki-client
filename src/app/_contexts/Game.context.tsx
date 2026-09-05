@@ -8,6 +8,7 @@ import React, {
     ReactNode,
     useEffect,
     useRef,
+    useMemo,
 } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
@@ -542,24 +543,29 @@ export const useGame = () => {
     const context = useContext(GameContext);
     // Always call useContext for ReplayContext (Rules of Hooks — same order every render).
     // Static import is safe: Replay.context does not import Game.context, so there is no
-    // module-level cycle (useBoardState imports both statically the same way).
+    // module-level cycle.
     const replayContext = useContext(ReplayContext);
+
+    // When outside a GameProvider (e.g., /Replay page), pull board state from ReplayContext
+    // so the board components get the correct connectedPlayer and gameState. Memoized so
+    // consumers see one object per replay frame instead of one per render. The replay is a
+    // finished game watched by a non-player: spectator, ended, no lobby, no chat.
+    const replayGame = useMemo<IGameContextType | null>(() => (replayContext ? {
+        ...FALLBACK_GAME_CONTEXT,
+        gameState: replayContext.gameState,
+        connectedPlayer: replayContext.connectedPlayer,
+        getOpponent: replayContext.getOpponent,
+        gameMessages: [],
+        isSpectator: true,
+        gameIsEnded: () => true,
+        lobbyState: null,
+    } as IGameContextType : null), [replayContext]);
 
     if (context) {
         return context;
     }
-
-    // When outside a GameProvider (e.g., /Replay page), pull board state
-    // from ReplayContext so card components (GameCard, LeaderBaseCard) get
-    // the correct connectedPlayer and gameState for rendering.
-    if (replayContext) {
-        return {
-            ...FALLBACK_GAME_CONTEXT,
-            gameState: replayContext.gameState,
-            gameMessages: replayContext.gameMessages,
-            connectedPlayer: replayContext.connectedPlayer,
-            getOpponent: replayContext.getOpponent,
-        } as IGameContextType;
+    if (replayGame) {
+        return replayGame;
     }
 
     // No GameProvider AND no ReplayContext — this is genuine misuse. Fail loudly

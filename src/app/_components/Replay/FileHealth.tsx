@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo, useState } from 'react';
 import { Box, Typography, Tooltip, Collapse } from '@mui/material';
-import { WarningAmberOutlined, CheckCircleOutlined } from '@mui/icons-material';
+import { WarningAmberOutlined, CheckCircleOutlined, ExpandMore } from '@mui/icons-material';
 import { checkKeyframes } from '@/lib/swupgn';
 import { fileIssues } from '@/app/_utils/swupgnFileIssues';
 import { useReplay } from '@/app/_contexts/Replay.context';
@@ -32,21 +32,14 @@ const FileHealth: React.FC = () => {
     const infos = issues.filter((i) => i.severity === 'info');
 
     if (result.ok && warnings.length === 0) {
-        if (infos.length > 0) {
-            return (
-                <Tooltip title={infos.map((i) => i.message).join(' ')}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'rgba(120,220,150,0.75)' }}>
-                        <CheckCircleOutlined sx={{ fontSize: 15 }} />
-                        <Typography variant="caption">File consistent · {infos.length === 1 ? infos[0].message.split(':')[0] : `${infos.length} notes`}</Typography>
-                    </Box>
-                </Tooltip>
-            );
-        }
+        const title = infos.length > 0 ? infos.map((i) => i.message).join(' ') : 'Every keyframe agrees with the folded events';
+        const suffix = infos.length === 0 ? '' : infos.length === 1 ? ` · ${infos[0].message.split(':')[0]}` : ` · ${infos.length} notes`;
         return (
-            <Tooltip title="Every keyframe agrees with the folded events">
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'rgba(120,220,150,0.75)' }}>
+            <Tooltip title={title}>
+                {/* Focusable so the tooltip (the only place the notes live) opens from the keyboard. */}
+                <Box tabIndex={0} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'rgba(120,220,150,0.75)', '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 } }}>
                     <CheckCircleOutlined sx={{ fontSize: 15 }} />
-                    <Typography variant="caption">File consistent</Typography>
+                    <Typography variant="caption">File consistent{suffix}</Typography>
                 </Box>
             </Tooltip>
         );
@@ -77,11 +70,13 @@ const FileHealth: React.FC = () => {
                 sx={{
                     display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer',
                     color: 'rgba(255,200,87,0.9)',
+                    '&:hover': { color: 'rgb(255,200,87)' },
                     '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
                 }}
             >
                 <WarningAmberOutlined sx={{ fontSize: 15 }} />
-                <Typography variant="caption">{badge}</Typography>
+                <Typography variant="caption" sx={{ flex: 1 }}>{badge}</Typography>
+                <ExpandMore sx={{ fontSize: 16, transition: 'transform 0.15s', transform: open ? 'rotate(180deg)' : 'none' }} />
             </Box>
             <Collapse in={open}>
                 {result.mismatches.length > 0 && (

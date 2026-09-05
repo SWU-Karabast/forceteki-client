@@ -4,7 +4,7 @@ export function formatResult(result: string): string {
 }
 
 function parseRoundPhase(seq: string): { round: string; phase: string } | null {
-    const m = seq.match(/^R(\d+)\.([A-Z])/);
+    const m = String(seq).match(/^R(\d+)\.([A-Z])/);
     if (!m) return null;
     const phase = m[2] === 'A' ? 'Action' : m[2] === 'G' ? 'Regroup' : m[2] === 'S' ? 'Setup' : m[2];
     return { round: m[1], phase };

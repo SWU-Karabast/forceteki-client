@@ -1,7 +1,7 @@
 import React, { useRef, useLayoutEffect, useState } from 'react';
 import { Box, Typography, Popover, PopoverOrigin } from '@mui/material';
 import { IDeckDiscardProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useBoardState } from '@/app/_hooks/useBoardState';
+import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
@@ -12,7 +12,7 @@ import { useDiscardPileHighlightSx } from '@/app/_contexts/OngoingEffectHighligh
 
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
-    const { gameState, connectedPlayer } = useBoardState();
+    const { gameState, connectedPlayer } = useGame();
     const { togglePopup, popups } = usePopup();
     const { isPortrait } = useScreenOrientation();
     const locale = useCardImageLocale();

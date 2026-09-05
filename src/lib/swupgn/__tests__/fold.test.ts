@@ -532,6 +532,59 @@ describe('hostile file cannot corrupt the page or the pile', () => {
     });
 });
 
+describe('a keyframe off an untrusted file is coerced to the PlayerState shape', () => {
+    const kf = (p1: Record<string, unknown>): ReducedState => ({
+        round: 1, phase: 'action', initiative: 1,
+        players: { 1: { seat: 1, ...p1 }, 2: keyframe().players[2] },
+    } as unknown as ReducedState);
+
+    it('a card that omits upgrades/statusTokens survives its own arena exit and DEFEAT', () => {
+        const start = { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf({ cards: [{ id: 'SOR#001', zone: 'ground' }] }) } as GameEvent;
+        let s = fold([start, { seq: '2', t: 'EXPERIENCE_GAIN', card: 'SOR#001', count: 1 } as GameEvent]);
+        expect(p1(s).cards[0].experience).toBe(1);
+        expect(p1(s).cards[0].upgrades).toEqual([]);
+        s = fold([start, { seq: '2', t: 'MOVE', card: 'SOR#001', from: 'ground', to: 'discard', p: 1 } as GameEvent]);
+        expect(p1(s).cards).toHaveLength(0);
+        s = fold([start, { seq: '2', t: 'DEFEAT', card: 'SOR#001' } as GameEvent]);
+        expect(p1(s).cards).toHaveLength(0);
+    });
+
+    it('non-array piles and non-numeric counts fall back instead of throwing on the next event', () => {
+        const start = { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf({ hand: 'nope', discard: null, credits: '3', baseHp: 'x', cards: [null, 7, { id: 'SOR#001', zone: 'ground', damage: 'lots' }] }) } as GameEvent;
+        const s = fold([start,
+            { seq: '2', t: 'MOVE', card: 'SOR#009', from: 'deck', to: 'hand', p: 1 },
+            { seq: '3', t: 'MOVE', card: 'TOKEN:credit#1', from: 'outsideTheGame', to: 'base', p: 1 },
+        ] as GameEvent[]);
+        expect(p1(s).hand).toEqual(['SOR#009']);
+        expect(p1(s).discard).toEqual([]);
+        expect(p1(s).credits).toBe(1);
+        expect(p1(s).baseHp).toBe(30);
+        expect(p1(s).cards).toEqual([{ id: 'SOR#001', zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {} }]);
+    });
+
+    it('caps every keyframe list, so one line cannot make every frame clone 50k strings', () => {
+        const big = Array.from({ length: 5000 }, (_, i) => `X#${i}`);
+        const ups = Array.from({ length: 5000 }, (_, i) => `U#${i}`);
+        const s = fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf({ hand: big, discard: big, cards: big.map((id) => ({ id, zone: 'ground', upgrades: ups })) }) }] as unknown as GameEvent[]);
+        expect(p1(s).hand.length).toBe(200);
+        expect(p1(s).discard.length).toBe(200);
+        expect(p1(s).cards.length).toBe(200);
+        expect(p1(s).cards[0].upgrades.length).toBe(200);
+    });
+
+    it('a keyframe that is not an object is ignored entirely', () => {
+        const s = fold([{ seq: '1', t: 'MOVE', card: 'SOR#009', from: 'deck', to: 'hand', p: 1 },
+            { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: 5 }] as unknown as GameEvent[]);
+        expect(p1(s).hand).toEqual(['SOR#009']);
+    });
+
+    it('a seat that is not an object is ignored and the folded seat kept', () => {
+        const s = fold([{ seq: '1', t: 'MOVE', card: 'SOR#009', from: 'deck', to: 'hand', p: 1 },
+            { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: { round: 1, phase: 'action', initiative: 1, players: { 1: 'garbage', 2: keyframe().players[2] } } }] as unknown as GameEvent[]);
+        expect(p1(s).hand).toEqual(['SOR#009']);
+    });
+});
+
 describe('keyframes do not smuggle token upgrades onto the board', () => {
     // The 1.0 writer lists a token UPGRADE in the keyframe's `cards[]` as though it were a
     // unit — the same token it also records on its host's statusTokens. MOVE events state
@@ -703,6 +756,26 @@ describe('upgrades attach to their host instead of standing in an arena', () => 
         const s = fold(normalizeEvents(pilotPlay).slice(0, 3));
         expect(p1(s).cards.map((c) => c.id)).toEqual(['JTL#221']);
         expect(p1(s).cards[0].upgrades).toEqual(['JTL#203']);
+    });
+
+    it('still recovers the binding with an inert record between the MOVE and its PLAY_UPGRADE', () => {
+        const ev: GameEvent[] = [pilotPlay[0], pilotPlay[1],
+            { seq: 'R3.A.0c', t: 'MOVE', card: 'X', from: 'hand', to: 'hand', p: 1 },
+            pilotPlay[2], pilotPlay[3]];
+        const s = fold(normalizeEvents(ev).slice(0, 3));
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['JTL#221']);
+        expect(p1(s).cards[0].upgrades).toEqual(['JTL#203']);
+    });
+
+    it('a same-arena MOVE naming a new host moves the upgrade over', () => {
+        const ev: GameEvent[] = [
+            { seq: '1', t: 'MOVE', card: 'H1', from: 'hand', to: 'ground', p: 1, kind: 'unit' },
+            { seq: '2', t: 'MOVE', card: 'H2', from: 'hand', to: 'ground', p: 1, kind: 'unit' },
+            { seq: '3', t: 'MOVE', card: 'U', from: 'hand', to: 'ground', p: 1, kind: 'upgrade', attachedTo: 'H1' },
+            { seq: '4', t: 'MOVE', card: 'U', from: 'ground', to: 'ground', p: 1, kind: 'upgrade', attachedTo: 'H2' },
+        ];
+        const s = fold(normalizeEvents(ev));
+        expect(Object.fromEntries(p1(s).cards.map((c) => [c.id, c.upgrades]))).toEqual({ H1: [], H2: ['U'] });
     });
 
     it('never lists an attached card as its own arena card after a keyframe snap', () => {

@@ -16,6 +16,10 @@ export function baseId(ref: string): string {
  */
 export function indexResolver(cards: readonly CardIndexRecord[] = []): NameResolver {
     // CLIENT-OWNED: entries come off JSON.parse, so a `null` line would throw here.
-    const byId = new Map(cards.filter((c) => !!c && typeof c === 'object').map((c) => [c.id, c.name]));
+    // CLIENT-OWNED: `name` is untyped too. A number reached DeckTab's `localeCompare` and
+    // threw; a newline reached serialize(), where a rendered story line beginning `%%%`
+    // would end the STORY section of the exported file and make it unreadable.
+    const byId = new Map(cards.filter((c) => !!c && typeof c === 'object')
+        .map((c) => [c.id, typeof c.name === 'string' ? c.name.replace(/[\r\n]+/g, ' ') : undefined]));
     return { nameOf: (id: string) => byId.get(baseId(id)) ?? baseId(id) };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { loadStaticJson, useStaticJson } from '@/app/_utils/staticJson';
 import { baseId, isTokenPseudoCard, tokenName, type NameResolver } from '@/lib/swupgn';
 
 /**
@@ -19,49 +19,17 @@ export function makeNameResolver(map: Record<string, string>): NameResolver {
                 const name = tokenName(id);
                 return name.replace(/(^|[\s-])\w/g, (c) => c.toUpperCase());
             }
-            return map[baseId(id)] ?? id;
+            return map[baseId(id)] ?? String(id);
         },
     };
 }
 
 // public/card-names.json is a static SET#NUM -> title map generated from forceteki's
-// card data (npm run gen:card-data). We fetch it once and module-cache the promise so
-// every replay that loads in this session shares one network round-trip.
+// card data (npm run gen:card-data).
 const CARD_NAMES_URL = '/card-names.json';
-let cardNameMapPromise: Promise<Record<string, string>> | null = null;
+const WARN = 'Failed to load card name map; move list will show ids.';
 
-export function loadCardNameMap(): Promise<Record<string, string>> {
-    if (!cardNameMapPromise) {
-        cardNameMapPromise = fetch(CARD_NAMES_URL)
-            .then((res) => {
-                if (!res.ok) throw new Error(`card-names.json ${res.status}`);
-                return res.json() as Promise<Record<string, string>>;
-            })
-            .catch((err) => {
-                // Non-fatal: the viewer falls back to raw SET#NUM ids. Reset the cache so a
-                // later mount can retry rather than reusing the rejected promise forever.
-                console.warn('Failed to load card name map; move list will show ids.', err);
-                cardNameMapPromise = null;
-                return {};
-            });
-    }
-    return cardNameMapPromise;
-}
+export const loadCardNameMap = (): Promise<Record<string, string>> => loadStaticJson<Record<string, string>>(CARD_NAMES_URL, WARN);
 
-/**
- * Hook: returns the SET#NUM -> title map, empty until the static JSON loads. Components
- * stay responsive on first paint (ids show), then re-render with names once it arrives.
- */
-export function useCardNameMap(): Record<string, string> {
-    const [map, setMap] = useState<Record<string, string>>({});
-    useEffect(() => {
-        let active = true;
-        loadCardNameMap().then((m) => {
-            if (active) setMap(m);
-        });
-        return () => {
-            active = false;
-        };
-    }, []);
-    return map;
-}
+/** Hook: SET#NUM -> title map, empty until the static JSON loads. */
+export const useCardNameMap = (): Record<string, string> => useStaticJson<Record<string, string>>(CARD_NAMES_URL, WARN);

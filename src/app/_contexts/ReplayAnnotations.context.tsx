@@ -6,7 +6,7 @@ import {
     loadAnnotations, saveAnnotations, mergeForExport, type WorkingAnnotation,
 } from '@/app/_utils/replayAnnotations';
 import { getAnnotationAuthor, setAnnotationAuthor } from '@/app/_utils/annotationAuthor';
-import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
+import { downloadSwuPgn } from '@/app/_utils/downloadBlob';
 
 export interface IReplayAnnotationsContext {
     // Session-authored notes (the editable working copy).
@@ -127,8 +127,7 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
     const exportDoc = useCallback(() => mergeForExport(doc, working), [doc, working]);
 
     const downloadWithAnnotations = useCallback(() => {
-        const blob = new Blob([serialize(exportDoc())], { type: 'application/vnd.swu-pgn' });
-        triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.swupgn`));
+        downloadSwuPgn(doc, serialize(exportDoc()));
     }, [doc, exportDoc]);
 
     const value = useMemo<IReplayAnnotationsContext>(() => ({

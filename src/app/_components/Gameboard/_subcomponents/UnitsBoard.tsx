@@ -6,7 +6,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
-import { useBoardState } from '@/app/_hooks/useBoardState';
+import { useGame } from '@/app/_contexts/Game.context';
 import BreakpointOverlay from './BreakpointOverlay';
 
 // Replay: a unit that just entered play animates in (scale + fade). Gated on the
@@ -26,6 +26,8 @@ const lungeUp = keyframes`
 const enterAnim = (card: ICardData) => (card.entering ? `${cardEnter} 0.32s ease-out` : 'none');
 const lungeAnim = (card: ICardData, dir: 'up' | 'down') =>
     (card.attacking ? `${dir === 'up' ? lungeUp : lungeDown} 0.42s ease-in-out` : 'none');
+// Honour the OS "reduce motion" setting: a replay at 8x lunges and fades several times a second.
+const REDUCED_MOTION = { '@media (prefers-reduced-motion: reduce)': { animation: 'none' } };
 // Combine enter + lunge (a card won't do both on the same frame, but compose safely).
 const cardAnim = (card: ICardData, dir: 'up' | 'down') =>
     [enterAnim(card), lungeAnim(card, dir)].filter((a) => a !== 'none').join(', ') || 'none';
@@ -99,7 +101,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         }));
     };
 
-    const { gameState, connectedPlayer, getOpponent } = useBoardState();
+    const { gameState, connectedPlayer, getOpponent } = useGame();
 
     const rawPlayerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
     const rawOpponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];
@@ -201,7 +203,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Opponent's Ground Units */}
                 <Box sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={{ animation: cardAnim(card, 'down') }}>
+                        <Box key={card.uuid} sx={{ animation: cardAnim(card, 'down'), ...REDUCED_MOTION }}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
@@ -211,7 +213,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={{ animation: cardAnim(card, 'up') }}>
+                        <Box key={card.uuid} sx={{ animation: cardAnim(card, 'up'), ...REDUCED_MOTION }}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
