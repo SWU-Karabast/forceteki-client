@@ -390,11 +390,10 @@ function adaptPlayer(
     // A spent Epic Action is game state (CR 1.16); LeaderBaseCard draws the token for it.
     if (ps.leader?.epicActionUsed === true) leader.epicActionSpent = true;
     if (highlight && highlight.has(leaderId) || (highlight && highlight.has(headerLeaderId))) leader.selected = true;
-    // Base HP: the .swupgn stream never states a base's printed HP, and ReducedState seeds
-    // every base at 30 — so bases with an aspect penalty or a Force slot (33, 28, ...) read
-    // wrong, and the base showed no damage at all because nothing set `damage` on it.
-    // Printed HP comes from card data; current HP is derived by the caller from the
-    // absolute `hp` on base DAMAGE/HEAL/OVERWHELM events.
+    // Base HP is the file's: `baseHp` is snapped from every keyframe and set absolutely by
+    // every base DAMAGE/HEAL/OVERWHELM (spec §11). The one window the file cannot cover is
+    // before the first keyframe, where the fold holds the placeholder 30; the caller may pass
+    // a card-data value for that window (§21 allows a reader with card data to derive it).
     const base = cardFromId(baseSetId, 'base', playerId, playerId, statOf(baseSetId, statMap), nameOf?.(baseSetId));
     base.type = 'base';
     // Printed HP the card data does not carry comes from the keyframe's `baseMaxHp` (30 is
@@ -402,8 +401,9 @@ function adaptPlayer(
     if (typeof base.hp !== 'number' && typeof ps.baseMaxHp === 'number') {
         base.hp = ps.baseMaxHp;
     }
-    if (typeof base.hp === 'number' && typeof baseHp === 'number') {
-        base.damage = Math.max(0, base.hp - baseHp);
+    const hpNow = typeof baseHp === 'number' ? baseHp : ps.baseHp;
+    if (typeof base.hp === 'number' && typeof hpNow === 'number') {
+        base.damage = Math.max(0, base.hp - hpNow);
     }
     // The board reads the player's aspects (leader + base) to pick the Heroism/Villainy
     // Force-token art, and `id` to tell whose side of the board it is on. Both are

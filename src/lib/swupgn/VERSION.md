@@ -47,15 +47,60 @@ fs/path + ajv). `tokens.ts`, `serialize.ts` and `foldFrames` are client-only.
 - Render wording: `plays X on Host`, `deploys X as a pilot on Vehicle`, `captures X with Y`,
   `holds X` in the board summary; the resource counters print nothing.
 
+## UI coverage: where each §11 field renders
+
+Every field of `ReducedState` (spec §11) reaches the screen through `swupgnBoardAdapter.adaptState`,
+which builds the live board's `gameState` shape; the components are the live game's own. The
+client never derives what the file states: card data is used for names, art, aspects, and two
+fallbacks noted below. Verified per vector at the final frame by
+`src/app/_utils/__tests__/vectorsBoard.test.ts`, and per field by `swupgnBoardAdapter.test.ts`.
+
+| §11 field | Adapter output | Component |
+|---|---|---|
+| `round`, `phase` | `gameState.phase`; the round comes from the current `seq` | `TransportControls` (round/phase label, round marks) |
+| `initiative` | `players[id].hasInitiative` | `Board` initiative token |
+| `initiativeTaken` | `gameState.initiativeClaimed` (older file: `initiative != null`) | `Board` initiative token (filled = taken) |
+| `baseHp` / `baseMaxHp` | `base.hp` = printed HP (card data) or the keyframe's `baseMaxHp`; `base.damage` = max − `baseHp`. Before the first keyframe the fold holds the placeholder 30, so `Replay.context.baseHpByFrame` supplies card-data HP for that window only (§21) | `LeaderBaseCard` (base) |
+| `handSize`, `hand[]` | `cardPiles.hand`: the named cards, padded to `handSize` with face-down placeholders (a Perspective file); fog-of-war hides identities and keeps the count | `PlayerHand` |
+| `deckSize` | `numCardsInDeck` = the file's `deckSize`; falls back to the INIT-order tracker (`deckTracker`); `undefined` when neither is known (absent ≠ zero) | `DeckDiscard` |
+| `resourcesReady` / `resourcesExhausted` | `availableResources` = ready; `cardPiles.resources` = ready + exhausted (named from the `hand → resource` MOVEs, face-down for the remainder) | `Resources` (`ready/total`) |
+| `credits` | `cardPiles.credits` (one placeholder per credit) | `Credits` |
+| `hasForce` | `forceToken.active` | `LeaderBaseCard` (Force token on the base) |
+| `discard[]` | `cardPiles.discard` | `DeckDiscard` |
+| `leader.id` | `leader.uuid` (header leader as fallback) | `LeaderBaseCard` |
+| `leader.deployed` | `leader.zone` = `base` (art) or `leader` (deployed placeholder); a pilot leader rides on its host as a parented upgrade card | `LeaderBaseCard`, `UnitsBoard`/`GameCard` |
+| `leader.exhausted` | `leader.exhausted` while undeployed (dimmed); the arena card's or the pilot card's flag while deployed. Older file: `Replay.context.leaderExhaustByFrame` (EXHAUST/READY scan) | `LeaderBaseCard`, `GameCard` |
+| `leader.epicActionUsed` | `leader.epicActionSpent` | `LeaderBaseCard` epic-action token |
+| `cards[].zone` | `groundArena` / `spaceArena` | `UnitsBoard` |
+| `cards[].damage`, `exhausted` | `damage`, `exhausted` (exhausted rotates the card) | `GameCard` |
+| `cards[].power`, `hp` | `power`, `hp` from `STATS`/keyframes. A pre-STATS file gets `effectiveStats` (printed + attachments + Grit from card data) and `statsReconstructed: true`, drawn as a `≈` marker with a tooltip | `GameCard` power/HP badges |
+| `cards[].keywords` | `keywords` (chips along the card's top edge, verbatim), `sentinel` (the live board's Sentinel icon) | `GameCard` |
+| `cards[].upgrades` | one parented arena card per printed upgrade / pilot, named and aspected for the banner | `UnitsBoard` → `GameCard` upgrade bars |
+| `cards[].shields`, `experience`, `statusTokens` | one parented `token` card per counter (`Shield`, `Experience`, `Advantage`, `Weakness`, any other name titled from the token) | `GameCard` token badges; an unknown token name renders as a named bar |
+| `cards[].captured` | `cardPiles.capturedZone`, one card per captive with `parentCardId` = captor; a `base@N` captor is held nowhere (§21) | `UnitsBoard` → `GameCard` captured strip |
+| controller vs owner | `controllerId` = the seat whose list holds the card; `ownerId` from the file's DECKS/header (`ownerSeatMap`), so a `TAKE_CONTROL`ed card shows the stolen icon | `GameCard` status icons |
+
+Beyond the board: `Replay.context` captions every frame with `replayAction.frameAction`, worded
+per the §16 table (mechanism records print nothing) and named with the story's `nm()`
+(`storyName`: copy suffix kept, `base@N` → "Player N's base"). `ResourcingReport` shows
+`paid` (Σ `EXHAUST_RESOURCES`) beside the printed `cost`. `FileHealth` shows every
+`checkKeyframes` mismatch (`seq`/`path`/`expected`/`got`), damaged keyframes, `RecorderErrors`,
+the §5.3/§6.2/§10.1/§13/§18 notes (`fileIssues`) and which earlier writer produced the file
+(`writerGeneration`, one line per detectable row of §22/§22.1, with what it costs the replay).
+
 ## Conformance gate
 
 `__tests__/vectors.test.ts` runs every vector under `__tests__/fixtures/vectors/` (all five,
 copied verbatim from forceteki `swupgn/test-vectors/`: `minimal`, `organic`, `upgrades`,
 `pilot`, `capture`) through parse → fold → render and requires byte-identical render and a
 byte-identical fold apart from the two pile contents below; every vector must also pass
-`checkKeyframes` with no mismatch (spec §20 step 5). Step 2 (`validate()`) is asserted
-upstream on the same bytes. `__tests__/fixtures/sample-game.swupgn` is a pre-1.0 file and
-pins the compatibility shims.
+`checkKeyframes` with no mismatch (spec §20 step 5), and survive serialize → parse with an
+identical fold and render. Step 2 (`validate()`) is asserted upstream on the same bytes.
+`src/app/_utils/__tests__/vectorsBoard.test.ts` takes each vector one level up, through
+`adaptState`, and asserts every §11 field against `.fold.json`, plus a clean `FileHealth`.
+`src/app/_utils/__tests__/swupgnCompat.test.ts` has one test per row of the §22 and §22.1
+tables. `__tests__/fixtures/sample-game.swupgn` is a pre-1.0 file and pins the compatibility
+shims.
 
 ## Version numbers do not order this format
 

@@ -53,14 +53,23 @@ describe.each(VECTORS)('test vector: %s', (name) => {
         expect(doc.story!.join('\n')).toBe(render(doc).replace(/^\n+|\n+$/g, ''));
     });
 
-    it('survives a serialize/parse round trip with every section intact', async () => {
+    it('survives a serialize/parse round trip with every section intact, folding and rendering identically', async () => {
         const { serialize } = await import('../index');
-        const again = parse(serialize(doc));
+        const text = serialize(doc);
+        // Canonical section order (spec §4), STORY and CARDS included.
+        expect(text.split('\n').filter((l) => l.startsWith('%%% ')))
+            .toEqual(['%%% STORY', '%%% DECKS', '%%% CARDS', '%%% SETUP', '%%% EVENTS', '%%% ANNOTATIONS']);
+        const again = parse(text);
         expect(again.events).toEqual(doc.events);
         expect(again.cards).toEqual(doc.cards);
         expect(again.story).toEqual(doc.story);
         expect(again.annotations).toEqual(doc.annotations);
         expect(again.header).toEqual(doc.header);
+        expect(fold(again.events)).toEqual(fold(doc.events));
+        expect(render(again)).toBe(render(doc));
+        // Threaded annotation fields (spec §15) ride through untouched.
+        const threaded = { ...doc, annotations: [...doc.annotations, { ref: doc.events[1].seq, text: 'reply', id: 'n2', parent: 'n1', ts: 1700000000000, by: 'p1' }] };
+        expect(parse(serialize(threaded)).annotations).toEqual(threaded.annotations);
     });
 
     it('passes the §14 gate with no mismatch (spec §20 step 5)', () => {

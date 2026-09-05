@@ -4,7 +4,7 @@
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent, NameResolver } from '@/lib/swupgn';
-import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver } from '@/lib/swupgn';
+import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver, isCompleteKeyframe } from '@/lib/swupgn';
 import { storyName } from '@/app/_utils/replayAction';
 import { adaptState, type AdaptOptions, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { deckByFrame, type DeckState } from '@/app/_utils/deckTracker';
@@ -209,30 +209,28 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         [events],
     );
 
-    // Per-frame base HP. ReducedState seeds every base at 30 because the fold has no card
-    // data, so a 33- or 28-HP base reads wrong until its first DAMAGE event — and the base
-    // never showed damage at all. Seed from printed HP instead and apply the ABSOLUTE `hp`
-    // the engine puts on every base DAMAGE/HEAL/OVERWHELM.
+    // Per-frame base HP for the window BEFORE the first keyframe only. The fold's `baseHp` is
+    // the file's own number from the first keyframe on (snapped there, then absolute on every
+    // base DAMAGE/HEAL/OVERWHELM, spec §11) and wins outright; before it the fold holds the
+    // placeholder 30, and a 33- or 28-HP base read wrong. Card data supplies the printed HP
+    // for that window (§21), with the same absolute `hp` records applied on top.
     const baseHpByFrame = useMemo<Array<Record<Seat, number | undefined>>>(() => {
-        const printed: Record<Seat, number | undefined> = {
+        const cur: Record<Seat, number | undefined> = {
             1: statMap[baseId(doc.header.p1Base)]?.hp,
             2: statMap[baseId(doc.header.p2Base)]?.hp,
         };
-        const cur: Record<Seat, number | undefined> = { 1: printed[1], 2: printed[2] };
         const out: Array<Record<Seat, number | undefined>> = new Array(events.length);
+        let seenKeyframe = false;
         for (let i = 0; i < events.length; i++) {
             const e = events[i];
+            if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && isCompleteKeyframe(e.keyframe)) seenKeyframe = true;
             if (e.t === 'DAMAGE' || e.t === 'HEAL' || e.t === 'OVERWHELM') {
                 const m = /^base@(\d)$/.exec(e.tgt);
                 if (m) cur[Number(m[1]) as Seat] = e.hp;
             }
-            // A base the card data does not know has no printed HP here; fall back to the
-            // fold's own value, which the first keyframe corrects and every base DAMAGE/HEAL/
-            // OVERWHELM keeps absolute (spec §11).
-            out[i] = {
-                1: cur[1] ?? frameStates[i]?.players[1]?.baseHp,
-                2: cur[2] ?? frameStates[i]?.players[2]?.baseHp,
-            };
+            out[i] = seenKeyframe
+                ? { 1: frameStates[i]?.players[1]?.baseHp, 2: frameStates[i]?.players[2]?.baseHp }
+                : { 1: cur[1] ?? frameStates[i]?.players[1]?.baseHp, 2: cur[2] ?? frameStates[i]?.players[2]?.baseHp };
         }
         return out;
     }, [events, frameStates, doc.header.p1Base, doc.header.p2Base, statMap]);
