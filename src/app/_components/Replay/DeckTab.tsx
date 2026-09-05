@@ -110,6 +110,10 @@ const DeckTab: React.FC = () => {
                 <SeatDeck seat={1} name={header.p1 || 'Player 1'} reveal={reveal} />
                 <SeatDeck seat={2} name={header.p2 || 'Player 2'} reveal={reveal} />
             </Box>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', display: 'block', mt: 2 }}>
+                Deck counts are the file&apos;s own. The cards shown in each hand and discard pile are best-effort:
+                the file&apos;s snapshots verify only how many are there, not which (spec §14).
+            </Typography>
         </Box>
     );
 };

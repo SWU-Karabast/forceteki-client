@@ -38,7 +38,7 @@ const TurnDigests: React.FC = () => {
                             <Typography key={seat} variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.82rem' }}>
                                 <Box component="span" sx={{ color: 'var(--initiative-blue)', fontWeight: 700 }}>{seat === 1 ? p1 : p2}</Box>
                                 {`: resourced ${row.resourced}, played ${row.played}, drawn ${row.drawn}`}
-                                {row.spent != null && `, spent ${row.spent}`}
+                                {row.paid != null ? `, paid ${row.paid}` : row.spent != null ? `, cost ${row.spent}` : ''}
                             </Typography>
                         );
                     })}

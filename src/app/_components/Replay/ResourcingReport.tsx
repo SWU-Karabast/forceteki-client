@@ -9,11 +9,16 @@ import type { Seat } from '@/lib/swupgn';
 const fmtPct = (v: number | null) => (v == null ? '—' : `${Math.round(v * 100)}%`);
 const fmtNum = (v: number | null) => (v == null ? '—' : String(v));
 
-const RoundTable: React.FC<{ rows: PlayerRoundResourcing[]; onSeek: (round: number) => void }> = ({ rows, onSeek }) => (
+/**
+ * `Paid` is the file's own count of resources exhausted (EXHAUST_RESOURCES, spec §10.1). A file
+ * written before that record existed only carries each play's PRINTED cost, which is not what
+ * was paid once an aspect penalty or a discount applied: that column is labelled `Cost*`.
+ */
+const RoundTable: React.FC<{ rows: PlayerRoundResourcing[]; paid: boolean; onSeek: (round: number) => void }> = ({ rows, paid, onSeek }) => (
     <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
         <Box component="thead">
             <Box component="tr" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>
-                {['Rnd', 'Res', 'Play', 'Draw', 'Pool', 'Spent', 'Float'].map((h) => (
+                {['Rnd', 'Res', 'Play', 'Draw', 'Pool', paid ? 'Paid' : 'Cost*', 'Float'].map((h) => (
                     <Box component="th" key={h} sx={{ py: 0.5, px: 0.75, fontWeight: 600, textAlign: h === 'Rnd' ? 'left' : 'right' }}>{h}</Box>
                 ))}
             </Box>
@@ -39,7 +44,9 @@ const RoundTable: React.FC<{ rows: PlayerRoundResourcing[]; onSeek: (round: numb
                     <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{r.played}</Box>
                     <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{r.drawn}</Box>
                     <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{fmtNum(r.pool)}</Box>
-                    <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{fmtNum(r.spent)}</Box>
+                    <Tooltip title={paid && r.spent != null ? `Printed cost of the cards played: ${r.spent}` : ''}>
+                        <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{fmtNum(paid ? r.paid : r.spent)}</Box>
+                    </Tooltip>
                     <Tooltip title={r.underspent ? 'Left resources unspent' : ''}>
                         <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right', fontWeight: r.underspent ? 800 : 400 }}>{fmtNum(r.float)}</Box>
                     </Tooltip>
@@ -112,10 +119,10 @@ const PlayerColumn: React.FC<{ seat: Seat; name: string; report: ResourcingRepor
                 <Stat label="Resourced" value={s.totalResourced} />
                 <Stat label="Played" value={s.totalPlayed} />
                 <Stat label="Drawn" value={s.totalDrawn} />
-                <Stat label="Spent" value={s.totalSpent} />
+                <Stat label={report.hasPaidData ? 'Paid' : 'Cost*'} value={report.hasPaidData ? fmtNum(s.totalPaid) : s.totalSpent} />
                 <Stat label="Avg eff." value={fmtPct(s.avgEfficiency)} />
             </Box>
-            <RoundTable rows={rows} onSeek={onSeek} />
+            <RoundTable rows={rows} paid={report.hasPaidData} onSeek={onSeek} />
             <Box sx={{ mt: 1.5 }}>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>
                     Drawn, never played: {s.drawnNeverPlayed.length}
@@ -150,9 +157,14 @@ const ResourcingReport: React.FC = () => {
 
     return (
         <Box sx={{ p: 1.5 }}>
-            {!hasCost && (
+            {!hasCost && !report.hasPaidData && (
                 <Typography variant="caption" sx={{ color: 'rgba(255,200,87,0.9)', display: 'block', mb: 1.5 }}>
                     No card cost data resolved for this game — showing resourcing tempo only (spend/float unavailable).
+                </Typography>
+            )}
+            {!report.hasPaidData && hasCost && (
+                <Typography variant="caption" sx={{ color: 'rgba(255,200,87,0.9)', display: 'block', mb: 1.5 }}>
+                    *Cost is each card&apos;s printed cost. This file predates the resource counters, so what was actually paid (after aspect penalties and discounts) is not recorded.
                 </Typography>
             )}
             <Box sx={{ display: 'flex', gap: 3 }}>
@@ -160,7 +172,7 @@ const ResourcingReport: React.FC = () => {
                 <PlayerColumn seat={2} name={doc.header.p2 || 'Player 2'} report={report} />
             </Box>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', display: 'block', mt: 2 }}>
-                Red rows left ≥2 resources unspent. Click a row to jump to that round.
+                Red rows left ≥2 resources unspent{report.hasPaidData ? ' (by what was paid, not printed cost)' : ''}. Click a row to jump to that round.
             </Typography>
         </Box>
     );

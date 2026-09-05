@@ -8,6 +8,11 @@ import { baseId, isSeat, asIdList } from '@/lib/swupgn';
 // What's exact here vs KaraBuddy's scrape-and-infer: cards resourced/played/drawn per
 // round and "drawn but never played" come straight from the event ids; pool comes from
 // the round-start keyframe; spend = Σ cost of cards actually played. No re-derivation.
+//
+// Two different numbers, and the spec keeps them apart (§10.1): `cost` on a play record is
+// the PRINTED cost, and what was actually PAID (aspect penalties, discounts, Exploit) is the
+// `EXHAUST_RESOURCES` written beside it. `paid` is the file's own sum of those; `spent` is
+// the printed sum. Float uses `paid` when the file carries it.
 
 export interface PlayerRoundResourcing {
     seat: Seat;
@@ -18,11 +23,14 @@ export interface PlayerRoundResourcing {
     resourced: number;
     // Play actions this round (units/upgrades/events/leader).
     played: number;
-    // Sum of cost of cards played this round, or null if no cost data for any play.
+    // Sum of PRINTED cost of cards played this round, or null if no cost data for any play.
     spent: number | null;
     // How many of this round's plays had a known cost (completeness of `spent`).
     costsKnown: number;
-    // pool - spent, clamped >=0; null when pool or spent is unknown.
+    // Resources actually PAID this round: the sum of EXHAUST_RESOURCES amounts (spec §10.1).
+    // Null in a file written before the counter existed.
+    paid: number | null;
+    // pool - (paid ?? spent), clamped >=0; null when pool and the spend are unknown.
     float: number | null;
     // Flagged when float >= the underspend threshold (resources left unspent).
     underspent: boolean;
@@ -36,7 +44,9 @@ export interface PlayerResourcingSummary {
     totalPlayed: number;
     totalDrawn: number;
     totalSpent: number;
-    // Mean per-round spend/pool over rounds where both are known, or null.
+    // Sum of `paid` over rounds that carry it; null when no round does.
+    totalPaid: number | null;
+    // Mean per-round (paid ?? spent)/pool over rounds where both are known, or null.
     avgEfficiency: number | null;
     // Exact ids drawn but never played to an arena (held, resourced, or discarded).
     drawnNeverPlayed: string[];
@@ -50,6 +60,8 @@ export interface ResourcingReport {
     summary: Record<Seat, PlayerResourcingSummary>;
     // True when at least one play cost was resolvable (float/spend meaningful).
     hasCostData: boolean;
+    // True when the file records EXHAUST_RESOURCES, so `paid` is the engine's own number.
+    hasPaidData: boolean;
 }
 
 const ARENA = new Set(['ground', 'space']);
@@ -62,11 +74,12 @@ interface Acc {
     played: number;
     spent: number;
     costsKnown: number;
+    paid: number | null;
     drawn: number;
 }
 
 function emptyAcc(): Acc {
-    return { pool: null, resourced: 0, played: 0, spent: 0, costsKnown: 0, drawn: 0 };
+    return { pool: null, resourced: 0, played: 0, spent: 0, costsKnown: 0, paid: null, drawn: 0 };
 }
 
 function costFor(card: string, explicit: number | undefined, costMap: Record<string, number>): number | undefined {
@@ -86,6 +99,7 @@ export function resourcingReport(doc: SwuPgnDocument, costMap: Record<string, nu
     const playedIds: Record<Seat, Set<string>> = { 1: new Set(), 2: new Set() };
     const resourcedIds: Record<Seat, Set<string>> = { 1: new Set(), 2: new Set() };
     let costResolved = false;
+    let hasPaid = false;
 
     let round = 0;
     const cell = (seat: Seat, r: number): Acc => {
@@ -156,6 +170,14 @@ export function resourcingReport(doc: SwuPgnDocument, costMap: Record<string, nu
             case 'DEPLOY_LEADER':
                 recordPlay(e.p, e.card, 'cost' in e ? e.cost : undefined);
                 break;
+            case 'EXHAUST_RESOURCES': {
+                // What was paid, as the engine counted it. `amount | 0` turns a hostile
+                // non-number into 0 rather than NaN, as the fold does.
+                const a = cell(e.p, round);
+                a.paid = (a.paid ?? 0) + Math.max(0, e.amount | 0);
+                hasPaid = true;
+                break;
+            }
             default:
                 break;
         }
@@ -169,11 +191,14 @@ export function resourcingReport(doc: SwuPgnDocument, costMap: Record<string, nu
             const a = cells.get(`${r}:${seat}`);
             if (!a) continue;
             const spent = a.costsKnown > 0 ? a.spent : null;
-            const float = a.pool != null && spent != null ? Math.max(0, a.pool - spent) : null;
+            // A round the file counted has a paid figure even when nothing was paid.
+            const paid = hasPaid ? (a.paid ?? 0) : null;
+            const outlay = paid ?? spent;
+            const float = a.pool != null && outlay != null ? Math.max(0, a.pool - outlay) : null;
             byRound.push({
                 seat, round: r,
                 pool: a.pool, resourced: a.resourced, played: a.played,
-                spent, costsKnown: a.costsKnown,
+                spent, costsKnown: a.costsKnown, paid,
                 float, underspent: float != null && float >= UNDERSPEND_THRESHOLD,
                 drawn: a.drawn,
             });
@@ -183,10 +208,11 @@ export function resourcingReport(doc: SwuPgnDocument, costMap: Record<string, nu
     const summary = {} as Record<Seat, PlayerResourcingSummary>;
     for (const seat of [1, 2] as Seat[]) {
         const seatRounds = byRound.filter((b) => b.seat === seat);
-        const effRounds = seatRounds.filter((b) => b.pool != null && b.pool > 0 && b.spent != null);
+        const effRounds = seatRounds.filter((b) => b.pool != null && b.pool > 0 && (b.paid ?? b.spent) != null);
         const avgEfficiency = effRounds.length
-            ? effRounds.reduce((s, b) => s + (b.spent! / b.pool!), 0) / effRounds.length
+            ? effRounds.reduce((s, b) => s + ((b.paid ?? b.spent)! / b.pool!), 0) / effRounds.length
             : null;
+        const paidRounds = seatRounds.filter((b) => b.paid != null);
         const neverPlayed = [...drawnIds[seat]].filter((id) => !playedIds[seat].has(id));
         summary[seat] = {
             seat,
@@ -194,11 +220,12 @@ export function resourcingReport(doc: SwuPgnDocument, costMap: Record<string, nu
             totalPlayed: seatRounds.reduce((s, b) => s + b.played, 0),
             totalDrawn: seatRounds.reduce((s, b) => s + b.drawn, 0),
             totalSpent: seatRounds.reduce((s, b) => s + (b.spent ?? 0), 0),
+            totalPaid: paidRounds.length ? paidRounds.reduce((s, b) => s + (b.paid ?? 0), 0) : null,
             avgEfficiency,
             drawnNeverPlayed: neverPlayed,
             resourcedFromHand: neverPlayed.filter((id) => resourcedIds[seat].has(id)).length,
         };
     }
 
-    return { rounds, byRound, summary, hasCostData: costResolved };
+    return { rounds, byRound, summary, hasCostData: costResolved, hasPaidData: hasPaid };
 }

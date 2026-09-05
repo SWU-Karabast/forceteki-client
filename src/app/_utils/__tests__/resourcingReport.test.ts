@@ -147,3 +147,51 @@ describe('resourcingReport on untyped records', () => {
         expect(r.summary[1].totalPlayed).toBe(0);
     });
 });
+
+describe('resourcingReport — paid (EXHAUST_RESOURCES) versus printed cost (spec §10.1)', () => {
+    const events: GameEvent[] = [
+        { seq: 'R1.S.0', t: 'ROUND_START', round: 1, keyframe: keyframe(5, 5) },
+        { seq: 'R1.A.0a', t: 'EXHAUST_RESOURCES', p: 1, amount: 4 }, // aspect penalty on a cost-3 card
+        { seq: 'R1.A.1', t: 'PLAY', p: 1, card: 'A', cost: 3 },
+        { seq: 'R1.A.1b', t: 'EXHAUST_RESOURCES', p: 2, amount: 1 }, // an ability, no play
+        { seq: 'R1.A.2', t: 'PASS', p: 2 },
+        { seq: 'R2.S.0', t: 'ROUND_START', round: 2, keyframe: keyframe(6, 6) },
+        { seq: 'R2.A.1', t: 'PLAY', p: 1, card: 'B', cost: 2 }, // a free play: nothing exhausted
+    ];
+    const rep = resourcingReport(docWith(events));
+
+    it('keeps the two numbers apart and floats on what was paid', () => {
+        const r1 = rep.byRound.find((b) => b.seat === 1 && b.round === 1)!;
+        expect(r1.spent).toBe(3);
+        expect(r1.paid).toBe(4);
+        expect(r1.float).toBe(1);
+        const r2 = rep.byRound.find((b) => b.seat === 1 && b.round === 2)!;
+        expect(r2.spent).toBe(2);
+        expect(r2.paid).toBe(0);
+        expect(r2.float).toBe(6);
+        expect(r2.underspent).toBe(true);
+        expect(rep.hasPaidData).toBe(true);
+    });
+
+    it('counts a payment with no play, and sums per seat', () => {
+        const p2 = rep.byRound.find((b) => b.seat === 2 && b.round === 1)!;
+        expect(p2.paid).toBe(1);
+        expect(p2.spent).toBeNull();
+        expect(rep.summary[1].totalPaid).toBe(4);
+        expect(rep.summary[1].totalSpent).toBe(5);
+        expect(rep.summary[1].avgEfficiency).toBeCloseTo((4 / 5 + 0 / 6) / 2);
+    });
+
+    it('a file with no counter has no paid figure and falls back to printed cost', () => {
+        const old = resourcingReport(docWith(events.filter((e) => e.t !== 'EXHAUST_RESOURCES')));
+        expect(old.hasPaidData).toBe(false);
+        expect(old.byRound.every((b) => b.paid === null)).toBe(true);
+        expect(old.summary[1].totalPaid).toBeNull();
+        expect(old.byRound.find((b) => b.seat === 1 && b.round === 1)!.float).toBe(2);
+    });
+
+    it('clamps a hostile amount to zero instead of NaN', () => {
+        const r = resourcingReport(docWith([events[0], { seq: 'x', t: 'EXHAUST_RESOURCES', p: 1, amount: 'lots' as unknown as number }]));
+        expect(r.byRound.find((b) => b.seat === 1)!.paid).toBe(0);
+    });
+});
