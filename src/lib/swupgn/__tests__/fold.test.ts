@@ -393,6 +393,25 @@ describe('token upgrades vs token units', () => {
         expect(p1(s).cards).toEqual([]);
     });
 
+    // Two X-Wings are two units, and the spec settles it in the id: a second copy is
+    // `TOKEN:x-wing#<id>:2`, never a repeat of the first id. So placement stays idempotent
+    // by id — a real stream emits CREATE_TOKEN *and* the MOVE that carries the same token
+    // into its arena, and folding both must not leave two of it — while distinct copies
+    // fold to distinct cards.
+    it('gives each token copy its own card and never double-adds one', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'CREATE_TOKEN', p: 1, token: 'TOKEN:x-wing#94153', zone: 'space' });
+        s = reduce(s, { seq: '2', t: 'CREATE_TOKEN', p: 1, token: 'TOKEN:x-wing#94153:2', zone: 'space' });
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['TOKEN:x-wing#94153', 'TOKEN:x-wing#94153:2']);
+        // The paired MOVE the engine emits for the same token is a re-placement, not a
+        // third unit.
+        s = reduce(s, { seq: '3', t: 'MOVE', card: 'TOKEN:x-wing#94153', from: 'outsideTheGame', to: 'space', p: 1, kind: 'unit' });
+        expect(p1(s).cards).toHaveLength(2);
+        // Defeating one copy leaves the other on the board.
+        s = reduce(s, { seq: '4', t: 'MOVE', card: 'TOKEN:x-wing#94153', from: 'space', to: 'discard', p: 1, kind: 'unit' });
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['TOKEN:x-wing#94153:2']);
+    });
+
     it('still keeps a token upgrade out of the arena', () => {
         let s = base();
         s = reduce(s, { seq: '1', t: 'MOVE', card: 'TOKEN:Advantage', from: 'outsideTheGame', to: 'space', p: 1 });

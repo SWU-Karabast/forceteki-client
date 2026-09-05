@@ -99,8 +99,8 @@ const TransportControls: React.FC = () => {
                 backdropFilter: 'blur(8px)',
                 display: 'flex',
                 alignItems: 'center',
-                px: 2,
-                gap: 1.5,
+                px: { xs: 0.75, sm: 2 },
+                gap: { xs: 0.25, sm: 1.5 },
                 zIndex: 1300,
                 borderTop: '1px solid rgba(255,255,255,0.1)',
             }}
@@ -127,8 +127,13 @@ const TransportControls: React.FC = () => {
                 </span>
             </Tooltip>
 
+            {/* Visually hidden, but the units matter: MUI's sx reads a bare 0-1 number on
+                width/height as a PERCENTAGE, so `width: 1` was 100% — a 375px child inside a
+                375px bar that already had padding, pushing scrollWidth to 381 and giving the
+                fixed bar a horizontal overflow on a phone. `clip` hid it, so it only showed
+                up as a bar that could be nudged sideways. */}
             <Box aria-live="polite" sx={{
-                position: 'absolute', width: 1, height: 1, overflow: 'hidden',
+                position: 'absolute', width: '1px', height: '1px', overflow: 'hidden',
                 clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap',
             }}>
                 {`Frame ${currentIndex + 1} of ${totalFrames}${currentRound ? `, ${currentRound}` : ''}`}
@@ -145,7 +150,7 @@ const TransportControls: React.FC = () => {
                 valueLabelFormat={formatPosition}
                 sx={{
                     flex: 1,
-                    mx: 1,
+                    mx: { xs: 0.5, sm: 1 },
                     color: 'var(--initiative-blue)',
                     '& .MuiSlider-thumb': { width: 14, height: 14 },
                     '& .MuiSlider-mark': {
@@ -162,12 +167,25 @@ const TransportControls: React.FC = () => {
                 }}
             />
 
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', minWidth: '70px', textAlign: 'center' }}>
+            {/* Everything below is hidden on a phone. The bar is a fixed 60px row, and at
+                375px the labels + speed group leave the slider about 45px — narrow enough
+                that the round marks collapse into each other and scrubbing is guesswork.
+                Nothing here is the only copy of its information: position and round both
+                ride the slider's value label, and the perspective is in the swap button's
+                aria-label. Playback speed is the one real loss; stepping and scrubbing
+                still work, and a speed picker that survives 375px needs a menu, not a row. */}
+            <Typography variant="body2" sx={{
+                display: { xs: 'none', sm: 'block' },
+                color: 'rgba(255,255,255,0.7)', minWidth: '70px', textAlign: 'center',
+            }}>
                 {currentIndex + 1} / {totalFrames}
             </Typography>
 
             {currentRound && (
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', minWidth: '140px', textAlign: 'center' }}>
+                <Typography variant="body2" sx={{
+                    display: { xs: 'none', sm: 'block' },
+                    color: 'rgba(255,255,255,0.5)', minWidth: '140px', textAlign: 'center',
+                }}>
                     {currentRound}
                 </Typography>
             )}
@@ -179,6 +197,7 @@ const TransportControls: React.FC = () => {
                 onChange={handleSpeedChange}
                 size="small"
                 sx={{
+                    display: { xs: 'none', sm: 'flex' },
                     '& .MuiToggleButton-root': {
                         color: 'rgba(255,255,255,0.5)',
                         borderColor: 'rgba(255,255,255,0.2)',
@@ -199,7 +218,10 @@ const TransportControls: React.FC = () => {
                 ))}
             </ToggleButtonGroup>
 
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', minWidth: '64px', textAlign: 'right' }}>
+            <Typography variant="body2" sx={{
+                display: { xs: 'none', sm: 'block' },
+                color: 'rgba(255,255,255,0.7)', minWidth: '64px', textAlign: 'right',
+            }}>
                 {currentPerspective}
             </Typography>
             <Tooltip title={`Viewing as ${currentPerspective} — swap perspective`}>
