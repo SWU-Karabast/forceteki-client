@@ -24,7 +24,8 @@ function emptyState(): ReducedState {
  * construction; hand/resource/discard piles are compared via the count fields, not
  * per-card. `credits`, `hasForce`, `resourcesExhausted`, `hand`/`discard` contents and
  * `upgrades` are intentionally OUT of scope for this gate — they are not yet driven by
- * dedicated fold deltas (credits/force have no events; upgrade nesting is not modelled).
+ * dedicated fold deltas upstream (the client folds credits/force from base MOVEs; upgrade
+ * nesting is not modelled).
  * Closing those is a Plan-3 completeness item; see SwuPgnKeyframeCompleteness.spec.ts.
  *
  * NOTE on handSize/resourcesReady: the fold reconstructs these from MOVE events (the

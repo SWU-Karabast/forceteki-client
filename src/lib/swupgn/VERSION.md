@@ -52,8 +52,8 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
 - **`fold.ts` hand CONTENTS** — upstream tracks `handSize` on MOVE but only ever appends to
   `hand[]` from DRAW, so `hand[]` grows monotonically. Harmless upstream (it's outside the
   integrity gate); fatal here, because the board renders that array.
-- **`fold.ts` The Force** — `TOKEN:the force` moving on and off a base drives `hasForce`;
-  upstream never sets it.
+- **`fold.ts` The Force and Credits** — `TOKEN:the force` moving on and off a base drives
+  `hasForce`; `TOKEN:credit…` moving on/off a base counts `credits`. Upstream sets neither.
 - **`tokens.ts`** — client-only. Repairs the token lifecycle in pre-1.0 files (which emit no
   removal decrement) and classifies token upgrades when no `kind` is stated.
 - **`parse.ts` `MAX_EVENTS`** — 200k-event ceiling. Upstream has none because it never builds

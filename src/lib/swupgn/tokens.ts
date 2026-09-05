@@ -76,6 +76,10 @@ export const eventKind = (e: unknown): CardKind | undefined => {
 export const isForceToken = (id: string): boolean =>
     isTokenPseudoCard(id) && tokenName(id) === FORCE_TOKEN_NAME;
 
+/** A Credit token likewise sits on the base; each one on it is one credit. */
+export const isCreditToken = (id: string): boolean =>
+    isTokenPseudoCard(id) && tokenName(id) === 'credit';
+
 /**
  * Repair the token lifecycle in a forceteki event stream.
  *

@@ -1,5 +1,5 @@
 import type { GameEvent, ReducedState, PlayerState, CardInstanceState, Seat } from './types';
-import { eventKind, isForceToken, isStatusTokenCard } from './tokens';
+import { eventKind, isCreditToken, isForceToken, isStatusTokenCard } from './tokens';
 
 function emptyPlayer(seat: Seat): PlayerState {
     return {
@@ -233,6 +233,15 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
     // base is the only signal the stream gives for it.
     if (e.t === 'MOVE' && isForceToken(e.card) && e.p) {
         player(s, e.p).hasForce = e.to === 'base';
+        return s;
+    }
+    // CLIENT-OWNED. Credits are the same shape: one token per credit, MOVEd onto the base when
+    // gained and off it (then DEFEATed) when spent. Its DEFEAT names no seat and falls through
+    // harmlessly — the card was never in an arena.
+    if (e.t === 'MOVE' && isCreditToken(e.card) && e.p) {
+        const ps = player(s, e.p);
+        if (e.to === 'base') ps.credits += 1;
+        else if (e.from === 'base') ps.credits = Math.max(0, ps.credits - 1);
         return s;
     }
     if (e.t !== 'STATUS_TOKEN' && 'card' in e && typeof e.card === 'string'

@@ -210,9 +210,9 @@ export function deckOrderLengths(doc: SwuPgnDocument): Record<Seat, number> {
 
 /**
  * A pile is only ever rendered, so its length is bounded by what can plausibly be shown.
- * `credits` and `resourcesExhausted` are never written by any event — they enter the state
- * only via a keyframe, copied verbatim from the file — so `{"credits": 900000000}` on one
- * line used to allocate a 900M-element array and OOM the tab.
+ * `credits` and `resourcesExhausted` also enter the state via a keyframe, copied verbatim
+ * from the file, so `{"credits": 900000000}` on one line used to allocate a 900M-element
+ * array and OOM the tab.
  */
 const MAX_PILE = 200;
 

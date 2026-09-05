@@ -310,6 +310,20 @@ describe('normalizeTokenEvents — the removal the stream never emits', () => {
         s = reduce(s, { seq: '2', t: 'MOVE', card: 'TOKEN:The Force', from: 'base', to: 'outsideTheGame', p: 2 });
         expect(s.players[2]!.hasForce).toBe(false);
     });
+
+    it('counts Credit tokens on and off a player base', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'TOKEN:credit#8015500527', from: 'outsideTheGame', to: 'base', p: 2 });
+        s = reduce(s, { seq: '2', t: 'MOVE', card: 'TOKEN:credit#8015500527:2', from: 'outsideTheGame', to: 'base', p: 2 });
+        expect(s.players[2]!.credits).toBe(2);
+        s = reduce(s, { seq: '3', t: 'MOVE', card: 'TOKEN:credit#8015500527', from: 'base', to: 'outsideTheGame', p: 2 });
+        s = reduce(s, { seq: '4', t: 'DEFEAT', card: 'TOKEN:credit#8015500527', reason: 'ability' });
+        expect(s.players[2]!.credits).toBe(1);
+        expect(s.players[2]!.cards).toHaveLength(0);
+        s = reduce(s, { seq: '5', t: 'MOVE', card: 'TOKEN:credit#8015500527:2', from: 'base', to: 'outsideTheGame', p: 2 });
+        s = reduce(s, { seq: '6', t: 'MOVE', card: 'TOKEN:credit#8015500527:2', from: 'base', to: 'outsideTheGame', p: 2 });
+        expect(s.players[2]!.credits).toBe(0);
+    });
 });
 
 describe('normalizeTokenEvents — a fixed emitter is left alone', () => {
