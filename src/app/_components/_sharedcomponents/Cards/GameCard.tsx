@@ -18,7 +18,8 @@ import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighli
 import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
-import { TokenContainer, type TokenType } from '../_styledcomponents/TokenContainer';
+import { TokenBadge, type TokenBadgeType } from './GameCard/TokenBadge';
+import { TokenBadgeStack } from './GameCard/TokenBadgeStack';
 import StatusIcon from '@/app/_components/_sharedcomponents/Cards/GameCard/StatusIcon';
 import { HealthBadge, PowerBadge } from './GameCard/StatBadge';
 
@@ -52,7 +53,7 @@ const upgradeSelectPopupData = (
 // Neutral token upgrades are consolidated into count badges on the right edge of the card,
 // in this order; every other upgrade renders as a bar below the card. A subcard is matched
 // to a badge by name, which is also how it is kept out of the bars.
-const TOKEN_BADGES: readonly { name: string; type: TokenType }[] = [
+const TOKEN_BADGES: readonly { name: string; type: TokenBadgeType }[] = [
     { name: 'Shield', type: 'shield' },
     { name: 'Experience', type: 'experience' },
     { name: 'Weakness', type: 'weakness' },
@@ -487,30 +488,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'absolute',
             top: '-5%',
             right: '-4%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            rowGap: '0.14em',
             fontSize: 'clamp(0.44rem, 1.1vw, 0.96rem)',
             zIndex: 2,
-        },
-        tokenBadge: {
-            height: '1.2em',
-            minWidth: '1.2em',
-            padding: '0 0.22em',
-            columnGap: '0.1em',
-            filter: 'drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.55))',
-            cursor: 'default',
-        },
-        selectableTokenBadge: {
-            cursor: 'pointer',
-        },
-        tokenBadgeCount: {
-            fontSize: '0.95em',
-            fontWeight: 700,
-            lineHeight: 1,
-            color: 'inherit',
-            textShadow: '0px 1px 1px rgba(0, 0, 0, 0.35)',
         },
         upgradeIcon:{
             position: 'relative',
@@ -766,30 +745,25 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 isIndirect={isIndirectDamage}
                             /> 
                         )}
-                        <Box sx={styles.tokenBadgeContainer}>
+                        <TokenBadgeStack sx={styles.tokenBadgeContainer}>
                             {tokenBadges.map(({ type, count, token, selectableToken }) => {
                                 const clickable = !!selectableToken || upgradesClickable;
                                 return (
-                                    <TokenContainer
+                                    <TokenBadge
                                         key={type}
                                         type={type}
+                                        count={count}
                                         stroke={selectableToken ? getBorderColor({ card: selectableToken, player: connectedPlayer }) : undefined}
                                         onClick={clickable ? (e) => badgeClick(e, selectableToken) : undefined}
-                                        sx={{
-                                            ...styles.tokenBadge,
-                                            ...(clickable ? styles.selectableTokenBadge : {}),
-                                        }}
                                         onMouseEnter={handlePreviewOpen}
                                         onMouseLeave={handlePreviewClose}
                                         {...longPressHandlers}
                                         data-card-url={s3CardImageURL(token, locale, CardStyle.Plain, cardbackPath)}
                                         data-card-type={token.printedType}
-                                    >
-                                        <Typography sx={styles.tokenBadgeCount}>{count}</Typography>
-                                    </TokenContainer>
+                                    />
                                 );
                             })}
-                        </Box>
+                        </TokenBadgeStack>
 
                         <PowerBadge sx={[styles.statBadge, { left: '-4%' } ]} value={card.power || 0} />
                         {Number(card.damage) > 0 && (

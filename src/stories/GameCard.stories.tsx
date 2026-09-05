@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/nextjs';
 import { Box, Typography } from '@mui/material';
 import { HealthBadge, PowerBadge } from '@/app/_components/_sharedcomponents/Cards/GameCard/StatBadge';
 import StatusIcon from '@/app/_components/_sharedcomponents/Cards/GameCard/StatusIcon';
+import { TokenBadge as TokenBadgeComponent } from '@/app/_components/_sharedcomponents/Cards/GameCard/TokenBadge';
+import { TokenBadgeStack } from '@/app/_components/_sharedcomponents/Cards/GameCard/TokenBadgeStack';
 
 const meta = {
     title: 'GameCard',
@@ -57,5 +59,17 @@ export const StatusIcons: Story = {
                 </Box>
             ))}
         </Box>
+    ),
+};
+
+export const TokenBadge: Story = {
+    name: 'TokenBadge',
+    render: () => (
+        <TokenBadgeStack sx={{ fontSize: 24 }}>
+            <TokenBadgeComponent type="shield" count={3} />
+            <TokenBadgeComponent type="experience" count={12} />
+            <TokenBadgeComponent type="weakness" count={1} />
+            <TokenBadgeComponent type="advantage" count={2} />
+        </TokenBadgeStack>
     ),
 };

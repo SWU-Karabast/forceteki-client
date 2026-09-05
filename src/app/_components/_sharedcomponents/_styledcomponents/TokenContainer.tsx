@@ -256,7 +256,7 @@ export function TokenContainer({ type, stroke, sx, children, ...boxProps }: Toke
         <Box
             ref={ref}
             {...boxProps}
-            sx={{
+            sx={[{
                 position: 'relative',
                 // Own stacking context, so the silhouette's negative z-index stays inside
                 // the token and children stack above it without any styling of their own.
@@ -269,8 +269,7 @@ export function TokenContainer({ type, stroke, sx, children, ...boxProps }: Toke
                 fontVariantNumeric: 'tabular-nums',
                 userSelect: 'none',
                 color: appearance.color,
-                ...sx,
-            }}
+            }, ...(Array.isArray(sx) ? sx : [sx])]}
         >
             <Box
                 component="svg"
