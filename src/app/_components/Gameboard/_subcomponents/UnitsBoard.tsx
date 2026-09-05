@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Grid } from '@mui/material';
+import { keyframes } from '@mui/system';
 import { debugBorder, isBreakpointOverlayEnabled } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
@@ -7,6 +8,29 @@ import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import BreakpointOverlay from './BreakpointOverlay';
+
+// Replay: a unit that just entered play animates in (scale + fade). Gated on the
+// adapter-set `card.entering` flag, so the live game (which never sets it) is unaffected.
+const cardEnter = keyframes`
+  from { opacity: 0; transform: scale(0.82) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+`;
+// Attack lunge: the attacker thrusts toward the opponent and back. Opponent units sit at the
+// top of the board so they lunge DOWN (+Y); the player's units sit at the bottom and lunge UP.
+const lungeDown = keyframes`
+  0% { transform: translateY(0); } 45% { transform: translateY(22px); } 100% { transform: translateY(0); }
+`;
+const lungeUp = keyframes`
+  0% { transform: translateY(0); } 45% { transform: translateY(-22px); } 100% { transform: translateY(0); }
+`;
+const enterAnim = (card: ICardData) => (card.entering ? `${cardEnter} 0.32s ease-out` : 'none');
+const lungeAnim = (card: ICardData, dir: 'up' | 'down') =>
+    (card.attacking ? `${dir === 'up' ? lungeUp : lungeDown} 0.42s ease-in-out` : 'none');
+// Honour the OS "reduce motion" setting: a replay at 8x lunges and fades several times a second.
+const REDUCED_MOTION = { '@media (prefers-reduced-motion: reduce)': { animation: 'none' } };
+// Combine enter + lunge (a card won't do both on the same frame, but compose safely).
+const cardAnim = (card: ICardData, dir: 'up' | 'down') =>
+    [enterAnim(card), lungeAnim(card, dir)].filter((a) => a !== 'none').join(', ') || 'none';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -179,7 +203,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Opponent's Ground Units */}
                 <Box sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid}>
+                        <Box key={card.uuid} sx={{ animation: cardAnim(card, 'down'), ...REDUCED_MOTION }}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
@@ -189,7 +213,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} >
+                        <Box key={card.uuid} sx={{ animation: cardAnim(card, 'up'), ...REDUCED_MOTION }}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}

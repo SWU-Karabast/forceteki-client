@@ -147,7 +147,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
 
     const locale = useCardImageLocale();
-
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
     const phase = gameState?.phase;

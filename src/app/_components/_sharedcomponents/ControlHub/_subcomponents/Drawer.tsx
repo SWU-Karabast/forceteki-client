@@ -10,7 +10,7 @@ import {
     ListItemText,
     ListItemIcon,
 } from '@mui/material';
-import { GitHub, Menu as MenuIcon, Close, Logout, Login, AdminPanelSettings } from '@mui/icons-material';
+import { GitHub, Menu as MenuIcon, Close, Logout, Login, AdminPanelSettings, OndemandVideo } from '@mui/icons-material';
 import NextLinkMui from './NextLinkMui/NextLinkMui';
 import { FaDiscord } from 'react-icons/fa6';
 import DecksIcon from '@/assets/custom-icons/decks-icon.svg';
@@ -139,6 +139,9 @@ export default function Drawer({ actions }: { actions: MenuAction[] }) {
         },
         DECKS: {
             icon: <DecksIcon />
+        },
+        REPLAY: {
+            icon: <OndemandVideo />
         },
         PREFERENCES: {
             icon: <PreferencesIcon />

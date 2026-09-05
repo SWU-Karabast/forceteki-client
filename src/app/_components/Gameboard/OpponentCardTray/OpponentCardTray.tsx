@@ -204,7 +204,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
             >
                 <Box sx={styles.opponentHandWrapper}>
                     <PlayerHand
-                        clickDisabled={true}
+                        clickDisabled={!isSpectator}
+                        allowHover={isSpectator}
                         maxCardOverlapPercent={0.95}
                         scrollbarEnabled={false}
                         cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []}
@@ -223,23 +224,27 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
                 }}
             >
                 {!gameIsEnded() && !lobbyState?.isPrivate && <GameTimer />}
-                <Box
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    sx={styles.lastPlayed}>
-                </Box>
-                <Popover
-                    id="mouse-over-popover"
-                    sx={{ pointerEvents: 'none' }}
-                    open={hasLastPlayedCard && open}
-                    anchorEl={anchorElement}
-                    onClose={handlePreviewClose}
-                    disableRestoreFocus
-                    slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
-                    {...popoverConfig()}
-                >
-                    <Box sx={{ ...styles.lastCardPlayedPreview }} />
-                </Popover>
+                {!isSpectator && (
+                    <>
+                        <Box
+                            onMouseEnter={handlePreviewOpen}
+                            onMouseLeave={handlePreviewClose}
+                            sx={styles.lastPlayed}>
+                        </Box>
+                        <Popover
+                            id="mouse-over-popover"
+                            sx={{ pointerEvents: 'none' }}
+                            open={hasLastPlayedCard && open}
+                            anchorEl={anchorElement}
+                            onClose={handlePreviewClose}
+                            disableRestoreFocus
+                            slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                            {...popoverConfig()}
+                        >
+                            <Box sx={{ ...styles.lastCardPlayedPreview }} />
+                        </Popover>
+                    </>
+                )}
             </Grid>
         </Grid>
     );
