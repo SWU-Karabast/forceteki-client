@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, IconButton, Tooltip, Snackbar, CircularProgress } from '@mui/material';
 import {
-    ChevronRight, ChevronLeft, FormatListBulleted, BarChartOutlined, CallSplitOutlined, MenuBookOutlined,
+    ChevronRight, ChevronLeft, FormatListBulleted, BarChartOutlined, CallSplitOutlined, MenuBookOutlined, StyleOutlined,
     ViewDayOutlined, ChatBubbleOutline, LinkOutlined, FileDownloadOutlined, DescriptionOutlined,
     VisibilityOutlined, VisibilityOffOutlined, ContentCut, FirstPage, LastPage, MovieCreationOutlined,
 } from '@mui/icons-material';
@@ -10,16 +10,19 @@ import { useReplay } from '@/app/_contexts/Replay.context';
 import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
 import { downloadClipWebm } from '@/app/_utils/exportClipWebm';
 import MovesTab from './MovesTab';
+import FileHealth from './FileHealth';
+import DeckTab from './DeckTab';
 import StoryTab from './StoryTab';
 import ResourcingReport from './ResourcingReport';
 import DecisionReview from './DecisionReview';
 import TurnDigests from './TurnDigests';
 import DiscussionTab from './DiscussionTab';
 
-type TabKey = 'story' | 'moves' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
+type TabKey = 'story' | 'moves' | 'deck' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
 const TABS: { key: TabKey; label: string; Icon: React.ElementType }[] = [
     { key: 'story', label: 'Story', Icon: MenuBookOutlined },
     { key: 'moves', label: 'Moves', Icon: FormatListBulleted },
+    { key: 'deck', label: 'Deck', Icon: StyleOutlined },
     { key: 'resourcing', label: 'Resourcing', Icon: BarChartOutlined },
     { key: 'decisions', label: 'Decisions', Icon: CallSplitOutlined },
     { key: 'digest', label: 'Digest', Icon: ViewDayOutlined },
@@ -35,7 +38,10 @@ const ReplayPanel: React.FC = () => {
         clip, setClipStart, setClipEnd, clearClip, doc, moves, nameOf,
     } = useReplay();
     const { downloadWithAnnotations } = useReplayAnnotations();
-    const [collapsed, setCollapsed] = useState(false);
+    // Collapsed by default on a phone: the panel is fixed at 88vw, so open-by-default
+    // covers the board completely and leaves the game as a sliver down one edge.
+    const [collapsed, setCollapsed] = useState(() =>
+        typeof window !== 'undefined' && window.matchMedia('(max-width: 599px)').matches);
     const [tab, setTab] = useState<TabKey>('moves');
     const [snack, setSnack] = useState<string | null>(null);
     const [recording, setRecording] = useState(false);
@@ -49,12 +55,14 @@ const ReplayPanel: React.FC = () => {
         const base = `${window.location.origin}/Replay?id=${replayId ?? ''}`;
         // Share the frame's `seq`, not its index: indices shift if the reader's set of
         // dropped records changes, seqs don't.
-        copy(`${base}&t=${events[currentIndex]?.seq ?? currentIndex}`, 'Link to this moment copied');
+        copy(`${base}&t=${events[currentIndex]?.seq ?? currentIndex}`,
+            'Link copied — send the .swupgn with it, the replay lives in your browser');
     };
     const copyClipLink = () => {
         if (!clip) return;
         const base = `${window.location.origin}/Replay?id=${replayId ?? ''}`;
-        copy(`${base}&from=${clip.start}&to=${clip.end}`, 'Clip link copied');
+        copy(`${base}&from=${clip.start}&to=${clip.end}`,
+            'Clip link copied — send the .swupgn with it, the replay lives in your browser');
     };
     const exportWebm = async () => {
         if (recording) return;
@@ -101,10 +109,11 @@ const ReplayPanel: React.FC = () => {
 
     const Body = tab === 'story' ? StoryTab
         : tab === 'moves' ? MovesTab
-            : tab === 'resourcing' ? ResourcingReport
-                : tab === 'decisions' ? DecisionReview
-                    : tab === 'digest' ? TurnDigests
-                        : DiscussionTab;
+            : tab === 'deck' ? DeckTab
+                : tab === 'resourcing' ? ResourcingReport
+                    : tab === 'decisions' ? DecisionReview
+                        : tab === 'digest' ? TurnDigests
+                            : DiscussionTab;
 
     return (
         <Box sx={{
@@ -120,9 +129,14 @@ const ReplayPanel: React.FC = () => {
                 <Tooltip title="Collapse panel"><IconButton size="small" onClick={() => setCollapsed(true)} sx={{ color: 'rgba(255,255,255,0.7)' }}><ChevronRight /></IconButton></Tooltip>
             </Box>
 
+            {/* Does the file agree with itself? */}
+            <Box sx={{ px: 1.5, py: 0.75, borderBottom: BORDER }}>
+                <FileHealth />
+            </Box>
+
             {/* Action toolbar (share / download / fog / clip) */}
             <Box sx={{ display: 'flex', alignItems: 'center', px: 1, py: 0.5, borderBottom: BORDER, gap: 0.25, flexWrap: 'wrap' }}>
-                <Tooltip title="Copy link to this moment"><IconButton size="small" onClick={shareMoment} sx={{ color: 'rgba(255,255,255,0.7)' }}><LinkOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
+                <Tooltip title="Copy link to this moment (send the .swupgn alongside it)"><IconButton size="small" onClick={shareMoment} sx={{ color: 'rgba(255,255,255,0.7)' }}><LinkOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
                 <Tooltip title="Download .swupgn (with notes)"><IconButton size="small" onClick={downloadWithAnnotations} sx={{ color: 'rgba(255,255,255,0.7)' }}><FileDownloadOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
                 <Tooltip title="Download text log"><IconButton size="small" onClick={downloadTextLog} sx={{ color: 'rgba(255,255,255,0.7)' }}><DescriptionOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
                 <Tooltip title={fogOfWar ? 'Reveal hidden hands' : 'Hide non-perspective hand'}><IconButton size="small" onClick={toggleFogOfWar} sx={{ color: fogOfWar ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.7)' }}>{fogOfWar ? <VisibilityOffOutlined sx={{ fontSize: 18 }} /> : <VisibilityOutlined sx={{ fontSize: 18 }} />}</IconButton></Tooltip>

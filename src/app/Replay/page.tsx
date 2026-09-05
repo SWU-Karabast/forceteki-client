@@ -240,7 +240,17 @@ export default function ReplayPage() {
         setRawContent(content);
         try {
             const { id } = await storeReplayContent(content);
-            router.replace(`/Replay?id=${id}`, { scroll: false });
+            // Keep t/from/to. A shared link names a MOMENT; the recipient has to upload the
+            // file to resolve it (replays live in this browser's IndexedDB, not on a
+            // server), and dropping the params here landed them at frame 0 instead — the
+            // one thing the link existed to communicate.
+            const keep = new URLSearchParams();
+            for (const k of ['t', 'from', 'to']) {
+                const v = searchParams.get(k);
+                if (v != null) keep.set(k, v);
+            }
+            const qs = keep.toString();
+            router.replace(`/Replay?id=${id}${qs ? `&${qs}` : ''}`, { scroll: false });
         } catch (err) {
             // Storage failed (e.g. QuotaExceededError); replay still works in-memory,
             // it just won't survive a refresh. Log so the failure isn't invisible.
@@ -286,7 +296,7 @@ export default function ReplayPage() {
                     {loading
                         ? 'Loading replay...'
                         : replayId
-                            ? 'Replay not found. Upload the file again.'
+                            ? 'This replay isn\'t stored on this device. Replays live in your browser, not on a server, so a link on its own can\'t open one — drop the .swupgn file below and the link will jump to the exact moment it points at.'
                             : 'Upload a game replay file to watch every turn play out in the simulator.'
                     }
                 </Typography>

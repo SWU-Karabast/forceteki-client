@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn';
 import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver } from '@/lib/swupgn';
 import { adaptState, deckOrderLengths, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
+import { deckByFrame } from '@/app/_utils/deckTracker';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
@@ -193,6 +194,10 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         return out;
     }, [events, frameStates]);
 
+    // Remaining deck per frame, counted from the engine's own deck MOVEs against the
+    // published starting order. One source of truth for the board and the Deck tab.
+    const deckStates = useMemo(() => deckByFrame(doc, events), [doc, events]);
+
     // Round boundaries, for landmarks on an otherwise featureless 500-frame scrubber.
     const roundMarks = useMemo(
         () => events.flatMap((e, i) => (e.t === 'ROUND_START' ? [{ value: i, label: `R${e.round}` }] : [])),
@@ -325,12 +330,16 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                 if (!prevIds.has(c.id)) enteringIds.push(c.id);
             }
         }
-        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; baseHp?: Partial<Record<Seat, number>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[] } = {
+        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; baseHp?: Partial<Record<Seat, number>>; deckRemaining?: Partial<Record<Seat, number>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[] } = {
             ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
             highlightIds: action.highlight,
             leaderExhausted: leaderExhaustByFrame[currentIndex],
             // Fog-of-war hides the opponent's hand; their face-down resources go with it.
             baseHp: baseHpByFrame[currentIndex],
+            deckRemaining: {
+                1: deckStates[currentIndex]?.[1].remaining.length,
+                2: deckStates[currentIndex]?.[2].remaining.length,
+            },
             resourcedIds: fogOfWar
                 ? { [perspective === P1 ? 1 : 2]: resourcedByFrame[currentIndex]?.[perspective === P1 ? 1 : 2] ?? [] } as Partial<Record<Seat, string[]>>
                 : resourcedByFrame[currentIndex],
@@ -339,7 +348,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
         return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame]);
+    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first
