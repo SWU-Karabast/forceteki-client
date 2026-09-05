@@ -95,6 +95,10 @@ export interface ICardData {
     // Replay-only: set on the attacker of the current frame's ATTACK, so UnitsBoard lunges
     // it toward the opponent. Never set by the live server gameState.
     attacking?: boolean;
+    // Replay-only: the unit's active keywords as the SWU-PGN file lists them, drawn as chips.
+    keywords?: string[];
+    // Replay-only: power/HP were rebuilt from card data because the file states none.
+    statsReconstructed?: boolean;
 }
 
 export interface IServerCardData {

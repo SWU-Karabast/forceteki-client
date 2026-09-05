@@ -62,8 +62,8 @@ describe('adaptState (full assembly)', () => {
         expect(gs.players.p1.availableResources).toBe(p1.resourcesReady);
     });
 
-    it('shows an empty deck when no tracked count is supplied', () => {
-        expect(gs.players.p1.numCardsInDeck).toBe(0);
+    it('shows no deck count at all when neither the file nor the tracker knows one (§14: absent is not zero)', () => {
+        expect(gs.players.p1.numCardsInDeck).toBeUndefined();
     });
 
     it('prefers the tracked deck per seat when supplied, clamped at zero', () => {
@@ -427,5 +427,134 @@ describe('captives, live stats and leader status (SWU-PGN 3c4ed35d)', () => {
         expect(gs.players.p1.leader.exhausted).toBe(true);
         expect(gs.players.p1.leader.zone).toBe('base');
         expect(gs.players.p1.numCardsInDeck).toBe(17);
+    });
+});
+
+describe('every §11 field reaches the board (spec conformance, forceteki 3c4ed35d)', () => {
+    const doc = {
+        header: { p1Leader: 'SOR#010', p1Base: 'SOR#028', p2Leader: 'SOR#005', p2Base: 'SOR#020' },
+        decks: [
+            { p: 1, leader: 'SOR#010', base: 'SOR#028', deck: [['SOR#108', 3]] },
+            { p: 2, leader: 'SOR#005', base: 'SOR#020', deck: [['SOR#045', 3]] },
+        ],
+    } as unknown as import('@/lib/swupgn').SwuPgnDocument;
+    const ids = { 1: 'p1', 2: 'p2' } as Record<Seat, string>;
+    const unit = (over: Partial<CardInstanceState> = {}): CardInstanceState => ({
+        id: 'SOR#108', zone: 'ground', damage: 0, exhausted: false, upgrades: [],
+        shields: 0, experience: 0, statusTokens: {}, captured: [], ...over,
+    });
+    const seat = (n: Seat, over: Partial<import('@/lib/swupgn').PlayerState> = {}) => ({
+        seat: n, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
+        resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [], ...over,
+    });
+    const state = (over: Partial<ReducedState> = {}, p1: Partial<import('@/lib/swupgn').PlayerState> = {}, p2: Partial<import('@/lib/swupgn').PlayerState> = {}): ReducedState => ({
+        round: 1, phase: 'action', initiative: 1, players: { 1: seat(1, p1), 2: seat(2, p2) }, ...over,
+    });
+    const ground = (gs: ReturnType<typeof adaptState>, p: string) => gs.players[p].cardPiles.groundArena as Array<Record<string, unknown>>;
+
+    it('shows STATS power/hp and keywords outright, never reconstructed, and flags Sentinel', () => {
+        const statMap = { 'SOR#108': { type: 'unit', power: 1, hp: 1, upgradePower: 9 } };
+        const gs = adaptState(state({}, { cards: [unit({ power: 6, hp: 7, keywords: ['raid 2', 'sentinel'], experience: 3 })] }), doc, ids, {}, statMap);
+        const w = ground(gs, 'p1').find((c) => c.uuid === 'SOR#108')!;
+        expect([w.power, w.hp]).toEqual([6, 7]);
+        expect(w.keywords).toEqual(['raid 2', 'sentinel']);
+        expect(w.sentinel).toBe(true);
+        expect(w.statsReconstructed).toBeUndefined();
+    });
+
+    it('marks stats it had to rebuild from card data (a pre-STATS file), and shows none when it cannot', () => {
+        const statMap = { 'SOR#108': { type: 'unit', power: 4, hp: 5 } };
+        const rebuilt = ground(adaptState(state({}, { cards: [unit({ experience: 1 })] }), doc, ids, {}, statMap), 'p1')[0];
+        expect(rebuilt.statsReconstructed).toBe(true);
+        expect(rebuilt.keywords).toBeUndefined();
+        expect(rebuilt.sentinel).toBeUndefined();
+        const unknown = ground(adaptState(state({}, { cards: [unit()] }), doc, ids), 'p1')[0];
+        expect(unknown.statsReconstructed).toBeUndefined();
+        expect('power' in unknown).toBe(false);
+    });
+
+    it('renders the leader from the file: base zone while undeployed, exhausted flag, spent Epic Action', () => {
+        const gs = adaptState(state({}, { leader: { id: 'SOR#010', deployed: false, exhausted: true, epicActionUsed: true } }), doc, ids);
+        const l = gs.players.p1.leader;
+        expect(l.zone).toBe('base');
+        expect(l.exhausted).toBe(true);
+        expect(l.epicActionSpent).toBe(true);
+        expect(gs.players.p2.leader.epicActionSpent).toBeUndefined();
+        // The file's flag wins over the caller's EXHAUST/READY scan.
+        const ready = adaptState(state({}, { leader: { id: 'SOR#010', deployed: false, exhausted: false, epicActionUsed: false } }), doc, ids, { leaderExhausted: { 1: true } });
+        expect(ready.players.p1.leader.exhausted).toBeFalsy();
+    });
+
+    it('a leader deployed as a pilot flips the slot, rides on its host, and carries its exhausted flag there', () => {
+        const gs = adaptState(state({}, {
+            cards: [unit({ id: 'SOR#050', zone: 'space', upgrades: ['SOR#010'] })],
+            leader: { id: 'SOR#010', deployed: true, exhausted: true, epicActionUsed: true },
+        }), doc, ids);
+        expect(gs.players.p1.leader.zone).not.toBe('base');
+        const pilot = (gs.players.p1.cardPiles.spaceArena as Array<Record<string, unknown>>).find((c) => c.uuid === 'SOR#010')!;
+        expect(pilot.parentCardId).toBe('SOR#050');
+        expect(pilot.exhausted).toBe(true);
+    });
+
+    it('deck count is the file\'s deckSize when stated, the tracker otherwise, nothing when neither', () => {
+        expect(adaptState(state({}, { deckSize: 12 }), doc, ids, { deckRemaining: { 1: 7, 2: 7 } }).players.p1.numCardsInDeck).toBe(12);
+        expect(adaptState(state(), doc, ids, { deckRemaining: { 1: 7, 2: 7 } }).players.p1.numCardsInDeck).toBe(7);
+        expect(adaptState(state(), doc, ids).players.p1.numCardsInDeck).toBeUndefined();
+    });
+
+    it('initiative: who holds it, and whether it was taken this round (initiativeTaken)', () => {
+        const taken = adaptState(state({ initiative: 2, initiativeTaken: true }), doc, ids);
+        expect(taken.players.p2.hasInitiative).toBe(true);
+        expect(taken.initiativeClaimed).toBe(true);
+        const available = adaptState(state({ initiative: 2, initiativeTaken: false }), doc, ids);
+        expect(available.players.p2.hasInitiative).toBe(true);
+        expect(available.initiativeClaimed).toBe(false);
+        // An older file never says: fall back to "someone holds it".
+        expect(adaptState(state({ initiative: 1 }), doc, ids).initiativeClaimed).toBe(true);
+        expect(adaptState(state({ initiative: null }), doc, ids).initiativeClaimed).toBe(false);
+    });
+
+    it('pads the hand to handSize with face-down cards when the file names fewer (a Perspective file)', () => {
+        const gs = adaptState(state({}, { handSize: 4, hand: ['SOR#108', 'SOR#108:2'] }), doc, ids);
+        const hand = gs.players.p1.cardPiles.hand as Array<{ uuid: string; setId: { set: string } }>;
+        expect(hand).toHaveLength(4);
+        expect(hand.slice(0, 2).map((c) => c.uuid)).toEqual(['SOR#108', 'SOR#108:2']);
+        expect(hand.slice(2).every((c) => !c.setId.set)).toBe(true);
+        // Fog-of-war keeps the count and hides every identity.
+        const fog = adaptState(state({}, { handSize: 4, hand: ['SOR#108', 'SOR#108:2'] }), doc, ids, { hideHandFor: 1 });
+        expect((fog.players.p1.cardPiles.hand as Array<{ setId: { set: string } }>).every((c) => !c.setId.set)).toBe(true);
+        expect(fog.players.p1.cardPiles.hand).toHaveLength(4);
+    });
+
+    it('a unit under TAKE_CONTROL keeps its owner (from DECKS) while its controller changes, so the board marks it stolen', () => {
+        const gs = adaptState(state({}, { cards: [unit({ id: 'SOR#045' })] }), doc, ids);
+        const stolen = ground(gs, 'p1').find((c) => c.uuid === 'SOR#045')!;
+        expect(stolen.controllerId).toBe('p1');
+        expect(stolen.ownerId).toBe('p2');
+        const own = ground(adaptState(state({}, { cards: [unit()] }), doc, ids), 'p1')[0];
+        expect(own.ownerId).toBe('p1');
+        // A token has no owner but its controller.
+        const tok = ground(adaptState(state({}, { cards: [unit({ id: 'TOKEN:battle-droid#123' })] }), doc, ids), 'p1')[0];
+        expect(tok.ownerId).toBe('p1');
+    });
+
+    it('a captive files under its captor as the other player\'s card; a base captor holds nothing anywhere', () => {
+        const gs = adaptState(state({}, { cards: [unit({ captured: ['SOR#045'] })] }), doc, ids);
+        const held = gs.players.p1.cardPiles.capturedZone as Array<Record<string, unknown>>;
+        expect(held).toHaveLength(1);
+        expect(held[0]).toMatchObject({ uuid: 'SOR#045', parentCardId: 'SOR#108', controllerId: 'p1', ownerId: 'p2' });
+        // The fold never files a card under `base@N` (spec §21): nothing to render.
+        const none = adaptState(state({}, { cards: [unit()] }), doc, ids);
+        expect(none.players.p1.cardPiles.capturedZone).toHaveLength(0);
+        expect(none.players.p2.cardPiles.capturedZone).toHaveLength(0);
+    });
+
+    it('resources, credits and the Force come straight from the counters', () => {
+        const gs = adaptState(state({}, { resourcesReady: 3, resourcesExhausted: 2, credits: 2, hasForce: true }), doc, ids);
+        expect(gs.players.p1.availableResources).toBe(3);
+        expect(gs.players.p1.cardPiles.resources).toHaveLength(5);
+        expect(gs.players.p1.cardPiles.credits).toHaveLength(2);
+        expect(gs.players.p1.forceToken.active).toBe(true);
+        expect(gs.players.p2.forceToken.active).toBe(false);
     });
 });

@@ -33,6 +33,18 @@ export interface AdaptedCard {
     subcards?: AdaptedCard[];
     parentCardId?: string;
     aspects?: string[];
+
+    /** Active keywords as the file lists them (`STATS` / keyframe `keywords`, spec §11). */
+    keywords?: string[];
+
+    /** GameCard's own Sentinel icon flag, set from `keywords`. */
+    sentinel?: boolean;
+
+    /** Power/HP were rebuilt from card data because the file states none (pre-STATS writer). */
+    statsReconstructed?: boolean;
+
+    /** LeaderBaseCard's spent-Epic-Action marker, from the leader's `epicActionUsed`. */
+    epicActionSpent?: boolean;
 }
 
 /** ReducedState arena zones → board cardPiles zone names. */
@@ -190,16 +202,26 @@ export function liveStats(inst: CardInstanceState): { power?: number; hp?: numbe
     };
 }
 
+/** A keyword list off the file is rendered as chips; cap it like every other list. */
+const MAX_KEYWORDS = 20;
+
 /** Build a board card from a folded in-play instance. Power/HP are the file's live values
- *  when it carries them, else the static reconstruction (see effectiveStats); damage is the
- *  folded value. */
+ *  when it carries them (spec §10.1 `STATS`, never derived); only a file written before
+ *  `STATS` existed gets the static reconstruction, and the card says so. Keywords are the
+ *  file's list, verbatim. */
 export function cardFromInstance(
-    inst: CardInstanceState, ownerId: string, stat?: CardStat, name?: string, statMap: Record<string, CardStat> = {},
+    inst: CardInstanceState, controllerId: string, stat?: CardStat, name?: string, statMap: Record<string, CardStat> = {},
+    ownerId: string = controllerId,
 ): AdaptedCard {
+    const stated = typeof inst.power === 'number' || typeof inst.hp === 'number';
+    const stats = stated ? liveStats(inst) : effectiveStats(inst, stat, statMap);
+    const reconstructed = !stated && (typeof stats.power === 'number' || typeof stats.hp === 'number');
+    const keywords = Array.isArray(inst.keywords) ? inst.keywords.slice(0, MAX_KEYWORDS).map(String) : [];
     return {
-        ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, ownerId, ownerId, stat, name),
-        ...effectiveStats(inst, stat, statMap),
-        ...liveStats(inst),
+        ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, controllerId, ownerId, stat, name),
+        ...stats,
+        ...(reconstructed ? { statsReconstructed: true } : {}),
+        ...(keywords.length ? { keywords, sentinel: keywords.includes('sentinel') } : {}),
         damage: inst.damage,
         exhausted: inst.exhausted,
         upgrades: inst.upgrades,
@@ -227,6 +249,26 @@ export interface AdaptOptions {
     enteringIds?: string[];
     attackingIds?: string[];
     nameOf?: NameOf;
+}
+
+/**
+ * Who OWNS each card, from the file's own DECKS section (plus the header's leaders and
+ * bases): the fold only says who CONTROLS it. The board marks a card held by someone other
+ * than its owner as stolen (`TAKE_CONTROL`, spec §10.1), and files captives under their
+ * captor while they stay the other player's cards. Tokens have no owner but their controller.
+ */
+export function ownerSeatMap(doc: SwuPgnDocument): Map<string, Seat> {
+    const out = new Map<string, Seat>();
+    const put = (id: unknown, seat: Seat) => { if (typeof id === 'string' && id) out.set(baseId(id), seat); };
+    put(doc.header.p1Leader, 1); put(doc.header.p1Base, 1);
+    put(doc.header.p2Leader, 2); put(doc.header.p2Base, 2);
+    for (const d of Array.isArray(doc.decks) ? doc.decks : []) {
+        if (d == null || typeof d !== 'object' || (d.p !== 1 && d.p !== 2)) continue;
+        put(d.leader, d.p); put(d.base, d.p);
+        for (const entry of Array.isArray(d.deck) ? d.deck : []) put(Array.isArray(entry) ? entry[0] : undefined, d.p);
+        for (const entry of Array.isArray(d.sideboard) ? d.sideboard : []) put(Array.isArray(entry) ? entry[0] : undefined, d.p);
+    }
+    return out;
 }
 
 /**
@@ -271,19 +313,23 @@ interface SeatOptions {
     baseHp?: number;
     deckRemaining?: number;
     nameOf?: NameOf;
+    ownerId?: (id: string) => string;
 }
 
 function adaptPlayer(
-    ps: PlayerState, playerId: string, leaderId: string, baseSetId: string,
+    ps: PlayerState, playerId: string, headerLeaderId: string, baseSetId: string,
     statMap: Record<string, CardStat>,
-    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, resourcedIds, baseHp, deckRemaining, nameOf }: SeatOptions,
+    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, resourcedIds, baseHp, deckRemaining, nameOf, ownerId }: SeatOptions,
 ): any {
-    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap));
+    const own = ownerId ?? (() => playerId);
+    // The file's own leader status names the card (spec §11); the header is the fallback.
+    const leaderId = ps.leader?.id ? String(ps.leader.id) : headerLeaderId;
+    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap, own(c.id)));
     // Captives file under their captor, exactly as the live server delivers them: one card
     // per captive with `parentCardId`, which UnitsBoard groups onto the host. They are the
     // opponent's cards, held here.
     const captured = ps.cards.flatMap((c, i) => (c.captured ?? []).map((id) => ({
-        ...cardFromId(id, 'capturedZone', playerId, playerId, statOf(id, statMap), nameOf?.(id)),
+        ...cardFromId(id, 'capturedZone', playerId, own(id), statOf(id, statMap), nameOf?.(id)),
         parentCardId: inPlay[i].uuid,
     })));
     // Token badges ride along in the arena piles as parented cards, exactly as the live
@@ -292,9 +338,11 @@ function adaptPlayer(
     // Real (printed) upgrades attach the same way: one parented arena card per upgrade, so
     // UnitsBoard groups it under its host. Without this a pilot or an equipment card is
     // tracked in the fold but renders nowhere.
+    // A leader flying as a pilot is one of these; its ready/exhausted flag rides along.
     const upgrades = ps.cards.flatMap((c, i) => (c.upgrades ?? []).map((id) => ({
-        ...cardFromId(id, inPlay[i].zone, playerId, playerId, statOf(id, statMap), nameOf?.(id)),
+        ...cardFromId(id, inPlay[i].zone, playerId, own(id), statOf(id, statMap), nameOf?.(id)),
         parentCardId: inPlay[i].uuid,
+        ...(ps.leader && baseId(id) === baseId(leaderId) ? { exhausted: ps.leader.exhausted === true } : {}),
     })));
     // Glow the card(s) that acted this frame (reuses GameCard's `selected` styling). The
     // board is non-interactive in replay, so repurposing `selected` as an action highlight
@@ -312,19 +360,20 @@ function adaptPlayer(
     }
     const ground = [...inPlay, ...upgrades, ...tokens].filter((c) => c.zone === 'groundArena');
     const space = [...inPlay, ...upgrades, ...tokens].filter((c) => c.zone === 'spaceArena');
-    // Fog-of-war: render this player's hand as face-down placeholders (count preserved,
-    // identities hidden) instead of the omniscient known cards.
-    const hand = hideHand
-        ? facedownStack(ps.hand.length, 'hand', playerId)
-        : ps.hand.slice(0, MAX_PILE).map((id) => cardFromId(id, 'hand', playerId, playerId, statOf(id, statMap), nameOf?.(id)));
-    const discard = ps.discard.slice(0, MAX_PILE).map((id) => cardFromId(id, 'discard', playerId, playerId, statOf(id, statMap), nameOf?.(id)));
+    // `handSize` is the gated count (spec §14); `hand[]` is what the file names, which a
+    // Perspective file may leave short (§17). Known cards first, face-down placeholders for the
+    // rest. Fog-of-war hides every identity and keeps the count.
+    const handSize = Math.max(0, Math.trunc(Number.isFinite(ps.handSize) ? ps.handSize : 0), hideHand ? ps.hand.length : 0);
+    const knownHand = hideHand ? [] : ps.hand.slice(0, MAX_PILE).map((id) => cardFromId(id, 'hand', playerId, own(id), statOf(id, statMap), nameOf?.(id)));
+    const hand = [...knownHand, ...facedownStack(handSize - knownHand.length, 'hand', playerId)];
+    const discard = ps.discard.slice(0, MAX_PILE).map((id) => cardFromId(id, 'discard', playerId, own(id), statOf(id, statMap), nameOf?.(id)));
     const resourcesTotal = ps.resourcesReady + ps.resourcesExhausted;
-    // Counted from the engine's own `from: 'deck'` MOVEs against the published starting
-    // order (deckTracker); subtracting the visible piles drifted whenever a card left the deck
-    // by a path the piles do not show. No INIT order in the file means no deck to show.
-    // A file that carries `deckSize` (spec §11) says the count outright; the tracked order
-    // still wins because it also knows WHICH cards, and the two agree on a conformant file.
-    const numCardsInDeck = Math.max(0, deckRemaining ?? ps.deckSize ?? 0);
+    // The file's own `deckSize` when it states one (spec §11, gated by §14). Before the first
+    // keyframe, or in a file written before the field existed, the count is tracked from the
+    // published INIT order and the engine's own `from: 'deck'` MOVEs (deckTracker). Neither
+    // known means "not recorded" (§14): the tray shows nothing rather than a zero.
+    const deckCount = typeof ps.deckSize === 'number' && Number.isFinite(ps.deckSize) ? ps.deckSize : deckRemaining;
+    const numCardsInDeck = typeof deckCount === 'number' ? Math.max(0, Math.trunc(deckCount)) : undefined;
     // A deployed leader lives in an arena as a unit (folded into ps.cards). The leader slot
     // then shows the "deployed" placeholder (zone != 'base'); otherwise it shows the leader
     // art. LeaderBaseCard derives isDeployed from `zone !== 'base'`, so an undeployed leader
@@ -335,9 +384,12 @@ function adaptPlayer(
     const leader = cardFromId(leaderId, leaderDeployed ? 'leader' : 'base', playerId, playerId, statOf(leaderId, statMap), nameOf?.(leaderId));
     leader.type = 'leader';
     // An undeployed leader exhausts when it uses its action ability — show Karabast's
-    // dimming. Glow it on the frame it acts (same `selected` highlight as units).
+    // dimming. The file's flag wins (spec §11); the caller's EXHAUST/READY scan is the
+    // fallback for a file whose keyframes carry no leader. Glow it on the frame it acts.
     if (!leaderDeployed && (ps.leader?.exhausted ?? leaderExhausted)) leader.exhausted = true;
-    if (highlight && highlight.has(leaderId)) leader.selected = true;
+    // A spent Epic Action is game state (CR 1.16); LeaderBaseCard draws the token for it.
+    if (ps.leader?.epicActionUsed === true) leader.epicActionSpent = true;
+    if (highlight && highlight.has(leaderId) || (highlight && highlight.has(headerLeaderId))) leader.selected = true;
     // Base HP: the .swupgn stream never states a base's printed HP, and ReducedState seeds
     // every base at 30 — so bases with an aspect penalty or a Force slot (33, 28, ...) read
     // wrong, and the base showed no damage at all because nothing set `damage` on it.
@@ -400,6 +452,7 @@ export function adaptState(
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
     const entering = opts.enteringIds && opts.enteringIds.length ? new Set(opts.enteringIds) : undefined;
     const attacking = opts.attackingIds && opts.attackingIds.length ? new Set(opts.attackingIds) : undefined;
+    const owners = ownerSeatMap(doc);
     const players: Record<string, any> = {};
     for (const seat of [1, 2] as Seat[]) {
         const ps = s.players[seat];
@@ -411,6 +464,7 @@ export function adaptState(
             hideHand: opts.hideHandFor === seat, highlight, leaderExhausted: opts.leaderExhausted?.[seat] ?? false,
             entering, attacking, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
             deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf,
+            ownerId: (id) => seatToId[owners.get(baseId(id)) ?? seat],
         });
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
@@ -418,7 +472,9 @@ export function adaptState(
     return {
         players,
         phase: s.phase,
-        initiativeClaimed: s.initiative != null,
+        // The initiative counter's status (spec §11): taken this round, or still available. A
+        // file written before `initiativeTaken` existed only says who holds it.
+        initiativeClaimed: typeof s.initiativeTaken === 'boolean' ? s.initiativeTaken : s.initiative != null,
         clientUIProperties: {},
         winners: [],
     };

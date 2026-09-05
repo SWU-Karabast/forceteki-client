@@ -3,8 +3,9 @@
 // gameState mirrors the live board's gameState, which is typed `any`
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
-import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn';
+import type { SwuPgnDocument, ReducedState, Seat, GameEvent, NameResolver } from '@/lib/swupgn';
 import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver } from '@/lib/swupgn';
+import { storyName } from '@/app/_utils/replayAction';
 import { adaptState, type AdaptOptions, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { deckByFrame, type DeckState } from '@/app/_utils/deckTracker';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
@@ -132,8 +133,12 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         () => (doc.cards?.length ? indexResolver(doc.cards) : makeNameResolver(nameMap)),
         [doc.cards, nameMap],
     );
+    // The client's own prose uses the story's `nm()` (spec §16): a copy keeps its ` #N` so two
+    // Wampas read apart, and `base@N` is "Player N's base". `render()` adds the suffix itself,
+    // so the text-log export keeps the bare resolver.
+    const names = useMemo<NameResolver>(() => ({ nameOf: (id: string) => storyName(id, resolver) }), [resolver]);
     const statMap = useCardStatMap();
-    const moves = useMemo(() => buildMoveList(events, resolver), [events, resolver]);
+    const moves = useMemo(() => buildMoveList(events, names), [events, names]);
 
     // Per-frame ReducedState, computed once per document load via a single O(n) forward
     // pass (foldFrames) instead of re-folding every prefix (which was O(n^2)).
@@ -318,7 +323,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     }, [doc, events, initialFrame, totalFrames, clipStart, clipEnd]);
 
     // What happened on the current frame: a caption + the in-play card(s) to glow.
-    const action = useMemo(() => frameAction(events[currentIndex], resolver), [events, currentIndex, resolver]);
+    const action = useMemo(() => frameAction(events[currentIndex], names), [events, currentIndex, names]);
 
     const gameState = useMemo(() => {
         if (!frameStates[currentIndex]) return null;
@@ -340,7 +345,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
             // Names come from the file's own CARDS index (or the static map for older files);
             // GameCard prints them on attached-upgrade banners.
-            nameOf: resolver.nameOf,
+            nameOf: names.nameOf,
             highlightIds: action.highlight,
             leaderExhausted: leaderExhaustByFrame[currentIndex],
             // Fog-of-war hides the opponent's hand; their face-down resources go with it.
@@ -357,7 +362,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
         return adaptState(frameStates[currentIndex], doc, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, resolver]);
+    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, names]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first
@@ -431,13 +436,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent,
         doc, events, roundMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
-        replayId, downloadReplay, nameOf: resolver.nameOf,
+        replayId, downloadReplay, nameOf: names.nameOf,
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, stepForward, stepBack, seekTo,
         seekToSeq, currentEvents, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, events, roundMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
-        currentMoveIndex, replayId, downloadReplay, resolver, downloadTextLog, fogOfWar, toggleFogOfWar,
+        currentMoveIndex, replayId, downloadReplay, names, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed,
         stepForward, stepBack, seekTo, seekToSeq, currentEvents, togglePerspective]);
