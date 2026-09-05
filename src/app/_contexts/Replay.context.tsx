@@ -12,6 +12,7 @@ import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
+import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
 import { triggerBlobDownload, sanitizeFilename, downloadSwuPgn } from '@/app/_utils/downloadBlob';
 
 /** One resource commitment: what was taken, and what the player could have taken instead. */
@@ -199,6 +200,10 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         return out;
     }, [events, frameStates]);
 
+    // Units to draw exhausted from their arrival frame, ahead of the entering EXHAUST the
+    // file writes a few records later (spec §10.1), so a played unit comes in exhausted.
+    const entryExhaust = useMemo(() => entryExhaustByFrame(events), [events]);
+
     // Remaining deck per frame, counted from the engine's own deck MOVEs against the
     // published starting order. One source of truth for the board and the Deck tab.
     const deckStates = useMemo(() => deckByFrame(doc, events), [doc, events]);
@@ -356,11 +361,12 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                 ? { [perspective === P1 ? 1 : 2]: resourcedByFrame[currentIndex]?.[perspective === P1 ? 1 : 2] ?? [] } as Partial<Record<Seat, string[]>>
                 : resourcedByFrame[currentIndex],
             enteringIds,
+            exhaustedIds: [...(entryExhaust[currentIndex] ?? [])],
             // On an ATTACK frame the attacker is the first highlight id; lunge it.
             attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
         return adaptState(frameStates[currentIndex], doc, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, names]);
+    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, names, entryExhaust]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first

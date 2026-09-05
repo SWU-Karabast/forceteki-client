@@ -4,6 +4,7 @@ import path from 'path';
 import { parse, fold, foldFrames, normalizeEvents, checkKeyframes, baseId, type ReducedState, type Seat, type CardInstanceState } from '@/lib/swupgn';
 import { adaptState, ownerSeatMap } from '../swupgnBoardAdapter';
 import { fileIssues, writerGeneration } from '../swupgnFileIssues';
+import { entryExhaustByFrame } from '../entryExhaust';
 
 /**
  * Spec §20 vectors, one level up from the fold: the board the viewer renders at the final
@@ -105,20 +106,23 @@ describe.each(VECTORS)('board at the final frame: %s', (name) => {
     });
 });
 
-describe('the entering EXHAUST lands on the very next frame (minimal vector, spec §10.1)', () => {
+describe('a played unit comes in exhausted (minimal vector, spec §10.1 entering EXHAUST)', () => {
     const doc = parse(readFileSync(path.join(DIR, 'minimal.swupgn'), 'utf-8'));
     const events = normalizeEvents(doc.events);
     const frames = foldFrames(events);
-    const at = (seq: string) => frames[events.findIndex((e) => e.seq === seq)];
+    const ahead = entryExhaustByFrame(events);
+    const idx = (seq: string) => events.findIndex((e) => e.seq === seq);
+    const wampa = (seq: string) => adaptState(frames[idx(seq)], doc, SEATS, { exhaustedIds: [...ahead[idx(seq)]] }).players.P1.cardPiles.groundArena[0];
 
-    it('the Wampa is ready on its PLAY frame and exhausted on the EXHAUST frame right after', () => {
-        const played = adaptState(at('R1.A.1'), doc, SEATS).players.P1.cardPiles.groundArena[0];
-        expect(played.exhausted).toBe(false);
-        const entered = adaptState(at('R1.A.1a'), doc, SEATS).players.P1.cardPiles.groundArena[0];
+    it('reads exhausted from its arrival MOVE through the PLAY, then from the fold once the EXHAUST lands', () => {
+        // The fold alone shows it ready until R1.A.1a; the look-ahead closes that gap.
+        expect(frames[idx('R1.A.1')].players[1]!.cards[0].exhausted).toBe(false);
+        for (const seq of ['R1.A.0b', 'R1.A.0c', 'R1.A.1']) expect(wampa(seq).exhausted, seq).toBe(true);
+        expect(ahead[idx('R1.A.1a')].size).toBe(0);
+        const entered = wampa('R1.A.1a');
         expect(entered.exhausted).toBe(true);
-        // STATS a frame earlier already gave it its numbers and keyword.
         expect([entered.power, entered.hp, entered.keywords]).toEqual([4, 5, ['overwhelm']]);
-        // Readied at regroup.
-        expect(adaptState(at('R1.G.11'), doc, SEATS).players.P1.cardPiles.groundArena[0].exhausted).toBe(false);
+        // Readied at regroup, and nothing pending there.
+        expect(wampa('R1.G.11').exhausted).toBe(false);
     });
 });

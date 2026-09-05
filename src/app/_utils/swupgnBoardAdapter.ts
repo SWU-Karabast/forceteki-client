@@ -248,6 +248,9 @@ export interface AdaptOptions {
     deckRemaining?: Partial<Record<Seat, number>>;
     enteringIds?: string[];
     attackingIds?: string[];
+
+    /** Units to draw exhausted ahead of the file's own EXHAUST record (see entryExhaust.ts). */
+    exhaustedIds?: string[];
     nameOf?: NameOf;
 }
 
@@ -309,6 +312,7 @@ interface SeatOptions {
     leaderExhausted?: boolean;
     entering?: Set<string>;
     attacking?: Set<string>;
+    exhausted?: Set<string>;
     resourcedIds?: string[];
     baseHp?: number;
     deckRemaining?: number;
@@ -319,7 +323,7 @@ interface SeatOptions {
 function adaptPlayer(
     ps: PlayerState, playerId: string, headerLeaderId: string, baseSetId: string,
     statMap: Record<string, CardStat>,
-    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, resourcedIds, baseHp, deckRemaining, nameOf, ownerId }: SeatOptions,
+    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, exhausted, resourcedIds, baseHp, deckRemaining, nameOf, ownerId }: SeatOptions,
 ): any {
     const own = ownerId ?? (() => playerId);
     // The file's own leader status names the card (spec §11); the header is the fallback.
@@ -357,6 +361,11 @@ function adaptPlayer(
     // Flag the attacker of this frame's ATTACK so UnitsBoard lunges it toward the opponent.
     if (attacking && attacking.size) {
         for (const c of inPlay) if (attacking.has(c.uuid)) c.attacking = true;
+    }
+    // A unit whose entering EXHAUST is still a few records ahead comes in exhausted, as it
+    // does at the table.
+    if (exhausted && exhausted.size) {
+        for (const c of inPlay) if (exhausted.has(c.uuid)) c.exhausted = true;
     }
     const ground = [...inPlay, ...upgrades, ...tokens].filter((c) => c.zone === 'groundArena');
     const space = [...inPlay, ...upgrades, ...tokens].filter((c) => c.zone === 'spaceArena');
@@ -452,6 +461,7 @@ export function adaptState(
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
     const entering = opts.enteringIds && opts.enteringIds.length ? new Set(opts.enteringIds) : undefined;
     const attacking = opts.attackingIds && opts.attackingIds.length ? new Set(opts.attackingIds) : undefined;
+    const exhausted = opts.exhaustedIds && opts.exhaustedIds.length ? new Set(opts.exhaustedIds) : undefined;
     const owners = ownerSeatMap(doc);
     const players: Record<string, any> = {};
     for (const seat of [1, 2] as Seat[]) {
@@ -462,7 +472,7 @@ export function adaptState(
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
         const adapted = adaptPlayer(ps, playerId, leaderId, baseSetId, statMap, {
             hideHand: opts.hideHandFor === seat, highlight, leaderExhausted: opts.leaderExhausted?.[seat] ?? false,
-            entering, attacking, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
+            entering, attacking, exhausted, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
             deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf,
             ownerId: (id) => seatToId[owners.get(baseId(id)) ?? seat],
         });
