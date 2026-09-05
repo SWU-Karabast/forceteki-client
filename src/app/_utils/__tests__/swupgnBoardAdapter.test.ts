@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { cardFromId, cardFromInstance, ZONE_MAP, adaptState, deckOrderLengths } from '../swupgnBoardAdapter';
+import { statOf } from '../swupgnCardStats';
 import { parse, stateAt, type ReducedState, type Seat, type CardInstanceState } from '@/lib/swupgn';
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -351,5 +352,32 @@ describe('effectiveStats — a unit shows what is attached to it, the way the en
         const gs = adaptState(s, doc, deckOrderLengths(doc), { 1: 'p1', 2: 'p2' }, {}, statMap);
         const n1 = gs.players.p1.cardPiles.spaceArena.find((c: { uuid: string }) => c.uuid === 'JTL#095');
         expect([n1.power, n1.hp]).toEqual([6, 5]);
+    });
+});
+
+describe('token units resolve their stats and art by numeric id', () => {
+    // A current file names a token unit `TOKEN:mandalorian#8192010342`; the stat map keys it
+    // `TOKEN:Mandalorian` with `id: "8192010342"`. Without the bridge the Mandalorian rendered
+    // as "TOKEN:mandalorian_8192... IMAGE NOT FOUND" with empty badges.
+    const statMap = {
+        'TOKEN:Mandalorian': { type: 'token', power: 2, hp: 2, arena: 'ground', id: '8192010342' },
+        'TOKEN:Shield': { type: 'token', power: 0, hp: 0, upgradePower: 0, upgradeHp: 0, id: '8752877738' },
+    };
+
+    it('finds the entry for every id shape the format has used', () => {
+        for (const id of ['TOKEN:mandalorian#8192010342', 'TOKEN:mandalorian#8192010342:2', 'TOKEN:Mandalorian', 'TOKEN:Mandalorian:3']) {
+            expect(statOf(id, statMap)?.id, id).toBe('8192010342');
+        }
+        expect(statOf('TOKEN:nothing#0000000000', statMap)).toBeUndefined();
+        expect(statOf('TOKEN:weakness', statMap)).toBeUndefined();
+    });
+
+    it('builds a board card that takes the token art path and carries its printed stats', () => {
+        const inst: CardInstanceState = { id: 'TOKEN:mandalorian#8192010342', zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 1, experience: 0, statusTokens: {} };
+        const c = cardFromInstance(inst, 'p2', statOf(inst.id, statMap), 'Mandalorian', statMap);
+        expect(c.type).toBe('token');       // s3CardImageURL: type includes 'token' -> cards/_tokens/<id>
+        expect(c.id).toBe('8192010342');
+        expect([c.power, c.hp]).toEqual([2, 2]);
+        expect(c.name).toBe('Mandalorian');
     });
 });
