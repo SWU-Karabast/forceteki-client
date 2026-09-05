@@ -80,7 +80,9 @@ fallbacks noted below. Verified per vector at the final frame by
 | `cards[].captured` | `cardPiles.capturedZone`, one card per captive with `parentCardId` = captor; a `base@N` captor is held nowhere (§21) | `UnitsBoard` → `GameCard` captured strip |
 | controller vs owner | `controllerId` = the seat whose list holds the card; `ownerId` from the file's DECKS/header (`ownerSeatMap`), so a `TAKE_CONTROL`ed card shows the stolen icon | `GameCard` status icons |
 
-Beyond the board: `Replay.context` captions every frame with `replayAction.frameAction`, worded
+Beyond the board: `StoryTab` shows the file's own `%%% STORY` (or a fresh `render()`), and its
+click-to-seek follows the story's numbering exactly (`storySeek`: the eight numbered types,
+reset per round and per phase). `Replay.context` captions every frame with `replayAction.frameAction`, worded
 per the §16 table (mechanism records print nothing) and named with the story's `nm()`
 (`storyName`: copy suffix kept, `base@N` → "Player N's base"). `ResourcingReport` shows
 `paid` (Σ `EXHAUST_RESOURCES`) beside the printed `cost`. `FileHealth` shows every

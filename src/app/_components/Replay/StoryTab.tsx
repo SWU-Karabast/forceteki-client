@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { render } from '@/lib/swupgn';
 import { useReplay } from '@/app/_contexts/Replay.context';
+import { storySeekIndex, storyLineTargets, roundOf } from '@/app/_utils/storySeek';
 
 /**
  * The game as prose, straight from the file's `%%% STORY` section.
@@ -18,18 +19,6 @@ import { useReplay } from '@/app/_contexts/Replay.context';
  * the prose changes — an unrecognised line just renders as text.
  */
 
-/** `  7. Player 1 attacks ...` -> 7. Only leading-numbered lines are seekable. */
-const actionNumberOf = (line: string): number | null => {
-    const m = /^\s{1,4}(\d+)\.\s/.exec(line);
-    return m ? Number(m[1]) : null;
-};
-
-/** `═══ ROUND 2 ═══` / ` ROUND 2   initiative: ...` -> 2. */
-const roundOf = (line: string): number | null => {
-    const m = /^[\s═]*ROUND\s+(\d+)\b/.exec(line);
-    return m ? Number(m[1]) : null;
-};
-
 const StoryTab: React.FC = () => {
     const { doc, events, currentIndex, seekTo } = useReplay();
 
@@ -39,24 +28,9 @@ const StoryTab: React.FC = () => {
         [doc],
     );
 
-    // Frame index for the Nth action of a round, so a numbered line can seek. Built from
+    // Frame per story line, keyed the way the story numbers its actions (spec §16): built from
     // EVENTS (the truth), never from the prose.
-    const seekIndex = useMemo(() => {
-        const m = new Map<string, number>();
-        let round = 0;
-        let action = 0;
-        for (let i = 0; i < events.length; i++) {
-            const e = events[i];
-            if (e.t === 'ROUND_START') { round = e.round; action = 0; m.set(`R${round}`, i); continue; }
-            // The story numbers top-level player actions; these are the events that produce one.
-            if (e.t === 'PLAY' || e.t === 'PLAY_EVENT' || e.t === 'PLAY_UPGRADE' || e.t === 'PLAY_SMUGGLE'
-                || e.t === 'DEPLOY_LEADER' || e.t === 'ATTACK' || e.t === 'ABILITY_ACTIVATE' || e.t === 'PASS') {
-                action += 1;
-                if (!m.has(`R${round}.${action}`)) m.set(`R${round}.${action}`, i);
-            }
-        }
-        return m;
-    }, [events]);
+    const targets = useMemo(() => storyLineTargets(lines, storySeekIndex(events)), [lines, events]);
 
     const currentRound = useMemo(() => {
         for (let i = currentIndex; i >= 0; i--) {
@@ -71,7 +45,6 @@ const StoryTab: React.FC = () => {
         activeRef.current?.scrollIntoView({ block: 'nearest' });
     }, [currentRound]);
 
-    let round = 0;
     return (
         <Box sx={{ p: 1.5 }}>
             <Box
@@ -85,10 +58,7 @@ const StoryTab: React.FC = () => {
             >
                 {lines.map((line, i) => {
                     const r = roundOf(line);
-                    if (r) round = r;
-                    const action = actionNumberOf(line);
-                    const seq = r ? `R${r}` : action ? `R${round}.${action}` : null;
-                    const target = seq ? seekIndex.get(seq) : undefined;
+                    const target = targets[i];
                     const isCurrentRound = r != null && r === currentRound;
 
                     if (target == null) {
