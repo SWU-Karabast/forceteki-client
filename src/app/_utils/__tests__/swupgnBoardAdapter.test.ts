@@ -247,3 +247,48 @@ describe('resource pile identities', () => {
         expect(pile.every((c: { setId: { set: string } }) => !c.setId.set)).toBe(true);
     });
 });
+
+describe('attached upgrades render as banners: aspects + name reach the subcard', () => {
+    // GameCard paints an upgrade banner from `cardUpgradebackground(subcard)`, which returns
+    // null without `aspects` -- the banner's background was literally `url(/null)` -- and prints
+    // `subcard.name`, which the adapter never set. Both come from the file: aspects via the
+    // stat map, names via the CARDS index the replay passes as `nameOf`.
+    const statMap = {
+        'LOF#164': { type: 'unit', power: 4, hp: 5, arena: 'ground', aspects: ['aggression'] },
+        'LOF#215': { type: 'upgrade', power: 1, hp: 3, aspects: ['cunning'] },
+    };
+    const names: Record<string, string> = { 'LOF#164': 'Wampa', 'LOF#215': 'Ascension Cable' };
+    const nameOf = (id: string) => names[id] ?? id;
+    const doc = parse(SAMPLE);
+    const decks = deckOrderLengths(doc);
+    const wampa: CardInstanceState = { id: 'LOF#164', zone: 'ground', damage: 0, exhausted: false, upgrades: ['LOF#215'], shields: 0, experience: 0, statusTokens: {} };
+    const state: ReducedState = {
+        round: 1, phase: 'action', initiative: 1,
+        players: {
+            1: { seat: 1, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0, resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [wampa] },
+            2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0, resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
+        },
+    };
+
+    it('gives the parented upgrade card its aspects, name and printed type', () => {
+        const gs = adaptState(state, doc, decks, { 1: 'p1', 2: 'p2' }, { nameOf }, statMap);
+        const ground = gs.players.p1.cardPiles.groundArena;
+        const cable = ground.find((c: { uuid: string }) => c.uuid === 'LOF#215');
+        expect(cable).toBeDefined();
+        expect(cable.parentCardId).toBe('LOF#164');
+        expect(cable.aspects).toEqual(['cunning']);
+        expect(cable.name).toBe('Ascension Cable');
+        expect(cable.type).toBe('upgrade');
+        // The host is named too; hover previews and the not-found overlay read it.
+        expect(ground.find((c: { uuid: string }) => c.uuid === 'LOF#164').name).toBe('Wampa');
+    });
+
+    it('omits both fields rather than emitting empty ones when nothing is known', () => {
+        const c = cardFromId('XXX#999', 'hand', 'p1', 'p1');
+        expect('aspects' in c).toBe(false);
+        expect('name' in c).toBe(false);
+        const d = cardFromId('XXX#999', 'hand', 'p1', 'p1', { aspects: [] }, '');
+        expect('aspects' in d).toBe(false);
+        expect('name' in d).toBe(false);
+    });
+});

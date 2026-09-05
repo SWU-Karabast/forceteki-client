@@ -336,8 +336,11 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                 if (!prevIds.has(c.id)) enteringIds.push(c.id);
             }
         }
-        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; baseHp?: Partial<Record<Seat, number>>; deckRemaining?: Partial<Record<Seat, number>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[] } = {
+        const opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; baseHp?: Partial<Record<Seat, number>>; deckRemaining?: Partial<Record<Seat, number>>; resourcedIds?: Partial<Record<Seat, string[]>>; enteringIds?: string[]; attackingIds?: string[]; nameOf?: (id: string) => string } = {
             ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
+            // Names come from the file's own CARDS index (or the static map for older files);
+            // GameCard prints them on attached-upgrade banners.
+            nameOf: resolver.nameOf,
             highlightIds: action.highlight,
             leaderExhausted: leaderExhaustByFrame[currentIndex],
             // Fog-of-war hides the opponent's hand; their face-down resources go with it.
@@ -354,7 +357,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
         return adaptState(frameStates[currentIndex], doc, decks, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates]);
+    }, [frameStates, currentIndex, doc, decks, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, resolver]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first

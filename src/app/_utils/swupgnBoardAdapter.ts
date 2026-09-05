@@ -32,6 +32,7 @@ export interface AdaptedCard {
     statusTokens?: Record<string, number>;
     subcards?: AdaptedCard[];
     parentCardId?: string;
+    aspects?: string[];
 }
 
 /** ReducedState arena zones → board cardPiles zone names. */
@@ -47,9 +48,16 @@ export function parseSetId(id: string): { set: string; number: number } {
     return { set, number: Number(num) };
 }
 
-/** Build a board card from a bare id (hand/discard piles carry only ids). */
+/**
+ * Build a board card from a bare id (hand/discard piles carry only ids).
+ *
+ * `aspects` and `name` are not decoration: GameCard paints an attached upgrade as a banner
+ * whose background is chosen by the card's aspects (`cardUpgradebackground`, null without
+ * them -- the banner rendered `url(/null)`) and whose text is the card's name. The live server
+ * sends both on every card; here they come from the stat map and the file's own CARDS index.
+ */
 export function cardFromId(
-    id: string, zone: string, controllerId: string, ownerId: string, stat?: CardStat,
+    id: string, zone: string, controllerId: string, ownerId: string, stat?: CardStat, name?: string,
 ): AdaptedCard {
     const artId = tokenArtId(id) ?? stat?.id;
     return {
@@ -59,6 +67,8 @@ export function cardFromId(
         controllerId,
         ownerId,
         type: stat?.type ?? 'unit',
+        ...(name ? { name } : {}),
+        ...(stat?.aspects?.length ? { aspects: stat.aspects } : {}),
         // Tokens have no set number: the S3 pipeline addresses them by numeric engine id
         // under cards/_tokens/, and s3CardImageURL takes that branch whenever `id` is set.
         // Current-format ids carry that number themselves (TOKEN:x-wing#9415311381), which
@@ -130,9 +140,9 @@ function tokenCards(
 
 /** Build a board card from a folded in-play instance. Printed power/HP come from the
  *  static stat map (the .swupgn stream has no stats); damage is the folded value. */
-export function cardFromInstance(inst: CardInstanceState, ownerId: string, stat?: CardStat): AdaptedCard {
+export function cardFromInstance(inst: CardInstanceState, ownerId: string, stat?: CardStat, name?: string): AdaptedCard {
     return {
-        ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, ownerId, ownerId, stat),
+        ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, ownerId, ownerId, stat, name),
         damage: inst.damage,
         exhausted: inst.exhausted,
         upgrades: inst.upgrades,
@@ -145,6 +155,9 @@ export function cardFromInstance(inst: CardInstanceState, ownerId: string, stat?
 export type { ReducedState, Seat };
 
 export type SeatToPlayerId = Record<Seat, string>;
+
+/** Resolves a card id to a display name; the replay passes the file's own CARDS index. */
+export type NameOf = (id: string) => string;
 
 /** Pull each seat's starting deck-order length from the INIT setup record. */
 export function deckOrderLengths(doc: SwuPgnDocument): Record<Seat, number> {
@@ -178,10 +191,10 @@ function facedownStack(count: number, zone: string, owner: string): AdaptedCard[
 
 /** Resource pile: the actual cards committed, face-down placeholders for any remainder. */
 function resourceCards(
-    ids: string[] | undefined, total: number, owner: string, statMap: Record<string, CardStat>,
+    ids: string[] | undefined, total: number, owner: string, statMap: Record<string, CardStat>, nameOf?: NameOf,
 ): AdaptedCard[] {
     const known = (Array.isArray(ids) ? ids : []).slice(0, total)
-        .map((id) => cardFromId(id, 'resources', owner, owner, statOf(id, statMap)));
+        .map((id) => cardFromId(id, 'resources', owner, owner, statOf(id, statMap), nameOf?.(id)));
     return known.length >= total
         ? known
         : [...known, ...facedownStack(total - known.length, 'resources', owner)];
@@ -198,8 +211,9 @@ function adaptPlayer(
     resourcedIds?: string[],
     baseHp?: number,
     deckRemaining?: number,
+    nameOf?: NameOf,
 ): any {
-    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap)));
+    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id)));
     // Token badges ride along in the arena piles as parented cards, exactly as the live
     // server delivers upgrades; UnitsBoard groups them onto their host.
     const tokens = ps.cards.flatMap((c, i) => tokenCards(c, inPlay[i], playerId, statMap));
@@ -207,7 +221,7 @@ function adaptPlayer(
     // UnitsBoard groups it under its host. Without this a pilot or an equipment card is
     // tracked in the fold but renders nowhere.
     const upgrades = ps.cards.flatMap((c, i) => (c.upgrades ?? []).map((id) => ({
-        ...cardFromId(id, inPlay[i].zone, playerId, playerId, statOf(id, statMap)),
+        ...cardFromId(id, inPlay[i].zone, playerId, playerId, statOf(id, statMap), nameOf?.(id)),
         parentCardId: inPlay[i].uuid,
     })));
     // Glow the card(s) that acted this frame (reuses GameCard's `selected` styling). The
@@ -230,8 +244,8 @@ function adaptPlayer(
     // identities hidden) instead of the omniscient known cards.
     const hand = hideHand
         ? facedownStack(ps.hand.length, 'hand', playerId)
-        : ps.hand.map((id) => cardFromId(id, 'hand', playerId, playerId, statOf(id, statMap)));
-    const discard = ps.discard.map((id) => cardFromId(id, 'discard', playerId, playerId, statOf(id, statMap)));
+        : ps.hand.map((id) => cardFromId(id, 'hand', playerId, playerId, statOf(id, statMap), nameOf?.(id)));
+    const discard = ps.discard.map((id) => cardFromId(id, 'discard', playerId, playerId, statOf(id, statMap), nameOf?.(id)));
     const resourcesTotal = ps.resourcesReady + ps.resourcesExhausted;
     // Prefer the tracked deck (counted from the engine's own `from: 'deck'` MOVEs) over
     // subtracting the visible zones — the subtraction drifts whenever a card leaves the deck
@@ -245,7 +259,7 @@ function adaptPlayer(
     // art. LeaderBaseCard derives isDeployed from `zone !== 'base'`, so an undeployed leader
     // MUST carry zone 'base' or it wrongly renders as deployed (the bug that hid leaders).
     const leaderDeployed = ps.cards.some((c) => baseId(c.id) === baseId(leaderId));
-    const leader = cardFromId(leaderId, leaderDeployed ? 'leader' : 'base', playerId, playerId, statOf(leaderId, statMap));
+    const leader = cardFromId(leaderId, leaderDeployed ? 'leader' : 'base', playerId, playerId, statOf(leaderId, statMap), nameOf?.(leaderId));
     leader.type = 'leader';
     // An undeployed leader exhausts when it uses its action ability — show Karabast's
     // dimming. Glow it on the frame it acts (same `selected` highlight as units).
@@ -256,7 +270,7 @@ function adaptPlayer(
     // wrong, and the base showed no damage at all because nothing set `damage` on it.
     // Printed HP comes from card data; current HP is derived by the caller from the
     // absolute `hp` on base DAMAGE/HEAL/OVERWHELM events.
-    const base = cardFromId(baseSetId, 'base', playerId, playerId, statOf(baseSetId, statMap));
+    const base = cardFromId(baseSetId, 'base', playerId, playerId, statOf(baseSetId, statMap), nameOf?.(baseSetId));
     base.type = 'base';
     // Printed HP the card data does not carry comes from the keyframe's `baseMaxHp` (30 is
     // the placeholder until the first keyframe lands, so the damage reads 0 until then).
@@ -297,7 +311,7 @@ function adaptPlayer(
             // Named resources when the caller derived them (the fold tracks only a count),
             // padded with face-down placeholders if the count outruns the known ids — a
             // keyframe can report more resources than the MOVE stream accounted for.
-            resources: resourceCards(resourcedIds, resourcesTotal, playerId, statMap),
+            resources: resourceCards(resourcedIds, resourcesTotal, playerId, statMap, nameOf),
             credits: facedownStack(ps.credits, 'credits', playerId),
             capturedZone: [] as AdaptedCard[],
         },
@@ -308,7 +322,7 @@ function adaptPlayer(
 export function adaptState(
     s: ReducedState, doc: SwuPgnDocument,
     decks: Record<Seat, number>, seatToId: SeatToPlayerId,
-    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; resourcedIds?: Partial<Record<Seat, string[]>>; baseHp?: Partial<Record<Seat, number>>; deckRemaining?: Partial<Record<Seat, number>>; enteringIds?: string[]; attackingIds?: string[] } = {},
+    opts: { hideHandFor?: Seat; highlightIds?: string[]; leaderExhausted?: Partial<Record<Seat, boolean>>; resourcedIds?: Partial<Record<Seat, string[]>>; baseHp?: Partial<Record<Seat, number>>; deckRemaining?: Partial<Record<Seat, number>>; enteringIds?: string[]; attackingIds?: string[]; nameOf?: NameOf } = {},
     statMap: Record<string, CardStat> = {},
 ): any {
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
@@ -321,7 +335,7 @@ export function adaptState(
         if (!ps) { continue; }
         const leaderId = seat === 1 ? doc.header.p1Leader : doc.header.p2Leader;
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
-        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering, attacking, opts.resourcedIds?.[seat], opts.baseHp?.[seat], opts.deckRemaining?.[seat]);
+        const adapted = adaptPlayer(ps, playerId, decks[seat], leaderId, baseSetId, opts.hideHandFor === seat, statMap, highlight, opts.leaderExhausted?.[seat] ?? false, entering, attacking, opts.resourcedIds?.[seat], opts.baseHp?.[seat], opts.deckRemaining?.[seat], opts.nameOf);
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
     }
