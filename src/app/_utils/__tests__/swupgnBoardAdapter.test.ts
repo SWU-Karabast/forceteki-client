@@ -385,7 +385,7 @@ describe('token units resolve their stats and art by numeric id', () => {
     });
 });
 
-describe('captives and snapshot stats (SWU-PGN 78566bda)', () => {
+describe('captives, live stats and leader status (SWU-PGN 3c4ed35d)', () => {
     const doc = parse(SAMPLE);
     const card = (over: Partial<CardInstanceState>): CardInstanceState => ({
         id: 'SOR#095', zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [], ...over,
@@ -411,15 +411,21 @@ describe('captives and snapshot stats (SWU-PGN 78566bda)', () => {
         expect(badges.map((c: { name: string }) => c.name)).toEqual(['Plot-Armor', 'Plot-Armor']);
     });
 
-    it('uses the keyframe power/hp while nothing feeding a stat has changed, then the static math', () => {
+    it('shows the live power/hp the file states (STATS / keyframes), else the static math', () => {
         const statMap = { 'SOR#095': { type: 'unit', power: 4, hp: 5 }, 'TOKEN:Experience': { type: 'token', upgradePower: 1, upgradeHp: 1, id: '2007868442' } };
-        const snapped = state([card({ power: 6, hp: 5 })]); // an ability gives +2/+0 the fold cannot see
-        const same = adaptState(snapped, doc, ids, { snapshot: snapped }, statMap);
-        expect([same.players.p1.cardPiles.groundArena[0].power, same.players.p1.cardPiles.groundArena[0].hp]).toEqual([6, 5]);
-        const later = state([card({ power: 6, hp: 5, experience: 1 })]);
-        const moved = adaptState(later, doc, ids, { snapshot: snapped }, statMap);
-        expect([moved.players.p1.cardPiles.groundArena[0].power, moved.players.p1.cardPiles.groundArena[0].hp]).toEqual([5, 6]);
-        const none = adaptState(later, doc, ids, {}, statMap);
-        expect(none.players.p1.cardPiles.groundArena[0].power).toBe(5);
+        const told = adaptState(state([card({ power: 6, hp: 5, experience: 1 })]), doc, ids, {}, statMap);
+        expect([told.players.p1.cardPiles.groundArena[0].power, told.players.p1.cardPiles.groundArena[0].hp]).toEqual([6, 5]);
+        const older = adaptState(state([card({ experience: 1 })]), doc, ids, {}, statMap);
+        expect([older.players.p1.cardPiles.groundArena[0].power, older.players.p1.cardPiles.groundArena[0].hp]).toEqual([5, 6]);
+    });
+
+    it('takes the leader status and deck count from the file when it carries them', () => {
+        const s = state([]);
+        s.players[1]!.leader = { id: doc.header.p1Leader, deployed: false, exhausted: true, epicActionUsed: true };
+        s.players[1]!.deckSize = 17;
+        const gs = adaptState(s, doc, ids);
+        expect(gs.players.p1.leader.exhausted).toBe(true);
+        expect(gs.players.p1.leader.zone).toBe('base');
+        expect(gs.players.p1.numCardsInDeck).toBe(17);
     });
 });

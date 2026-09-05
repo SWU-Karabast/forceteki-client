@@ -1,15 +1,30 @@
 # Vendored SWU-PGN reader
 
-Source: forceteki `swupgn/src/`. Re-vendored 2026-09-05 at upstream **`78566bda`** ("Land the
-replay client's nine findings"). `swupgn/src/` is byte-identical through upstream `dd7f9af4`;
-the three commits after `78566bda` touch only the spec text (regroup readies the exhausted
-resources one `READY_RESOURCES` at a time; a reader tolerates a no-op one) and a spec comment.
+Source: forceteki `swupgn/src/`. Re-vendored 2026-09-05 at upstream **`3c4ed35d`** ("Encode the
+whole CR 1.16 game state"), on top of `78566bda` ("Land the replay client's nine findings").
 The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit.
 
 `types.ts`, `integrity.ts` and `render.ts` are **verbatim** (types.ts: one closing brace
 re-indented for this repo's eslint, whitespace only). `fold.ts`, `parse.ts` and `cardNames.ts`
 are upstream plus the client-owned blocks listed below. `validate.ts` stays omitted (Node-only:
 fs/path + ajv). `tokens.ts`, `serialize.ts` and `foldFrames` are client-only.
+
+## What 3c4ed35d changed in the format (all handled here)
+
+- A unit entering play exhausted gets an `EXHAUST` right after its arrival (the normal case);
+  one entering ready gets nothing. Before this every replay showed a just-played unit ready.
+- `STATS {card, power, hp, keywords?}`: the engine's live values, written whenever they change
+  and snapshotted in keyframes. The fold sets them on the card; the gate compares them when a
+  keyframe carries them. The board shows them outright; the static reconstruction in
+  `swupgnBoardAdapter.effectiveStats` is now only for files written before `STATS`.
+- `ReducedState.initiativeTaken`, `PlayerState.deckSize`, `PlayerState.leader {id, deployed,
+  exhausted, epicActionUsed}`; `epic: true` on `DEPLOY_LEADER` / `ABILITY_ACTIVATE`.
+  `EXHAUST`/`READY` also set the leader's flag; the leader's `MOVE` arena→base undeploys it.
+  All gated when the keyframe carries them; `deckSize` first-keyframe-exempt like `baseHp`.
+- Render: `resources ready/total   deck n   leader deployed|exhausted|ready` on the board line
+  and ` power/hp` after each unit; `STATS` prints nothing.
+- Regroup writes `READY_RESOURCES` only for the exhausted resources; a reader tolerates a
+  no-op one.
 
 ## What 78566bda changed in the format (all handled here)
 
@@ -26,9 +41,9 @@ fs/path + ajv). `tokens.ts`, `serialize.ts` and `foldFrames` are client-only.
   `kind: "upgrade"` attaches to `target`.
 - Token upgrades classify by type: anything that is not Shield/Experience is a `STATUS_TOKEN`
   under its own name (`weakness` included), an open list.
-- Keyframe cards carry snapshot `power`/`hp` (not gated) and `captured` (gated). The gate now
-  compares `resourcesExhausted`, `credits`, `hasForce`, and per card `upgrades`/`captured` as
-  sets. A keyframe missing a seat or malformed is ignored and reported (§13).
+- Keyframe cards carry `captured` (gated). The gate compares `resourcesExhausted`, `credits`,
+  `hasForce`, and per card `upgrades`/`captured` as sets. A keyframe missing a seat or
+  malformed is ignored and reported (§13).
 - Render wording: `plays X on Host`, `deploys X as a pilot on Vehicle`, `captures X with Y`,
   `holds X` in the board summary; the resource counters print nothing.
 
@@ -71,9 +86,10 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
   a seat that is missing or malformed is ignored and the folded seat kept. Upstream replaces
   wholesale and ignores the whole keyframe. Pre-1.0 files in the wild carry one-seat keyframes,
   and replacing wholesale erased that player's board. Compatibility shim. Also filters a token
-  upgrade or an attached card that an early writer listed as its own arena card. Snapshot
-  `power`/`hp` ride through when numeric. `isCompleteKeyframe`/`hasSnapKeyframe`/`emptyState`
-  are exported for the verbatim `integrity.ts` and `render.ts`.
+  upgrade or an attached card that an early writer listed as its own arena card. `power`/`hp`,
+  `keywords`, `deckSize`, `leader` and `initiativeTaken` ride through when well-typed.
+  `isCompleteKeyframe`/`hasSnapKeyframe`/`emptyState` are exported for the verbatim
+  `integrity.ts` and `render.ts`.
 - **`fold.ts` `foldFrames()`** — no upstream equivalent; the scrubber needs every frame and
   `events.map((_, i) => fold(...))` is O(n²).
 - **`fold.ts` `eventKind()` fallback** — `kind` when stated, else `attachedTo` ⇒ upgrade (the

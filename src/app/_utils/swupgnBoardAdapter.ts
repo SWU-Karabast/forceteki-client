@@ -178,35 +178,28 @@ export function effectiveStats(
     };
 }
 
-/** What a unit's stats depend on, for deciding whether a keyframe's snapshot still applies. */
-const statInputs = (c: CardInstanceState): string => JSON.stringify([
-    [...(c.upgrades ?? [])].sort(), c.shields, c.experience, c.statusTokens, c.damage,
-]);
-
 /**
- * A keyframe carries the engine's live `power`/`hp` (ability effects included, spec §11);
- * the fold never maintains them. They are exact for as long as nothing that feeds a stat
- * has changed since that keyframe; after that the static reconstruction takes over.
+ * Live stats when the file states them (`STATS` records and keyframes, spec §10.1/§11: the
+ * engine's own numbers, ability effects included); the static reconstruction only for a
+ * file written before `STATS` existed.
  */
-export function snapshotStats(inst: CardInstanceState, snapshot?: CardInstanceState): { power?: number; hp?: number } {
-    if (!snapshot || statInputs(snapshot) !== statInputs(inst)) return {};
+export function liveStats(inst: CardInstanceState): { power?: number; hp?: number } {
     return {
-        ...(typeof snapshot.power === 'number' ? { power: snapshot.power } : {}),
-        ...(typeof snapshot.hp === 'number' ? { hp: snapshot.hp } : {}),
+        ...(typeof inst.power === 'number' ? { power: inst.power } : {}),
+        ...(typeof inst.hp === 'number' ? { hp: inst.hp } : {}),
     };
 }
 
-/** Build a board card from a folded in-play instance. Printed power/HP come from the
- *  static stat map, raised by whatever is attached (see effectiveStats) and corrected by
- *  the last keyframe's snapshot while it still applies; damage is the folded value. */
+/** Build a board card from a folded in-play instance. Power/HP are the file's live values
+ *  when it carries them, else the static reconstruction (see effectiveStats); damage is the
+ *  folded value. */
 export function cardFromInstance(
     inst: CardInstanceState, ownerId: string, stat?: CardStat, name?: string, statMap: Record<string, CardStat> = {},
-    snapshot?: CardInstanceState,
 ): AdaptedCard {
     return {
         ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, ownerId, ownerId, stat, name),
         ...effectiveStats(inst, stat, statMap),
-        ...snapshotStats(inst, snapshot),
+        ...liveStats(inst),
         damage: inst.damage,
         exhausted: inst.exhausted,
         upgrades: inst.upgrades,
@@ -234,9 +227,6 @@ export interface AdaptOptions {
     enteringIds?: string[];
     attackingIds?: string[];
     nameOf?: NameOf;
-
-    /** The state at the last keyframe on or before this frame, for its snapshot `power`/`hp`. */
-    snapshot?: ReducedState;
 }
 
 /**
@@ -281,16 +271,14 @@ interface SeatOptions {
     baseHp?: number;
     deckRemaining?: number;
     nameOf?: NameOf;
-    snapshot?: PlayerState;
 }
 
 function adaptPlayer(
     ps: PlayerState, playerId: string, leaderId: string, baseSetId: string,
     statMap: Record<string, CardStat>,
-    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, resourcedIds, baseHp, deckRemaining, nameOf, snapshot }: SeatOptions,
+    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, resourcedIds, baseHp, deckRemaining, nameOf }: SeatOptions,
 ): any {
-    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap,
-        snapshot?.cards.find((k) => k.id === c.id)));
+    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap));
     // Captives file under their captor, exactly as the live server delivers them: one card
     // per captive with `parentCardId`, which UnitsBoard groups onto the host. They are the
     // opponent's cards, held here.
@@ -334,17 +322,21 @@ function adaptPlayer(
     // Counted from the engine's own `from: 'deck'` MOVEs against the published starting
     // order (deckTracker); subtracting the visible piles drifted whenever a card left the deck
     // by a path the piles do not show. No INIT order in the file means no deck to show.
-    const numCardsInDeck = Math.max(0, deckRemaining ?? 0);
+    // A file that carries `deckSize` (spec §11) says the count outright; the tracked order
+    // still wins because it also knows WHICH cards, and the two agree on a conformant file.
+    const numCardsInDeck = Math.max(0, deckRemaining ?? ps.deckSize ?? 0);
     // A deployed leader lives in an arena as a unit (folded into ps.cards). The leader slot
     // then shows the "deployed" placeholder (zone != 'base'); otherwise it shows the leader
     // art. LeaderBaseCard derives isDeployed from `zone !== 'base'`, so an undeployed leader
     // MUST carry zone 'base' or it wrongly renders as deployed (the bug that hid leaders).
-    const leaderDeployed = ps.cards.some((c) => baseId(c.id) === baseId(leaderId));
+    // The file's own leader status when it carries one (spec §11); otherwise whether the
+    // leader is standing in an arena.
+    const leaderDeployed = ps.leader?.id ? ps.leader.deployed : ps.cards.some((c) => baseId(c.id) === baseId(leaderId));
     const leader = cardFromId(leaderId, leaderDeployed ? 'leader' : 'base', playerId, playerId, statOf(leaderId, statMap), nameOf?.(leaderId));
     leader.type = 'leader';
     // An undeployed leader exhausts when it uses its action ability — show Karabast's
     // dimming. Glow it on the frame it acts (same `selected` highlight as units).
-    if (!leaderDeployed && leaderExhausted) leader.exhausted = true;
+    if (!leaderDeployed && (ps.leader?.exhausted ?? leaderExhausted)) leader.exhausted = true;
     if (highlight && highlight.has(leaderId)) leader.selected = true;
     // Base HP: the .swupgn stream never states a base's printed HP, and ReducedState seeds
     // every base at 30 — so bases with an aspect penalty or a Force slot (33, 28, ...) read
@@ -418,7 +410,7 @@ export function adaptState(
         const adapted = adaptPlayer(ps, playerId, leaderId, baseSetId, statMap, {
             hideHand: opts.hideHandFor === seat, highlight, leaderExhausted: opts.leaderExhausted?.[seat] ?? false,
             entering, attacking, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
-            deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf, snapshot: opts.snapshot?.players[seat],
+            deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf,
         });
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
