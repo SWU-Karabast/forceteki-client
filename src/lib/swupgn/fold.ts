@@ -1,5 +1,5 @@
 import type { GameEvent, ReducedState, PlayerState, CardInstanceState, Seat } from './types';
-import { isForceToken, isStatusTokenCard } from './tokens';
+import { eventKind, isForceToken, isStatusTokenCard } from './tokens';
 
 function emptyPlayer(seat: Seat): PlayerState {
     return {
@@ -80,6 +80,43 @@ function placeCard(s: ReducedState, seat: Seat, id: string, zone: string): void 
 const ARENA_ZONES = new Set(['ground', 'space']);
 
 /**
+ * CLIENT-OWNED. Attach an upgrade to its host, ONCE.
+ *
+ * Spec §10.1 makes `attachedTo` on the MOVE the normative binding and says a reader MUST use
+ * it; upstream's fold attaches only from `PLAY_UPGRADE.target`, which is fine for a final
+ * state but leaves the reader trusting event adjacency the spec tells it not to. A real
+ * stream carries BOTH (the MOVE with `attachedTo`, then the PLAY_UPGRADE with `target`), so
+ * attachment is idempotent by id or every upgrade would render twice on its host.
+ */
+function attachToHost(s: ReducedState, hostId: string, id: string): void {
+    const host = findCard(s, hostId);
+    if (host && !host.upgrades.includes(id)) {
+        host.upgrades.push(id);
+    }
+}
+
+/**
+ * CLIENT-OWNED. Take a card off whichever host carries it.
+ *
+ * The spec's fold never removes an entry from `upgrades[]` -- §14 lists it as un-gated, and a
+ * final-state reader is rescued by the next keyframe. A scrubber renders every frame in
+ * between, so a defeated Ascension Cable stayed on its host for the rest of the round, and a
+ * pilot whose vehicle was destroyed kept flying it. Any arena exit detaches: the writer marks
+ * a printed upgrade's exit `kind: "upgrade"` but a pilot's exit `kind: "unit"` with no host,
+ * so the rule keys on the zone transition, not on what the record says the card is.
+ */
+function detachFromHosts(s: ReducedState, id: string): void {
+    for (const seat of [1, 2] as Seat[]) {
+        for (const c of s.players[seat]?.cards ?? []) {
+            const i = c.upgrades.indexOf(id);
+            if (i >= 0) {
+                c.upgrades.splice(i, 1);
+            }
+        }
+    }
+}
+
+/**
  * Engine truth: every zone transition is an OnCardMoved → MOVE event. handSize,
  * resourcesReady and the in-play `cards[]` set are therefore reconstructed from MOVE
  * (the single source of truth), NOT from DRAW/RESOURCE/PLAY, which are higher-level
@@ -90,7 +127,10 @@ const ARENA_ZONES = new Set(['ground', 'space']);
  * a paired MOVE keep working; MOVE placement is idempotent by id so PLAY+MOVE in real
  * streams does not double-add.
  */
-function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: string; p?: Seat; kind?: 'unit' | 'upgrade' }): void {
+function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: string; p?: Seat; kind?: 'unit' | 'upgrade'; attachedTo?: string }): void {
+    // The role this move enacts. `kind` when stated; otherwise, per spec §22.1, a move that
+    // names a host is an attachment.
+    const kind = eventKind(e);
     if (e.p == null) {
         // Without a seat we can only update zone on an already-tracked card; counts are
         // unattributable. Real engine streams always carry the seat.
@@ -134,16 +174,27 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         if (di >= 0) ps.discard.splice(di, 1);
     }
 
+    // CLIENT-OWNED. Leaving an arena leaves whatever the card was attached to. Runs for every
+    // move, whatever `kind` says: see detachFromHosts for why the record cannot be trusted here.
+    if (ARENA_ZONES.has(e.from) && !ARENA_ZONES.has(e.to)) {
+        detachFromHosts(s, e.card);
+    }
+
     // In-play (arena) membership. An UPGRADE never has any: it attaches to a unit, and its
     // effect on the board is carried by the host's own records (SHIELD_GAIN, EXPERIENCE_GAIN,
     // STATUS_TOKEN, or PLAY_UPGRADE.target). Without `kind` a reader cannot tell a token
     // upgrade from a token unit — both are `TOKEN:<name>#<id>` — and folding the upgrade in
     // put a phantom card in the arena. The hand/resource counts above still apply: an upgrade
     // really does leave the hand.
-    if (e.kind === 'upgrade') {
+    if (kind === 'upgrade') {
         const upgrade = findCard(s, e.card);
         if (upgrade) {
             upgrade.zone = e.to;
+        }
+        // CLIENT-OWNED. The normative binding (spec §10.1): the move that puts an upgrade or a
+        // pilot into an arena names its host, and that is where the reader attaches it.
+        if (ARENA_ZONES.has(e.to) && e.attachedTo) {
+            attachToHost(s, e.attachedTo, e.card);
         }
         return;
     }
@@ -185,7 +236,7 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         return s;
     }
     if (e.t !== 'STATUS_TOKEN' && 'card' in e && typeof e.card === 'string'
-        && isStatusTokenCard(e.card, 'kind' in e ? e.kind : undefined)) {
+        && isStatusTokenCard(e.card, eventKind(e))) {
         return s;
     }
     switch (e.t) {
@@ -204,8 +255,8 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         }
         case 'PLAY_UPGRADE': {
             if (e.target) {
-                const host = findCard(s, e.target);
-                if (host) { host.upgrades.push(e.card); }
+                // Idempotent: the paired MOVE's `attachedTo` usually attached it already.
+                attachToHost(s, e.target, e.card);
             }
             // An upgrade is NEVER an arena card, so there is no fallback placement: if the
             // host isn't tracked the attachment is simply not modelled. Placing it instead
@@ -250,6 +301,9 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
             break;
         }
         case 'DEFEAT': {
+            // CLIENT-OWNED. A defeated upgrade or pilot comes off its host. In a current file
+            // its exit MOVE already did this; in a pre-1.0 file the DEFEAT is the only record.
+            detachFromHosts(s, e.card);
             for (const seat of [1, 2] as Seat[]) {
                 const ps = s.players[seat];
                 if (!ps) {

@@ -127,7 +127,7 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
     const exportDoc = useCallback(() => mergeForExport(doc, working), [doc, working]);
 
     const downloadWithAnnotations = useCallback(() => {
-        const blob = new Blob([serialize(exportDoc())], { type: 'text/plain' });
+        const blob = new Blob([serialize(exportDoc())], { type: 'application/vnd.swu-pgn' });
         triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.swupgn`));
     }, [doc, exportDoc]);
 

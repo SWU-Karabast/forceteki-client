@@ -1,4 +1,5 @@
 import type { SwuPgnDocument, Header } from './types';
+import { render } from './render';
 
 // Header tag order mirrors parse()'s required set; optional Format is emitted when present.
 const HEADER_ORDER: [keyof Header, string][] = [
@@ -28,12 +29,27 @@ function section(name: string, records: unknown[]): string[] {
     return [`%%% ${name}`, ...records.map((r) => JSON.stringify(r))];
 }
 
-/** Serialize a SwuPgnDocument back to a .swupgn string. Round-trips through parse(). */
+/**
+ * Serialize a SwuPgnDocument back to a .swupgn string. Round-trips through parse().
+ *
+ * Sections go out in the spec's canonical order (§4): STORY first so a person who opens the
+ * file reads the game, then DECKS, CARDS, SETUP, EVENTS, ANNOTATIONS. STORY and CARDS are
+ * derived and optional, but this writer emits both: the only thing the client changes on
+ * export is the annotation list, so the file's own prose still describes its events, and
+ * without CARDS the exported copy would name nothing for a reader with no card database.
+ * A document that arrived without a story gets one rendered from its own events (§16).
+ */
 export function serialize(doc: SwuPgnDocument): string {
+    const story = doc.story && doc.story.length > 0 ? doc.story : render(doc).split('\n');
     const out: string[] = [
         ...headerLines(doc.header),
         '',
+        '%%% STORY',
+        ...story,
+        '',
         ...section('DECKS', doc.decks),
+        '',
+        ...section('CARDS', doc.cards ?? []),
         '',
         ...section('SETUP', doc.setup),
         '',

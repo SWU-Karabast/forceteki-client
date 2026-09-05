@@ -114,3 +114,24 @@ describe('parse — DoS ceiling on event count', () => {
         expect(() => parse(huge)).toThrow(/too many events/);
     });
 });
+
+describe('parse — the Game tag gate (spec §18, §22.1)', () => {
+    const withGame = (tag: string) => SAMPLE.replace(/\[Game "[^"]*"\]/, tag === null ? '' : `[Game "${tag}"]`);
+
+    it('accepts every 1.x by shape, never by numeric order', () => {
+        // 1.1 files are OLDER than 1.0 (renumbered at publication) and must still read.
+        for (const v of ['SWU-PGN/1.0', 'SWU-PGN/1.1', 'SWU-PGN/1.7', 'SWU-PGN/1.42']) {
+            expect(parse(withGame(v)).header.game).toBe(v);
+        }
+    });
+
+    it('refuses a different major version, and anything that is not SWU-PGN', () => {
+        for (const v of ['SWU-PGN/2.0', 'SWU-PGN/0.9', 'SWU-PGN/10.0', 'PGN/1.0', 'swu-pgn/1.0', 'SWU-PGN/1', 'SWU-PGN/1.0.1', '']) {
+            expect(() => parse(withGame(v)), v).toThrow(/unsupported format version/);
+        }
+    });
+
+    it('still reports a missing Game tag as missing, not as unsupported', () => {
+        expect(() => parse(SAMPLE.replace(/\[Game "[^"]*"\]/, ''))).toThrow(/missing required header tag \[Game\]/);
+    });
+});

@@ -21,6 +21,12 @@ function finiteOr(value: string, fallback: number): number {
     return Number.isFinite(n) ? n : fallback;
 }
 
+// CLIENT-OWNED. Spec §18: a reader MUST refuse a different major version and MUST accept any
+// 1.x. Upstream leaves this to validate(), which the client does not ship (Node-only), so
+// the gate lives at the one place every file passes through. The shape is matched, never
+// compared numerically: §22.1 says a file declaring 1.1 is OLDER than 1.0, so `>=` is wrong.
+const SUPPORTED_GAME_TAG = /^SWU-PGN\/1\.\d+$/;
+
 function buildHeader(raw: Record<string, string>): Header {
     const req = (k: string): string => {
         if (!(k in raw)) {
@@ -28,8 +34,12 @@ function buildHeader(raw: Record<string, string>): Header {
         }
         return raw[k];
     };
+    const game = req('Game');
+    if (!SUPPORTED_GAME_TAG.test(game)) {
+        throw new Error(`SWU-PGN: unsupported format version [Game "${game}"] (this reader speaks SWU-PGN/1.x)`);
+    }
     return {
-        game: req('Game'), gameId: req('GameId'), date: req('Date'),
+        game, gameId: req('GameId'), date: req('Date'),
         format: raw['Format'], cardPool: req('CardPool'), engine: req('Engine'),
         seed: req('Seed'),
         // The 'as' casts below are intentional: structural parsing trusts the raw

@@ -60,6 +60,18 @@ export const isStatusTokenCard = (id: string, kind?: CardKind): boolean => {
     return PRE_1_0_UPGRADE_NAMES.has(tokenName(id));
 };
 
+/**
+ * The role an event states for its card, with the spec §22.1 fallback for a file that states
+ * no `kind`: a MOVE that names `attachedTo` enacts an attachment, so it is an upgrade move.
+ * Neither field is present on most event types; both reads are guarded.
+ */
+export const eventKind = (e: unknown): CardKind | undefined => {
+    if (e == null || typeof e !== 'object') return undefined;
+    const r = e as { kind?: unknown; attachedTo?: unknown };
+    if (r.kind === 'unit' || r.kind === 'upgrade') return r.kind;
+    return typeof r.attachedTo === 'string' && r.attachedTo ? 'upgrade' : undefined;
+};
+
 /** The Force is a per-player token that sits on the base, not a unit status token. */
 export const isForceToken = (id: string): boolean =>
     isTokenPseudoCard(id) && tokenName(id) === FORCE_TOKEN_NAME;
@@ -85,7 +97,7 @@ export function normalizeTokenEvents(events: GameEvent[]): GameEvent[] {
         if (e == null || typeof e !== 'object') {
             return e;
         }
-        if (!('card' in e) || !isStatusTokenCard(e.card, 'kind' in e ? e.kind : undefined)) {
+        if (!('card' in e) || !isStatusTokenCard(e.card, eventKind(e))) {
             return e;
         }
         if (e.t !== 'MOVE') {

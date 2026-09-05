@@ -258,6 +258,11 @@ function adaptPlayer(
     // absolute `hp` on base DAMAGE/HEAL/OVERWHELM events.
     const base = cardFromId(baseSetId, 'base', playerId, playerId, statOf(baseSetId, statMap));
     base.type = 'base';
+    // Printed HP the card data does not carry comes from the keyframe's `baseMaxHp` (30 is
+    // the placeholder until the first keyframe lands, so the damage reads 0 until then).
+    if (typeof base.hp !== 'number' && typeof ps.baseMaxHp === 'number') {
+        base.hp = ps.baseMaxHp;
+    }
     if (typeof base.hp === 'number' && typeof baseHp === 'number') {
         base.damage = Math.max(0, base.hp - baseHp);
     }

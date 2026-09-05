@@ -221,10 +221,16 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                 const m = /^base@(\d)$/.exec(e.tgt);
                 if (m) cur[Number(m[1]) as Seat] = e.hp;
             }
-            out[i] = { 1: cur[1], 2: cur[2] };
+            // A base the card data does not know has no printed HP here; fall back to the
+            // fold's own value, which the first keyframe corrects and every base DAMAGE/HEAL/
+            // OVERWHELM keeps absolute (spec §11).
+            out[i] = {
+                1: cur[1] ?? frameStates[i]?.players[1]?.baseHp,
+                2: cur[2] ?? frameStates[i]?.players[2]?.baseHp,
+            };
         }
         return out;
-    }, [events, doc.header.p1Base, doc.header.p2Base, statMap]);
+    }, [events, frameStates, doc.header.p1Base, doc.header.p2Base, statMap]);
 
     // Per-frame resource-pile contents. The fold tracks only a COUNT (ReducedState mirrors
     // forceteki's reference PlayerState, which has no resource identities), but the card ids
@@ -367,7 +373,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
 
     const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);
     const downloadReplay = useCallback(() => {
-        const blob = new Blob([rawContent ?? serialize(doc)], { type: 'text/plain' });
+        const blob = new Blob([rawContent ?? serialize(doc)], { type: 'application/vnd.swu-pgn' });
         triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.swupgn`));
     }, [rawContent, doc]);
 

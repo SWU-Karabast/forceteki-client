@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Box, Typography, Tooltip, Collapse } from '@mui/material';
 import { WarningAmberOutlined, CheckCircleOutlined } from '@mui/icons-material';
 import { checkKeyframes } from '@/lib/swupgn';
+import { fileIssues } from '@/app/_utils/swupgnFileIssues';
 import { useReplay } from '@/app/_contexts/Replay.context';
 
 /**
@@ -16,13 +17,31 @@ import { useReplay } from '@/app/_contexts/Replay.context';
  *
  * Checked against the RAW events, not the repaired stream: the point is to report what the
  * writer emitted, including the defects this reader works around.
+ *
+ * Alongside the keyframe gate, the spec asks a reader to SURFACE a few things it accepts
+ * (§5.3 provenance sentinels, §10.1/§6.2 non-conformant records, §13 partial keyframes, §18
+ * unknown event types). Those come from fileIssues(); an info-level note (a Perspective
+ * file) is shown but does not turn the badge amber.
  */
 const FileHealth: React.FC = () => {
     const { doc } = useReplay();
     const [open, setOpen] = useState(false);
     const result = useMemo(() => checkKeyframes(doc.events), [doc]);
+    const issues = useMemo(() => fileIssues(doc), [doc]);
+    const warnings = issues.filter((i) => i.severity === 'warning');
+    const infos = issues.filter((i) => i.severity === 'info');
 
-    if (result.ok) {
+    if (result.ok && warnings.length === 0) {
+        if (infos.length > 0) {
+            return (
+                <Tooltip title={infos.map((i) => i.message).join(' ')}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'rgba(120,220,150,0.75)' }}>
+                        <CheckCircleOutlined sx={{ fontSize: 15 }} />
+                        <Typography variant="caption">File consistent · {infos.length === 1 ? infos[0].message.split(':')[0] : `${infos.length} notes`}</Typography>
+                    </Box>
+                </Tooltip>
+            );
+        }
         return (
             <Tooltip title="Every keyframe agrees with the folded events">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'rgba(120,220,150,0.75)' }}>
@@ -41,13 +60,18 @@ const FileHealth: React.FC = () => {
         byPath.set(key, (byPath.get(key) ?? 0) + 1);
     }
 
+    const badge = [
+        result.mismatches.length > 0 ? `${result.mismatches.length} keyframe mismatch${result.mismatches.length === 1 ? '' : 'es'}` : '',
+        warnings.length > 0 ? `${warnings.length} format issue${warnings.length === 1 ? '' : 's'}` : '',
+    ].filter(Boolean).join(' · ');
+
     return (
         <Box>
             <Box
                 role="button"
                 tabIndex={0}
                 aria-expanded={open}
-                aria-label={`${result.mismatches.length} keyframe mismatches. Show details`}
+                aria-label={`${badge}. Show details`}
                 onClick={() => setOpen((o) => !o)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((o) => !o); } }}
                 sx={{
@@ -57,18 +81,25 @@ const FileHealth: React.FC = () => {
                 }}
             >
                 <WarningAmberOutlined sx={{ fontSize: 15 }} />
-                <Typography variant="caption">
-                    {result.mismatches.length} keyframe mismatch{result.mismatches.length === 1 ? '' : 'es'}
-                </Typography>
+                <Typography variant="caption">{badge}</Typography>
             </Box>
             <Collapse in={open}>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mt: 0.5 }}>
-                    The writer&apos;s own snapshots disagree with its own event stream. The board
-                    below follows the events. Fields affected:
-                </Typography>
-                {[...byPath].map(([path, n]) => (
-                    <Typography key={path} variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', display: 'block', fontFamily: 'monospace', fontSize: '0.68rem' }}>
-                        {path} ×{n}
+                {result.mismatches.length > 0 && (
+                    <>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mt: 0.5 }}>
+                            The writer&apos;s own snapshots disagree with its own event stream. The board
+                            below follows the events. Fields affected:
+                        </Typography>
+                        {[...byPath].map(([path, n]) => (
+                            <Typography key={path} variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', display: 'block', fontFamily: 'monospace', fontSize: '0.68rem' }}>
+                                {path} ×{n}
+                            </Typography>
+                        ))}
+                    </>
+                )}
+                {issues.map((i) => (
+                    <Typography key={i.message} variant="caption" sx={{ color: i.severity === 'warning' ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.45)', display: 'block', mt: 0.5 }}>
+                        {i.message}
                     </Typography>
                 ))}
             </Collapse>

@@ -2,6 +2,17 @@
 
 Source: forceteki `swupgn/src/`. Re-vendored 2026-09-04 against the published **SWU-PGN/1.0**
 writer (`kind` on MOVE/CREATE_TOKEN/CARDS, `%%% STORY`, `%%% CARDS`, `attachedTo`, `RESOURCE`).
+Re-synced 2026-09-05 against upstream `479b2b5f`: the only upstream change since was the
+render wording `(cost N)`, which the normative `minimal.render.txt` pins.
+
+## Conformance gate
+
+`__tests__/vectors.test.ts` runs every vector under `__tests__/fixtures/vectors/` (copied
+verbatim from forceteki `swupgn/test-vectors/`) through parse → fold → render and requires
+byte-identical output (spec §20). `__tests__/fixtures/*-2026-09-05.swupgn` are real files the
+fixed writer produced (organic game; a printed upgrade + advantage token whose host is then
+defeated; a pilot whose vehicle is then destroyed) and pin the upgrade lifecycle between
+keyframes. When upstream adds a vector, copy it in; when the writer changes, regenerate these.
 
 `validate.ts` stays omitted (Node-only: fs/path + ajv).
 
@@ -13,6 +24,24 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
 ## Client-owned divergences — preserve these when re-vendoring
 
 - **`types.ts`** — `Annotation` carries `id`/`parent`/`ts` for the viewer's threaded discussion.
+  These are now in the upstream `annotation.schema.json` and spec §15 (added 2026-09-05), so an
+  exported file validates. Before that the schema said `additionalProperties: false` and this
+  note wrongly claimed otherwise.
+- **`parse.ts` Game-tag gate** — spec §18/§22.1: refuse any major other than 1, accept every
+  `SWU-PGN/1.x` by shape. Upstream leaves this to `validate()`, which is Node-only and omitted
+  here, so the reader itself has to say no.
+- **`fold.ts` upgrade attach/detach** — `attachToHost` on a MOVE carrying `attachedTo` into an
+  arena (the spec's normative binding, §10.1), idempotent with `PLAY_UPGRADE.target`; and
+  `detachFromHosts` on ANY arena exit and on DEFEAT. Upstream's `upgrades[]` is append-only
+  (§14 lists it un-gated) and relies on the next keyframe; a scrubber renders the frames in
+  between, where a defeated Ascension Cable otherwise stays on its host for the rest of the
+  round. Keyed on the zone transition, not `kind`, because the writer marks a pilot's exit
+  `kind: "unit"` with no host.
+- **`tokens.ts` `eventKind()`** — `kind` when stated, else `attachedTo` ⇒ upgrade (the §22.1
+  fallback for a file that states no kind). Both `isStatusTokenCard` call sites use it.
+- **`serialize.ts`** — emits `%%% STORY` (the document's own, or a fresh render) and
+  `%%% CARDS` in the spec's canonical section order. Both are optional, but dropping them
+  turned an annotated export into a file that named nothing.
 - **`fold.ts` `snapToKeyframe()`** — merges a keyframe PER SEAT; upstream replaces wholesale
   and the spec says to ignore a keyframe missing a seat. Current writers always emit both
   seats, so this is a compatibility shim for the 1.1 files already in the wild, where a
@@ -27,7 +56,6 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
   upstream never sets it.
 - **`tokens.ts`** — client-only. Repairs the token lifecycle in pre-1.0 files (which emit no
   removal decrement) and classifies token upgrades when no `kind` is stated.
-- **`serialize.ts`** — client-owned; no upstream counterpart.
 - **`parse.ts` `MAX_EVENTS`** — 200k-event ceiling. Upstream has none because it never builds
   per-frame snapshots; the viewer does, so an unbounded event count is an OOM on a shared file.
 - **`fold.ts` untrusted-input guards** — seat validation (a `p` of `"__proto__"` resolved to

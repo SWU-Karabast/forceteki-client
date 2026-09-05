@@ -1,0 +1,11 @@
+
+══════════════════════════════════════════════════════════════════════════════
+ ROUND 1                                                 initiative: Player 1 
+ P1  base 30/30   hand 1   resources 2
+ P2  base 30/30   hand 1   resources 2
+══════════════════════════════════════════════════════════════════════════════
+
+ ── action ──
+  1. Player 1 plays Wampa to ground (cost 2)
+  2. Player 1 attacks Player 2's base with Wampa
+       ↳ 2 damage to Player 2's base — 28 HP left

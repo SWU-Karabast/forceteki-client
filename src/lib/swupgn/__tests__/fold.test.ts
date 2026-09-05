@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, normalizeEvents, repairUpgradePlays, isStatusTokenCard, tokenArtId, parse } from '../index';
+import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, normalizeEvents, repairUpgradePlays, isStatusTokenCard, tokenArtId, parse, checkKeyframes } from '../index';
 import type { GameEvent, ReducedState, PlayerState } from '../index';
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -558,6 +558,108 @@ describe('dropInertRecords never orphans an anchored record', () => {
         expect(normalizeEvents(inert)).toHaveLength(inert.length);
     });
 });
+
+describe('upgrades attach via the MOVE\'s attachedTo and come off when they leave play', () => {
+    // Records copied from files the fixed forceteki writer produced on 2026-09-05: a printed
+    // upgrade (Ascension Cable, LOF#215) on a Wampa (LOF#164), and a pilot (Academy Graduate,
+    // JTL#058) flown onto an X-Wing (LAW#253). The token upgrades that ride alongside in the
+    // real stream are covered by the token tests above.
+    const wampaOut = (): ReducedState => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'LOF#164', from: 'hand', to: 'ground', p: 1, kind: 'unit' });
+        return s;
+    };
+
+    it('attaches from the MOVE alone, and the PLAY_UPGRADE that follows does not attach it twice', () => {
+        let s = wampaOut();
+        s = reduce(s, { seq: 'R1.A.2b', t: 'MOVE', card: 'LOF#215', from: 'hand', to: 'ground', p: 1, kind: 'upgrade', attachedTo: 'LOF#164' });
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['LOF#164']);
+        expect(p1(s).cards[0].upgrades).toEqual(['LOF#215']);
+        s = reduce(s, { seq: 'R1.A.2', t: 'PLAY_UPGRADE', p: 1, card: 'LOF#215', zone: 'ground', target: 'LOF#164', cost: 2 });
+        expect(p1(s).cards[0].upgrades).toEqual(['LOF#215']);
+        // The upgrade left the hand like any card, and never became an arena card.
+        expect(p1(s).handSize).toBe(0);
+        expect(p1(s).cards).toHaveLength(1);
+    });
+
+    it('a defeated printed upgrade leaves its host on the exit MOVE and lands in the discard', () => {
+        let s = wampaOut();
+        s = reduce(s, { seq: 'a', t: 'MOVE', card: 'LOF#215', from: 'hand', to: 'ground', p: 1, kind: 'upgrade', attachedTo: 'LOF#164' });
+        // The writer states no host on the way out; the id is enough.
+        s = reduce(s, { seq: 'R1.A.5b', t: 'MOVE', card: 'LOF#215', from: 'ground', to: 'discard', p: 1, kind: 'upgrade' });
+        s = reduce(s, { seq: 'R1.A.5c', t: 'DEFEAT', card: 'LOF#215', reason: 'frameworkEffect' });
+        expect(p1(s).cards[0].upgrades).toEqual([]);
+        expect(p1(s).discard).toEqual(['LOF#215']);
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['LOF#164']);
+    });
+
+    it('a pilot whose vehicle is destroyed stops flying it, even though its exit MOVE says kind: unit', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'LAW#253', from: 'hand', to: 'space', p: 1, kind: 'unit' });
+        s = reduce(s, { seq: 'R1.A.0ci', t: 'MOVE', card: 'JTL#058', from: 'hand', to: 'space', p: 1, kind: 'upgrade', attachedTo: 'LAW#253' });
+        s = reduce(s, { seq: 'R1.A.1', t: 'PLAY_UPGRADE', p: 1, card: 'JTL#058', zone: 'space', target: 'LAW#253', cost: 1 });
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['LAW#253']);
+        expect(p1(s).cards[0].upgrades).toEqual(['JTL#058']);
+        // Verbatim from pilot.swupgn: the pilot's exit is recorded as a unit move with no host.
+        s = reduce(s, { seq: 'R1.A.3b', t: 'MOVE', card: 'JTL#058', from: 'space', to: 'discard', p: 1, kind: 'unit' });
+        s = reduce(s, { seq: 'R1.A.3c', t: 'DEFEAT', card: 'JTL#058', reason: 'frameworkEffect' });
+        expect(p1(s).cards[0].upgrades).toEqual([]);
+        expect(p1(s).discard).toEqual(['JTL#058']);
+        // The pilot never got its own arena slot on the way out either.
+        expect(p1(s).cards).toHaveLength(1);
+        s = reduce(s, { seq: 'R1.A.3d', t: 'MOVE', card: 'LAW#253', from: 'space', to: 'discard', p: 1, kind: 'unit' });
+        s = reduce(s, { seq: 'R1.A.3e', t: 'DEFEAT', card: 'LAW#253', reason: 'ability' });
+        expect(p1(s).cards).toEqual([]);
+        expect(p1(s).discard).toEqual(['JTL#058', 'LAW#253']);
+    });
+
+    it('a pre-1.0 file with only a DEFEAT still takes the upgrade off its host', () => {
+        let s = wampaOut();
+        s = reduce(s, { seq: 'p', t: 'PLAY_UPGRADE', p: 1, card: 'LOF#215', target: 'LOF#164' });
+        expect(p1(s).cards[0].upgrades).toEqual(['LOF#215']);
+        s = reduce(s, { seq: 'd', t: 'DEFEAT', card: 'LOF#215', reason: 'ability' });
+        expect(p1(s).cards[0].upgrades).toEqual([]);
+    });
+
+    it('treats a MOVE that names a host but states no kind as an attachment (spec §22.1)', () => {
+        let s = wampaOut();
+        s = reduce(s, { seq: 'x', t: 'MOVE', card: 'SEC#038', from: 'hand', to: 'ground', p: 1, attachedTo: 'LOF#164' });
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['LOF#164']);
+        expect(p1(s).cards[0].upgrades).toEqual(['SEC#038']);
+    });
+
+    it('a MOVE to a host the fold does not track attaches nothing and places nothing', () => {
+        let s = base();
+        s = reduce(s, { seq: 'x', t: 'MOVE', card: 'LOF#215', from: 'hand', to: 'ground', p: 1, kind: 'upgrade', attachedTo: 'NOPE#001' });
+        expect(p1(s).cards).toEqual([]);
+    });
+
+    it('reproduces the fixed writer\'s own files: no upgrade is ever an arena card, and none outlives its exit', () => {
+        for (const name of ['upgrades', 'pilot'] as const) {
+            const text = readFileSync(path.join(__dirname, `fixtures/${name}-2026-09-05.swupgn`), 'utf-8');
+            const doc = parse(text);
+            const events = normalizeEvents(doc.events);
+            const frames = foldFrames(events);
+            const upgradeIds = new Set(events.flatMap((e) => (e.t === 'PLAY_UPGRADE' ? [e.card] : [])));
+            expect(upgradeIds.size).toBeGreaterThan(0);
+            for (let i = 0; i < frames.length; i++) {
+                const arena = ([1, 2] as const).flatMap((seat) => frames[i].players[seat]?.cards ?? []);
+                for (const c of arena) expect(upgradeIds.has(c.id), `${name} frame ${i} (${events[i].seq})`).toBe(false);
+            }
+            // After the last record that moves an upgrade out of an arena, no host carries it.
+            for (const id of upgradeIds) {
+                const exit = events.map((e, i) => ({ e, i })).filter(({ e }) => e.t === 'MOVE' && e.card === id && ARENA.has(e.from) && !ARENA.has(e.to)).pop();
+                expect(exit, `${name}: ${id} never left play`).toBeDefined();
+                const after = ([1, 2] as const).flatMap((seat) => frames[exit!.i].players[seat]?.cards ?? []);
+                for (const c of after) expect(c.upgrades, `${name} after ${events[exit!.i].seq}`).not.toContain(id);
+            }
+            // And the keyframe gate stays silent about arena membership on both files.
+            expect(checkKeyframes(doc.events).mismatches.filter((m) => m.path.includes('cards['))).toEqual([]);
+        }
+    });
+});
+
+const ARENA = new Set(['ground', 'space']);
 
 describe('upgrades attach to their host instead of standing in an arena', () => {
     // A PILOT is the sharp case: `kind` describes the card's PRINTED type, not the role it
