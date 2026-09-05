@@ -292,3 +292,64 @@ describe('attached upgrades render as banners: aspects + name reach the subcard'
         expect('name' in d).toBe(false);
     });
 });
+
+describe('effectiveStats — a unit shows what is attached to it, the way the engine sums it', () => {
+    // Values from forceteki card data: N-1 Starfighter 3/2; Han Solo, Has His Moments is a
+    // 4/5 unit but a +2/+3 pilot; Craving Power +2/+2; Experience +1/+1; Advantage +1/+0;
+    // Shield +0/+0. 501st Veteran has Grit.
+    const statMap = {
+        'JTL#095': { type: 'unit', power: 3, hp: 2, arena: 'space' },
+        'JTL#203': { type: 'unit', power: 4, hp: 5, arena: 'ground', upgradePower: 2, upgradeHp: 3 },
+        'LOF#091': { type: 'upgrade', power: 2, hp: 2, upgradePower: 2, upgradeHp: 2 },
+        'TWI#050': { type: 'unit', power: 4, hp: 5, arena: 'ground', grit: true },
+        'TOKEN:Experience': { type: 'token', power: 1, hp: 1, upgradePower: 1, upgradeHp: 1, id: '2007868442' },
+        'TOKEN:Advantage': { type: 'token', power: 1, hp: 0, upgradePower: 1, upgradeHp: 0, id: '5844562972' },
+        'TOKEN:Shield': { type: 'token', power: 0, hp: 0, upgradePower: 0, upgradeHp: 0, id: '8752877738' },
+    };
+    const unit = (over: Partial<CardInstanceState>): CardInstanceState => ({
+        id: 'JTL#095', zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, ...over,
+    });
+    const stats = (inst: CardInstanceState) => {
+        const c = cardFromInstance(inst, 'p1', statMap[inst.id as keyof typeof statMap], undefined, statMap);
+        return [c.power, c.hp];
+    };
+
+    it('adds a pilot by its piloting line, not its unit line', () => {
+        expect(stats(unit({ upgrades: ['JTL#203'] }))).toEqual([5, 5]);
+    });
+
+    it('adds a printed upgrade and every token, each by its own printed bonus', () => {
+        expect(stats(unit({ upgrades: ['LOF#091'] }))).toEqual([5, 4]);
+        expect(stats(unit({ experience: 2 }))).toEqual([5, 4]);
+        expect(stats(unit({ statusTokens: { advantage: 1 } }))).toEqual([4, 2]);
+        expect(stats(unit({ shields: 3 }))).toEqual([3, 2]);
+        expect(stats(unit({ upgrades: ['JTL#203', 'LOF#091'], experience: 1, statusTokens: { advantage: 1 } }))).toEqual([9, 8]);
+    });
+
+    it('Grit raises power by damage taken; nothing goes below zero', () => {
+        expect(stats(unit({ id: 'TWI#050', zone: 'ground', damage: 3 }))).toEqual([7, 5]);
+        expect(stats(unit({ id: 'TWI#050', zone: 'ground', damage: 0 }))).toEqual([4, 5]);
+    });
+
+    it('does not invent stats for a card the data does not know, or for an unknown attachment', () => {
+        const c = cardFromInstance(unit({ id: 'XXX#001', upgrades: ['LOF#091'] }), 'p1', undefined, undefined, statMap);
+        expect('power' in c).toBe(false);
+        expect('hp' in c).toBe(false);
+        // An attachment the map lacks contributes nothing rather than NaN.
+        expect(stats(unit({ upgrades: ['NOPE#999'] }))).toEqual([3, 2]);
+    });
+
+    it('is what adaptState puts on the board card', () => {
+        const doc = parse(SAMPLE);
+        const s: ReducedState = {
+            round: 1, phase: 'action', initiative: 1,
+            players: {
+                1: { seat: 1, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0, resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [unit({ upgrades: ['JTL#203'], statusTokens: { advantage: 1 } })] },
+                2: { seat: 2, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0, resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [] },
+            },
+        };
+        const gs = adaptState(s, doc, deckOrderLengths(doc), { 1: 'p1', 2: 'p2' }, {}, statMap);
+        const n1 = gs.players.p1.cardPiles.spaceArena.find((c: { uuid: string }) => c.uuid === 'JTL#095');
+        expect([n1.power, n1.hp]).toEqual([6, 5]);
+    });
+});

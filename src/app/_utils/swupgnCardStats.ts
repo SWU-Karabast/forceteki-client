@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { baseId } from '@/lib/swupgn';
 
-// public/card-stats.json is a static SET#NUM -> {power,hp,arena,type,aspects} map generated from
+// public/card-stats.json is a static SET#NUM -> {power,hp,arena,type,aspects,upgradePower,upgradeHp,grit} map generated from
 // forceteki's per-card data (npm run gen:card-data). The board uses it to show power/HP
 // stat badges on in-play units and the deployed-leader's unit stats — the .swupgn stream
 // carries card ids but not printed stats. Fetched once and module-cached, like names/costs.
@@ -12,6 +12,9 @@ export interface CardStat {
     arena?: string;    // 'ground' | 'space'
     aspects?: string[];// e.g. ['cunning','heroism'] — leader/base aspects
     id?: string;       // numeric engine id; tokens resolve their art by this, not by setId
+    upgradePower?: number; // stat bonus this card grants when attached (upgrades, tokens, pilots)
+    upgradeHp?: number;
+    grit?: boolean;    // Grit keyword: the unit's power rises by its damage
 }
 
 const CARD_STATS_URL = '/card-stats.json';

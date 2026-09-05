@@ -138,11 +138,50 @@ function tokenCards(
     return out;
 }
 
+/**
+ * A unit's stats as the board should show them: printed values plus what is attached.
+ *
+ * The .swupgn stream carries no stats at all, and the fold only knows WHAT is on a unit
+ * (`upgrades[]`, `shields`, `experience`, `statusTokens`). The engine's own rule
+ * (UnitProperties.getStatModifiers) is: printed power/HP, plus each attached card's printed
+ * upgrade bonus -- Experience +1/+1, Advantage +1/+0, Shield +0/+0, an Ascension Cable +1/+3, a
+ * pilot its piloting line rather than its unit line -- plus Grit (power += damage), floored at
+ * zero. All of that is static card data, so it is reproduced here. What is NOT reproduced is
+ * an ability effect ("+2/+0 while you control a leader unit"): nothing in the file records
+ * those, so a unit under one shows its stats without it.
+ */
+export function effectiveStats(
+    inst: CardInstanceState, stat: CardStat | undefined, statMap: Record<string, CardStat>,
+): { power?: number; hp?: number } {
+    if (typeof stat?.power !== 'number' && typeof stat?.hp !== 'number') return {};
+    let power = stat.power ?? 0;
+    let hp = stat.hp ?? 0;
+    const add = (s: CardStat | undefined, n = 1) => {
+        power += (s?.upgradePower ?? 0) * n;
+        hp += (s?.upgradeHp ?? 0) * n;
+    };
+    for (const id of inst.upgrades ?? []) add(statOf(id, statMap));
+    const tokens: Record<string, number> = { shield: inst.shields, experience: inst.experience, ...inst.statusTokens };
+    for (const [token, count] of Object.entries(tokens)) {
+        const title = TOKEN_BADGE_NAME[token];
+        if (title && Number.isFinite(count) && count > 0) add(statOf(`TOKEN:${title}`, statMap), Math.trunc(count));
+    }
+    if (stat.grit) power += Math.max(0, inst.damage);
+    return {
+        ...(typeof stat.power === 'number' ? { power: Math.max(0, power) } : {}),
+        ...(typeof stat.hp === 'number' ? { hp: Math.max(0, hp) } : {}),
+    };
+}
+
 /** Build a board card from a folded in-play instance. Printed power/HP come from the
- *  static stat map (the .swupgn stream has no stats); damage is the folded value. */
-export function cardFromInstance(inst: CardInstanceState, ownerId: string, stat?: CardStat, name?: string): AdaptedCard {
+ *  static stat map (the .swupgn stream has no stats), raised by whatever is attached
+ *  (see effectiveStats); damage is the folded value. */
+export function cardFromInstance(
+    inst: CardInstanceState, ownerId: string, stat?: CardStat, name?: string, statMap: Record<string, CardStat> = {},
+): AdaptedCard {
     return {
         ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, ownerId, ownerId, stat, name),
+        ...effectiveStats(inst, stat, statMap),
         damage: inst.damage,
         exhausted: inst.exhausted,
         upgrades: inst.upgrades,
@@ -213,7 +252,7 @@ function adaptPlayer(
     deckRemaining?: number,
     nameOf?: NameOf,
 ): any {
-    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id)));
+    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap));
     // Token badges ride along in the arena piles as parented cards, exactly as the live
     // server delivers upgrades; UnitsBoard groups them onto their host.
     const tokens = ps.cards.flatMap((c, i) => tokenCards(c, inPlay[i], playerId, statMap));
