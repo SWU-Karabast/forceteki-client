@@ -37,7 +37,7 @@ export const StatBadges: Story = {
                 { label: 'Power', Badge: PowerBadge },
             ].map(({ label, Badge }) => (
                 <Box key={label} sx={itemStyles}>
-                    <Badge value={5} sx={{ width: '60px', fontSize: '32px' }} />
+                    <Badge value={5} sx={{ width: '1em', fontSize: '64px' }} />
                     <Typography>{label}</Typography>
                 </Box>
             ))}
