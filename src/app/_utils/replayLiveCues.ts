@@ -80,6 +80,16 @@ export function lastPlayedByFrame(events: GameEvent[]): Array<{ set: string; num
     return out;
 }
 
+/**
+ * A frame playback must stop on: a player's action, a round or phase banner, the game's end.
+ * An ATTACK or a PASS changes nothing in the folded board, so "did the board change" alone
+ * would skip it during playback, and with it the attack's lunge and the caption.
+ */
+export function isBeatFrame(e: GameEvent | undefined): boolean {
+    return e != null && typeof e === 'object'
+        && (NUMBERED.has(e.t) || e.t === 'ROUND_START' || e.t === 'PHASE_START' || e.t === 'GAME_END');
+}
+
 /** A consequence holds for a fraction of the beat: an action, then its effects in quick succession. */
 const CONSEQUENCE_FRACTION = 0.45;
 const MIN_HOLD_MS = 120;
@@ -91,7 +101,5 @@ const MIN_HOLD_MS = 120;
  * one motion at the table rather than one beat per bookkeeping line.
  */
 export function frameHoldMs(e: GameEvent | undefined, intervalMs: number): number {
-    const beat = e != null && typeof e === 'object'
-        && (NUMBERED.has(e.t) || e.t === 'ROUND_START' || e.t === 'PHASE_START' || e.t === 'GAME_END');
-    return beat ? intervalMs : Math.max(MIN_HOLD_MS, Math.round(intervalMs * CONSEQUENCE_FRACTION));
+    return isBeatFrame(e) ? intervalMs : Math.max(MIN_HOLD_MS, Math.round(intervalMs * CONSEQUENCE_FRACTION));
 }

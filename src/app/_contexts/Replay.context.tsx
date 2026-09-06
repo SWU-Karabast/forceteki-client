@@ -13,7 +13,7 @@ import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
 import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
-import { activeSeatByFrame, attackByFrame, lastPlayedByFrame, frameHoldMs } from '@/app/_utils/replayLiveCues';
+import { activeSeatByFrame, attackByFrame, lastPlayedByFrame, frameHoldMs, isBeatFrame } from '@/app/_utils/replayLiveCues';
 import { triggerBlobDownload, sanitizeFilename, downloadSwuPgn } from '@/app/_utils/downloadBlob';
 
 /** One resource commitment: what was taken, and what the player could have taken instead. */
@@ -156,20 +156,20 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     }, [events]);
     const moveFrames = useMemo(() => moves.map((mv) => seqToFrame.get(mv.seq) ?? -1), [moves, seqToFrame]);
 
-    // Whether each frame actually changes the rendered board vs the previous frame.
-    // adaptState is a pure function of the ReducedState, so frames whose state is
-    // byte-identical render identically — those are the no-op frames (shuffles, hidden
-    // choices) that auto-playback skips so only visible changes hold on screen.
+    // Whether playback should stop on each frame: the folded board changed since the previous
+    // frame, or the frame is a player's action (an ATTACK or a PASS folds to nothing, but it
+    // is the beat the lunge and the caption hang on). Frames that are neither — a shuffle, a
+    // hidden choice — are skipped during auto-playback so only visible changes hold on screen.
     const boardChanged = useMemo<boolean[]>(() => {
         const flags = new Array<boolean>(frameStates.length);
         let prevKey = '';
         for (let i = 0; i < frameStates.length; i++) {
             const key = JSON.stringify(frameStates[i]);
-            flags[i] = i === 0 || key !== prevKey;
+            flags[i] = i === 0 || key !== prevKey || isBeatFrame(events[i]);
             prevKey = key;
         }
         return flags;
-    }, [frameStates]);
+    }, [frameStates, events]);
 
     // Frames that are part of a "draw burst" — a DRAW summary or a deck->hand MOVE. A round
     // starts with several of these back-to-back; we collapse the run so playback shows the
