@@ -80,6 +80,14 @@ fallbacks noted below. Verified per vector at the final frame by
 | `cards[].captured` | `cardPiles.capturedZone`, one card per captive with `parentCardId` = captor; a `base@N` captor is held nowhere (§21) | `UnitsBoard` → `GameCard` captured strip |
 | controller vs owner | `controllerId` = the seat whose list holds the card; `ownerId` from the file's DECKS/header (`ownerSeatMap`), so a `TAKE_CONTROL`ed card shows the stolen icon | `GameCard` status icons |
 
+Live-play cues the board shows around the cards, rebuilt per frame from the file
+(`replayLiveCues.ts`): whose action it is (`isActionPhaseActivePlayer`, the trays' turn aura;
+the seat each record names, opening each action phase on the initiative holder), the attack in
+progress (`isAttacker`/`isDefender` on the attacker, the target unit or the target base, for the
+ATTACK and the consequences filed under its seq), and the last card played
+(`clientUIProperties.lastPlayedCard`, the opponent tray's preview). Playback holds a player's
+action for the full beat and its consequences for a fraction (`frameHoldMs`).
+
 Beyond the board: `StoryTab` shows the file's own `%%% STORY` (or a fresh `render()`), and its
 click-to-seek follows the story's numbering exactly (`storySeek`: the eight numbered types,
 reset per round and per phase). `Replay.context` captions every frame with `replayAction.frameAction`, worded

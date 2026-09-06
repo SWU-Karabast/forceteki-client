@@ -13,7 +13,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
-    const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useGame();
+    const { gameState, connectedPlayer, getOpponent, isSpectator, isReplay, gameIsEnded, lobbyState } = useGame();
     const { isPortrait } = useScreenOrientation();
     const locale = useCardImageLocale();
 
@@ -224,7 +224,7 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
                 }}
             >
                 {!gameIsEnded() && !lobbyState?.isPrivate && <GameTimer />}
-                {!isSpectator && (
+                {(!isSpectator || isReplay) && (
                     <>
                         <Box
                             onMouseEnter={handlePreviewOpen}

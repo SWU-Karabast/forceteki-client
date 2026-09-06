@@ -44,6 +44,10 @@ interface IGameContextType {
     updateDistributionPrompt: (uuid: string, amount: number) => void;
     distributionPromptData: IDistributionPromptData | null;
     isSpectator: boolean;
+
+    /** A finished game replayed from a file: spectator rules, but the board's own cues
+     *  (last played card) are shown, since there is no hidden information to protect. */
+    isReplay?: boolean;
     lastQueueHeartbeat: number;
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
@@ -557,6 +561,7 @@ export const useGame = () => {
         getOpponent: replayContext.getOpponent,
         gameMessages: [],
         isSpectator: true,
+        isReplay: true,
         gameIsEnded: () => true,
         lobbyState: null,
     } as IGameContextType : null), [replayContext]);

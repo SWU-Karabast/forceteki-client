@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // gameState mirrors the live board's gameState, which is typed `any`
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent, NameResolver } from '@/lib/swupgn';
 import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver, isCompleteKeyframe } from '@/lib/swupgn';
 import { storyName } from '@/app/_utils/replayAction';
@@ -13,6 +13,7 @@ import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
 import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
+import { activeSeatByFrame, attackByFrame, lastPlayedByFrame, frameHoldMs } from '@/app/_utils/replayLiveCues';
 import { triggerBlobDownload, sanitizeFilename, downloadSwuPgn } from '@/app/_utils/downloadBlob';
 
 /** One resource commitment: what was taken, and what the player could have taken instead. */
@@ -125,7 +126,6 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const [perspective, setPerspective] = useState(P1);
     const [fogOfWar, setFogOfWar] = useState(false);
     const [clip, setClipState] = useState<{ start: number; end: number } | null>(null);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // A current-format file carries its own `%%% CARDS` index, which covers tokens and any
     // card newer than the client's generated name map — prefer it, and fall back to the
@@ -203,6 +203,12 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // Units to draw exhausted from their arrival frame, ahead of the entering EXHAUST the
     // file writes a few records later (spec §10.1), so a played unit comes in exhausted.
     const entryExhaust = useMemo(() => entryExhaustByFrame(events), [events]);
+
+    // What the live board shows around the cards: whose action it is, the attack in progress,
+    // the last card played. All read off the file (replayLiveCues).
+    const activeSeats = useMemo(() => activeSeatByFrame(events, frameStates), [events, frameStates]);
+    const attacks = useMemo(() => attackByFrame(events), [events]);
+    const lastPlayed = useMemo(() => lastPlayedByFrame(events), [events]);
 
     // Remaining deck per frame, counted from the engine's own deck MOVEs against the
     // published starting order. One source of truth for the board and the Deck tab.
@@ -362,11 +368,14 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                 : resourcedByFrame[currentIndex],
             enteringIds,
             exhaustedIds: [...(entryExhaust[currentIndex] ?? [])],
+            activeSeat: activeSeats[currentIndex],
+            attack: attacks[currentIndex],
+            lastPlayedCard: lastPlayed[currentIndex],
             // On an ATTACK frame the attacker is the first highlight id; lunge it.
             attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
         return adaptState(frameStates[currentIndex], doc, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, names, entryExhaust]);
+    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, names, entryExhaust, activeSeats, attacks, lastPlayed]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first
@@ -423,19 +432,18 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         if (!isPlaying) return;
         // A clip loops within [start, end]; normal playback runs to the end and stops.
         const lastFrame = clip ? clip.end : totalFrames - 1;
-        intervalRef.current = setInterval(() => {
-            setCurrentIndex((prev) => {
-                if (prev >= lastFrame) {
-                    if (clip) return clip.start; // loop the clip
-                    setIsPlaying(false);
-                    return prev;
-                }
-                // Fast-forward over visually-identical no-op frames during auto-playback.
-                return nextMeaningfulFrame(prev, lastFrame);
-            });
-        }, SPEED_INTERVALS[speed] ?? 1000);
-        return () => { if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; } };
-    }, [isPlaying, speed, totalFrames, clip, nextMeaningfulFrame]);
+        if (currentIndex >= lastFrame) {
+            if (clip) setCurrentIndex(clip.start); // loop the clip
+            else setIsPlaying(false);
+            return;
+        }
+        // One timeout per frame, held for as long as this frame deserves: a player's action
+        // for the full beat, the records that resolve it for a fraction, so an attack lunges
+        // and lands the way it does at the table. Fast-forwards over board-identical frames.
+        const next = nextMeaningfulFrame(currentIndex, lastFrame);
+        const t = setTimeout(() => setCurrentIndex(next), frameHoldMs(events[currentIndex], SPEED_INTERVALS[speed] ?? 1000));
+        return () => clearTimeout(t);
+    }, [isPlaying, speed, currentIndex, totalFrames, clip, nextMeaningfulFrame, events]);
 
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent,

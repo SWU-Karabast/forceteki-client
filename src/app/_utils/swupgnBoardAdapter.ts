@@ -45,6 +45,10 @@ export interface AdaptedCard {
 
     /** LeaderBaseCard's spent-Epic-Action marker, from the leader's `epicActionUsed`. */
     epicActionSpent?: boolean;
+
+    /** The live board's attack/defend arrows while an ATTACK resolves. */
+    isAttacker?: boolean;
+    isDefender?: boolean;
 }
 
 /** ReducedState arena zones → board cardPiles zone names. */
@@ -251,6 +255,15 @@ export interface AdaptOptions {
 
     /** Units to draw exhausted ahead of the file's own EXHAUST record (see entryExhaust.ts). */
     exhaustedIds?: string[];
+
+    /** Whose action it is (the live trays' turn aura); unset outside an action phase. */
+    activeSeat?: Seat;
+
+    /** The attack in progress: the live board's attack/defend arrows on attacker and target. */
+    attack?: { atk: string; def: string };
+
+    /** The card last played, previewed in the opponent tray as the live board does. */
+    lastPlayedCard?: { set: string; number: number };
     nameOf?: NameOf;
 }
 
@@ -313,6 +326,8 @@ interface SeatOptions {
     entering?: Set<string>;
     attacking?: Set<string>;
     exhausted?: Set<string>;
+    attack?: { atk: string; def: string };
+    active?: boolean;
     resourcedIds?: string[];
     baseHp?: number;
     deckRemaining?: number;
@@ -323,7 +338,7 @@ interface SeatOptions {
 function adaptPlayer(
     ps: PlayerState, playerId: string, headerLeaderId: string, baseSetId: string,
     statMap: Record<string, CardStat>,
-    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, exhausted, resourcedIds, baseHp, deckRemaining, nameOf, ownerId }: SeatOptions,
+    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, exhausted, attack, active = false, resourcedIds, baseHp, deckRemaining, nameOf, ownerId }: SeatOptions,
 ): any {
     const own = ownerId ?? (() => playerId);
     // The file's own leader status names the card (spec §11); the header is the fallback.
@@ -367,6 +382,13 @@ function adaptPlayer(
     if (exhausted && exhausted.size) {
         for (const c of inPlay) if (exhausted.has(c.uuid)) c.exhausted = true;
     }
+    // The live board's attack/defend arrows, for as long as the attack is resolving.
+    if (attack) {
+        for (const c of inPlay) {
+            if (c.uuid === attack.atk) c.isAttacker = true;
+            if (c.uuid === attack.def) c.isDefender = true;
+        }
+    }
     const ground = [...inPlay, ...upgrades, ...tokens].filter((c) => c.zone === 'groundArena');
     const space = [...inPlay, ...upgrades, ...tokens].filter((c) => c.zone === 'spaceArena');
     // `handSize` is the gated count (spec §14); `hand[]` is what the file names, which a
@@ -405,6 +427,7 @@ function adaptPlayer(
     // a card-data value for that window (§21 allows a reader with card data to derive it).
     const base = cardFromId(baseSetId, 'base', playerId, playerId, statOf(baseSetId, statMap), nameOf?.(baseSetId));
     base.type = 'base';
+    if (attack && attack.def === `base@${ps.seat}`) base.isDefender = true;
     // Printed HP the card data does not carry comes from the keyframe's `baseMaxHp` (30 is
     // the placeholder until the first keyframe lands, so the damage reads 0 until then).
     if (typeof base.hp !== 'number' && typeof ps.baseMaxHp === 'number') {
@@ -428,7 +451,7 @@ function adaptPlayer(
         leader,
         base,
         hasInitiative: false, // set by adaptState from ReducedState.initiative
-        isActionPhaseActivePlayer: false,
+        isActionPhaseActivePlayer: active,
         // The live board reads `promptState.<field>` WITHOUT null-guarding promptState
         // (e.g. LeaderBaseCard/GameCard read promptState.distributeAmongTargets). Replay
         // has no prompts, but the object must exist so those reads return undefined
@@ -475,6 +498,7 @@ export function adaptState(
             entering, attacking, exhausted, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
             deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf,
             ownerId: (id) => seatToId[owners.get(baseId(id)) ?? seat],
+            attack: opts.attack, active: opts.activeSeat === seat,
         });
         adapted.hasInitiative = s.initiative === seat;
         players[playerId] = adapted;
@@ -485,7 +509,8 @@ export function adaptState(
         // The initiative counter's status (spec §11): taken this round, or still available. A
         // file written before `initiativeTaken` existed only says who holds it.
         initiativeClaimed: typeof s.initiativeTaken === 'boolean' ? s.initiativeTaken : s.initiative != null,
-        clientUIProperties: {},
+        // The live board previews the last card played in the opponent tray.
+        clientUIProperties: opts.lastPlayedCard ? { lastPlayedCard: opts.lastPlayedCard } : {},
         winners: [],
     };
 }
