@@ -1,6 +1,5 @@
 import React from 'react';
-import { Box, IconButton, Popover, PopoverOrigin, Tooltip, Typography } from '@mui/material';
-import ThreeSixty from '@mui/icons-material/ThreeSixty';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -8,14 +7,11 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource, type SelectCardsPopup } from '../Popup/Popup.types';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
-import { blockedFromPlay, cannotBeAttacked, getBorderColor, hasSentinel, isBlanked, isStolen } from './cardUtils';
+import { blockedFromPlay, cannotBeAttacked, getBorderColor, hasSentinel, isBlanked, isStolen, usePreviewCardPopover, usePopoverConfig } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
-import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
-import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
-import { ZoneName } from '@/app/_constants/constants';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
 import { TokenBadge, type TokenBadgeType } from './GameCard/TokenBadge';
@@ -62,39 +58,6 @@ const TOKEN_BADGES: readonly { name: string; type: TokenBadgeType }[] = [
 
 const TOKEN_BADGE_NAMES = TOKEN_BADGES.map((badge) => badge.name);
 
-const usePopoverConfig = (card: ICardData): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
-    const { connectedPlayer } = useGame();
-    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
-    const arena = card.zone;
-
-    if (cardInPlayersHand) {
-        return {
-            anchorOrigin:{
-                vertical: -5,
-                horizontal: 'center',
-            },
-            transformOrigin: {
-                vertical: 'bottom',
-                horizontal: 'center',
-            }
-        };
-    }
-
-    // if the unit is on the left side, we display the popover to the right.
-    // if the unit is on the right side, we display the popover to the left
-    // we want to avoid displaying the popover on the same place as the card if there's no remaining screen left
-    return {
-        anchorOrigin:{
-            vertical: 'center',
-            horizontal: arena === ZoneName.SpaceArena ? 'right' : -5,
-        },
-        transformOrigin: {
-            vertical: 'center',
-            horizontal: arena === ZoneName.SpaceArena ? -5 : 'right',
-        }
-    };
-}
-
 const GameCard: React.FC<IGameCardProps> = ({
     card,
     onClick,
@@ -119,75 +82,12 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
     const isHiddenHandCard = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
     const popoverConfig = usePopoverConfig(card);
-
-    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
-    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const hoverTimeout = React.useRef<number | undefined>(undefined);
-    const open = Boolean(anchorElement);
     const isHoveredInChat = hoveredChatCard.id === card.uuid;
-    const isPreviewingLeaderCard = anchorElement?.getAttribute('data-card-type') === 'leader';
-
     const {
-        aspectRatio,
-        width,
-        isFlipped,
-        toggleFlip,
-    } = useLeaderCardFlipPreview({
-        anchorElement,
-        cardId: anchorElement?.getAttribute('data-card-id') || undefined,
-        setPreviewImage,
-        frontCardStyle: CardStyle.Plain,
-        backCardStyle: CardStyle.PlainLeader,
-        isLeader: isPreviewingLeaderCard,
-        isDeployed: true,
-    });
-
-    const [isTouchDevice, setIsTouchDevice] = React.useState(false);
-
-    const longPressHandlers = useLongPress({
-        onLongPress: (target) => {
-            const imageUrl = target.getAttribute('data-card-url');
-            if (!imageUrl || cardInOpponentsHand) return;
-            setIsTouchDevice(true);
-            setAnchorElement(target);
-            setPreviewImage(`url(${imageUrl})`);
-        },
-        onRelease: () => undefined,
-    });
-
-    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
-        // Skip hover preview on touch devices to avoid brief flash on tap
-        if (window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(any-pointer: fine)').matches) return;
-
-        const target = event.currentTarget;
-        const imageUrl = target.getAttribute('data-card-url');
-        if (!imageUrl) return;
-
-        if (cardInOpponentsHand) {
-            return;
-        }
-
-        hoverTimeout.current = window.setTimeout(() => {
-            setAnchorElement(target);
-            setPreviewImage(`url(${imageUrl})`);
-        }, 200);
-    };
-
-    const handlePreviewClose = () => {
-        clearTimeout(hoverTimeout.current);
-        setAnchorElement(null);
-        setPreviewImage(null);
-    };
-
-    // Keep touch previews open until the next interaction anywhere on the screen.
-    React.useEffect(() => {
-        if (!open || !isTouchDevice) return;
-        const onPointerDown = () => handlePreviewClose();
-        document.addEventListener('pointerdown', onPointerDown);
-        return () => document.removeEventListener('pointerdown', onPointerDown);
-    }, [open, isTouchDevice]);
-
-
+        getCardPreviewProps,
+        popover,
+        closePreview
+    } = usePreviewCardPopover(cardInOpponentsHand, popoverConfig);
 
     const showValueAdjuster = () => {
         const prompt = getConnectedPlayerPrompt();
@@ -289,8 +189,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             // for the underlying unit. With Alliance Outpost that buffered second click
             // auto-applies the buff to the token whose shield was just defeated, for example.
             event.stopPropagation();
-            setAnchorElement(null);
-            setPreviewImage(null);
+            closePreview();
             sendGameMessage(['cardClicked', subCard.uuid]);
         }
     }
@@ -592,35 +491,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             mb:'0px',
             position:'relative'
         },
-        cardPreview: {
-            borderRadius: '.38em',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            imageRendering: '-webkit-optimize-contrast',
-            backfaceVisibility: 'hidden',
-            userSelect: 'none',
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
-            aspectRatio,
-            width,
-        },
-        mobileFlipButton: {
-            position: 'absolute',
-            top: '0.35rem',
-            right: '0.35rem',
-            zIndex: 2,
-            width: '3.25rem',
-            height: '3.25rem',
-            color: 'white',
-            backgroundColor: 'rgba(3, 12, 19, 0.72)',
-            border: '1px solid rgba(255, 255, 255, 0.38)',
-            borderRadius: '999px',
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.55)',
-            transition: 'opacity 140ms ease, background-color 140ms ease',
-            '&:hover': {
-                backgroundColor: 'rgba(3, 12, 19, 0.9)',
-            },
-        },
         attackIcon: {
             position: 'absolute',
             backgroundImage: 'url(/Attacking.svg)',
@@ -658,33 +528,17 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '24%',
             height: '24%',
         },
-        ctrlText: {
-            bottom: '0px',
-            display: 'flex',
-            justifySelf: 'center',
-            width: 'fit-content',
-            height: '2rem',
-            color: 'white',
-            fontSize: '1rem',
-            fontWeight: 'bold',
-            textShadow: `
-                -1px -1px 0 #000,
-                 1px -1px 0 #000,
-                -1px  1px 0 #000,
-                 1px  1px 0 #000
-            `
-        },
     }
     return (
         <Box sx={[styles.cardContainer, highlightSx]}>
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
                 <Box
                     sx={styles.cloneIcon}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId }, locale)}
-                    data-card-type="clone"
-                    data-card-id={card.setId.set + '_' + card.setId.number}
+                    {...getCardPreviewProps({
+                        cardUrl: s3CardImageURL({ ...card, setId: updatedCardId }, locale),
+                        cardType: 'clone',
+                        cardId: card.setId.set + '_' + card.setId.number
+                    })}
                 >
                     <Typography sx={styles.cloneName}>Clone</Typography>
                 </Box>
@@ -708,12 +562,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 <Box
                     sx={styles.cardOverlay}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    {...longPressHandlers}
-                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId }, locale)}
-                    data-card-type={card.printedType}
-                    data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
+                    {...getCardPreviewProps({
+                        cardUrl: s3CardImageURL({ ...card, setId: updatedCardId }, locale),
+                        cardType: card.printedType,
+                        cardId: card.setId? card.setId.set+'_'+card.setId.number : card.id
+                    })}
                 >
                     <Box sx={styles.unimplementedAlert}></Box>
                     <Box sx={styles.resourceIcon}/>
@@ -754,12 +607,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                                         type={type}
                                         count={count}
                                         stroke={selectableToken ? getBorderColor({ card: selectableToken, player: connectedPlayer }) : undefined}
+                                        {...getCardPreviewProps({
+                                            cardUrl: s3CardImageURL(token, locale, CardStyle.Plain, cardbackPath),
+                                            cardType: token.printedType,
+                                        })}
                                         onClick={clickable ? (e) => badgeClick(e, selectableToken) : undefined}
-                                        onMouseEnter={handlePreviewOpen}
-                                        onMouseLeave={handlePreviewClose}
-                                        {...longPressHandlers}
-                                        data-card-url={s3CardImageURL(token, locale, CardStyle.Plain, cardbackPath)}
-                                        data-card-type={token.printedType}
                                     />
                                 );
                             })}
@@ -781,37 +633,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             {card.isAttacker && <Box sx={styles.attackIcon}/>}
             {card.isDefender && <Box sx={styles.defendIcon}/>}
 
-            <Popover
-                id="mouse-over-popover"
-                sx={{ pointerEvents: isTouchDevice ? 'auto' : 'none' }}
-                open={open}
-                anchorEl={anchorElement}
-                onClose={handlePreviewClose}
-                disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' }, tabIndex: -1 } }}
-                {...popoverConfig}
-            >
-                <Box sx={{ position: 'relative' }}>
-                    <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
-                    {isPreviewingLeaderCard && isTouchDevice && (
-                        <IconButton
-                            aria-label="Flip leader card"
-                            sx={styles.mobileFlipButton}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                toggleFlip();
-                            }}
-                        >
-                            <ThreeSixty fontSize="medium" />
-                        </IconButton>
-                    )}
-                </Box>
-                {isPreviewingLeaderCard && !isTouchDevice && !isFlipped && (
-                    <Typography variant={'body1'} sx={styles.ctrlText}
-                    >CTRL: View Flipside</Typography>
-                )}
-            </Popover>
+            {popover}
 
             {nonShieldUpgradeCards.map((subcard) => (
                 <Box
@@ -822,17 +644,15 @@ const GameCard: React.FC<IGameCardProps> = ({
                         cursor: subcard.selectable ? 'pointer' : 'normal'
                     }}
                     onClick={(e) => subcardClick(e, subcard)}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    {...longPressHandlers}
-                    data-card-url={s3CardImageURL(
-                        { ...subcard, setId: subcard.clonedCardId ?? subcard.setId },
-                        locale,
-                        CardStyle.Plain,
-                        cardbackPath)
-                    }
-                    data-card-type={subcard.printedType}
-                    data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
+                    {...getCardPreviewProps({
+                        cardUrl: s3CardImageURL(
+                            { ...subcard, setId: subcard.clonedCardId ?? subcard.setId },
+                            locale,
+                            CardStyle.Plain,
+                            cardbackPath),
+                        cardType: subcard.printedType,
+                        cardId: subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id
+                    })}
                 >
                     <Box sx={styles.upgradeOverlay}>
                         <Typography key={subcard.uuid} sx={styles.upgradeName}>
@@ -862,17 +682,15 @@ const GameCard: React.FC<IGameCardProps> = ({
                                     cursor: capturedCard.selectable ? 'pointer' : 'normal'
                                 }}
                                 onClick={(e) => subcardClick(e, capturedCard)}
-                                onMouseEnter={handlePreviewOpen}
-                                onMouseLeave={handlePreviewClose}
-                                {...longPressHandlers}
-                                data-card-url={s3CardImageURL(
-                                    { ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId },
-                                    locale,
-                                    CardStyle.Plain,
-                                    cardbackPath)
-                                }
-                                data-card-type={capturedCard.printedType}
-                                data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
+                                {...getCardPreviewProps({
+                                    cardUrl: s3CardImageURL(
+                                        { ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId },
+                                        locale,
+                                        CardStyle.Plain,
+                                        cardbackPath),
+                                    cardType: capturedCard.printedType,
+                                    cardId: capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id
+                                })}
                             >
                                 <Typography sx={styles.upgradeName}>
                                     {capturedCard.clonedCardName ?? capturedCard.name}
