@@ -30,6 +30,17 @@ export const parseSetId = (fullCardId: string) => {
     };
 };
 
+/**
+ * Card Status
+ */
+type CardStatusFn = (card: ICardData, cardStyle: CardStyle) => boolean;
+
+export const cannotBeAttacked: CardStatusFn = (card) => !!card.cannotBeAttacked;
+export const hasSentinel: CardStatusFn = (card, cardStyle) => cardStyle === CardStyle.InPlay && !!card.sentinel
+export const isBlanked: CardStatusFn = (card) => !!card.isBlanked;
+export const blockedFromPlay: CardStatusFn = (card) => !!card.blockedFromPlayReason;
+// Held by someone other than its owner.
+export const isStolen: CardStatusFn = (card) => !!card.controllerId && !!card.ownerId && card.controllerId !== card.ownerId;
 
 export const getBorderColor = (options:BorderColorOptions) => {
     const {
