@@ -50,3 +50,6 @@ storybook-static
 
 # devs IDEs
 .idea/
+
+# claude code — personal overrides stay local, shared config is committed
+.claude/settings.local.json
