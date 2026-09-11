@@ -11,12 +11,15 @@ interface UnsavedChangesDialogProps {
     open: boolean;
     onDiscard: () => void;
     onCancel: () => void;
+    // NEW: Optional prop to allow custom messages per tab
+    customMessage?: string; 
 }
 
 const UnsavedChangesDialog: React.FC<UnsavedChangesDialogProps> = ({
     open,
     onDiscard,
     onCancel,
+    customMessage, // Extract the new prop
 }) => {
     const styles = {
         dialog: {
@@ -68,7 +71,8 @@ const UnsavedChangesDialog: React.FC<UnsavedChangesDialogProps> = ({
                 </Typography>
 
                 <Typography sx={styles.message}>
-                    You have unsaved sound preference changes.
+                    {/* NEW: Use the custom message if provided, otherwise use a generic fallback */}
+                    {customMessage || 'You have unsaved preference changes.'}
                     <br />
                     What would you like to do?
                 </Typography>
