@@ -18,27 +18,14 @@ describe.each(VECTORS)('test vector: %s', (name) => {
     const text = readFileSync(path.join(DIR, `${name}.swupgn`), 'utf-8');
     const doc = parse(text);
 
-    it('folds to exactly .fold.json, apart from the two pile CONTENTS the client tracks better', () => {
-        // `hand[]` / `discard[]` CONTENTS are the one documented divergence (VERSION.md, spec
-        // §14 "not checked"): upstream only ever appends to them, the viewer renders them and
-        // so removes a card that left. Everything else must be byte-identical, and the
-        // client's piles must be exactly upstream's minus cards that actually left the zone.
+    it('folds to exactly .fold.json', () => {
+        // Byte for byte, with no carve-out. `hand[]` and `discard[]` CONTENTS used to be the
+        // one documented divergence — upstream only appended to them, the viewer renders them
+        // and so had to remove a card that left. Upstream folds both from MOVE now (spec §12.1)
+        // and gates them (§14), so the client's fold and the vector agree outright.
         const expected = JSON.parse(readFileSync(path.join(DIR, `${name}.fold.json`), 'utf-8')) as ReducedState;
-        const gone = (seat: 1 | 2, zone: 'hand' | 'discard') => new Set(doc.events
-            .filter((e) => e.t === 'MOVE' && e.p === seat && e.from === zone && e.to !== zone)
-            .map((e) => (e as { card: string }).card));
-        for (const got of [fold(normalizeEvents(doc.events)), fold(doc.events)]) {
-            for (const seat of [1, 2] as const) {
-                for (const zone of ['hand', 'discard'] as const) {
-                    const ours = new Set(got.players[seat]![zone]);
-                    const left = gone(seat, zone);
-                    expect(expected.players[seat]![zone].filter((id) => ours.has(id) || left.has(id)), `${zone} ${seat}`)
-                        .toEqual(expected.players[seat]![zone]);
-                    got.players[seat]![zone] = expected.players[seat]![zone];
-                }
-            }
-            expect(got).toEqual(expected);
-        }
+        expect(fold(doc.events)).toEqual(expected);
+        expect(fold(normalizeEvents(doc.events))).toEqual(expected);
     });
 
     it('renders to exactly .render.txt', () => {

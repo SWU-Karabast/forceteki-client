@@ -1,13 +1,80 @@
 # Vendored SWU-PGN reader
 
-Source: forceteki `swupgn/src/`. Re-vendored 2026-09-05 at upstream **`3c4ed35d`** ("Encode the
-whole CR 1.16 game state"), on top of `78566bda` ("Land the replay client's nine findings").
-The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit.
+Source: forceteki `swupgn/src/`. Re-vendored 2026-09-11 at upstream **`463c3022`** ("docs: sync
+the SWU-PGN docs with what the writer actually does"), on top of `3c4ed35d` ("Encode the whole
+CR 1.16 game state") and `78566bda` ("Land the replay client's nine findings"). The spec is
+`docs/SWU-PGN-1.0-SPEC.md` at that commit.
 
-`types.ts`, `integrity.ts` and `render.ts` are **verbatim** (types.ts: one closing brace
-re-indented for this repo's eslint, whitespace only). `fold.ts`, `parse.ts` and `cardNames.ts`
-are upstream plus the client-owned blocks listed below. `validate.ts` stays omitted (Node-only:
-fs/path + ajv). `tokens.ts`, `serialize.ts` and `foldFrames` are client-only.
+`types.ts` and `render.ts` are **verbatim** (no re-indent needed at `463c3022`; this repo's
+eslint is clean on them as they stand). `integrity.ts` is verbatim apart from one line, the
+keyframe snap — see the divergence list. `fold.ts`, `parse.ts` and `cardNames.ts` are
+upstream plus the client-owned blocks listed below. `validate.ts` stays omitted (Node-only:
+fs/path + ajv), and `actionLinks.ts` with it — see "Deliberately not ported". `tokens.ts`,
+`serialize.ts` and `foldFrames` are client-only.
+
+## What `463c3022` changed in the format (all handled here)
+
+- **`LEADER_FLIP {p, card, onStartingSide}`** — a double-sided leader (Chancellor Palpatine,
+  `TWI#017`) never deploys: its Action turns the card over in place in the base zone, changing
+  its title, aspects and traits. No `MOVE`, no `DEPLOY_LEADER`, and nothing else in the stream
+  implies it. `onStartingSide` is the resulting face, stated and never toggled, so applying it
+  twice is applying it once and a reader that snapped to a keyframe can apply it with no
+  history. The fold sets it on `leaderOwner(card) ?? player(p)`, seeding the seat's `leader`
+  entry from the flip when nothing has named it yet; the gate compares it only when the
+  keyframe states it (absent means "not a double-sided leader", never `false`); the story
+  prints `<player> flips <name>`. The board passes it to `s3CardImageURL`, which already keys
+  the back-face art off it — before this a flipped leader replayed as its front side forever.
+- **`PlayerState.baseEpicActionUsed`** — an `ABILITY_ACTIVATE` with `epic: true` whose `card`
+  is `base@N` is the BASE spending its Epic Action. Twelve bases carry one, and CR 1.16 counts
+  it as game state. A base ref resolves straight to a seat (§6.3), so it is checked first and
+  anything else falls through to the leader's own flag; the leader's single `epicActionUsed`
+  stays one boolean, because a leader has exactly one Epic Action and both forms of it share
+  the limit. Gated when the keyframe states it, against `?? false`. The board draws the same
+  epic-action token on the base card.
+- **`PlayerState.resources[]`** — WHICH cards are in the resource row, in the order they were
+  resourced. Reconstructable because every `MOVE` names its card; the ready/exhausted SPLIT is
+  not, so the two counts stay the authority on ready state. Added on `→ resource`, removed on
+  `resource →`, and moved between seats by a `TAKE_CONTROL` with `zone: "resource"` — without
+  that last part the card stays in the losing seat's row and the gate reports a mismatch on
+  BOTH seats for the rest of the game. Stays **absent** until a MOVE or a keyframe supplies
+  one. Gated as a set. The board draws the row from it, falling back to the client's MOVE scan
+  for a file written before it existed.
+- **`ReducedState.active`** — whose turn it is. **Keyframe-supplied and deliberately not
+  derived**: deriving it means modelling passing and priority, exactly the rules knowledge this
+  format exists to spare a reader, and the engine has not chosen one when `PHASE_START` fires.
+  Exact at every keyframe, stale between them, so it is **not** part of the §14 gate and the
+  client surfaces no turn indicator from it (the trays' turn aura stays `replayLiveCues`'s own
+  per-frame derivation, which is a different claim). Stored only when the record names a real
+  seat — `Seat` is erased at runtime, and an unguarded write puts arbitrary JSON in a field a
+  reader indexes `players[active]` with.
+- **`CREATE_TOKEN` places only into an arena** — `zone` must be `ground` or `space`. A token
+  named in any other zone is not in play yet; placing it put a card in `cards[]` with a
+  non-arena zone that no keyframe agrees with. Its `MOVE` into the arena is what puts it in
+  play, exactly as for a printed card (§12.1 step 3).
+- **`for` on any record** — names the top-level action a record belongs to, because the engine
+  performs part of an action before it announces it (an attack's target `CHOICE` and the
+  attacker's `EXHAUST` are `R2.A.5a`/`R2.A.5b` and belong to the `ATTACK` at `R2.A.6`). The
+  move list starts each action's span at the first record filed under it
+  (`replayMoves.firstFrameByAction`), so the highlight no longer sits on the previous action
+  while the attacker is being chosen and exhausted on screen.
+- **`EndDate`, `Match`, `GameNumber` header tags** — when the game ended (with `Date`, the
+  duration), an opaque match id stable across a Bo3 (`sha256:<hex>` of the lobby id; a writer
+  MUST NOT emit the lobby id itself), and which game of it this is. `parse` conditionally
+  spreads each; `serialize` emits each when present (and `RecorderErrors` with them, which it
+  had been dropping); the panel header shows `formatGameMeta` — `12m 31s · game 2 of match
+  9f3a1c2`, each part only when the file states it.
+- **`MAX_ZONE_LIST = 1000`** on every zone-list insert. It matters more here than upstream:
+  this parses untrusted uploaded files in a browser, and `addOnce` scans the list, so one
+  `{"t":"DRAW","cards":[…200k unique strings…]}` is ~2e10 string comparisons and a hung tab.
+  Past the cap the id is dropped rather than the file rejected — degrading is the fold's
+  contract, and no honest file comes near 1000.
+- **`hand` and `discard` CONTENTS are now GATED** (§14). They were ungated on the belief that
+  only the counts were reconstructable; every `MOVE` names its card, so both lists are exact.
+  `hand` compares as a set (a hand is unordered), `discard` in order (a pile is ordered, §11).
+  Upstream's five vectors produced 45 mismatches before this and none after. This also
+  **retires the client's one fold divergence**: upstream folds both from `MOVE` and dedupes by
+  id now, exactly as the client already did, so `vectors.test.ts` asserts `.fold.json` byte for
+  byte with no carve-out.
 
 ## What 3c4ed35d changed in the format (all handled here)
 
@@ -63,7 +130,10 @@ fallbacks noted below. Verified per vector at the final frame by
 | `baseHp` / `baseMaxHp` | `base.hp` = printed HP (card data) or the keyframe's `baseMaxHp`; `base.damage` = max − `baseHp`. Before the first keyframe the fold holds the placeholder 30, so `Replay.context.baseHpByFrame` supplies card-data HP for that window only (§21) | `LeaderBaseCard` (base) |
 | `handSize`, `hand[]` | `cardPiles.hand`: the named cards, padded to `handSize` with face-down placeholders (a Perspective file); fog-of-war hides identities and keeps the count | `PlayerHand` |
 | `deckSize` | `numCardsInDeck` = the file's `deckSize`; falls back to the INIT-order tracker (`deckTracker`); `undefined` when neither is known (absent ≠ zero) | `DeckDiscard` |
-| `resourcesReady` / `resourcesExhausted` | `availableResources` = ready; `cardPiles.resources` = ready + exhausted (named from the `hand → resource` MOVEs, face-down for the remainder) | `Resources` (`ready/total`) |
+| `resourcesReady` / `resourcesExhausted` | `availableResources` = ready; `cardPiles.resources` = ready + exhausted | `Resources` (`ready/total`) |
+| `resources[]` | the row's membership, straight from the fold; a file that states none falls back to the client's `hand → resource` MOVE scan, face-down for the remainder | `Resources` |
+| `baseEpicActionUsed` | `base.epicActionSpent` | `LeaderBaseCard` (base) epic-action token |
+| `active` | **nothing.** Keyframe-supplied and stale between keyframes (§11), so no turn indicator is derived from it. The trays' turn aura is `replayLiveCues.activeSeatByFrame`, a per-frame derivation from the seat each record names — a different claim, and never presented as the file's | — |
 | `credits` | `cardPiles.credits` (one placeholder per credit) | `Credits` |
 | `hasForce` | `forceToken.active` | `LeaderBaseCard` (Force token on the base) |
 | `discard[]` | `cardPiles.discard` | `DeckDiscard` |
@@ -71,6 +141,7 @@ fallbacks noted below. Verified per vector at the final frame by
 | `leader.deployed` | `leader.zone` = `base` (art) or `leader` (deployed placeholder); a pilot leader rides on its host as a parented upgrade card | `LeaderBaseCard`, `UnitsBoard`/`GameCard` |
 | `leader.exhausted` | `leader.exhausted` while undeployed (dimmed); the arena card's or the pilot card's flag while deployed. Older file: `Replay.context.leaderExhaustByFrame` (EXHAUST/READY scan) | `LeaderBaseCard`, `GameCard` |
 | `leader.epicActionUsed` | `leader.epicActionSpent` | `LeaderBaseCard` epic-action token |
+| `leader.onStartingSide` | `leader.onStartingSide`, which `s3CardImageURL` turns into the back-face art (`017-base2.webp`). Absent stays absent — `false` would ask for a back face the card does not have | `LeaderBaseCard` (leader art) |
 | `cards[].zone` | `groundArena` / `spaceArena` | `UnitsBoard` |
 | `cards[].damage`, `exhausted` | `damage`, `exhausted` (exhausted rotates the card). A unit whose entering `EXHAUST` is still a few records ahead is drawn exhausted from its arrival frame (`entryExhaust.ts`, display only; the fold is untouched) | `GameCard` |
 | `cards[].power`, `hp` | `power`, `hp` from `STATS`/keyframes. A pre-STATS file gets `effectiveStats` (printed + attachments + Grit from card data) and `statsReconstructed: true`, drawn as a `≈` marker with a tooltip | `GameCard` power/HP badges |
@@ -88,7 +159,9 @@ ATTACK and the consequences filed under its seq), and the last card played
 (`clientUIProperties.lastPlayedCard`, the opponent tray's preview). Playback holds a player's
 action for the full beat and its consequences for a fraction (`frameHoldMs`).
 
-Beyond the board: `StoryTab` shows the file's own `%%% STORY` (or a fresh `render()`), and its
+Beyond the board: the panel header shows `formatGameMeta` — the game's duration (`Date` →
+`EndDate`) and `game N of match <short>` (`Match`/`GameNumber`, §5.2), each part only when the
+file states it. `StoryTab` shows the file's own `%%% STORY` (or a fresh `render()`), and its
 click-to-seek follows the story's numbering exactly (`storySeek`: the eight numbered types,
 reset per round and per phase). `Replay.context` captions every frame with `replayAction.frameAction`, worded
 per the §16 table (mechanism records print nothing) and named with the story's `nm()`
@@ -102,8 +175,8 @@ the §5.3/§6.2/§10.1/§13/§18 notes (`fileIssues`) and which earlier writer p
 
 `__tests__/vectors.test.ts` runs every vector under `__tests__/fixtures/vectors/` (all five,
 copied verbatim from forceteki `swupgn/test-vectors/`: `minimal`, `organic`, `upgrades`,
-`pilot`, `capture`) through parse → fold → render and requires byte-identical render and a
-byte-identical fold apart from the two pile contents below; every vector must also pass
+`pilot`, `capture`) through parse → fold → render and requires a byte-identical render and a
+byte-identical fold, with no carve-out; every vector must also pass
 `checkKeyframes` with no mismatch (spec §20 step 5), and survive serialize → parse with an
 identical fold and render. Step 2 (`validate()`) is asserted upstream on the same bytes.
 `src/app/_utils/__tests__/vectorsBoard.test.ts` takes each vector one level up, through
@@ -127,17 +200,23 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
   array is refused with its line number (§4 says every record is an object). It used to reach
   `events[i].seq` in the viewer and be persisted to IndexedDB before first render, so the
   `?id=` link crash-looped. Upstream leaves this to `validate()`.
-- **`fold.ts` hand and discard CONTENTS** — upstream only counts on MOVE and appends to
-  `hand[]` from DRAW / `discard[]` from DISCARD, PLAY_EVENT and DEFEAT, so both grow
-  monotonically. Harmless upstream (outside the integrity gate); fatal here, because the board
-  renders both arrays keyed by card id. The client adds AND removes on MOVE and dedupes the
-  summary records. This is the one place the vectors' `.fold.json` is not reproduced byte for
-  byte: the client's piles are upstream's minus the cards that actually left the zone, and
-  `vectors.test.ts` asserts exactly that.
+- **`integrity.ts` keyframe snap** — upstream ends each comparison with
+  `s = JSON.parse(JSON.stringify(e.keyframe))`, deep-cloning the RAW keyframe.
+  `isCompleteKeyframe` only proves `cards`/`hand`/`discard` are arrays and each card is *some*
+  object; it validates no per-card field. So a keyframe card with no `statusTokens` rode into
+  `reduce()` and the next `STATUS_TOKEN` threw on `c.statusTokens[token]`, and one with no
+  `upgrades` threw on the next arena exit at `c.upgrades.indexOf`. Harmless upstream, where
+  `checkKeyframes` runs on the writer's own state; fatal here, where `FileHealth` runs it on an
+  uploaded file inside a render-time `useMemo` with no error boundary — one shared file blanked
+  the Replay page for everyone who opened it. The client calls `snapToKeyframe` instead, which
+  normalizes and caps every list before the clone and makes the gate measure what the viewer
+  actually folds. Both regression paths are pinned in `integrity.test.ts`.
 - **`fold.ts` keyframe snap** — `snapToKeyframe` merges PER SEAT: a seat with the shape the
   fold dereferences (§13's `isCompleteKeyframe`, applied per seat) is snapped with every
   scalar coerced (`normalizePlayer`/`normalizeCard`) and every list capped at
-  `MAX_KEYFRAME_LIST` (200) BEFORE the deep copy, so a hostile keyframe is never cloned whole;
+  `MAX_KEYFRAME_LIST` (200) BEFORE the deep copy, so a hostile keyframe is never cloned whole
+  (`resources` is capped with them, and `baseEpicActionUsed`, `leader.onStartingSide` and the
+  top-level `active` ride through only when well-typed, absent staying absent);
   a seat that is missing or malformed is ignored and the folded seat kept. Upstream replaces
   wholesale and ignores the whole keyframe. Pre-1.0 files in the wild carry one-seat keyframes,
   and replacing wholesale erased that player's board. Compatibility shim. Also filters a token
@@ -170,7 +249,9 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
   recovers a pilot's host from the keyframes when the writer named none, and resolves token
   art ids for both id shapes.
 - **`serialize.ts`** — client-only: emits `%%% STORY` (the document's own, or a fresh render)
-  and `%%% CARDS` in the spec's canonical section order.
+  and `%%% CARDS` in the spec's canonical section order, and every optional §5.2 header tag the
+  document carries (`EndDate`, `Match`, `GameNumber`, `RecorderErrors`) — dropping one would
+  quietly relabel a partial file as complete, or orphan a game from its match.
 - **`types.ts` Annotation threading** — `id`/`parent`/`ts` are upstream now (spec §15).
   Nothing client-owned remains in types.ts.
 
@@ -178,9 +259,23 @@ Re-vendoring dropped MAX_EVENTS and the discard guards once already (caught by /
 by the test suite — they had no tests). Diff this list against upstream before accepting a
 re-vendor, not just the test results.
 
+## Deliberately not ported from `463c3022`
+
+- **`actionLinks.ts` (`linkActionSteps`)** — the writer-side pass that stamps `for` on a file
+  whose writer did not. This is a reader: it uses `for` when the file carries it and loses only
+  the grouping when it does not. If it is ever ported, the **action-typed precursor sets** must
+  come with it exactly — `ATTACK` may be preceded only by `CHOICE`/`MODAL_CHOICE`/`EXHAUST`,
+  every other top-level action also by `MOVE`/`STATS`/`EXHAUST_RESOURCES` — because one shared
+  set gets an **Ambush** unit wrong: it is played and attacks in the same phase, so the play's
+  own `MOVE` and `STATS` sit immediately before the `ATTACK` naming the same card, and the
+  attack steals them. Keep the rule that a run is filed only if something in it names the
+  action's card; a wrong link is worse than none.
+
 Resolved upstream, do NOT re-apply: the `[Rounds]` NaN fallback; keeping token upgrades out of
 the arenas (driven by `kind`); the seat/`__proto__` guard, `arr()` for scalar-where-array
 fields and the primitive-keyframe guard (upstream has all three); attach-from-`attachedTo`,
-detach-on-exit and `hasForce` (upstream folds them now); the `(cost N)` render wording.
+detach-on-exit and `hasForce` (upstream folds them now); the `(cost N)` render wording; the hand/discard
+CONTENTS fold (upstream adds AND removes on MOVE and dedupes the summary records now, and
+gates both in §14 — the client's version of this is retired, not divergent).
 
 Long-term: replace with a shared npm package (see spec "Long-term note").

@@ -581,6 +581,20 @@ describe('a keyframe off an untrusted file is coerced to the PlayerState shape',
         expect(p1(s).cards[0].upgrades.length).toBe(200);
     });
 
+    it('caps every zone list, so one DRAW cannot hang the tab scanning it', () => {
+        // `addOnce` scans the list, so an unbounded one is quadratic: 200k unique ids is ~2e10
+        // string comparisons. Past the cap the id is dropped, not the file refused — degrading
+        // is the fold's contract, and no honest file comes near 1000.
+        const big = Array.from({ length: 3000 }, (_, i) => `X#${i}`);
+        const s = fold([{ seq: 'R1.A.1', t: 'DRAW', p: 1, count: big.length, cards: big },
+            { seq: 'R1.A.2', t: 'DISCARD', p: 1, cards: big }] as unknown as GameEvent[]);
+        expect(p1(s).hand.length).toBe(1000);
+        expect(p1(s).discard.length).toBe(1000);
+        // And the cards it did keep are the real ones, in order.
+        expect(p1(s).hand[0]).toBe('X#0');
+        expect(p1(s).hand[999]).toBe('X#999');
+    });
+
     it('a keyframe that is not an object is ignored entirely', () => {
         const s = fold([{ seq: '1', t: 'MOVE', card: 'SOR#009', from: 'deck', to: 'hand', p: 1 },
             { seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: 5 }] as unknown as GameEvent[]);
@@ -804,5 +818,31 @@ describe('upgrades attach to their host instead of standing in an arena', () => 
             { seq: '2', t: 'PLAY_UPGRADE', p: 1, card: 'UPG', target: 'HOST' },
         ];
         expect(repairUpgradePlays(ev)).toEqual(ev);
+    });
+});
+
+describe('a keyframe cannot smuggle a bad shape into the new §11 fields', () => {
+    const kf = (over: Record<string, unknown>): ReducedState => ({
+        round: 1, phase: 'action', initiative: 1,
+        players: { 1: { seat: 1, hand: [], discard: [], cards: [], ...over }, 2: keyframe().players[2] },
+    } as unknown as ReducedState);
+
+    it('coerces resources, baseEpicActionUsed and onStartingSide, and keeps absent absent', () => {
+        const snap = (over: Record<string, unknown>) => fold([{
+            seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf(over),
+        }] as unknown as GameEvent[]);
+        // A non-array `resources` is a list the fold scans on every resource MOVE.
+        expect(snap({ resources: 'evil' }).players[1]!.resources).toBeUndefined();
+        expect(snap({ resources: Array.from({ length: 900 }, (_, i) => `R#${i}`) }).players[1]!.resources!.length).toBe(200);
+        expect(snap({ baseEpicActionUsed: 'yes' }).players[1]!.baseEpicActionUsed).toBeUndefined();
+        expect(snap({ baseEpicActionUsed: true }).players[1]!.baseEpicActionUsed).toBe(true);
+        // Absent is never "back side": only a double-sided leader carries a face at all.
+        expect(snap({ leader: { id: 'SOR#010', deployed: false, exhausted: false, epicActionUsed: false } })
+            .players[1]!.leader!.onStartingSide).toBeUndefined();
+        expect(snap({ leader: { id: 'TWI#017', deployed: false, exhausted: false, epicActionUsed: false, onStartingSide: false } })
+            .players[1]!.leader!.onStartingSide).toBe(false);
+        // `active` is indexed as players[active] by a reader: never written from a non-seat.
+        expect(fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: { ...kf({}), active: '__proto__' } }] as unknown as GameEvent[]).active).toBeUndefined();
+        expect(fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: { ...kf({}), active: 2 } }] as unknown as GameEvent[]).active).toBe(2);
     });
 });

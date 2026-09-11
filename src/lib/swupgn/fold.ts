@@ -243,6 +243,60 @@ const ARENA_ZONES = new Set(['ground', 'space']);
 const isArena = (z: string): boolean => ARENA_ZONES.has(z);
 
 /**
+ * Zone-list membership. Every card id is unique for the whole game (the `:N` copy suffix, spec
+ * §6.1), so a list can hold an id at most once and adding is idempotent by id. That is what lets
+ * a MOVE and the summary record beside it (DRAW, DISCARD, DEFEAT, PLAY_EVENT) both name the same
+ * card without the card landing in the pile twice.
+ */
+/**
+ * Zone lists are bounded by the size of a deck, so a list longer than this cannot be a real game.
+ * The cap exists because this parses UNTRUSTED files in a browser: `addOnce` scans the list, so a
+ * single `{"t":"DRAW","cards":[...200k unique strings...]}` would otherwise cost ~2e10 string
+ * comparisons and hang the tab. Past the cap the id is dropped rather than the file rejected --
+ * degrading is the fold's contract, and no honest file reaches it.
+ */
+const MAX_ZONE_LIST = 1000;
+
+function addOnce(list: string[], id: string): void {
+    if (list.length >= MAX_ZONE_LIST) {
+        return;
+    }
+    if (!list.includes(id)) {
+        list.push(id);
+    }
+}
+
+function removeOne(list: string[], id: string): void {
+    const i = list.indexOf(id);
+    if (i >= 0) {
+        list.splice(i, 1);
+    }
+}
+
+/**
+ * The seat's resource-row membership list, created on first use. It stays ABSENT until a MOVE
+ * or a keyframe supplies one, so a file written before `resources` existed folds to a state
+ * with no `resources` at all rather than to a misleading empty row.
+ */
+function resourceList(ps: PlayerState): string[] {
+    if (!Array.isArray(ps.resources)) {
+        ps.resources = [];
+    }
+    return ps.resources;
+}
+
+/**
+ * Store the active seat only when the file actually names a seat. `Seat` is erased at runtime, so
+ * an unguarded write puts arbitrary JSON in a field a reader will reasonably use as
+ * `players[state.active]` -- the same prototype-pollution shape `isSeat` exists to stop.
+ */
+function setActive(s: ReducedState, active: unknown): void {
+    if (isSeat(active)) {
+        s.active = active;
+    }
+}
+
+/**
  * Engine truth: every zone transition is an OnCardMoved → MOVE event. handSize, the resource
  * counts, credits, the Force and the in-play `cards[]` set are therefore reconstructed from
  * MOVE (the single source of truth), NOT from DRAW/RESOURCE/PLAY, which are higher-level
@@ -280,20 +334,17 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         return;
     }
 
-    // Hand membership: count AND contents.
-    //
-    // CLIENT-OWNED on the contents. Upstream only counts here and appends to `hand[]` from
-    // DRAW, so `hand[]` grows monotonically — every card ever drawn stays in it. That is
-    // harmless for a final-state fold (`hand[]` is outside the integrity gate), but a
-    // scrubber RENDERS this array: without the removal a player's hand shows cards they
-    // played ten rounds ago, and repeated ids produce duplicate React keys.
+    // Hand: the COUNT and the CONTENTS. Every MOVE names its card, so `hand[]` is exact at
+    // every moment, not just at a keyframe — DRAW is only a summary of the deck→hand MOVEs
+    // beside it. This used to be a client-owned divergence (upstream appended from DRAW and
+    // never removed, so a scrubber rendered cards played ten rounds ago); upstream folds and
+    // gates it the same way now, so it mirrors upstream — re-diff it, do not rewrite it.
     if (e.to === 'hand' && e.from !== 'hand') {
         ps.handSize += 1;
-        if (!ps.hand.includes(e.card)) ps.hand.push(e.card);
+        addOnce(ps.hand, e.card);
     } else if (e.from === 'hand' && e.to !== 'hand') {
         ps.handSize = Math.max(0, ps.handSize - 1);
-        const hi = ps.hand.indexOf(e.card);
-        if (hi >= 0) ps.hand.splice(hi, 1);
+        removeOne(ps.hand, e.card);
     }
 
     // Deck count, once a keyframe has told us where it started.
@@ -314,12 +365,17 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         }
     }
 
-    // Resource row. A card enters ready (an EXHAUST_RESOURCES beside the move says otherwise);
-    // it leaves from whichever bucket `exhausted` names.
+    // Resource row: the two COUNTS and the MEMBERSHIP. A card enters ready (an
+    // EXHAUST_RESOURCES beside the move says otherwise); it leaves from whichever bucket
+    // `exhausted` names. Which cards are in the row is a separate question from which of them
+    // are exhausted -- the row's ready state stays counted, because no record names the
+    // individual card that exhausted.
     if (e.to === 'resource' && e.from !== 'resource') {
         countResource(ps, 1, false);
+        addOnce(resourceList(ps), e.card);
     } else if (e.from === 'resource' && e.to !== 'resource') {
         countResource(ps, -1, e.exhausted === true);
+        removeOne(resourceList(ps), e.card);
     }
 
     // Credits and the Force: the only two things that live in `base` and are counted.
@@ -329,14 +385,14 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         countBaseToken(ps, e.card, -1);
     }
 
-    // CLIENT-OWNED. Discard membership, both directions. The viewer RENDERS the discard
-    // pile keyed by card id, so an append-only pile duplicates React keys and drifts
-    // numCardsInDeck; a card that leaves the discard has to leave the array too.
+    // Discard: likewise the pile's CONTENTS, in engine order. DEFEAT cannot be the author —
+    // a defeated unit's MOVE to discard is emitted BEFORE its DEFEAT, so by then the card is
+    // already out of `cards[]`. The MOVE owns the pile; DEFEAT/DISCARD/PLAY_EVENT are
+    // summaries. Mirrors upstream (it was client-owned until upstream adopted the same rule).
     if (e.to === 'discard' && e.from !== 'discard') {
-        if (!ps.discard.includes(e.card)) ps.discard.push(e.card);
+        addOnce(ps.discard, e.card);
     } else if (e.from === 'discard' && e.to !== 'discard') {
-        const di = ps.discard.indexOf(e.card);
-        if (di >= 0) ps.discard.splice(di, 1);
+        removeOne(ps.discard, e.card);
     }
 
     // In-play (arena) membership. An UPGRADE never has any: it attaches to a unit, and its
@@ -391,8 +447,18 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         return s;
     }
     switch (e.t) {
-        case 'ROUND_START': s.round = e.round; s.initiativeTaken = false; break;
-        case 'PHASE_START': s.phase = (e.phase as ReducedState['phase']); break;
+        // `active` is stated rather than derived: working out whose turn it is from the last
+        // action means modelling passing and priority, which is exactly the rules knowledge the
+        // format exists to spare a reader. Absent leaves the previous value alone.
+        case 'ROUND_START':
+            s.round = e.round;
+            s.initiativeTaken = false;
+            setActive(s, e.active);
+            break;
+        case 'PHASE_START':
+            s.phase = (e.phase as ReducedState['phase']);
+            setActive(s, e.active);
+            break;
         case 'CLAIM_INITIATIVE': s.initiative = e.p; s.initiativeTaken = true; break;
         // handSize/resourcesReady are driven by MOVE (the engine's source of truth for
         // zone transitions); see applyMoveCounts. PLAY only places the card in its zone —
@@ -400,9 +466,9 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         case 'PLAY': case 'PLAY_SMUGGLE':
             placeCard(s, e.p, e.card, e.zone ?? 'ground'); break;
         case 'PLAY_EVENT': {
-            // CLIENT-OWNED dedupe: the paired hand->discard MOVE already listed it.
+            // Idempotent beside its own hand->discard MOVE, which is the pile's author.
             const ps = player(s, e.p);
-            if (ps && !ps.discard.includes(e.card)) ps.discard.push(e.card);
+            if (ps) addOnce(ps.discard, e.card);
             break;
         }
         case 'PLAY_UPGRADE': {
@@ -441,10 +507,40 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         }
         case 'ABILITY_ACTIVATE': {
             if (e.epic === true) {
+                // A base's Epic Action and a leader's are separate abilities on separate cards.
+                // The record tells them apart by its `card`: a base is `base@N` everywhere it is
+                // pointed at (§6.3), so a base ref resolves straight to a seat, and anything else
+                // is a card id matched against that seat's leader.
+                const baseSeat = seatOfBaseRef(e.card);
+                if (baseSeat != null) {
+                    const ps = player(s, baseSeat);
+                    if (ps) {
+                        ps.baseEpicActionUsed = true;
+                    }
+                    break;
+                }
                 const owner = leaderOwner(s, e.card);
                 if (owner?.leader) {
                     owner.leader.epicActionUsed = true;
                 }
+            }
+            break;
+        }
+        case 'LEADER_FLIP': {
+            // A double-sided leader flips IN PLACE in the base zone -- no MOVE, no deploy -- and
+            // the flip changes its title, aspects and traits. `onStartingSide` is stated, not
+            // toggled, so applying it is idempotent and a reader that snapped to a keyframe mid-
+            // game still lands on the right face. Falls back to the seat on the record when the
+            // leader's id is not yet known (no keyframe seen, no DEPLOY_LEADER -- these leaders
+            // never deploy, so that is the normal case early in a file).
+            const owner = leaderOwner(s, e.card) ?? player(s, e.p);
+            if (owner) {
+                // A double-sided leader NEVER deploys, so in a file with no keyframe yet nothing
+                // has named the seat's leader and there is no record to update. Seed one from the
+                // flip itself rather than dropping the face on the floor: the id is right there,
+                // and a later keyframe overwrites the whole entry anyway.
+                owner.leader ??= { id: e.card, deployed: false, exhausted: false, epicActionUsed: false };
+                owner.leader.onStartingSide = e.onStartingSide;
             }
             break;
         }
@@ -480,6 +576,12 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
                 if (e.zone === 'resource') {
                     countResource(fromPs, -1, e.exhausted === true);
                     countResource(ps, 1, e.exhausted === true);
+                    // The row's MEMBERSHIP moves with the count. Without this the card stays in
+                    // the losing seat's `resources` and never joins the winner's, and since every
+                    // keyframe now carries `resources` the gate reports a mismatch on BOTH seats
+                    // for the rest of the game.
+                    removeOne(resourceList(fromPs), e.card);
+                    addOnce(resourceList(ps), e.card);
                 } else {
                     countBaseToken(fromPs, e.card, -1);
                     countBaseToken(ps, e.card, 1);
@@ -523,7 +625,13 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
             detach(s, e.card);
             break;
         case 'CREATE_TOKEN':
-            if (e.kind !== 'upgrade') { placeCard(s, e.p, e.token, e.zone); }
+            // Arena zones only. An `upgrade` token attaches and is never an arena card, and a
+            // token named in any other zone is not in play yet -- placing it would put a card in
+            // `cards[]` with a non-arena zone, which no keyframe agrees with. Its MOVE into the
+            // arena is what puts it in play, exactly as for a printed card (§12.1 step 3).
+            if (e.kind !== 'upgrade' && ARENA_ZONES.has(e.zone)) {
+                placeCard(s, e.p, e.token, e.zone);
+            }
             break;
         case 'EXHAUST_RESOURCES': case 'READY_RESOURCES': {
             // `amount | 0` turns a hostile non-number into 0 rather than NaN.
@@ -584,8 +692,10 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
                 }
                 const idx = ps.cards.findIndex((c) => c.id === e.card);
                 if (idx >= 0) {
-                    // CLIENT-OWNED dedupe: a paired arena->discard MOVE may also have added it.
-                    if (!ps.discard.includes(ps.cards[idx].id)) ps.discard.push(ps.cards[idx].id);
+                    // Idempotent: in a real stream the MOVE to discard already filed it and
+                    // already took it out of `cards`, so this finds nothing. It still runs for
+                    // a fold driven by DEFEAT with no paired MOVE (unit-level tests).
+                    addOnce(ps.discard, ps.cards[idx].id);
                     ps.cards.splice(idx, 1);
                 }
             }
@@ -597,17 +707,17 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         // membership (see applyMoveCounts). DRAW/DISCARD/RESOURCE no longer mutate those
         // counts — they coincide with the underlying MOVEs and would double-count.
         case 'MOVE': applyMoveCounts(s, e); break;
-        // CLIENT-OWNED: DRAW/DISCARD dedupe — the paired MOVEs already added these ids, and
-        // double-adding produced duplicate ids (and duplicate React keys) when a card was
-        // drawn, played and drawn again.
+        // DRAW/DISCARD add once by id: the paired MOVEs already added them, and double-adding
+        // produced duplicate ids (and duplicate React keys) when a card was drawn, played and
+        // drawn again. Mirrors upstream.
         case 'DRAW': {
             const ps = player(s, e.p);
-            if (ps) for (const c of arr<string>(e.cards)) if (!ps.hand.includes(c)) ps.hand.push(c);
+            if (ps) for (const c of arr<string>(e.cards)) addOnce(ps.hand, c);
             break;
         }
         case 'DISCARD': {
             const ps = player(s, e.p);
-            if (ps) for (const c of arr<string>(e.cards)) if (!ps.discard.includes(c)) ps.discard.push(c);
+            if (ps) for (const c of arr<string>(e.cards)) addOnce(ps.discard, c);
             break;
         }
         case 'RESOURCE': break;
@@ -674,7 +784,13 @@ function normalizeCard(c: CardInstanceState): CardInstanceState {
 function normalizeLeader(l: unknown): PlayerState['leader'] {
     if (l == null || typeof l !== 'object') return undefined;
     const r = l as Partial<NonNullable<PlayerState['leader']>>;
-    return { id: String(r.id), deployed: r.deployed === true, exhausted: r.exhausted === true, epicActionUsed: r.epicActionUsed === true };
+    return {
+        id: String(r.id), deployed: r.deployed === true, exhausted: r.exhausted === true,
+        epicActionUsed: r.epicActionUsed === true,
+        // Only a double-sided leader carries a face. Absent stays absent: `false` would mean
+        // "on its back side", which is a different claim from "this leader has one side".
+        ...(typeof r.onStartingSide === 'boolean' ? { onStartingSide: r.onStartingSide } : {}),
+    };
 }
 
 /** CLIENT-OWNED. A complete keyframe seat with every scalar coerced and every list capped. */
@@ -690,6 +806,14 @@ function normalizePlayer(seat: Seat, r: PlayerState): PlayerState {
         cards: r.cards.slice(0, MAX_KEYFRAME_LIST).map(normalizeCard),
         deckSize: typeof r.deckSize === 'number' && Number.isFinite(r.deckSize) ? r.deckSize : undefined,
         leader: normalizeLeader(r.leader),
+        // Both stay ABSENT when the keyframe does not carry them -- absent is "not recorded",
+        // and the gate only compares each when it is there. Written as explicit keys, not a
+        // conditional spread, so a hostile non-array `resources` cannot ride through `...r`;
+        // `undefined` is dropped by the clone below, which is what keeps absent absent.
+        // `resources` is capped like every other keyframe list: the fold scans it on each
+        // MOVE in and out of the row.
+        resources: Array.isArray(r.resources) ? stringList(r.resources) : undefined,
+        baseEpicActionUsed: typeof r.baseEpicActionUsed === 'boolean' ? r.baseEpicActionUsed : undefined,
     };
 }
 
@@ -719,6 +843,10 @@ export function snapToKeyframe(s: ReducedState, kf: ReducedState): ReducedState 
     const next = clone({
         round: kf.round, phase: kf.phase, initiative: kf.initiative,
         ...(typeof kf.initiativeTaken === 'boolean' ? { initiativeTaken: kf.initiativeTaken } : {}),
+        // Keyframe-supplied and never derived (§11): the keyframe is the only authority on
+        // whose turn it is, so one that states no seat clears the stale value rather than
+        // carrying it past a round boundary. Guarded like every other seat the fold indexes by.
+        ...(isSeat(kf.active) ? { active: kf.active } : {}),
         players,
     });
     // CLIENT-OWNED. Early writers listed a token UPGRADE in the keyframe's `cards[]` as though

@@ -1,5 +1,5 @@
 import type { CardInstanceState, GameEvent, PlayerState, ReducedState } from './types';
-import { emptyState, isCompleteKeyframe, reduce } from './fold';
+import { emptyState, isCompleteKeyframe, reduce, snapToKeyframe } from './fold';
 
 export interface KeyframeMismatch { seq: string; path: string; expected: unknown; got: unknown; }
 export interface IntegrityResult { ok: boolean; mismatches: KeyframeMismatch[]; }
@@ -16,16 +16,22 @@ function sameSet(a: unknown, b: unknown): boolean {
  * GATED (reconstructable from the event model, single source of truth = the event stream):
  * `initiativeTaken`; per seat `baseHp`, `handSize`, `deckSize`, `resourcesReady`,
  * `resourcesExhausted`, `credits`, `hasForce`, the leader's `id`/`deployed`/`exhausted`/
- * `epicActionUsed`; and per in-play card matched by id: `zone`, `damage`, `exhausted`,
- * `shields`, `experience`, `statusTokens`, `upgrades` and `captured` (both as sets — attachment
- * order is not part of the model), `power`, `hp` and `keywords` (the live values `STATS`
- * records carry). `baseHp` and `deckSize` are exempt at the first keyframe only — see
- * checkKeyframes. Fields an older file's keyframe lacks (`deckSize`, `leader`, `power`,
- * `hp`, `keywords`, `initiativeTaken`) are skipped: absent is "not recorded", not "zero".
+ * `epicActionUsed`; `hand` (as a set — a hand is unordered) and `discard` (in order — the pile
+ * is); and per in-play card matched by id: `zone`, `damage`, `exhausted`, `shields`,
+ * `experience`, `statusTokens`, `upgrades` and `captured` (both as sets — attachment order is
+ * not part of the model), `power`, `hp` and `keywords` (the live values `STATS` records carry).
+ * `baseHp` and `deckSize` are exempt at the first keyframe only — see checkKeyframes. Fields an
+ * older file's keyframe lacks (`deckSize`, `leader`, `power`, `hp`, `keywords`,
+ * `initiativeTaken`) are skipped: absent is "not recorded", not "zero".
  *
- * NOT GATED (and why): `hand`/`discard` CONTENTS (only the counts are reconstructed: DRAW
- * appends to `hand[]` but nothing removes from it). The keyframe's
- * `cards` array only contains ground/space arena cards (see
+ * `hand`/`discard` CONTENTS were previously ungated, on the belief that only the counts were
+ * reconstructable. They are not: every MOVE names its card, so both lists are exact. The fold
+ * used to grow `hand[]` from DRAW and never remove, and to leave `discard` to DEFEAT — which
+ * fires AFTER the MOVE that already emptied `cards`, so no defeated unit ever reached the pile.
+ * Both are now MOVE-driven and gated here; the five vectors produced 45 mismatches before the
+ * fix and none after.
+ *
+ * The keyframe's `cards` array only contains ground/space arena cards (see
  * SwuPgnGameAdapter.buildSwuPgnPlayerState), so card-level checks are scoped to arena cards
  * by construction.
  *
@@ -87,6 +93,26 @@ function diffSeat(seq: string, seat: 1 | 2, e: PlayerState, g: PlayerState, chec
             out.push({ seq, path: `players.${seat}.${field}`, expected: e[field], got: g[field] });
         }
     }
+    // Hand and discard CONTENTS. Every MOVE names its card, so both are reconstructable and
+    // both are gated (see fold.applyMoveCounts). A hand is unordered, so it compares as a set;
+    // a discard pile is ordered (spec §11) and compares in order.
+    if (!sameSet(e.hand, g.hand)) {
+        out.push({ seq, path: `players.${seat}.hand`, expected: e.hand, got: g.hand });
+    }
+    if (JSON.stringify(e.discard ?? []) !== JSON.stringify(g.discard ?? [])) {
+        out.push({ seq, path: `players.${seat}.discard`, expected: e.discard, got: g.discard });
+    }
+    // Resource-row MEMBERSHIP, as a set -- the row's order is not part of the model, and the
+    // ready/exhausted split is carried by the two counts, not by this list. Compared only when
+    // the keyframe carries it, so a file written before `resources` existed still passes.
+    if (Array.isArray(e.resources) && !sameSet(e.resources, g.resources)) {
+        out.push({ seq, path: `players.${seat}.resources`, expected: e.resources, got: g.resources });
+    }
+    // The BASE's Epic Action. Compared only when the keyframe states it -- a base without one
+    // carries no flag, and neither does a file written before this existed.
+    if (typeof e.baseEpicActionUsed === 'boolean' && e.baseEpicActionUsed !== (g.baseEpicActionUsed ?? false)) {
+        out.push({ seq, path: `players.${seat}.baseEpicActionUsed`, expected: e.baseEpicActionUsed, got: g.baseEpicActionUsed ?? false });
+    }
     // Like baseHp, the starting deck is not in the stream, so the first keyframe supplies it.
     if (checkBaseHp && typeof e.deckSize === 'number' && e.deckSize !== g.deckSize) {
         out.push({ seq, path: `players.${seat}.deckSize`, expected: e.deckSize, got: g.deckSize });
@@ -94,6 +120,11 @@ function diffSeat(seq: string, seat: 1 | 2, e: PlayerState, g: PlayerState, chec
     // The leader is compared once a keyframe has named it (its id comes from the keyframe or
     // a DEPLOY_LEADER; before either the fold has no leader to be wrong about).
     if (e.leader && g.leader) {
+        // `onStartingSide` is only carried for a double-sided leader, so it is compared only
+        // when the keyframe states it -- absent means "not a flipping leader", not `false`.
+        if (typeof e.leader.onStartingSide === 'boolean' && e.leader.onStartingSide !== g.leader.onStartingSide) {
+            out.push({ seq, path: `players.${seat}.leader.onStartingSide`, expected: e.leader.onStartingSide, got: g.leader.onStartingSide });
+        }
         for (const field of ['id', 'deployed', 'exhausted', 'epicActionUsed'] as const) {
             if (e.leader[field] !== g.leader[field]) {
                 out.push({ seq, path: `players.${seat}.leader.${field}`, expected: e.leader[field], got: g.leader[field] });
@@ -126,6 +157,12 @@ function diff(seq: string, expected: ReducedState, got: ReducedState, checkBaseH
     if (typeof expected.initiativeTaken === 'boolean' && expected.initiativeTaken !== (got.initiativeTaken ?? false)) {
         out.push({ seq, path: 'initiativeTaken', expected: expected.initiativeTaken, got: got.initiativeTaken ?? false });
     }
+    // `active` is deliberately NOT compared. It is supplied by keyframes, not reconstructed:
+    // the engine has not yet chosen an action-phase active player when PHASE_START fires, so the
+    // event stream cannot state it, and deriving it from the actions would mean modelling passing
+    // and priority -- the rules knowledge this format exists to spare a reader. A keyframe is
+    // therefore the only authority, and comparing the fold against it would only ever restate
+    // that. See spec §11 and §14.
     for (const seat of [1, 2] as const) {
         const e = expected.players[seat];
         const g = got.players[seat];
@@ -168,7 +205,17 @@ export function checkKeyframes(events: GameEvent[]): IntegrityResult {
             }
             mismatches.push(...diff(e.seq, e.keyframe, s, seenKeyframe));
             seenKeyframe = true;
-            s = JSON.parse(JSON.stringify(e.keyframe));
+            // CLIENT-OWNED. Upstream deep-clones the RAW keyframe here. `isCompleteKeyframe`
+            // only proves cards/hand/discard are arrays and each card is some object -- it
+            // validates no per-card field -- so a card with no `statusTokens` or no `upgrades`
+            // rode straight into `reduce()`, and the next STATUS_TOKEN threw on
+            // `c.statusTokens[token]` or the next arena exit threw on `c.upgrades.indexOf`.
+            // Harmless upstream, where checkKeyframes runs on the writer's own state; fatal
+            // here, where it runs on an uploaded file inside a render-time useMemo with no
+            // error boundary, so one shared file blanked the Replay page for everyone who
+            // opened it. Snap through the same normalization the fold uses, which also makes
+            // the gate measure what the viewer actually folds.
+            s = snapToKeyframe(s, e.keyframe);
             continue;
         }
         s = reduce(s, e);

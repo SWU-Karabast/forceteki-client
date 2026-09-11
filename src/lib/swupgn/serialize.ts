@@ -1,14 +1,19 @@
 import type { SwuPgnDocument, Header } from './types';
 import { render } from './render';
 
-// Header tag order mirrors parse()'s required set; optional Format is emitted when present.
+// Header tag order mirrors parse()'s required set; every optional tag (§5.2) is emitted when
+// present and skipped when absent, so an export carries back out exactly what came in — a
+// dropped `RecorderErrors` or `Match` would quietly relabel a partial file as complete, or
+// orphan a game from its match.
 const HEADER_ORDER: [keyof Header, string][] = [
-    ['game', 'Game'], ['gameId', 'GameId'], ['date', 'Date'], ['format', 'Format'],
+    ['game', 'Game'], ['gameId', 'GameId'], ['date', 'Date'], ['endDate', 'EndDate'],
+    ['format', 'Format'],
     ['cardPool', 'CardPool'], ['engine', 'Engine'], ['seed', 'Seed'],
     ['perspective', 'Perspective'], ['p1Id', 'P1Id'], ['p2Id', 'P2Id'],
     ['p1', 'P1'], ['p2', 'P2'], ['p1Leader', 'P1Leader'], ['p1Base', 'P1Base'],
     ['p2Leader', 'P2Leader'], ['p2Base', 'P2Base'], ['result', 'Result'],
     ['reason', 'Reason'], ['rounds', 'Rounds'],
+    ['match', 'Match'], ['gameNumber', 'GameNumber'], ['recorderErrors', 'RecorderErrors'],
 ];
 
 function esc(v: string): string {
