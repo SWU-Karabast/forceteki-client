@@ -1,6 +1,9 @@
 import type { GameEvent, ReducedState, Seat } from '@/lib/swupgn';
 import { isSeat } from '@/lib/swupgn';
 import { parseSetId } from './swupgnBoardAdapter';
+// Events a player chose to do (spec §16): a beat of playback, and a change of whose action it is.
+import { NUMBERED_ACTIONS as NUMBERED } from './swupgnMoves';
+
 
 /**
  * The cues the live board shows around the cards, rebuilt per frame from the file so a replay
@@ -9,9 +12,6 @@ import { parseSetId } from './swupgnBoardAdapter';
  * preview in the opponent tray), and how long a frame should hold during playback.
  * Every one is a pure function of the event stream; nothing here assumes a rule.
  */
-
-/** Events a player chose to do (spec §16): a beat of playback, and a change of whose action it is. */
-const NUMBERED = new Set<GameEvent['t']>(['PLAY', 'PLAY_EVENT', 'PLAY_UPGRADE', 'PLAY_SMUGGLE', 'DEPLOY_LEADER', 'ATTACK', 'PASS', 'CLAIM_INITIATIVE']);
 
 /**
  * Whose action it is on each frame of an action phase; `undefined` outside one (the trays

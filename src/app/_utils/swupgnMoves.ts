@@ -8,8 +8,21 @@ export interface ReplayMove {
     label: string;
 }
 
+/**
+ * The eight event types §16 NUMBERS in the story — the things a player chose to do. One copy,
+ * because two drifted lists of the same spec list is how the story-tab numbering broke before.
+ * `storySeek` uses it for click-to-seek, `replayLiveCues` for what counts as a playback beat.
+ */
+export const NUMBERED_ACTIONS = new Set<GameEvent['t']>([
+    'PLAY', 'PLAY_EVENT', 'PLAY_UPGRADE', 'PLAY_SMUGGLE', 'DEPLOY_LEADER', 'ATTACK', 'PASS',
+    'CLAIM_INITIATIVE',
+]);
+
+// Rows the move list offers as click-to-seek targets. Wider than §16's numbered set: a
+// DEFEAT and the GAME_END are worth seeking to even though the story indents them, and so
+// is a leader flipping, which is the only record that says a double-sided leader changed.
 const MOVE_TYPES = new Set<GameEvent['t']>([
-    'PLAY', 'PLAY_EVENT', 'PLAY_UPGRADE', 'PLAY_SMUGGLE', 'DEPLOY_LEADER',
+    'PLAY', 'PLAY_EVENT', 'PLAY_UPGRADE', 'PLAY_SMUGGLE', 'DEPLOY_LEADER', 'LEADER_FLIP',
     'ATTACK', 'PASS', 'CLAIM_INITIATIVE', 'DEFEAT', 'GAME_END',
 ]);
 

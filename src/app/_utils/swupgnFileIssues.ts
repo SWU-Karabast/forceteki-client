@@ -16,7 +16,7 @@ export interface FileIssue {
 /** Every `t` this reader understands (spec §10). Anything else folds as "do nothing" (§18). */
 const KNOWN_EVENT_TYPES = new Set<string>([
     'PLAY', 'PLAY_EVENT', 'PLAY_UPGRADE', 'PLAY_SMUGGLE', 'DEPLOY_LEADER', 'ATTACK', 'PASS',
-    'CLAIM_INITIATIVE', 'CHOICE', 'MULLIGAN', 'KEEP_HAND', 'MODAL_CHOICE', 'ABILITY_ACTIVATE',
+    'CLAIM_INITIATIVE', 'CHOICE', 'MULLIGAN', 'KEEP_HAND', 'MODAL_CHOICE', 'ABILITY_ACTIVATE', 'LEADER_FLIP',
     'DAMAGE', 'HEAL', 'DEFEAT', 'EXHAUST', 'READY', 'EXHAUST_RESOURCES', 'READY_RESOURCES', 'DRAW', 'DISCARD', 'RESOURCE', 'SHUFFLE',
     'CREATE_TOKEN', 'MOVE', 'CAPTURE', 'RESCUE', 'TAKE_CONTROL', 'SHIELD_GAIN', 'SHIELD_USE',
     'EXPERIENCE_GAIN', 'STATUS_TOKEN', 'STATS', 'OVERWHELM', 'SEARCH', 'REVEAL', 'TRIGGER',
@@ -131,6 +131,8 @@ export function writerGeneration(doc: SwuPgnDocument): string[] {
         out.push('Keyframes carry no captives: a captured unit is filed under its captor from CAPTURE records alone and never verified (§22).');
     }
     const resourced = new Set<string>();
+    const leaderIds = new Set([doc.header.p1Leader, doc.header.p2Leader].map(String));
+    let baseEpicByCardId = 0;
     let controlNoZone = 0;
     let captureNoCaptor = 0;
     let exitWithHost = 0;
@@ -151,6 +153,12 @@ export function writerGeneration(doc: SwuPgnDocument): string[] {
             readyResource++;
         } else if (e.t === 'GAME_END' && !/\.game-end$/.test(String(e.seq))) {
             gameEndShared++;
+        } else if (e.t === 'ABILITY_ACTIVATE' && e.epic === true
+            && !/^base@[12]$/.test(String(e.card)) && !leaderIds.has(String(e.card))) {
+            // §22: a base activating its own Epic Action used to name itself by card id. Only
+            // `base@N` resolves to a seat (§6.3), so the spent flag is lost. An epic activation
+            // that names neither a base nor either seat's leader is that early writer.
+            baseEpicByCardId++;
         }
     }
     if (controlNoZone > 0) {
@@ -170,6 +178,9 @@ export function writerGeneration(doc: SwuPgnDocument): string[] {
     }
     if (gameEndShared > 0) {
         out.push('GAME_END shares its seq with the phase end (early writer): a link to that moment lands on the first of the two.');
+    }
+    if (baseEpicByCardId > 0) {
+        out.push(`${plural(baseEpicByCardId, 'Epic Action')} activated by a card the file names by id rather than base@N (early writer): a base's spent Epic Action is not shown (§22).`);
     }
     if (/^forceteki@\d+\.\d+\.\d+$/.test(doc.header.engine)) {
         out.push(`[Engine "${doc.header.engine}"] is a package version, not a commit: the build that wrote this file cannot be pinpointed (§5.3).`);

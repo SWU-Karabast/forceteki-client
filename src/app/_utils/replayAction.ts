@@ -113,6 +113,11 @@ export function frameAction(e: GameEvent | undefined, n: NameResolver): FrameAct
             return { label: `${who(e.p)} keeps their hand`, highlight: [], kind: 'other' };
         case 'CLAIM_INITIATIVE':
             return { label: `${who(e.p)} claims initiative`, highlight: [], kind: 'other' };
+        // A double-sided leader turning over is a visible beat, not mechanism: its title,
+        // aspects and traits all change and no other record implies it (§16 words it exactly
+        // this way, and render.ts prints the same line).
+        case 'LEADER_FLIP':
+            return { label: `${who(e.p)} flips ${nm(e.card)}`, highlight: [e.card], kind: 'other' };
         case 'PASS':
             return { label: `${who(e.p)} passes`, highlight: [], kind: 'other' };
         case 'GAME_END':

@@ -143,4 +143,37 @@ describe('writerGeneration — which 1.0 writer wrote the file (§22, §22.1)', 
         const doc = current();
         expect(() => writerGeneration({ ...doc, events: [null, 5, { t: 'ROUND_START', keyframe: { players: { 1: null, 2: 'x' } } }] as unknown as GameEvent[] })).not.toThrow();
     });
+
+    it('detects a base Epic Action activated by card id instead of base@N (§22)', () => {
+        const doc = current();
+        // Neither a `base@N` ref nor either seat's leader id: the early-writer shape.
+        const events: GameEvent[] = [...doc.events, ev({ t: 'ABILITY_ACTIVATE', p: 1, card: 'SOR#028', epic: true })];
+        const notes = writerGeneration({ ...doc, events });
+        expect(notes).toEqual([expect.stringContaining('1 Epic Action activated by a card the file names by id')]);
+    });
+
+    it('does not flag a base@N ref or a leader id activating its Epic Action', () => {
+        const doc = current();
+        const events: GameEvent[] = [
+            ...doc.events,
+            ev({ t: 'ABILITY_ACTIVATE', p: 1, card: 'base@1', epic: true }),
+            ev({ t: 'ABILITY_ACTIVATE', p: 1, card: doc.header.p1Leader, epic: true }),
+            // A non-epic activation by card id is unremarkable either way.
+            ev({ t: 'ABILITY_ACTIVATE', p: 1, card: 'SOR#028', epic: false }),
+        ];
+        expect(writerGeneration({ ...doc, events })).toEqual([]);
+    });
+});
+
+describe('every event type the fold handles is a known type (§10, §18)', () => {
+    it('does not report a record this reader folds as unknown', () => {
+        // The list is what tells a reader "this file uses something I do not understand".
+        // A type the fold has a case for must never appear in it: LEADER_FLIP did, so a
+        // conformant file with a flipped leader reported a format issue it did not have.
+        const doc = withHeader({}, [
+            { seq: 'R1.A.1', t: 'LEADER_FLIP', p: 1, card: 'TWI#017', onStartingSide: false },
+        ] as GameEvent[]);
+
+        expect(fileIssues(doc).filter((i) => /unknown event type/.test(i.message))).toEqual([]);
+    });
 });

@@ -1,4 +1,5 @@
 import type { GameEvent } from '@/lib/swupgn';
+import { NUMBERED_ACTIONS as NUMBERED } from './swupgnMoves';
 
 /**
  * Maps the numbered lines of a `%%% STORY` back to frames, using the story's own numbering
@@ -11,8 +12,6 @@ import type { GameEvent } from '@/lib/swupgn';
  * Keys: `R{round}` for a round banner, `R{round}.{phaseOrdinal}.{n}` for the n-th numbered
  * action of that round's k-th phase block (k counts ` ── phase ──` lines since the banner).
  */
-const NUMBERED = new Set<GameEvent['t']>(['PLAY', 'PLAY_EVENT', 'PLAY_UPGRADE', 'PLAY_SMUGGLE', 'DEPLOY_LEADER', 'ATTACK', 'PASS', 'CLAIM_INITIATIVE']);
-
 export function storySeekIndex(events: GameEvent[]): Map<string, number> {
     const m = new Map<string, number>();
     let round = 0;
