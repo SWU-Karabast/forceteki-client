@@ -34,6 +34,10 @@ export function formatRoundPhase(seq: string): string {
  * record: otherwise the move list highlights the previous action while the attacker is being
  * chosen and exhausted on screen. A file whose writer stamped no `for` simply has no entries
  * here, and every span starts where it always did.
+ *
+ * This reports the first index carrying each link and nothing more — it does NOT promise the
+ * links are sanely ordered, because `for` is legal on ANY record and these files are uploaded.
+ * The caller decides whether a filed frame is usable (see `moveFrames` in Replay.context).
  */
 export function firstFrameByAction(events: Array<{ for?: string }>): Map<string, number> {
     const out = new Map<string, number>();
@@ -68,10 +72,20 @@ function formatSpan(ms: number): string {
  * unfinished game, or a delivery path that never set `GameNumber` shows fewer parts, never a
  * guess. Empty string when the file states none.
  */
+/**
+ * ISO-8601 with an explicit offset (`Z` or `±hh:mm`). §5.2 says `Date`/`EndDate` are UTC, but
+ * nothing validates it and these files are uploaded: `Date.parse` reads an offset-less
+ * timestamp as LOCAL time, which is finite and plausible, so the existing guards pass and the
+ * duration is silently wrong by the viewer's UTC offset. A stamp that does not say its zone
+ * is treated as not recorded.
+ */
+const utcMs = (v: string | undefined): number =>
+    (v && /(?:Z|[+-]\d{2}:?\d{2})$/.test(v) ? Date.parse(v) : NaN);
+
 export function formatGameMeta(h: { date?: string; endDate?: string; match?: string; gameNumber?: number }): string {
     const parts: string[] = [];
-    const start = h.date ? Date.parse(h.date) : NaN;
-    const end = h.endDate ? Date.parse(h.endDate) : NaN;
+    const start = utcMs(h.date);
+    const end = utcMs(h.endDate);
     // A negative span is a clock that went backwards between the two stamps: say nothing
     // rather than "-3m".
     if (Number.isFinite(start) && Number.isFinite(end) && end >= start) {

@@ -157,14 +157,25 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     }, [events]);
     // A move's span starts at the first record filed under it — its own, or an earlier one the
     // writer stamped with `for` (spec §9.1: an attack's target CHOICE and the attacker's
-    // EXHAUST are numbered before the ATTACK they belong to). Still ascending, because a
-    // precursor is numbered after the previous action's own record.
+    // EXHAUST are numbered before the ATTACK they belong to).
+    //
+    // `currentMoveIndex` below scans this array and BREAKS at the first frame past the current
+    // one, so it must be ascending. A conformant writer only stamps the contiguous run
+    // immediately before an action, but `for` is legal on any record and this reads uploaded
+    // files: one stray early record naming a late action pulled that move's frame backwards
+    // and the scan then stopped early, leaving a stale row highlighted for the rest of a
+    // forward scrub. So a filed frame is taken only when it actually sits between the previous
+    // move and this one — otherwise the move's own frame stands, and the array is ascending by
+    // construction rather than by assumption.
     const moveFrames = useMemo(() => {
         const filedUnder = firstFrameByAction(events);
+        let prev = -1;
         return moves.map((mv) => {
             const own = seqToFrame.get(mv.seq) ?? -1;
             const filed = filedUnder.get(mv.seq);
-            return own >= 0 && filed != null ? Math.min(own, filed) : own;
+            const start = own >= 0 && filed != null && filed > prev && filed < own ? filed : own;
+            if (start >= 0) prev = start;
+            return start;
         });
     }, [moves, seqToFrame, events]);
 

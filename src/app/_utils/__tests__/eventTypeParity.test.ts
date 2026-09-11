@@ -19,6 +19,13 @@ import path from 'path';
  * every `case '<TYPE>'` in it to be accounted for in each list — handled, or deliberately named
  * in the exclusion set below with the reason. Adding an event type to `fold.ts` and nowhere
  * else fails here, which is the only thing that has ever caught this class.
+ *
+ * Two structural assumptions, stated because this reads source text rather than values:
+ *  - each list stays ONE flat array literal of quoted names, not `[...A, ...B]` or `.concat()`;
+ *  - `fold.ts` and `replayAction.ts` each keep exactly ONE switch over `GameEvent['t']`, since
+ *    a second one would silently widen the sets and could hide a real gap.
+ * Break either and this fails loudly (never vacuously — the size guard below covers that), but
+ * for the wrong reason. Restructure the lists and this test has to move with them.
  */
 const SRC = (p: string) => readFileSync(path.join(__dirname, '..', p), 'utf-8');
 const LIB = (p: string) => readFileSync(path.join(__dirname, '../../../lib/swupgn', p), 'utf-8');
@@ -51,6 +58,10 @@ describe('event-type parity with the fold switch', () => {
         // are found, every assertion below would pass vacuously.
         expect(FOLD_TYPES.size).toBeGreaterThan(25);
         expect(FOLD_TYPES.has('LEADER_FLIP')).toBe(true);
+        // And the one-switch-per-file assumption the extraction rests on.
+        for (const [file, src] of [['fold.ts', LIB('fold.ts')], ['replayAction.ts', SRC('replayAction.ts')]] as const) {
+            expect((src.match(/\bswitch\s*\(/g) ?? []).length, `${file} has one switch`).toBe(1);
+        }
     });
 
     it('swupgnFileIssues.KNOWN_EVENT_TYPES covers every type the fold folds', () => {

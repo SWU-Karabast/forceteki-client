@@ -68,6 +68,13 @@ describe('formatGameMeta (spec §5.2)', () => {
         // A clock that went backwards between the two stamps says nothing, never "-3m".
         expect(formatGameMeta({ date: '2026-09-11T20:12:00.000Z', endDate: start })).toBe('');
         expect(formatGameMeta({ date: 'not a date', endDate: start })).toBe('');
+        // A stamp with no zone is finite and plausible, so every other guard passes — but
+        // Date.parse reads it as LOCAL time, so the duration would be wrong by the viewer's
+        // offset. §5.2 says these are UTC; a stamp that does not say so is not recorded.
+        expect(formatGameMeta({ date: '2026-09-11T20:00:00', endDate: '2026-09-11T20:12:31' })).toBe('');
+        expect(formatGameMeta({ date: start, endDate: '2026-09-11T20:12:31' })).toBe('');
+        // An explicit non-UTC offset is still explicit, so it is trusted and normalised.
+        expect(formatGameMeta({ date: '2026-09-11T16:00:00-04:00', endDate: start })).toBe('0s');
     });
 });
 
@@ -87,5 +94,43 @@ describe('LEADER_FLIP reaches the caption and the move list (spec §16)', () => 
         expect(buildMoveList([flip], names)).toEqual([
             { seq: 'R2.A.3', t: 'LEADER_FLIP', player: 'Player 1', label: 'Player 1 flips Chancellor Palpatine' },
         ]);
+    });
+});
+
+describe('a move span never runs backwards (Replay.context moveFrames)', () => {
+    // `currentMoveIndex` scans moveFrames and BREAKS at the first frame past the current one,
+    // so the array must ascend. `for` is legal on ANY record and these files are uploaded, so
+    // one stray early record naming a late action used to pull that move's frame backwards and
+    // stop the scan early, freezing a stale row highlighted for the rest of a forward scrub.
+    // This is the context's rule, kept here because that is where firstFrameByAction lives.
+    const spanStarts = (events: Array<{ for?: string }>, moves: Array<{ seq: string; own: number }>) => {
+        const filedUnder = firstFrameByAction(events);
+        let prev = -1;
+        return moves.map((mv) => {
+            const filed = filedUnder.get(mv.seq);
+            const start = mv.own >= 0 && filed != null && filed > prev && filed < mv.own ? filed : mv.own;
+            if (start >= 0) prev = start;
+            return start;
+        });
+    };
+
+    it('uses a filed frame that really sits between the two moves', () => {
+        // The normal case: the attack's target CHOICE at frame 2, the ATTACK itself at 3.
+        const events = [{}, {}, { for: 'R1.A.2' }, {}] as Array<{ for?: string }>;
+        expect(spanStarts(events, [{ seq: 'R1.A.1', own: 0 }, { seq: 'R1.A.2', own: 3 }])).toEqual([0, 2]);
+    });
+
+    it('ignores a stray link that would run the span backwards', () => {
+        const events = [{}, {}, {}, {}, {}, { for: 'R1.A.3' }] as Array<{ for?: string }>;
+        const frames = spanStarts(events, [
+            { seq: 'R1.A.1', own: 0 }, { seq: 'R1.A.2', own: 100 }, { seq: 'R1.A.3', own: 150 },
+        ]);
+        expect(frames).toEqual([0, 100, 150]);
+        expect([...frames].sort((a, b) => a - b)).toEqual(frames);
+    });
+
+    it('ignores a link at or after the move it claims to precede', () => {
+        const events = Array.from({ length: 6 }, (_, i) => (i === 5 ? { for: 'R1.A.2' } : {}));
+        expect(spanStarts(events, [{ seq: 'R1.A.1', own: 0 }, { seq: 'R1.A.2', own: 4 }])).toEqual([0, 4]);
     });
 });
