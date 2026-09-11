@@ -280,6 +280,16 @@ export interface AdaptOptions {
  * bases): the fold only says who CONTROLS it. The board marks a card held by someone other
  * than its owner as stolen (`TAKE_CONTROL`, spec §10.1), and files captives under their
  * captor while they stay the other player's cards. Tokens have no owner but their controller.
+ *
+ * A card BOTH decks contain has no owner here, on purpose. DECKS lists base ids, and the `:N`
+ * copy suffix that makes an instance unique (§6.1) is assigned during the game, not in the
+ * deck list — so for a card both players run, nothing in the file says whose copy `SOR#232:2`
+ * is. A single id → seat map cannot express that, and silently kept whichever deck parsed
+ * last, which marked every copy in the OTHER seat's hand as stolen: on the `organic` vector,
+ * where both decks are identical, four of Player 1's hand cards wore the stolen mask and none
+ * of Player 2's did. Ambiguous ownership is dropped instead, so `own()` falls back to the
+ * controller and the card reads as unstolen — the honest answer when the file cannot say.
+ * A card only one player runs still resolves, so a genuine `TAKE_CONTROL` still shows.
  */
 // `adaptState` runs on EVERY frame change, and the owner map is a pure function of the
 // document, which never changes while a replay is open. Keyed by the document object so a
@@ -294,7 +304,15 @@ export function ownerSeatMap(doc: SwuPgnDocument): Map<string, Seat> {
         return cached;
     }
     const out = new Map<string, Seat>();
-    const put = (id: unknown, seat: Seat) => { if (typeof id === 'string' && id) out.set(baseId(id), seat); };
+    // Tracked per id so a second seat claiming the same card marks it ambiguous rather than
+    // overwriting the first.
+    const claimed = new Map<string, Seat | 'both'>();
+    const put = (id: unknown, seat: Seat) => {
+        if (typeof id !== 'string' || !id) return;
+        const key = baseId(id);
+        const prev = claimed.get(key);
+        claimed.set(key, prev == null || prev === seat ? seat : 'both');
+    };
     put(doc.header.p1Leader, 1); put(doc.header.p1Base, 1);
     put(doc.header.p2Leader, 2); put(doc.header.p2Base, 2);
     for (const d of Array.isArray(doc.decks) ? doc.decks : []) {
@@ -302,6 +320,9 @@ export function ownerSeatMap(doc: SwuPgnDocument): Map<string, Seat> {
         put(d.leader, d.p); put(d.base, d.p);
         for (const entry of Array.isArray(d.deck) ? d.deck : []) put(Array.isArray(entry) ? entry[0] : undefined, d.p);
         for (const entry of Array.isArray(d.sideboard) ? d.sideboard : []) put(Array.isArray(entry) ? entry[0] : undefined, d.p);
+    }
+    for (const [id, seat] of claimed) {
+        if (seat !== 'both') out.set(id, seat);
     }
     ownerSeatMapCache.set(doc, out);
     return out;

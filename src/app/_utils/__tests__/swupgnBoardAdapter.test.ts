@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { cardFromId, cardFromInstance, ZONE_MAP, adaptState } from '../swupgnBoardAdapter';
+import { cardFromId, cardFromInstance, ZONE_MAP, adaptState, ownerSeatMap } from '../swupgnBoardAdapter';
 import { statOf } from '../swupgnCardStats';
-import { parse, stateAt, type ReducedState, type Seat, type CardInstanceState } from '@/lib/swupgn';
+import { parse, stateAt, foldFrames, normalizeEvents, type ReducedState, type Seat, type CardInstanceState } from '@/lib/swupgn';
 import { readFileSync } from 'fs';
 import path from 'path';
 
@@ -556,5 +556,62 @@ describe('every §11 field reaches the board (spec conformance, forceteki 3c4ed3
         expect(gs.players.p1.cardPiles.credits).toHaveLength(2);
         expect(gs.players.p1.forceToken.active).toBe(true);
         expect(gs.players.p2.forceToken.active).toBe(false);
+    });
+});
+
+describe('ownerSeatMap — a card both players run has no owner', () => {
+    // The board draws a stolen mask whenever controllerId !== ownerId. DECKS lists BASE ids,
+    // and the `:N` copy suffix that makes an instance unique (§6.1) is assigned during the
+    // game, so for a card both decks contain nothing in the file says whose copy this is.
+    // A single id -> seat map kept whichever deck parsed last, and every copy in the other
+    // seat's hand wore the mask.
+    const docWith = (p1: string[], p2: string[]) => ({
+        header: { p1Leader: 'SOR#010', p1Base: 'SOR#027', p2Leader: 'SOR#005', p2Base: 'SOR#029' },
+        decks: [
+            { p: 1, deck: p1.map((id) => [id, 1]) },
+            { p: 2, deck: p2.map((id) => [id, 1]) },
+        ],
+    }) as unknown as Parameters<typeof ownerSeatMap>[0];
+
+    it('drops a shared card and keeps a card only one player runs', () => {
+        const m = ownerSeatMap(docWith(['A#1', 'SHARED#9'], ['B#2', 'SHARED#9']));
+        expect(m.get('A#1')).toBe(1);
+        expect(m.get('B#2')).toBe(2);
+        expect(m.has('SHARED#9'), 'both decks run it — ownership is unknowable').toBe(false);
+    });
+
+    it('a card listed twice in the SAME deck still resolves', () => {
+        // Two copies of one card is the normal case, not an ambiguity.
+        expect(ownerSeatMap(docWith(['A#1', 'A#1'], ['B#2'])).get('A#1')).toBe(1);
+    });
+
+    it('the leaders and bases in the header still resolve', () => {
+        const m = ownerSeatMap(docWith(['A#1'], ['B#2']));
+        expect(m.get('SOR#010')).toBe(1);
+        expect(m.get('SOR#029')).toBe(2);
+    });
+
+    it('no card in either hand reads as stolen on a vector where both decks are identical', () => {
+        // `organic` has 5/5 deck overlap. Before the fix, four of Player 1's hand cards were
+        // marked stolen and none of Player 2's were.
+        const doc = parse(readFileSync(
+            path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors/organic.swupgn'), 'utf-8',
+        ));
+        const frames = foldFrames(normalizeEvents(doc.events));
+        const gs = adaptState(frames[frames.length - 1], doc, { 1: 'P1', 2: 'P2' }, { nameOf: (id) => id });
+        for (const seat of ['P1', 'P2'] as const) {
+            const stolen = (gs.players[seat].cardPiles.hand as Array<{ uuid: string; ownerId: string; controllerId: string }>)
+                .filter((c) => c.ownerId !== c.controllerId);
+            expect(stolen.map((c) => c.uuid), `${seat} hand`).toEqual([]);
+        }
+    });
+
+    it('a genuine TAKE_CONTROL still reads as stolen', () => {
+        // The fix must not blind the board to a real steal: SOR#128 is only in P1's deck, so
+        // it still resolves to seat 1, and P2 holding it is a mismatch the board should draw.
+        const doc = docWith(['SOR#128'], ['B#2']);
+        expect(ownerSeatMap(doc).get('SOR#128')).toBe(1);
+        const card = cardFromId('SOR#128', 'groundArena', 'P2', 'P1');
+        expect(card.controllerId).not.toBe(card.ownerId);
     });
 });
