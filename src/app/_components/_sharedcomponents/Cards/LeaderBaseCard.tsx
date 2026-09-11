@@ -14,6 +14,7 @@ import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
 import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
+import UpgradeStrip, { UpgradeAspect } from '@/app/_components/_sharedcomponents/Cards/UpgradeStrip';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -205,27 +206,24 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         };
     }
 
-    const capturedCardBackground = (card: ICardData) => {
-        if (!card.aspects){
-            return null
-        }
+    const getUpgradeStripBg = (card: ICardData):UpgradeAspect => {
         if (card.aspects.includes('villainy') && card.aspects.length === 1) {
-            return 'upgrade-black.png';
+            return 'villainy';
         }
         if (card.aspects.includes('heroism') && card.aspects.length === 1) {
-            return 'upgrade-white.png';
+            return 'heroism';
         }
         switch (true) {
             case card.aspects.includes('aggression'):
-                return 'upgrade-red.png';
+                return 'aggression';
             case card.aspects.includes('command'):
-                return 'upgrade-green.png';
+                return 'command';
             case card.aspects.includes('cunning'):
-                return 'upgrade-yellow.png';
+                return 'cunning';
             case card.aspects.includes('vigilance'):
-                return 'upgrade-blue.png';
+                return 'vigilance';
             default:
-                return 'upgrade-grey.png';
+                return 'neutral';
         }
     };
 
@@ -239,6 +237,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
     const styles = {
         card: {
+            flex: 1,
             backgroundColor: 'black',
             borderRadius: '0.5rem',
             width: '100%',
@@ -256,6 +255,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             '-webkit-user-select': 'none',   /* Prevents image selection */
         },
         deployedPlaceholder: {
+            flex: 1,
             backgroundColor: 'transparent',
             borderRadius: '0.5rem',
             width: '100%',
@@ -403,19 +403,17 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             `
         },
         capturedCardsDivider:{
-            fontSize: '8px',
+            top: '-40%',
             textAlign: 'center',
             color: 'white',
             width: '100%',
             backgroundColor:'black',
-            mb: isConnectedPlayer ? '0px' : '-2px',
-            mt: isConnectedPlayer ? '-2px' : '0px',
-            position:'relative',
-            zIndex: -1
+            position:'absolute',
+            zIndex: 2,
+            fontSize: 'clamp(4px, .65vw, 12px)'
         },
         capturedCardIcon:{
             width: '100%',
-            aspectRatio: '7/1',
             display: 'flex',
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
@@ -423,9 +421,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             justifyContent: 'center',
             boxSizing: 'content-box',
             position: 'relative',
-            mb: isConnectedPlayer ? '0px' : '-4px',
-            mt: isConnectedPlayer ? '-4px' : '0px',
-            zIndex: 0, // Establish stacking context
         },
         capturedCardBackground: {
             position: 'absolute',
@@ -439,33 +434,21 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             zIndex: 1, // Background layer
         },
         capturedCardName: {
+            position: 'absolute',
+            lineHeight: 'normal',
             fontSize: 'clamp(4px, .65vw, 12px)',
-            marginTop: isConnectedPlayer ? '-2%' : '1%',
             fontWeight: '600',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             color: 'black',
             textAlign: 'center',
             userSelect: 'none',
-            position: 'relative',
-            zIndex: 2, // Text layer above background
+            zIndex: 1, // Text layer above background
         },
     };
 
     const capturedCardsDecoration = (
-        <Box sx={{
-            width: '100%',
-            position: 'relative',
-            mb: isConnectedPlayer ? '-4%' : '0px',
-            mt: isConnectedPlayer ? '0px' : '-4%',
-            // sits above the adjacent upgrade strip so the "Captured" divider stays fully legible
-            zIndex: 2
-        }}>
-            {!isConnectedPlayer && (
-                <Typography sx={styles.capturedCardsDivider}>
-                    Captured
-                </Typography>
-            )}
+        <Box sx={{ flex: 1, position: 'relative' }}>
             {capturedCards.map((capturedCard: ICardData) => (
                 <Box
                     key={`captured-${capturedCard.uuid}`}
@@ -481,39 +464,28 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     data-card-type={capturedCard.printedType}
                     data-card-id={capturedCard.setId ? capturedCard.setId.set + '_' + capturedCard.setId.number : capturedCard.id}
                 >
+                    <UpgradeStrip aspect={getUpgradeStripBg(card)} sx={{ maxWidth: '100%' }} />
                     {/* Background image element positioned behind text */}
-                    <Box
+                    {/* <Box
                         sx={{
                             ...styles.capturedCardBackground,
                             backgroundImage: `url(${capturedCardBackground(capturedCard)})`,
                             border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
                         }}
-                    />
-                    <Typography sx={{
-                        ...styles.capturedCardName
-                    }}>
+                    /> */}
+                    <Typography sx={styles.capturedCardName}>
                         {capturedCard.name}
                     </Typography>
+
                 </Box>
             ))}
-            {isConnectedPlayer && (
-                <Typography sx={styles.capturedCardsDivider}>
-                    Captured
-                </Typography>
-            )}
         </Box>
     )
 
     // Base upgrades (via the Fortify keyword) render as aspect-colored strips tucked against the base,
     // mirroring the captured-cards decoration above.
     const upgradesDecoration = (
-        <Box sx={{
-            width: '100%',
-            position: 'relative',
-            mb: isConnectedPlayer ? '-4%' : '0px',
-            mt: isConnectedPlayer ? '0px' : '-4%',
-            zIndex: 1
-        }}>
+        <Box sx={{ flex: 1, position: 'relative', mb: isConnectedPlayer ? '0' : '-2px' }}>
             {upgrades.map((upgrade: ICardData) => (
                 <Box
                     key={`base-upgrade-${upgrade.uuid}`}
@@ -529,17 +501,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     data-card-type={upgrade.printedType}
                     data-card-id={upgrade.setId ? upgrade.setId.set + '_' + upgrade.setId.number : upgrade.id}
                 >
+                    <UpgradeStrip aspect={getUpgradeStripBg(upgrade)} />
                     {/* Background image element positioned behind text */}
-                    <Box
+                    {/* <Box
                         sx={{
                             ...styles.capturedCardBackground,
                             backgroundImage: `url(${capturedCardBackground(upgrade)})`,
                             border: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',
                         }}
-                    />
-                    <Typography sx={{
-                        ...styles.capturedCardName
-                    }}>
+                    /> */}
+                    <Typography sx={styles.capturedCardName}>
                         {upgrade.name}
                     </Typography>
                 </Box>
@@ -548,9 +519,29 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     )
 
     return (
-        <Box sx={{ width: '100%' }}>
-            {capturedCards.length > 0 && isConnectedPlayer && capturedCardsDecoration}
-            {upgrades.length > 0 && isConnectedPlayer && upgradesDecoration}
+        <Box sx={{ position: 'relative', width: '100%', display: 'flex', flexDirection: isConnectedPlayer ? 'column' : 'column-reverse' }}>
+
+            <Box sx={{
+                mb: isConnectedPlayer ? '-4%' : '0px',
+                mt: isConnectedPlayer ? '0px' : '-4%',
+                position: 'relative',
+                flex: 1,
+                // zIndex must be higher than prompt text, upgrades must remain interactive so they must be on top
+                zIndex: 2,
+            }}>
+                <Box sx={{ display: 'flex', flexDirection: !isConnectedPlayer ? 'column' : 'column-reverse' }}>
+                    {upgrades.length > 0 && upgradesDecoration}
+                    {capturedCards.length > 0 && (
+                        <Box sx={{ position: 'relative', height: '0.3em' }}>
+                            <Typography sx={styles.capturedCardsDivider}>
+                                Captured
+                            </Typography>
+                        </Box>
+                    )}
+                    {capturedCards.length > 0 && capturedCardsDecoration}
+                </Box>
+            </Box>
+
             <Box
                 sx={isDeployed ? styles.deployedPlaceholder : [styles.card, highlightSx]}
                 onClick={handleClick}
@@ -579,7 +570,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     <Box sx={styles.unimplementedAlert}></Box>
                 </Box>
                 <Box sx={styles.epicActionIcon}></Box>
-                { showValueAdjuster() && <CardValueAdjuster card={card} /> }
+
                 {cardStyle === LeaderBaseCardStyle.Base && (
                     <>
                         <Box sx={styles.damageCounterContainer}>
@@ -658,9 +649,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         <Box sx={styles.leaderBlankIcon}/>
                     </>
                 )}
+                { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             </Box>
-            {upgrades.length > 0 && !isConnectedPlayer && upgradesDecoration}
-            {capturedCards.length > 0 && !isConnectedPlayer && capturedCardsDecoration}
         </Box>
     );
 };
