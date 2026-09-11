@@ -6,6 +6,7 @@ import { useReplay } from '@/app/_contexts/Replay.context';
 import { initRecord } from '@/app/_utils/deckTracker';
 import { costOf, useCardCostMap } from '@/app/_utils/swupgnCardCosts';
 import { baseId, type Seat } from '@/lib/swupgn';
+import SeekRow from './SeekRow';
 
 /**
  * What is left in each deck at this moment, in draw order.
@@ -88,15 +89,12 @@ const DeckTab: React.FC = () => {
     return (
         <Box sx={{ p: 1.5 }}>
             <Tooltip title="The file publishes the full starting deck order, so upcoming draws are exact">
-                <Box
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={reveal}
-                    aria-label={reveal ? 'Hide upcoming draws' : 'Reveal upcoming draws'}
+                <SeekRow
                     onClick={() => setReveal((r) => !r)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setReveal((r) => !r); } }}
+                    pressed={reveal}
+                    label={reveal ? 'Hide upcoming draws' : 'Reveal upcoming draws'}
                     sx={{
-                        display: 'inline-flex', alignItems: 'center', gap: 0.5, cursor: 'pointer', mb: 1.5,
+                        display: 'inline-flex', alignItems: 'center', gap: 0.5, mb: 1.5,
                         color: reveal ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.6)',
                         '&:hover': { color: 'white' },
                         '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
@@ -104,7 +102,7 @@ const DeckTab: React.FC = () => {
                 >
                     {reveal ? <VisibilityOutlined sx={{ fontSize: 16 }} /> : <VisibilityOffOutlined sx={{ fontSize: 16 }} />}
                     <Typography variant="caption">{reveal ? 'Upcoming draws shown' : 'Reveal upcoming draws'}</Typography>
-                </Box>
+                </SeekRow>
             </Tooltip>
             <Box sx={{ display: 'flex', gap: 3 }}>
                 <SeatDeck seat={1} name={header.p1 || 'Player 1'} reveal={reveal} />

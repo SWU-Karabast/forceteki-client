@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Box, Typography, Tooltip, Collapse } from '@mui/material';
 import { WarningAmberOutlined, CheckCircleOutlined, ExpandMore } from '@mui/icons-material';
 import { checkKeyframes } from '@/lib/swupgn';
+import SeekRow from './SeekRow';
 import { fileIssues, writerGeneration } from '@/app/_utils/swupgnFileIssues';
 import { useReplay } from '@/app/_contexts/Replay.context';
 
@@ -76,15 +77,12 @@ const FileHealth: React.FC = () => {
 
     return (
         <Box>
-            <Box
-                role="button"
-                tabIndex={0}
-                aria-expanded={open}
-                aria-label={`${badge}. Show details`}
+            <SeekRow
                 onClick={() => setOpen((o) => !o)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((o) => !o); } }}
+                expanded={open}
+                label={`${badge}. Show details`}
                 sx={{
-                    display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 0.5,
                     color,
                     '&:hover': { filter: 'brightness(1.15)' },
                     '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
@@ -93,7 +91,7 @@ const FileHealth: React.FC = () => {
                 <Icon sx={{ fontSize: 15 }} />
                 <Typography variant="caption" sx={{ flex: 1 }}>{badge}</Typography>
                 <ExpandMore sx={{ fontSize: 16, transition: 'transform 0.15s', transform: open ? 'rotate(180deg)' : 'none' }} />
-            </Box>
+            </SeekRow>
             <Collapse in={open}>
                 {mismatches.length > 0 && (
                     <>
