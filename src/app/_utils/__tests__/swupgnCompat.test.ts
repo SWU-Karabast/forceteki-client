@@ -229,6 +229,100 @@ describe('§22 earlier 1.0 files', () => {
         expect(writerGeneration(withEvents(events))).toEqual([expect.stringContaining('Keyframes carry no leader')]);
     });
 
+    it('a base\'s Epic Action was not tracked: base@N sets the seat flag and the board draws it', () => {
+        // The leader's own Epic Action is a DIFFERENT ability on a different card: one epic
+        // ABILITY_ACTIVATE must never set the other's flag.
+        const s = fold([...R1(),
+            ev({ t: 'ABILITY_ACTIVATE', p: 1, card: 'base@1', epic: true }),
+        ]);
+        expect(s.players[1]!.baseEpicActionUsed).toBe(true);
+        expect(s.players[2]!.baseEpicActionUsed).toBeUndefined();
+        expect(s.players[1]!.leader?.epicActionUsed).toBe(false);
+        const gs = adaptState(s, base(), SEATS);
+        expect(gs.players.P1.base.epicActionSpent).toBe(true);
+        expect(gs.players.P2.base.epicActionSpent).toBeUndefined();
+    });
+
+    it('a base named itself by card id: the flag is lost, and the file says so', () => {
+        // Only `base@N` resolves to a seat (§6.3), so an early writer's card id cannot be
+        // attributed -- the fold changes nothing and writerGeneration names the cost.
+        const events = [...R1(), ev({ t: 'ABILITY_ACTIVATE', p: 1, card: 'SOR#024', epic: true })];
+        expect(fold(events).players[1]!.baseEpicActionUsed).toBeUndefined();
+        expect(writerGeneration(withEvents(events)))
+            .toEqual([expect.stringContaining('names by id rather than base@N')]);
+    });
+
+    it('a double-sided leader\'s face was not recorded: LEADER_FLIP states it, and the board shows it', () => {
+        // Stated, never toggled: applying it twice is applying it once, and a reader that
+        // joined at a keyframe can apply it with no history.
+        const flip = (onStartingSide: boolean, seq: string) =>
+            ev({ t: 'LEADER_FLIP', p: 1, card: 'SOR#010', onStartingSide }, seq);
+        const s = fold([...R1(), flip(false, 'R1.A.9'), flip(false, 'R1.A.10')]);
+        expect(s.players[1]!.leader?.onStartingSide).toBe(false);
+        expect(s.players[2]!.leader?.onStartingSide).toBeUndefined();
+        expect(adaptState(s, base(), SEATS).players.P1.leader.onStartingSide).toBe(false);
+        // And back again, from a fold that never saw the first flip.
+        expect(fold([...R1(), flip(true, 'R1.A.9')]).players[1]!.leader?.onStartingSide).toBe(true);
+        // These leaders never deploy, so early in a file nothing has named the seat's leader:
+        // the flip seeds the entry rather than dropping the face.
+        const early = fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1 } as GameEvent, flip(false, 'R1.A.1')]);
+        expect(early.players[1]!.leader).toEqual({ id: 'SOR#010', deployed: false, exhausted: false, epicActionUsed: false, onStartingSide: false });
+        // The story prints it: a changed title, aspects and traits is a visible beat.
+        expect(render(withEvents([flip(false, 'R1.A.9')]))).toContain('Player 1 flips');
+    });
+
+    it('the resource row was counted only: membership folds from MOVE and moves with control', () => {
+        const s = fold([...R1(),
+            ev({ t: 'MOVE', card: 'SOR#108', from: 'hand', to: 'resource', p: 1 }, 'R1.A.9'),
+            ev({ t: 'TAKE_CONTROL', p: 2, card: 'SOR#108', zone: 'resource', from: 1 }, 'R1.A.10'),
+        ]);
+        // The card leaves the losing seat's row and joins the winner's, or the gate reports a
+        // mismatch on BOTH seats for the rest of the game.
+        expect(s.players[1]!.resources).not.toContain('SOR#108');
+        expect(s.players[2]!.resources).toContain('SOR#108');
+        // Absent, never an empty row, in a file that never names one.
+        expect(fold(R1()).players[1]!.resources).toBeUndefined();
+    });
+
+    it('whose turn it is was not recorded: `active` rides in from keyframes only', () => {
+        const withActive = (active: unknown): GameEvent =>
+            ({ seq: 'R1.A.start', t: 'PHASE_START', phase: 'action', active } as GameEvent);
+        expect(fold([withActive(2)]).active).toBe(2);
+        // Never derived, and never written from a seat the file did not state: `Seat` is erased
+        // at runtime and a reader indexes `players[active]` with it.
+        expect(fold([withActive('__proto__')]).active).toBeUndefined();
+        expect(fold([withActive(2), withActive(undefined)]).active).toBe(2);
+        // Keyframe-supplied, so it is deliberately outside the §14 gate: a fold that never saw
+        // it still passes against a keyframe that states one.
+        const kf = (active: Seat): GameEvent => ({
+            seq: 'R2.start', t: 'ROUND_START', round: 2,
+            keyframe: { ...fold(R1()), active },
+        } as GameEvent);
+        expect(checkKeyframes([...R1(), kf(1)]).mismatches).toEqual([]);
+    });
+
+    it('a token named outside an arena is not in play until its MOVE places it', () => {
+        // Placing it on CREATE_TOKEN alone put a card in `cards[]` with a non-arena zone,
+        // which no keyframe agrees with (§12.1 step 3).
+        const create = (zone: string) => ev({ t: 'CREATE_TOKEN', p: 1, token: 'TOKEN:x-wing#94', zone, kind: 'unit' });
+        expect(fold([...R1(), create('outsideTheGame')]).players[1]!.cards).toEqual([]);
+        expect(fold([...R1(), create('space')]).players[1]!.cards.map((c) => c.id)).toEqual(['TOKEN:x-wing#94']);
+    });
+
+    it('no game duration and no match grouping: the header carries them when the writer can', () => {
+        const doc = base();
+        const h = { ...doc.header, endDate: '2026-09-11T20:12:31.000Z', match: 'sha256:9f3a1c2', gameNumber: 2 };
+        // They survive a round trip, and an older file that carries none stays absent.
+        expect(parse(serialize({ ...doc, header: h })).header).toEqual(h);
+        expect(parse(serialize(doc)).header.endDate).toBeUndefined();
+    });
+
+    it('nothing linked a record to the action it belongs to: `for` does, and it rides through', () => {
+        const doc = base();
+        const events = [...R1(), ev({ t: 'CHOICE', p: 1, prompt: 'x', offered: ['base@2'], chose: 0, for: 'R1.A.10' })];
+        expect(parse(serialize({ ...doc, events })).events).toEqual(events);
+    });
+
     it('rows the spec marks undetectable or reader-side have nothing to test', () => {
         // `Date` meaning (not detectable); the fold ignoring attachedTo, the minimal vector's
         // prologue and its rules-legal attack (not file changes): nothing in a file changes.

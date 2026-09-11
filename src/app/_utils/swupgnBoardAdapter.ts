@@ -43,8 +43,16 @@ export interface AdaptedCard {
     /** Power/HP were rebuilt from card data because the file states none (pre-STATS writer). */
     statsReconstructed?: boolean;
 
-    /** LeaderBaseCard's spent-Epic-Action marker, from the leader's `epicActionUsed`. */
+    /** LeaderBaseCard's spent-Epic-Action marker. The leader's `epicActionUsed`, and on the
+     *  base card the seat's `baseEpicActionUsed` -- 12 bases carry an Epic Action of their
+     *  own, and CR 1.16 counts both as game state (spec §11). */
     epicActionSpent?: boolean;
+
+    /** Which face of a DOUBLE-SIDED leader is up, from `LEADER_FLIP` / the keyframe's
+     *  `leader.onStartingSide` (spec §11). `s3CardImageURL` already keys the back-face art
+     *  off this, so passing it through is the whole of showing a flipped leader. Absent on
+     *  every other leader; absent is never "back side". */
+    onStartingSide?: boolean;
 
     /** The live board's attack/defend arrows while an ATTACK resolves. */
     isAttacker?: boolean;
@@ -273,7 +281,18 @@ export interface AdaptOptions {
  * than its owner as stolen (`TAKE_CONTROL`, spec §10.1), and files captives under their
  * captor while they stay the other player's cards. Tokens have no owner but their controller.
  */
+// `adaptState` runs on EVERY frame change, and the owner map is a pure function of the
+// document, which never changes while a replay is open. Keyed by the document object so a
+// second replay gets its own entry and a closed one is collected; the DECKS section carries
+// no length cap, so on a hostile file this is the difference between one build and one per
+// frame. Reuses the cached map before rebuilding.
+const ownerSeatMapCache = new WeakMap<SwuPgnDocument, Map<string, Seat>>();
+
 export function ownerSeatMap(doc: SwuPgnDocument): Map<string, Seat> {
+    const cached = ownerSeatMapCache.get(doc);
+    if (cached) {
+        return cached;
+    }
     const out = new Map<string, Seat>();
     const put = (id: unknown, seat: Seat) => { if (typeof id === 'string' && id) out.set(baseId(id), seat); };
     put(doc.header.p1Leader, 1); put(doc.header.p1Base, 1);
@@ -284,6 +303,7 @@ export function ownerSeatMap(doc: SwuPgnDocument): Map<string, Seat> {
         for (const entry of Array.isArray(d.deck) ? d.deck : []) put(Array.isArray(entry) ? entry[0] : undefined, d.p);
         for (const entry of Array.isArray(d.sideboard) ? d.sideboard : []) put(Array.isArray(entry) ? entry[0] : undefined, d.p);
     }
+    ownerSeatMapCache.set(doc, out);
     return out;
 }
 
@@ -420,13 +440,21 @@ function adaptPlayer(
     if (!leaderDeployed && (ps.leader?.exhausted ?? leaderExhausted)) leader.exhausted = true;
     // A spent Epic Action is game state (CR 1.16); LeaderBaseCard draws the token for it.
     if (ps.leader?.epicActionUsed === true) leader.epicActionSpent = true;
-    if (highlight && highlight.has(leaderId) || (highlight && highlight.has(headerLeaderId))) leader.selected = true;
+    // A double-sided leader (Chancellor Palpatine) flips in place in the base zone: no MOVE,
+    // no deploy, and a different title, aspects and traits on the way back up. Only the file
+    // says which face is up, so without this the board shows the starting side for the rest
+    // of the game. Absent stays absent -- `false` would ask for back-face art.
+    if (typeof ps.leader?.onStartingSide === 'boolean') leader.onStartingSide = ps.leader.onStartingSide;
+    if (highlight && (highlight.has(leaderId) || highlight.has(headerLeaderId))) leader.selected = true;
     // Base HP is the file's: `baseHp` is snapped from every keyframe and set absolutely by
     // every base DAMAGE/HEAL/OVERWHELM (spec §11). The one window the file cannot cover is
     // before the first keyframe, where the fold holds the placeholder 30; the caller may pass
     // a card-data value for that window (§21 allows a reader with card data to derive it).
     const base = cardFromId(baseSetId, 'base', playerId, playerId, statOf(baseSetId, statMap), nameOf?.(baseSetId));
     base.type = 'base';
+    // The BASE's own Epic Action, a separate ability on a separate card from the leader's
+    // (spec §11). Same token, drawn on the base card.
+    if (ps.baseEpicActionUsed === true) base.epicActionSpent = true;
     if (attack && attack.def === `base@${ps.seat}`) base.isDefender = true;
     // Printed HP the card data does not carry comes from the keyframe's `baseMaxHp` (30 is
     // the placeholder until the first keyframe lands, so the damage reads 0 until then).
@@ -465,9 +493,10 @@ function adaptPlayer(
             discard,
             groundArena: ground,
             spaceArena: space,
-            // Named resources when the caller derived them (the fold tracks only a count),
-            // padded with face-down placeholders if the count outruns the known ids — a
-            // keyframe can report more resources than the MOVE stream accounted for.
+            // Which cards are in the row, padded with face-down placeholders if the count
+            // outruns the known ids. The caller supplies the list (from the fold's own
+            // `resources`, spec §11, or its MOVE scan for an older file) so that fog-of-war
+            // can withhold it.
             resources: resourceCards(resourcedIds, resourcesTotal, playerId, statMap, nameOf),
             credits: facedownStack(ps.credits, 'credits', playerId),
             capturedZone: captured,

@@ -17,6 +17,7 @@ import ResourcingReport from './ResourcingReport';
 import DecisionReview from './DecisionReview';
 import TurnDigests from './TurnDigests';
 import DiscussionTab from './DiscussionTab';
+import { formatGameMeta } from '@/app/_utils/replayMoves';
 
 type TabKey = 'story' | 'moves' | 'deck' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
 const TABS: { key: TabKey; label: string; Icon: React.ElementType; Body: React.FC }[] = [
@@ -38,6 +39,7 @@ const ReplayPanel: React.FC = () => {
         clip, setClipStart, setClipEnd, clearClip, doc, moves, nameOf,
     } = useReplay();
     const { downloadWithAnnotations } = useReplayAnnotations();
+    const gameMeta = formatGameMeta(header);
     const theme = useTheme();
     // Collapsed by default on a phone: the panel is fixed at 88vw, so open-by-default
     // covers the board completely and leaves the game as a sliver down one edge. Same
@@ -119,9 +121,23 @@ const ReplayPanel: React.FC = () => {
         }}>
             {/* Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, py: 1, borderBottom: BORDER, gap: 1 }}>
-                <Typography variant="body2" sx={{ color: 'white', fontWeight: 700, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {(header.p1 || 'Player 1')} vs {(header.p2 || 'Player 2')}
-                </Typography>
+                <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                    <Typography variant="body2" sx={{ color: 'white', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {(header.p1 || 'Player 1')} vs {(header.p2 || 'Player 2')}
+                    </Typography>
+                    {/* How long the game took and where it sits in a match, when the file says
+                        (spec §5.2). Absent tags print nothing rather than a placeholder. The
+                        tooltip is the only way back to the full match id once the panel
+                        narrows and the line clips, and 0.45 alpha at this size lands under
+                        the 4.5:1 contrast floor against the panel ground. */}
+                    {gameMeta && (
+                        <Tooltip title={gameMeta}>
+                            <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.62)', fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {gameMeta}
+                            </Typography>
+                        </Tooltip>
+                    )}
+                </Box>
                 <Tooltip title="Collapse panel"><IconButton size="small" onClick={() => setCollapsed(true)} sx={{ color: 'rgba(255,255,255,0.7)' }}><ChevronRight /></IconButton></Tooltip>
             </Box>
 

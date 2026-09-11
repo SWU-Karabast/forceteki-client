@@ -9,6 +9,7 @@ import { storyName } from '@/app/_utils/replayAction';
 import { adaptState, type AdaptOptions, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { deckByFrame, type DeckState } from '@/app/_utils/deckTracker';
 import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
+import { firstFrameByAction } from '@/app/_utils/replayMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
@@ -154,7 +155,18 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         for (let i = 0; i < events.length; i++) if (!m.has(events[i].seq)) m.set(events[i].seq, i);
         return m;
     }, [events]);
-    const moveFrames = useMemo(() => moves.map((mv) => seqToFrame.get(mv.seq) ?? -1), [moves, seqToFrame]);
+    // A move's span starts at the first record filed under it — its own, or an earlier one the
+    // writer stamped with `for` (spec §9.1: an attack's target CHOICE and the attacker's
+    // EXHAUST are numbered before the ATTACK they belong to). Still ascending, because a
+    // precursor is numbered after the previous action's own record.
+    const moveFrames = useMemo(() => {
+        const filedUnder = firstFrameByAction(events);
+        return moves.map((mv) => {
+            const own = seqToFrame.get(mv.seq) ?? -1;
+            const filed = filedUnder.get(mv.seq);
+            return own >= 0 && filed != null ? Math.min(own, filed) : own;
+        });
+    }, [moves, seqToFrame, events]);
 
     // Whether playback should stop on each frame: the folded board changed since the previous
     // frame, or the frame is a player's action (an ATTACK or a PASS folds to nothing, but it
@@ -246,11 +258,11 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         return out;
     }, [events, frameStates, doc.header.p1Base, doc.header.p2Base, statMap]);
 
-    // Per-frame resource-pile contents. The fold tracks only a COUNT (ReducedState mirrors
-    // forceteki's reference PlayerState, which has no resource identities), but the card ids
-    // are right there in the `hand -> resource` MOVEs — and which card a player commits is
-    // the single most reviewable decision in the game. Derived here, alongside
-    // leaderExhaustByFrame, rather than by adding a client-only field to ReducedState.
+    // Per-frame resource-pile contents. `ReducedState.resources` carries the row's membership
+    // now (spec §11), snapped from every keyframe, so that is what the board draws. The MOVE
+    // scan below stays as the fallback for a file written before the field existed, where the
+    // ids are still right there in the `hand -> resource` MOVEs — and which card a player
+    // commits is the single most reviewable decision in the game.
     const resourcedByFrame = useMemo<Array<Record<Seat, string[]>>>(() => {
         const cur: Record<Seat, string[]> = { 1: [], 2: [] };
         const out: Array<Record<Seat, string[]>> = new Array(events.length);
@@ -264,10 +276,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
                     cur[e.p] = cur[e.p].filter((c) => c !== e.card);
                 }
             }
-            out[i] = { 1: cur[1], 2: cur[2] };
+            out[i] = {
+                1: frameStates[i]?.players[1]?.resources ?? cur[1],
+                2: frameStates[i]?.players[2]?.resources ?? cur[2],
+            };
         }
         return out;
-    }, [events]);
+    }, [events, frameStates]);
 
     // Per-frame exhausted state of each leader, from EXHAUST/READY events for the leader id.
     // A leader exhausts when it uses its action ability (Karabast then dims the leader). The

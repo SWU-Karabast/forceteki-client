@@ -24,7 +24,12 @@ describe.each(VECTORS)('board at the final frame: %s', (name) => {
     const events = normalizeEvents(doc.events);
     const frames = foldFrames(events);
     const last = frames[frames.length - 1];
-    const gs = adaptState(last, doc, SEATS, { nameOf: (id) => id });
+    // `resourcedIds` is what Replay.context passes: the fold's own `resources` (§11) when the
+    // file states one, its MOVE scan otherwise. Without it the row is all face-down.
+    const gs = adaptState(last, doc, SEATS, {
+        nameOf: (id) => id,
+        resourcedIds: { 1: last.players[1]?.resources, 2: last.players[2]?.resources },
+    });
     const owners = ownerSeatMap(doc);
 
     it('folds the repaired stream to the same final board as the raw one', () => {
@@ -40,8 +45,15 @@ describe.each(VECTORS)('board at the final frame: %s', (name) => {
         expect(p.cardPiles.credits.length, 'credits').toBe(e.credits);
         expect(p.forceToken.active, 'hasForce').toBe(e.hasForce);
         expect(p.numCardsInDeck, 'deckSize').toBe(e.deckSize);
-        expect(p.cardPiles.discard.map((c: Card) => c.uuid), 'discard (client trims departed cards)')
-            .toEqual(e.discard.filter((id) => last.players[seat]!.discard.includes(id)));
+        expect(p.cardPiles.discard.map((c: Card) => c.uuid), 'discard').toEqual(e.discard);
+        // Which cards are in the resource row, when the file states them (§11 `resources`).
+        if (Array.isArray(e.resources)) {
+            expect(p.cardPiles.resources.map((c: Card) => c.uuid).sort(), 'resources').toEqual([...e.resources].sort());
+        }
+        // The BASE's Epic Action, a separate ability from the leader's.
+        expect(p.base.epicActionSpent, 'baseEpicActionUsed').toBe(e.baseEpicActionUsed || undefined);
+        // Only a double-sided leader carries a face; absent must stay absent, never `false`.
+        expect(p.leader.onStartingSide, 'leader onStartingSide').toBe(e.leader!.onStartingSide);
         // Base HP: printed max from the keyframe, damage from the absolute hp the file states.
         expect(p.base.hp, 'baseMaxHp').toBe(e.baseMaxHp);
         expect(p.base.damage, 'base damage').toBe(e.baseMaxHp - e.baseHp);
