@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse, normalizeEvents, indexResolver, type GameEvent } from '@/lib/swupgn';
-import { buildBeats, beatAt, captionForBeat } from '../replayBeats';
+import { buildBeats, beatAt, captionForBeat, chapterMarks } from '../replayBeats';
 import { frameAction, storyName } from '../replayAction';
 
 const doc = parse(readFileSync(join(__dirname, '../../../lib/swupgn/__tests__/fixtures/game-463c3022.swupgn'), 'utf8'));
@@ -80,5 +80,15 @@ describe('captionForBeat', () => {
     });
     it('a bare PASS has no extras', () => {
         expect(captionForBeat(beatAt(beats, frameOf('R1.A.2')), events, names).extra).toBe(0);
+    });
+});
+
+describe('chapterMarks', () => {
+    it('one round mark per ROUND_START and one phase tick per PHASE_START, as beat indices', () => {
+        const marks = chapterMarks(beats, events);
+        expect(marks.filter((m) => m.kind === 'round').map((m) => m.label)).toEqual(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']);
+        expect(marks.filter((m) => m.kind === 'phase')).toHaveLength(14);   // setup + 7 action + 6 regroup (the game ends in R7's action phase)
+        expect(marks[0]).toEqual({ value: 0, label: 'Setup', kind: 'phase' });
+        for (const m of marks) expect(beats[m.value].kind).toBe('banner');
     });
 });

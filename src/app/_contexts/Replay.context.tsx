@@ -13,7 +13,7 @@ import { firstFrameByAction } from '@/app/_utils/replayMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
-import { buildBeats, beatAt, captionForBeat, type Beat } from '@/app/_utils/replayBeats';
+import { buildBeats, beatAt, captionForBeat, chapterMarks as chapterMarksOf, type Beat } from '@/app/_utils/replayBeats';
 import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
 import { activeSeatByFrame, attackByFrame, lastPlayedByFrame } from '@/app/_utils/replayLiveCues';
 import { classifyBeat, type Transition } from '@/app/_utils/replayTransitions';
@@ -43,8 +43,8 @@ export interface IReplayContextType {
      *  reader drops inert records, so the two are not the same length. */
     events: GameEvent[];
 
-    /** Round boundaries as scrubber marks: frame index + "R1", "R2", ... */
-    roundMarks: { value: number; label: string }[];
+    /** Round + phase boundaries as scrubber marks: beat index + label + kind. */
+    chapterMarks: { value: number; label: string; kind: 'round' | 'phase' }[];
 
     /** Remaining deck per seat after each frame, from the published starting order. */
     deckStates: Array<Record<Seat, DeckState>>;
@@ -242,11 +242,8 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // published starting order. One source of truth for the board and the Deck tab.
     const deckStates = useMemo(() => deckByFrame(doc, events), [doc, events]);
 
-    // Round boundaries, for landmarks on an otherwise featureless 500-frame scrubber.
-    const roundMarks = useMemo(
-        () => events.flatMap((e, i) => (e.t === 'ROUND_START' ? [{ value: i, label: `R${e.round}` }] : [])),
-        [events],
-    );
+    // Round + phase boundaries, for landmarks on an otherwise featureless beat scrubber.
+    const chapterMarks = useMemo(() => chapterMarksOf(beats, events), [beats, events]);
 
     // Per-frame base HP for the window BEFORE the first keyframe only. The fold's `baseHp` is
     // the file's own number from the first keyframe on (snapped there, then absolute on every
@@ -475,14 +472,14 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
 
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent,
-        doc, events, roundMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
+        doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
         replayId, downloadReplay, nameOf: names.nameOf,
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, animate: true,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
-    }), [gameState, perspective, getOpponent, doc, events, roundMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
+    }), [gameState, perspective, getOpponent, doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, downloadReplay, names, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed,

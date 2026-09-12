@@ -103,13 +103,13 @@ const DecisionList: React.FC<{ seat: Seat }> = ({ seat }) => {
 };
 
 const PlayerColumn: React.FC<{ seat: Seat; name: string; report: ResourcingReportData }> = ({ seat, name, report }) => {
-    const { nameOf, roundMarks, seekTo } = useReplay();
+    const { nameOf, chapterMarks, seekToBeat } = useReplay();
 
     const rows = report.byRound.filter((b) => b.seat === seat);
     const s = report.summary[seat];
     const onSeek = (round: number) => {
-        const mark = roundMarks.find((m) => m.label === `R${round}`);
-        if (mark) seekTo(mark.value);
+        const mark = chapterMarks.find((m) => m.kind === 'round' && m.label === `R${round}`);
+        if (mark) seekToBeat(mark.value);
     };
 
     return (

@@ -86,3 +86,15 @@ export function beatAt(beats: Beat[], frame: number): Beat {
 export function captionForBeat(b: Beat, events: GameEvent[], names: NameResolver): { label: string; extra: number } {
     return { label: frameAction(events[b.anchor], names).label, extra: b.end - b.start };
 }
+
+/** Scrubber landmarks: a round mark per ROUND_START, a phase tick per PHASE_START -- both as
+ *  beat indices (the slider now scrubs by beat, not by frame). */
+export function chapterMarks(beats: Beat[], events: GameEvent[]): { value: number; label: string; kind: 'round' | 'phase' }[] {
+    const out: { value: number; label: string; kind: 'round' | 'phase' }[] = [];
+    for (const b of beats) {
+        const e = events[b.anchor];
+        if (e.t === 'ROUND_START') out.push({ value: b.index, label: `R${e.round}`, kind: 'round' });
+        else if (e.t === 'PHASE_START') out.push({ value: b.index, label: e.phase === 'setup' ? 'Setup' : e.phase === 'action' ? 'Action' : 'Regroup', kind: 'phase' });
+    }
+    return out;
+}

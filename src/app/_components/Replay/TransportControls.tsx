@@ -7,10 +7,10 @@ import {
     SkipPrevious,
     SkipNext,
     SwapHoriz,
+    Tune,
 } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { formatRoundPhase } from '@/app/_utils/replayMoves';
-import { beatAt } from '@/app/_utils/replayBeats';
 import { SPEEDS } from '@/app/_utils/replayTiming';
 
 const TransportControls: React.FC = () => {
@@ -27,7 +27,7 @@ const TransportControls: React.FC = () => {
         currentIndex,
         totalFrames,
         events,
-        roundMarks,
+        chapterMarks,
         beats,
         currentBeat,
         seekToBeat,
@@ -38,15 +38,16 @@ const TransportControls: React.FC = () => {
     const currentRound = formatRoundPhase(events[currentIndex]?.seq ?? '');
 
     // One DOM node per mark. A file with thousands of ROUND_STARTs is hostile, not a game;
-    // keep the landmarks legible and bounded. The slider now scrubs by BEAT, so each mark's
-    // frame is remapped to the beat that contains it.
+    // keep the landmarks legible and bounded. chapterMarks already carries beat indices, so
+    // no frame->beat remap is needed here (unlike the old frame-indexed roundMarks).
+    const roundMarks = useMemo(() => chapterMarks.filter((m) => m.kind === 'round'), [chapterMarks]);
+    const phaseMarks = useMemo(() => chapterMarks.filter((m) => m.kind === 'phase'), [chapterMarks]);
     const sliderMarks = useMemo(() => {
         const MAX_MARKS = 100;
-        const marks = roundMarks.length <= MAX_MARKS
+        return roundMarks.length <= MAX_MARKS
             ? roundMarks
             : roundMarks.filter((_, i) => i % Math.ceil(roundMarks.length / MAX_MARKS) === 0);
-        return marks.map((m) => ({ value: beatAt(beats, m.value).index, label: m.label }));
-    }, [roundMarks, beats]);
+    }, [roundMarks]);
 
     const formatPosition = (value: number) => {
         const seq = events[beats[value]?.anchor]?.seq;
@@ -159,36 +160,54 @@ const TransportControls: React.FC = () => {
             }}>
                 {/* Silent during autoplay: at 8x that was several announcements a second, and
                     a screen reader never finished one before the next arrived. */}
-                {isPlaying ? '' : `Frame ${currentIndex + 1} of ${totalFrames}${currentRound ? `, ${currentRound}` : ''}`}
+                {isPlaying ? '' : `Beat ${currentBeat.index + 1} of ${beats.length}${currentRound ? `, ${currentRound}` : ''}`}
             </Box>
-            <Slider
-                aria-label="Replay position"
-                getAriaValueText={formatPosition}
-                value={currentBeat.index}
-                min={0}
-                max={Math.max(0, beats.length - 1)}
-                marks={sliderMarks}
-                onChange={handleSliderChange}
-                valueLabelDisplay="auto"
-                valueLabelFormat={formatPosition}
-                sx={{
-                    flex: 1,
-                    mx: { xs: 0.5, sm: 1 },
-                    color: 'var(--initiative-blue)',
-                    '& .MuiSlider-thumb': { width: 14, height: 14 },
-                    '& .MuiSlider-mark': {
-                        width: 3,
-                        height: 10,
-                        borderRadius: 1,
-                        backgroundColor: 'rgba(255,255,255,0.5)',
-                    },
-                    '& .MuiSlider-markActive': { backgroundColor: 'var(--selection-blue)' },
-                    '& .MuiSlider-valueLabel': {
-                        backgroundColor: 'rgba(0,0,0,0.85)',
-                        fontSize: '0.7rem',
-                    },
-                }}
-            />
+            <Box sx={{ position: 'relative', flex: 1, mx: { xs: 0.5, sm: 1 } }}>
+                <Slider
+                    aria-label="Replay position"
+                    getAriaValueText={formatPosition}
+                    value={currentBeat.index}
+                    min={0}
+                    max={Math.max(0, beats.length - 1)}
+                    marks={sliderMarks}
+                    onChange={handleSliderChange}
+                    valueLabelDisplay="auto"
+                    valueLabelFormat={formatPosition}
+                    sx={{
+                        color: 'var(--initiative-blue)',
+                        '& .MuiSlider-thumb': { width: 14, height: 14 },
+                        '& .MuiSlider-mark': {
+                            width: '3px',
+                            height: '10px',
+                            borderRadius: 1,
+                            backgroundColor: 'rgba(255,255,255,0.5)',
+                        },
+                        '& .MuiSlider-markActive': { backgroundColor: 'var(--selection-blue)' },
+                        '& .MuiSlider-valueLabel': {
+                            backgroundColor: 'rgba(0,0,0,0.85)',
+                            fontSize: '0.7rem',
+                        },
+                    }}
+                />
+                {/* Phase ticks: a second row under the track. MUI marks are one style for the
+                    whole slider, so a round mark (10px, labelled) and a phase tick (5px, bare)
+                    can't share the `marks` prop -- these are plain positioned divs instead. */}
+                <Box aria-hidden sx={{ position: 'absolute', left: 0, right: 0, top: '22px', height: '5px', pointerEvents: 'none' }}>
+                    {phaseMarks.map((m) => (
+                        <Box
+                            key={m.value}
+                            sx={{
+                                position: 'absolute',
+                                left: `${beats.length > 1 ? (m.value / (beats.length - 1)) * 100 : 0}%`,
+                                width: '1px',
+                                height: '5px',
+                                backgroundColor: 'rgba(255,255,255,0.35)',
+                                transform: 'translateX(-50%)',
+                            }}
+                        />
+                    ))}
+                </Box>
+            </Box>
 
             {/* Everything below is hidden on a phone. The bar is a fixed 60px row, and at
                 375px the labels + speed group leave the slider about 45px — narrow enough
@@ -254,6 +273,14 @@ const TransportControls: React.FC = () => {
                     sx={{ color: 'white' }}
                 >
                     <SwapHoriz />
+                </IconButton>
+            </Tooltip>
+
+            {/* Wired up in Task 14; visible at every breakpoint since it's the phone's only
+                route to playback options once the speed group hides. */}
+            <Tooltip title="Playback options">
+                <IconButton aria-label="Playback options" onClick={() => {}} sx={{ color: 'white' }}>
+                    <Tune />
                 </IconButton>
             </Tooltip>
         </Box>
