@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { parse, foldFrames, normalizeEvents, type GameEvent, type Seat } from '@/lib/swupgn';
-import { activeSeatByFrame, attackByFrame, lastPlayedByFrame, frameHoldMs, isBeatFrame } from '../replayLiveCues';
+import { activeSeatByFrame, attackByFrame, lastPlayedByFrame } from '../replayLiveCues';
 import { adaptState } from '../swupgnBoardAdapter';
 
 const DIR = path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors');
@@ -94,34 +94,5 @@ describe('lastPlayedByFrame — the card preview in the opponent tray', () => {
         expect(adaptState(frames[0], doc, SEATS, { lastPlayedCard: { set: 'SOR', number: 108 } }).clientUIProperties)
             .toEqual({ lastPlayedCard: { set: 'SOR', number: 108 } });
         expect(adaptState(frames[0], doc, SEATS, {}).clientUIProperties).toEqual({});
-    });
-});
-
-describe('frameHoldMs — actions hold a beat, their consequences pass quickly', () => {
-    const ev = (over: object): GameEvent => ({ seq: 'x', ...over } as GameEvent);
-    it('holds numbered actions, banners and the game end for the full interval', () => {
-        for (const t of ['PLAY', 'ATTACK', 'PASS', 'CLAIM_INITIATIVE', 'DEPLOY_LEADER', 'ROUND_START', 'PHASE_START', 'GAME_END']) {
-            expect(frameHoldMs(ev({ t }), 1000), t).toBe(1000);
-        }
-    });
-    it('holds consequences for a fraction, never below the floor', () => {
-        for (const t of ['DAMAGE', 'EXHAUST', 'STATS', 'MOVE', 'DRAW', 'DEFEAT']) {
-            expect(frameHoldMs(ev({ t }), 1000), t).toBe(450);
-        }
-        expect(frameHoldMs(ev({ t: 'DAMAGE' }), 250)).toBe(120);
-        expect(frameHoldMs(undefined, 1000)).toBe(450);
-    });
-});
-
-describe('isBeatFrame — playback stops on a player\'s action even when the board did not change', () => {
-    const ev = (over: object): GameEvent => ({ seq: 'x', ...over } as GameEvent);
-    it('an ATTACK and a PASS are beats; a shuffle or a choice is not', () => {
-        expect(isBeatFrame(ev({ t: 'ATTACK' }))).toBe(true);
-        expect(isBeatFrame(ev({ t: 'PASS' }))).toBe(true);
-        expect(isBeatFrame(ev({ t: 'GAME_END' }))).toBe(true);
-        expect(isBeatFrame(ev({ t: 'SHUFFLE' }))).toBe(false);
-        expect(isBeatFrame(ev({ t: 'CHOICE' }))).toBe(false);
-        expect(isBeatFrame(undefined)).toBe(false);
-        expect(isBeatFrame(null as unknown as GameEvent)).toBe(false);
     });
 });

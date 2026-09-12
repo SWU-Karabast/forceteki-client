@@ -16,6 +16,8 @@ import { frameAction } from '@/app/_utils/replayAction';
 import { buildBeats, beatAt, captionForBeat, type Beat } from '@/app/_utils/replayBeats';
 import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
 import { activeSeatByFrame, attackByFrame, lastPlayedByFrame } from '@/app/_utils/replayLiveCues';
+import { classifyBeat, type Transition } from '@/app/_utils/replayTransitions';
+import { SPEEDS, dwellMs } from '@/app/_utils/replayTiming';
 import { triggerBlobDownload, sanitizeFilename, downloadSwuPgn } from '@/app/_utils/downloadBlob';
 
 /** One resource commitment: what was taken, and what the player could have taken instead. */
@@ -77,6 +79,9 @@ export interface IReplayContextType {
     /** The beat timeline (Task 2's buildBeats over `events`) and the beat the playhead sits in. */
     beats: Beat[];
     currentBeat: Beat;
+
+    /** What moved in a beat (Task 5's classifyBeat), for the animator and the autoplay dwell. */
+    transitionsOf: (b: Beat) => Transition[];
     stepForward: () => void; stepBack: () => void; seekTo: (i: number) => void;
 
     /** The old per-frame step, kept for the shift-key fine-grained scrub. */
@@ -97,10 +102,6 @@ export function useReplay(): IReplayContextType {
     if (!ctx) throw new Error('useReplay must be used within a ReplayProvider');
     return ctx;
 }
-
-// ms per frame at each speed. 1x is 1000ms (was 2000) so playback visibly progresses
-// without feeling stuck; the other steps stay relative.
-export const SPEED_INTERVALS: Record<number, number> = { 0.5: 2000, 1: 1000, 2: 500, 4: 250 };
 
 const P1 = 'Player 1';
 const P2 = 'Player 2';
@@ -135,7 +136,9 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const totalFrames = events.length;
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [speed, setSpeed] = useState(1);
+    const [speed, setSpeedState] = useState<number>(1);
+    // Ignore a speed outside the supported list rather than let the dwell divide by a stray value.
+    const setSpeed = useCallback((s: number) => { if ((SPEEDS as readonly number[]).includes(s)) setSpeedState(s); }, []);
     const [perspective, setPerspective] = useState(P1);
     const [fogOfWar, setFogOfWar] = useState(false);
     const [clip, setClipState] = useState<{ start: number; end: number } | null>(null);
@@ -161,6 +164,11 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // The beat timeline (Task 2): stepping, scrubbing and autoplay all move by beat, not by frame.
     const beats = useMemo(() => buildBeats(events), [events]);
     const currentBeat = useMemo(() => beatAt(beats, currentIndex), [beats, currentIndex]);
+    // What moved in a beat (Task 5's classifyBeat), keyed off the frames it spans.
+    const transitionsOf = useCallback(
+        (b: Beat) => classifyBeat(b, events, frameStates[b.start - 1], frameStates[b.end]),
+        [events, frameStates],
+    );
 
     // seq -> frame index, built once, so currentMoveIndex is a cheap lookup rather than
     // an events.findIndex() per move on every frame change (was O(moves x events)).
@@ -466,12 +474,16 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             return;
         }
         // One timeout per BEAT, so an attack, a resource run or a draw burst holds on screen
-        // as one step instead of dealing its records one at a time.
+        // as one step instead of dealing its records one at a time. The dwell is timed for
+        // the beat about to be SHOWN, not the one just left — its own animation length,
+        // plus a handoff pause when the acting seat changes.
         const b = beatAt(beats, currentIndex);
         const next = Math.min(currentIndex < b.end ? b.end : (beats[b.index + 1]?.end ?? lastFrame), lastFrame);
-        const t = setTimeout(() => setCurrentIndex(next), SPEED_INTERVALS[speed] ?? 1000);
+        const nextBeat = beats[b.index + (currentIndex < b.end ? 0 : 1)] ?? b;
+        const handoff = nextBeat.seat !== undefined && b.seat !== undefined && nextBeat.seat !== b.seat;
+        const t = setTimeout(() => setCurrentIndex(next), dwellMs(transitionsOf(nextBeat), handoff, speed));
         return () => clearTimeout(t);
-    }, [isPlaying, speed, currentIndex, totalFrames, clip, beats]);
+    }, [isPlaying, speed, currentIndex, totalFrames, clip, beats, transitionsOf]);
 
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent,
@@ -480,13 +492,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed,
-        beats, currentBeat, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
+        beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, events, roundMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, downloadReplay, names, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
-        play, pause, isPlaying, speed,
-        beats, currentBeat, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
+        play, pause, isPlaying, speed, setSpeed,
+        beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, currentEvents, caption, togglePerspective]);
 
     return <ReplayContext.Provider value={value}>{children}</ReplayContext.Provider>;

@@ -8,13 +8,10 @@ import {
     SkipNext,
     SwapHoriz,
 } from '@mui/icons-material';
-import { useReplay, SPEED_INTERVALS } from '@/app/_contexts/Replay.context';
+import { useReplay } from '@/app/_contexts/Replay.context';
 import { formatRoundPhase } from '@/app/_utils/replayMoves';
 import { beatAt } from '@/app/_utils/replayBeats';
-
-// Single source of truth — derived from the playback interval map so the two
-// can never drift (a speed without a matching interval would silently fall back).
-const SPEEDS = Object.keys(SPEED_INTERVALS).map(Number).sort((a, b) => a - b);
+import { SPEEDS } from '@/app/_utils/replayTiming';
 
 const TransportControls: React.FC = () => {
     const {
@@ -95,12 +92,12 @@ const TransportControls: React.FC = () => {
                     if (e.shiftKey) stepRecordForward(); else stepForward();
                     break;
                 case '[': {
-                    const currentSpeedIdx = SPEEDS.indexOf(speed);
+                    const currentSpeedIdx = (SPEEDS as readonly number[]).indexOf(speed);
                     if (currentSpeedIdx > 0) setSpeed(SPEEDS[currentSpeedIdx - 1]);
                     break;
                 }
                 case ']': {
-                    const currentSpeedIdx = SPEEDS.indexOf(speed);
+                    const currentSpeedIdx = (SPEEDS as readonly number[]).indexOf(speed);
                     if (currentSpeedIdx < SPEEDS.length - 1) setSpeed(SPEEDS[currentSpeedIdx + 1]);
                     break;
                 }

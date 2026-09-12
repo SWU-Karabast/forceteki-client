@@ -1,16 +1,13 @@
 import type { GameEvent, ReducedState, Seat } from '@/lib/swupgn';
 import { isSeat } from '@/lib/swupgn';
 import { parseSetId } from './swupgnBoardAdapter';
-// Events a player chose to do (spec §16): a beat of playback, and a change of whose action it is.
-import { NUMBERED_ACTIONS as NUMBERED } from './swupgnMoves';
-
 
 /**
  * The cues the live board shows around the cards, rebuilt per frame from the file so a replay
  * reads like a game in progress: whose action it is (the blue/red aura under each hand),
- * which unit is attacking what (the attack/defend arrows), what was played last (the card
- * preview in the opponent tray), and how long a frame should hold during playback.
- * Every one is a pure function of the event stream; nothing here assumes a rule.
+ * which unit is attacking what (the attack/defend arrows), and what was played last (the card
+ * preview in the opponent tray). Every one is a pure function of the event stream; nothing
+ * here assumes a rule.
  */
 
 /**
@@ -78,28 +75,4 @@ export function lastPlayedByFrame(events: GameEvent[]): Array<{ set: string; num
         out[i] = last;
     }
     return out;
-}
-
-/**
- * A frame playback must stop on: a player's action, a round or phase banner, the game's end.
- * An ATTACK or a PASS changes nothing in the folded board, so "did the board change" alone
- * would skip it during playback, and with it the attack's lunge and the caption.
- */
-export function isBeatFrame(e: GameEvent | undefined): boolean {
-    return e != null && typeof e === 'object'
-        && (NUMBERED.has(e.t) || e.t === 'ROUND_START' || e.t === 'PHASE_START' || e.t === 'GAME_END');
-}
-
-/** A consequence holds for a fraction of the beat: an action, then its effects in quick succession. */
-const CONSEQUENCE_FRACTION = 0.45;
-const MIN_HOLD_MS = 120;
-
-/**
- * How long playback holds a frame. A player's action (and a round or phase banner, and the
- * game's end) holds for the full interval; the records that resolve it — the cost paid, the
- * damage dealt, a unit exhausting — pass at a fraction of it, the way an attack resolves in
- * one motion at the table rather than one beat per bookkeeping line.
- */
-export function frameHoldMs(e: GameEvent | undefined, intervalMs: number): number {
-    return isBeatFrame(e) ? intervalMs : Math.max(MIN_HOLD_MS, Math.round(intervalMs * CONSEQUENCE_FRACTION));
 }
