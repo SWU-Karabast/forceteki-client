@@ -4,8 +4,9 @@
 // means the selectors Task 4 tagged live in exactly one place.
 import type { Seat } from '@/lib/swupgn';
 import type { Snap } from './animPrimitives';
+import type { Snapshot } from './frameAnimationPlan';
 
-export type Snapshot = Map<string, Snap>;
+export type { Snapshot };
 
 const rectOf = (el: HTMLElement, html: string): Snap | null => {
     const r = el.getBoundingClientRect();

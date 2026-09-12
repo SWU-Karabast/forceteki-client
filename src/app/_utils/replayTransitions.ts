@@ -44,8 +44,15 @@ const seatOfCard = (s: ReducedState | undefined, id: string, fallback: Seat | un
  */
 export function classifyBeat(beat: Beat, events: GameEvent[], prev: ReducedState | undefined, next: ReducedState): Transition[] {
     const out: Transition[] = [];
-    const anchor = events[beat.anchor];
-    const attacker = anchor.t === 'ATTACK' ? anchor.atk : undefined;
+    // Every ATTACK filed anywhere in the beat owns its combat damage -- not just one filed as
+    // the beat's ANCHOR. A lettered (ability-granted) ATTACK anchors on the ABILITY_ACTIVATE
+    // that granted it, so keying off `anchor` alone missed it and let the combat DAMAGE fire
+    // its own hit/flash on top of the attack's lunge.
+    const attackers = new Set(
+        events.slice(beat.start, beat.end + 1)
+            .filter((e): e is Extract<GameEvent, { t: 'ATTACK' }> => e.t === 'ATTACK')
+            .map((e) => e.atk)
+    );
     const deploying = new Set<string>();
     const defeated = new Set<string>();
     for (let i = beat.start; i <= beat.end; i++) {
@@ -99,7 +106,7 @@ export function classifyBeat(beat: Beat, events: GameEvent[], prev: ReducedState
                 const base = /^base@(\d)$/.exec(e.tgt);
                 if (base) { out.push({ kind: 'baseHit', seat: Number(base[1]) as Seat, amt: e.amt, hp: e.hp }); break; }
                 // Combat damage is drawn by the lunge; anything else is a bolt from its source.
-                if (e.damageType === 'combat' && (e.src === attacker || e.tgt === attacker)) break;
+                if (e.damageType === 'combat' && (attackers.has(e.src) || attackers.has(e.tgt))) break;
                 out.push({ kind: 'damage', ...(e.src ? { src: e.src } : {}), tgt: e.tgt, amt: e.amt, hp: e.hp, survived: !defeated.has(e.tgt) });
                 break;
             }

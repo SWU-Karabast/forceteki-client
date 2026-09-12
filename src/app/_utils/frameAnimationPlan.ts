@@ -66,6 +66,10 @@ export function planBeat(input: PlanInput): Intent[] {
     // Rule 13: one intent owns a card's visual per beat -- the move/enter/exit
     // sweeps skip everything a play/stage/lunge/exit already claimed.
     const owned = new Set<string>();
+    // Attackers that actually got a lunge intent pushed (rect(s) resolved below) -- the
+    // defeat case below only skips an exit for these; an attack transition whose lunge was
+    // skipped (missing attacker/defender rect) must not be assumed to own the corpse's fade.
+    const lunged = new Set<string>();
     // Rule 14: enters/plays, then lunges/bolts, then exits, then moves.
     const plays: Intent[] = [];
     const fx: Intent[] = [];
@@ -159,6 +163,7 @@ export function planBeat(input: PlanInput): Intent[] {
                 const d = t.defenderType === 'base' ? bases[other(t.seat)] ?? rect(t.def) : rect(t.def);
                 if (!a || !d) break;
                 owned.add(t.atk);
+                lunged.add(t.atk);
                 fx.push({ type: 'lunge', uuid: t.atk, from: a, to: d, delay: 0 });
                 if (t.survived && t.defenderType === 'unit') fx.push({ type: 'shake', uuid: t.def, amplitude: 7, delay: IMPACT });
                 break;
@@ -200,7 +205,7 @@ export function planBeat(input: PlanInput): Intent[] {
                 if (by) fx.push({ type: 'tracer', from: center(by), to: center(from), color: DEFEAT_COLOR, delay: 0 });
                 const delay = attacks.some((a) => a.def === t.card) ? STRIKE
                     : bolts.some((b) => b.tgt === t.card) || by ? DURATION.tracer : 0;
-                if (!attacks.some((a) => a.atk === t.card)) exits.push({ type: 'exit', uuid: t.card, rect: from, delay });
+                if (!lunged.has(t.card)) exits.push({ type: 'exit', uuid: t.card, rect: from, delay });
                 break;
             }
             // Rule 11, grouped below (cards committed together line up side by side).

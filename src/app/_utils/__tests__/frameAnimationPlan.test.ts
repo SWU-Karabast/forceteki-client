@@ -45,6 +45,17 @@ describe('planBeat', () => {
             { type: 'exit', uuid: 'B', rect: r(900, 250), delay: Math.round(DURATION.lunge * 0.45) },
         ]);
     });
+    it('a defeated attacker whose lunge was skipped (no defender rect) still exits instead of popping off the board', () => {
+        const k = base();
+        k.prev.set('A', r(900, 500));   // no rect for 'B' at all -> the defender rect resolves to undefined
+        k.transitions = [
+            { kind: 'attack', atk: 'A', def: 'B', seat: 1, defenderType: 'unit', survived: false },
+            { kind: 'defeat', card: 'A', seat: 1, reason: 'combat', by: 'B' },
+        ];
+        expect(planBeat(k)).toEqual([
+            { type: 'exit', uuid: 'A', rect: r(900, 500), delay: 0 },
+        ]);
+    });
     it('a base attack lunges at the base and shakes it by the damage', () => {
         const i = base();
         i.prev.set('A', r(900, 500)); i.next.set('A', r(900, 500));

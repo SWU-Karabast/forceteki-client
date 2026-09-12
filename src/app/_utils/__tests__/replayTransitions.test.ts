@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parse, normalizeEvents, foldFrames } from '@/lib/swupgn';
+import type { GameEvent } from '@/lib/swupgn';
+import { parse, normalizeEvents, foldFrames, emptyState } from '@/lib/swupgn';
 import { buildBeats, beatAt } from '../replayBeats';
+import type { Beat } from '../replayBeats';
 import { classifyBeat } from '../replayTransitions';
 
 const doc = parse(readFileSync(join(__dirname, '../../../lib/swupgn/__tests__/fixtures/game-463c3022.swupgn'), 'utf8'));
@@ -55,6 +57,21 @@ describe('classifyBeat', () => {
     it('a bare pass moves nothing', () => {
         expect(at('R1.A.2')).toEqual([]);
         expect(at('R2.A.6')).toEqual([]);   // the PASS the ability used to be filed under
+    });
+    it('a lettered ATTACK (an ability-granted attack) owns its own combat damage, even though the beat anchors on the ABILITY_ACTIVATE', () => {
+        // Part D-2 shape: the action ability is the beat's anchor; the ATTACK it grants and the
+        // combat DAMAGE it deals both ride as lettered consequences of that same base seq.
+        const events: GameEvent[] = [
+            { seq: 'R9.A.1', t: 'ABILITY_ACTIVATE', p: 1, card: 'LAW#008', ability: 'law008_action_1' },
+            { seq: 'R9.A.1a', t: 'ATTACK', p: 1, atk: 'LAW#008', def: 'ASH#056', defenderType: 'unit' },
+            { seq: 'R9.A.1b', t: 'DAMAGE', src: 'LAW#008', tgt: 'ASH#056', amt: 3, damageType: 'combat', hp: 2 },
+        ];
+        const beat: Beat = { index: 0, kind: 'action', start: 0, end: 2, anchor: 0, seat: 1 };
+        const ts = classifyBeat(beat, events, emptyState(), emptyState());
+        expect(ts.filter((t) => t.kind === 'attack')).toEqual([
+            { kind: 'attack', atk: 'LAW#008', def: 'ASH#056', seat: 1, defenderType: 'unit', survived: true },
+        ]);
+        expect(ts.filter((t) => t.kind === 'damage')).toEqual([]);
     });
 });
 

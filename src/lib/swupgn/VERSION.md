@@ -156,8 +156,9 @@ Live-play cues the board shows around the cards, rebuilt per frame from the file
 the seat each record names, opening each action phase on the initiative holder), the attack in
 progress (`isAttacker`/`isDefender` on the attacker, the target unit or the target base, for the
 ATTACK and the consequences filed under its seq), and the last card played
-(`clientUIProperties.lastPlayedCard`, the opponent tray's preview). Playback holds a player's
-action for the full beat and its consequences for a fraction (`frameHoldMs`).
+(`clientUIProperties.lastPlayedCard`, the opponent tray's preview). Playback holds each BEAT
+on screen for its animation length (`replayTiming.ts`'s `beatDurationMs`, plus a handoff pause
+folded in by `dwellMs`), not a fixed per-frame hold.
 
 Beyond the board: the panel header shows `formatGameMeta` — the game's duration (`Date` →
 `EndDate`) and `game N of match <short>` (`Match`/`GameNumber`, §5.2), each part only when the

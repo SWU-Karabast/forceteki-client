@@ -76,7 +76,11 @@ const TransportControls: React.FC = () => {
             // role="button") used to swallow them too, which is why clicking a row then
             // pressing an arrow did nothing.
             const target = e.target as HTMLElement | null;
-            if (target?.closest?.('input, textarea, select, [role="slider"], [contenteditable="true"]')) return;
+            // [role="tab"] stays in this list (unlike [role="button"], deliberately excluded
+            // above) so the panel's tablist (ReplayPanel.tsx) can roll its own ArrowLeft/Right
+            // without a global step also firing. .MuiPopover-root covers the playback-options
+            // popover so arrows don't step the replay while it has focus.
+            if (target?.closest?.('input, textarea, select, [role="slider"], [role="tab"], [role="dialog"], .MuiPopover-root, [contenteditable="true"]')) return;
             // Space still backs off a focused button/link/tab so it activates that control
             // instead of double-firing play/pause.
             if (e.key === ' ' && target?.closest?.('button, [role="button"], a[href], [role="tab"]')) return;

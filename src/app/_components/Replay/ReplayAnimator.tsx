@@ -119,6 +119,12 @@ function run(i: Intent, s: P.Stage, locale: CardImageLocale): void {
         case 'upgradeStage': return P.upgradeStage(s, { ...i, faceUp: i.faceDown ? faceArt(i.uuid, locale) : undefined });
         case 'resourceStage': return P.resourceStage(s, i);
         case 'leaderDeploy': return P.leaderDeploy(s, i);
+        default: {
+            // A new Intent variant that isn't handled above fails the build here instead of
+            // silently doing nothing at runtime.
+            const _exhaustive: never = i;
+            void _exhaustive;
+        }
     }
 }
 export default ReplayAnimator;
