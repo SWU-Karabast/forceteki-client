@@ -570,7 +570,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
     }
     return (
-        <Box sx={[styles.cardContainer, highlightSx]}>
+        <Box sx={[styles.cardContainer, highlightSx]} data-card-uuid={card.uuid}>
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
                 <Box
                     sx={styles.cloneIcon}
@@ -690,6 +690,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             {nonShieldUpgradeCards.map((subcard) => (
                 <Box
                     key={subcard.uuid}
+                    data-upgrade-uuid={subcard.uuid}
                     sx={{ ...styles.upgradeIcon,
                         backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
                         border: subcard.selectable ? `2px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',

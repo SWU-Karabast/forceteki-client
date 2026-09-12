@@ -558,6 +558,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 aria-haspopup="true"
                 data-card-url={s3CardImageURL(card, locale)}
                 data-card-type={isLeader ? 'leader' : 'base'}
+                data-card-uuid={isDeployed ? undefined : card.uuid}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
                 {...longPressHandlers}
