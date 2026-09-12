@@ -95,4 +95,28 @@ describe('event-type parity with the fold switch', () => {
         const missing = [...FOLD_TYPES].filter((t) => !moveTypes.has(t) && !NOT_A_SEEK_TARGET.has(t));
         expect(missing, 'a player action with no row in the Moves tab').toEqual([]);
     });
+
+    it('replayBeats.BANNERS includes only the types that are beat banners', () => {
+        // BANNERS groups the round/phase/game markers into single-frame beats. Every event type
+        // not in BANNERS has to be justified here, so adding a new ROUND_START-like type to the
+        // fold without adding it to BANNERS fails.
+        const NOT_A_BANNER = new Set([
+            // Player actions and their consequences, grouped into action beats.
+            'PLAY', 'PLAY_SMUGGLE', 'PLAY_EVENT', 'PLAY_UPGRADE', 'ATTACK', 'PASS', 'EXHAUST',
+            'READY', 'EXHAUST_RESOURCES', 'READY_RESOURCES', 'STATS', 'CHOICE', 'MODAL_CHOICE',
+            'ABILITY_ACTIVATE', 'LEADER_FLIP', 'DEPLOY_LEADER', 'CLAIM_INITIATIVE', 'DEFEAT',
+            // Cards added to play or discard.
+            'MOVE', 'DRAW', 'DISCARD', 'RESOURCE', 'REVEAL', 'SEARCH',
+            // Effects of an action.
+            'DAMAGE', 'HEAL', 'OVERWHELM', 'SHIELD_GAIN', 'SHIELD_USE', 'EXPERIENCE_GAIN',
+            'STATUS_TOKEN', 'CREATE_TOKEN', 'CAPTURE', 'RESCUE', 'TAKE_CONTROL', 'TRIGGER',
+            // Phase and round machinery (other than the banner markers).
+            'PHASE_END', 'ROUND_END',
+            // Housekeeping.
+            'SHUFFLE', 'MULLIGAN', 'KEEP_HAND',
+        ]);
+        const banners = quotedNamesIn(SRC('replayBeats.ts'), 'BANNERS');
+        const missing = [...FOLD_TYPES].filter((t) => !banners.has(t) && !NOT_A_BANNER.has(t));
+        expect(missing, 'an event type that looks like a banner but is not in BANNERS').toEqual([]);
+    });
 });
