@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // gameState mirrors the live board's gameState, which is typed `any`
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent, NameResolver } from '@/lib/swupgn';
 import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver, isCompleteKeyframe } from '@/lib/swupgn';
 import { storyName } from '@/app/_utils/replayAction';
@@ -18,6 +18,7 @@ import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
 import { activeSeatByFrame, attackByFrame, lastPlayedByFrame } from '@/app/_utils/replayLiveCues';
 import { classifyBeat, type Transition } from '@/app/_utils/replayTransitions';
 import { SPEEDS, dwellMs } from '@/app/_utils/replayTiming';
+import { readPrefs, writePrefs, PREFS_KEY, DEFAULT_PREFS, type StepBy } from '@/app/_utils/replayPrefs';
 import { triggerBlobDownload, sanitizeFilename, downloadSwuPgn } from '@/app/_utils/downloadBlob';
 
 /** One resource commitment: what was taken, and what the player could have taken instead. */
@@ -76,8 +77,11 @@ export interface IReplayContextType {
     play: () => void; pause: () => void; isPlaying: boolean;
     speed: number; setSpeed: (s: number) => void;
 
-    /** Whether beat-to-beat card motion animates (Task 14 makes it a stored preference). */
-    animate: boolean;
+    /** Whether beat-to-beat card motion animates. Persisted (Task 14). */
+    animate: boolean; setAnimate: (a: boolean) => void;
+
+    /** What the arrow keys and the board chevrons step by. Persisted (Task 14). */
+    stepBy: StepBy; setStepBy: (s: StepBy) => void;
 
     /** The beat timeline (Task 2's buildBeats over `events`) and the beat the playhead sits in. */
     beats: Beat[];
@@ -143,9 +147,36 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const totalFrames = events.length;
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [speed, setSpeedState] = useState<number>(1);
+    const [speed, setSpeedState] = useState<number>(DEFAULT_PREFS.speed);
     // Ignore a speed outside the supported list rather than let the dwell divide by a stray value.
     const setSpeed = useCallback((s: number) => { if ((SPEEDS as readonly number[]).includes(s)) setSpeedState(s); }, []);
+    const [stepBy, setStepBy] = useState<StepBy>(DEFAULT_PREFS.stepBy);
+    const [animate, setAnimate] = useState<boolean>(DEFAULT_PREFS.animate);
+    // The write effect below fires on mount too (same as any effect), which would commit
+    // these still-default values right over whatever the read effect just found — the two
+    // run in the same post-render pass, before React has applied the read's setState calls.
+    // Skipping the write effect's very first run avoids that clobber; every real change
+    // after mount still writes normally.
+    const skippedFirstWrite = useRef(false);
+    // Read the stored playback preference once on mount (SSR renders the defaults above;
+    // the read happens after hydration, from the browser's own localStorage).
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            const prefs = readPrefs(window.localStorage.getItem(PREFS_KEY));
+            setSpeedState(prefs.speed);
+            setStepBy(prefs.stepBy);
+            setAnimate(prefs.animate);
+        } catch { /* localStorage unavailable (private mode, denied) — keep the defaults */ }
+    }, []);
+    // ...and persist it on every change thereafter.
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (!skippedFirstWrite.current) { skippedFirstWrite.current = true; return; }
+        try {
+            window.localStorage.setItem(PREFS_KEY, writePrefs({ speed, stepBy, animate }));
+        } catch { /* localStorage unavailable — the preference just won't survive a reload */ }
+    }, [speed, stepBy, animate]);
     const [perspective, setPerspective] = useState(P1);
     const [fogOfWar, setFogOfWar] = useState(false);
     const [clip, setClipState] = useState<{ start: number; end: number } | null>(null);
@@ -412,19 +443,23 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
 
     const toggleFogOfWar = useCallback(() => setFogOfWar((f) => !f), []);
 
-    // The old per-frame step, kept for the shift-key fine-grained scrub.
+    // The old per-frame step, kept for the shift-key fine-grained scrub (and for the
+    // 'record' step-by preference, Task 14).
     const stepRecordForward = useCallback(() => setCurrentIndex((p) => Math.min(p + 1, totalFrames - 1)), [totalFrames]);
     const stepRecordBack = useCallback(() => setCurrentIndex((p) => Math.max(p - 1, 0)), []);
     // A beat step lands on the beat's END: the fully resolved board. Going back from a beat's end
     // lands on the previous beat's end, so forward then back is an identity.
-    const stepForward = useCallback(() => setCurrentIndex((p) => {
+    const stepBeatForward = useCallback(() => setCurrentIndex((p) => {
         const b = beatAt(beats, p);
         return p < b.end ? b.end : (beats[b.index + 1]?.end ?? p);
     }), [beats]);
-    const stepBack = useCallback(() => setCurrentIndex((p) => {
+    const stepBeatBack = useCallback(() => setCurrentIndex((p) => {
         const b = beatAt(beats, p);
         return beats[b.index - 1]?.end ?? 0;
     }), [beats]);
+    // The arrow keys and the board chevrons step by whichever unit the preference names.
+    const stepForward = stepBy === 'record' ? stepRecordForward : stepBeatForward;
+    const stepBack = stepBy === 'record' ? stepRecordBack : stepBeatBack;
     const seekToBeat = useCallback((i: number) => {
         const b = beats[Math.max(0, Math.min(i, beats.length - 1))];
         if (b) setCurrentIndex(b.end);
@@ -484,13 +519,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         replayId, downloadReplay, nameOf: names.nameOf,
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
-        play, pause, isPlaying, speed, setSpeed, animate: true,
+        play, pause, isPlaying, speed, setSpeed, animate, setAnimate, stepBy, setStepBy,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, seekToBeatOf, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, downloadReplay, names, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
-        play, pause, isPlaying, speed, setSpeed,
+        play, pause, isPlaying, speed, setSpeed, animate, stepBy,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, seekToBeatOf, currentEvents, caption, togglePerspective]);
 

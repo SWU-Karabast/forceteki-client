@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import { Box, IconButton, Slider, Tooltip, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import {
     PlayArrow,
@@ -12,6 +12,7 @@ import {
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { formatRoundPhase } from '@/app/_utils/replayMoves';
 import { SPEEDS } from '@/app/_utils/replayTiming';
+import PlaybackOptions from './PlaybackOptions';
 
 const TransportControls: React.FC = () => {
     const {
@@ -35,6 +36,7 @@ const TransportControls: React.FC = () => {
         currentPerspective,
     } = useReplay();
 
+    const [optionsAnchor, setOptionsAnchor] = useState<HTMLElement | null>(null);
     const currentRound = formatRoundPhase(events[currentIndex]?.seq ?? '');
 
     // One DOM node per mark. A file with thousands of ROUND_STARTs is hostile, not a game;
@@ -276,13 +278,14 @@ const TransportControls: React.FC = () => {
                 </IconButton>
             </Tooltip>
 
-            {/* Wired up in Task 14; visible at every breakpoint since it's the phone's only
-                route to playback options once the speed group hides. */}
+            {/* Visible at every breakpoint since it's the phone's only route to playback
+                options once the speed group hides. */}
             <Tooltip title="Playback options">
-                <IconButton aria-label="Playback options" onClick={() => {}} sx={{ color: 'white' }}>
+                <IconButton aria-label="Playback options" onClick={(e) => setOptionsAnchor(e.currentTarget)} sx={{ color: 'white' }}>
                     <Tune />
                 </IconButton>
             </Tooltip>
+            <PlaybackOptions anchorEl={optionsAnchor} onClose={() => setOptionsAnchor(null)} />
         </Box>
     );
 };
