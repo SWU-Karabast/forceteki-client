@@ -34,6 +34,19 @@ const LIB = (p: string) => readFileSync(path.join(__dirname, '../../../lib/swupg
 const caseLabels = (src: string): Set<string> =>
     new Set([...src.matchAll(/case '([A-Z_]+)':/g)].map((m) => m[1]));
 
+/** Every `case 'X':` label inside one named function's body (braces-matched), not the whole file. */
+function caseLabelsInFunction(src: string, name: string): Set<string> {
+    const start = src.indexOf(`function ${name}`);
+    if (start < 0) throw new Error(`${name} not found — the parity test is checking nothing`);
+    const bodyStart = src.indexOf('{', start);
+    let depth = 0, end = bodyStart;
+    for (; end < src.length; end++) {
+        if (src[end] === '{') depth++;
+        else if (src[end] === '}' && --depth === 0) break;
+    }
+    return caseLabels(src.slice(bodyStart, end + 1));
+}
+
 /**
  * The UPPER_SNAKE string literals in the `const <name> = …` declaration, that declaration only.
  * Runs to the closing `]);` / `];` rather than the first `]`, because the first bracket after
@@ -118,5 +131,13 @@ describe('event-type parity with the fold switch', () => {
         const banners = quotedNamesIn(SRC('replayBeats.ts'), 'BANNERS');
         const missing = [...FOLD_TYPES].filter((t) => !banners.has(t) && !NOT_A_BANNER.has(t));
         expect(missing, 'an event type that looks like a banner but is not in BANNERS').toEqual([]);
+    });
+
+    it('replayTransitions.classifyBeat only switches on types the fold folds', () => {
+        // Unlike the lists above, this checks the other direction: a typo'd case label in
+        // classifyBeat's switch would silently never fire, since its `default` swallows it.
+        const classified = caseLabelsInFunction(SRC('replayTransitions.ts'), 'classifyBeat');
+        const bogus = [...classified].filter((t) => !FOLD_TYPES.has(t));
+        expect(bogus, 'a case label here that fold.ts never emits would never fire').toEqual([]);
     });
 });
