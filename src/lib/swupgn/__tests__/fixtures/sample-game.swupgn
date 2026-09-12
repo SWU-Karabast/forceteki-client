@@ -1,0 +1,155 @@
+[Game "SWU-PGN/1.1"]
+[GameId "12345"]
+[Date "2026-06-17T02:34:24.601Z"]
+[Format "premier"]
+[CardPool "ASH,IBH,JTL,LAW,LOF,SEC,SHD,SOR,TS26,TWI"]
+[Engine "forceteki@unknown"]
+[Seed "unseeded"]
+[P1Id "sha256:fcc5452e9bd8d2c0df1bcb3a4648163cbb5723c1c88f6c04aabeb5e76cecdf62"]
+[P2Id "sha256:f9188a804748f400c0c5abb9cf7125d0b3a51c75af21b2292dd44de3276df787"]
+[P1 "Player 1"]
+[P2 "Player 2"]
+[P1Leader "SOR#010"]
+[P1Base "SOR#027"]
+[P2Leader "SOR#005"]
+[P2Base "SOR#029"]
+[Result "Incomplete"]
+[Reason "Unknown"]
+[Rounds "3"]
+
+%%% DECKS
+{"p":1,"leader":"SOR#010","base":"SOR#027","deck":[["SHD#257",20],["SOR#178",6],["LOF#164",1],["SOR#232",1]]}
+{"p":2,"leader":"SOR#005","base":"SOR#029","deck":[["SHD#257",20],["SOR#178",6],["SOR#095",1]]}
+
+%%% SETUP
+{"seq":"R1.S.0","t":"INIT","p1DeckOrder":["SHD#257","SHD#257:2","SHD#257:3","SHD#257:4","SHD#257:5","SOR#178","SHD#257:6","SHD#257:7","SOR#178:2","SHD#257:8","SOR#178:3","SHD#257:9","SOR#232","SHD#257:10","SHD#257:11","LOF#164","SHD#257:12","SHD#257:13","SHD#257:14","SHD#257:15","SHD#257:16","SHD#257:17","SOR#178:4","SHD#257:18","SOR#178:5","SOR#178:6","SHD#257:19","SHD#257:20"],"p2DeckOrder":["SHD#257:21","SOR#178:7","SHD#257:22","SHD#257:23","SHD#257:24","SHD#257:25","SHD#257:26","SHD#257:27","SHD#257:28","SHD#257:29","SHD#257:30","SOR#095","SHD#257:31","SHD#257:32","SHD#257:33","SHD#257:34","SOR#178:8","SOR#178:9","SOR#178:10","SHD#257:35","SOR#178:11","SHD#257:36","SOR#178:12","SHD#257:37","SHD#257:38","SHD#257:39","SHD#257:40"]}
+
+%%% EVENTS
+{"seq":"R0.S.start","t":"PHASE_START","phase":"setup"}
+{"seq":"R0.S.1","t":"MODAL_CHOICE","p":2,"offered":["Yourself","Opponent"],"chose":1}
+{"seq":"R0.S.2","t":"SHUFFLE","p":1}
+{"seq":"R0.S.3","t":"MOVE","card":"SHD#257","from":"deck","to":"hand","p":1}
+{"seq":"R0.S.4","t":"MOVE","card":"SHD#257:2","from":"deck","to":"hand","p":1}
+{"seq":"R0.S.5","t":"MOVE","card":"SHD#257:3","from":"deck","to":"hand","p":1}
+{"seq":"R0.S.6","t":"MOVE","card":"SHD#257:4","from":"deck","to":"hand","p":1}
+{"seq":"R0.S.7","t":"MOVE","card":"SHD#257:5","from":"deck","to":"hand","p":1}
+{"seq":"R0.S.8","t":"MOVE","card":"SOR#178","from":"deck","to":"hand","p":1}
+{"seq":"R0.S.9","t":"DRAW","p":1,"count":6,"cards":["SHD#257","SHD#257:2","SHD#257:3","SHD#257:4","SHD#257:5","SOR#178"]}
+{"seq":"R0.S.10","t":"SHUFFLE","p":2}
+{"seq":"R0.S.11","t":"MOVE","card":"SHD#257:21","from":"deck","to":"hand","p":2}
+{"seq":"R0.S.12","t":"MOVE","card":"SOR#178:7","from":"deck","to":"hand","p":2}
+{"seq":"R0.S.13","t":"MOVE","card":"SHD#257:22","from":"deck","to":"hand","p":2}
+{"seq":"R0.S.14","t":"MOVE","card":"SHD#257:23","from":"deck","to":"hand","p":2}
+{"seq":"R0.S.15","t":"MOVE","card":"SHD#257:24","from":"deck","to":"hand","p":2}
+{"seq":"R0.S.16","t":"MOVE","card":"SHD#257:25","from":"deck","to":"hand","p":2}
+{"seq":"R0.S.17","t":"DRAW","p":2,"count":6,"cards":["SHD#257:21","SOR#178:7","SHD#257:22","SHD#257:23","SHD#257:24","SHD#257:25"]}
+{"seq":"R0.S.18","t":"KEEP_HAND","p":1}
+{"seq":"R0.S.19","t":"KEEP_HAND","p":2}
+{"seq":"R0.S.20","t":"MOVE","card":"SHD#257","from":"hand","to":"resource","p":1}
+{"seq":"R0.S.21","t":"MOVE","card":"SHD#257:2","from":"hand","to":"resource","p":1}
+{"seq":"R0.S.22","t":"MOVE","card":"SHD#257:21","from":"hand","to":"resource","p":2}
+{"seq":"R0.S.23","t":"MOVE","card":"SOR#178:7","from":"hand","to":"resource","p":2}
+{"seq":"R0.S.end","t":"PHASE_END","phase":"setup"}
+{"seq":"R1.start","t":"ROUND_START","round":1,"keyframe":{"round":1,"phase":"action","initiative":1,"players":{"1":{"seat":1,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["SHD#257:3","SHD#257:4","SHD#257:5","SOR#178"],"resourcesReady":2,"resourcesExhausted":0,"credits":0,"hasForce":false,"discard":[],"cards":[]},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["SHD#257:22","SHD#257:23","SHD#257:24","SHD#257:25"],"resourcesReady":2,"resourcesExhausted":0,"credits":0,"hasForce":false,"discard":[],"cards":[]}}}}
+{"seq":"R1.A.start","t":"PHASE_START","phase":"action"}
+{"seq":"R1.A.0a","t":"MOVE","card":"SHD#257:10","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0b","t":"MOVE","card":"SHD#257:5","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0c","t":"MOVE","card":"SHD#257:3","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0d","t":"MOVE","card":"SHD#257:14","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0e","t":"MOVE","card":"SHD#257:8","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0f","t":"MOVE","card":"SHD#257:16","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0g","t":"MOVE","card":"SHD#257","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0h","t":"MOVE","card":"SHD#257:19","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0i","t":"MOVE","card":"SHD#257:12","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0j","t":"MOVE","card":"SHD#257:7","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0k","t":"MOVE","card":"SHD#257:11","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0l","t":"MOVE","card":"SHD#257:18","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0m","t":"MOVE","card":"SHD#257:13","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0n","t":"MOVE","card":"SHD#257:9","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0o","t":"MOVE","card":"SHD#257:15","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0p","t":"MOVE","card":"SHD#257:2","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0q","t":"MOVE","card":"SHD#257:4","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0r","t":"MOVE","card":"SHD#257:20","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0s","t":"MOVE","card":"SHD#257:6","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0t","t":"MOVE","card":"SHD#257:17","from":"outsideTheGame","to":"resource","p":1}
+{"seq":"R1.A.0u","t":"MOVE","card":"SHD#257:40","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0v","t":"MOVE","card":"SHD#257:22","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0w","t":"MOVE","card":"SHD#257:30","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0x","t":"MOVE","card":"SHD#257:27","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0y","t":"MOVE","card":"SHD#257:31","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0z","t":"MOVE","card":"SHD#257:26","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0aa","t":"MOVE","card":"SHD#257:32","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0ab","t":"MOVE","card":"SHD#257:35","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0ac","t":"MOVE","card":"SHD#257:36","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0ad","t":"MOVE","card":"SHD#257:39","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0ae","t":"MOVE","card":"SHD#257:33","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0af","t":"MOVE","card":"SHD#257:29","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0ag","t":"MOVE","card":"SHD#257:37","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0ah","t":"MOVE","card":"SHD#257:21","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0ai","t":"MOVE","card":"SHD#257:25","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0aj","t":"MOVE","card":"SHD#257:23","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0ak","t":"MOVE","card":"SHD#257:24","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0al","t":"MOVE","card":"SHD#257:28","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0am","t":"MOVE","card":"SHD#257:34","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0an","t":"MOVE","card":"SHD#257:38","from":"outsideTheGame","to":"resource","p":2}
+{"seq":"R1.A.0ao","t":"MOVE","card":"LOF#164","from":"outsideTheGame","to":"ground","p":1}
+{"seq":"R1.A.0ap","t":"MOVE","card":"SOR#232","from":"outsideTheGame","to":"ground","p":1}
+{"seq":"R1.A.0aq","t":"MOVE","card":"SOR#095","from":"outsideTheGame","to":"ground","p":2}
+{"seq":"R1.A.0ar","t":"MOVE","card":"SOR#178:6","from":"outsideTheGame","to":"deck","p":1}
+{"seq":"R1.A.0as","t":"MOVE","card":"SOR#178:5","from":"outsideTheGame","to":"deck","p":1}
+{"seq":"R1.A.0at","t":"MOVE","card":"SOR#178:3","from":"outsideTheGame","to":"deck","p":1}
+{"seq":"R1.A.0au","t":"MOVE","card":"SOR#178","from":"outsideTheGame","to":"deck","p":1}
+{"seq":"R1.A.0av","t":"MOVE","card":"SOR#178:4","from":"outsideTheGame","to":"deck","p":1}
+{"seq":"R1.A.0aw","t":"MOVE","card":"SOR#178:2","from":"outsideTheGame","to":"deck","p":1}
+{"seq":"R1.A.0ax","t":"MOVE","card":"SOR#178:11","from":"outsideTheGame","to":"deck","p":2}
+{"seq":"R1.A.0ay","t":"MOVE","card":"SOR#178:10","from":"outsideTheGame","to":"deck","p":2}
+{"seq":"R1.A.0az","t":"MOVE","card":"SOR#178:8","from":"outsideTheGame","to":"deck","p":2}
+{"seq":"R1.A.0ba","t":"MOVE","card":"SOR#178:9","from":"outsideTheGame","to":"deck","p":2}
+{"seq":"R1.A.0bb","t":"MOVE","card":"SOR#178:7","from":"outsideTheGame","to":"deck","p":2}
+{"seq":"R1.A.0bc","t":"MOVE","card":"SOR#178:12","from":"outsideTheGame","to":"deck","p":2}
+{"seq":"R1.A.0bd","t":"CHOICE","p":1,"prompt":"Wampa","offered":["LOF#164","SOR#232","SOR#027","SOR#010","SOR#095","SOR#029","SOR#005"],"chose":5}
+{"seq":"R1.A.0be","t":"EXHAUST","card":"LOF#164"}
+{"seq":"R1.A.1","t":"ATTACK","p":1,"atk":"LOF#164","def":"base@2","defenderType":"base"}
+{"seq":"R1.A.1a","t":"DAMAGE","src":"LOF#164","tgt":"base@2","amt":4,"damageType":"combat","hp":26}
+{"seq":"R1.A.2","t":"PASS","p":1}
+{"seq":"R1.A.2a","t":"CHOICE","p":2,"prompt":"Battlefield Marine","offered":["SOR#095","SOR#029","SOR#005","LOF#164","SOR#232","SOR#027","SOR#010"],"chose":5}
+{"seq":"R1.A.2b","t":"EXHAUST","card":"SOR#095"}
+{"seq":"R1.A.3","t":"ATTACK","p":2,"atk":"SOR#095","def":"base@1","defenderType":"base"}
+{"seq":"R1.A.3a","t":"DAMAGE","src":"SOR#095","tgt":"base@1","amt":3,"damageType":"combat","hp":27}
+{"seq":"R1.A.4","t":"PASS","p":2}
+{"seq":"R1.A.5","t":"PASS","p":1}
+{"seq":"R1.A.end","t":"PHASE_END","phase":"action"}
+{"seq":"R1.G.start","t":"PHASE_START","phase":"regroup"}
+{"seq":"R1.G.1","t":"MOVE","card":"SOR#178:2","from":"deck","to":"hand","p":1}
+{"seq":"R1.G.2","t":"MOVE","card":"SOR#178:4","from":"deck","to":"hand","p":1}
+{"seq":"R1.G.3","t":"DRAW","p":1,"count":2,"cards":["SOR#178:2","SOR#178:4"]}
+{"seq":"R1.G.4","t":"MOVE","card":"SOR#178:12","from":"deck","to":"hand","p":2}
+{"seq":"R1.G.5","t":"MOVE","card":"SOR#178:7","from":"deck","to":"hand","p":2}
+{"seq":"R1.G.6","t":"DRAW","p":2,"count":2,"cards":["SOR#178:12","SOR#178:7"]}
+{"seq":"R1.G.7","t":"READY","card":"LOF#164"}
+{"seq":"R1.G.8","t":"READY","card":"SOR#095"}
+{"seq":"R1.G.end","t":"PHASE_END","phase":"regroup"}
+{"seq":"R1.end","t":"ROUND_END","round":1}
+{"seq":"R2.start","t":"ROUND_START","round":2,"keyframe":{"round":2,"phase":"action","initiative":1,"players":{"1":{"seat":1,"baseHp":27,"baseMaxHp":30,"handSize":2,"hand":["SOR#178:2","SOR#178:4"],"resourcesReady":20,"resourcesExhausted":0,"credits":0,"hasForce":false,"discard":[],"cards":[{"id":"LOF#164","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{}},{"id":"SOR#232","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{}}]},"2":{"seat":2,"baseHp":26,"baseMaxHp":30,"handSize":2,"hand":["SOR#178:12","SOR#178:7"],"resourcesReady":20,"resourcesExhausted":0,"credits":0,"hasForce":false,"discard":[],"cards":[{"id":"SOR#095","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{}}]}}}}
+{"seq":"R2.A.start","t":"PHASE_START","phase":"action"}
+{"seq":"R2.A.0a","t":"CHOICE","p":1,"prompt":"AT-ST","offered":["LOF#164","SOR#232","SOR#027","SOR#010","SOR#095","SOR#029","SOR#005"],"chose":5}
+{"seq":"R2.A.0b","t":"EXHAUST","card":"SOR#232"}
+{"seq":"R2.A.1","t":"ATTACK","p":1,"atk":"SOR#232","def":"base@2","defenderType":"base"}
+{"seq":"R2.A.1a","t":"DAMAGE","src":"SOR#232","tgt":"base@2","amt":6,"damageType":"combat","hp":20}
+{"seq":"R2.A.2","t":"PASS","p":1}
+{"seq":"R2.A.3","t":"PASS","p":2}
+{"seq":"R2.A.end","t":"PHASE_END","phase":"action"}
+{"seq":"R2.G.start","t":"PHASE_START","phase":"regroup"}
+{"seq":"R2.G.1","t":"MOVE","card":"SOR#178","from":"deck","to":"hand","p":1}
+{"seq":"R2.G.2","t":"MOVE","card":"SOR#178:3","from":"deck","to":"hand","p":1}
+{"seq":"R2.G.3","t":"DRAW","p":1,"count":2,"cards":["SOR#178","SOR#178:3"]}
+{"seq":"R2.G.4","t":"MOVE","card":"SOR#178:9","from":"deck","to":"hand","p":2}
+{"seq":"R2.G.5","t":"MOVE","card":"SOR#178:8","from":"deck","to":"hand","p":2}
+{"seq":"R2.G.6","t":"DRAW","p":2,"count":2,"cards":["SOR#178:9","SOR#178:8"]}
+{"seq":"R2.G.7","t":"READY","card":"SOR#232"}
+{"seq":"R2.G.end","t":"PHASE_END","phase":"regroup"}
+{"seq":"R2.end","t":"ROUND_END","round":2}
+{"seq":"R3.start","t":"ROUND_START","round":3,"keyframe":{"round":3,"phase":"action","initiative":1,"players":{"1":{"seat":1,"baseHp":27,"baseMaxHp":30,"handSize":4,"hand":["SOR#178:2","SOR#178:4","SOR#178","SOR#178:3"],"resourcesReady":20,"resourcesExhausted":0,"credits":0,"hasForce":false,"discard":[],"cards":[{"id":"LOF#164","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{}},{"id":"SOR#232","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{}}]},"2":{"seat":2,"baseHp":20,"baseMaxHp":30,"handSize":4,"hand":["SOR#178:12","SOR#178:7","SOR#178:9","SOR#178:8"],"resourcesReady":20,"resourcesExhausted":0,"credits":0,"hasForce":false,"discard":[],"cards":[{"id":"SOR#095","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{}}]}}}}
+{"seq":"R3.A.start","t":"PHASE_START","phase":"action"}
+
+%%% ANNOTATIONS

@@ -252,8 +252,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
             userSelect: 'none',
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
+            WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
+            WebkitUserSelect: 'none',   /* Prevents image selection */
         },
         deployedPlaceholder: {
             backgroundColor: 'transparent',
@@ -352,8 +352,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             imageRendering: '-webkit-optimize-contrast',
             backfaceVisibility: 'hidden',
             userSelect: 'none',
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
+            WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
+            WebkitUserSelect: 'none',   /* Prevents image selection */
             aspectRatio: aspectRatio,
             width: width,
         },
@@ -558,6 +558,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 aria-haspopup="true"
                 data-card-url={s3CardImageURL(card, locale)}
                 data-card-type={isLeader ? 'leader' : 'base'}
+                data-card-uuid={isDeployed ? undefined : card.uuid}
                 onMouseEnter={handlePreviewOpen}
                 onMouseLeave={handlePreviewClose}
                 {...longPressHandlers}
@@ -649,7 +650,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
                 {cardStyle === LeaderBaseCardStyle.Leader && title && (
                     <>
-                        <Box sx={styles.nameplateBox}>
+                        <Box sx={styles.nameplateBox} data-leader-nameplate="true">
                             <Typography variant="body2" sx={styles.nameplateText}>
                                 {title}
                             </Typography>

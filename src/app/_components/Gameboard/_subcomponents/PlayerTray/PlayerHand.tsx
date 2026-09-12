@@ -229,7 +229,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                 >
                     {cards.map((card, i) => (
                         <Box
-                            key={`${connectedPlayer}-hand-${i}`}
+                            key={card.uuid ?? `${connectedPlayer}-hand-${i}`}
                             sx={{
                                 position: 'relative',
                                 width: 'auto',
@@ -261,7 +261,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                 >
                     {cards.map((card, i) => (
                         <Box
-                            key={`${connectedPlayer}-hand-${i}`}
+                            key={card.uuid ?? `${connectedPlayer}-hand-${i}`}
                             sx={{
                                 position: 'absolute',
                                 width: 'auto',

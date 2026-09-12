@@ -15,7 +15,9 @@ const Navbar = dynamic(() => import('./Navigation/NavBar'), { ssr: false });
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const path = usePathname();
     const pagesWithWebsocket = ['/GameBoard', '/lobby', '/quickGame'];
+    const pagesWithoutNavbar: string[] = [];
     const isPageWithWebsocket = pagesWithWebsocket.includes(path);
+    const hideNavbar = pagesWithoutNavbar.includes(path);
 
     return (
         <>
@@ -24,10 +26,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                     <GameProvider>
                         {children}
                     </GameProvider>
-                </ClientProviders> 
+                </ClientProviders>
             ) : (
                 <ClientProviders>
-                    <Navbar />
+                    {!hideNavbar && <Navbar />}
                     {children}
                 </ClientProviders>
             )}

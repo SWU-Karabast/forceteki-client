@@ -78,6 +78,10 @@ export const AVAILABLE_MENU_ACTIONS: Record<string, { label: string; href: strin
         label: 'Decks',
         href: '/DeckPage'
     },
+    REPLAY: {
+        label: 'Replay',
+        href: '/Replay'
+    },
     PREFERENCES: {
         label: 'Preferences',
         href: '/Preferences',
@@ -123,6 +127,7 @@ const ControlHub: React.FC = () => {
     const menuActions: Array<MenuAction> = filterNulls([
         'UNIMPLEMENTED',
         'DECKS',
+        'REPLAY',
         'PREFERENCES',
         'TERMS',
         user && isMod ? 'MODS' : null,

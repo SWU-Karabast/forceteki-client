@@ -74,7 +74,6 @@ const GameCard: React.FC<IGameCardProps> = ({
     const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
 
     const locale = useCardImageLocale();
-
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const isOpponentEffect = gameState?.players[connectedPlayer]?.promptState.isOpponentEffect;
     const phase = gameState?.phase;
@@ -313,8 +312,8 @@ const GameCard: React.FC<IGameCardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             userSelect: 'none',
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
+            WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
+            WebkitUserSelect: 'none',   /* Prevents image selection */
         },
         upgradeOverlay: {
             position: 'absolute',
@@ -465,6 +464,46 @@ const GameCard: React.FC<IGameCardProps> = ({
             pointerEvents: 'none',
             zIndex: 2,
         },
+        // Replay only: the file's keyword list, along the top edge, and a marker for stats the
+        // adapter had to rebuild from card data (a pre-STATS file). Neither is ever set live.
+        keywordStrip: {
+            position: 'absolute',
+            top: '2%',
+            left: '4%',
+            right: '4%',
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: '0.15em',
+            fontSize: 'clamp(0.36rem, 0.85vw, 0.7rem)',
+            pointerEvents: 'none',
+            zIndex: 2,
+        },
+        keywordChip: {
+            fontSize: 'inherit',
+            fontWeight: 700,
+            lineHeight: 1.2,
+            padding: '0 0.35em',
+            borderRadius: '0.6em',
+            color: 'white',
+            backgroundColor: 'rgba(0, 0, 0, 0.72)',
+            border: '1px solid rgba(255, 255, 255, 0.35)',
+            textTransform: 'capitalize',
+            whiteSpace: 'nowrap',
+        },
+        reconstructedMark: {
+            position: 'absolute',
+            bottom: '-2%',
+            left: '25%',
+            fontSize: 'clamp(0.5rem, 1.1vw, 0.9rem)',
+            fontWeight: 900,
+            color: '#ffc857',
+            textShadow: '0 0 3px black',
+            lineHeight: 1,
+            zIndex: 3,
+            cursor: 'help',
+            pointerEvents: 'auto',
+        },
         upgradeBlankIcon:{
             position: 'absolute',
             right: '4px',
@@ -531,7 +570,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
     }
     return (
-        <Box sx={[styles.cardContainer, highlightSx]}>
+        <Box sx={[styles.cardContainer, highlightSx]} data-card-uuid={card.uuid}>
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
                 <Box
                     sx={styles.cloneIcon}
@@ -627,6 +666,18 @@ const GameCard: React.FC<IGameCardProps> = ({
                             </Box>
                         )}
                         <HealthBadge sx={[styles.statBadge, { right: '-4%' } ]} value={card.hp || 0} />
+                        {card.statsReconstructed && (
+                            <Tooltip title="Power and HP rebuilt from card data: this replay predates STATS records, so ability effects are not included" arrow>
+                                <Box sx={styles.reconstructedMark} aria-label="Stats reconstructed from card data">≈</Box>
+                            </Tooltip>
+                        )}
+                        {!!card.keywords?.length && (
+                            <Box sx={styles.keywordStrip} aria-label={`Keywords: ${card.keywords.join(', ')}`}>
+                                {card.keywords.map((k) => (
+                                    <Typography key={k} component="span" sx={styles.keywordChip}>{k}</Typography>
+                                ))}
+                            </Box>
+                        )}
                     </>
                 )}
             </Box>
@@ -639,6 +690,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             {nonShieldUpgradeCards.map((subcard) => (
                 <Box
                     key={subcard.uuid}
+                    data-upgrade-uuid={subcard.uuid}
                     sx={{ ...styles.upgradeIcon,
                         backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
                         border: subcard.selectable ? `2px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',

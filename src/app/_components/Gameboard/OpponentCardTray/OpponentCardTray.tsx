@@ -13,7 +13,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameTimer from '../_subcomponents/OpponentTray/GameTimer';
 
 const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
-    const { gameState, connectedPlayer, getOpponent, isSpectator, gameIsEnded, lobbyState } = useGame();
+    const { gameState, connectedPlayer, getOpponent, isSpectator, isReplay, gameIsEnded, lobbyState } = useGame();
     const { isPortrait } = useScreenOrientation();
     const locale = useCardImageLocale();
 
@@ -204,7 +204,8 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
             >
                 <Box sx={styles.opponentHandWrapper}>
                     <PlayerHand
-                        clickDisabled={true}
+                        clickDisabled={!isSpectator}
+                        allowHover={isSpectator}
                         maxCardOverlapPercent={0.95}
                         scrollbarEnabled={false}
                         cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []}
@@ -223,23 +224,27 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
                 }}
             >
                 {!gameIsEnded() && !lobbyState?.isPrivate && <GameTimer />}
-                <Box
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    sx={styles.lastPlayed}>
-                </Box>
-                <Popover
-                    id="mouse-over-popover"
-                    sx={{ pointerEvents: 'none' }}
-                    open={hasLastPlayedCard && open}
-                    anchorEl={anchorElement}
-                    onClose={handlePreviewClose}
-                    disableRestoreFocus
-                    slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
-                    {...popoverConfig()}
-                >
-                    <Box sx={{ ...styles.lastCardPlayedPreview }} />
-                </Popover>
+                {(!isSpectator || isReplay) && (
+                    <>
+                        <Box
+                            onMouseEnter={handlePreviewOpen}
+                            onMouseLeave={handlePreviewClose}
+                            sx={styles.lastPlayed}>
+                        </Box>
+                        <Popover
+                            id="mouse-over-popover"
+                            sx={{ pointerEvents: 'none' }}
+                            open={hasLastPlayedCard && open}
+                            anchorEl={anchorElement}
+                            onClose={handlePreviewClose}
+                            disableRestoreFocus
+                            slotProps={{ paper: { sx: { backgroundColor: 'transparent' } } }}
+                            {...popoverConfig()}
+                        >
+                            <Box sx={{ ...styles.lastCardPlayedPreview }} />
+                        </Popover>
+                    </>
+                )}
             </Grid>
         </Grid>
     );

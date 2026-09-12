@@ -1,0 +1,536 @@
+'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// gameState mirrors the live board's gameState, which is typed `any`
+// (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
+import type { SwuPgnDocument, ReducedState, Seat, GameEvent, NameResolver } from '@/lib/swupgn';
+import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver, isCompleteKeyframe } from '@/lib/swupgn';
+import { storyName } from '@/app/_utils/replayAction';
+import { adaptState, type AdaptOptions, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
+import { deckByFrame, type DeckState } from '@/app/_utils/deckTracker';
+import { buildMoveList, type ReplayMove } from '@/app/_utils/swupgnMoves';
+import { firstFrameByAction } from '@/app/_utils/replayMoves';
+import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
+import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
+import { frameAction } from '@/app/_utils/replayAction';
+import { buildBeats, beatAt, captionForBeat, chapterMarks as chapterMarksOf, type Beat } from '@/app/_utils/replayBeats';
+import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
+import { activeSeatByFrame, attackByFrame, lastPlayedByFrame } from '@/app/_utils/replayLiveCues';
+import { classifyBeat, type Transition } from '@/app/_utils/replayTransitions';
+import { SPEEDS, dwellMs } from '@/app/_utils/replayTiming';
+import { readPrefs, writePrefs, PREFS_KEY, DEFAULT_PREFS, type StepBy } from '@/app/_utils/replayPrefs';
+import { triggerBlobDownload, sanitizeFilename, downloadSwuPgn } from '@/app/_utils/downloadBlob';
+
+/** One resource commitment: what was taken, and what the player could have taken instead. */
+export interface IResourcingDecision {
+    seq: string;
+    frame: number;
+    seat: Seat;
+    round: number;
+    card: string;
+
+    /** The hand as it stood BEFORE the commitment, including `card`. */
+    handBefore: string[];
+}
+
+export interface IReplayContextType {
+    gameState: any;
+    connectedPlayer: string;
+    getOpponent: (p: string) => string;
+
+    doc: SwuPgnDocument;
+
+    /** The repaired event stream. Frame indices address THIS, not `doc.events` — the
+     *  reader drops inert records, so the two are not the same length. */
+    events: GameEvent[];
+
+    /** Round + phase boundaries as scrubber marks: beat index + label + kind. */
+    chapterMarks: { value: number; label: string; kind: 'round' | 'phase' }[];
+
+    /** Remaining deck per seat after each frame, from the published starting order. */
+    deckStates: Array<Record<Seat, DeckState>>;
+
+    /** Every resource commitment, with the hand it was chosen from. */
+    resourcingDecisions: IResourcingDecision[];
+    currentIndex: number;
+    totalFrames: number;
+    header: SwuPgnDocument['header'];
+    moves: ReplayMove[];
+    currentMoveIndex: number;
+    replayId: string | null;
+    downloadReplay: () => void;
+
+    /** Resolve a SET#NUM[:copy] card id to a display name (falls back to the raw id). */
+    nameOf: (id: string) => string;
+
+    // Download a human-readable text log of the game (reader's render()).
+    downloadTextLog: () => void;
+    // Fog-of-war: when true, the non-perspective player's hand renders face-down.
+    fogOfWar: boolean;
+    toggleFogOfWar: () => void;
+    // Clip range [start,end] (frame indices); playback loops within it. Null = whole game.
+    clip: { start: number; end: number } | null;
+    setClipStart: () => void;
+    setClipEnd: () => void;
+    clearClip: () => void;
+
+    play: () => void; pause: () => void; isPlaying: boolean;
+    speed: number; setSpeed: (s: number) => void;
+
+    /** Whether beat-to-beat card motion animates. Persisted (Task 14). */
+    animate: boolean; setAnimate: (a: boolean) => void;
+
+    /** What the arrow keys and the board chevrons step by. Persisted (Task 14). */
+    stepBy: StepBy; setStepBy: (s: StepBy) => void;
+
+    /** The beat timeline (Task 2's buildBeats over `events`) and the beat the playhead sits in. */
+    beats: Beat[];
+    currentBeat: Beat;
+
+    /** What moved in a beat (Task 5's classifyBeat), for the animator and the autoplay dwell. */
+    transitionsOf: (b: Beat) => Transition[];
+    stepForward: () => void; stepBack: () => void; seekTo: (i: number) => void;
+
+    /** The old per-frame step, kept for the shift-key fine-grained scrub. */
+    stepRecordForward: () => void; stepRecordBack: () => void;
+    seekToBeat: (i: number) => void;
+    seekToSeq: (seq: string) => void;
+
+    /** Seek to the END of the beat that owns the record `seq` (a move row lands on the
+     *  resolved board; `seekToSeq` stays exact for `?t=` links and annotations). */
+    seekToBeatOf: (seq: string) => void;
+    currentEvents: string[];
+
+    /** How many records the current beat's anchor resolved, for the "+N records" caption. */
+    captionExtra: number;
+    togglePerspective: () => void; currentPerspective: string;
+}
+
+export const ReplayContext = createContext<IReplayContextType | null>(null);
+
+export function useReplay(): IReplayContextType {
+    const ctx = useContext(ReplayContext);
+    if (!ctx) throw new Error('useReplay must be used within a ReplayProvider');
+    return ctx;
+}
+
+const P1 = 'Player 1';
+const P2 = 'Player 2';
+const SEAT_TO_ID: SeatToPlayerId = { 1: P1, 2: P2 };
+
+interface ReplayProviderProps {
+    doc: SwuPgnDocument;
+    children: ReactNode;
+    rawContent?: string | null;
+    replayId?: string | null;
+
+    /** Opening position: a `seq` (stable across stream repairs) or a legacy frame index. */
+    initialFrame?: number | string;
+    nameMap?: Record<string, string>;
+    // Deep-linked clip range (?from&to): seek to start and auto-play the range on load.
+    clipStart?: number | null;
+    clipEnd?: number | null;
+}
+
+export const ReplayProvider: React.FC<ReplayProviderProps> = ({
+    doc, children, rawContent = null, replayId = null, initialFrame = 0, nameMap = {},
+    clipStart = null, clipEnd = null,
+}) => {
+    // Read the repaired stream, not the file's literal events: forceteki never emits a
+    // decrement when a status token leaves its host, and deck searches emit inert MOVEs
+    // that cost a scrubber frame each. See normalizeEvents.
+    const events = useMemo(
+        // Hold back any record an annotation points at: dropping it would orphan the thread.
+        () => normalizeEvents(doc.events, new Set(doc.annotations.map((a) => a.ref))),
+        [doc],
+    );
+    const totalFrames = events.length;
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [speed, setSpeedState] = useState<number>(DEFAULT_PREFS.speed);
+    // Ignore a speed outside the supported list rather than let the dwell divide by a stray value.
+    const setSpeed = useCallback((s: number) => { if ((SPEEDS as readonly number[]).includes(s)) setSpeedState(s); }, []);
+    const [stepBy, setStepBy] = useState<StepBy>(DEFAULT_PREFS.stepBy);
+    const [animate, setAnimate] = useState<boolean>(DEFAULT_PREFS.animate);
+    // The write effect below fires on mount too (same as any effect), which would commit
+    // these still-default values right over whatever the read effect just found — the two
+    // run in the same post-render pass, before React has applied the read's setState calls.
+    // Skipping the write effect's very first run avoids that clobber; every real change
+    // after mount still writes normally.
+    const skippedFirstWrite = useRef(false);
+    // Read the stored playback preference once on mount (SSR renders the defaults above;
+    // the read happens after hydration, from the browser's own localStorage).
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            const prefs = readPrefs(window.localStorage.getItem(PREFS_KEY));
+            setSpeedState(prefs.speed);
+            setStepBy(prefs.stepBy);
+            setAnimate(prefs.animate);
+        } catch { /* localStorage unavailable (private mode, denied) — keep the defaults */ }
+    }, []);
+    // ...and persist it on every change thereafter.
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (!skippedFirstWrite.current) { skippedFirstWrite.current = true; return; }
+        try {
+            window.localStorage.setItem(PREFS_KEY, writePrefs({ speed, stepBy, animate }));
+        } catch { /* localStorage unavailable — the preference just won't survive a reload */ }
+    }, [speed, stepBy, animate]);
+    const [perspective, setPerspective] = useState(P1);
+    const [fogOfWar, setFogOfWar] = useState(false);
+    const [clip, setClipState] = useState<{ start: number; end: number } | null>(null);
+
+    // A current-format file carries its own `%%% CARDS` index, which covers tokens and any
+    // card newer than the client's generated name map — prefer it, and fall back to the
+    // static map for files written before the index existed.
+    const resolver = useMemo(
+        () => (doc.cards?.length ? indexResolver(doc.cards) : makeNameResolver(nameMap)),
+        [doc.cards, nameMap],
+    );
+    // The client's own prose uses the story's `nm()` (spec §16): a copy keeps its ` #N` so two
+    // Wampas read apart, and `base@N` is "Player N's base". This decorated resolver is for
+    // components that print an id DIRECTLY (`nameOf` below: the decklist, the decision review,
+    // a bookmark label). Everything that goes through `frameAction` -- the move list, the live
+    // caption, the beat caption -- applies `storyName` ITSELF and so takes the BARE `resolver`;
+    // handing it this one produced "Ant Droid #2 #2". `render()` likewise decorates internally.
+    const names = useMemo<NameResolver>(() => ({ nameOf: (id: string) => storyName(id, resolver) }), [resolver]);
+    const statMap = useCardStatMap();
+    const moves = useMemo(() => buildMoveList(events, resolver), [events, resolver]);
+
+    // Per-frame ReducedState, computed once per document load via a single O(n) forward
+    // pass (foldFrames) instead of re-folding every prefix (which was O(n^2)).
+    const frameStates = useMemo<ReducedState[]>(() => foldFrames(events), [events]);
+
+    // The beat timeline (Task 2): stepping, scrubbing and autoplay all move by beat, not by frame.
+    const beats = useMemo(() => buildBeats(events), [events]);
+    const currentBeat = useMemo(() => beatAt(beats, currentIndex), [beats, currentIndex]);
+    // What moved in a beat (Task 5's classifyBeat), keyed off the frames it spans.
+    const transitionsOf = useCallback(
+        (b: Beat) => classifyBeat(b, events, frameStates[b.start - 1], frameStates[b.end]),
+        [events, frameStates],
+    );
+
+    // seq -> frame index, built once, so currentMoveIndex is a cheap lookup rather than
+    // an events.findIndex() per move on every frame change (was O(moves x events)).
+    const seqToFrame = useMemo(() => {
+        const m = new Map<string, number>();
+        // First occurrence wins, matching stateAt()/seekToSeq()'s findIndex: a duplicate seq
+        // used to seek one way from the move list and another from a ?t= link.
+        for (let i = 0; i < events.length; i++) if (!m.has(events[i].seq)) m.set(events[i].seq, i);
+        return m;
+    }, [events]);
+    // A move's span starts at the first record filed under it — its own, or an earlier one the
+    // writer stamped with `for` (spec §9.1: an attack's target CHOICE and the attacker's
+    // EXHAUST are numbered before the ATTACK they belong to).
+    //
+    // `currentMoveIndex` below scans this array and BREAKS at the first frame past the current
+    // one, so it must be ascending. A conformant writer only stamps the contiguous run
+    // immediately before an action, but `for` is legal on any record and this reads uploaded
+    // files: one stray early record naming a late action pulled that move's frame backwards
+    // and the scan then stopped early, leaving a stale row highlighted for the rest of a
+    // forward scrub. So a filed frame is taken only when it actually sits between the previous
+    // move and this one — otherwise the move's own frame stands, and the array is ascending by
+    // construction rather than by assumption.
+    const moveFrames = useMemo(() => {
+        const filedUnder = firstFrameByAction(events);
+        let prev = -1;
+        return moves.map((mv) => {
+            const own = seqToFrame.get(mv.seq) ?? -1;
+            const filed = filedUnder.get(mv.seq);
+            const start = own >= 0 && filed != null && filed > prev && filed < own ? filed : own;
+            if (start >= 0) prev = start;
+            return start;
+        });
+    }, [moves, seqToFrame, events]);
+
+    // Resource commitments paired with the hand they were chosen from. The board can only
+    // show the hand AFTER the pick (the card has already left it on that frame), but what
+    // makes a resourcing decision reviewable is the alternatives that were passed over.
+    const resourcingDecisions = useMemo<IResourcingDecision[]>(() => {
+        let round = 0;
+        const out: IResourcingDecision[] = [];
+        for (let i = 0; i < events.length; i++) {
+            const e = events[i];
+            if (e.t === 'ROUND_START') { round = e.round; continue; }
+            if (e.t !== 'MOVE' || e.to !== 'resource' || e.from !== 'hand') continue;
+            if (e.p !== 1 && e.p !== 2) continue;
+            const before = frameStates[i - 1]?.players[e.p]?.hand ?? [];
+            out.push({
+                seq: e.seq, frame: i, seat: e.p, round, card: e.card,
+                // Guard the fold missing the card (a keyframe can resync the hand): the
+                // committed card is part of the choice by definition.
+                handBefore: before.includes(e.card) ? [...before] : [...before, e.card],
+            });
+        }
+        return out;
+    }, [events, frameStates]);
+
+    // Units to draw exhausted from their arrival frame, ahead of the entering EXHAUST the
+    // file writes a few records later (spec §10.1), so a played unit comes in exhausted.
+    const entryExhaust = useMemo(() => entryExhaustByFrame(events), [events]);
+
+    // What the live board shows around the cards: whose action it is, the attack in progress,
+    // the last card played. All read off the file (replayLiveCues).
+    const activeSeats = useMemo(() => activeSeatByFrame(events, frameStates), [events, frameStates]);
+    const attacks = useMemo(() => attackByFrame(events), [events]);
+    const lastPlayed = useMemo(() => lastPlayedByFrame(events), [events]);
+
+    // Remaining deck per frame, counted from the engine's own deck MOVEs against the
+    // published starting order. One source of truth for the board and the Deck tab.
+    const deckStates = useMemo(() => deckByFrame(doc, events), [doc, events]);
+
+    // Round + phase boundaries, for landmarks on an otherwise featureless beat scrubber.
+    const chapterMarks = useMemo(() => chapterMarksOf(beats, events), [beats, events]);
+
+    // Per-frame base HP for the window BEFORE the first keyframe only. The fold's `baseHp` is
+    // the file's own number from the first keyframe on (snapped there, then absolute on every
+    // base DAMAGE/HEAL/OVERWHELM, spec §11) and wins outright; before it the fold holds the
+    // placeholder 30, and a 33- or 28-HP base read wrong. Card data supplies the printed HP
+    // for that window (§21), with the same absolute `hp` records applied on top.
+    const baseHpByFrame = useMemo<Array<Record<Seat, number | undefined>>>(() => {
+        const cur: Record<Seat, number | undefined> = {
+            1: statMap[baseId(doc.header.p1Base)]?.hp,
+            2: statMap[baseId(doc.header.p2Base)]?.hp,
+        };
+        const out: Array<Record<Seat, number | undefined>> = new Array(events.length);
+        let seenKeyframe = false;
+        for (let i = 0; i < events.length; i++) {
+            const e = events[i];
+            if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && isCompleteKeyframe(e.keyframe)) seenKeyframe = true;
+            if (e.t === 'DAMAGE' || e.t === 'HEAL' || e.t === 'OVERWHELM') {
+                const m = /^base@(\d)$/.exec(e.tgt);
+                if (m) cur[Number(m[1]) as Seat] = e.hp;
+            }
+            out[i] = seenKeyframe
+                ? { 1: frameStates[i]?.players[1]?.baseHp, 2: frameStates[i]?.players[2]?.baseHp }
+                : { 1: cur[1] ?? frameStates[i]?.players[1]?.baseHp, 2: cur[2] ?? frameStates[i]?.players[2]?.baseHp };
+        }
+        return out;
+    }, [events, frameStates, doc.header.p1Base, doc.header.p2Base, statMap]);
+
+    // Per-frame resource-pile contents. `ReducedState.resources` carries the row's membership
+    // now (spec §11), snapped from every keyframe, so that is what the board draws. The MOVE
+    // scan below stays as the fallback for a file written before the field existed, where the
+    // ids are still right there in the `hand -> resource` MOVEs — and which card a player
+    // commits is the single most reviewable decision in the game.
+    const resourcedByFrame = useMemo<Array<Record<Seat, string[]>>>(() => {
+        const cur: Record<Seat, string[]> = { 1: [], 2: [] };
+        const out: Array<Record<Seat, string[]>> = new Array(events.length);
+        for (let i = 0; i < events.length; i++) {
+            const e = events[i];
+            // `e.p` comes off the file; anything but a real seat has no bucket here.
+            if (e.t === 'MOVE' && (e.p === 1 || e.p === 2)) {
+                if (e.to === 'resource' && e.from !== 'resource') {
+                    cur[e.p] = [...cur[e.p], e.card];
+                } else if (e.from === 'resource' && e.to !== 'resource') {
+                    cur[e.p] = cur[e.p].filter((c) => c !== e.card);
+                }
+            }
+            out[i] = {
+                1: frameStates[i]?.players[1]?.resources ?? cur[1],
+                2: frameStates[i]?.players[2]?.resources ?? cur[2],
+            };
+        }
+        return out;
+    }, [events, frameStates]);
+
+    // Per-frame exhausted state of each leader, from EXHAUST/READY events for the leader id.
+    // A leader exhausts when it uses its action ability (Karabast then dims the leader). The
+    // undeployed leader isn't a folded card, so without this the board would never show it.
+    const leaderExhaustByFrame = useMemo<Array<Record<Seat, boolean>>>(() => {
+        const lead: Record<Seat, string> = { 1: baseId(doc.header.p1Leader), 2: baseId(doc.header.p2Leader) };
+        const cur: Record<Seat, boolean> = { 1: false, 2: false };
+        const out: Array<Record<Seat, boolean>> = new Array(events.length);
+        for (let i = 0; i < events.length; i++) {
+            const e = events[i];
+            if ((e.t === 'EXHAUST' || e.t === 'READY') && 'card' in e) {
+                const on = e.t === 'EXHAUST';
+                for (const seat of [1, 2] as Seat[]) if (baseId(e.card) === lead[seat]) cur[seat] = on;
+            }
+            out[i] = { ...cur };
+        }
+        return out;
+    }, [events, doc.header.p1Leader, doc.header.p2Leader]);
+
+    useEffect(() => {
+        setPerspective(P1);
+        setFogOfWar(false);
+        // A deep-linked clip range (?from&to) seeks to its start and auto-plays; otherwise
+        // honor ?t (initialFrame) and start paused.
+        const hasClip = clipStart != null && clipEnd != null && clipEnd >= clipStart;
+        if (hasClip) {
+            // Clamp to the real frame range: `from`/`to` come straight off the URL, and an
+            // out-of-range `clip.end` broke the autoplay effect's beat lookup below.
+            // `?from=0&to=1e15` hung the tab, on load, on an auto-playing path.
+            const last = Math.max(0, totalFrames - 1);
+            const start = Math.min(Math.max(0, clipStart!), last);
+            setClipState({ start, end: Math.min(Math.max(start, clipEnd!), last) });
+            setCurrentIndex(Math.max(0, Math.min(clipStart!, totalFrames - 1)));
+            setIsPlaying(true);
+        } else {
+            setClipState(null);
+            // Open on frame 0 unless a ?t deep-link says otherwise. Playback used to skip to
+            // the first ROUND_START, which hid the setup prologue — including both players'
+            // opening resource picks, which are exactly what a replay is reviewed for.
+            //
+            // A `seq` deep-link is resolved against the repaired stream, so it lands on the
+            // same MOMENT even though the reader drops inert records; a bare number is a
+            // legacy index and is taken at face value.
+            const seqIndex = typeof initialFrame === 'string' && !/^\d+$/.test(initialFrame)
+                ? events.findIndex((e) => e.seq === initialFrame)
+                : -1;
+            const target = seqIndex >= 0 ? seqIndex : Number(initialFrame) || 0;
+            setCurrentIndex(Math.max(0, Math.min(target, totalFrames - 1)));
+            setIsPlaying(false);
+        }
+    }, [doc, events, initialFrame, totalFrames, clipStart, clipEnd]);
+
+    // What happened on the current frame: a caption + the in-play card(s) to glow.
+    const action = useMemo(() => frameAction(events[currentIndex], resolver), [events, currentIndex, resolver]);
+
+    const gameState = useMemo(() => {
+        if (!frameStates[currentIndex]) return null;
+        // Fog-of-war hides the hand of whoever is NOT the current perspective.
+        const oppSeat: Seat = perspective === P1 ? 2 : 1;
+        const opts: AdaptOptions = {
+            ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
+            // Names come from the file's own CARDS index (or the static map for older files);
+            // GameCard prints them on attached-upgrade banners.
+            nameOf: names.nameOf,
+            highlightIds: action.highlight,
+            leaderExhausted: leaderExhaustByFrame[currentIndex],
+            // Fog-of-war hides the opponent's hand; their face-down resources go with it.
+            baseHp: baseHpByFrame[currentIndex],
+            deckRemaining: {
+                1: deckStates[currentIndex]?.[1].remaining.length,
+                2: deckStates[currentIndex]?.[2].remaining.length,
+            },
+            resourcedIds: fogOfWar
+                ? { [perspective === P1 ? 1 : 2]: resourcedByFrame[currentIndex]?.[perspective === P1 ? 1 : 2] ?? [] } as Partial<Record<Seat, string[]>>
+                : resourcedByFrame[currentIndex],
+            exhaustedIds: [...(entryExhaust[currentIndex] ?? [])],
+            activeSeat: activeSeats[currentIndex],
+            attack: attacks[currentIndex],
+            lastPlayedCard: lastPlayed[currentIndex],
+        };
+        return adaptState(frameStates[currentIndex], doc, SEAT_TO_ID, opts, statMap);
+    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, names, entryExhaust, activeSeats, attacks, lastPlayed]);
+
+    const currentMoveIndex = useMemo(() => {
+        // moveFrames is ascending (moves are in timeline order), so stop at the first
+        // move that lands after the current frame.
+        let idx = -1;
+        for (let i = 0; i < moveFrames.length; i++) {
+            const f = moveFrames[i];
+            if (f >= 0 && f <= currentIndex) idx = i; else if (f > currentIndex) break;
+        }
+        return idx;
+    }, [moveFrames, currentIndex]);
+
+    // Caption text for the current BEAT (richer than the move list: includes ability
+    // activations, resourcing, draws, discards), plus how many records the beat's anchor
+    // resolved (the caption bar's "+N records"). Empty label when nothing noteworthy.
+    const caption = useMemo(() => captionForBeat(currentBeat, events, resolver), [currentBeat, events, resolver]);
+    const currentEvents = useMemo(() => (caption.label ? [caption.label] : []), [caption]);
+
+    const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);
+    const downloadReplay = useCallback(() => {
+        downloadSwuPgn(doc, rawContent ?? serialize(doc));
+    }, [rawContent, doc]);
+
+    const downloadTextLog = useCallback(() => {
+        const blob = new Blob([render(doc, resolver)], { type: 'text/plain' });
+        triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.txt`));
+    }, [doc, resolver]);
+
+    const toggleFogOfWar = useCallback(() => setFogOfWar((f) => !f), []);
+
+    // The old per-frame step, kept for the shift-key fine-grained scrub (and for the
+    // 'record' step-by preference, Task 14).
+    const stepRecordForward = useCallback(() => setCurrentIndex((p) => Math.min(p + 1, totalFrames - 1)), [totalFrames]);
+    const stepRecordBack = useCallback(() => setCurrentIndex((p) => Math.max(p - 1, 0)), []);
+    // A beat step lands on the beat's END: the fully resolved board. Going back from a beat's end
+    // lands on the previous beat's end, so forward then back is an identity.
+    const stepBeatForward = useCallback(() => setCurrentIndex((p) => {
+        const b = beatAt(beats, p);
+        return p < b.end ? b.end : (beats[b.index + 1]?.end ?? p);
+    }), [beats]);
+    const stepBeatBack = useCallback(() => setCurrentIndex((p) => {
+        const b = beatAt(beats, p);
+        return beats[b.index - 1]?.end ?? 0;
+    }), [beats]);
+    // The arrow keys and the board chevrons step by whichever unit the preference names.
+    const stepForward = stepBy === 'record' ? stepRecordForward : stepBeatForward;
+    const stepBack = stepBy === 'record' ? stepRecordBack : stepBeatBack;
+    const seekToBeat = useCallback((i: number) => {
+        const b = beats[Math.max(0, Math.min(i, beats.length - 1))];
+        if (b) setCurrentIndex(b.end);
+    }, [beats]);
+    const seekTo = useCallback((i: number) => setCurrentIndex(Math.max(0, Math.min(i, totalFrames - 1))), [totalFrames]);
+    const seekToSeq = useCallback((seq: string) => {
+        const i = events.findIndex((e) => e.seq === seq);
+        if (i >= 0) setCurrentIndex(i);
+    }, [events]);
+    const seekToBeatOf = useCallback((seq: string) => {
+        const i = seqToFrame.get(seq);
+        if (i != null) setCurrentIndex(beatAt(beats, i).end);
+    }, [seqToFrame, beats]);
+    const play = useCallback(() => {
+        setIsPlaying(true);
+        // Advance immediately so Play gives instant feedback instead of a dead wait for
+        // the first interval tick. Skips to the next beat's end.
+        setCurrentIndex((prev) => {
+            const lastFrame = clip ? clip.end : totalFrames - 1;
+            if (prev >= lastFrame) return prev;
+            const b = beatAt(beats, prev);
+            return Math.min(prev < b.end ? b.end : (beats[b.index + 1]?.end ?? lastFrame), lastFrame);
+        });
+    }, [clip, totalFrames, beats]);
+    const pause = useCallback(() => setIsPlaying(false), []);
+    const togglePerspective = useCallback(() => setPerspective((p) => (p === P1 ? P2 : P1)), []);
+
+    // Clip authoring: set the in/out point to the current frame; clear to drop the clip.
+    const setClipStart = useCallback(() => setClipState((c) => ({ start: currentIndex, end: Math.max(currentIndex, c?.end ?? currentIndex) })), [currentIndex]);
+    const setClipEnd = useCallback(() => setClipState((c) => ({ start: Math.min(currentIndex, c?.start ?? currentIndex), end: currentIndex })), [currentIndex]);
+    const clearClip = useCallback(() => setClipState(null), []);
+
+    useEffect(() => {
+        if (!isPlaying) return;
+        // A clip loops within [start, end]; normal playback runs to the end and stops.
+        const lastFrame = clip ? clip.end : totalFrames - 1;
+        if (currentIndex >= lastFrame) {
+            if (clip) setCurrentIndex(clip.start); // loop the clip
+            else setIsPlaying(false);
+            return;
+        }
+        // One timeout per BEAT, so an attack, a resource run or a draw burst holds on screen
+        // as one step instead of dealing its records one at a time. The dwell is timed for
+        // the beat about to be SHOWN, not the one just left — its own animation length,
+        // plus a handoff pause when the acting seat changes.
+        const b = beatAt(beats, currentIndex);
+        const next = Math.min(currentIndex < b.end ? b.end : (beats[b.index + 1]?.end ?? lastFrame), lastFrame);
+        const nextBeat = beats[b.index + (currentIndex < b.end ? 0 : 1)] ?? b;
+        const handoff = nextBeat.seat !== undefined && b.seat !== undefined && nextBeat.seat !== b.seat;
+        const t = setTimeout(() => setCurrentIndex(next), dwellMs(transitionsOf(nextBeat), handoff, speed));
+        return () => clearTimeout(t);
+    }, [isPlaying, speed, currentIndex, totalFrames, clip, beats, transitionsOf]);
+
+    const value: IReplayContextType = useMemo(() => ({
+        gameState, connectedPlayer: perspective, getOpponent,
+        doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
+        replayId, downloadReplay, nameOf: names.nameOf,
+        downloadTextLog, fogOfWar, toggleFogOfWar,
+        clip, setClipStart, setClipEnd, clearClip,
+        play, pause, isPlaying, speed, setSpeed, animate, setAnimate, stepBy, setStepBy,
+        beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
+        seekToSeq, seekToBeatOf, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
+    }), [gameState, perspective, getOpponent, doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
+        currentMoveIndex, replayId, downloadReplay, names, downloadTextLog, fogOfWar, toggleFogOfWar,
+        clip, setClipStart, setClipEnd, clearClip,
+        play, pause, isPlaying, speed, setSpeed, animate, stepBy,
+        beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
+        seekToSeq, seekToBeatOf, currentEvents, caption, togglePerspective]);
+
+    return <ReplayContext.Provider value={value}>{children}</ReplayContext.Provider>;
+};
