@@ -10,6 +10,7 @@ import TransportControls from '@/app/_components/Replay/TransportControls';
 import ReplayPanel from '@/app/_components/Replay/ReplayPanel';
 import LastActionCaption from '@/app/_components/Replay/LastActionCaption';
 import ReplayAnimator from '@/app/_components/Replay/ReplayAnimator';
+import BoardChevrons from '@/app/_components/Replay/BoardChevrons';
 import RecentReplays from '@/app/_components/Replay/RecentReplays';
 import OpponentCardTray from '@/app/_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '@/app/_components/Gameboard/Board/Board';
@@ -170,6 +171,7 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
                     <Box sx={{ height: '18dvh', mb: '60px' }}>
                         <PlayerCardTray trayPlayer={connectedPlayer} />
                     </Box>
+                    <BoardChevrons />
                     <ReplayAnimator containerRef={mainRef} />
                 </Box>
                 <PopupShell sidebarOpen={false} />
