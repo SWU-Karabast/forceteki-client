@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import { useReplay, SPEED_INTERVALS } from '@/app/_contexts/Replay.context';
 import { formatRoundPhase } from '@/app/_utils/replayMoves';
+import { beatAt } from '@/app/_utils/replayBeats';
 
 // Single source of truth — derived from the playback interval map so the two
 // can never drift (a speed without a matching interval would silently fall back).
@@ -22,13 +23,17 @@ const TransportControls: React.FC = () => {
         pause,
         stepForward,
         stepBack,
+        stepRecordForward,
+        stepRecordBack,
         speed,
         setSpeed,
         currentIndex,
         totalFrames,
         events,
         roundMarks,
-        seekTo,
+        beats,
+        currentBeat,
+        seekToBeat,
         togglePerspective,
         currentPerspective,
     } = useReplay();
@@ -36,17 +41,19 @@ const TransportControls: React.FC = () => {
     const currentRound = formatRoundPhase(events[currentIndex]?.seq ?? '');
 
     // One DOM node per mark. A file with thousands of ROUND_STARTs is hostile, not a game;
-    // keep the landmarks legible and bounded.
+    // keep the landmarks legible and bounded. The slider now scrubs by BEAT, so each mark's
+    // frame is remapped to the beat that contains it.
     const sliderMarks = useMemo(() => {
         const MAX_MARKS = 100;
-        if (roundMarks.length <= MAX_MARKS) return roundMarks;
-        const step = Math.ceil(roundMarks.length / MAX_MARKS);
-        return roundMarks.filter((_, i) => i % step === 0);
-    }, [roundMarks]);
+        const marks = roundMarks.length <= MAX_MARKS
+            ? roundMarks
+            : roundMarks.filter((_, i) => i % Math.ceil(roundMarks.length / MAX_MARKS) === 0);
+        return marks.map((m) => ({ value: beatAt(beats, m.value).index, label: m.label }));
+    }, [roundMarks, beats]);
 
     const formatPosition = (value: number) => {
-        const seq = events[value]?.seq;
-        return (seq && formatRoundPhase(seq)) || `${value + 1} / ${totalFrames}`;
+        const seq = events[beats[value]?.anchor]?.seq;
+        return (seq && formatRoundPhase(seq)) || `${value + 1} / ${beats.length}`;
     };
 
     const handlePlayPause = useCallback(() => {
@@ -59,16 +66,20 @@ const TransportControls: React.FC = () => {
     }, [setSpeed]);
 
     const handleSliderChange = useCallback((_: Event, value: number | number[]) => {
-        seekTo(value as number);
-    }, [seekTo]);
+        seekToBeat(value as number);
+    }, [seekToBeat]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Global shortcuts apply only when nothing interactive has focus: Space on a
-            // focused button must press the button, and an arrow on the slider must not
-            // step twice (the slider's own key handling plus ours).
+            // Global shortcuts apply only when nothing interactive has focus. Arrows only
+            // back off for an actual text/slider control — a focused move row (a SeekRow,
+            // role="button") used to swallow them too, which is why clicking a row then
+            // pressing an arrow did nothing.
             const target = e.target as HTMLElement | null;
-            if (target?.closest?.('input, textarea, select, button, a[href], [role="button"], [role="slider"], [role="tab"], [contenteditable="true"]')) return;
+            if (target?.closest?.('input, textarea, select, [role="slider"], [contenteditable="true"]')) return;
+            // Space still backs off a focused button/link/tab so it activates that control
+            // instead of double-firing play/pause.
+            if (e.key === ' ' && target?.closest?.('button, [role="button"], a[href], [role="tab"]')) return;
 
             switch (e.key) {
                 case ' ':
@@ -77,11 +88,11 @@ const TransportControls: React.FC = () => {
                     break;
                 case 'ArrowLeft':
                     e.preventDefault();
-                    stepBack();
+                    if (e.shiftKey) stepRecordBack(); else stepBack();
                     break;
                 case 'ArrowRight':
                     e.preventDefault();
-                    stepForward();
+                    if (e.shiftKey) stepRecordForward(); else stepForward();
                     break;
                 case '[': {
                     const currentSpeedIdx = SPEEDS.indexOf(speed);
@@ -98,7 +109,7 @@ const TransportControls: React.FC = () => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handlePlayPause, stepBack, stepForward, speed, setSpeed]);
+    }, [handlePlayPause, stepBack, stepForward, stepRecordBack, stepRecordForward, speed, setSpeed]);
 
     return (
         <Box
@@ -156,9 +167,9 @@ const TransportControls: React.FC = () => {
             <Slider
                 aria-label="Replay position"
                 getAriaValueText={formatPosition}
-                value={currentIndex}
+                value={currentBeat.index}
                 min={0}
-                max={Math.max(0, totalFrames - 1)}
+                max={Math.max(0, beats.length - 1)}
                 marks={sliderMarks}
                 onChange={handleSliderChange}
                 valueLabelDisplay="auto"
@@ -193,7 +204,7 @@ const TransportControls: React.FC = () => {
                 display: { xs: 'none', sm: 'block' },
                 color: 'rgba(255,255,255,0.7)', minWidth: '70px', textAlign: 'center',
             }}>
-                {currentIndex + 1} / {totalFrames}
+                {currentBeat.index + 1} / {beats.length}
             </Typography>
 
             {currentRound && (

@@ -1,5 +1,6 @@
-import type { GameEvent, Seat } from '@/lib/swupgn';
+import type { GameEvent, Seat, NameResolver } from '@/lib/swupgn';
 import { NUMBERED_ACTIONS } from './swupgnMoves';
+import { frameAction } from './replayAction';
 
 /**
  * A beat is one thing a player would say happened: an action with the records the engine
@@ -79,4 +80,9 @@ export function beatAt(beats: Beat[], frame: number): Beat {
     let lo = 0, hi = beats.length - 1;
     while (lo < hi) { const mid = (lo + hi) >> 1; if (beats[mid].end < frame) lo = mid + 1; else hi = mid; }
     return beats[lo];
+}
+
+/** What the caption bar says for a whole beat: the anchor's label, plus how many records resolved it. */
+export function captionForBeat(b: Beat, events: GameEvent[], names: NameResolver): { label: string; extra: number } {
+    return { label: frameAction(events[b.anchor], names).label, extra: b.end - b.start };
 }

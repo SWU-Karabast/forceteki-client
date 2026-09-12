@@ -4,29 +4,27 @@ import { Box, Typography } from '@mui/material';
 import { keyframes } from '@mui/system';
 import { useReplay } from '@/app/_contexts/Replay.context';
 
-// Slide-and-fade the caption in each time the action changes. The `key={headline}` below
-// remounts the bar on every new beat, so this replays per action instead of only on mount.
+// Slide-and-fade the caption in each time the beat changes. The `key={currentBeat.index}`
+// below remounts the bar on every new beat, so this replays once per beat, not per record.
 const captionIn = keyframes`
   from { opacity: 0; transform: translate(-50%, 8px); }
   to   { opacity: 1; transform: translate(-50%, 0); }
 `;
 
 /**
- * Caption bar that narrates the events resolved in the current frame, sitting
- * just above the transport bar, so each step reads as "what just happened".
+ * Caption bar that narrates the current beat, sitting just above the transport bar, so
+ * each step reads as "what just happened".
  */
 const LastActionCaption: React.FC = () => {
-    const { currentEvents } = useReplay();
+    const { currentEvents, captionExtra, currentBeat } = useReplay();
 
     if (currentEvents.length === 0) return null;
 
-    // Lead with the most recent beat; summarize the rest.
     const headline = currentEvents[currentEvents.length - 1];
-    const extra = currentEvents.length - 1;
 
     return (
         <Box
-            key={headline}
+            key={currentBeat.index}
             sx={{
                 position: 'fixed',
                 bottom: 68, // just above the 60px transport bar
@@ -51,9 +49,9 @@ const LastActionCaption: React.FC = () => {
             <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {headline}
             </Typography>
-            {extra > 0 && (
+            {captionExtra > 0 && (
                 <Typography variant="caption" sx={{ color: 'var(--initiative-blue)', whiteSpace: 'nowrap' }}>
-                    +{extra} more
+                    +{captionExtra} records
                 </Typography>
             )}
         </Box>

@@ -13,8 +13,9 @@ import { firstFrameByAction } from '@/app/_utils/replayMoves';
 import { makeNameResolver } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
+import { buildBeats, beatAt, captionForBeat, type Beat } from '@/app/_utils/replayBeats';
 import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
-import { activeSeatByFrame, attackByFrame, lastPlayedByFrame, frameHoldMs, isBeatFrame } from '@/app/_utils/replayLiveCues';
+import { activeSeatByFrame, attackByFrame, lastPlayedByFrame } from '@/app/_utils/replayLiveCues';
 import { triggerBlobDownload, sanitizeFilename, downloadSwuPgn } from '@/app/_utils/downloadBlob';
 
 /** One resource commitment: what was taken, and what the player could have taken instead. */
@@ -72,9 +73,20 @@ export interface IReplayContextType {
 
     play: () => void; pause: () => void; isPlaying: boolean;
     speed: number; setSpeed: (s: number) => void;
+
+    /** The beat timeline (Task 2's buildBeats over `events`) and the beat the playhead sits in. */
+    beats: Beat[];
+    currentBeat: Beat;
     stepForward: () => void; stepBack: () => void; seekTo: (i: number) => void;
+
+    /** The old per-frame step, kept for the shift-key fine-grained scrub. */
+    stepRecordForward: () => void; stepRecordBack: () => void;
+    seekToBeat: (i: number) => void;
     seekToSeq: (seq: string) => void;
     currentEvents: string[];
+
+    /** How many records the current beat's anchor resolved, for the "+N records" caption. */
+    captionExtra: number;
     togglePerspective: () => void; currentPerspective: string;
 }
 
@@ -146,6 +158,10 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // pass (foldFrames) instead of re-folding every prefix (which was O(n^2)).
     const frameStates = useMemo<ReducedState[]>(() => foldFrames(events), [events]);
 
+    // The beat timeline (Task 2): stepping, scrubbing and autoplay all move by beat, not by frame.
+    const beats = useMemo(() => buildBeats(events), [events]);
+    const currentBeat = useMemo(() => beatAt(beats, currentIndex), [beats, currentIndex]);
+
     // seq -> frame index, built once, so currentMoveIndex is a cheap lookup rather than
     // an events.findIndex() per move on every frame change (was O(moves x events)).
     const seqToFrame = useMemo(() => {
@@ -178,28 +194,6 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             return start;
         });
     }, [moves, seqToFrame, events]);
-
-    // Whether playback should stop on each frame: the folded board changed since the previous
-    // frame, or the frame is a player's action (an ATTACK or a PASS folds to nothing, but it
-    // is the beat the lunge and the caption hang on). Frames that are neither — a shuffle, a
-    // hidden choice — are skipped during auto-playback so only visible changes hold on screen.
-    const boardChanged = useMemo<boolean[]>(() => {
-        const flags = new Array<boolean>(frameStates.length);
-        let prevKey = '';
-        for (let i = 0; i < frameStates.length; i++) {
-            const key = JSON.stringify(frameStates[i]);
-            flags[i] = i === 0 || key !== prevKey || isBeatFrame(events[i]);
-            prevKey = key;
-        }
-        return flags;
-    }, [frameStates, events]);
-
-    // Frames that are part of a "draw burst" — a DRAW summary or a deck->hand MOVE. A round
-    // starts with several of these back-to-back; we collapse the run so playback shows the
-    // whole drawn hand in one step instead of dealing card-by-card.
-    const isDrawBurst = useMemo<boolean[]>(() => events.map((e) =>
-        e.t === 'DRAW' || (e.t === 'MOVE' && e.to === 'hand' && e.from === 'deck')
-    ), [events]);
 
     // Resource commitments paired with the hand they were chosen from. The board can only
     // show the hand AFTER the pick (the card has already left it on that frame), but what
@@ -313,16 +307,6 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         return out;
     }, [events, doc.header.p1Leader, doc.header.p2Leader]);
 
-    // Next frame that visibly changes the board, capped at lastFrame. Used by auto-playback
-    // (NOT manual step) so the interval fast-forwards over visually-identical no-op frames.
-    const nextMeaningfulFrame = useCallback((from: number, lastFrame: number): number => {
-        let i = from + 1;
-        // Skip frames that don't change the board, and skip mid-draw-burst frames (stop on
-        // the LAST draw of a run so the whole drawn hand appears at once).
-        while (i < lastFrame && (!boardChanged[i] || (isDrawBurst[i] && isDrawBurst[i + 1]))) i++;
-        return Math.min(i, lastFrame);
-    }, [boardChanged, isDrawBurst]);
-
     useEffect(() => {
         setPerspective(P1);
         setFogOfWar(false);
@@ -330,10 +314,9 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         // honor ?t (initialFrame) and start paused.
         const hasClip = clipStart != null && clipEnd != null && clipEnd >= clipStart;
         if (hasClip) {
-            // Clamp to the real frame range: `from`/`to` come straight off the URL, and
-            // nextMeaningfulFrame walks to `clip.end` — past the array, boardChanged[i] is
-            // undefined so the loop never breaks. `?from=0&to=1e15` hung the tab, on load,
-            // on an auto-playing path.
+            // Clamp to the real frame range: `from`/`to` come straight off the URL, and an
+            // out-of-range `clip.end` broke the autoplay effect's beat lookup below.
+            // `?from=0&to=1e15` hung the tab, on load, on an auto-playing path.
             const last = Math.max(0, totalFrames - 1);
             const start = Math.min(Math.max(0, clipStart!), last);
             setClipState({ start, end: Math.min(Math.max(start, clipEnd!), last) });
@@ -414,9 +397,11 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         return idx;
     }, [moveFrames, currentIndex]);
 
-    // Caption text for the current frame (richer than the move list: includes ability
-    // activations, resourcing, draws, discards). Empty string when nothing noteworthy.
-    const currentEvents = useMemo(() => (action.label ? [action.label] : []), [action]);
+    // Caption text for the current BEAT (richer than the move list: includes ability
+    // activations, resourcing, draws, discards), plus how many records the beat's anchor
+    // resolved (the caption bar's "+N records"). Empty label when nothing noteworthy.
+    const caption = useMemo(() => captionForBeat(currentBeat, events, names), [currentBeat, events, names]);
+    const currentEvents = useMemo(() => (caption.label ? [caption.label] : []), [caption]);
 
     const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);
     const downloadReplay = useCallback(() => {
@@ -430,8 +415,23 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
 
     const toggleFogOfWar = useCallback(() => setFogOfWar((f) => !f), []);
 
-    const stepForward = useCallback(() => setCurrentIndex((p) => Math.min(p + 1, totalFrames - 1)), [totalFrames]);
-    const stepBack = useCallback(() => setCurrentIndex((p) => Math.max(p - 1, 0)), []);
+    // The old per-frame step, kept for the shift-key fine-grained scrub.
+    const stepRecordForward = useCallback(() => setCurrentIndex((p) => Math.min(p + 1, totalFrames - 1)), [totalFrames]);
+    const stepRecordBack = useCallback(() => setCurrentIndex((p) => Math.max(p - 1, 0)), []);
+    // A beat step lands on the beat's END: the fully resolved board. Going back from a beat's end
+    // lands on the previous beat's end, so forward then back is an identity.
+    const stepForward = useCallback(() => setCurrentIndex((p) => {
+        const b = beatAt(beats, p);
+        return p < b.end ? b.end : (beats[b.index + 1]?.end ?? p);
+    }), [beats]);
+    const stepBack = useCallback(() => setCurrentIndex((p) => {
+        const b = beatAt(beats, p);
+        return beats[b.index - 1]?.end ?? 0;
+    }), [beats]);
+    const seekToBeat = useCallback((i: number) => {
+        const b = beats[Math.max(0, Math.min(i, beats.length - 1))];
+        if (b) setCurrentIndex(b.end);
+    }, [beats]);
     const seekTo = useCallback((i: number) => setCurrentIndex(Math.max(0, Math.min(i, totalFrames - 1))), [totalFrames]);
     const seekToSeq = useCallback((seq: string) => {
         const i = events.findIndex((e) => e.seq === seq);
@@ -440,12 +440,14 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const play = useCallback(() => {
         setIsPlaying(true);
         // Advance immediately so Play gives instant feedback instead of a dead wait for
-        // the first interval tick. Skips to the next visibly-meaningful frame.
+        // the first interval tick. Skips to the next beat's end.
         setCurrentIndex((prev) => {
             const lastFrame = clip ? clip.end : totalFrames - 1;
-            return prev < lastFrame ? nextMeaningfulFrame(prev, lastFrame) : prev;
+            if (prev >= lastFrame) return prev;
+            const b = beatAt(beats, prev);
+            return Math.min(prev < b.end ? b.end : (beats[b.index + 1]?.end ?? lastFrame), lastFrame);
         });
-    }, [clip, totalFrames, nextMeaningfulFrame]);
+    }, [clip, totalFrames, beats]);
     const pause = useCallback(() => setIsPlaying(false), []);
     const togglePerspective = useCallback(() => setPerspective((p) => (p === P1 ? P2 : P1)), []);
 
@@ -463,13 +465,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             else setIsPlaying(false);
             return;
         }
-        // One timeout per frame, held for as long as this frame deserves: a player's action
-        // for the full beat, the records that resolve it for a fraction, so an attack lunges
-        // and lands the way it does at the table. Fast-forwards over board-identical frames.
-        const next = nextMeaningfulFrame(currentIndex, lastFrame);
-        const t = setTimeout(() => setCurrentIndex(next), frameHoldMs(events[currentIndex], SPEED_INTERVALS[speed] ?? 1000));
+        // One timeout per BEAT, so an attack, a resource run or a draw burst holds on screen
+        // as one step instead of dealing its records one at a time.
+        const b = beatAt(beats, currentIndex);
+        const next = Math.min(currentIndex < b.end ? b.end : (beats[b.index + 1]?.end ?? lastFrame), lastFrame);
+        const t = setTimeout(() => setCurrentIndex(next), SPEED_INTERVALS[speed] ?? 1000);
         return () => clearTimeout(t);
-    }, [isPlaying, speed, currentIndex, totalFrames, clip, nextMeaningfulFrame, events]);
+    }, [isPlaying, speed, currentIndex, totalFrames, clip, beats]);
 
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent,
@@ -477,13 +479,15 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         replayId, downloadReplay, nameOf: names.nameOf,
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
-        play, pause, isPlaying, speed, setSpeed, stepForward, stepBack, seekTo,
-        seekToSeq, currentEvents, togglePerspective, currentPerspective: perspective,
+        play, pause, isPlaying, speed, setSpeed,
+        beats, currentBeat, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
+        seekToSeq, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, events, roundMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, downloadReplay, names, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed,
-        stepForward, stepBack, seekTo, seekToSeq, currentEvents, togglePerspective]);
+        beats, currentBeat, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
+        seekToSeq, currentEvents, caption, togglePerspective]);
 
     return <ReplayContext.Provider value={value}>{children}</ReplayContext.Provider>;
 };

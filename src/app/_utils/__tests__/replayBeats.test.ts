@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parse, normalizeEvents, type GameEvent } from '@/lib/swupgn';
-import { buildBeats, beatAt } from '../replayBeats';
+import { parse, normalizeEvents, indexResolver, type GameEvent } from '@/lib/swupgn';
+import { buildBeats, beatAt, captionForBeat } from '../replayBeats';
+import { frameAction, storyName } from '../replayAction';
 
 const doc = parse(readFileSync(join(__dirname, '../../../lib/swupgn/__tests__/fixtures/game-463c3022.swupgn'), 'utf8'));
 const events = normalizeEvents(doc.events, new Set());
@@ -64,5 +65,20 @@ describe('buildBeats', () => {
         expect(beatAt(beats, -5)).toBe(beats[0]);
         expect(beatAt(beats, 9999)).toBe(beats[beats.length - 1]);
         expect(buildBeats([] as GameEvent[])).toEqual([]);
+    });
+});
+
+describe('captionForBeat', () => {
+    const resolver = indexResolver(doc.cards ?? []);
+    const names = { nameOf: (id: string) => storyName(id, resolver) };
+    it('names the anchor action and counts the records that resolved it', () => {
+        const b = beatAt(beats, frameOf('R2.A.1'));
+        expect(captionForBeat(b, events, names)).toEqual({
+            label: frameAction(events[b.anchor], names).label,
+            extra: 8,
+        });
+    });
+    it('a bare PASS has no extras', () => {
+        expect(captionForBeat(beatAt(beats, frameOf('R1.A.2')), events, names).extra).toBe(0);
     });
 });
