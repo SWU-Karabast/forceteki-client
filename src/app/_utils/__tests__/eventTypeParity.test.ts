@@ -127,6 +127,8 @@ describe('event-type parity with the fold switch', () => {
             'PHASE_END', 'ROUND_END',
             // Housekeeping.
             'SHUFFLE', 'MULLIGAN', 'KEEP_HAND',
+            // A note on the action it interrupted, so it rides in that action's beat.
+            'UNDO',
         ]);
         const banners = quotedNamesIn(SRC('replayBeats.ts'), 'BANNERS');
         const missing = [...FOLD_TYPES].filter((t) => !banners.has(t) && !NOT_A_BANNER.has(t));

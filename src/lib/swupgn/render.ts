@@ -82,6 +82,7 @@ function line(e: GameEvent, n: NameResolver): string | null {
         case 'CHOICE': case 'PHASE_END': case 'ROUND_END': case 'SHUFFLE':
         case 'MODAL_CHOICE': case 'MOVE': case 'EXHAUST': case 'READY':
         case 'EXHAUST_RESOURCES': case 'READY_RESOURCES': case 'STATS':
+        case 'UNDO':
             return null;
         case 'PHASE_START': return null;       // handled as a banner below
         case 'ROUND_START': return null;       // handled as a banner below

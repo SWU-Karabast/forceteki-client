@@ -189,11 +189,14 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         [doc.cards, nameMap],
     );
     // The client's own prose uses the story's `nm()` (spec §16): a copy keeps its ` #N` so two
-    // Wampas read apart, and `base@N` is "Player N's base". `render()` adds the suffix itself,
-    // so the text-log export keeps the bare resolver.
+    // Wampas read apart, and `base@N` is "Player N's base". This decorated resolver is for
+    // components that print an id DIRECTLY (`nameOf` below: the decklist, the decision review,
+    // a bookmark label). Everything that goes through `frameAction` -- the move list, the live
+    // caption, the beat caption -- applies `storyName` ITSELF and so takes the BARE `resolver`;
+    // handing it this one produced "Ant Droid #2 #2". `render()` likewise decorates internally.
     const names = useMemo<NameResolver>(() => ({ nameOf: (id: string) => storyName(id, resolver) }), [resolver]);
     const statMap = useCardStatMap();
-    const moves = useMemo(() => buildMoveList(events, names), [events, names]);
+    const moves = useMemo(() => buildMoveList(events, resolver), [events, resolver]);
 
     // Per-frame ReducedState, computed once per document load via a single O(n) forward
     // pass (foldFrames) instead of re-folding every prefix (which was O(n^2)).
@@ -384,7 +387,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     }, [doc, events, initialFrame, totalFrames, clipStart, clipEnd]);
 
     // What happened on the current frame: a caption + the in-play card(s) to glow.
-    const action = useMemo(() => frameAction(events[currentIndex], names), [events, currentIndex, names]);
+    const action = useMemo(() => frameAction(events[currentIndex], resolver), [events, currentIndex, resolver]);
 
     const gameState = useMemo(() => {
         if (!frameStates[currentIndex]) return null;
@@ -428,7 +431,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // Caption text for the current BEAT (richer than the move list: includes ability
     // activations, resourcing, draws, discards), plus how many records the beat's anchor
     // resolved (the caption bar's "+N records"). Empty label when nothing noteworthy.
-    const caption = useMemo(() => captionForBeat(currentBeat, events, names), [currentBeat, events, names]);
+    const caption = useMemo(() => captionForBeat(currentBeat, events, resolver), [currentBeat, events, resolver]);
     const currentEvents = useMemo(() => (caption.label ? [caption.label] : []), [caption]);
 
     const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);

@@ -1,6 +1,6 @@
 import type { GameEvent, Seat, NameResolver } from '@/lib/swupgn';
 import { NUMBERED_ACTIONS } from './swupgnMoves';
-import { frameAction } from './replayAction';
+import { frameAction, isPlayerAction } from './replayAction';
 
 /**
  * A beat is one thing a player would say happened: an action with the records the engine
@@ -14,11 +14,6 @@ export type BeatKind = 'setup' | 'banner' | 'action' | 'resource' | 'draw' | 're
 export interface Beat { index: number; kind: BeatKind; start: number; end: number; anchor: number; seat?: Seat }
 const BANNERS = new Set(['ROUND_START', 'PHASE_START', 'GAME_END']);
 const isDraw = (e: GameEvent) => e.t === 'DRAW' || (e.t === 'MOVE' && e.from === 'deck' && e.to === 'hand');
-// A leader or unit ACTION ability is the player's action (CR 6.1), but the writer files it as a
-// lettered consequence of whatever came before (`R2.A.6a` under `R2.A.6 PASS`) -- see Part D-2.
-// Give it its own beat; its own consequences stay lettered under the same base seq, so they
-// follow it into the new beat by being "what came before".
-const isActionAbility = (e: GameEvent) => e.t === 'ABILITY_ACTIVATE' && (e.epic === true || /_action_\d+$/.test(String(e.ability ?? '')));
 const isReady = (e: GameEvent) => e.t === 'READY' || e.t === 'READY_RESOURCES';
 const seatOf = (e: GameEvent): Seat | undefined => ('p' in e && (e.p === 1 || e.p === 2) ? e.p : undefined);
 const cardOf = (e: GameEvent) => ('card' in e && typeof e.card === 'string' ? e.card : undefined);
@@ -32,6 +27,13 @@ export function buildBeats(events: GameEvent[]): Beat[] {
     const actionFrames = new Map<string, number>();
     events.forEach((e, i) => { if (NUMBERED_ACTIONS.has(e.t)) actionFrames.set(e.seq, i); });
     events.forEach((e, i) => { if (e.t === 'RESOURCE' && !actionFrames.has(baseSeq(e.seq))) actionFrames.set(e.seq, i); });
+    // A leader's or unit's ACTION or Epic Action ability is the player's action (CR 6.1) and the
+    // writer numbers it as one (Part D-2), so it anchors a beat and owns its lettered
+    // consequences -- including the draw one of them causes, which would otherwise split off
+    // into its own draw beat. On a pre-D-2 file the record is itself lettered under the
+    // opponent's PASS; it still gets its own beat here, and the `prev` rule below keeps its
+    // siblings with it.
+    events.forEach((e, i) => { if (isPlayerAction(e)) actionFrames.set(e.seq, i); });
     const ownerOfAction = (f: number): Owner => ({ key: events[f].seq, kind: events[f].t === 'RESOURCE' ? 'resource' : 'action', seat: seatOf(events[f]), anchor: f });
     // Pass 1: who owns each frame.
     const owners: Owner[] = [];
@@ -44,7 +46,6 @@ export function buildBeats(events: GameEvent[]): Beat[] {
         let o: Owner;
         if (BANNERS.has(e.t)) o = { key: `banner:${e.seq}`, kind: 'banner', anchor: i };
         else if (actionFrames.has(e.seq)) o = ownerOfAction(i);
-        else if (isActionAbility(e)) o = { key: `ability:${e.seq}`, kind: 'action', seat: seatOf(e), anchor: i };
         else if (filedFor !== undefined) o = ownerOfAction(filedFor);
         // A consequence stays with the beat it is already in when that beat shares its base -- so
         // an action ability's own consequences follow the ability, not the PASS it was filed under.

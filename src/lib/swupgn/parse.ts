@@ -60,6 +60,7 @@ function buildHeader(raw: Record<string, string>): Header {
         ...(raw['RecorderErrors'] != null ? { recorderErrors: finiteOr(raw['RecorderErrors'], 0) } : {}),
         ...(raw['EndDate'] != null ? { endDate: raw['EndDate'] } : {}),
         ...(raw['Match'] != null ? { match: raw['Match'] } : {}),
+        ...(raw['Undos'] != null ? { undos: finiteOr(raw['Undos'], 0) } : {}),
         ...(raw['GameNumber'] != null ? { gameNumber: finiteOr(raw['GameNumber'], 0) } : {}),
     };
 }

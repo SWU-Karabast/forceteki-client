@@ -744,6 +744,8 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         case 'KEEP_HAND': case 'MODAL_CHOICE': case 'SHUFFLE':
         case 'SEARCH': case 'REVEAL':
         case 'TRIGGER': case 'PHASE_END': case 'ROUND_END': case 'GAME_END':
+        // UNDO is a note: the records it retracted are already gone from the stream (§18).
+        case 'UNDO':
             break;
         default: { const _exhaustive: never = e; void _exhaustive; break; }
     }

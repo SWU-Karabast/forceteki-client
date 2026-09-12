@@ -20,7 +20,7 @@ const KNOWN_EVENT_TYPES = new Set<string>([
     'DAMAGE', 'HEAL', 'DEFEAT', 'EXHAUST', 'READY', 'EXHAUST_RESOURCES', 'READY_RESOURCES', 'DRAW', 'DISCARD', 'RESOURCE', 'SHUFFLE',
     'CREATE_TOKEN', 'MOVE', 'CAPTURE', 'RESCUE', 'TAKE_CONTROL', 'SHIELD_GAIN', 'SHIELD_USE',
     'EXPERIENCE_GAIN', 'STATUS_TOKEN', 'STATS', 'OVERWHELM', 'SEARCH', 'REVEAL', 'TRIGGER',
-    'PHASE_START', 'PHASE_END', 'ROUND_START', 'ROUND_END', 'GAME_END',
+    'PHASE_START', 'PHASE_END', 'ROUND_START', 'ROUND_END', 'GAME_END', 'UNDO',
 ]);
 
 /** The complete zone vocabulary (spec §6.2). Any other string in from/to/zone is non-conformant. */
@@ -160,6 +160,17 @@ export function writerGeneration(doc: SwuPgnDocument): string[] {
             // that names neither a base nor either seat's leader is that early writer.
             baseEpicByCardId++;
         }
+    }
+    // §22: before the Part D-1 fix, the ROUND_END keyframe was taken AFTER the round had rolled
+    // over, so it claimed `phase: setup` and `initiativeTaken: false` in a round whose initiative
+    // WAS claimed -- one keyframe mismatch per such round, on every game that writer produced.
+    // Only say so when it actually costs a mismatch (a round nobody claimed in reads the same
+    // either way), because this line exists to explain the FileHealth badge, not to add to it.
+    const staleRoundEnd = events.filter((e) => e.t === 'ROUND_END'
+        && e.keyframe?.phase === 'setup' && e.keyframe?.initiativeTaken === false
+        && events.some((c) => c.t === 'CLAIM_INITIATIVE' && c.seq.startsWith(`R${e.round}.`))).length;
+    if (staleRoundEnd > 0) {
+        out.push(`Pre-D-1 writer: ${plural(staleRoundEnd, 'ROUND_END keyframe')} snapshotted after the round rolled over, so the initiative counter in ${staleRoundEnd === 1 ? 'it disagrees' : 'them disagrees'} with the events (§22). That is the whole of the mismatch count; the events themselves are intact.`);
     }
     if (controlNoZone > 0) {
         out.push(`${plural(controlNoZone, 'control change')} recorded without a zone: the stolen card stays under its old controller on the board (§22).`);

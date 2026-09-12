@@ -19,10 +19,24 @@ const other = (p?: Seat): Seat | undefined => (p === 1 ? 2 : p === 2 ? 1 : undef
 const isBase = (id: unknown): boolean => typeof id === 'string' && /^base@[12]$/.test(id);
 
 /**
+ * An ABILITY_ACTIVATE the player SPENT their action on (CR 6.1), which §16 numbers as its own
+ * action. `kind` is the writer's stable answer; the `_action_N` id suffix is the fallback for
+ * files written before `kind` existed, where the record is also filed as a lettered
+ * consequence of whatever came before it (spec §22).
+ */
+export function isPlayerAction(e: GameEvent): boolean {
+    if (e.t !== 'ABILITY_ACTIVATE') return false;
+    if (e.kind) return e.kind === 'action' || e.kind === 'epic';
+    return e.epic === true || /_action_\d+$/.test(String(e.ability ?? ''));
+}
+
+/**
  * The story's `nm()` (spec §16): `base@N` is "Player N's base"; a copy keeps its ` #N` so two
  * Wampas read as "Wampa" and "Wampa #2". Every NameResolver strips the suffix before lookup.
  */
 export function storyName(id: string, n: NameResolver): string {
+    // Takes a BARE resolver (one that maps SET#NUM -> title). Passing a resolver that already
+    // ran through here appends the copy suffix twice: "Ant Droid #2 #2".
     const s = String(id);
     const base = /^base@([12])$/.exec(s);
     if (base) return `${who(Number(base[1]) as Seat)}'s base`;
@@ -57,7 +71,15 @@ export function frameAction(e: GameEvent | undefined, n: NameResolver): FrameAct
                 kind: 'deploy',
             };
         case 'ABILITY_ACTIVATE':
-            return { label: `${nm(e.card)} uses an ability`, highlight: [e.card], kind: 'ability' };
+            // An action or Epic Action is the player's own action, and the story names them that
+            // way ("Player 1 uses Director Krennic", "... 's Epic Action"). Every other kind is
+            // something the game did, so the card is the subject: "Ant Droid uses an ability".
+            return isPlayerAction(e)
+                ? { label: `${who(e.p)} uses ${nm(e.card)}${e.kind === 'epic' || e.epic ? '\'s Epic Action' : ''}`, highlight: [e.card], kind: 'ability' }
+                : { label: `${nm(e.card)} uses an ability`, highlight: [e.card], kind: 'ability' };
+        case 'UNDO':
+            // The retracted records are already gone from the stream: this marks WHERE.
+            return { label: `${who(e.by)} takes back a move`, highlight: [], kind: 'other' };
         case 'TRIGGER':
             return { label: `${nm(e.card)} triggers`, highlight: [e.card], kind: 'ability' };
         case 'ATTACK':

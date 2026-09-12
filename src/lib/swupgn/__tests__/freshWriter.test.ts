@@ -7,6 +7,7 @@ import { parse, normalizeEvents, checkKeyframes } from '../index';
 // setup so no action-phase harness artifact (spec §21) is in it. Pins what the reader gets
 // from the writer as it ships today, including its one known defect.
 const text = readFileSync(join(__dirname, 'fixtures/game-463c3022.swupgn'), 'utf8');
+// (The post-fix writer is pinned separately in writerD1toD9.test.ts.)
 
 describe('fresh writer fixture (forceteki@463c3022)', () => {
     const doc = parse(text);
@@ -20,8 +21,9 @@ describe('fresh writer fixture (forceteki@463c3022)', () => {
 
     it('agrees with every keyframe except the writer defect in Part D-1 (initiativeTaken at ROUND_END)', () => {
         const r = checkKeyframes(doc.events);
-        // When forceteki fixes the ROUND_END snapshot this becomes [] and the test must be
-        // updated to expect that: the point is that nothing ELSE drifts unnoticed.
+        // This file is the PRE-FIX generation and keeps this expectation for good: forceteki
+        // fixed D-1 on 2026-09-12 and `writerD1toD9.test.ts` pins the fixed writer at []. Both
+        // have to keep working -- a saved replay from before the fix is still a valid file.
         expect(r.mismatches.map((m) => `${m.seq}:${m.path}:${m.expected}->${m.got}`)).toEqual([
             'R1.end:initiativeTaken:false->true',
             'R2.end:initiativeTaken:false->true',

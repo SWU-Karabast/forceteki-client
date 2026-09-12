@@ -102,3 +102,21 @@ describe('frameAction', () => {
         expect(storyName('Opponent', names)).toBe('Opponent');
     });
 });
+
+describe('storyName takes a BARE resolver', () => {
+    // Regression: Replay.context wrapped its resolver in storyName AND handed that to
+    // frameAction / buildMoveList / captionForBeat, which each call storyName again. Every
+    // copy-suffixed card read "Ant Droid #2 #2" in the Moves tab and the live caption.
+    // a real resolver strips the copy suffix before lookup, the way indexResolver does
+    const bare = { nameOf: (id: string) => (id.replace(/:\d+$/, '') === 'ASH#116' ? 'Ant Droid' : id) };
+    const decorated = { nameOf: (id: string) => storyName(id, bare) };
+
+    it('adds the copy suffix exactly once', () => {
+        expect(storyName('ASH#116:2', bare)).toBe('Ant Droid #2');
+        expect(storyName('ASH#116', bare)).toBe('Ant Droid');
+    });
+
+    it('doubles it when given an already-decorated resolver — do not do this', () => {
+        expect(storyName('ASH#116:2', decorated)).toBe('Ant Droid #2 #2');
+    });
+});

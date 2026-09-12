@@ -10,6 +10,13 @@ export type Seat = 1 | 2;
  */
 export type CardKind = 'unit' | 'upgrade';
 
+/**
+ * What kind of ability an `ABILITY_ACTIVATE` was. `action` and `epic` are the only two the
+ * player SPENT their action on (CR 6.1), which is why they are §16 numbered actions and
+ * everything else is a lettered consequence of whatever caused it.
+ */
+export type AbilityKind = 'action' | 'triggered' | 'keyword' | 'replacement' | 'epic' | 'constant';
+
 export interface Header {
     game: string;            // "SWU-PGN/1.0"
     gameId: string;
@@ -45,6 +52,11 @@ export interface Header {
 
     /** Which game of that match this is, 1-based. Meaningless without `match`. */
     gameNumber?: number;
+
+    /** How many times a player undid during this game. The recorder truncates the event stream
+     *  back to the restored snapshot, so the retracted records are gone; this count and the
+     *  `UNDO` note records are all that says a decision was taken back (spec §5.2). */
+    undos?: number;
 }
 
 export interface DeckRecord {
@@ -97,6 +109,11 @@ export interface SetupInitRecord {
  */
 export interface ActionLink {
     for?: string;
+
+    /** Milliseconds since the header's `Date`, on the §16 numbered actions and on
+     *  `ROUND_START`/`PHASE_START` only — how long the player took to decide. Relative and
+     *  coarse by design (§5.2 dropped absolute per-event timestamps); the fold ignores it. */
+    ms?: number;
 }
 
 export type GameEvent = ActionLink & (
@@ -107,7 +124,14 @@ export type GameEvent = ActionLink & (
   | { seq: string; t: 'CHOICE'; p: Seat; prompt?: string; offered: string[]; chose: number }
   | { seq: string; t: 'MULLIGAN' | 'KEEP_HAND'; p: Seat }
   | { seq: string; t: 'MODAL_CHOICE'; p: Seat; offered: string[]; chose: number }
-  | { seq: string; t: 'ABILITY_ACTIVATE'; p: Seat; card: string; ability?: string; epic?: boolean }
+  // `ability` is an engine id with an unstable shape (`huyang#...._triggered_0`,
+  // `shield_replacement_0`, `reforge_anonymous`) and is for debugging only. `kind` is the
+  // stable one: it says whether the player SPENT their action on this (`action`/`epic`, a §16
+  // numbered action) or whether the game did it to them. `title` is the printed ability text.
+  | { seq: string; t: 'ABILITY_ACTIVATE'; p: Seat; card: string; ability?: string; epic?: boolean; kind?: AbilityKind; title?: string }
+  // The recorder truncated the stream back to a snapshot here: `at` is the first seq that was
+  // dropped, `by` the seat that undid. A note record — it changes no state (spec §18).
+  | { seq: string; t: 'UNDO'; at: string; by: Seat }
   // A double-sided leader flipped in place (it never deploys). `onStartingSide` is the face
   // AFTER the flip -- an absolute value, not a toggle, so a dropped record cannot invert
   // every later face and a reader joining at a keyframe has something to apply.
