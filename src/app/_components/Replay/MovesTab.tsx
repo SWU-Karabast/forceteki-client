@@ -1,9 +1,10 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { ChatBubbleOutline } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
+import { followIntoView } from '@/app/_utils/panelFollow';
 import SeekRow from './SeekRow';
 
 const PLAYER_COLORS: Record<string, string> = {
@@ -12,15 +13,17 @@ const PLAYER_COLORS: Record<string, string> = {
 };
 
 /** The move list, rendered inline as a panel tab body. Click a row to seek; the current
- *  move is highlighted and auto-scrolled into view; annotated moves show a chat marker. */
+ *  move is highlighted and follows the playhead into view; annotated moves show a chat
+ *  marker. The follow moves only the panel's own scroller (`followIntoView`), never the
+ *  document, and snaps rather than animates while autoplay is running. */
 const MovesTab: React.FC = () => {
-    const { moves, currentMoveIndex, seekToSeq } = useReplay();
+    const { moves, currentMoveIndex, seekToBeatOf, isPlaying } = useReplay();
     const { annotatedRefs } = useReplayAnnotations();
-    const activeRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-        activeRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }, [currentMoveIndex]);
+        const panel = document.getElementById('replay-tabpanel');
+        followIntoView(panel?.querySelector(`[data-move-index="${currentMoveIndex}"]`), !isPlaying);
+    }, [currentMoveIndex, isPlaying]);
 
     return (
         <Box sx={{ py: 0.5 }}>
@@ -31,9 +34,9 @@ const MovesTab: React.FC = () => {
                 const isCurrent = i === currentMoveIndex;
                 const annotated = annotatedRefs.has(move.seq);
                 return (
-                    <Box key={move.seq} ref={isCurrent ? activeRef : undefined}>
+                    <Box key={move.seq} data-move-index={i}>
                         <SeekRow
-                            onClick={() => seekToSeq(move.seq)}
+                            onClick={() => seekToBeatOf(move.seq)}
                             label={`${move.label}${annotated ? ', has notes' : ''}`}
                             sx={{
                                 display: 'flex', alignItems: 'center', gap: 1, px: 1.5, py: 0.6,

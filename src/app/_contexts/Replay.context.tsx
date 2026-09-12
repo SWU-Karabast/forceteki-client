@@ -91,6 +91,10 @@ export interface IReplayContextType {
     stepRecordForward: () => void; stepRecordBack: () => void;
     seekToBeat: (i: number) => void;
     seekToSeq: (seq: string) => void;
+
+    /** Seek to the END of the beat that owns the record `seq` (a move row lands on the
+     *  resolved board; `seekToSeq` stays exact for `?t=` links and annotations). */
+    seekToBeatOf: (seq: string) => void;
     currentEvents: string[];
 
     /** How many records the current beat's anchor resolved, for the "+N records" caption. */
@@ -430,6 +434,10 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         const i = events.findIndex((e) => e.seq === seq);
         if (i >= 0) setCurrentIndex(i);
     }, [events]);
+    const seekToBeatOf = useCallback((seq: string) => {
+        const i = seqToFrame.get(seq);
+        if (i != null) setCurrentIndex(beatAt(beats, i).end);
+    }, [seqToFrame, beats]);
     const play = useCallback(() => {
         setIsPlaying(true);
         // Advance immediately so Play gives instant feedback instead of a dead wait for
@@ -478,13 +486,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, animate: true,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
-        seekToSeq, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
+        seekToSeq, seekToBeatOf, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, downloadReplay, names, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
-        seekToSeq, currentEvents, caption, togglePerspective]);
+        seekToSeq, seekToBeatOf, currentEvents, caption, togglePerspective]);
 
     return <ReplayContext.Provider value={value}>{children}</ReplayContext.Provider>;
 };
