@@ -23,6 +23,7 @@ export interface Stage {
     show(el: HTMLElement | null): void;
     animate(el: Element, keyframes: Keyframe[], timing: KeyframeEffectOptions, onDone?: () => void): void; // owns WAAPI, rate and cleanup
     later(ms: number, fn: () => void): void; // rate-scaled setTimeout the stage can cancel
+    board?(): HTMLElement | null; // the whole board, for the leader-deploy landing shake
 }
 
 const EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
@@ -184,27 +185,156 @@ export function stagePresent(s: Stage, p: {
     from: Snap;
     stage: Point;
     scale: number;
-    to: Snap | null;
+    land: { at: Point; scale: number };   // where the clone ends up: destination CENTRE + scale
     total: number;
     arrive: number;
     depart: number;
     fadeOut: boolean;
     delay?: number;
     zIndex: number;
+    shadow?: string;
+    initial?: () => HTMLElement;          // the first inner face (default: the departing card)
+    riseEasing?: string;
+    landEasing?: string;
     onDone?: () => void;
 }): { inner: HTMLElement } {
-    const { outer, inner } = s.layer(p.from, p.zIndex);
+    const { outer, inner } = s.layer(p.from, p.zIndex, { shadow: p.shadow });
+    inner.appendChild(p.initial ? p.initial() : s.face(p.from.html));
     const cx = p.from.x + p.from.w / 2, cy = p.from.y + p.from.h / 2;
     const tStage = `translate(${p.stage.x - cx}px, ${p.stage.y - cy}px) scale(${p.scale})`;
-    const tEnd = p.to
-        ? `translate(${p.to.x + p.to.w / 2 - cx}px, ${p.to.y + p.to.h / 2 - cy}px) scale(${p.to.w / p.from.w}, ${p.to.h / p.from.h})`
-        : 'translate(0,0) scale(1)';
+    const tEnd = `translate(${p.land.at.x - cx}px, ${p.land.at.y - cy}px) scale(${p.land.scale})`;
+    // Opacity is carried by EVERY keyframe: named only on the last, WAAPI would
+    // synthesise an implicit opacity:1 start and fade across the whole flight
+    // instead of only the landing leg.
     s.animate(outer, [
-        { transform: 'translate(0,0) scale(1)', offset: 0, easing: EASING },
-        { transform: tStage, offset: p.arrive, easing: 'linear' },
-        { transform: tStage, offset: p.depart, easing: EASING },
+        { transform: 'translate(0,0) scale(1)', opacity: 1, offset: 0, easing: p.riseEasing ?? EASING },
+        { transform: tStage, opacity: 1, offset: p.arrive, easing: 'linear' },
+        { transform: tStage, opacity: 1, offset: p.depart, easing: p.landEasing ?? EASING },
         { transform: tEnd, opacity: p.fadeOut ? 0 : 1, offset: 1 },
     ], { duration: p.total, delay: p.delay ?? 0, fill: 'both' },
     () => { outer.remove(); p.onDone?.(); });
     return { inner };
+}
+
+// ---------------------------------------------------------------------------
+// The four COMPOSITE plays, ported from karabuddy's FrameAnimator executor
+// (cases eventStage / upgradeStage / resourceStage / leaderDeploy). Each is
+// `stagePresent` plus its own flip and flourishes; the scales, arrive/depart
+// offsets and easings are karabuddy's. Our `Intent`s carry no card ART (the
+// planner never measured any), so a reveal only happens where the beat measured
+// a real face: an opponent's hidden event/upgrade stays a cardback in flight.
+// ---------------------------------------------------------------------------
+
+const RISE_EASING = 'cubic-bezier(0.3, 0, 0.2, 1)';
+const LAND_EASING = 'cubic-bezier(0.5, 0, 0.7, 1)';
+const CARDBACK_URL = '/card-back.png';
+const EVENT_SCALE = 2.1, EVENT_ARRIVE = 0.26, EVENT_DEPART = 0.74, EVENT_FLIP_AT = 130, EVENT_FLIP_MS = 260;
+const UPGRADE_SCALE = 1.7, UPGRADE_ARRIVE = 0.28, UPGRADE_DEPART = 0.66;
+const RESOURCE_SCALE = 1.65, RESOURCE_ARRIVE = 0.265, RESOURCE_DEPART = 0.595, RESOURCE_FLIP_MS = 300;
+const LEADER_SCALE = 2.3, LEADER_RISE_MS = 400, LEADER_HOLD_MS = 450, LEADER_FLIP_MS = 280;
+
+const mid = (r: Snap): Point => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 });
+
+/** A pile is a single stacked box: land shrunk into it, never smaller than a quarter. */
+const intoPile = (from: Snap, pile: Snap) => ({ at: mid(pile), scale: Math.max(0.25, pile.w / from.w) });
+
+/** A fill-parent cardback (the face a card turns to as it commits to resources). */
+function cardback(s: Stage): HTMLElement {
+    const n = s.node();
+    Object.assign(n.style, {
+        position: 'absolute', inset: '0', borderRadius: '7px', backgroundColor: '#0a0c10',
+        backgroundImage: `url(${CARDBACK_URL})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+    } as Partial<CSSStyleDeclaration>);
+    return n;
+}
+
+// EVENT: the card flies out of the hand toward the bases, pauses grown at the
+// stage point ("held above the board" to be read), then drops into the discard
+// pile and fades — the pile is one stacked box, so there is no per-card render
+// to hand off to.
+export function eventStage(s: Stage, p: { uuid: string; from: Snap; to: Snap | null; stage: Point; faceDown: boolean }): void {
+    const live = p.to ? s.findCard(p.uuid) : null;
+    s.hide(live);
+    const { inner } = stagePresent(s, {
+        from: p.from, stage: p.stage, scale: EVENT_SCALE,
+        land: p.to ? intoPile(p.from, p.to) : { at: p.stage, scale: 0.5 },
+        arrive: EVENT_ARRIVE, depart: EVENT_DEPART, total: DURATION.eventPresent,
+        fadeOut: true, zIndex: 12, shadow: 'drop-shadow(0 16px 26px rgba(0, 0, 0, 0.55))',
+        riseEasing: RISE_EASING, landEasing: LAND_EASING,
+        onDone: () => s.show(live),
+    });
+    // A hidden-hand play flips face-up mid-flight, when the frame rendered a face.
+    const face = p.to?.html;
+    if (p.faceDown && face) flip(s, inner, { build: () => s.face(face), at: EVENT_FLIP_AT, duration: EVENT_FLIP_MS });
+}
+
+// UPGRADE: fly out of the hand, present grown above the host, then tuck UNDER it
+// — the clone lands at the unit's lower edge, scaled to the unit's width, and
+// fades out, handing off to the host's rendered upgrade strip beneath.
+export function upgradeStage(s: Stage, p: { uuid: string; from: Snap; unit: Snap; stage: Point; faceDown: boolean }): void {
+    stagePresent(s, {
+        from: p.from, stage: p.stage, scale: UPGRADE_SCALE,
+        land: { at: { x: p.unit.x + p.unit.w / 2, y: p.unit.y + p.unit.h * 0.62 }, scale: p.unit.w / p.from.w },
+        arrive: UPGRADE_ARRIVE, depart: UPGRADE_DEPART, total: DURATION.upgradePresent,
+        fadeOut: true, zIndex: 12, shadow: 'drop-shadow(0 14px 22px rgba(0, 0, 0, 0.55))',
+        riseEasing: RISE_EASING, landEasing: LAND_EASING,
+    });
+}
+
+// RESOURCE: the card grows (presented face-up to be read), flips to its back as
+// it commits — that is how a card is resourced in the physical game — then
+// shrinks into the resource pile and fades. An already-face-down source (the
+// opponent's hidden hand) is a cardback throughout, so it just drops.
+export function resourceStage(s: Stage, p: { uuid: string; from: Snap; pile: Snap; stage: Point; faceDown: boolean }): void {
+    const { inner } = stagePresent(s, {
+        from: p.from, stage: p.stage, scale: RESOURCE_SCALE, land: intoPile(p.from, p.pile),
+        arrive: RESOURCE_ARRIVE, depart: RESOURCE_DEPART, total: DURATION.resource,
+        fadeOut: true, zIndex: 12, shadow: 'drop-shadow(0 14px 22px rgba(0, 0, 0, 0.55))',
+        riseEasing: RISE_EASING, landEasing: LAND_EASING,
+    });
+    // The flip starts AFTER the read-hold (as the drop begins), so the face sits
+    // readable through the pause.
+    if (!p.faceDown) flip(s, inner, { build: () => cardback(s), at: RESOURCE_DEPART * DURATION.resource, duration: RESOURCE_FLIP_MS });
+}
+
+// LEADER DEPLOY: raise the leader off the table under a spotlight vignette,
+// hold, flip to its unit side as the slam begins, and land in the arena slot —
+// shaking the whole board on the landing. The deployed unit stays hidden until
+// the clone lands.
+export function leaderDeploy(s: Stage, p: { uuid: string; from: Snap; to: Snap; stage: Point }): void {
+    const live = s.findCard(p.uuid);
+    s.hide(live);
+    const total = DURATION.leaderDeploy;
+    // The vignette darkens the board edges as the leader rises, holds through the
+    // present AND the slam, and lifts only AFTER it lands.
+    const vigTotal = total + DURATION.vignette;
+    const vig = s.node();
+    Object.assign(vig.style, {
+        position: 'absolute', inset: '0', pointerEvents: 'none', zIndex: '13', opacity: '0',
+        background: 'radial-gradient(ellipse 62% 62% at 50% 45%, transparent 14%, rgba(0,0,0,0.92) 86%)',
+    } as Partial<CSSStyleDeclaration>);
+    s.mount(vig);
+    s.animate(vig, [
+        { opacity: 0, offset: 0 }, { opacity: 0.9, offset: LEADER_RISE_MS / vigTotal },
+        { opacity: 0.9, offset: total / vigTotal }, { opacity: 0, offset: 1 },
+    ], { duration: vigTotal, easing: 'ease-in-out' }, () => vig.remove());
+    const depart = (LEADER_RISE_MS + LEADER_HOLD_MS) / total;
+    const { inner } = stagePresent(s, {
+        from: p.from, stage: p.stage, scale: LEADER_SCALE, land: { at: mid(p.to), scale: p.to.w / p.from.w },
+        arrive: LEADER_RISE_MS / total, depart, total,
+        fadeOut: false, zIndex: 14, shadow: 'drop-shadow(0 22px 34px rgba(0, 0, 0, 0.6))',
+        riseEasing: 'cubic-bezier(0.2, 0, 0.2, 1)', landEasing: 'cubic-bezier(0.55, 0, 0.85, 0.5)',
+        onDone: () => s.show(live),
+    });
+    flip(s, inner, { build: () => s.face(p.to.html), at: LEADER_RISE_MS + LEADER_HOLD_MS, duration: LEADER_FLIP_MS });
+    // The board shake rides a `later` rather than the animation's onDone: onDone
+    // also fires on a cancel, and a stepped-past deploy must not jolt the board.
+    s.later(total, () => {
+        const b = s.board?.();
+        if (!b) return;
+        s.animate(b, [
+            { transform: 'translate(0, 0)' }, { transform: 'translate(-5px, 4px)' }, { transform: 'translate(5px, -3px)' },
+            { transform: 'translate(-4px, 2px)' }, { transform: 'translate(3px, -1px)' }, { transform: 'translate(0, 0)' },
+        ], { duration: 380, easing: 'ease-out' });
+    });
 }

@@ -76,6 +76,9 @@ export interface IReplayContextType {
     play: () => void; pause: () => void; isPlaying: boolean;
     speed: number; setSpeed: (s: number) => void;
 
+    /** Whether beat-to-beat card motion animates (Task 14 makes it a stored preference). */
+    animate: boolean;
+
     /** The beat timeline (Task 2's buildBeats over `events`) and the beat the playhead sits in. */
     beats: Beat[];
     currentBeat: Beat;
@@ -491,7 +494,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         replayId, downloadReplay, nameOf: names.nameOf,
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
-        play, pause, isPlaying, speed, setSpeed,
+        play, pause, isPlaying, speed, setSpeed, animate: true,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, events, roundMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,

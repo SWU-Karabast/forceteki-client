@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Card, Grid, Typography, IconButton } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -9,6 +9,7 @@ import FileUpload from '@/app/_components/Replay/FileUpload';
 import TransportControls from '@/app/_components/Replay/TransportControls';
 import ReplayPanel from '@/app/_components/Replay/ReplayPanel';
 import LastActionCaption from '@/app/_components/Replay/LastActionCaption';
+import ReplayAnimator from '@/app/_components/Replay/ReplayAnimator';
 import RecentReplays from '@/app/_components/Replay/RecentReplays';
 import OpponentCardTray from '@/app/_components/Gameboard/OpponentCardTray/OpponentCardTray';
 import Board from '@/app/_components/Gameboard/Board/Board';
@@ -126,6 +127,9 @@ function ReplayHeader({ header }: { header: SwuPgnDocument['header'] }) {
 
 function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
     const { gameState, connectedPlayer, getOpponent } = useReplay();
+    // The animator's coordinate space: <main> holds BOTH trays and the board, so a
+    // hand -> arena flight measures in one frame of reference.
+    const mainRef = useRef<HTMLElement>(null);
 
     if (!gameState?.players) {
         return (
@@ -140,6 +144,7 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
             <Grid container sx={{ height: '100dvh', overflow: 'hidden', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1200 }}>
                 <Box
                     component="main"
+                    ref={mainRef}
                     sx={{
                         width: '100%',
                         height: '100dvh',
@@ -165,6 +170,7 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
                     <Box sx={{ height: '18dvh', mb: '60px' }}>
                         <PlayerCardTray trayPlayer={connectedPlayer} />
                     </Box>
+                    <ReplayAnimator containerRef={mainRef} />
                 </Box>
                 <PopupShell sidebarOpen={false} />
             </Grid>
