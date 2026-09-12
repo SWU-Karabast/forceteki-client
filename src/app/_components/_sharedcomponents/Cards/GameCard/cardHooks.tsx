@@ -2,7 +2,7 @@ import { CardStyle, ICardData } from '@/app/_components/_sharedcomponents/Cards/
 import { Box, IconButton, Popover, PopoverOrigin, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ZoneName } from '@/app/_constants/constants';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import ThreeSixty from '@mui/icons-material/ThreeSixty';
@@ -45,12 +45,25 @@ export const usePopoverConfig = (card: ICardData): { anchorOrigin: PopoverOrigin
     };
 }
 
+export type PopoverConfig = { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin };
+
+
+export type CardPreviewData = {
+    cardUrl: string;
+    cardType?: string;
+    cardId?: string;
+    // needed only for TWI Chancellor Palpatine
+    cardSide?: '0' | '1';
+    // tell if a leader hasn't been deployed
+    cardNotDeployed?: boolean;
+}
+
 /**
  * Hook to extract the preview card popover from the GameCard. Ideally we should be able to test this in isolation
  * @param disabled don't display a preview at all
  * @param popoverConfig preview popovert positioning
  */
-export const usePreviewCardPopover = (disabled: boolean, popoverConfig: { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin }) => {
+export const usePreviewCardPopover = (disabled: boolean, popoverConfig: PopoverConfig) => {
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
@@ -66,10 +79,9 @@ export const usePreviewCardPopover = (disabled: boolean, popoverConfig: { anchor
         anchorElement,
         cardId: anchorElement?.getAttribute('data-card-id') || undefined,
         setPreviewImage,
-        frontCardStyle: CardStyle.Plain,
-        backCardStyle: CardStyle.PlainLeader,
+        frontCardStyle: CardStyle.PlainLeader,
+        backCardStyle: CardStyle.Plain,
         isLeader: isPreviewingLeaderCard,
-        isDeployed: true,
     });
     const styles = {
         cardPreview: {
@@ -155,18 +167,16 @@ export const usePreviewCardPopover = (disabled: boolean, popoverConfig: { anchor
         setAnchorElement(null);
         setPreviewImage(null);
     };
-    const getCardPreviewProps = ({ cardUrl,
-        cardType,
-        cardId }: { cardUrl: string; cardType?: string; cardId?: string }) => {
-        return {
-            onMouseEnter: handlePreviewOpen,
-            onMouseLeave: handlePreviewClose,
-            'data-card-url': cardUrl,
-            'data-card-type': cardType,
-            'data-card-id': cardId,
-            ...longPressHandlers
-        }
-    };
+    const getCardPreviewProps = ({ cardUrl, cardType, cardId, cardSide, cardNotDeployed }: CardPreviewData) => ({
+        onMouseEnter: handlePreviewOpen,
+        onMouseLeave: handlePreviewClose,
+        'data-card-url': cardUrl,
+        'data-card-type': cardType,
+        'data-card-id': cardId,
+        ...(cardNotDeployed ? { 'data-card-not-deployed': 'false' } : {}),
+        ...(cardSide ? { 'data-card-side': cardSide } : {}),
+        ...longPressHandlers
+    });
     const popover = disabled ? null : (
         <Popover
             id="mouse-over-popover"
@@ -202,7 +212,7 @@ export const usePreviewCardPopover = (disabled: boolean, popoverConfig: { anchor
     );
 
     // Keep touch previews open until the next interaction anywhere on the screen.
-    React.useEffect(() => {
+    useEffect(() => {
         if (!open || !isTouchDevice) return;
         const onPointerDown = () => handlePreviewClose();
         document.addEventListener('pointerdown', onPointerDown);
@@ -213,5 +223,6 @@ export const usePreviewCardPopover = (disabled: boolean, popoverConfig: { anchor
         getCardPreviewProps,
         closePreview: handlePreviewClose,
         popover,
+        open,
     };
 }

@@ -91,6 +91,7 @@ export function s3CardImageURL(
         cardNumber += '-base';
     }
     if (cardType === 'leader' && 'onStartingSide' in card && !card.onStartingSide) {
+        console.log({card});
         cardNumber += '2';
     }
 

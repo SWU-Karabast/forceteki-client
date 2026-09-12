@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs';
+import { Typography } from '@mui/material';
 import UpgradeStrip, { type UpgradeAspect } from '@/app/_components/_sharedcomponents/Cards/UpgradeStrip';
 
 const references = {
@@ -18,15 +19,23 @@ const meta = {
     parameters: { layout: 'centered' },
     argTypes: {
         aspect: { control: 'select', options: Object.keys(references) },
+        reversed: { control: 'boolean' },
         width: { control: { type: 'range', min: 96, max: 768, step: 24 } },
     },
-    args: { aspect: 'vigilance', width: 176, height: 'auto' },
+    args: { aspect: 'vigilance', reversed: false, width: 176, height: 'auto' },
 } satisfies Meta<typeof UpgradeStrip>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
+
+export const Reversed: Story = {
+    args: {
+        reversed: true,
+        children: <Typography sx={{ color: 'black', fontSize: 10, lineHeight: 1 }}>Upgrade name</Typography>,
+    },
+};
 
 export const AllAspects: Story = {
     render: (args) => (
@@ -64,10 +73,14 @@ export const CompareWithOriginals: Story = {
                             <img
                                 src={`/upgrade-${color}.png`}
                                 alt={`${aspect} upgrade original`}
-                                style={{ display: 'block', width: args.width, height: 'auto' }}
+                                style={{ display: 'block', width: typeof args.width === 'number' || typeof args.width === 'string' ? args.width : 176, height: 'auto' }}
                             />
                         </td>
-                        <td><UpgradeStrip {...args} aspect={aspect as UpgradeAspect} style={{ display: 'block' }} /></td>
+                        <td>
+                            <div style={{ width: typeof args.width === 'number' || typeof args.width === 'string' ? args.width : 176, background: 'black', paddingTop: '6px', paddingBottom: '3px', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px', overflow: 'hidden' }}>
+                                <UpgradeStrip {...args} aspect={aspect as UpgradeAspect} style={{ display: 'block' }} />
+                            </div>
+                        </td>
                     </tr>
                 ))}
             </tbody>
