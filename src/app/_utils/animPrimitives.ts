@@ -16,6 +16,7 @@ export interface Stage {
     clone(snap: Snap, zIndex?: number): HTMLElement; // overlay clone at snap's rect, transform-origin 0 0
     layer(snap: Snap, zIndex: number, opts?: { origin?: string; shadow?: string }): { outer: HTMLElement; inner: HTMLElement }; // outer moves, inner flips
     face(html: string): HTMLElement; // a fill-parent face built from outerHTML
+    node(): HTMLElement; // a bare element the caller styles and mounts; the stage creates it so primitives never touch `document`
     mount(el: HTMLElement): void; // append a raw FX node to the overlay
     rel(p: Point): { left: number; top: number }; // screen point → overlay-relative
     hide(el: HTMLElement | null): void;
@@ -136,10 +137,12 @@ export function shake(s: Stage, p: { uuid: string; amplitude: number; delay?: nu
 
 // TRACER: a colored bolt that streaks from a source point to a target (damage /
 // heal). Invisible until it begins (matters when delayed behind a staged event).
+// The orb is a bare `s.node()`, not `document.createElement`, so this stays
+// DOM-free outside the stage and testable in node.
 export function tracer(s: Stage, p: { from: Point; to: Point; color: string; delay?: number }): void {
     const size = 16;
     const o = s.rel(p.from);
-    const orb = document.createElement('div');
+    const orb = s.node();
     Object.assign(orb.style, {
         position: 'absolute', left: `${o.left - size / 2}px`, top: `${o.top - size / 2}px`,
         width: `${size}px`, height: `${size}px`, borderRadius: '50%', opacity: '0',
@@ -156,9 +159,11 @@ export function tracer(s: Stage, p: { from: Point; to: Point; color: string; del
 
 // FLASH: a colored impact wash over the struck card, timed to land as the bolt
 // connects (tracer duration - 70ms, plus any event-effect delay).
+// The wash is a bare `s.node()`, not `document.createElement`, so this stays
+// DOM-free outside the stage and testable in node.
 export function flash(s: Stage, p: { rect: Snap; color: string; delay?: number }): void {
     const f = s.rel(p.rect);
-    const el = document.createElement('div');
+    const el = s.node();
     Object.assign(el.style, {
         position: 'absolute', left: `${f.left}px`, top: `${f.top}px`, width: `${p.rect.w}px`, height: `${p.rect.h}px`,
         borderRadius: '7px', background: p.color, opacity: '0', pointerEvents: 'none', zIndex: '9', mixBlendMode: 'screen',

@@ -1,17 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { slide, lunge, playFlip, exitFade, shake, type Stage, type Snap } from '../animPrimitives';
+import { slide, lunge, playFlip, exitFade, shake, tracer, flash, type Stage, type Snap } from '../animPrimitives';
 import { DURATION } from '../replayTiming';
 
 interface Call { el: string; keyframes: Keyframe[]; timing: KeyframeEffectOptions }
-function fakeStage(cards: Record<string, boolean> = {}): Stage & { calls: Call[]; hidden: string[]; shown: string[]; timers: number[] } {
+function fakeStage(cards: Record<string, boolean> = {}): Stage & { calls: Call[]; hidden: string[]; shown: string[]; timers: number[]; mounted: string[] } {
     const mk = (tag: string) => ({ tag, style: {} as Record<string, string>, appendChild() {}, replaceChildren() {}, remove() {} } as unknown as HTMLElement & { tag: string });
     const st = {
-        rate: 1, calls: [] as Call[], hidden: [] as string[], shown: [] as string[], timers: [] as number[],
+        rate: 1, calls: [] as Call[], hidden: [] as string[], shown: [] as string[], timers: [] as number[], mounted: [] as string[],
         findCard: (u: string) => (cards[u] ? Object.assign(mk('live'), { uuid: u }) : null),
         clone: (snap: Snap) => mk(`clone:${snap.html}`),
         layer: (snap: Snap) => ({ outer: mk(`outer:${snap.html}`), inner: mk(`inner:${snap.html}`) }),
         face: (html: string) => mk(`face:${html}`),
-        mount: () => {}, rel: (p: { x: number; y: number }) => ({ left: p.x, top: p.y }),
+        node: () => mk('node'),
+        mount: (el: HTMLElement) => { st.mounted.push((el as unknown as { tag: string }).tag); },
+        rel: (p: { x: number; y: number }) => ({ left: p.x, top: p.y }),
         hide: (el: HTMLElement | null) => { if (el) st.hidden.push((el as { uuid?: string }).uuid ?? (el as unknown as { tag: string }).tag); },
         show: (el: HTMLElement | null) => { if (el) st.shown.push((el as { uuid?: string }).uuid ?? (el as unknown as { tag: string }).tag); },
         animate: (el: Element, keyframes: Keyframe[], timing: KeyframeEffectOptions, onDone?: () => void) => { st.calls.push({ el: (el as unknown as { tag: string }).tag ?? 'live', keyframes, timing }); onDone?.(); },
@@ -58,5 +60,20 @@ describe('animPrimitives', () => {
         expect(kf[0].transform).toBe('translate(0, 0)');
         expect(kf[kf.length - 1].transform).toBe('translate(0, 0)');
         expect(s.calls[0].timing.duration).toBe(DURATION.shake);
+    });
+    it('tracer mounts a bolt from the source point to the target', () => {
+        const s = fakeStage();
+        tracer(s, { from: { x: 0, y: 0 }, to: { x: 100, y: 50 }, color: 'red', delay: 40 });
+        expect(s.mounted).toEqual(['node']);
+        expect(s.calls[0].keyframes).toHaveLength(3);
+        expect(s.calls[0].timing.duration).toBe(DURATION.tracer);
+        expect(s.calls[0].timing.delay).toBe(40);
+    });
+    it('flash washes the struck card as the bolt connects', () => {
+        const s = fakeStage();
+        flash(s, { rect: snap(0, 0, 50, 50), color: 'blue', delay: 10 });
+        expect(s.mounted).toEqual(['node']);
+        expect(s.calls[0].keyframes.map((k) => k.opacity)).toEqual([0, 0.55, 0]);
+        expect(s.calls[0].timing.delay).toBe(10 + DURATION.tracer - 70);
     });
 });
