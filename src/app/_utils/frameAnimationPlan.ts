@@ -164,13 +164,16 @@ export function planBeat(input: PlanInput): Intent[] {
                 break;
             }
             // Rule 5: a bolt from its source (or the acting seat's base), a flash on
-            // the spot it struck, and a recoil if the target lived.
+            // the spot it struck, and a recoil if the target lived. Every intent's
+            // `delay` is when the effect is SCHEDULED, so the flash carries the bolt's
+            // delay -- the `flash` primitive owns the `DURATION.tracer - 70` offset that
+            // lands the wash as the bolt connects.
             case 'damage': {
                 const tgt = rect(t.tgt);
                 if (!tgt) break;
                 const src = (t.src ? rect(t.src) : null) ?? (actorSeat ? bases[actorSeat] : null);
                 if (src) fx.push({ type: 'tracer', from: center(src), to: center(tgt), color: DAMAGE_COLOR, delay: 0 });
-                fx.push({ type: 'flash', rect: tgt, color: DAMAGE_COLOR, delay: DURATION.tracer - 70 });
+                fx.push({ type: 'flash', rect: tgt, color: DAMAGE_COLOR, delay: 0 });
                 if (t.survived) fx.push({ type: 'shake', uuid: t.tgt, amplitude: 7, delay: DURATION.tracer });
                 break;
             }

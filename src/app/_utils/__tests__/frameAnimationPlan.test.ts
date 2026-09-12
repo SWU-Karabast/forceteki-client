@@ -58,6 +58,17 @@ describe('planBeat', () => {
             { type: 'shake', uuid: 'base@2', amplitude: 8, delay: Math.round(DURATION.lunge * 0.42) },
         ]);
     });
+    it('a damage bolt streaks from its source, flashes the target, and recoils a survivor', () => {
+        const i = base();
+        i.prev.set('S', r(900, 500)); i.next.set('S', r(900, 500));
+        i.prev.set('T', r(900, 250)); i.next.set('T', r(900, 250));
+        i.transitions = [{ kind: 'damage', src: 'S', tgt: 'T', amt: 2, hp: 3, survived: true }];
+        expect(planBeat(i)).toEqual([
+            { type: 'tracer', from: { x: 950, y: 570 }, to: { x: 950, y: 320 }, color: '#ff5a4d', delay: 0 },
+            { type: 'flash', rect: r(900, 250), color: '#ff5a4d', delay: 0 },
+            { type: 'shake', uuid: 'T', amplitude: 7, delay: DURATION.tracer },
+        ]);
+    });
     it('an ability defeat fires a bolt from the leader and fades the target when it lands', () => {
         const i = base();
         i.prev.set('LAW#008', r(600, 60, 'leader')); i.next.set('LAW#008', r(600, 60, 'leader'));
