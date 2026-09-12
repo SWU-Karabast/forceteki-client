@@ -6,6 +6,9 @@ import { planBeat, type Intent } from '@/app/_utils/frameAnimationPlan';
 import { createBoardGeometry, snapOf, type Snapshot } from '@/app/_utils/boardGeometry';
 import { RAPID_STEP_MS } from '@/app/_utils/replayTiming';
 import * as P from '@/app/_utils/animPrimitives';
+import { parseSetId } from '@/app/_utils/swupgnBoardAdapter';
+import { s3CardImageURL, type CardImageLocale } from '@/app/_utils/s3Utils';
+import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import type { Seat } from '@/lib/swupgn';
 
 /**
@@ -16,11 +19,15 @@ import type { Seat } from '@/lib/swupgn';
  */
 const ReplayAnimator: React.FC<{ containerRef: React.RefObject<HTMLElement | null> }> = ({ containerRef }) => {
     const { currentIndex, beats, transitionsOf, speed, isPlaying, currentPerspective, animate, gameState } = useReplay();
+    const locale = useCardImageLocale();
     const overlayRef = useRef<HTMLDivElement>(null);
     const prevRects = useRef<Snapshot | null>(null);
     const prevIndex = useRef(currentIndex);
     const lastRun = useRef(0);
-    const active = useRef<Animation[]>([]);
+    // Each animation with the cleanup it owes: a cancel fires `oncancel` on a LATER
+    // task, so the previous beat's `show()` / zIndex restore would land after the new
+    // beat had already hidden its cards. The cleanup runs them itself instead.
+    const active = useRef<{ anim: Animation; onDone?: () => void }[]>([]);
     const timers = useRef<number[]>([]);
     const hidden = useRef<HTMLElement[]>([]);
 
@@ -28,7 +35,7 @@ const ReplayAnimator: React.FC<{ containerRef: React.RefObject<HTMLElement | nul
         const container = containerRef.current, overlay = overlayRef.current;
         if (!container || !overlay) return;
         // 1. cancel whatever is still running, restore hidden live cards, empty the overlay
-        active.current.forEach((a) => a.cancel()); active.current = [];
+        active.current.forEach(({ anim, onDone }) => { anim.onfinish = anim.oncancel = null; anim.cancel(); onDone?.(); }); active.current = [];
         timers.current.forEach((t) => window.clearTimeout(t)); timers.current = [];
         hidden.current.forEach((el) => { el.style.opacity = ''; }); hidden.current = [];
         overlay.replaceChildren();
@@ -73,11 +80,11 @@ const ReplayAnimator: React.FC<{ containerRef: React.RefObject<HTMLElement | nul
             rel: (p) => ({ left: p.x - cRect.left, top: p.y - cRect.top }),
             hide: (el) => { if (el) { el.style.opacity = '0'; hidden.current.push(el); } },
             show: (el) => { if (el) el.style.opacity = ''; },
-            animate: (el, kf, timing, onDone) => { const a = el.animate(kf, timing); a.playbackRate = rate; active.current.push(a); a.onfinish = a.oncancel = () => onDone?.(); },
+            animate: (el, kf, timing, onDone) => { const a = el.animate(kf, timing); a.playbackRate = rate; active.current.push({ anim: a, onDone }); a.onfinish = a.oncancel = () => onDone?.(); },
             later: (ms, fn) => { timers.current.push(window.setTimeout(fn, ms / rate)); },
             board: () => container,
         };
-        for (const intent of intents) run(intent, stage);
+        for (const intent of intents) run(intent, stage, locale);
     // gameState is in the deps so the effect runs after the board re-rendered the new frame.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentIndex, gameState]);
@@ -94,7 +101,11 @@ function fromHtml(html: string): HTMLElement {
     return el;
 }
 
-function run(i: Intent, s: P.Stage): void {
+/** The card's own art, for a face-down play that has no rendered face to clone: the
+ *  intent's uuid IS the card's `SET#NUM` id. */
+const faceArt = (uuid: string, locale: CardImageLocale) => s3CardImageURL({ setId: parseSetId(uuid), type: '', id: uuid }, locale);
+
+function run(i: Intent, s: P.Stage, locale: CardImageLocale): void {
     switch (i.type) {
         case 'move': return P.slide(s, { uuid: i.uuid, from: i.from, to: i.to, delay: i.delay });
         case 'enter': return P.enterFade(s, { uuid: i.uuid, delay: i.delay });
@@ -104,8 +115,8 @@ function run(i: Intent, s: P.Stage): void {
         case 'shake': return P.shake(s, { uuid: i.uuid, amplitude: i.amplitude, delay: i.delay });
         case 'tracer': return P.tracer(s, { from: i.from, to: i.to, color: i.color, delay: i.delay });
         case 'flash': return P.flash(s, { rect: i.rect, color: i.color, delay: i.delay });
-        case 'eventStage': return P.eventStage(s, i);
-        case 'upgradeStage': return P.upgradeStage(s, i);
+        case 'eventStage': return P.eventStage(s, { ...i, faceUp: i.faceDown ? faceArt(i.uuid, locale) : undefined });
+        case 'upgradeStage': return P.upgradeStage(s, { ...i, faceUp: i.faceDown ? faceArt(i.uuid, locale) : undefined });
         case 'resourceStage': return P.resourceStage(s, i);
         case 'leaderDeploy': return P.leaderDeploy(s, i);
     }

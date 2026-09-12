@@ -650,7 +650,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
                 {cardStyle === LeaderBaseCardStyle.Leader && title && (
                     <>
-                        <Box sx={styles.nameplateBox}>
+                        <Box sx={styles.nameplateBox} data-leader-nameplate="true">
                             <Typography variant="body2" sx={styles.nameplateText}>
                                 {title}
                             </Typography>

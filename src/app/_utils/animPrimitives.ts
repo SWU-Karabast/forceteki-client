@@ -238,21 +238,24 @@ const mid = (r: Snap): Point => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 });
 /** A pile is a single stacked box: land shrunk into it, never smaller than a quarter. */
 const intoPile = (from: Snap, pile: Snap) => ({ at: mid(pile), scale: Math.max(0.25, pile.w / from.w) });
 
-/** A fill-parent cardback (the face a card turns to as it commits to resources). */
-function cardback(s: Stage): HTMLElement {
+/** A fill-parent face painted from an image url: the cardback a resourced card turns
+ *  to, and the card ART a hidden-hand play reveals (a face-down play has no rendered
+ *  destination to clone, so the caller resolves the art url and passes it in). */
+function artNode(s: Stage, url: string, backing = ''): HTMLElement {
     const n = s.node();
     Object.assign(n.style, {
-        position: 'absolute', inset: '0', borderRadius: '7px', backgroundColor: '#0a0c10',
-        backgroundImage: `url(${CARDBACK_URL})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+        position: 'absolute', inset: '0', borderRadius: '7px', backgroundColor: backing,
+        backgroundImage: `url(${url})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
     } as Partial<CSSStyleDeclaration>);
     return n;
 }
+const cardback = (s: Stage) => artNode(s, CARDBACK_URL, '#0a0c10');
 
 // EVENT: the card flies out of the hand toward the bases, pauses grown at the
 // stage point ("held above the board" to be read), then drops into the discard
 // pile and fades — the pile is one stacked box, so there is no per-card render
 // to hand off to.
-export function eventStage(s: Stage, p: { uuid: string; from: Snap; to: Snap | null; stage: Point; faceDown: boolean }): void {
+export function eventStage(s: Stage, p: { uuid: string; from: Snap; to: Snap | null; stage: Point; faceDown: boolean; faceUp?: string }): void {
     const live = p.to ? s.findCard(p.uuid) : null;
     s.hide(live);
     const { inner } = stagePresent(s, {
@@ -263,22 +266,26 @@ export function eventStage(s: Stage, p: { uuid: string; from: Snap; to: Snap | n
         riseEasing: RISE_EASING, landEasing: LAND_EASING,
         onDone: () => s.show(live),
     });
-    // A hidden-hand play flips face-up mid-flight, when the frame rendered a face.
-    const face = p.to?.html;
-    if (p.faceDown && face) flip(s, inner, { build: () => s.face(face), at: EVENT_FLIP_AT, duration: EVENT_FLIP_MS });
+    // A hidden-hand play flips face-up mid-flight: the cardback becomes the card's
+    // art (the discard pile is one stacked box, so it renders no face to clone).
+    const build = p.faceUp ? () => artNode(s, p.faceUp!) : p.to?.html ? () => s.face(p.to!.html) : null;
+    if (p.faceDown && build) flip(s, inner, { build, at: EVENT_FLIP_AT, duration: EVENT_FLIP_MS });
 }
 
 // UPGRADE: fly out of the hand, present grown above the host, then tuck UNDER it
 // — the clone lands at the unit's lower edge, scaled to the unit's width, and
 // fades out, handing off to the host's rendered upgrade strip beneath.
-export function upgradeStage(s: Stage, p: { uuid: string; from: Snap; unit: Snap; stage: Point; faceDown: boolean }): void {
-    stagePresent(s, {
+export function upgradeStage(s: Stage, p: { uuid: string; from: Snap; unit: Snap; stage: Point; faceDown: boolean; faceUp?: string }): void {
+    const { inner } = stagePresent(s, {
         from: p.from, stage: p.stage, scale: UPGRADE_SCALE,
         land: { at: { x: p.unit.x + p.unit.w / 2, y: p.unit.y + p.unit.h * 0.62 }, scale: p.unit.w / p.from.w },
         arrive: UPGRADE_ARRIVE, depart: UPGRADE_DEPART, total: DURATION.upgradePresent,
         fadeOut: true, zIndex: 12, shadow: 'drop-shadow(0 14px 22px rgba(0, 0, 0, 0.55))',
         riseEasing: RISE_EASING, landEasing: LAND_EASING,
     });
+    // An upgrade renders only as its host's strip, so a hidden-hand play likewise has
+    // no face to clone: it flips the cardback to the card's art on the way up.
+    if (p.faceDown && p.faceUp) flip(s, inner, { build: () => artNode(s, p.faceUp!), at: EVENT_FLIP_AT, duration: EVENT_FLIP_MS });
 }
 
 // RESOURCE: the card grows (presented face-up to be read), flips to its back as
@@ -322,6 +329,9 @@ export function leaderDeploy(s: Stage, p: { uuid: string; from: Snap; to: Snap; 
     const { inner } = stagePresent(s, {
         from: p.from, stage: p.stage, scale: LEADER_SCALE, land: { at: mid(p.to), scale: p.to.w / p.from.w },
         arrive: LEADER_RISE_MS / total, depart, total,
+        // Only the CARD rises: the player-name plate renders inside the leader's
+        // element and stays on the board, so a clone carrying it reads as a duplicate.
+        initial: () => { const f = s.face(p.from.html); f.querySelectorAll('[data-leader-nameplate]').forEach((el) => el.remove()); return f; },
         fadeOut: false, zIndex: 14, shadow: 'drop-shadow(0 22px 34px rgba(0, 0, 0, 0.6))',
         riseEasing: 'cubic-bezier(0.2, 0, 0.2, 1)', landEasing: 'cubic-bezier(0.55, 0, 0.85, 0.5)',
         onDone: () => s.show(live),
