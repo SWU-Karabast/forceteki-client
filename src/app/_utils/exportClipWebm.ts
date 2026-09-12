@@ -1,6 +1,9 @@
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn';
 import { foldFrames } from '@/lib/swupgn';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
+import { buildBeats, type Beat } from '@/app/_utils/replayBeats';
+import { classifyBeat } from '@/app/_utils/replayTransitions';
+import { beatDurationMs } from '@/app/_utils/replayTiming';
 
 // P4 heavy stretch: export a clip [start,end] as a real downloadable .webm. We CANNOT
 // capture the live DOM board to a canvas — the card images come from an S3 bucket with no
@@ -20,8 +23,15 @@ export interface ClipExportOpts {
     // seq -> human move label (from the move list), for the action caption.
     labelForSeq: (seq: string) => string | undefined;
     nameOf: (id: string) => string;
-    // Hold each game frame on screen this long (default 700ms) so the clip is watchable.
+    // Floor for a beat that moves nothing (default 700ms); a beat with transitions holds
+    // for its own authored duration instead, so the clip paces like autoplay at 1x.
     msPerFrame?: number;
+}
+
+/** Beats whose frame range intersects `[lo, hi]` -- a beat partly inside the clip still
+ *  counts once. Exported for its own unit test; the exporter is browser-only otherwise. */
+export function clipBeats(beats: Beat[], lo: number, hi: number): Beat[] {
+    return beats.filter((b) => b.start <= hi && b.end >= lo);
 }
 
 const W = 1280;
@@ -142,14 +152,19 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
     recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
     const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); });
 
-    // One pass; refolding every prefix was O(n²) on the clip length.
-    const states = foldFrames(events.slice(0, hi + 1));
+    // One pass over the whole stream (not just the clip): a beat straddling `hi` needs
+    // its full span to classify correctly, even though we only ever draw up to `hi`.
+    const frames = foldFrames(events);
+    const beats = clipBeats(buildBeats(events), lo, hi);
     recorder.start();
-    for (let i = lo; i <= hi; i++) {
-        const state = states[i];
-        const caption = labelForSeq(events[i].seq) ?? '';
-        drawFrame(ctx, state, doc.header, nameOf, caption, i, events.length - 1);
-        await sleep(msPerFrame);
+    for (const beat of beats) {
+        const frameNo = Math.min(beat.end, hi);
+        const state = frames[frameNo];
+        const caption = labelForSeq(events[beat.anchor].seq) ?? '';
+        const transitions = classifyBeat(beat, events, frames[beat.start - 1], frames[beat.end]);
+        const holdMs = transitions.length ? beatDurationMs(transitions) : Math.max(beatDurationMs([]), msPerFrame);
+        drawFrame(ctx, state, doc.header, nameOf, caption, frameNo, events.length - 1);
+        await sleep(holdMs);
     }
     recorder.stop();
     await stopped;
