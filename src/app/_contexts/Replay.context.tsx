@@ -358,18 +358,6 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         if (!frameStates[currentIndex]) return null;
         // Fog-of-war hides the hand of whoever is NOT the current perspective.
         const oppSeat: Seat = perspective === P1 ? 2 : 1;
-        // Units in play this frame that weren't in the previous one → animate them in.
-        const prev = frameStates[currentIndex - 1];
-        let enteringIds: string[] | undefined;
-        if (prev) {
-            const prevIds = new Set<string>();
-            for (const seat of [1, 2] as Seat[]) for (const c of prev.players[seat]?.cards ?? []) prevIds.add(c.id);
-            const cur = frameStates[currentIndex];
-            enteringIds = [];
-            for (const seat of [1, 2] as Seat[]) for (const c of cur.players[seat]?.cards ?? []) {
-                if (!prevIds.has(c.id)) enteringIds.push(c.id);
-            }
-        }
         const opts: AdaptOptions = {
             ...(fogOfWar ? { hideHandFor: oppSeat } : {}),
             // Names come from the file's own CARDS index (or the static map for older files);
@@ -386,13 +374,10 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             resourcedIds: fogOfWar
                 ? { [perspective === P1 ? 1 : 2]: resourcedByFrame[currentIndex]?.[perspective === P1 ? 1 : 2] ?? [] } as Partial<Record<Seat, string[]>>
                 : resourcedByFrame[currentIndex],
-            enteringIds,
             exhaustedIds: [...(entryExhaust[currentIndex] ?? [])],
             activeSeat: activeSeats[currentIndex],
             attack: attacks[currentIndex],
             lastPlayedCard: lastPlayed[currentIndex],
-            // On an ATTACK frame the attacker is the first highlight id; lunge it.
-            attackingIds: action.kind === 'attack' && action.highlight[0] ? [action.highlight[0]] : undefined,
         };
         return adaptState(frameStates[currentIndex], doc, SEAT_TO_ID, opts, statMap);
     }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, names, entryExhaust, activeSeats, attacks, lastPlayed]);

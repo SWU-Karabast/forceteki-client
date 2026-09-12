@@ -20,8 +20,6 @@ export interface AdaptedCard {
     type: string;
     power?: number;
     hp?: number;
-    entering?: boolean;
-    attacking?: boolean;
     damage: number;
     exhausted: boolean;
     selected: boolean;
@@ -258,8 +256,6 @@ export interface AdaptOptions {
     resourcedIds?: Partial<Record<Seat, string[]>>;
     baseHp?: Partial<Record<Seat, number>>;
     deckRemaining?: Partial<Record<Seat, number>>;
-    enteringIds?: string[];
-    attackingIds?: string[];
 
     /** Units to draw exhausted ahead of the file's own EXHAUST record (see entryExhaust.ts). */
     exhaustedIds?: string[];
@@ -364,8 +360,6 @@ interface SeatOptions {
     hideHand?: boolean;
     highlight?: Set<string>;
     leaderExhausted?: boolean;
-    entering?: Set<string>;
-    attacking?: Set<string>;
     exhausted?: Set<string>;
     attack?: { atk: string; def: string };
     active?: boolean;
@@ -379,7 +373,7 @@ interface SeatOptions {
 function adaptPlayer(
     ps: PlayerState, playerId: string, headerLeaderId: string, baseSetId: string,
     statMap: Record<string, CardStat>,
-    { hideHand = false, highlight, leaderExhausted = false, entering, attacking, exhausted, attack, active = false, resourcedIds, baseHp, deckRemaining, nameOf, ownerId }: SeatOptions,
+    { hideHand = false, highlight, leaderExhausted = false, exhausted, attack, active = false, resourcedIds, baseHp, deckRemaining, nameOf, ownerId }: SeatOptions,
 ): any {
     const own = ownerId ?? (() => playerId);
     // The file's own leader status names the card (spec §11); the header is the fallback.
@@ -409,14 +403,6 @@ function adaptPlayer(
     // is safe and needs no new prop on the shared card component.
     if (highlight && highlight.size) {
         for (const c of inPlay) if (highlight.has(c.uuid)) c.selected = true;
-    }
-    // Flag units that just entered play this frame so UnitsBoard animates them in.
-    if (entering && entering.size) {
-        for (const c of inPlay) if (entering.has(c.uuid)) c.entering = true;
-    }
-    // Flag the attacker of this frame's ATTACK so UnitsBoard lunges it toward the opponent.
-    if (attacking && attacking.size) {
-        for (const c of inPlay) if (attacking.has(c.uuid)) c.attacking = true;
     }
     // A unit whose entering EXHAUST is still a few records ahead comes in exhausted, as it
     // does at the table.
@@ -532,8 +518,6 @@ export function adaptState(
     statMap: Record<string, CardStat> = {},
 ): any {
     const highlight = opts.highlightIds && opts.highlightIds.length ? new Set(opts.highlightIds) : undefined;
-    const entering = opts.enteringIds && opts.enteringIds.length ? new Set(opts.enteringIds) : undefined;
-    const attacking = opts.attackingIds && opts.attackingIds.length ? new Set(opts.attackingIds) : undefined;
     const exhausted = opts.exhaustedIds && opts.exhaustedIds.length ? new Set(opts.exhaustedIds) : undefined;
     const owners = ownerSeatMap(doc);
     const players: Record<string, any> = {};
@@ -545,7 +529,7 @@ export function adaptState(
         const baseSetId = seat === 1 ? doc.header.p1Base : doc.header.p2Base;
         const adapted = adaptPlayer(ps, playerId, leaderId, baseSetId, statMap, {
             hideHand: opts.hideHandFor === seat, highlight, leaderExhausted: opts.leaderExhausted?.[seat] ?? false,
-            entering, attacking, exhausted, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
+            exhausted, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
             deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf,
             ownerId: (id) => seatToId[owners.get(baseId(id)) ?? seat],
             attack: opts.attack, active: opts.activeSeat === seat,
