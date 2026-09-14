@@ -1,10 +1,10 @@
 import React from 'react';
-import {Box, Button, SxProps} from '@mui/material';
+import { Box, Button, SxProps } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ICardData } from './CardTypes';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
-import {extendSx} from "@/app/_utils/utils";
-import {Theme} from "@mui/material/styles";
+import { extendSx } from '@/app/_utils/utils';
+import { Theme } from '@mui/material/styles';
 
 interface ICardValueAdjusterProps {
     card: ICardData;
