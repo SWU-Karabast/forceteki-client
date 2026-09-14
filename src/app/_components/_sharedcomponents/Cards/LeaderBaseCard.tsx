@@ -354,7 +354,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             color: 'white',
             width: '100%',
             backgroundColor:'black',
-            position:'absolute',
             zIndex: 2,
             fontSize: 'clamp(4px, .65vw, 12px)'
         },
@@ -367,17 +366,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             justifyContent: 'center',
             boxSizing: 'content-box',
             position: 'relative',
-        },
-        capturedCardBackground: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-            transform: isConnectedPlayer ? 'scaleY(-1)' : 'none',
-            zIndex: 1, // Background layer
         },
         capturedCardName: {
             lineHeight: 'normal',
@@ -404,19 +392,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         cardId: capturedCard.setId ? capturedCard.setId.set + '_' + capturedCard.setId.number : capturedCard.id
                     })}
                 >
-                    <UpgradeStrip aspect={getUpgradeStripBg(capturedCard)} reversed={isConnectedPlayer}>
+                    <UpgradeStrip
+                        aspect={getUpgradeStripBg(capturedCard)}
+                        reversed={isConnectedPlayer}
+                        sx={{
+                            border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
+                        }}>
                         <Typography sx={styles.capturedCardName}>
                             {capturedCard.name}
                         </Typography>
                     </UpgradeStrip>
-                    {/* Background image element positioned behind text */}
-                    {/* <Box
-                        sx={{
-                            ...styles.capturedCardBackground,
-                            backgroundImage: `url(${capturedCardBackground(capturedCard)})`,
-                            border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
-                        }}
-                    /> */}
                 </Box>
             ))}
         </Box>
@@ -440,20 +425,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         cardId: upgrade.setId ? upgrade.setId.set + '_' + upgrade.setId.number : upgrade.id
                     })}
                 >
-                    <UpgradeStrip aspect={getUpgradeStripBg(upgrade)} reversed={isConnectedPlayer}>
+                    <UpgradeStrip
+                        aspect={getUpgradeStripBg(upgrade)}
+                        reversed={isConnectedPlayer}
+                        sx={{
+                            border: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',
+                        }}>
                         <Typography sx={styles.capturedCardName}>
                             {upgrade.name}
                         </Typography>
                     </UpgradeStrip>
-                    {/* Background image element positioned behind text */}
-                    {/* <Box
-                        sx={{
-                            ...styles.capturedCardBackground,
-                            backgroundImage: `url(${capturedCardBackground(upgrade)})`,
-                            border: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',
-                        }}
-                    /> */}
-
                 </Box>
             ))}
         </Box>
@@ -471,12 +452,17 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     sx={{
                         display: 'flex',
                         flexDirection: !isConnectedPlayer ? 'column' : 'column-reverse',
-                        mb: !isConnectedPlayer ? '0px' : '-4px',
-                        mt: !isConnectedPlayer ? '-4px' : '0px',
+                        mb: !isConnectedPlayer ? '0px' : '-5px',
+                        mt: !isConnectedPlayer ? '-5px' : '0px',
+
+                        backgroundColor: 'black',
+                        p: !isConnectedPlayer ? '0 0 1px' : '1px 0 0',
+                        borderRadius: !isConnectedPlayer ? '0 0 4px 4px' : '4px 4px 0 0',
+
                     }}>
                     {upgrades.length > 0 && upgradesDecoration}
                     {capturedCards.length > 0 && (
-                        <Box sx={{ position: 'relative', height: '0.3em' }}>
+                        <Box sx={{ position: 'relative' }}>
                             <Typography sx={styles.capturedCardsDivider}>
                                 Captured
                             </Typography>

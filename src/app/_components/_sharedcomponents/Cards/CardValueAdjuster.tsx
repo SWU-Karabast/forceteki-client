@@ -47,7 +47,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ sx, card, isIndi
             width: '100%',
             border: '1px solid #404040',
             borderRadius: '4px',
-            zIndex: 1
+            zIndex: 3
         },
         valueAdjusterButton: {
             background: distributeDamage ? 'rgba(219, 19, 29, 0.8)' : distributeHealing && 'rgba(0, 186, 255, 0.8)',
