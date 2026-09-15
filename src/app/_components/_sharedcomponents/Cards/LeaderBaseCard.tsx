@@ -1,7 +1,6 @@
 import React from 'react';
-import { Box, IconButton, Popover, Typography, useMediaQuery } from '@mui/material';
-import ThreeSixty from '@mui/icons-material/ThreeSixty';
-import { CardStyle, ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
+import { Box, Typography, useMediaQuery } from '@mui/material';
+import { ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
@@ -9,11 +8,11 @@ import { getBorderColor } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
 import CardValueAdjuster from './CardValueAdjuster';
-import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
-import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
 import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
+import UpgradeStrip, { UpgradeAspect } from '@/app/_components/_sharedcomponents/Cards/UpgradeStrip';
+import { PopoverConfig, usePreviewCardPopover } from '@/app/_components/_sharedcomponents/Cards/GameCard/cardHooks';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -26,55 +25,35 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, hoveredChatCard } = useGame();
     const locale = useCardImageLocale();
-    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
-    const hoverTimeout = React.useRef<number | undefined>(undefined);
-    const open = Boolean(anchorElement);
     const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
     const isMobilePortrait = useMediaQuery('(orientation: portrait) and (max-width:932px)');
-
-    const isHoveringCapturedCard = anchorElement?.getAttribute('data-card-type') !== 'leader' && anchorElement?.getAttribute('data-card-type') !== 'base';
-    const isHoveredInChat = hoveredChatCard.id === card?.uuid;
-    const leaderCardFlipPreview = useLeaderCardFlipPreview({
-        anchorElement,
-        cardId: card?.setId ? `${card.setId.set}_${card.setId.number}` : card?.id,
-        setPreviewImage,
-        frontCardStyle: CardStyle.PlainLeader,
-        backCardStyle: CardStyle.Plain,
-        isDeployed: false,
-        isLeader: anchorElement?.getAttribute('data-card-type') === 'leader',
-        card: card ? {
-            onStartingSide: card.onStartingSide,
-            id: card.id
-        } : undefined,
-    });
-    const aspectRatio = isHoveringCapturedCard ? '1 / 1.4' : leaderCardFlipPreview.aspectRatio;
-    const width = isHoveringCapturedCard ? 'clamp(200px, 60vw, 16rem)' : leaderCardFlipPreview.width;
-
-    const [isTouchDevice, setIsTouchDevice] = React.useState(false);
-
-    const longPressHandlers = useLongPress({
-        onLongPress: (target) => {
-            const imageUrl = target.getAttribute('data-card-url');
-            if (!imageUrl) return;
-            setIsTouchDevice(true);
-            setAnchorElement(target);
-            setPreviewImage(`url(${imageUrl})`);
+    const isConnectedPlayer = card !== null && card.controllerId === connectedPlayer;
+    const popoverConfig: PopoverConfig = isMobilePortrait ? {
+        anchorOrigin: {
+            vertical: isConnectedPlayer ? -5 : 'bottom',
+            horizontal: 'center',
         },
-        onRelease: () => undefined,
-    });
-
-    // Keep touch previews open until the next interaction anywhere on the screen.
-    React.useEffect(() => {
-        if (!open || !isTouchDevice) return;
-        const onPointerDown = () => {
-            clearTimeout(hoverTimeout.current);
-            setAnchorElement(null);
-            setPreviewImage(null);
-        };
-        document.addEventListener('pointerdown', onPointerDown);
-        return () => document.removeEventListener('pointerdown', onPointerDown);
-    }, [open, isTouchDevice]);
+        transformOrigin: {
+            vertical: isConnectedPlayer ? 'bottom' : -5,
+            horizontal: 'center',
+        }
+    } : {
+        anchorOrigin: {
+            vertical: 'center',
+            horizontal: -5,
+        },
+        transformOrigin: {
+            vertical: 'center',
+            horizontal: 'right',
+        }
+    };
+    const {
+        getCardPreviewProps,
+        popover,
+        closePreview,
+        open: previewOpen
+    } = usePreviewCardPopover(false, popoverConfig);
+    const isHoveredInChat = hoveredChatCard.id === card?.uuid;
 
     // Compute card image URL + load status before any early return so hooks
     // are called in a stable order.
@@ -86,30 +65,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     }
 
     const controller = gameState?.players[card.controllerId];
-
     const controllerHasForceToken = controller?.forceToken.active || false;
     const forceTokenUuid = controller?.forceToken.uuid;
     const forceTokenSelectable = controller?.forceToken.selectionState?.selectable || false;
-
-    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
-        // Skip hover preview on touch devices to avoid brief flash on tap
-        if (window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(any-pointer: fine)').matches) return;
-
-        const target = event.currentTarget;
-        const imageUrl = target.getAttribute('data-card-url');
-        if (!imageUrl) return;
-
-        hoverTimeout.current = window.setTimeout(() => {
-            setAnchorElement(target);
-            setPreviewImage(`url(${imageUrl})`);
-        }, 200);
-    };
-
-    const handlePreviewClose = () => {
-        clearTimeout(hoverTimeout.current);
-        setAnchorElement(null);
-        setPreviewImage(null);
-    };
 
     const defaultClickFunction = () => {
         if (card.selectable) {
@@ -178,7 +136,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const distributionAmount = distributionPromptData?.valueDistribution.find((item: DistributionEntry) => item.uuid === card.uuid)?.amount || 0;
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
     const activePlayer = gameState?.players?.[connectedPlayer]?.isActionPhaseActivePlayer;
-    const isConnectedPlayer = card.controllerId === connectedPlayer;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getForceTokenIconStyle = (player: any, isSelectable: boolean = false) => {
@@ -205,40 +162,40 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         };
     }
 
-    const capturedCardBackground = (card: ICardData) => {
+    const getUpgradeStripBg = (card: ICardData):UpgradeAspect => {
         if (!card.aspects){
-            return null
+            return 'neutral';
         }
         if (card.aspects.includes('villainy') && card.aspects.length === 1) {
-            return 'upgrade-black.png';
+            return 'villainy';
         }
         if (card.aspects.includes('heroism') && card.aspects.length === 1) {
-            return 'upgrade-white.png';
+            return 'heroism';
         }
         switch (true) {
             case card.aspects.includes('aggression'):
-                return 'upgrade-red.png';
+                return 'aggression';
             case card.aspects.includes('command'):
-                return 'upgrade-green.png';
+                return 'command';
             case card.aspects.includes('cunning'):
-                return 'upgrade-yellow.png';
+                return 'cunning';
             case card.aspects.includes('vigilance'):
-                return 'upgrade-blue.png';
+                return 'vigilance';
             default:
-                return 'upgrade-grey.png';
+                return 'neutral';
         }
     };
 
     const subcardClick = (subCard: ICardData) => {
         if (subCard.selectable) {
-            setAnchorElement(null);
-            setPreviewImage(null);
+            closePreview();
             sendGameMessage(['cardClicked', subCard.uuid]);
         }
     }
 
     const styles = {
         card: {
+            flex: 1,
             backgroundColor: 'black',
             borderRadius: '0.5rem',
             width: '100%',
@@ -256,6 +213,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             '-webkit-user-select': 'none',   /* Prevents image selection */
         },
         deployedPlaceholder: {
+            flex: 1,
             backgroundColor: 'transparent',
             borderRadius: '0.5rem',
             width: '100%',
@@ -345,18 +303,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             textWrap: 'nowrap',
             overflow: { xs: 'hidden', md: 'visible' },
         },
-        cardPreview: {
-            borderRadius: '.38em',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            imageRendering: '-webkit-optimize-contrast',
-            backfaceVisibility: 'hidden',
-            userSelect: 'none',
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
-            aspectRatio: aspectRatio,
-            width: width,
-        },
         mobileFlipButton: {
             position: 'absolute',
             top: '0.35rem',
@@ -403,19 +349,16 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             `
         },
         capturedCardsDivider:{
-            fontSize: '8px',
+            top: '-40%',
             textAlign: 'center',
             color: 'white',
             width: '100%',
             backgroundColor:'black',
-            mb: isConnectedPlayer ? '0px' : '-2px',
-            mt: isConnectedPlayer ? '-2px' : '0px',
-            position:'relative',
-            zIndex: -1
+            zIndex: 2,
+            fontSize: 'clamp(4px, .65vw, 12px)'
         },
         capturedCardIcon:{
             width: '100%',
-            aspectRatio: '7/1',
             display: 'flex',
             backgroundSize: '100% 100%',
             backgroundRepeat: 'no-repeat',
@@ -423,49 +366,19 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             justifyContent: 'center',
             boxSizing: 'content-box',
             position: 'relative',
-            mb: isConnectedPlayer ? '0px' : '-4px',
-            mt: isConnectedPlayer ? '-4px' : '0px',
-            zIndex: 0, // Establish stacking context
-        },
-        capturedCardBackground: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-            transform: isConnectedPlayer ? 'scaleY(-1)' : 'none',
-            zIndex: 1, // Background layer
         },
         capturedCardName: {
+            lineHeight: 'normal',
             fontSize: 'clamp(4px, .65vw, 12px)',
-            marginTop: isConnectedPlayer ? '-2%' : '1%',
             fontWeight: '600',
             whiteSpace: 'nowrap',
-            overflow: 'hidden',
             color: 'black',
             textAlign: 'center',
-            userSelect: 'none',
-            position: 'relative',
-            zIndex: 2, // Text layer above background
         },
     };
 
     const capturedCardsDecoration = (
-        <Box sx={{
-            width: '100%',
-            position: 'relative',
-            mb: isConnectedPlayer ? '-4%' : '0px',
-            mt: isConnectedPlayer ? '0px' : '-4%',
-            // sits above the adjacent upgrade strip so the "Captured" divider stays fully legible
-            zIndex: 2
-        }}>
-            {!isConnectedPlayer && (
-                <Typography sx={styles.capturedCardsDivider}>
-                    Captured
-                </Typography>
-            )}
+        <Box sx={{ flex: 1, position: 'relative' }}>
             {capturedCards.map((capturedCard: ICardData) => (
                 <Box
                     key={`captured-${capturedCard.uuid}`}
@@ -473,47 +386,31 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         ...styles.capturedCardIcon,
                         cursor: capturedCard.selectable ? 'pointer' : 'default',
                     }}
-                    onClick={() => subcardClick(capturedCard)}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    {...longPressHandlers}
-                    data-card-url={s3CardImageURL({ ...capturedCard, setId: capturedCard.setId }, locale)}
-                    data-card-type={capturedCard.printedType}
-                    data-card-id={capturedCard.setId ? capturedCard.setId.set + '_' + capturedCard.setId.number : capturedCard.id}
+                    {...getCardPreviewProps({
+                        cardUrl: s3CardImageURL({ ...capturedCard, setId: capturedCard.setId }, locale),
+                        cardType:capturedCard.printedType,
+                        cardId: capturedCard.setId ? capturedCard.setId.set + '_' + capturedCard.setId.number : capturedCard.id
+                    })}
                 >
-                    {/* Background image element positioned behind text */}
-                    <Box
+                    <UpgradeStrip
+                        aspect={getUpgradeStripBg(capturedCard)}
+                        reversed={isConnectedPlayer}
                         sx={{
-                            ...styles.capturedCardBackground,
-                            backgroundImage: `url(${capturedCardBackground(capturedCard)})`,
                             border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
-                        }}
-                    />
-                    <Typography sx={{
-                        ...styles.capturedCardName
-                    }}>
-                        {capturedCard.name}
-                    </Typography>
+                        }}>
+                        <Typography sx={styles.capturedCardName}>
+                            {capturedCard.name}
+                        </Typography>
+                    </UpgradeStrip>
                 </Box>
             ))}
-            {isConnectedPlayer && (
-                <Typography sx={styles.capturedCardsDivider}>
-                    Captured
-                </Typography>
-            )}
         </Box>
     )
 
     // Base upgrades (via the Fortify keyword) render as aspect-colored strips tucked against the base,
     // mirroring the captured-cards decoration above.
     const upgradesDecoration = (
-        <Box sx={{
-            width: '100%',
-            position: 'relative',
-            mb: isConnectedPlayer ? '-4%' : '0px',
-            mt: isConnectedPlayer ? '0px' : '-4%',
-            zIndex: 1
-        }}>
+        <Box sx={{ flex: 1, position: 'relative' }}>
             {upgrades.map((upgrade: ICardData) => (
                 <Box
                     key={`base-upgrade-${upgrade.uuid}`}
@@ -522,45 +419,71 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         cursor: upgrade.selectable ? 'pointer' : 'default',
                     }}
                     onClick={() => subcardClick(upgrade)}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    {...longPressHandlers}
-                    data-card-url={s3CardImageURL({ ...upgrade, setId: upgrade.setId }, locale)}
-                    data-card-type={upgrade.printedType}
-                    data-card-id={upgrade.setId ? upgrade.setId.set + '_' + upgrade.setId.number : upgrade.id}
+                    {...getCardPreviewProps({
+                        cardUrl: s3CardImageURL({ ...upgrade, setId: upgrade.setId }, locale),
+                        cardType: upgrade.printedType,
+                        cardId: upgrade.setId ? upgrade.setId.set + '_' + upgrade.setId.number : upgrade.id
+                    })}
                 >
-                    {/* Background image element positioned behind text */}
-                    <Box
+                    <UpgradeStrip
+                        aspect={getUpgradeStripBg(upgrade)}
+                        reversed={isConnectedPlayer}
                         sx={{
-                            ...styles.capturedCardBackground,
-                            backgroundImage: `url(${capturedCardBackground(upgrade)})`,
                             border: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',
-                        }}
-                    />
-                    <Typography sx={{
-                        ...styles.capturedCardName
-                    }}>
-                        {upgrade.name}
-                    </Typography>
+                        }}>
+                        <Typography sx={styles.capturedCardName}>
+                            {upgrade.name}
+                        </Typography>
+                    </UpgradeStrip>
                 </Box>
             ))}
         </Box>
     )
-
     return (
-        <Box sx={{ width: '100%' }}>
-            {capturedCards.length > 0 && isConnectedPlayer && capturedCardsDecoration}
-            {upgrades.length > 0 && isConnectedPlayer && upgradesDecoration}
+        <Box sx={{ position: 'relative', width: '100%', display: 'flex', flexDirection: isConnectedPlayer ? 'column' : 'column-reverse' }}>
+            <Box sx={{
+                position: 'relative',
+                flex: 1,
+                // zIndex must be higher than prompt text, upgrades must remain interactive so they must be on top
+                zIndex: 2,
+                mb: '',
+            }}>
+                <Box 
+                    sx={{
+                        display: 'flex',
+                        flexDirection: !isConnectedPlayer ? 'column' : 'column-reverse',
+                        mb: !isConnectedPlayer ? '0px' : '-5px',
+                        mt: !isConnectedPlayer ? '-5px' : '0px',
+
+                        backgroundColor: 'black',
+                        p: !isConnectedPlayer ? '0 0 1px' : '1px 0 0',
+                        borderRadius: !isConnectedPlayer ? '0 0 4px 4px' : '4px 4px 0 0',
+
+                    }}>
+                    {upgrades.length > 0 && upgradesDecoration}
+                    {capturedCards.length > 0 && (
+                        <Box sx={{ position: 'relative' }}>
+                            <Typography sx={styles.capturedCardsDivider}>
+                                Captured
+                            </Typography>
+                        </Box>
+                    )}
+                    {capturedCards.length > 0 && capturedCardsDecoration}
+                </Box>
+            </Box>
+
             <Box
                 sx={isDeployed ? styles.deployedPlaceholder : [styles.card, highlightSx]}
                 onClick={handleClick}
-                aria-owns={open ? 'mouse-over-popover' : undefined}
+                aria-owns={previewOpen ? 'mouse-over-popover' : undefined}
                 aria-haspopup="true"
-                data-card-url={s3CardImageURL(card, locale)}
-                data-card-type={isLeader ? 'leader' : 'base'}
-                onMouseEnter={handlePreviewOpen}
-                onMouseLeave={handlePreviewClose}
-                {...longPressHandlers}
+                {...getCardPreviewProps({
+                    cardUrl: s3CardImageURL(card, locale),
+                    cardType: isLeader ? 'leader' : 'base',
+                    cardId: card.setId ? `${card.setId.set}_${card.setId.number.toString().padStart(3, '0')}` : card.id,
+                    cardSide: card.onStartingSide ? '0' : '1',
+                    cardNotDeployed: !isDeployed,
+                })}
             >
                 {!isDeployed && (
                     <Box
@@ -579,7 +502,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     <Box sx={styles.unimplementedAlert}></Box>
                 </Box>
                 <Box sx={styles.epicActionIcon}></Box>
-                { showValueAdjuster() && <CardValueAdjuster card={card} /> }
+
                 {cardStyle === LeaderBaseCardStyle.Base && (
                     <>
                         <Box sx={styles.damageCounterContainer}>
@@ -599,53 +522,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         <Box sx={styles.baseBlankIcon}/>
                     </>
                 )}
-
-                <Popover
-                    id="mouse-over-popover"
-                    sx={{ pointerEvents: isTouchDevice ? 'auto' : 'none' }}
-                    open={open}
-                    anchorEl={anchorElement}
-                    anchorOrigin={isMobilePortrait ? {
-                        vertical: isConnectedPlayer ? -5 : 'bottom',
-                        horizontal: 'center',
-                    } : {
-                        vertical: 'center',
-                        horizontal: -5,
-                    }}
-                    transformOrigin={isMobilePortrait ? {
-                        vertical: isConnectedPlayer ? 'bottom' : -5,
-                        horizontal: 'center',
-                    } : {
-                        vertical: 'center',
-                        horizontal: 'right',
-                    }}
-                    onClose={handlePreviewClose}
-                    disableRestoreFocus
-                    slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}
-                >
-                    <Box sx={{ position: 'relative' }}>
-                        <Box sx={{
-                            ...styles.cardPreview,backgroundImage: previewImage
-                        }} />
-                        {isLeader && isTouchDevice && (
-                            <IconButton
-                                aria-label="Flip leader card"
-                                sx={styles.mobileFlipButton}
-                                onPointerDown={(event) => event.stopPropagation()}
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    leaderCardFlipPreview.toggleFlip();
-                                }}
-                            >
-                                <ThreeSixty fontSize="medium" />
-                            </IconButton>
-                        )}
-                    </Box>
-                    {isLeader && !isTouchDevice && !leaderCardFlipPreview.isFlipped && (
-                        <Typography variant={'body1'} sx={styles.ctrlText}
-                        >CTRL: View Flipside</Typography>
-                    )}
-                </Popover>
+                {popover}
 
                 {cardStyle === LeaderBaseCardStyle.Leader && title && (
                     <>
@@ -658,9 +535,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         <Box sx={styles.leaderBlankIcon}/>
                     </>
                 )}
+                { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             </Box>
-            {upgrades.length > 0 && !isConnectedPlayer && upgradesDecoration}
-            {capturedCards.length > 0 && !isConnectedPlayer && capturedCardsDecoration}
         </Box>
     );
 };
