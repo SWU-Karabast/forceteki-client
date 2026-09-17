@@ -27,7 +27,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     const locale = useCardImageLocale();
     const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
     const isMobilePortrait = useMediaQuery('(orientation: portrait) and (max-width:932px)');
-    const isConnectedPlayer = card !== null && card.controllerId === connectedPlayer;
+    const isConnectedPlayer = !!card && card.controllerId === connectedPlayer;
     const popoverConfig: PopoverConfig = isMobilePortrait ? {
         anchorOrigin: {
             vertical: isConnectedPlayer ? -5 : 'bottom',
