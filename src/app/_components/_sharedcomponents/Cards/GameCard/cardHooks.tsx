@@ -69,6 +69,7 @@ export const usePreviewCardPopover = (disabled: boolean, popoverConfig: PopoverC
     const hoverTimeout = React.useRef<number | undefined>(undefined);
     const open = Boolean(anchorElement);
     const isPreviewingLeaderCard = anchorElement?.getAttribute('data-card-type') === 'leader';
+    const isLeaderNotDeployed = !!anchorElement?.getAttribute('data-card-not-deployed');
 
     const {
         aspectRatio,
@@ -79,8 +80,8 @@ export const usePreviewCardPopover = (disabled: boolean, popoverConfig: PopoverC
         anchorElement,
         cardId: anchorElement?.getAttribute('data-card-id') || undefined,
         setPreviewImage,
-        frontCardStyle: CardStyle.PlainLeader,
-        backCardStyle: CardStyle.Plain,
+        frontCardStyle: isLeaderNotDeployed ? CardStyle.PlainLeader : CardStyle.Plain,
+        backCardStyle: isLeaderNotDeployed ? CardStyle.Plain : CardStyle.PlainLeader,
         isLeader: isPreviewingLeaderCard,
     });
     const styles = {
