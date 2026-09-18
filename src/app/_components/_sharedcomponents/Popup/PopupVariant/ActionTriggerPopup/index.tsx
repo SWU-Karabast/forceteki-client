@@ -11,8 +11,7 @@ import {
 } from '../../Popup.styles';
 import { ActionTriggerPopup, PopupButton } from '../../Popup.types';
 import RichText from '../../../RichText/RichText';
-import GradientBorderButton from '@/app/_components/_sharedcomponents/_styledcomponents/GradientBorderButton';
-import TriggerButton, { CARD_WIDTH } from './TriggerButton';
+import TriggerOption from './TriggerOption';
 
 interface ButtonProps {
     data: ActionTriggerPopup;
@@ -39,19 +38,6 @@ const styles = {
         paddingInline: '1rem',
         marginTop: '0.25rem',
         marginBottom: '2rem',
-    },
-    // one card (and its optional inline Pass button) per column; bottom-aligned so all cards line up
-    // regardless of whether a Pass button hangs below them
-    triggerColumn: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-    },
-    // matched to the card width and paired tightly beneath it, mirroring the optional-trigger prompt
-    passButton: {
-        width: CARD_WIDTH,
-        marginTop: '0.5rem',
     },
 };
 
@@ -84,35 +70,25 @@ export default function ActionTriggerPopupModal({ data }: ButtonProps) {
                     )}
                     <Box sx={styles.modalContent}>
                         {data.buttons.map((button: PopupButton, index: number) => (
-                            <Box key={`${button.uuid}:${index}`} sx={styles.triggerColumn}>
-                                <TriggerButton
-                                    text={button.text}
-                                    sourceCard={button.sourceCard}
-                                    hasLegalEffects={button.hasLegalEffects}
-                                    count={button.count}
-                                    onClick={() => {
-                                        sendGameMessage([button.command, button.arg, button.uuid]);
-                                    }}
-                                />
-                                {/* Reserve the Pass row on every column when any trigger is optional so the
-                                    cards stay bottom-aligned; only optional triggers render an active button. */}
-                                {anyOptional && (
-                                    <GradientBorderButton
-                                        sx={{
-                                            ...styles.passButton,
-                                            visibility: button.optional ? 'visible' : 'hidden',
-                                        }}
-                                        disabled={!button.optional}
-                                        onClick={
-                                            button.optional && button.passArg
-                                                ? () => sendGameMessage([button.command, button.passArg, button.uuid])
-                                                : undefined
+                            <TriggerOption
+                                key={`${button.uuid}:${index}`}
+                                cardText={button.text}
+                                sourceCard={button.sourceCard}
+                                hasLegalEffects={button.hasLegalEffects}
+                                count={button.count}
+                                onTrigger={() => sendGameMessage([button.command, button.arg, button.uuid])}
+                                // reserve the fence + Pass row on every column when any trigger is optional
+                                // so the cards stay bottom-aligned, even on non-optional columns
+                                reservePassSpace={anyOptional}
+                                pass={
+                                    button.optional && button.passArg
+                                        ? {
+                                            text: button.passText ?? 'Pass',
+                                            onPass: () => sendGameMessage([button.command, button.passArg, button.uuid]),
                                         }
-                                    >
-                                        <RichText text={button.passText ?? 'Pass'} />
-                                    </GradientBorderButton>
-                                )}
-                            </Box>
+                                        : undefined
+                                }
+                            />
                         ))}
                     </Box>
                 </>

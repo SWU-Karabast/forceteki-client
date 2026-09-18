@@ -13,8 +13,12 @@ type SourceCardImageData = Parameters<typeof s3CardImageURL>[0];
 export const STACK_OFFSET_PX = 10;
 export const STACK_SCALE = 0.92; // scale factor for each stacked card; smaller = more obvious stack
 
-// the card's width, exported so sibling controls (e.g. a Pass button beneath) can match it exactly
+// the card's width, exported so sibling controls (e.g. the "Or" fence beneath) can match it exactly
 export const CARD_WIDTH = 'clamp(116px, 16vw, 10rem)';
+
+// the Pass button is inset from the card width (narrower on both sides) so the card reads as the
+// primary option and gets more visual prominence
+export const PASS_BUTTON_WIDTH = `calc(${CARD_WIDTH} - 2rem)`;
 
 const styles = {
     // the flex item. It is always exactly one card in size (same as an ungrouped trigger) so the row
