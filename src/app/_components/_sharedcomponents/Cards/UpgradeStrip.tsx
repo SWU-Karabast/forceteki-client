@@ -27,7 +27,7 @@ export default function UpgradeStrip({ aspect, reversed = false, sx, children, .
     const { border, fill } = palette[aspect];
 
     return (
-        <Box {...props} sx={extendSx({ position: 'relative', background: 'black', px: '6px', py: '1px' }, sx)}>
+        <Box {...props} sx={extendSx({ position: 'relative', minWidth: 0, background: 'black', px: '6px', py: '1px' }, sx)}>
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="8 8.91 176 17.82"
@@ -54,6 +54,13 @@ export default function UpgradeStrip({ aspect, reversed = false, sx, children, .
                     alignItems: 'center',
                     justifyContent: 'center',
                     pointerEvents: 'none',
+                    '& > .MuiTypography-root': {
+                        minWidth: 0,
+                        maxWidth: '100%',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                    },
                 }}
             >
                 {children}
