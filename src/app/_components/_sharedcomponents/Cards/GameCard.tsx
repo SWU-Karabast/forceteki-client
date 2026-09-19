@@ -432,8 +432,9 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         upgradeBlankIcon:{
             position: 'absolute',
-            right: '4px',
+            right: '-4%',
             width: '18%',
+            zIndex: 1,
             aspectRatio: '1 / 1',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
