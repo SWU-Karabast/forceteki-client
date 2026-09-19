@@ -7,7 +7,7 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource, type SelectCardsPopup } from '../Popup/Popup.types';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
-import { blockedFromPlay, cannotBeAttacked, getBorderColor, hasSentinel, isBlanked, isStolen } from './cardUtils';
+import { blockedFromPlay, cannotBeAttacked, getBorderColor, getUpgradeStripBg, hasSentinel, isBlanked, isStolen } from './cardUtils';
 import { usePreviewCardPopover, usePopoverConfig } from './GameCard/cardHooks';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
@@ -19,7 +19,7 @@ import { TokenBadge, type TokenBadgeType } from './GameCard/TokenBadge';
 import { TokenBadgeStack } from './GameCard/TokenBadgeStack';
 import StatusIcon from '@/app/_components/_sharedcomponents/Cards/GameCard/StatusIcon';
 import { HealthBadge, PowerBadge } from './GameCard/StatBadge';
-import UpgradeStrip, { type UpgradeAspect } from './UpgradeStrip';
+import UpgradeStrip from './UpgradeStrip';
 
 // Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
 const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
@@ -196,30 +196,6 @@ const GameCard: React.FC<IGameCardProps> = ({
         }
     }
 
-    // helper function to get the correct aspects for the upgrade cards
-    const getUpgradeStripBg = (card: ICardData): UpgradeAspect => {
-        if (!card.aspects){
-            return 'neutral';
-        }
-        if (card.aspects.includes('villainy') && card.aspects.length === 1) {
-            return 'villainy';
-        }
-        if (card.aspects.includes('heroism') && card.aspects.length === 1) {
-            return 'heroism';
-        }
-        switch (true) {
-            case card.aspects.includes('aggression'):
-                return 'aggression';
-            case card.aspects.includes('command'):
-                return 'command';
-            case card.aspects.includes('cunning'):
-                return 'cunning';
-            case card.aspects.includes('vigilance'):
-                return 'vigilance';
-            default:
-                return 'neutral';
-        }
-    };
     const nonShieldUpgradeCards = subcards.filter((subcard) => !TOKEN_BADGE_NAMES.includes(subcard.name ?? ''));
 
     const tokenBadges = TOKEN_BADGES
@@ -386,7 +362,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
         upgradeName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
-            fontWeight: '800',
+            fontWeight: '600',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             color: 'black',

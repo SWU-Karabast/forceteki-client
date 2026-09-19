@@ -1,4 +1,29 @@
 import { ICardData, CardStyle, IServerCardData, ISetCode, IPreviewCard } from './CardTypes'
+import type { UpgradeAspect } from './UpgradeStrip';
+
+export const getUpgradeStripBg = (card: ICardData): UpgradeAspect => {
+    if (!card.aspects) {
+        return 'neutral';
+    }
+    if (card.aspects.includes('villainy') && card.aspects.length === 1) {
+        return 'villainy';
+    }
+    if (card.aspects.includes('heroism') && card.aspects.length === 1) {
+        return 'heroism';
+    }
+    switch (true) {
+        case card.aspects.includes('aggression'):
+            return 'aggression';
+        case card.aspects.includes('command'):
+            return 'command';
+        case card.aspects.includes('cunning'):
+            return 'cunning';
+        case card.aspects.includes('vigilance'):
+            return 'vigilance';
+        default:
+            return 'neutral';
+    }
+};
 
 type BorderColorOptions = {
     card: ICardData;

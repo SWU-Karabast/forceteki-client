@@ -22,7 +22,7 @@ const palette: Record<UpgradeAspect, { border: string; fill: string }> = {
     neutral: { border: '#afafaf', fill: '#e8e8e8' },
 };
 
-/** Scalable upgrade artwork cropped to its visible 176 × 16.2 bounds. */
+/** Scalable upgrade artwork cropped to its visible 176 × 17.82 bounds (10% taller than the original proportions). */
 export default function UpgradeStrip({ aspect, reversed = false, sx, children, ...props }: UpgradeStripProps) {
     const { border, fill } = palette[aspect];
 
@@ -30,13 +30,13 @@ export default function UpgradeStrip({ aspect, reversed = false, sx, children, .
         <Box {...props} sx={extendSx({ position: 'relative', background: 'black', px: '6px', py: '1px' }, sx)}>
             <svg
                 xmlns="http://www.w3.org/2000/svg"
-                viewBox="8 8.1 176 16.2"
+                viewBox="8 8.91 176 17.82"
                 aria-hidden="true"
                 focusable="false"
                 width="100%"
                 style={{ display: 'block' }}
             >
-                <g transform={reversed ? 'scale(1 0.81) translate(0 40) scale(1 -1)' : 'scale(1 0.81)'}>
+                <g transform={reversed ? 'scale(1 0.891) translate(0 40) scale(1 -1)' : 'scale(1 0.891)'}>
                     <path d="M8.125 11H59.375M62.625 11H167.375M170.625 11H173.375M176.625 11H179.375" stroke={border} strokeWidth={2} />
                     <path d="M60 11H62M168 11H170M174 11H176M180 11H182" stroke="#d4d4d4" strokeWidth={2} />
                     <rect x={8} y={14} width={176} height={16} rx={6} fill={border} />
