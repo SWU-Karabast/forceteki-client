@@ -19,6 +19,7 @@ import { TokenBadge, type TokenBadgeType } from './GameCard/TokenBadge';
 import { TokenBadgeStack } from './GameCard/TokenBadgeStack';
 import StatusIcon from '@/app/_components/_sharedcomponents/Cards/GameCard/StatusIcon';
 import { HealthBadge, PowerBadge } from './GameCard/StatBadge';
+import UpgradeStrip, { type UpgradeAspect } from './UpgradeStrip';
 
 // Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
 const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
@@ -196,27 +197,27 @@ const GameCard: React.FC<IGameCardProps> = ({
     }
 
     // helper function to get the correct aspects for the upgrade cards
-    const cardUpgradebackground = (card: ICardData) => {
+    const getUpgradeStripBg = (card: ICardData): UpgradeAspect => {
         if (!card.aspects){
-            return null
+            return 'neutral';
         }
         if (card.aspects.includes('villainy') && card.aspects.length === 1) {
-            return 'upgrade-black.png';
+            return 'villainy';
         }
         if (card.aspects.includes('heroism') && card.aspects.length === 1) {
-            return 'upgrade-white.png';
+            return 'heroism';
         }
         switch (true) {
             case card.aspects.includes('aggression'):
-                return 'upgrade-red.png';
+                return 'aggression';
             case card.aspects.includes('command'):
-                return 'upgrade-green.png';
+                return 'command';
             case card.aspects.includes('cunning'):
-                return 'upgrade-yellow.png';
+                return 'cunning';
             case card.aspects.includes('vigilance'):
-                return 'upgrade-blue.png';
+                return 'vigilance';
             default:
-                return 'upgrade-grey.png';
+                return 'neutral';
         }
     };
     const nonShieldUpgradeCards = subcards.filter((subcard) => !TOKEN_BADGE_NAMES.includes(subcard.name ?? ''));
@@ -316,19 +317,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
             '-webkit-user-select': 'none',   /* Prevents image selection */
         },
-        upgradeOverlay: {
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'transparent',
-            filter: 'none',
-            clickEvents: 'none',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row',
-            paddingRight: '4px',
-        },
         numberFont: {
             fontSize: '1em',
             fontWeight: '700',
@@ -391,16 +379,10 @@ const GameCard: React.FC<IGameCardProps> = ({
             fontSize: 'clamp(0.44rem, 1.1vw, 0.96rem)',
             zIndex: 2,
         },
-        upgradeIcon:{
+        upgradeIcon: {
             position: 'relative',
             width: '100%',
-            aspectRatio: '4.85',
-            display: 'flex',
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxSizing: 'content-box',
+            boxSizing: 'border-box',
         },
         upgradeName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
@@ -408,10 +390,11 @@ const GameCard: React.FC<IGameCardProps> = ({
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             color: 'black',
+            textAlign: 'center',
             userSelect: 'none',
             margin: 0,
             padding: 0,
-            lineHeight: 1,
+            lineHeight: 'normal',
         },
         cloneIcon:{
             width: '100%',
@@ -637,12 +620,13 @@ const GameCard: React.FC<IGameCardProps> = ({
             {popover}
 
             {nonShieldUpgradeCards.map((subcard) => (
-                <Box
+                <UpgradeStrip
                     key={subcard.uuid}
+                    aspect={getUpgradeStripBg(subcard)}
+                    reversed={card.controllerId === connectedPlayer}
                     sx={{ ...styles.upgradeIcon,
-                        backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
-                        border: subcard.selectable ? `2px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',
-                        cursor: subcard.selectable ? 'pointer' : 'normal'
+                        border: subcard.selectable ? `1.5px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',
+                        cursor: subcard.selectable ? 'pointer' : 'default'
                     }}
                     onClick={(e) => subcardClick(e, subcard)}
                     {...getCardPreviewProps({
@@ -655,16 +639,14 @@ const GameCard: React.FC<IGameCardProps> = ({
                         cardId: subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id
                     })}
                 >
-                    <Box sx={styles.upgradeOverlay}>
-                        <Typography key={subcard.uuid} sx={styles.upgradeName}>
-                            {subcard.clonedCardName ?? subcard.name}
-                        </Typography>
+                    <Typography sx={styles.upgradeName}>
+                        {subcard.clonedCardName ?? subcard.name}
+                    </Typography>
 
-                        {subcard.isBlanked && (
-                            <Box sx={styles.upgradeBlankIcon}/>
-                        )}
-                    </Box>
-                </Box>
+                    {subcard.isBlanked && (
+                        <Box sx={styles.upgradeBlankIcon}/>
+                    )}
+                </UpgradeStrip>
             ))}
 
             {capturedCards.length > 0 && (
@@ -674,13 +656,14 @@ const GameCard: React.FC<IGameCardProps> = ({
                     </Typography>
                     {capturedCards.map((capturedCard: ICardData) => {
                         return (
-                            <Box
+                            <UpgradeStrip
                                 key={`captured-${capturedCard.uuid}`}
+                                aspect={getUpgradeStripBg(capturedCard)}
+                                reversed={card.controllerId === connectedPlayer}
                                 sx={{
                                     ...styles.upgradeIcon,
-                                    backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
-                                    border: capturedCard.selectable ? `2px solid ${getBorderColor({ card:capturedCard, player:connectedPlayer })}` : 'none',
-                                    cursor: capturedCard.selectable ? 'pointer' : 'normal'
+                                    border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
+                                    cursor: capturedCard.selectable ? 'pointer' : 'default'
                                 }}
                                 onClick={(e) => subcardClick(e, capturedCard)}
                                 {...getCardPreviewProps({
@@ -696,7 +679,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 <Typography sx={styles.upgradeName}>
                                     {capturedCard.clonedCardName ?? capturedCard.name}
                                 </Typography>
-                            </Box>
+                            </UpgradeStrip>
                         );
                     })}
                 </>
