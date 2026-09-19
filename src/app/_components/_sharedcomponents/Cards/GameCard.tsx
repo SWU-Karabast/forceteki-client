@@ -359,6 +359,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             position: 'relative',
             width: '100%',
             boxSizing: 'border-box',
+            py: '2px',
         },
         upgradeName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
@@ -599,7 +600,6 @@ const GameCard: React.FC<IGameCardProps> = ({
                 <UpgradeStrip
                     key={subcard.uuid}
                     aspect={getUpgradeStripBg(subcard)}
-                    reversed={card.controllerId === connectedPlayer}
                     sx={{ ...styles.upgradeIcon,
                         border: subcard.selectable ? `1.5px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',
                         cursor: subcard.selectable ? 'pointer' : 'default'
@@ -635,7 +635,6 @@ const GameCard: React.FC<IGameCardProps> = ({
                             <UpgradeStrip
                                 key={`captured-${capturedCard.uuid}`}
                                 aspect={getUpgradeStripBg(capturedCard)}
-                                reversed={card.controllerId === connectedPlayer}
                                 sx={{
                                     ...styles.upgradeIcon,
                                     border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
