@@ -197,6 +197,7 @@ const GameCard: React.FC<IGameCardProps> = ({
     }
 
     const nonShieldUpgradeCards = subcards.filter((subcard) => !TOKEN_BADGE_NAMES.includes(subcard.name ?? ''));
+    const hasAttachmentStrips = nonShieldUpgradeCards.length > 0 || capturedCards.length > 0;
 
     const tokenBadges = TOKEN_BADGES
         .map(({ name, type }) => {
@@ -243,7 +244,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         cardContainer: {
             position: 'relative',
             backgroundColor: 'black',
-            borderRadius: '0.5rem',
+            borderRadius: hasAttachmentStrips ? '0.5rem 0.5rem 4px 4px' : '0.5rem',
             width: '100%',
             maxHeight: '100%',
             display: 'flex',
@@ -360,6 +361,10 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '100%',
             boxSizing: 'border-box',
             py: '2px',
+            '&:last-child': {
+                borderBottomLeftRadius: '4px',
+                borderBottomRightRadius: '4px',
+            },
         },
         upgradeName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
