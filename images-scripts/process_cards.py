@@ -114,6 +114,7 @@ HTTP_TIMEOUT = 10
 PER_SET_MAX_ATTEMPTS: dict[str, int] = {
     "TS26": 100,
     "IBH": 110,
+    "HMW": 272  # Homeworlds has more cards due to additional common bases
 }
 
 # Per-set extra leader cardNumbers. Some sets have a leader whose number
