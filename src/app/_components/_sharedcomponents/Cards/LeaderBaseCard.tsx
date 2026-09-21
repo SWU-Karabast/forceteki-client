@@ -424,6 +424,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 // zIndex must be higher than prompt text, upgrades must remain interactive so they must be on top
                 zIndex: 2,
                 mb: '',
+                display: upgrades.length > 0 || capturedCards.length > 0 ? 'block' : 'hidden'
             }}>
                 <Box 
                     sx={{
