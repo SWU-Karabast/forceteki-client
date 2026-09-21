@@ -4,7 +4,7 @@ import { ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardType
 import { useGame } from '@/app/_contexts/Game.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
-import { getBorderColor, getUpgradeStripBg } from './cardUtils';
+import { getBorderColor, getCardPrimaryAspect } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
 import CardValueAdjuster from './CardValueAdjuster';
@@ -370,7 +370,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     })}
                 >
                     <UpgradeStrip
-                        aspect={getUpgradeStripBg(capturedCard)}
+                        aspect={getCardPrimaryAspect(capturedCard)}
                         reversed={isConnectedPlayer}
                         sx={{
                             border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
@@ -403,7 +403,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     })}
                 >
                     <UpgradeStrip
-                        aspect={getUpgradeStripBg(upgrade)}
+                        aspect={getCardPrimaryAspect(upgrade)}
                         reversed={isConnectedPlayer}
                         sx={{
                             border: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',

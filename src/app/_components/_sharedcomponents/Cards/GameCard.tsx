@@ -7,7 +7,7 @@ import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource, type SelectCardsPopup } from '../Popup/Popup.types';
 import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
-import { blockedFromPlay, cannotBeAttacked, getBorderColor, getUpgradeStripBg, hasSentinel, isBlanked, isStolen } from './cardUtils';
+import { blockedFromPlay, cannotBeAttacked, getBorderColor, getCardPrimaryAspect, hasSentinel, isBlanked, isStolen } from './cardUtils';
 import { usePreviewCardPopover, usePopoverConfig } from './GameCard/cardHooks';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
@@ -605,7 +605,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             {nonShieldUpgradeCards.map((subcard) => (
                 <UpgradeStrip
                     key={subcard.uuid}
-                    aspect={getUpgradeStripBg(subcard)}
+                    aspect={getCardPrimaryAspect(subcard)}
                     sx={{ ...styles.upgradeIcon,
                         border: subcard.selectable ? `1.5px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',
                         cursor: subcard.selectable ? 'pointer' : 'default'
@@ -640,7 +640,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                         return (
                             <UpgradeStrip
                                 key={`captured-${capturedCard.uuid}`}
-                                aspect={getUpgradeStripBg(capturedCard)}
+                                aspect={getCardPrimaryAspect(capturedCard)}
                                 sx={{
                                     ...styles.upgradeIcon,
                                     border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',

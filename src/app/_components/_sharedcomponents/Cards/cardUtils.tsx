@@ -1,7 +1,7 @@
 import { ICardData, CardStyle, IServerCardData, ISetCode, IPreviewCard } from './CardTypes'
 import type { UpgradeAspect } from './UpgradeStrip';
 
-export const getUpgradeStripBg = (card: ICardData): UpgradeAspect => {
+export const getCardPrimaryAspect = (card: ICardData): UpgradeAspect => {
     if (!card.aspects) {
         return 'neutral';
     }
