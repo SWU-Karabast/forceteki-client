@@ -4,14 +4,14 @@ import { ICardData, ILeaderBaseCardProps, LeaderBaseCardStyle } from './CardType
 import { useGame } from '@/app/_contexts/Game.context';
 import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
-import { getBorderColor } from './cardUtils';
+import { getBorderColor, getCardPrimaryAspect } from './cardUtils';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
 import CardValueAdjuster from './CardValueAdjuster';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
 import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
-import UpgradeStrip, { UpgradeAspect } from '@/app/_components/_sharedcomponents/Cards/UpgradeStrip';
+import UpgradeStrip from '@/app/_components/_sharedcomponents/Cards/UpgradeStrip';
 import { PopoverConfig, usePreviewCardPopover } from '@/app/_components/_sharedcomponents/Cards/GameCard/cardHooks';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
@@ -162,29 +162,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         };
     }
 
-    const getUpgradeStripBg = (card: ICardData):UpgradeAspect => {
-        if (!card.aspects){
-            return 'neutral';
-        }
-        if (card.aspects.includes('villainy') && card.aspects.length === 1) {
-            return 'villainy';
-        }
-        if (card.aspects.includes('heroism') && card.aspects.length === 1) {
-            return 'heroism';
-        }
-        switch (true) {
-            case card.aspects.includes('aggression'):
-                return 'aggression';
-            case card.aspects.includes('command'):
-                return 'command';
-            case card.aspects.includes('cunning'):
-                return 'cunning';
-            case card.aspects.includes('vigilance'):
-                return 'vigilance';
-            default:
-                return 'neutral';
-        }
-    };
 
     const subcardClick = (subCard: ICardData) => {
         if (subCard.selectable) {
@@ -393,7 +370,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     })}
                 >
                     <UpgradeStrip
-                        aspect={getUpgradeStripBg(capturedCard)}
+                        aspect={getCardPrimaryAspect(capturedCard)}
                         reversed={isConnectedPlayer}
                         sx={{
                             border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
@@ -426,7 +403,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     })}
                 >
                     <UpgradeStrip
-                        aspect={getUpgradeStripBg(upgrade)}
+                        aspect={getCardPrimaryAspect(upgrade)}
                         reversed={isConnectedPlayer}
                         sx={{
                             border: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',
@@ -447,6 +424,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 // zIndex must be higher than prompt text, upgrades must remain interactive so they must be on top
                 zIndex: 2,
                 mb: '',
+                display: upgrades.length > 0 || capturedCards.length > 0 ? 'block' : 'hidden'
             }}>
                 <Box 
                     sx={{
