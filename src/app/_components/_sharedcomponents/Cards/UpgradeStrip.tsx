@@ -1,8 +1,8 @@
-import type { ICardData } from './CardTypes';
+import type { IAspect } from './CardTypes';
 import { Box, BoxProps } from '@mui/material';
 import { extendSx } from '@/app/_utils/utils';
 
-export type UpgradeAspect = NonNullable<ICardData['aspects']>[number] | 'neutral';
+export type UpgradeAspect = IAspect | 'neutral';
 
 export interface UpgradeStripProps extends BoxProps {
     aspect: UpgradeAspect;

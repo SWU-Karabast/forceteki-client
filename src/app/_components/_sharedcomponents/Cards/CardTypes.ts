@@ -117,7 +117,7 @@ interface ICardSetId {
     number: number;
 }
 
-type IAspect = 'aggression' | 'command' | 'cunning' | 'heroism' | 'vigilance' | 'villainy';
+export type IAspect = 'aggression' | 'command' | 'cunning' | 'heroism' | 'vigilance' | 'villainy';
 
 
 export interface IPromptDisplayCardData {
