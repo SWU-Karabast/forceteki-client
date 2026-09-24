@@ -89,7 +89,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const opponentId = Object.keys(gamestate.players).find(id => id !== connectedPlayerId) || '';
         const opponent = gamestate.players[opponentId];
         const zones = [];
-        if (playerState?.leaders?.[0]?.selectable || playerState?.base.selectable) {
+        if (playerState?.leaders?.some((leader: any) => leader.selectable) || playerState?.base.selectable) {
             zones.push(`player-${ZoneName.Base}`);
         }
         for (const zoneName in playerState?.cardPiles) {
@@ -97,7 +97,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 zones.push(`player-${zoneName}`);
             }
         }
-        if (opponent?.leaders?.[0]?.selectable || opponent?.base.selectable) {
+        if (opponent?.leaders?.some((leader: any) => leader.selectable) || opponent?.base.selectable) {
             zones.push(`opponent-${ZoneName.Base}`);
         }
         for (const zoneName in opponent?.cardPiles) {
