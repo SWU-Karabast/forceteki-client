@@ -113,6 +113,48 @@ export const useDeckManagement = (): IDeckManagementState => {
     // When SWU Stats is linked, default to using SWU Stats decks
     const [useSwuStatsDecks, setUseSwuStatsDecks] = useState<boolean>(false);
 
+    // Deep links (?deckLink=&format=&cardPool=&gamesToWinMode=) prefill the
+    // create-game form once on load, so external tools can hand a prepared
+    // game setup to this page. Param values are the enum wire strings (e.g.
+    // format=limited, cardPool=unlimited, gamesToWinMode=bestOfOne) and are
+    // validated against the same enums the stored-preference initializers use;
+    // a missing or invalid value leaves the stored preference in place.
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+
+        const deckLinkParam = params.get('deckLink');
+        if (deckLinkParam) {
+            setDeckLink(deckLinkParam);
+        }
+
+        const formatParam = params.get('format');
+        const formatValue =
+            formatParam && Object.values(SwuGameFormat).some((value) => value === formatParam)
+                ? formatParam
+                : null;
+        if (formatValue) {
+            setFormat(formatValue as SwuGameFormat); // validated against SwuGameFormat above
+        }
+
+        const cardPoolParam = params.get('cardPool');
+        const cardPoolValue =
+            cardPoolParam && Object.values(CardPool).some((value) => value === cardPoolParam)
+                ? cardPoolParam
+                : null;
+        if (cardPoolValue) {
+            setCardPool(cardPoolValue as CardPool); // validated against CardPool above
+        }
+
+        const gamesToWinModeParam = params.get('gamesToWinMode');
+        const gamesToWinModeValue =
+            gamesToWinModeParam && Object.values(GamesToWinMode).some((value) => value === gamesToWinModeParam)
+                ? gamesToWinModeParam
+                : null;
+        if (gamesToWinModeValue) {
+            setGamesToWinMode(gamesToWinModeValue as GamesToWinMode); // validated against GamesToWinMode above
+        }
+    }, []);
+
     // When SWU Stats link status changes, update the toggle accordingly
     useEffect(() => {
         const stored = localStorage.getItem('useSwuStatsDecks');
