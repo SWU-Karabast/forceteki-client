@@ -44,6 +44,6 @@ export class SwurecDeckProvider extends DeckProviderBase {
     }
 
     protected override buildApiUrl(shareToken: string): string {
-        return `https://swurec.gg/api/decks/karabast-export/${encodeURIComponent(shareToken)}`;
+        return `https://swurec.gg/api/decks/export/${encodeURIComponent(shareToken)}`;
     }
 }
