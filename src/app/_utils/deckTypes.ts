@@ -32,7 +32,8 @@ export enum DeckSource {
     HoloScan = 'HoloScan',
     Melee = 'Melee',
     Niamos = 'Niamos',
-    SWUPedia = 'SWUPedia'
+    SWUPedia = 'SWUPedia',
+    SithVault = 'SithVault'
 }
 
 export interface IDeckData {

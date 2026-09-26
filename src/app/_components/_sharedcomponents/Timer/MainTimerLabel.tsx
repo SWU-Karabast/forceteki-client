@@ -6,7 +6,7 @@ const labelDefaultStyles = {
     marginBottom: 0,
     cursor: 'pointer',
     fontWeight: 600,
-    fontSize: { xs: '1.5rem', md: '1rem' }
+    fontSize: { xs: '0.8rem', md: '1rem' }
 };
 
 const Divider = () => <div style={{ height: '1px', width: '100%', background: 'white', opacity: 0.3, marginTop: '2px' }} />;

@@ -124,8 +124,18 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
     const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
     const isNewDeckInputEmpty = !showSavedDecks && deckLink.trim().length === 0;
-    const isCreateGameDisabled = isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty;
+    const isSwuStatsDeckSource = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked;
+    const hasNoSavedDecksAvailable = showSavedDecks &&
+        (isSwuStatsDeckSource ? swuStatsDecks.length === 0 : savedDecks.length === 0);
+    const isSavedDeckEmpty = showSavedDecks && !favoriteDeck;
+    const isCreateGameDisabled = isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty || isSavedDeckEmpty;
     const showDeckLinkRequiredError = deckLinkTouched && isNewDeckInputEmpty;
+    // The SWU Stats dropdown renders its own empty-state message in the field, so don't duplicate it there.
+    const showSavedDeckHint = isSavedDeckEmpty && !isSavedDeckSelectionLoading &&
+        !isSwuStatsDeckSelectionLoading && !(hasNoSavedDecksAvailable && isSwuStatsDeckSource);
+    const savedDeckHintText = hasNoSavedDecksAvailable
+        ? 'No saved decks found. Use New Deck to add one.'
+        : 'Select a deck to continue.';
 
     useEffect(() => {
         handleJsonDeck(deckLink);
@@ -327,6 +337,10 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             color: 'var(--initiative-red);',
             mt: '0.5rem'
         },
+        hintMessageStyle: {
+            color: '#aaa',
+            mt: '0.5rem'
+        },
         errorMessageLink:{
             cursor: 'pointer',
             color: 'var(--selection-red);',
@@ -503,7 +517,11 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     <>
                         <FormControl fullWidth sx={styles.formControlStyle}>
                             {renderKarabastDecksDropdown()}
-                            
+                            {showSavedDeckHint && (
+                                <Typography variant="body1" sx={styles.hintMessageStyle}>
+                                    {savedDeckHintText}
+                                </Typography>
+                            )}
                             <Box sx={styles.manageDecksContainer}>
                                 <Button
                                     onClick={handleDeckManagement}
@@ -529,7 +547,11 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     <>
                         <FormControl fullWidth sx={styles.formControlStyle}>
                             {renderSwuStatsDecksDropdown()}
-                            
+                            {showSavedDeckHint && (
+                                <Typography variant="body1" sx={styles.hintMessageStyle}>
+                                    {savedDeckHintText}
+                                </Typography>
+                            )}
                             <Box sx={styles.manageDecksContainer}>
                                 <Button
                                     href="https://swustats.net"

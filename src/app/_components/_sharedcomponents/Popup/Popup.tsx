@@ -2,10 +2,11 @@
 import { PopupData, PopupType, usePopup } from '@/app/_contexts/Popup.context';
 import { Box, SxProps, Theme } from '@mui/material';
 import React from 'react';
-import { ActionTriggerPopup, BatchTriggerPopup, DefaultPopup, DropdownPopup, NumberPopup, PilePopup, SelectCardsPopup, WaitDelayPopup } from './Popup.types';
+import { ActionTriggerPopup, BatchTriggerPopup, DefaultPopup, DropdownPopup, NumberPopup, OptionalTriggerPopup, PilePopup, SelectCardsPopup, WaitDelayPopup } from './Popup.types';
 import { DefaultPopupModal } from './PopupVariant/DefaultPopup';
 import ActionTriggerPopupModal from './PopupVariant/ActionTriggerPopup';
 import BatchTriggerPopupModal from './PopupVariant/BatchTriggerPopup';
+import OptionalTriggerPopupModal from './PopupVariant/OptionalTriggerPopup';
 import { PilePopupModal } from './PopupVariant/PilePopup';
 import { SelectCardsPopupModal } from './PopupVariant/SelectCardsPopup';
 import { contentStyle } from './Popup.styles';
@@ -31,7 +32,13 @@ export const getPopupPosition = (type: PopupType, data: PopupData, index: number
         top: '50%',
         transform: 'translate(-50%, -50%)',
         minWidth: '80%',
-        width: { xs: 'calc(100dvw - 2rem)', md: '80%' }
+        width: { xs: 'calc(100dvw - 2rem)', md: '80%' },
+        '@media (orientation: landscape) and (max-width: 932px)': {
+            // The persistent chat drawer occupies part of PopupShell in mobile
+            // landscape, so size the popup from that remaining space instead
+            // of the full viewport.
+            width: 'calc(100% - 2rem)',
+        },
     };
 
     // const pilePosition = {
@@ -78,6 +85,8 @@ const PopupShell: React.FC<IPopupShellProps> = ({
                 return <ActionTriggerPopupModal data={data as ActionTriggerPopup} />;
             case 'batchTrigger':
                 return <BatchTriggerPopupModal data={data as BatchTriggerPopup} />;
+            case 'optionalTrigger':
+                return <OptionalTriggerPopupModal data={data as OptionalTriggerPopup} />;
             case 'default':
                 return <DefaultPopupModal data={data as DefaultPopup} />;
             case 'pile':
@@ -109,7 +118,7 @@ const PopupShell: React.FC<IPopupShellProps> = ({
         )
     }
 
-    const centeredModalTypes: PopupType[] = ['default', 'actionTrigger', 'batchTrigger'];
+    const centeredModalTypes: PopupType[] = ['default', 'actionTrigger', 'batchTrigger', 'optionalTrigger'];
     const [nonDefaultPopups, defaultPopups] = [
         popups.filter((popup) => !centeredModalTypes.includes(popup.type)),
         popups.filter((popup) => centeredModalTypes.includes(popup.type))

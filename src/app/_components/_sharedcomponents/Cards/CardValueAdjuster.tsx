@@ -1,15 +1,18 @@
 import React from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, SxProps } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ICardData } from './CardTypes';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
+import { extendSx } from '@/app/_utils/utils';
+import { Theme } from '@mui/material/styles';
 
 interface ICardValueAdjusterProps {
     card: ICardData;
     isIndirect?: boolean;
+    sx?: SxProps<Theme>;
 }
 
-const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect = false }) => {
+const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ sx, card, isIndirect = false }) => {
     const { updateDistributionPrompt, distributionPromptData, gameState, connectedPlayer } = useGame();
 
     const handleValueAdjusterClick = (amount: number) => {
@@ -44,7 +47,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
             width: '100%',
             border: '1px solid #404040',
             borderRadius: '4px',
-            zIndex: 1
+            zIndex: 3
         },
         valueAdjusterButton: {
             background: distributeDamage ? 'rgba(219, 19, 29, 0.8)' : distributeHealing && 'rgba(0, 186, 255, 0.8)',
@@ -68,7 +71,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ card, isIndirect
         },
     }
     return (
-        <Box sx={styles.valueAdjuster}>
+        <Box sx={extendSx(styles.valueAdjuster, sx)}>
             <Button
                 sx={styles.valueAdjusterButton}
                 variant="contained"

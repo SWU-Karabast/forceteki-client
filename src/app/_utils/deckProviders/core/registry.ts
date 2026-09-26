@@ -8,6 +8,7 @@ import { MeleeDeckProvider } from '../MeleeDeckProvider';
 import { MySwuDeckProvider } from '../MySwuDeckProvider';
 import { NiamosDeckProvider } from '../NiamosDeckProvider';
 import { ProtectThePodDeckProvider } from '../ProtectThePodDeckProvider';
+import { SithvaultDeckProvider } from '../SithvaultDeckProvider';
 import { SwubaseDeckProvider } from '../SwubaseDeckProvider';
 import { SwucardhubDeckProvider } from '../SwucardhubDeckProvider';
 import { SwudbDeckProvider } from '../SwudbDeckProvider';
@@ -47,6 +48,7 @@ const providers: readonly DeckProviderBase[] = [
     new CardcoreDeckProvider(),
     new HoloscanDeckProvider(),
     new SwupediaDeckProvider(),
+    new SithvaultDeckProvider(),
 ];
 
 /**
