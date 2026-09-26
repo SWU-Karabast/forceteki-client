@@ -39,7 +39,7 @@ const SUGGESTION_TEXT: Record<SuggestableCardLocale, ISuggestionText> = {
         dismissLabel: 'Kartensprachvorschlag schließen',
     },
     [CardImageLocale.Spanish]: {
-        message: '¿Ver las imágenes de las cartas en español? (La interfaz del sitio sigue en inglés.)',
+        message: '¿Quieres visualizar las cartas en español? (La interfaz del sitio continuará en inglés)',
         switchLabel: 'Cambiar a español',
         dismissLabel: 'Descartar la sugerencia de idioma de las cartas',
     },
