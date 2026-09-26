@@ -10,6 +10,7 @@ import {
     IModActionResponse,
     IPlayerSearchResult,
     IUsernameChangeResponse,
+    modActionDefinitions,
     ModActionType,
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
@@ -104,9 +105,10 @@ const UserManagementTab: React.FC = () => {
     const handleSubmitAction = () => {
         if (!selectedPlayer) return;
 
+        const definition = modActionDefinitions[actionType];
         const durationDays = getDurationInDays();
-        if (actionType === ModActionType.Mute && !durationDays) return;
-        if (actionType !== ModActionType.Rename && !note.trim()){
+        if (definition.requiresDuration && !durationDays) return;
+        if (definition.requiresNote && !note.trim()){
             setIsNoteError(true);
             return;
         }
@@ -132,7 +134,7 @@ const UserManagementTab: React.FC = () => {
                         selectedPlayer.id,
                         actionType,
                         note.trim(),
-                        actionType === ModActionType.Mute ? durationDays : undefined,
+                        definition.requiresDuration ? durationDays : undefined,
                     );
                     if(result.success){
                         setSuccessMessage(result.message);
@@ -190,7 +192,7 @@ const UserManagementTab: React.FC = () => {
     };
 
     const canSubmit = selectedPlayer
-        && (actionType !== ModActionType.Mute || getDurationInDays() > 0);
+        && (!modActionDefinitions[actionType].requiresDuration || getDurationInDays() > 0);
 
     // ==================== Styles ====================
     const styles = {
@@ -448,12 +450,12 @@ const UserManagementTab: React.FC = () => {
                                                 Pending force rename
                                             </Typography>
                                         )}
-                                        {selectedPlayer.reportingDisabled && (
+                                        {selectedPlayer.activeReportingDisabledId && (
                                             <Typography sx={{ color: '#ef5350', fontSize: '0.875rem', fontWeight: 600 }}>
                                                 Reporting disabled
                                             </Typography>
                                         )}
-                                        {!selectedPlayer.isMuted && !selectedPlayer.activeRename && !selectedPlayer.reportingDisabled && (
+                                        {!selectedPlayer.isMuted && !selectedPlayer.activeRename && !selectedPlayer.activeReportingDisabledId && (
                                             <Typography sx={{ color: '#9e9e9e', fontSize: '0.875rem', fontWeight: 600 }}>
                                                 No active mod actions
                                             </Typography>
@@ -479,14 +481,13 @@ const UserManagementTab: React.FC = () => {
                                     size="small"
                                     sx={{ minWidth: '160px' }}
                                 >
-                                    <MenuItem value={ModActionType.Warning}>Warning</MenuItem>
-                                    <MenuItem value={ModActionType.Rename}>Force Rename</MenuItem>
-                                    <MenuItem value={ModActionType.Mute}>Mute</MenuItem>
-                                    <MenuItem value={ModActionType.ReportingDisabled}>Disable Reporting</MenuItem>
+                                    <MenuItem value={ModActionType.Warning}>{modActionDefinitions[ModActionType.Warning].label}</MenuItem>
+                                    <MenuItem value={ModActionType.Rename}>{modActionDefinitions[ModActionType.Rename].label}</MenuItem>
+                                    <MenuItem value={ModActionType.Mute}>{modActionDefinitions[ModActionType.Mute].label}</MenuItem>
+                                    <MenuItem value={ModActionType.ReportingDisabled}>{modActionDefinitions[ModActionType.ReportingDisabled].label}</MenuItem>
                                 </StyledTextField>
 
-                                {/* Duration - only for Mute */}
-                                {actionType === ModActionType.Mute && (
+                                {modActionDefinitions[actionType].requiresDuration && (
                                     <>
                                         <StyledTextField
                                             type="number"
@@ -514,7 +515,7 @@ const UserManagementTab: React.FC = () => {
 
                                 <PreferenceButton
                                     variant="concede"
-                                    text={submitLoading ? '' : actionType}
+                                    text={submitLoading ? '' : modActionDefinitions[actionType].label}
                                     buttonFnc={handleSubmitAction}
                                     disabled={!canSubmit || submitLoading}
                                 />
@@ -523,7 +524,7 @@ const UserManagementTab: React.FC = () => {
                             {/* Notes */}
                             <Typography sx={{ ...styles.sectionTitle, mt: '0.75rem' }}>Moderator notes for action</Typography>
                             <StyledTextField
-                                placeholder={actionType === ModActionType.Rename ? 'Notes about the action (optional)' : 'Notes about the action (required)'}
+                                placeholder={modActionDefinitions[actionType].requiresNote ? 'Notes about the action (required)' : 'Notes about the action (optional)'}
                                 value={note}
                                 onChange={(e) => {
                                     setNote(e.target.value);
@@ -610,9 +611,8 @@ const UserManagementTab: React.FC = () => {
                                     const action = entry.modAction!;
                                     const status = getActionStatus(action, selectedPlayer);
                                     const isCancellable = (!action.cancelledAt
-                                        && action.actionType !== ModActionType.Warning
-                                        && !(action.expiresAt && new Date(action.expiresAt) <= new Date())
-                                        && action.actionType !== ModActionType.Rename)
+                                        && modActionDefinitions[action.actionType].cancellable
+                                        && !(action.expiresAt && new Date(action.expiresAt) <= new Date()))
                                         || selectedPlayer.activeRename?.modActionId === action.id;
 
                                     return (

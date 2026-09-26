@@ -85,8 +85,11 @@ export const getActionStatus = (action: IModActionResponse, selectedPlayer:IPlay
         }
     }
     if (action.actionType === ModActionType.ReportingDisabled) {
-        // Not cancelled (handled above) and no expiry — an active ReportingDisabled restriction.
-        return { label: 'Active', color: '#ef5350' };
+        // Only the action the server reports as active is live; duplicates in history are superseded.
+        if (selectedPlayer.activeReportingDisabledId === action.id) {
+            return { label: 'Active', color: '#ef5350' };
+        }
+        return { label: 'Inactive', color: '#9E9E9E' };
     }
     return { label: '', color: '#9E9E9E' };
 };

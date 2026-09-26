@@ -305,10 +305,10 @@ function CurrentGameTab() {
                         text={'Report Bug'}
                         buttonFnc={handleOpenBugReport}
                         sx={{ minWidth: '140px' }}
-                        disabled={!canReportBug || isReportingDisabled}
+                        disabled={!canReportBug}
                     />
                     <Typography sx={styles.typeographyStyle}>
-                        {isReportingDisabled ? reportingDisabledText : canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
+                        {canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
                     </Typography>
                 </Box>
             
