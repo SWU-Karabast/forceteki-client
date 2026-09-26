@@ -176,6 +176,7 @@ const CardLanguageSuggestionBanner: React.FC = () => {
         },
         message: {
             color: '#88b0cc',
+            margin: 0,
             textAlign: 'center',
         },
         switchButton: {
