@@ -21,9 +21,9 @@ const Board: React.FC<IBoardProps> = ({
     const titleOpponent = gameState.players[opponentId].user.username;
     const titleCurrentPlayer = gameState.players[connectedPlayer].user.username;
 
-    const playerLeader = gameState?.players[connectedPlayer].leader;
+    const playerLeader = gameState?.players[connectedPlayer].leaders?.[0];
     let playerBase = gameState?.players[connectedPlayer].base;
-    const opponentLeader = gameState?.players[opponentId].leader;
+    const opponentLeader = gameState?.players[opponentId].leaders?.[0];
     let opponentBase = gameState?.players[opponentId].base;
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
