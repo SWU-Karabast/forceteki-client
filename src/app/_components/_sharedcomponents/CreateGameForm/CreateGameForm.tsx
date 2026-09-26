@@ -137,6 +137,22 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         ? 'No saved decks found. Use New Deck to add one.'
         : 'Select a deck to continue.';
 
+    // Deep links (?lobbyName=&isPrivate=true) prefill this form's local state
+    // once on load, complementing the ?deckLink=&format=&cardPool=&gamesToWinMode=
+    // prefill in useDeckManagement.
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+
+        const lobbyNameParam = params.get('lobbyName');
+        if (lobbyNameParam) {
+            setLobbyName(lobbyNameParam);
+        }
+
+        if (params.get('isPrivate') === 'true') {
+            setPrivateGame(true);
+        }
+    }, []);
+
     useEffect(() => {
         handleJsonDeck(deckLink);
     }, [deckLink]);
