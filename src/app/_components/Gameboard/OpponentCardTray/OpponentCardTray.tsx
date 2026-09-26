@@ -56,12 +56,21 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
     const styles = {
         leftColumn: {
             ...debugBorder('red'),
-            flexDirection: isPortrait ? 'column' : 'row', // Responsive layout
+            flexDirection: 'row', // Responsive layout
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            padding: isPortrait ? '0.5rem' : '1.0rem',
+            padding: '1rem',
             gap: '1rem',
+            // Mobile landscape
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                py: '8px',
+            },
+            // Mobile portrait
+            '@media (orientation: portrait) and (max-width: 932px)': {
+                p: '0.5rem',
+                flexDirection: 'column',
+            },
             height: '100%',
             boxSizing: 'border-box',
         },
@@ -92,8 +101,19 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
             alignItems: 'center',
             justifyContent: 'flex-end',
             py: '1rem',
-            pr: { xs: '1rem', md: '2rem' },
-            gap: { xs: hasLastPlayedCard ? '1rem' : '0', md: '1rem' },
+            pr: '2rem',
+            gap: '1rem',
+            // Mobile portrait
+            '@media (orientation: portrait) and (max-width: 932px)': {
+                pr: '5px',
+                gap: hasLastPlayedCard ? '6px' : '0',
+            },
+            // Mobile landscape
+            '@media (orientation: landscape) and (max-width: 932px)': {
+                pr: '1rem',
+                gap: hasLastPlayedCard ? '1rem' : '0',
+                py: '8px',
+            },
         },
         lastPlayed: {
             ...debugBorder('yellow'),
@@ -153,6 +173,10 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '1rem', // 2rem gap between columns
+                // Mobile portrait
+                '@media (orientation: portrait) and (max-width: 932px)': {
+                    columnGap: '6px',
+                },
                 position: 'relative',
                 zIndex: 2 // Above playmats
             }}
@@ -184,7 +208,9 @@ const OpponentCardTray: React.FC<IOpponentCardTrayProps> = ({ trayPlayer }) => {
                         maxCardOverlapPercent={0.95}
                         scrollbarEnabled={false}
                         cards={gameState?.players[getOpponent(connectedPlayer)].cardPiles['hand'] || []}
-                        cardback={opponentsCardbackPath} />
+                        cardback={opponentsCardbackPath}
+                        showCardCount
+                    />
                 </Box>
                 <Box sx={ styles.opponentTurnAura} />
             </Grid>

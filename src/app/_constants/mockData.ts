@@ -86,6 +86,17 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: 'Preview the Homeworlds meta with Next Set cards',
+        content: `
+        <p>Homeworlds (Set 9) cards are now playable in Premier & Eternal formats with the "Next Set" card pool.</p>
+
+        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we're always looking for new contributors.</p><p></p>
+	  `,
+        date: '8/31/26',
+        image: s3ImageURL('ui/homeworlds-preview-banner.webp'),
+        imageAlt: 'News Announcement',
+    },
+    {
         title: '🛠️ Update: Auto-Target is here',
         content: `
         <p>Streamline your gameplay! Auto-Target skips the manual selection step whenever an action or ability has exactly one legal target —  no choice to make, no click needed.</p>
@@ -97,17 +108,6 @@ export const articles: IArticle[] = [
         date: '7/23/26',
         image: '/auto-target.jpg',
         imageAlt: 'Auto-Target Setting',
-    },
-    {
-        title: 'Ashes of the Empire is now legal in Premier!',
-        content: `
-        <p>Ashes of the Empire (Set 8) is now legal in the Premier format! The "Next Set" card pools have been disabled in all formats until the next preview season.</p>
-    
-        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we're always looking for new contributors.</p><p></p>
-	  `,
-        date: '7/13/26',
-        image: s3ImageURL('ui/ash-news-banner.webp'),
-        imageAlt: 'News Announcement',
     },
 ];
 

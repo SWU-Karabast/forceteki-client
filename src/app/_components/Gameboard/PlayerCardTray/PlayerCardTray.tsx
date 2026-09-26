@@ -86,6 +86,9 @@ const PlayerCardTray: React.FC<IPlayerCardTrayProps> = ({ trayPlayer }) => {
                 display: 'flex',
                 flexWrap: 'nowrap',
                 columnGap: '1rem',
+                '@media (orientation: portrait) and (max-width: 932px)': {
+                    columnGap: '6px',
+                },
                 position: 'relative',
                 zIndex: 2 // Above playmats
             }}

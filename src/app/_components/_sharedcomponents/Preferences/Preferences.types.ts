@@ -1,9 +1,10 @@
 import { SxProps } from '@mui/material';
 import { Theme } from '@mui/material/styles';
+import { ReactNode } from 'react';
 
 export type IButtonType = {
     variant: 'concede' | 'standard' | 'warning',
-    text?: string,
+    text?: string | ReactNode,
     buttonFnc?: () => void,
     disabled?: boolean,
     sx?: SxProps<Theme>,
@@ -175,6 +176,16 @@ export interface IFindUserResponse {
     players: IPlayerSearchResult[];
     modActions: IModActionResponse[];
     usernameChanges: IUsernameChangeResponse[];
+}
+
+/**
+ * Global server settings, owned by the backend and toggleable by moderators at runtime.
+ */
+export interface IServerSettings {
+    gamesEnabled: boolean;
+    maintenanceMessage?: string;
+    updatedBy?: string;
+    updatedAt?: string;
 }
 
 export enum DurationUnit {

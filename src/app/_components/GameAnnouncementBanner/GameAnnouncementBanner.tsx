@@ -22,7 +22,7 @@ export type GameAnnouncement =
  */
 export const CurrentGameAnnouncement: GameAnnouncement | undefined = {
     kind: 'custom',
-    message: 'Ashes of the Empire is now legal in Premier!',
+    message: 'Next Set cards are now available in Premier & Eternal!',
 };
 
 interface IGameAnnouncementBannerProps {
@@ -43,7 +43,7 @@ const GameAnnouncementBanner: React.FC<IGameAnnouncementBannerProps> = ({
         text = `${FormatLabels[format]} format${cardPool === CardPool.NextSet ? ' with Next Set cards' : ''} is now available${isOnlyInLobby ? ' in Lobbies' : ''}!`;
     }
 
-    return <Typography variant="body1" sx={{ color: '#88b0cc', textAlign: 'center', mb: '1rem' }}>
+    return <Typography variant="body1" sx={{ color: '#bc63dc', textAlign: 'center', mb: '1rem' }}>
         {text}
     </Typography>
 }

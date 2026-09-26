@@ -120,8 +120,18 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
     const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
     const isNewDeckInputEmpty = !showSavedDecks && deckLink.trim().length === 0;
-    const isJoinQueueDisabled = queueState || isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty;
+    const isSwuStatsDeckSource = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked;
+    const hasNoSavedDecksAvailable = showSavedDecks &&
+        (isSwuStatsDeckSource ? swuStatsDecks.length === 0 : savedDecks.length === 0);
+    const isSavedDeckEmpty = showSavedDecks && !favoriteDeck;
+    const isJoinQueueDisabled = queueState || isSavedDeckSelectionLoading || isSwuStatsDeckSelectionLoading || isNewDeckInputEmpty || isSavedDeckEmpty;
     const showDeckLinkRequiredError = deckLinkTouched && isNewDeckInputEmpty;
+    // The SWU Stats dropdown renders its own empty-state message in the field, so don't duplicate it there.
+    const showSavedDeckHint = isSavedDeckEmpty && !isSavedDeckSelectionLoading &&
+        !isSwuStatsDeckSelectionLoading && !(hasNoSavedDecksAvailable && isSwuStatsDeckSource);
+    const savedDeckHintText = hasNoSavedDecksAvailable
+        ? 'No saved decks found. Use New Deck to add one.'
+        : 'Select a deck to continue.';
 
     // Timer ref for clearing the inline text after 5s
 
@@ -326,6 +336,10 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             color: 'var(--initiative-red);',
             mt: '0.5rem'
         },
+        hintMessageStyle: {
+            color: '#aaa',
+            mt: '0.5rem'
+        },
         errorMessageLinkPlain:{
             ml: '2px',
             cursor: 'pointer',
@@ -485,7 +499,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 {showSavedDecks && !useSwuStatsDecks && (
                     <FormControl fullWidth sx={styles.formControlStyle}>
                         {renderKarabastDecksDropdown()}
-                        
+                        {showSavedDeckHint && (
+                            <Typography variant="body1" sx={styles.hintMessageStyle}>
+                                {savedDeckHintText}
+                            </Typography>
+                        )}
                         <Box sx={styles.manageDecksContainer}>
                             <Button
                                 onClick={handleDeckManagement}
@@ -499,7 +517,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 {showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && (
                     <FormControl fullWidth sx={styles.formControlStyle}>
                         {renderSwuStatsDecksDropdown()}
-                        
+                        {showSavedDeckHint && (
+                            <Typography variant="body1" sx={styles.hintMessageStyle}>
+                                {savedDeckHintText}
+                            </Typography>
+                        )}
                         <Box sx={styles.manageDecksContainer}>
                             <Button
                                 href="https://swustats.net"

@@ -4,14 +4,22 @@ import { Box, Typography, Tab, Tabs } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import CosmeticsManagerTab from './subpages/CosmeticsManagerTab';
 import UserManagementTab from './subpages/UserManagementTab';
+import ServerControlsTab from './subpages/ServerControlsTab';
 import { useRouter } from 'next/navigation';
 
 enum ModToolsTab {
     CosmeticsManager = 0,
     UserManagement = 1,
+    ServerControls = 2,
 }
 
-const ModPageClient = () => {
+interface IModPageClientProps {
+
+    /** Gates the admin-only tools. The server enforces the same split on every endpoint behind them. */
+    isAdmin: boolean;
+}
+
+const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<ModToolsTab>(ModToolsTab.CosmeticsManager);
 
@@ -112,12 +120,14 @@ const ModPageClient = () => {
                 >
                     <Tab label="Cosmetics Manager" sx={styles.tab} />
                     <Tab label="User Management" sx={styles.tab} />
+                    {isAdmin && <Tab label="Server Controls" sx={styles.tab} />}
                 </Tabs>
 
                 {/* Tab Content */}
                 <Box sx={styles.tabPanel}>
-                    {activeTab === ModToolsTab.CosmeticsManager && <CosmeticsManagerTab />}
+                    {activeTab === ModToolsTab.CosmeticsManager && <CosmeticsManagerTab isAdmin={isAdmin} />}
                     {activeTab === ModToolsTab.UserManagement && <UserManagementTab />}
+                    {isAdmin && activeTab === ModToolsTab.ServerControls && <ServerControlsTab />}
                 </Box>
             </Box>
         </Box>

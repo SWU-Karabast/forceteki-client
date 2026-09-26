@@ -1,56 +1,64 @@
 import React from 'react';
-import { Box, IconButton, Popover, PopoverOrigin, Tooltip, Typography } from '@mui/material';
-import ThreeSixty from '@mui/icons-material/ThreeSixty';
-import Grid from '@mui/material/Grid';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { CardStyle, ICardData, IGameCardProps } from './CardTypes';
 import CardValueAdjuster from './CardValueAdjuster';
 import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
-import { cardImageLabel, s3CardImageURL, s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { PopupSource, type SelectCardsPopup } from '../Popup/Popup.types';
+import { cardImageLabel, s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
-import { getBorderColor } from './cardUtils';
+import { blockedFromPlay, cannotBeAttacked, getBorderColor, getCardPrimaryAspect, hasSentinel, isBlanked, isStolen } from './cardUtils';
+import { usePreviewCardPopover, usePopoverConfig } from './GameCard/cardHooks';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
-import { useLeaderCardFlipPreview } from '@/app/_hooks/useLeaderPreviewFlip';
-import { useLongPress } from '@/app/_hooks/useLongPress';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
-import { ZoneName } from '@/app/_constants/constants';
+import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
+import { TokenBadge, type TokenBadgeType } from './GameCard/TokenBadge';
+import { TokenBadgeStack } from './GameCard/TokenBadgeStack';
+import StatusIcon from '@/app/_components/_sharedcomponents/Cards/GameCard/StatusIcon';
+import { HealthBadge, PowerBadge } from './GameCard/StatBadge';
+import UpgradeStrip from './UpgradeStrip';
 
+// Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
+const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
+    subcards
+        .filter((s) => s.selectable || s.selected)
+        .map((u) => ({
+            ...u,
+            selectionState: u.selected ? 'selected' : u.selectable ? 'selectable' : 'unselectable',
+        }));
 
-const usePopoverConfig = (card: ICardData): { anchorOrigin: PopoverOrigin, transformOrigin: PopoverOrigin } => {
-    const { connectedPlayer } = useGame();
-    const cardInPlayersHand = card.controllerId === connectedPlayer && card.zone === 'hand';
-    const arena = card.zone;
+// Popup payload for selecting a unit's upgrades. Clicks toggle via 'cardClicked' (board
+// SelectCardPrompt); the Close button only dismisses the popup, since confirmation happens
+// on the board's own prompt Done.
+const upgradeSelectPopupData = (
+    unitUuid: string,
+    unitName: string | undefined,
+    subcards: ICardData[],
+): Omit<SelectCardsPopup, 'type'> => ({
+    uuid: unitUuid,
+    title: unitName ?? 'Select upgrades',
+    cards: buildUpgradeSelectCards(subcards),
+    perCardButtons: [],
+    buttons: [],
+    source: PopupSource.User,
+    clickMode: 'cardClicked',
+    localCloseButton: true,
+});
 
-    if (cardInPlayersHand) {
-        return {
-            anchorOrigin:{
-                vertical: -5,
-                horizontal: 'center',
-            },
-            transformOrigin: {
-                vertical: 'bottom',
-                horizontal: 'center',
-            }
-        };
-    }
+// Neutral token upgrades are consolidated into count badges on the right edge of the card,
+// in this order; every other upgrade renders as a bar below the card. A subcard is matched
+// to a badge by name, which is also how it is kept out of the bars.
+const TOKEN_BADGES: readonly { name: string; type: TokenBadgeType }[] = [
+    { name: 'Shield', type: 'shield' },
+    { name: 'Experience', type: 'experience' },
+    { name: 'Weakness', type: 'weakness' },
+    { name: 'Advantage', type: 'advantage' },
+];
 
-    // if the unit is on the left side, we display the popover to the right.
-    // if the unit is on the right side, we display the popover to the left
-    // we want to avoid displaying the popover on the same place as the card if there's no remaining screen left
-    return {
-        anchorOrigin:{
-            vertical: 'center',
-            horizontal: arena === ZoneName.SpaceArena ? 'right' : -5,
-        },
-        transformOrigin: {
-            vertical: 'center',
-            horizontal: arena === ZoneName.SpaceArena ? -5 : 'right',
-        }
-    };
-}
+const TOKEN_BADGE_NAMES = TOKEN_BADGES.map((badge) => badge.name);
 
 const GameCard: React.FC<IGameCardProps> = ({
     card,
@@ -63,7 +71,9 @@ const GameCard: React.FC<IGameCardProps> = ({
     cardback = undefined,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, isSpectator, hoveredChatCard } = useGame();
-    const { clearPopups } = usePopup();
+    const { clearPopups, openPopup, closePopup, popups } = usePopup();
+    const highlightSx = useOngoingEffectHighlightSx(card?.uuid);
+
     const locale = useCardImageLocale();
 
     const distributeHealing = gameState?.players[connectedPlayer]?.promptState.distributeAmongTargets?.type === 'distributeHealing';
@@ -74,85 +84,12 @@ const GameCard: React.FC<IGameCardProps> = ({
     const cardInOpponentsHand = card.controllerId !== connectedPlayer && card.zone === 'hand';
     const isHiddenHandCard = overlapEnabled && (cardInOpponentsHand || (isSpectator && card.zone === 'hand'));
     const popoverConfig = usePopoverConfig(card);
-    
-    // Check if card is blocked from play by opponent's effect (e.g., Regional Governor, Trade Route Taxation)
-    const isBlockedFromPlay = !!card.blockedFromPlayReason;
-
-    const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
-    const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const hoverTimeout = React.useRef<number | undefined>(undefined);
-    const open = Boolean(anchorElement);
     const isHoveredInChat = hoveredChatCard.id === card.uuid;
-    const isPreviewingLeaderCard = anchorElement?.getAttribute('data-card-type') === 'leader';
-
     const {
-        aspectRatio,
-        width,
-        isFlipped,
-        toggleFlip,
-    } = useLeaderCardFlipPreview({
-        anchorElement,
-        cardId: anchorElement?.getAttribute('data-card-id') || undefined,
-        setPreviewImage,
-        frontCardStyle: CardStyle.Plain,
-        backCardStyle: CardStyle.PlainLeader,
-        isLeader: isPreviewingLeaderCard,
-        isDeployed: true,
-    });
-
-    const [isTouchDevice, setIsTouchDevice] = React.useState(false);
-
-    const longPressHandlers = useLongPress({
-        onLongPress: (target) => {
-            const imageUrl = target.getAttribute('data-card-url');
-            if (!imageUrl || cardInOpponentsHand) return;
-            setIsTouchDevice(true);
-            setAnchorElement(target);
-            setPreviewImage(`url(${imageUrl})`);
-        },
-        onRelease: () => undefined,
-    });
-
-    const isStolen = React.useMemo(() => {
-        if (!(card.controllerId && card.ownerId)) {
-            return false
-        }
-        return card.controllerId !== card.ownerId
-    }, [card.controllerId, card.ownerId])
-
-    const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
-        // Skip hover preview on touch devices to avoid brief flash on tap
-        if (window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(any-pointer: fine)').matches) return;
-
-        const target = event.currentTarget;
-        const imageUrl = target.getAttribute('data-card-url');
-        if (!imageUrl) return;
-
-        if (cardInOpponentsHand) {
-            return;
-        }
-
-        hoverTimeout.current = window.setTimeout(() => {
-            setAnchorElement(target);
-            setPreviewImage(`url(${imageUrl})`);
-        }, 200);
-    };
-
-    const handlePreviewClose = () => {
-        clearTimeout(hoverTimeout.current);
-        setAnchorElement(null);
-        setPreviewImage(null);
-    };
-
-    // Keep touch previews open until the next interaction anywhere on the screen.
-    React.useEffect(() => {
-        if (!open || !isTouchDevice) return;
-        const onPointerDown = () => handlePreviewClose();
-        document.addEventListener('pointerdown', onPointerDown);
-        return () => document.removeEventListener('pointerdown', onPointerDown);
-    }, [open, isTouchDevice]);
-
-
+        getCardPreviewProps,
+        popover,
+        closePreview
+    } = usePreviewCardPopover(cardInOpponentsHand, popoverConfig);
 
     const showValueAdjuster = () => {
         const prompt = getConnectedPlayerPrompt();
@@ -185,6 +122,29 @@ const GameCard: React.FC<IGameCardProps> = ({
         )
         : '';
     const { status: cardImageStatus, imgProps: cardImgProps } = useImageLoadStatus(styledCardUrl);
+
+    // Multi-select upgrade popup: keep it in sync with live board state and auto-close it when the
+    // prompt ends or nothing stays selectable. Declared before the early return so hook order stays stable.
+    const multiSelectActive = getConnectedPlayerPrompt()?.selectCardMode === 'multiple';
+    const hasSelectableUpgrades = subcards.some((s) => s.selectable);
+    const upgradeUnitUuid = card?.uuid;
+    const upgradePopupOpen = popups.some((p) => p.uuid === upgradeUnitUuid);
+    // Signature of the live selection so the open popup is re-fed only on real changes (no loop).
+    const liveUpgradeSignature = subcards
+        .filter((s) => s.selectable || s.selected)
+        .map((u) => `${u.uuid}:${u.selected ? 's' : u.selectable ? 'a' : 'u'}`)
+        .join(',');
+    React.useEffect(() => {
+        if (!upgradePopupOpen || !upgradeUnitUuid) {
+            return;
+        }
+        if (!multiSelectActive || !hasSelectableUpgrades) {
+            closePopup(upgradeUnitUuid);
+            return;
+        }
+        openPopup('select', upgradeSelectPopupData(upgradeUnitUuid, card?.name, subcards));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [upgradePopupOpen, upgradeUnitUuid, multiSelectActive, hasSelectableUpgrades, liveUpgradeSignature]);
 
     if (!card) {
         return null;
@@ -231,39 +191,40 @@ const GameCard: React.FC<IGameCardProps> = ({
             // for the underlying unit. With Alliance Outpost that buffered second click
             // auto-applies the buff to the token whose shield was just defeated, for example.
             event.stopPropagation();
-            setAnchorElement(null);
-            setPreviewImage(null);
+            closePreview();
             sendGameMessage(['cardClicked', subCard.uuid]);
         }
     }
 
-    // helper function to get the correct aspects for the upgrade cards
-    const cardUpgradebackground = (card: ICardData) => {
-        if (!card.aspects){
-            return null
-        }
-        if (card.aspects.includes('villainy') && card.aspects.length === 1) {
-            return 'upgrade-black.png';
-        }
-        if (card.aspects.includes('heroism') && card.aspects.length === 1) {
-            return 'upgrade-white.png';
-        }
-        switch (true) {
-            case card.aspects.includes('aggression'):
-                return 'upgrade-red.png';
-            case card.aspects.includes('command'):
-                return 'upgrade-green.png';
-            case card.aspects.includes('cunning'):
-                return 'upgrade-yellow.png';
-            case card.aspects.includes('vigilance'):
-                return 'upgrade-blue.png';
-            default:
-                return 'upgrade-grey.png';
+    const nonShieldUpgradeCards = subcards.filter((subcard) => !TOKEN_BADGE_NAMES.includes(subcard.name ?? ''));
+    const hasAttachmentStrips = nonShieldUpgradeCards.length > 0 || capturedCards.length > 0;
+
+    const tokenBadges = TOKEN_BADGES
+        .map(({ name, type }) => {
+            const tokens = subcards.filter((subcard) => subcard.name === name);
+            return {
+                type,
+                count: tokens.length,
+                token: tokens[0],
+                selectableToken: tokens.find((subcard) => subcard.selectable),
+            };
+        })
+        .filter((badge) => badge.count > 0);
+
+    // On a multi-select prompt (e.g. Power Failure), clicking a token badge opens a popup to
+    // select any number of this unit's upgrades individually. On single-select prompts, badges
+    // keep the inline behavior (select the first selectable token of that type). The popup itself
+    // is kept live and auto-closed by an effect above the early return.
+    const upgradesClickable = multiSelectActive && hasSelectableUpgrades;
+    const openUpgradeSelectPopup = () => openPopup('select', upgradeSelectPopupData(card.uuid, card.name, subcards));
+    const badgeClick = (e: React.MouseEvent, selectableToken?: ICardData) => {
+        if (upgradesClickable) {
+            e.stopPropagation();
+            openUpgradeSelectPopup();
+        } else if (selectableToken) {
+            subcardClick(e, selectableToken);
         }
     };
-    // Filter subcards into Shields and other upgrades
-    const shieldCards = subcards.filter((subcard) => subcard.name === 'Shield');
-    const nonShieldUpgradeCards = subcards.filter((subcard) => subcard.name !== 'Shield');
     const promptType = getConnectedPlayerPrompt()?.promptType;
     const borderColor = getBorderColor({
         card,
@@ -283,14 +244,14 @@ const GameCard: React.FC<IGameCardProps> = ({
         cardContainer: {
             position: 'relative',
             backgroundColor: 'black',
-            borderRadius: '0.5rem',
+            borderRadius: hasAttachmentStrips ? '0.5rem 0.5rem 4px 4px' : '0.5rem',
             width: '100%',
             maxHeight: '100%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             transform: card.exhausted && card.zone !== 'resource' ? 'rotate(4deg)' : 'none',
-            transition: 'transform 0.15s ease',
+            transition: 'box-shadow 0.25s ease, transform 0.15s ease',
             '&:hover': {
                 cursor: clickDisabled() ? 'normal' : 'pointer',
             },
@@ -329,21 +290,9 @@ const GameCard: React.FC<IGameCardProps> = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            WebkitTouchCallout: 'none',
             userSelect: 'none',
-        },
-        upgradeOverlay: {
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'transparent',
-            filter: 'none',
-            clickEvents: 'none',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'row',
-            paddingRight: '4px',
+            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
+            '-webkit-user-select': 'none',   /* Prevents image selection */
         },
         numberFont: {
             fontSize: '1em',
@@ -370,39 +319,11 @@ const GameCard: React.FC<IGameCardProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
         },
-        powerIcon:{
+        statBadge: {
+            fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
             position: 'absolute',
             width: '28%',
-            aspectRatio: '3 / 4',
-            display: 'flex',
             bottom: '-6%',
-            left: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('power-badge')})`,
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
-            userSelect: 'none',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
-        },
-        healthIcon:{
-            position: 'absolute',
-            width: '28%',
-            aspectRatio: '3 / 4',
-            display: 'flex',
-            bottom: '-6%',
-            right: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('hp-badge')})`,
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
-            userSelect: 'none',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 'clamp(0.5rem, 1.8vw, 2rem)',
         },
         damageIcon:{
             position: 'absolute',
@@ -428,50 +349,34 @@ const GameCard: React.FC<IGameCardProps> = ({
             height: '100%',
             userSelect: 'none',
         },
-        shieldContainer: {
-            position:'absolute',
-            top:'-5%',
+        tokenBadgeContainer: {
+            position: 'absolute',
+            top: '-5%',
             right: '-4%',
-            width: '100%',
-            justifyContent: 'right',
-            alignItems: 'center',
-            columnGap: '4px'
+            fontSize: 'clamp(0.44rem, 1.1vw, 0.96rem)',
+            zIndex: 2,
         },
-        shieldIcon:{
-            width: '28%',
-            aspectRatio: '1 / 1',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('shield-token')})`,
-        },
-        blankedShieldIcon:{
-            width: '28%',
-            aspectRatio: '1 / 1',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('shield-token-blanked')})`,
-        },
-        upgradeIcon:{
+        upgradeIcon: {
             position: 'relative',
             width: '100%',
-            aspectRatio: '4.85',
-            display: 'flex',
-            backgroundSize: '100% 100%',
-            backgroundRepeat: 'no-repeat',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxSizing: 'content-box',
+            boxSizing: 'border-box',
+            py: '2px',
+            '&:last-child': {
+                borderBottomLeftRadius: '4px',
+                borderBottomRightRadius: '4px',
+            },
         },
         upgradeName: {
             fontSize: 'clamp(4px, .65vw, 12px)',
-            fontWeight: '800',
+            fontWeight: '600',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             color: 'black',
+            textAlign: 'center',
             userSelect: 'none',
             margin: 0,
             padding: 0,
-            lineHeight: 1,
+            lineHeight: 'normal',
         },
         cloneIcon:{
             width: '100%',
@@ -512,69 +417,28 @@ const GameCard: React.FC<IGameCardProps> = ({
                  1px  1px 0 #000
             `
         },
-        sentinelIcon:{
+        statusIconContainer: {
             position: 'absolute',
-            width: '28%',
-            aspectRatio: '1 / 1',
-            top:'32%',
-            right: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: `url(${s3TokenImageURL('sentinel-icon')})`,
-            filter: 'drop-shadow(0 6px 6px 0 #00000040)'
-        },
-        stolenIcon:{
-            position: 'absolute',
-            width: '28%',
-            aspectRatio: '1 / 1',
-            top:'32%',
+            bottom: cardStyle === CardStyle.InPlay ? '33%' : '50%',
             left: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/StolenIcon.png)',
-        },
-        blankIcon:{
-            position: 'absolute',
             width: cardStyle === CardStyle.InPlay ? '28%' : '35%',
-            aspectRatio: '1 / 1',
-            top: '32%',
-            right: cardStyle === CardStyle.InPlay ? '-4%' : 'auto',
-            left: cardStyle === CardStyle.InPlay ? 'auto' : '1%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/BlankIcon.png)',
+            display: 'flex',
+            flexDirection: 'column-reverse',
+            alignItems: 'flex-start',
+            fontSize: 'clamp(0.44rem, 1.1vw, 0.96rem)',
+            rowGap: '0.2em',
+            pointerEvents: 'none',
+            zIndex: 2,
         },
         upgradeBlankIcon:{
             position: 'absolute',
-            right: '4px',
+            right: '-4%',
             width: '18%',
+            zIndex: 1,
             aspectRatio: '1 / 1',
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/BlankIcon.png)',
-        },
-        cannotBeAttacked:{
-            position: 'absolute',
-            width: '28%',
-            aspectRatio: '1 / 1',
-            top:'-5%',
-            left: '-4%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/HiddenIcon.png)',
-        },
-        blockedFromPlayIcon:{
-            position: 'absolute',
-            width: '35%',
-            aspectRatio: '1 / 1',
-            // Move down when blank icon is also visible (both icons would be at top: 32% otherwise)
-            top: card.isBlanked && cardStyle !== CardStyle.InPlay ? '60%' : '32%',
-            left: '1%',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundImage: 'url(/LockIcon.png)',
-            filter: 'drop-shadow(0 4px 4px 0 #00000080)',
-            zIndex: 2,
         },
         unimplementedAlert: {
             display: notImplemented(card) ? 'flex' : 'none',
@@ -583,22 +447,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundRepeat: 'no-repeat',
             aspectRatio: '1/1',
             width: '50%'
-        },
-        damageCounter: {
-            fontWeight: '800',
-            fontSize: '1.9rem',
-            color: 'white',
-            width: '2.5rem',
-            aspectRatio: '1 / 1',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: distributeHealing ? 'rgba(0, 186, 255, 1)' : 'url(/token-background.svg)',
-            borderRadius: distributeHealing ? '17px 8px' : '0px',
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            filter: 'drop-shadow(0 4px 4px 0 #00000040)',
-            textShadow: '1px 1px #00000033'
         },
         capturedCardsDivider:{
             fontSize: '11px',
@@ -609,32 +457,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             backgroundColor:'black',
             mb:'0px',
             position:'relative'
-        },
-        cardPreview: {
-            borderRadius: '.38em',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            imageRendering: '-webkit-optimize-contrast',
-            backfaceVisibility: 'hidden',
-            aspectRatio,
-            width,
-        },
-        mobileFlipButton: {
-            position: 'absolute',
-            top: '0.35rem',
-            right: '0.35rem',
-            zIndex: 2,
-            width: '3.25rem',
-            height: '3.25rem',
-            color: 'white',
-            backgroundColor: 'rgba(3, 12, 19, 0.72)',
-            border: '1px solid rgba(255, 255, 255, 0.38)',
-            borderRadius: '999px',
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.55)',
-            transition: 'opacity 140ms ease, background-color 140ms ease',
-            '&:hover': {
-                backgroundColor: 'rgba(3, 12, 19, 0.9)',
-            },
         },
         attackIcon: {
             position: 'absolute',
@@ -673,33 +495,17 @@ const GameCard: React.FC<IGameCardProps> = ({
             width: '24%',
             height: '24%',
         },
-        ctrlText: {
-            bottom: '0px',
-            display: 'flex',
-            justifySelf: 'center',
-            width: 'fit-content',
-            height: '2rem',
-            color: 'white',
-            fontSize: '1rem',
-            fontWeight: 'bold',
-            textShadow: `
-                -1px -1px 0 #000,
-                 1px -1px 0 #000,
-                -1px  1px 0 #000,
-                 1px  1px 0 #000
-            `
-        },
     }
     return (
-        <Box sx={styles.cardContainer}>
+        <Box sx={[styles.cardContainer, highlightSx]}>
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
                 <Box
                     sx={styles.cloneIcon}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId }, locale)}
-                    data-card-type="clone"
-                    data-card-id={card.setId.set + '_' + card.setId.number}
+                    {...getCardPreviewProps({
+                        cardUrl: s3CardImageURL({ ...card, setId: updatedCardId }, locale),
+                        cardType: 'clone',
+                        cardId: card.setId.set + '_' + card.setId.number
+                    })}
                 >
                     <Typography sx={styles.cloneName}>Clone</Typography>
                 </Box>
@@ -723,12 +529,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                 )}
                 <Box
                     sx={styles.cardOverlay}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    {...longPressHandlers}
-                    data-card-url={s3CardImageURL({ ...card, setId: updatedCardId }, locale)}
-                    data-card-type={card.printedType}
-                    data-card-id={card.setId? card.setId.set+'_'+card.setId.number : card.id}
+                    {...getCardPreviewProps({
+                        cardUrl: s3CardImageURL({ ...card, setId: updatedCardId }, locale),
+                        cardType: card.printedType,
+                        cardId: card.setId? card.setId.set+'_'+card.setId.number : card.id
+                    })}
                 >
                     <Box sx={styles.unimplementedAlert}></Box>
                     <Box sx={styles.resourceIcon}/>
@@ -741,20 +546,17 @@ const GameCard: React.FC<IGameCardProps> = ({
                         <Typography sx={styles.numberFont}>{cardCounter}</Typography>
                     </Box>
                 )}
-                {isStolen && (
-                    <Box sx={styles.stolenIcon}/>
-                )}
-                {card.cannotBeAttacked && (
-                    <Box sx={styles.cannotBeAttacked}/>
-                )}
-                {isBlockedFromPlay && (
-                    <Tooltip title={card.blockedFromPlayReason || 'Cannot play this card'} arrow>
-                        <Box sx={styles.blockedFromPlayIcon}/>
-                    </Tooltip>
-                )}
-                {card.isBlanked && (
-                    <Box sx={styles.blankIcon}/>
-                )}
+                <Box sx={styles.statusIconContainer}>
+                    {cannotBeAttacked(card, cardStyle) && <StatusIcon type="hidden" />}
+                    {hasSentinel(card, cardStyle) && <StatusIcon type="sentinel" />}
+                    {isBlanked(card, cardStyle) && <StatusIcon type="blank" />}
+                    {blockedFromPlay(card, cardStyle) && (
+                        <Tooltip title={card.blockedFromPlayReason || 'Cannot play this card'} arrow>
+                            <StatusIcon type="lock" />
+                        </Tooltip>
+                    )}
+                    {isStolen(card, cardStyle) && <StatusIcon type="stolen" />}
+                </Box>
                 {cardStyle === CardStyle.InPlay && (
                     <>
                         { showValueAdjuster() && (
@@ -763,25 +565,26 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 isIndirect={isIndirectDamage}
                             /> 
                         )}
-                        <Grid direction="row" container sx={styles.shieldContainer}>
-                            {shieldCards.map((shieldCard, index) => (
-                                <Box
-                                    key={`${card.uuid}-shield-${index}`}
-                                    sx={{
-                                        ...(shieldCard.isBlanked ? styles.blankedShieldIcon : styles.shieldIcon),
-                                        border: shieldCard.selectable ? `2px solid ${getBorderColor({ card: shieldCard, player: connectedPlayer })}` : 'none',
-                                        cursor: shieldCard.selectable ? 'pointer' : 'normal'
-                                    }}
-                                    onClick={(e) => subcardClick(e, shieldCard)}
-                                />
-                            ))}
-                        </Grid>
-                        {card.sentinel && (
-                            <Box sx={styles.sentinelIcon}/>
-                        )}
-                        <Box sx={styles.powerIcon}>
-                            <Typography sx={styles.numberFont}>{card.power}</Typography>
-                        </Box>
+                        <TokenBadgeStack sx={styles.tokenBadgeContainer}>
+                            {tokenBadges.map(({ type, count, token, selectableToken }) => {
+                                const clickable = !!selectableToken || upgradesClickable;
+                                return (
+                                    <TokenBadge
+                                        key={type}
+                                        type={type}
+                                        count={count}
+                                        stroke={selectableToken ? getBorderColor({ card: selectableToken, player: connectedPlayer }) : undefined}
+                                        {...getCardPreviewProps({
+                                            cardUrl: s3CardImageURL(token, locale, CardStyle.Plain, cardbackPath),
+                                            cardType: token.printedType,
+                                        })}
+                                        onClick={clickable ? (e) => badgeClick(e, selectableToken) : undefined}
+                                    />
+                                );
+                            })}
+                        </TokenBadgeStack>
+
+                        <PowerBadge sx={[styles.statBadge, { left: '-4%' } ]} value={card.power || 0} />
                         {Number(card.damage) > 0 && (
                             <Box sx={styles.damageIcon}>
                                 <Typography sx={styles.damageNumber}>
@@ -789,9 +592,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                                 </Typography>
                             </Box>
                         )}
-                        <Box sx={styles.healthIcon}>
-                            <Typography sx={styles.numberFont}>{card.hp}</Typography>
-                        </Box>
+                        <HealthBadge sx={[styles.statBadge, { right: '-4%' } ]} value={card.hp || 0} />
                     </>
                 )}
             </Box>
@@ -799,69 +600,35 @@ const GameCard: React.FC<IGameCardProps> = ({
             {card.isAttacker && <Box sx={styles.attackIcon}/>}
             {card.isDefender && <Box sx={styles.defendIcon}/>}
 
-            <Popover
-                id="mouse-over-popover"
-                sx={{ pointerEvents: isTouchDevice ? 'auto' : 'none' }}
-                open={open}
-                anchorEl={anchorElement}
-                onClose={handlePreviewClose}
-                disableRestoreFocus
-                slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' }, tabIndex: -1 } }}
-                {...popoverConfig}
-            >
-                <Box sx={{ position: 'relative' }}>
-                    <Box sx={{ ...styles.cardPreview, backgroundImage: previewImage }} />
-                    {isPreviewingLeaderCard && isTouchDevice && (
-                        <IconButton
-                            aria-label="Flip leader card"
-                            sx={styles.mobileFlipButton}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                toggleFlip();
-                            }}
-                        >
-                            <ThreeSixty fontSize="medium" />
-                        </IconButton>
-                    )}
-                </Box>
-                {isPreviewingLeaderCard && !isTouchDevice && !isFlipped && (
-                    <Typography variant={'body1'} sx={styles.ctrlText}
-                    >CTRL: View Flipside</Typography>
-                )}
-            </Popover>
+            {popover}
 
             {nonShieldUpgradeCards.map((subcard) => (
-                <Box
+                <UpgradeStrip
                     key={subcard.uuid}
+                    aspect={getCardPrimaryAspect(subcard)}
                     sx={{ ...styles.upgradeIcon,
-                        backgroundImage: `url(${(cardUpgradebackground(subcard))})`,
-                        border: subcard.selectable ? `2px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',
-                        cursor: subcard.selectable ? 'pointer' : 'normal'
+                        border: subcard.selectable ? `1.5px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',
+                        cursor: subcard.selectable ? 'pointer' : 'default'
                     }}
                     onClick={(e) => subcardClick(e, subcard)}
-                    onMouseEnter={handlePreviewOpen}
-                    onMouseLeave={handlePreviewClose}
-                    {...longPressHandlers}
-                    data-card-url={s3CardImageURL(
-                        { ...subcard, setId: subcard.clonedCardId ?? subcard.setId },
-                        locale,
-                        CardStyle.Plain,
-                        cardbackPath)
-                    }
-                    data-card-type={subcard.printedType}
-                    data-card-id={subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id}
+                    {...getCardPreviewProps({
+                        cardUrl: s3CardImageURL(
+                            { ...subcard, setId: subcard.clonedCardId ?? subcard.setId },
+                            locale,
+                            CardStyle.Plain,
+                            cardbackPath),
+                        cardType: subcard.printedType,
+                        cardId: subcard.setId? subcard.setId.set+'_'+subcard.setId.number : subcard.id
+                    })}
                 >
-                    <Box sx={styles.upgradeOverlay}>
-                        <Typography key={subcard.uuid} sx={styles.upgradeName}>
-                            {subcard.clonedCardName ?? subcard.name}
-                        </Typography>
+                    <Typography sx={styles.upgradeName}>
+                        {subcard.clonedCardName ?? subcard.name}
+                    </Typography>
 
-                        {subcard.isBlanked && (
-                            <Box sx={styles.upgradeBlankIcon}/>
-                        )}
-                    </Box>
-                </Box>
+                    {subcard.isBlanked && (
+                        <Box sx={styles.upgradeBlankIcon}/>
+                    )}
+                </UpgradeStrip>
             ))}
 
             {capturedCards.length > 0 && (
@@ -871,31 +638,29 @@ const GameCard: React.FC<IGameCardProps> = ({
                     </Typography>
                     {capturedCards.map((capturedCard: ICardData) => {
                         return (
-                            <Box
+                            <UpgradeStrip
                                 key={`captured-${capturedCard.uuid}`}
+                                aspect={getCardPrimaryAspect(capturedCard)}
                                 sx={{
                                     ...styles.upgradeIcon,
-                                    backgroundImage: `url(${cardUpgradebackground(capturedCard)})`,
-                                    border: capturedCard.selectable ? `2px solid ${getBorderColor({ card:capturedCard, player:connectedPlayer })}` : 'none',
-                                    cursor: capturedCard.selectable ? 'pointer' : 'normal'
+                                    border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
+                                    cursor: capturedCard.selectable ? 'pointer' : 'default'
                                 }}
                                 onClick={(e) => subcardClick(e, capturedCard)}
-                                onMouseEnter={handlePreviewOpen}
-                                onMouseLeave={handlePreviewClose}
-                                {...longPressHandlers}
-                                data-card-url={s3CardImageURL(
-                                    { ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId },
-                                    locale,
-                                    CardStyle.Plain,
-                                    cardbackPath)
-                                }
-                                data-card-type={capturedCard.printedType}
-                                data-card-id={capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id}
+                                {...getCardPreviewProps({
+                                    cardUrl: s3CardImageURL(
+                                        { ...capturedCard, setId: capturedCard.clonedCardId ?? capturedCard.setId },
+                                        locale,
+                                        CardStyle.Plain,
+                                        cardbackPath),
+                                    cardType: capturedCard.printedType,
+                                    cardId: capturedCard.setId? capturedCard.setId.set+'_'+capturedCard.setId.number : capturedCard.id
+                                })}
                             >
                                 <Typography sx={styles.upgradeName}>
                                     {capturedCard.clonedCardName ?? capturedCard.name}
                                 </Typography>
-                            </Box>
+                            </UpgradeStrip>
                         );
                     })}
                 </>
