@@ -173,6 +173,7 @@ export interface IModActionResponse {
     cancelledAt?: string;
     cancelledById?: string;
     cancelledByUsername?: string;
+    relatedReportId?: string;
 }
 
 export interface IPlayerSearchResult {
@@ -209,6 +210,115 @@ export interface IUsernameChangeResponse {
     source: UsernameChangeSource;
     relatedModActionId?: string;
     createdAt: string;
+}
+
+// ==================== Player reports (mod tools) ====================
+
+export enum PlayerReportStatus {
+    Open = 'Open',
+    Closed = 'Closed',
+}
+
+export enum PlayerReportOutcome {
+    Punished = 'Punished',
+    NoAction = 'NoAction',
+    FalseReport = 'FalseReport',
+    TimerAbuse = 'TimerAbuse',
+}
+
+export enum PlayerReportRole {
+    Reporter = 'Reporter',
+    Reported = 'Reported',
+}
+
+export interface IPlayerReport {
+    id: string;
+    createdAt: string;
+    status: PlayerReportStatus;
+    reporterId: string;
+    reporterUsername: string;
+    reportedPlayerId: string;
+    reportedPlayerUsername: string;
+    offense: PlayerReportType | string;
+    description: string;
+    lobbyId: string;
+    gameId?: string;
+    gameFormat: string;
+    matchType: string;
+    gameStepsSinceLastUndo?: number;
+    screenResolution?: { width: number; height: number };
+    viewport?: { width: number; height: number };
+    reportedPlayerPriorReportCount: number;
+    reporterPriorFalseReportCount: number;
+    claimedById?: string;
+    claimedByUsername?: string;
+    claimedAt?: string;
+    closedAt?: string;
+    closedById?: string;
+    closedByUsername?: string;
+    outcome?: PlayerReportOutcome;
+    closingNote?: string;
+    reopenedAt?: string;
+    reopenedByUsername?: string;
+}
+
+export interface IPlayerReportLogLine {
+    at: string;
+    playerIds: string[];
+    text: string;
+}
+
+export interface IPlayerReportLog {
+    reportId: string;
+    kind: 'Chat' | 'Game';
+    lines: IPlayerReportLogLine[];
+    truncated: boolean;
+}
+
+export interface IPlayerReportIndexEntry {
+    reportId: string;
+    playerId: string;
+    role: PlayerReportRole;
+    createdAt: string;
+    offense: string;
+    status: PlayerReportStatus;
+    outcome?: PlayerReportOutcome;
+}
+
+export interface IPlayerReportPlayerContext {
+    playerId: string;
+    username: string;
+    createdAt?: string;
+    isMuted: boolean;
+    activeRename: IActiveModActionCacheEntry | null;
+    modActions: IModActionResponse[];
+    reportsAgainst: IPlayerReportIndexEntry[];
+    reportsFiled: IPlayerReportIndexEntry[];
+}
+
+export interface IPlayerReportDetailResponse {
+    success: boolean;
+    report: IPlayerReport;
+    chatLog: IPlayerReportLog | null;
+    gameLog: IPlayerReportLog | null;
+    reporter: IPlayerReportPlayerContext;
+    reportedPlayer: IPlayerReportPlayerContext;
+    ticketActions: IModActionResponse[];
+
+    /** Id of the moderator who requested the report, as the server sees them */
+    viewerId: string;
+}
+
+export interface IPlayerReportListResponse {
+    success: boolean;
+    reports: IPlayerReport[];
+    nextBeforeMonth: string | null;
+}
+
+export interface IPlayerReportUpdateResponse {
+    success: boolean;
+    report?: IPlayerReport;
+    message?: string;
 }
 
 export interface IFindUserResponse {

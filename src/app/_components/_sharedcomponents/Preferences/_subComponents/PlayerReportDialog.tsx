@@ -19,7 +19,7 @@ import {
     PlayerReportType
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
-const REPORT_TYPES: IReportTypeConfig[] = [
+export const REPORT_TYPES: IReportTypeConfig[] = [
     {
         type: PlayerReportType.AbusingMechanics,
         label: 'Abusing Karabast Features',

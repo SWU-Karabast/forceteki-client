@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, MenuItem, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -17,7 +17,13 @@ import {
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
 
-const UserManagementTab: React.FC = () => {
+interface IUserManagementTabProps {
+
+    /** Search to run on mount or whenever it changes, e.g. when a report opens a player's profile */
+    searchRequest?: { query: string; requestId: number } | null;
+}
+
+const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest }) => {
     // Search state
     const [searchQuery, setSearchQuery] = useState('');
     const [searchLoading, setSearchLoading] = useState(false);
@@ -52,8 +58,10 @@ const UserManagementTab: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // ==================== Handlers ====================
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) return;
+    const handleSearch = () => runSearch(searchQuery);
+
+    const runSearch = async (query: string) => {
+        if (!query.trim()) return;
 
         setSearchLoading(true);
         setSearchError(null);
@@ -64,7 +72,7 @@ const UserManagementTab: React.FC = () => {
         setSuccessMessage(null);
 
         try {
-            const result = await ServerApiService.findUserAsync(searchQuery.trim());
+            const result = await ServerApiService.findUserAsync(query.trim());
             setPlayers(result.players);
             setModActions(result.modActions || []);
             setUsernameChanges(result.usernameChanges || []);
@@ -95,6 +103,15 @@ const UserManagementTab: React.FC = () => {
             }
         }
     };
+
+    useEffect(() => {
+        if (searchRequest?.query) {
+            setSearchQuery(searchRequest.query);
+            runSearch(searchRequest.query);
+        }
+        // runSearch is recreated every render; only a new request should trigger a search
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchRequest?.requestId]);
 
     const getDurationInDays = (): number => {
         const value = parseInt(durationValue);
