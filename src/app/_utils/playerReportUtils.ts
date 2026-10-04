@@ -9,6 +9,9 @@ import {
 /** Days for the "Mute 1 week" quick action */
 export const ONE_WEEK_IN_DAYS = 7;
 
+/** Mirrors PlayerReportService.LogRetentionDays on the server */
+export const LOG_RETENTION_DAYS = 30;
+
 /** A reporter with at least this many reports closed as false reports is flagged in the report list */
 export const FREQUENT_FALSE_REPORTER_THRESHOLD = 2;
 

@@ -260,6 +260,7 @@ export interface IPlayerReport {
     closingNote?: string;
     reopenedAt?: string;
     reopenedByUsername?: string;
+    logsDeletedAt?: string;
 }
 
 export interface IPlayerReportLogLine {

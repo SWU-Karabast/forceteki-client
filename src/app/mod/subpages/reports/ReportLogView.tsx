@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Box, FormControlLabel, Switch, Tab, Tabs, Typography } from '@mui/material';
 import { IPlayerReportLog } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import { formatLogTime, getGameFormatLabel, getMatchTypeLabel } from '@/app/_utils/playerReportUtils';
+import { formatDate } from '@/app/_utils/ModerationUtils';
+import { formatLogTime, getGameFormatLabel, getMatchTypeLabel, LOG_RETENTION_DAYS } from '@/app/_utils/playerReportUtils';
 import { IReportLogViewProps } from './reportTypes';
 
 enum LogTab {
@@ -105,8 +106,13 @@ const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog
         const lines = (log?.lines ?? []).filter((line) => !onlySelectedPlayer || line.playerIds.includes(highlightPlayerId));
         return (
             <Box sx={styles.logBox}>
+                {report.logsDeletedAt && (
+                    <Typography sx={styles.notice}>
+                        The logs were deleted on {formatDate(report.logsDeletedAt)}, {LOG_RETENTION_DAYS} days after the ticket was closed.
+                    </Typography>
+                )}
                 {log?.truncated && <Typography sx={styles.notice}>Older lines were cut off because the log was too long.</Typography>}
-                {lines.length === 0 && <Typography sx={styles.empty}>(no messages)</Typography>}
+                {lines.length === 0 && !report.logsDeletedAt && <Typography sx={styles.empty}>(no messages)</Typography>}
                 {lines.map((line, index) => (
                     <Box key={`${line.at}-${index}`} sx={styles.line(line.playerIds.includes(highlightPlayerId))}>
                         <Typography sx={styles.time}>{formatLogTime(line.at)}</Typography>
