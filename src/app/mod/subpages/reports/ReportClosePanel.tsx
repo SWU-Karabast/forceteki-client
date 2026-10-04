@@ -9,7 +9,6 @@ import {
 import { ServerApiService } from '@/app/_services/ServerApiService';
 import { formatDate } from '@/app/_utils/ModerationUtils';
 import { getOutcomeOption, REPORT_OUTCOME_OPTIONS } from '@/app/_utils/playerReportUtils';
-import NotImplementedCog from './NotImplementedCog';
 import { IReportClosePanelProps } from './reportTypes';
 
 /**
@@ -66,7 +65,6 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
         radio: {
             color: '#fff',
             '&.Mui-checked': { color: '#fff' },
-            '&.Mui-disabled': { color: '#5f5f5f' },
         },
         radioLabel: (color: string) => ({
             display: 'inline-flex',
@@ -121,11 +119,9 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
                     <FormControlLabel
                         key={option.value}
                         value={option.value}
-                        disabled={option.notImplemented}
                         control={<Radio size="small" sx={styles.radio} />}
                         label={(
-                            <Box component="span" sx={styles.radioLabel(option.notImplemented ? '#7a7a7a' : option.color)}>
-                                {option.notImplemented && <NotImplementedCog />}
+                            <Box component="span" sx={styles.radioLabel(option.color)}>
                                 {option.label}
                             </Box>
                         )}

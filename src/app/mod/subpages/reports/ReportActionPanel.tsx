@@ -11,7 +11,6 @@ import {
     REPORT_QUICK_ACTIONS,
     ReportQuickActionKey,
 } from '@/app/_utils/playerReportUtils';
-import NotImplementedCog from './NotImplementedCog';
 import { IReportActionPanelProps } from './reportTypes';
 
 enum DurationUnit {
@@ -65,6 +64,8 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
                 return `issue a warning to ${targetUsername}`;
             case ReportQuickActionKey.ForceRename:
                 return `force ${targetUsername} to rename`;
+            case ReportQuickActionKey.DisableReporting:
+                return `disable reporting for ${targetUsername}`;
             default:
                 return selectedAction.label;
         }
@@ -80,7 +81,7 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
 
     const handleConfirm = async () => {
         setConfirmOpen(false);
-        if (!selectedAction?.actionType) {
+        if (!selectedAction) {
             return;
         }
 
@@ -135,11 +136,6 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
                 '&:hover': { backgroundColor: 'rgba(47, 125, 182, 0.75)' },
             } : {}),
         }),
-        buttonLabel: {
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-        },
         durationRow: {
             display: 'flex',
             gap: '0.75rem',
@@ -186,15 +182,10 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
                     <PreferenceButton
                         key={action.key}
                         variant="standard"
-                        disabled={action.notImplemented || submitting || targetIsAnonymous}
+                        disabled={submitting || targetIsAnonymous}
                         sx={styles.actionButton(selectedAction?.key === action.key)}
                         buttonFnc={() => setSelectedAction(action)}
-                        text={(
-                            <Box component="span" sx={styles.buttonLabel}>
-                                {action.notImplemented && <NotImplementedCog />}
-                                {action.label}
-                            </Box>
-                        )}
+                        text={action.label}
                     />
                 ))}
             </Box>

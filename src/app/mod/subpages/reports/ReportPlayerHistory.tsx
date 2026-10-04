@@ -45,6 +45,7 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
             lastLogin: '',
             isMuted: context.isMuted,
             activeRename: context.activeRename ?? undefined,
+            activeReportingDisabledId: context.activeReportingDisabledId,
         };
 
         const reportIds = new Set([...context.reportsAgainst, ...context.reportsFiled].map((entry) => entry.reportId));

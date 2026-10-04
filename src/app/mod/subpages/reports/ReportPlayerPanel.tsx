@@ -110,6 +110,7 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
             <Typography sx={styles.stat}>Reports filed: {context.reportsFiled.length}</Typography>
             {muteText && <Typography sx={styles.statusMuted}>{muteText}</Typography>}
             {context.activeRename && <Typography sx={styles.statusRename}>Pending force rename</Typography>}
+            {context.activeReportingDisabledId && <Typography sx={styles.statusRename}>Reporting disabled</Typography>}
         </Box>
     );
 };

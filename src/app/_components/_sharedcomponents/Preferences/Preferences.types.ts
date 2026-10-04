@@ -291,6 +291,7 @@ export interface IPlayerReportPlayerContext {
     createdAt?: string;
     isMuted: boolean;
     activeRename: IActiveModActionCacheEntry | null;
+    activeReportingDisabledId: string | null;
     modActions: IModActionResponse[];
     reportsAgainst: IPlayerReportIndexEntry[];
     reportsFiled: IPlayerReportIndexEntry[];

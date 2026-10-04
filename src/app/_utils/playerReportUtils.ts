@@ -2,6 +2,7 @@ import { REPORT_TYPES } from '@/app/_components/_sharedcomponents/Preferences/_s
 import {
     IModActionResponse,
     ModActionType,
+    modActionDefinitions,
     PlayerReportOutcome,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
@@ -32,9 +33,6 @@ export interface IReportOutcomeOption {
     value: PlayerReportOutcome;
     label: string;
     color: string;
-
-    /** Shown with the not-implemented cog and cannot be selected yet */
-    notImplemented?: boolean;
 }
 
 export const REPORT_OUTCOME_OPTIONS: IReportOutcomeOption[] = [
@@ -52,17 +50,14 @@ export enum ReportQuickActionKey {
     MuteCustom = 'muteCustom',
     Warning = 'warning',
     ForceRename = 'forceRename',
-    BlockReport = 'blockReport',
+    DisableReporting = 'disableReporting',
 }
 
 export interface IReportQuickAction {
     key: ReportQuickActionKey;
     label: string;
-    actionType?: ModActionType;
+    actionType: ModActionType;
     durationDays?: number;
-
-    /** Shown with the not-implemented cog and cannot be used yet */
-    notImplemented?: boolean;
 }
 
 export const REPORT_QUICK_ACTIONS: IReportQuickAction[] = [
@@ -70,7 +65,7 @@ export const REPORT_QUICK_ACTIONS: IReportQuickAction[] = [
     { key: ReportQuickActionKey.MuteCustom, label: 'Mute…', actionType: ModActionType.Mute },
     { key: ReportQuickActionKey.Warning, label: 'Warning', actionType: ModActionType.Warning },
     { key: ReportQuickActionKey.ForceRename, label: 'Force rename', actionType: ModActionType.Rename },
-    { key: ReportQuickActionKey.BlockReport, label: 'Block reports', notImplemented: true },
+    { key: ReportQuickActionKey.DisableReporting, label: modActionDefinitions[ModActionType.ReportingDisabled].label, actionType: ModActionType.ReportingDisabled },
 ];
 
 /** Short name of what a mod action did, e.g. "Mute 7 days", "Warning", "Force rename" */
@@ -82,6 +77,8 @@ export const describeModAction = (action: IModActionResponse): string => {
             return 'Warning';
         case ModActionType.Rename:
             return 'Force rename';
+        case ModActionType.ReportingDisabled:
+            return 'Reporting disabled';
         default:
             return action.actionType;
     }
