@@ -37,14 +37,14 @@ const tosBlocks = [
     { type: 'heading', text: 'Privacy & Data Use' },
     { type: 'ol', items: [
         'Minimal Data Collection: karabast.net does not collect or store personal information beyond what is necessary to operate the Site. Login is handled via Discord or Google; passwords are never stored by the Site.',
-        'Chat Data: Chat is not recorded in logs during normal gameplay. If a user files a \'Report Player\' complaint, the relevant chat session may be captured temporarily for moderation review.',
+        'Chat Data: Chat is not recorded in logs during normal gameplay. If a user files a \'Report Player\' complaint, the chat and game log of that match are stored for moderation review. They are only accessible to moderators and are deleted 30 days after the report has been resolved. A record of the report and of any resulting moderation actions, without chat content, is kept for 12 months.',
         'Bug Reports: User-submitted bug reports may include the current game state and technical details such as screen resolution. This data is used only to diagnose and resolve issues.',
         'Device & Browser Information: The Site may automatically collect limited, non-identifying technical information about the user\'s device or browser, such as screen resolution and viewport dimensions, in connection with gameplay sessions. This information is used solely to support development, debugging, performance analysis, and compatibility testing of the Site, and is not used to identify individual users or shared with third parties.',
         'Deck Data: User deck information is private and not distributed outside of gameplay. Deck contents are visible only during play, and only to opponents and spectators in that match unless a private lobby is used.',
         'Statistics & SWUStats Integration: The Site may send anonymized game and card play statistics to third-party services such as SWUStats.net. This is entirely optional and only occurs if users provide their SWUStats deck link or key. Use of such a link constitutes implicit consent for the Site to share user deck and play data with SWUStats.net. Otherwise, data is not shared outside of the Site.',
         'No Advertising or Tracking: The Site does not use Google Analytics, advertising networks, or third-party trackers. Cookies or similar technologies may be used only for login and session management.',
         'Data Sharing: The Site does not sell, rent, or otherwise share user data with third parties, except as noted above, where required by law, or where users have given consent. The Site may expand integrations to additional third-party services in the future (e.g., new deck statistics providers), but will not share game data without user consent.',
-        'Data Retention: Data related to moderation may be retained only as long as necessary to address the relevant issue. Deck data may be deleted from the user\'s account but may be retained in logs for a period of time.'
+        'Data Retention: Data related to moderation is retained only as long as necessary to address the relevant issue, within the periods described above. Deck data may be deleted from the user\'s account but may be retained in logs for a period of time.'
     ] },
     { type: 'heading', text: 'Disclaimer of Warranties' },
     { type: 'ol', items: [
