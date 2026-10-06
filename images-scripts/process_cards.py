@@ -64,7 +64,7 @@ def _maybe_progress(iterable, *, total: int, desc: str, unit: str = "item"):
 # ─────────────────────────── Config / Defaults ────────────────────────────
 
 # Bumped at set rotation. Override per-invocation with --set.
-DEFAULT_SET_CODE = "ASH"
+DEFAULT_SET_CODE = "IC27"
 
 # swudb hosts only English images. Non-English locales are pulled from FFG.
 DEFAULT_SOURCE_URL = "https://swudb.com/images/cards/{set}/{n}.png"
@@ -114,7 +114,8 @@ HTTP_TIMEOUT = 10
 PER_SET_MAX_ATTEMPTS: dict[str, int] = {
     "TS26": 100,
     "IBH": 110,
-    "HMW": 272  # Homeworlds has more cards due to additional common bases
+    "HMW": 272,  # Homeworlds has more cards due to additional common bases
+    "IC27": 200
 }
 
 # Per-set extra leader cardNumbers. Some sets have a leader whose number
@@ -159,7 +160,9 @@ PER_SET_LANDSCAPE_DOUBLE_LEADERS: dict[str, set[int]] = {
 # via S3 CopyObject (no body re-upload, no data-transfer cost).
 CACHE_CONTROL_DEFAULT = "public, max-age=31536000, immutable"
 CACHE_CONTROL_PREVIEW = "public, max-age=604800, immutable"
-PREVIEW_SETS: set[str] = {"IC27", "HMW"}
+PREVIEW_SETS: set[str] = {
+    "IC27",
+}
 
 
 def cache_control_for(set_code: str) -> str:
