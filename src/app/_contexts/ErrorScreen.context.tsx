@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useCallback, useContext, useMemo, useState, ReactNode } from 'react';
-import ErrorCardOverlay, { IErrorScreenAction } from '@/app/_components/_sharedcomponents/Error/ErrorCardOverlay';
+import ErrorDialog, { IErrorScreenAction } from '@/app/_components/_sharedcomponents/Error/ErrorDialog';
 
 export interface IErrorScreenRequest {
     title: string;
@@ -25,9 +25,9 @@ interface IErrorScreenContext {
 const ErrorScreenContext = createContext<IErrorScreenContext | undefined>(undefined);
 
 /**
- * Provides the full-screen error card used in place of browser `alert()` dialogs.
- * Lives above both the game board and the standalone pages so any of them can raise
- * an error without knowing where it will be drawn.
+ * Provides the error dialog used in place of browser `alert()` dialogs. Lives above both
+ * the game board and the standalone pages so any of them can raise an error without
+ * knowing where it will be drawn.
  */
 export const ErrorScreenProvider = ({ children }: { children: ReactNode }) => {
     const [request, setRequest] = useState<IErrorScreenRequest | null>(null);
@@ -53,7 +53,7 @@ export const ErrorScreenProvider = ({ children }: { children: ReactNode }) => {
     return (
         <ErrorScreenContext.Provider value={value}>
             {children}
-            <ErrorCardOverlay
+            <ErrorDialog
                 open={request !== null}
                 title={request?.title ?? ''}
                 message={request?.message ?? ''}
