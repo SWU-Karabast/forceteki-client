@@ -14,9 +14,12 @@ import {
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
+import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
 
 const UserManagementTab: React.FC = () => {
+    const dateFormat = useDateFormat();
+
     // Search state
     const [searchQuery, setSearchQuery] = useState('');
     const [searchLoading, setSearchLoading] = useState(false);
@@ -386,7 +389,7 @@ const UserManagementTab: React.FC = () => {
                                                 Last active:
                                             </Typography>
                                             <Typography sx={{ color: 'white', fontSize: '0.875rem' }}>
-                                                {formatDate(player.lastLogin)}
+                                                {formatDate(player.lastLogin, dateFormat)}
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -418,13 +421,13 @@ const UserManagementTab: React.FC = () => {
                                 <Box sx={styles.userDetailRow}>
                                     <Typography sx={styles.userDetailLabel}>Last login:</Typography>
                                     <Typography sx={styles.userDetailValue}>
-                                        {formatDate(selectedPlayer.lastLogin)}
+                                        {formatDate(selectedPlayer.lastLogin, dateFormat)}
                                     </Typography>
                                 </Box>
                                 <Box sx={styles.userDetailRow}>
                                     <Typography sx={styles.userDetailLabel}>Created:</Typography>
                                     <Typography sx={styles.userDetailValue}>
-                                        {formatDate(selectedPlayer.createdAt)}
+                                        {formatDate(selectedPlayer.createdAt, dateFormat)}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -568,7 +571,7 @@ const UserManagementTab: React.FC = () => {
                                                             }}
                                                         />
                                                         <Typography sx={{ color: change.source === UsernameChangeSource.ForcedRename ? '#ffd54f' : 'white', fontSize: '0.85rem', mb:'0px' }}>
-                                                            {getUsernameChangeLabel(change)}
+                                                            {getUsernameChangeLabel(change, dateFormat)}
                                                         </Typography>
                                                     </Box>
                                                 </Box>
@@ -626,7 +629,7 @@ const UserManagementTab: React.FC = () => {
                                                         }}
                                                     />
                                                     <Typography sx={{ color: '#ffd54f', fontSize: '0.85rem', mb:'0px' }}>
-                                                        {getModActionEntryLabel(entry, selectedPlayer)}
+                                                        {getModActionEntryLabel(entry, selectedPlayer, dateFormat)}
                                                     </Typography>
                                                     {status.label && (
                                                         <Typography sx={styles.statusBadge(status.color)}>
@@ -686,7 +689,7 @@ const UserManagementTab: React.FC = () => {
                                                                     Started
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.startedAt)}
+                                                                    {formatDate(action.startedAt, dateFormat)}
                                                                 </Typography>
                                                             </Box>
                                                         )}
@@ -696,7 +699,7 @@ const UserManagementTab: React.FC = () => {
                                                                     Expires
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.expiresAt)}
+                                                                    {formatDate(action.expiresAt, dateFormat)}
                                                                 </Typography>
                                                             </Box>
                                                         )}
@@ -718,7 +721,7 @@ const UserManagementTab: React.FC = () => {
                                                                     Cancelled
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.cancelledAt)} by {action.cancelledByUsername}
+                                                                    {formatDate(action.cancelledAt, dateFormat)} by {action.cancelledByUsername}
                                                                 </Typography>
                                                             </Box>
                                                         )}
