@@ -6,6 +6,7 @@ import {
     CircularProgress,
     FormControl,
     FormControlLabel,
+    FormLabel,
     Link,
     MenuItem,
     Radio,
@@ -20,7 +21,7 @@ import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchmakingPreference, MatchmakingPreferenceLabels } from '@/app/_constants/constants';
 import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -116,6 +117,10 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+    const [matchmakingPreference, setMatchmakingPreference] = useState<MatchmakingPreference>(() => {
+        const stored = localStorage.getItem('matchmakingPreference');
+        return Object.values(MatchmakingPreference).find((preference) => preference === stored) ?? MatchmakingPreference.NoPreference;
+    });
     const [deckLinkTouched, setDeckLinkTouched] = useState<boolean>(false);
     const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
     const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
@@ -138,6 +143,10 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     useEffect(() => {
         handleJsonDeck(deckLink);
     }, [deckLink]);
+
+    useEffect(() => {
+        localStorage.setItem('matchmakingPreference', matchmakingPreference);
+    }, [matchmakingPreference]);
 
     const handleChangeDeckSelectionType = (value: string) => {
         if (value === 'SWU Stats Deck') {
@@ -243,6 +252,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 format: queueConfig.format,
                 cardPool: queueConfig.cardPool,
                 gamesToWinMode: queueConfig.gamesToWinMode,
+                matchmakingPreference,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
@@ -266,7 +276,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     setModalOpen(true)
                 }else if(response.status === 400) {
                     // TODO: better error handling between BE and FE
-                    if (result.message?.includes('Invalid game format') || result.message?.includes('You must be logged in')) {
+                    if (result.message?.includes('Invalid game format') || result.message?.includes('Invalid matchmaking preference') || result.message?.includes('You must be logged in')) {
                         setError(null,result.message,'Join Queue Error','error');
                     } else {
                         setError('Couldn\'t import. Deck is invalid.',errors,'Deck Validation Error','error');
@@ -618,6 +628,43 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                         </Link>
                     </Typography>
                 )}
+
+                <FormControl component="fieldset" fullWidth disabled={queueState} sx={styles.formControlStyle}>
+                    <FormLabel id="matchmaking-preference-label" component="legend" sx={styles.labelTextStyle}>
+                        Matchmaking preference
+                    </FormLabel>
+                    <RadioGroup
+                        row
+                        name="matchmakingPreference"
+                        aria-labelledby="matchmaking-preference-label"
+                        value={matchmakingPreference}
+                        onChange={(_event: ChangeEvent<HTMLInputElement>, value: string) => {
+                            const preference = Object.values(MatchmakingPreference).find((option) => option === value);
+                            if (preference === undefined) {
+                                setError('Choose a valid matchmaking preference and try again.', undefined, 'Join Queue Error', 'error');
+                                setModalOpen(true);
+                                return;
+                            }
+                            setMatchmakingPreference(preference);
+                        }}
+                    >
+                        {Object.values(MatchmakingPreference).map((preference) => (
+                            <FormControlLabel
+                                key={preference}
+                                value={preference}
+                                control={<Radio sx={styles.checkboxStyle} />}
+                                label={
+                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
+                                        {MatchmakingPreferenceLabels[preference]}
+                                    </Typography>
+                                }
+                            />
+                        ))}
+                    </RadioGroup>
+                    <Typography variant="body2" sx={styles.hintMessageStyle}>
+                        Matching broadens as you wait to help find an opponent.
+                    </Typography>
+                </FormControl>
 
                 <FormatSelectionForm
                     format={queueConfig.format}
