@@ -257,6 +257,7 @@ const UserManagementTab: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            gap: '0.75rem',
             padding: '0.5rem 0.75rem',
             cursor: 'pointer',
             '&:hover': {
@@ -273,10 +274,14 @@ const UserManagementTab: React.FC = () => {
             fontSize: '0.75rem',
             fontWeight: 600,
             ml: '0.5rem',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
         }),
         cancelButton: {
             color: '#ef5350',
             fontSize: '0.75rem',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
             cursor: 'pointer',
             '&:hover': { textDecoration: 'underline' },
         },
@@ -622,17 +627,18 @@ const UserManagementTab: React.FC = () => {
                                                 sx={styles.actionHistoryHeader}
                                                 onClick={() => setExpandedActionId(isExpanded ? null : action.id)}
                                             >
-                                                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                                     <ExpandMoreIcon
                                                         sx={{
                                                             color: 'white',
                                                             fontSize: '1.2rem',
+                                                            flexShrink: 0,
                                                             mr: '0.5rem',
                                                             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                                                             transition: 'transform 0.2s',
                                                         }}
                                                     />
-                                                    <Typography sx={{ color: '#ffd54f', fontSize: '0.85rem', mb:'0px' }}>
+                                                    <Typography sx={{ color: '#ffd54f', fontSize: '0.85rem', mb:'0px', minWidth: 0, overflowWrap: 'anywhere' }}>
                                                         {getModActionEntryLabel(entry, selectedPlayer)}
                                                     </Typography>
                                                     {status.label && (
