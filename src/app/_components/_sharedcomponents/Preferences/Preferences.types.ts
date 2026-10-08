@@ -118,7 +118,46 @@ export enum ModActionType {
     Mute = 'Mute',
     Warning = 'Warning',
     Rename = 'Rename',
+    ReportingDisabled = 'ReportingDisabled',
 }
+
+/**
+ * Per-type behaviour, mirroring ModActionDefinitions on the server. Keep the two in sync — the server
+ * re-validates everything, so a mismatch shows up as a rejected submission rather than a hole.
+ */
+export interface IModActionDefinition {
+    label: string;
+    requiresNote: boolean;
+    requiresDuration: boolean;
+    cancellable: boolean;
+}
+
+export const modActionDefinitions: Record<ModActionType, IModActionDefinition> = {
+    [ModActionType.Mute]: {
+        label: 'Mute',
+        requiresNote: true,
+        requiresDuration: true,
+        cancellable: true,
+    },
+    [ModActionType.Warning]: {
+        label: 'Warning',
+        requiresNote: true,
+        requiresDuration: false,
+        cancellable: false,
+    },
+    [ModActionType.Rename]: {
+        label: 'Force Rename',
+        requiresNote: false,
+        requiresDuration: false,
+        cancellable: false,
+    },
+    [ModActionType.ReportingDisabled]: {
+        label: 'Disable Reporting',
+        requiresNote: true,
+        requiresDuration: false,
+        cancellable: true,
+    },
+};
 
 export interface IModActionResponse {
     id: string;
@@ -143,6 +182,7 @@ export interface IPlayerSearchResult {
     lastLogin: string;
     isMuted: boolean;
     activeRename?: IActiveModActionCacheEntry;
+    activeReportingDisabledId?: string | null;
 }
 
 export interface IActiveModActionCacheEntry {

@@ -216,9 +216,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const updateReportingDisabledSeen = () => {
         setUser((prevUser) => {
             if(!prevUser) return null;
+            if(!prevUser.reportingDisabled) return prevUser;
             return {
                 ...prevUser,
-                reportingDisabled: ModerationFieldState.EnabledAndSeen
+                reportingDisabled: { ...prevUser.reportingDisabled, hasSeen: true }
             }
         })
     }

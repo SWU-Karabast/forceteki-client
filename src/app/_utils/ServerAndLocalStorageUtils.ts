@@ -293,7 +293,7 @@ export const setReportingDisabledSeenAsync = async(user: IUser | null): Promise<
         if (!response.ok) {
             throw new Error(result.message);
         }
-        return result
+        return !!result.success
     }catch (error) {
         console.error(error);
         throw error;
