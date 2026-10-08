@@ -86,13 +86,13 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'Preview the Homeworlds meta with Next Set cards',
+        title: 'Homeworlds is Released',
         content: `
-        <p>Homeworlds (Set 9) cards are now playable in Premier & Eternal formats with the "Next Set" card pool.</p>
+        <p>Homeworlds (Set 9) cards are fully implemented and available in all game modes. Now that the set is released, these cards are part of the "Current" card pool.</p>
 
         <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we're always looking for new contributors.</p><p></p>
 	  `,
-        date: '8/31/26',
+        date: '10/7/26',
         image: s3ImageURL('ui/homeworlds-preview-banner.webp'),
         imageAlt: 'News Announcement',
     },

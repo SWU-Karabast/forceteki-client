@@ -17,6 +17,9 @@ export const authOptions: AuthOptions = {
         DiscordProvider({
             clientId: process.env.DISCORD_CLIENT_ID!,
             clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+            // Discord includes an `iss` param in its OAuth callback, which openid-client
+            // can only validate if the provider declares the expected issuer
+            issuer: 'https://discord.com',
         }),
     ],
     session: {
