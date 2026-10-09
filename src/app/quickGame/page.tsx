@@ -31,8 +31,8 @@ const QuickGame: React.FC = () => {
 
     const styles = {
         containerStyle: {
-            height: '100vh',
-            overflow: 'hidden',
+            minHeight: '100vh',
+            position: 'relative',
             backgroundImage: `url(${backgroundPath}?v=2)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -50,7 +50,9 @@ const QuickGame: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: '100%',
+            minHeight: '100vh',
+            boxSizing: 'border-box',
+            padding: '6rem 1rem 5rem',
         },
         leaveQueueLink: {
             fontWeight: '600',
@@ -80,7 +82,7 @@ const QuickGame: React.FC = () => {
 
     return (
         <Grid container sx={styles.containerStyle}>
-            <Grid size={12} height={'100%'}>
+            <Grid size={12}>
                 <Box sx={styles.searchBoxContainer}>
                     {lobbyState ? (
                         <FoundGame />
