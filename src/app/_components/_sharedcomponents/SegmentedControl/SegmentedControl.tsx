@@ -8,7 +8,7 @@ const styles = {
         padding: '3px',
         boxSizing: 'border-box',
         borderRadius: '5px',
-        backgroundColor: '#102B3E',
+        backgroundColor: '#1B2B38',
     },
     indicator: {
         position: 'absolute',
@@ -16,7 +16,7 @@ const styles = {
         bottom: '3px',
         left: '3px',
         borderRadius: '3px',
-        backgroundColor: 'primary.main',
+        backgroundColor: '#557894',
         pointerEvents: 'none',
         transition: 'transform 200ms ease',
         '@media (prefers-reduced-motion: reduce)': {
@@ -38,10 +38,10 @@ const styles = {
         textAlign: 'center',
         color: 'white',
         '&:not(.Mui-disabled):not(:has(input:checked)):hover': {
-            backgroundColor: '#214A6B',
+            backgroundColor: '#30485C',
         },
         '&:has(input:focus-visible)': {
-            outline: '2px solid #B5E5FF',
+            outline: '2px solid #C0D5E5',
             outlineOffset: '-2px',
         },
         '&.Mui-disabled': {
