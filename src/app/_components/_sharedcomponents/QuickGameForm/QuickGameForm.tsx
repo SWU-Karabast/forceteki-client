@@ -9,8 +9,6 @@ import {
     FormLabel,
     Link,
     MenuItem,
-    Radio,
-    RadioGroup,
     Tooltip,
     Typography
 } from '@mui/material';
@@ -33,6 +31,8 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
+import FormatInfoPopup from '../FormatSelectionForm/FormatInfoPopup';
+import SegmentedControl from '../SegmentedControl/SegmentedControl';
 import GameAnnouncementBanner, { CurrentGameAnnouncement } from '../../GameAnnouncementBanner/GameAnnouncementBanner';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
@@ -117,6 +117,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+    const [matchmakingInfoOpen, setMatchmakingInfoOpen] = useState(false);
     const [matchmakingPreference, setMatchmakingPreference] = useState<MatchmakingPreference>(() => {
         const stored = localStorage.getItem('matchmakingPreference');
         return Object.values(MatchmakingPreference).find((preference) => preference === stored) ?? MatchmakingPreference.NoPreference;
@@ -319,6 +320,21 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
             mb: '.5em',
             color: 'white',
         },
+        preferenceLabelRow: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            flexWrap: 'wrap',
+            gap: '0.25rem 0.5rem',
+        },
+        learnMoreStyle: {
+            color: 'lightblue',
+            textDecoration: 'underline',
+            textDecorationStyle: 'dotted',
+            fontSize: '0.7rem',
+            cursor: 'pointer',
+            '&:hover': { color: '#6BA3BE' },
+        },
         labelTextStyleSecondary: {
             color: '#aaaaaa',
             display: 'inline',
@@ -466,45 +482,18 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 Join Matchmaking Queue
             </Typography>
             <form onSubmit={handleJoinGameQueue}>
-                <FormControl component="fieldset" sx={styles.formControlStyle}>
-                    <RadioGroup
-                        row
+                <FormControl component="fieldset" fullWidth sx={styles.formControlStyle}>
+                    <SegmentedControl
+                        name="deckSource"
+                        label="Deck source"
                         value={showSavedDecks ? (useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Deck' : 'Saved Deck') : 'New Deck'}
-                        onChange={(
-                            e: ChangeEvent<HTMLInputElement>,
-                            value: string
-                        ) => handleChangeDeckSelectionType(value)}
-                    >
-                        {isSwuStatsLinked && (
-                            <FormControlLabel
-                                value="SWU Stats Deck"
-                                control={<Radio sx={styles.checkboxStyle} />}
-                                label={
-                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        SWU Stats Deck
-                                    </Typography>
-                                }
-                            />
-                        )}
-                        <FormControlLabel
-                            value="Saved Deck"
-                            control={<Radio sx={styles.checkboxStyle} />}
-                            label={
-                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Saved Deck
-                                </Typography>
-                            }
-                        />
-                        <FormControlLabel
-                            value="New Deck"
-                            control={<Radio sx={styles.checkboxStyle} />}
-                            label={
-                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    New Deck
-                                </Typography>
-                            }
-                        />
-                    </RadioGroup>
+                        onChange={handleChangeDeckSelectionType}
+                        options={[
+                            ...(isSwuStatsLinked ? [{ value: 'SWU Stats Deck', label: 'SWU Stats Deck' }] : []),
+                            { value: 'Saved Deck', label: 'Saved Deck' },
+                            { value: 'New Deck', label: 'New Deck' },
+                        ]}
+                    />
                 </FormControl>
                 {showSavedDecks && !useSwuStatsDecks && (
                     <FormControl fullWidth sx={styles.formControlStyle}>
@@ -629,40 +618,43 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     </Typography>
                 )}
 
-                <FormControl component="fieldset" fullWidth disabled={queueState} sx={styles.formControlStyle}>
-                    <FormLabel id="matchmaking-preference-label" component="legend" sx={styles.labelTextStyle}>
-                        Matchmaking preference
-                    </FormLabel>
-                    <RadioGroup
-                        row
-                        name="matchmakingPreference"
-                        aria-labelledby="matchmaking-preference-label"
-                        value={matchmakingPreference}
-                        onChange={(_event: ChangeEvent<HTMLInputElement>, value: string) => {
-                            const preference = Object.values(MatchmakingPreference).find((option) => option === value);
-                            if (preference === undefined) {
-                                setError('Choose a valid matchmaking preference and try again.', undefined, 'Join Queue Error', 'error');
-                                setModalOpen(true);
-                                return;
-                            }
-                            setMatchmakingPreference(preference);
+                <FormControl component="fieldset" fullWidth aria-label="Matchmaking Preference" disabled={queueState} sx={styles.formControlStyle}>
+                    <FormLabel
+                        id="matchmaking-preference-label"
+                        component="legend"
+                        sx={{
+                            ...styles.labelTextStyle,
+                            width: '100%',
+                            '&.Mui-focused': { color: styles.labelTextStyle.color },
                         }}
                     >
-                        {Object.values(MatchmakingPreference).map((preference) => (
-                            <FormControlLabel
-                                key={preference}
-                                value={preference}
-                                control={<Radio sx={styles.checkboxStyle} />}
-                                label={
-                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        {MatchmakingPreferenceLabels[preference]}
-                                    </Typography>
-                                }
-                            />
-                        ))}
-                    </RadioGroup>
+                        <Box component="span" sx={styles.preferenceLabelRow}>
+                            <Box component="span">Matchmaking Preference</Box>
+                            <Link
+                                component="button"
+                                type="button"
+                                underline="hover"
+                                aria-label="About Matchmaking Preference"
+                                sx={styles.learnMoreStyle}
+                                onClick={() => setMatchmakingInfoOpen(true)}
+                            >
+                                About Matchmaking Preference
+                            </Link>
+                        </Box>
+                    </FormLabel>
+                    <SegmentedControl
+                        name="matchmakingPreference"
+                        label="Matchmaking Preference"
+                        value={matchmakingPreference}
+                        onChange={setMatchmakingPreference}
+                        disabled={queueState}
+                        options={Object.values(MatchmakingPreference).map((preference) => ({
+                            value: preference,
+                            label: MatchmakingPreferenceLabels[preference],
+                        }))}
+                    />
                     <Typography variant="body2" sx={styles.hintMessageStyle}>
-                        Matching broadens as you wait to help find an opponent.
+                        Matching broadens over time if no opponents are found
                     </Typography>
                 </FormControl>
 
@@ -693,6 +685,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     {queueState ? 'Queueing...' : 'Join Queue'}
                 </Button>
             </form>
+            <FormatInfoPopup
+                open={matchmakingInfoOpen}
+                onClose={() => setMatchmakingInfoOpen(false)}
+                topic="matchmakingPreference"
+            />
         </Box>
     );
 };

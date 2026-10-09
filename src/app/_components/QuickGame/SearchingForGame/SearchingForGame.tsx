@@ -102,10 +102,6 @@ const styles = {
         color: '#aaa',
         whiteSpace: 'nowrap',
     },
-    preferenceHint: {
-        color: '#aaa',
-        marginTop: '1rem',
-    },
 };
 
 const SearchingForGame: React.FC = () => {
@@ -183,9 +179,6 @@ const SearchingForGame: React.FC = () => {
                             );
                         })}
                     </Box>
-                    <Typography variant="body2" sx={styles.preferenceHint}>
-                        Your opponent&apos;s preferences also apply.
-                    </Typography>
                 </Box>
             )}
         </Card>

@@ -9,15 +9,21 @@ import {
     DialogTitle,
 } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { SwuGameFormat, FormatLabels, CardPool, CardPoolLabels } from '@/app/_constants/constants';
+import { SwuGameFormat, FormatLabels, CardPool, CardPoolLabels, MatchmakingPreference, MatchmakingPreferenceLabels } from '@/app/_constants/constants';
 
-type FormatInfoTopic = 'formats' | 'cardPool';
+type FormatInfoTopic = 'formats' | 'cardPool' | 'matchmakingPreference';
 
 interface IFormatInfoPopupProps {
     open: boolean;
     onClose: () => void;
     topic: FormatInfoTopic;
 }
+
+const topicTitles: Record<FormatInfoTopic, string> = {
+    formats: 'Game Formats',
+    cardPool: 'Card Pools',
+    matchmakingPreference: 'Matchmaking Preferences',
+};
 
 const formatDescriptions: Record<SwuGameFormat, { summary: string; deckRules: string; notes?: string }> = {
     [SwuGameFormat.Premier]: {
@@ -58,6 +64,12 @@ const cardPoolDescriptions: Record<CardPool, { summary: string; constructed: str
         constructed: 'All released cards are available with no set restrictions.',
         limited: 'All draft/sealed-legal cards are available. Cards from preconstructed products are still excluded.',
     },
+};
+
+const matchmakingPreferenceDescriptions: Record<MatchmakingPreference, string> = {
+    [MatchmakingPreference.CompetitiveTesting]: 'Test competitive decks and practice tournament-style play.',
+    [MatchmakingPreference.CasualBrewing]: 'Try new deck ideas or play a more relaxed game.',
+    [MatchmakingPreference.NoPreference]: 'Search for either kind of game without a preference of your own.',
 };
 
 const styles = {
@@ -114,6 +126,8 @@ const styles = {
 } as const;
 
 const FormatInfoPopup: React.FC<IFormatInfoPopupProps> = ({ open, onClose, topic }) => {
+    const titleId = React.useId();
+
     return (
         <Dialog
             open={open}
@@ -124,11 +138,11 @@ const FormatInfoPopup: React.FC<IFormatInfoPopupProps> = ({ open, onClose, topic
                 }
                 onClose();
             }}
-            aria-labelledby="format-info-dialog-title"
+            aria-labelledby={titleId}
             sx={styles.dialog}
         >
-            <DialogTitle sx={styles.title} id="format-info-dialog-title">
-                {topic === 'formats' ? 'Game Formats' : 'Card Pools'}
+            <DialogTitle sx={styles.title} id={titleId}>
+                {topicTitles[topic]}
             </DialogTitle>
             <DialogContent>
                 {topic === 'formats' ? (
@@ -156,7 +170,7 @@ const FormatInfoPopup: React.FC<IFormatInfoPopupProps> = ({ open, onClose, topic
                             </Box>
                         );
                     })
-                ) : (
+                ) : topic === 'cardPool' ? (
                     Object.values(CardPool).map((pool) => {
                         const desc = cardPoolDescriptions[pool];
                         return (
@@ -180,6 +194,36 @@ const FormatInfoPopup: React.FC<IFormatInfoPopupProps> = ({ open, onClose, topic
                             </Box>
                         );
                     })
+                ) : (
+                    <>
+                        {Object.values(MatchmakingPreference).map((preference) => (
+                            <Box key={preference}>
+                                <Typography sx={styles.sectionTitle}>
+                                    {MatchmakingPreferenceLabels[preference]}
+                                </Typography>
+                                <Typography sx={styles.sectionBody}>
+                                    {matchmakingPreferenceDescriptions[preference]}
+                                </Typography>
+                            </Box>
+                        ))}
+                        <Typography sx={styles.sectionTitle}>
+                            How Matching Works
+                        </Typography>
+                        <Typography sx={styles.sectionBody}>
+                            These are soft preferences, not separate queues. Your search broadens as you wait.
+                        </Typography>
+                        <Box component="ul" sx={styles.detailList}>
+                            <Typography component="li" sx={styles.detailBody}>
+                                Competitive and Casual searches start with opponents who chose the same preference.
+                            </Typography>
+                            <Typography component="li" sx={styles.detailBody}>
+                                By default, No Preference opponents are included after 15 seconds, and all preferences are included after 30 seconds.
+                            </Typography>
+                            <Typography component="li" sx={styles.detailBody}>
+                                No Preference is open to all categories immediately, but both players&apos; search windows must allow a match.
+                            </Typography>
+                        </Box>
+                    </>
                 )}
             </DialogContent>
             <DialogActions sx={styles.actions}>
