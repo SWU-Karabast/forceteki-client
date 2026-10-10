@@ -130,8 +130,8 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
                 }))}
             />
         </FormControl>
-        <FormatInfoPopup open={formatInfoOpen} onClose={() => setFormatInfoOpen(false)} topic="formats" />
-        <FormatInfoPopup open={cardPoolInfoOpen} onClose={() => setCardPoolInfoOpen(false)} topic="cardPool" />
+        <FormatInfoPopup open={formatInfoOpen} onClose={() => setFormatInfoOpen(false)} topic="formats" formatConfigs={formatConfigs} />
+        <FormatInfoPopup open={cardPoolInfoOpen} onClose={() => setCardPoolInfoOpen(false)} topic="cardPool" formatConfigs={formatConfigs} />
     </>
 }
 

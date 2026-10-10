@@ -689,6 +689,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 open={matchmakingInfoOpen}
                 onClose={() => setMatchmakingInfoOpen(false)}
                 topic="matchmakingPreference"
+                formatConfigs={formatConfigs}
             />
         </Box>
     );

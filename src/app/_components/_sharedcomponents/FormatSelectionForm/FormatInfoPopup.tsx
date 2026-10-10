@@ -9,7 +9,8 @@ import {
     DialogTitle,
 } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { SwuGameFormat, FormatLabels, CardPool, CardPoolLabels, MatchmakingPreference, MatchmakingPreferenceLabels } from '@/app/_constants/constants';
+import { SwuGameFormat, FormatLabels, CardPool, CardPoolLabels, MatchmakingPreference, MatchmakingPreferenceLabels, getFormatsFromConfig } from '@/app/_constants/constants';
+import type { IFormatModeConfig } from '@/app/_constants/constants';
 
 type FormatInfoTopic = 'formats' | 'cardPool' | 'matchmakingPreference';
 
@@ -17,6 +18,7 @@ interface IFormatInfoPopupProps {
     open: boolean;
     onClose: () => void;
     topic: FormatInfoTopic;
+    formatConfigs: IFormatModeConfig[];
 }
 
 const topicTitles: Record<FormatInfoTopic, string> = {
@@ -45,6 +47,11 @@ const formatDescriptions: Record<SwuGameFormat, { summary: string; deckRules: st
         summary: 'A casual playtesting format. All cards are legal with no rotation and no suspended list.',
         deckRules: '50-card minimum main deck, no sideboard restrictions.',
         notes: 'Always uses the "Unlimited" card pool.',
+    },
+    [SwuGameFormat.FauxSuns]: {
+        summary: 'A singleton format where each player has two leaders. All cards are legal.',
+        deckRules: '80-card minimum main deck, 1 copy of each card, 2 leaders, no sideboard restrictions.',
+        notes: 'A Heroism leader can\'t be paired with a Villainy leader; a leader with neither aspect can pair with either. Uses Plan and Blast counters. Always uses the "Unlimited" card pool.',
     },
 };
 
@@ -125,8 +132,9 @@ const styles = {
     },
 } as const;
 
-const FormatInfoPopup: React.FC<IFormatInfoPopupProps> = ({ open, onClose, topic }) => {
+const FormatInfoPopup: React.FC<IFormatInfoPopupProps> = ({ open, onClose, topic, formatConfigs }) => {
     const titleId = React.useId();
+    const availableFormats = getFormatsFromConfig(formatConfigs);
 
     return (
         <Dialog
@@ -146,7 +154,7 @@ const FormatInfoPopup: React.FC<IFormatInfoPopupProps> = ({ open, onClose, topic
             </DialogTitle>
             <DialogContent>
                 {topic === 'formats' ? (
-                    Object.values(SwuGameFormat).map((fmt) => {
+                    Object.values(SwuGameFormat).filter((fmt) => availableFormats.includes(fmt)).map((fmt) => {
                         const desc = formatDescriptions[fmt];
                         return (
                             <Box key={fmt}>
